@@ -1,0 +1,400 @@
+type UserPostCounts = 
+ record {
+   draftCount: text;
+   handle: text;
+   publishedCount: text;
+   totalPostCount: text;
+   totalViewCount: text;
+   uniqueClaps: text;
+   uniqueReaderCount: text;
+ };
+type UpdateCallsAggregatedData = vec nat64;
+type TagModel = 
+ record {
+   createdDate: text;
+   id: text;
+   value: text;
+ };
+type SaveResult = 
+ variant {
+   err: text;
+   ok: Post__1;
+ };
+type Rule = 
+ record {
+   description: text;
+   id: text;
+ };
+type Result_9 = 
+ variant {
+   err: text;
+   ok: TagModel;
+ };
+type Result_8 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok:
+    record {
+      vec record {
+            text;
+            nat;
+          };
+      vec record {
+            text;
+            PostModerationStatus;
+          };
+    };
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: Metadata;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: record {
+         vec PostMigrationType;
+         vec record {
+               text;
+               text;
+             };
+       };
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: vec record {
+             text;
+             nat;
+           };
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: Post;
+ };
+type RecallOptions = 
+ variant {
+   allTime;
+   ninetydays;
+   sixtydays;
+   thisMonth;
+   thisWeek;
+   thisYear;
+   today;
+ };
+type Post__1 = 
+ record {
+   category: text;
+   claps: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tags: vec PostTagModel;
+   title: text;
+   url: text;
+   views: text;
+ };
+type PostTagModel__1 = 
+ record {
+   tagId: text;
+   tagName: text;
+ };
+type PostTagModel = 
+ record {
+   tagId: text;
+   tagName: text;
+ };
+type PostTag = 
+ record {
+   createdDate: int;
+   isActive: bool;
+   modifiedDate: int;
+   tagId: text;
+ };
+type PostSaveModel = 
+ record {
+   category: text;
+   content: text;
+   creator: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   postId: text;
+   subtitle: text;
+   tagIds: vec text;
+   title: text;
+ };
+type PostModerationStatus = 
+ variant {
+   approved;
+   rejected;
+   reviewRequired;
+ };
+type PostMigrationType = 
+ record {
+   caller: text;
+   category: text;
+   claps: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   isRejected: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tags: vec PostTagModel;
+   title: text;
+   url: text;
+   views: text;
+   wordCount: nat;
+ };
+type Post = 
+ record {
+   category: text;
+   claps: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tags: vec PostTagModel;
+   title: text;
+   url: text;
+   views: text;
+ };
+type NumericEntity = 
+ record {
+   avg: nat64;
+   first: nat64;
+   last: nat64;
+   max: nat64;
+   min: nat64;
+ };
+type NftCanisterEntry = 
+ record {
+   canisterId: text;
+   handle: text;
+ };
+type MetricsGranularity = 
+ variant {
+   daily;
+   hourly;
+ };
+type MetadataValue = 
+ record {
+   text;
+   variant {
+     "blob": blob;
+     "nat": nat;
+     "nat8": nat8;
+     "text": text;
+   };
+ };
+type MetadataContainer = 
+ variant {
+   "blob": blob;
+   data: vec MetadataValue;
+   json: text;
+ };
+type Metadata = 
+ variant {
+   fungible:
+    record {
+      decimals: nat8;
+      metadata: opt MetadataContainer;
+      name: text;
+      symbol: text;
+    };
+   nonfungible:
+    record {
+      asset: text;
+      metadata: opt MetadataContainer;
+      name: text;
+      thumbnail: text;
+    };
+ };
+type HourlyMetricsData = 
+ record {
+   canisterCycles: CanisterCyclesAggregatedData;
+   canisterHeapMemorySize: CanisterHeapMemoryAggregatedData;
+   canisterMemorySize: CanisterMemoryAggregatedData;
+   timeMillis: int;
+   updateCalls: UpdateCallsAggregatedData;
+ };
+type GetPostsByFollowers = 
+ record {
+   posts: vec Post__1;
+   totalCount: text;
+ };
+type GetMetricsParameters = 
+ record {
+   dateFromMillis: nat;
+   dateToMillis: nat;
+   granularity: MetricsGranularity;
+ };
+type DailyMetricsData = 
+ record {
+   canisterCycles: NumericEntity;
+   canisterHeapMemorySize: NumericEntity;
+   canisterMemorySize: NumericEntity;
+   timeMillis: int;
+   updateCalls: nat64;
+ };
+type ContentStatus = 
+ variant {
+   approved;
+   rejected;
+   reviewRequired;
+ };
+type ContentResult = 
+ record {
+   sourceId: text;
+   status: ContentStatus;
+ };
+type CanisterMetricsData = 
+ variant {
+   daily: vec DailyMetricsData;
+   hourly: vec HourlyMetricsData;
+ };
+type CanisterMetrics = record {data: CanisterMetricsData;};
+type CanisterMemoryAggregatedData = vec nat64;
+type CanisterHeapMemoryAggregatedData = vec nat64;
+type CanisterCyclesAggregatedData = vec nat64;
+service : {
+  acceptCycles: () -> ();
+  addNewRules: (vec text) -> ();
+  addPostCategory: (text, text) -> (Result);
+  availableCycles: () -> (nat) query;
+  clapPost: (text) -> () oneway;
+  collectCanisterMetrics: () -> ();
+  copyPostsFromHandleToPublication: (text, text) -> (Result_1);
+  createTag: (text) -> (Result_9);
+  currentId: () -> (nat) query;
+  delete: (text) -> (Result_8);
+  deleteUserPosts: (text) -> (Result_8);
+  dumpIds: () -> (Result_2);
+  dumpPosts: () -> (Result_2);
+  dumpUserIds: () -> (Result_2);
+  followTag: (text) -> (Result_2);
+  generateAccountIds: () -> ();
+  generateContent: (text) -> (text);
+  generateLatestPosts: () -> ();
+  generateLowercaseHandles: () -> (text, vec text);
+  generatePublishedDates: () -> ();
+  generateWordCounts: () -> ();
+  get: (text) -> (Result) query;
+  getAdmins: () -> (Result_4) query;
+  getAllModerationStatus: () -> (Result_7);
+  getAllTags: () -> (vec TagModel) query;
+  getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getCgUsers: () -> (Result_4) query;
+  getKinicList: () -> (Result_4) query;
+  getLatestPosts: (nat32, nat32) -> (GetPostsByFollowers) query;
+  getList: (vec text) -> (vec Post) query;
+  getMetadata: (text, nat) -> (Result_6) query;
+  getMoreLatestPosts: (nat32, nat32) -> (vec Post) query;
+  getMyPosts: (bool, bool, nat32, nat32) -> (vec Post) query;
+  getMyTags: () -> (vec PostTagModel__1) query;
+  getNftCanisters: () -> (vec NftCanisterEntry) query;
+  getPopular: (nat32, nat32) -> (GetPostsByFollowers) query;
+  getPopularThisMonth: (nat32, nat32) -> (GetPostsByFollowers) query;
+  getPopularThisWeek: (nat32, nat32) -> (GetPostsByFollowers) query;
+  getPopularToday: (nat32, nat32) -> (GetPostsByFollowers) query;
+  getPostUrls: () -> (Result_1);
+  getPostWithPublicationControl: (text) -> (Result);
+  getPostsByCategory: (text, text, nat32, nat32) ->
+   (GetPostsByFollowers) query;
+  getPostsByFollowers: (vec text, nat32, nat32) ->
+   (GetPostsByFollowers) query;
+  getPostsByPostIds: (vec text) -> (vec Post) query;
+  getPostsMigration: (nat, nat) -> (Result_5);
+  getPremiumArticle: (text) -> (Result);
+  getRegisteredRules: () -> (vec Rule);
+  getSEOStorageErrors: () -> (vec text);
+  getTagsByUser: (text) -> (vec PostTag) query;
+  getTotalArticleViews: () -> (nat) query;
+  getTotalPostCount: () -> (nat) query;
+  getTrustedCanisters: () -> (Result_4) query;
+  getUserPostCounts: (text) -> (UserPostCounts) query;
+  getUserPostIds: (text) -> (Result_4) query;
+  getUserPosts: (text) -> (vec Post) query;
+  getViewsByRange: (RecallOptions) -> (int) query;
+  getViewsHistoryHashmap: () -> (Result_3) query;
+  getWordCount: (text) -> (nat) query;
+  indexPopular: () -> ();
+  latestPostsMigration: () -> ();
+  linkWritersToPublicationPosts: () -> (Result_1);
+  makePostPremium: (text) -> (bool);
+  migratePostToPublication: (text, text, bool) -> (Result);
+  migratePostsFromFastblocks: (text, text) -> (Result_1);
+  modClubCallback: (ContentResult) -> () oneway;
+  registerAdmin: (text) -> (Result_2);
+  registerCanister: (text) -> (Result_2);
+  registerCgUser: (text) -> (Result_2);
+  registerNftCanisterId: (text) -> (Result_1);
+  registerNftCanisterIdAdminFunction: (text, text) -> (Result_1);
+  registerPublisher: () -> ();
+  reindex: () -> (Result_1);
+  removeExistingRules: (vec text) -> ();
+  removePostCategory: (text) -> (Result);
+  save: (PostSaveModel) -> (SaveResult);
+  setUpModClub: (text) -> () oneway;
+  simulateModClub: (text, PostModerationStatus) -> ();
+  simulatePremiumArticle: (text, bool) -> ();
+  storeAllSEO: (nat, nat) -> (Result_2);
+  storeSEO: (text, bool) -> (Result_2);
+  testInstructionSize: () -> (text);
+  unfollowTag: (text) -> (Result_2);
+  unregisterAdmin: (text) -> (Result_2);
+  unregisterCanister: (text) -> (Result_2);
+  unregisterCgUser: (text) -> (Result_2);
+  updateHandle: (text, text) -> (Result_1);
+  updatePostDraft: (text, bool) -> (Result);
+  viewPost: (text) -> () oneway;
+  x: () -> (vec text);
+}

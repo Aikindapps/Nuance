@@ -1,0 +1,102 @@
+@import '../../shared/styles/Colors';
+
+.logged-out {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: auto;
+  width: 85%;
+  img {
+    width: fit-content;
+    margin-bottom: 15px;
+  }
+  h1 {
+    font-weight: 200;
+    font-size: 38px;
+    line-height: 45px;
+    color: $darker-border-color;
+    text-align: center;
+  }
+  p {
+    font-size: 14px;
+    line-height: 26px;
+    text-align: center;
+    color: $primary-color;
+    margin: 15px 0;
+  }
+  .buttons {
+    margin-top: 20px;
+    .button {
+      margin: 25px 0;
+    }
+    .identity {
+      text-align: left !important;
+    }
+    .info-link{
+      color:$dark-secondary-text-color;
+    }
+  }
+}
+
+.logged-out-responsive {
+  display: none;
+}
+
+
+@media only screen and (max-width: 768px) {
+  .logged-out {
+    display: none;
+  }
+  .wrapper {
+    width: 100%;
+    background-image: url('../../assets/assets/images/backgrounds/mask-group.svg');
+    background-size: auto 260px;
+    background-position: 100% 130px;
+    background-repeat: no-repeat;
+    .logged-out-responsive {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: auto;
+      width: 80%;
+      margin-top: 5px;
+
+      img {
+        width: fit-content;
+      }
+      h1 {
+        font-weight: 200;
+        font-size: 32px;
+        line-height: 45px;
+        color: $primary-color;
+        text-align: center;
+        margin-bottom: 5px;
+      }
+      p {
+        font-size: 14px;
+        line-height: 26px;
+        text-align: center;
+        //color: $primary-color;
+        width: 70%;
+        margin-top: 3px;
+      }
+      .buttons {
+        .button {
+          margin: 15px 0;
+        }
+        .identity {
+          align-self: flex-start;
+          margin-left: 0;
+        }
+        p {
+          width: 100%;
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .search-container {
+    margin: 20px auto;
+  }
+}

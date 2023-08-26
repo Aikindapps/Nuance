@@ -1,0 +1,257 @@
+type SaveResult = 
+ variant {
+   err: text;
+   ok: PostBucketType;
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok: Metadata;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: PostBucketType__1;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: Post;
+ };
+type PostTagModel = 
+ record {
+   tagId: text;
+   tagName: text;
+ };
+type PostSaveModelBucketMigration = 
+ record {
+   caller: principal;
+   category: text;
+   content: text;
+   created: text;
+   creator: text;
+   creatorHandle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   isRejected: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tagNames: vec text;
+   title: text;
+ };
+type PostSaveModel = 
+ record {
+   caller: principal;
+   category: text;
+   content: text;
+   creator: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   postId: text;
+   subtitle: text;
+   tagNames: vec text;
+   title: text;
+ };
+type PostBucketType__1 = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   title: text;
+   url: text;
+   wordCount: text;
+ };
+type PostBucketType = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   title: text;
+   url: text;
+   wordCount: text;
+ };
+type PostBucket = 
+ service {
+   acceptCycles: () -> ();
+   addPostCategory: (text, text) -> (Result_4);
+   availableCycles: () -> (nat) query;
+   delete: (text) -> (Result_3);
+   deleteUserPosts: (text) -> (Result_3);
+   dumpIds: () -> (Result_2);
+   dumpPosts: () -> (Result_2);
+   dumpUserIds: () -> (Result_2);
+   generateContent: (text) -> (text);
+   generatePublishedDates: () -> ();
+   get: (text) -> (Result_4) query;
+   getAdmins: () -> (Result_6) query;
+   getAllRejected: () -> (vec record {
+                                text;
+                                text;
+                              }) query;
+   getBucketCanisterVersion: () -> (text) query;
+   getCgUsers: () -> (Result_6) query;
+   getFrontendCanisterId: () -> (text) query;
+   getKinicList: () -> (Result_6) query;
+   getList: (vec text) -> (vec PostBucketType__1) query;
+   getMaxMemorySize: () -> (nat) query;
+   getMemorySize: () -> (nat) query;
+   getMetadata: (text, nat) -> (Result_7) query;
+   getNftCanisters: () -> (vec NftCanisterEntry) query;
+   getPostCoreCanisterId: () -> (text) query;
+   getPostUrls: () -> (Result_1) query;
+   getPostWithPublicationControl: (text) -> (Result_4);
+   getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
+   getPremiumArticle: (text) -> (Result_4);
+   getTotalPostCount: () -> (nat) query;
+   getTrustedCanisters: () -> (Result_6) query;
+   getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
+   initializeBucketCanister: (vec text, vec text, vec text,
+    vec record {
+          text;
+          text;
+        }, text, text) -> (Result_1);
+   isBucketCanisterActivePublic: () -> (bool) query;
+   makeBucketCanisterNonActive: () -> (Result_5);
+   makePostPremium: (text) -> (bool);
+   migratePostToPublication: (text, text, bool) -> (Result);
+   registerAdmin: (text) -> (Result_2);
+   registerCanister: (text) -> (Result_2);
+   registerCgUser: (text) -> (Result_2);
+   registerNftCanisterId: (text, text) -> (Result_1);
+   registerNftCanisterIdAdminFunction: (text, text) -> (Result_1);
+   reindex: () -> (Result_1);
+   rejectPostByModclub: (text) -> () oneway;
+   removePostCategory: (text) -> (Result_4);
+   save: (PostSaveModel) -> (SaveResult);
+   saveMultiple: (vec PostSaveModelBucketMigration) -> (vec SaveResult);
+   setMaxMemorySize: (nat) -> (Result_3);
+   simulatePremiumArticle: (text, bool) -> ();
+   storeAllSEO: () -> (Result_2);
+   storeHandlesAndPrincipals: (vec record {
+                                     text;
+                                     text;
+                                   }) -> (Result_1);
+   storeSEO: (text, bool) -> (Result_2);
+   testInstructionSize: () -> (text);
+   unRejectPostByModclub: (text) -> () oneway;
+   unregisterAdmin: (text) -> (Result_2);
+   unregisterCanister: (text) -> (Result_2);
+   unregisterCgUser: (text) -> (Result_2);
+   updateHandle: (text, text) -> (Result_1);
+   updatePostDraft: (text, bool) -> (Result);
+ };
+type Post = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   claps: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tags: vec PostTagModel;
+   title: text;
+   url: text;
+   views: text;
+   wordCount: text;
+ };
+type NftCanisterEntry = 
+ record {
+   canisterId: text;
+   handle: text;
+ };
+type MetadataValue = 
+ record {
+   text;
+   variant {
+     "blob": blob;
+     "nat": nat;
+     "nat8": nat8;
+     "text": text;
+   };
+ };
+type MetadataContainer = 
+ variant {
+   "blob": blob;
+   data: vec MetadataValue;
+   json: text;
+ };
+type Metadata = 
+ variant {
+   fungible:
+    record {
+      decimals: nat8;
+      metadata: opt MetadataContainer;
+      name: text;
+      symbol: text;
+    };
+   nonfungible:
+    record {
+      asset: text;
+      metadata: opt MetadataContainer;
+      name: text;
+      thumbnail: text;
+    };
+ };
+service : () -> PostBucket

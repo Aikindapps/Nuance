@@ -1,0 +1,26 @@
+<?xml version="1.0" standalone="yes"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="304" height="304">
+<path style="fill:#151551; stroke:none;" d="M0 0L0 304L304 304L304 0L0 0z"/>
+<path style="fill:#ffffff; stroke:none;" d="M36 35L36 99L139 99L139 35L36 35z"/>
+<path style="fill:#545380; stroke:none;" d="M139 35L139 100L140 100L140 56L139 35z"/>
+<path style="fill:#ffffff; stroke:none;" d="M165 35L165 99L268 99L268 35L165 35z"/>
+<path style="fill:#545380; stroke:none;" d="M268 35L268 100L269 100L269 56L268 35z"/>
+<path style="fill:#7c7b9d; stroke:none;" d="M36 99L36 100L139 100L108 99L36 99M165 99L165 100L268 100L237 99L165 99z"/>
+<path style="fill:#adadc3; stroke:none;" d="M36 112L36 113L113 113L89 112L36 112z"/>
+<path style="fill:#545380; stroke:none;" d="M113 112L113 125L36 125L36 126L114 126L113 112z"/>
+<path style="fill:#adadc3; stroke:none;" d="M165 112L165 113L242 113L218 112L165 112z"/>
+<path style="fill:#7c7b9d; stroke:none;" d="M242 112L242 125L243 125L242 112z"/>
+<path style="fill:#ffffff; stroke:none;" d="M36 113L36 125L113 125L113 113L36 113M165 113L165 125L242 125L242 113L165 113z"/>
+<path style="fill:#545380; stroke:none;" d="M165 125L165 126L243 126L219 125L165 125z"/>
+<path style="fill:#ffffff; stroke:none;" d="M36 177L36 241L139 241L139 177L36 177z"/>
+<path style="fill:#545380; stroke:none;" d="M139 177L139 242L140 242L140 198L139 177z"/>
+<path style="fill:#ffffff; stroke:none;" d="M165 177L165 241L268 241L268 177L165 177z"/>
+<path style="fill:#545380; stroke:none;" d="M268 177L268 242L269 242L269 198L268 177z"/>
+<path style="fill:#7c7b9d; stroke:none;" d="M36 241L36 242L139 242L108 241L36 241M165 241L165 242L268 242L237 241L165 241z"/>
+<path style="fill:#adadc3; stroke:none;" d="M36 254L36 255L113 255L89 254L36 254z"/>
+<path style="fill:#545380; stroke:none;" d="M113 254L113 267L36 267L36 268L114 268L113 254z"/>
+<path style="fill:#adadc3; stroke:none;" d="M165 254L165 255L242 255L218 254L165 254z"/>
+<path style="fill:#7c7b9d; stroke:none;" d="M242 254L242 267L243 267L242 254z"/>
+<path style="fill:#ffffff; stroke:none;" d="M36 255L36 267L113 267L113 255L36 255M165 255L165 267L242 267L242 255L165 255z"/>
+<path style="fill:#545380; stroke:none;" d="M165 267L165 268L243 268L219 267L165 267z"/>
+</svg>

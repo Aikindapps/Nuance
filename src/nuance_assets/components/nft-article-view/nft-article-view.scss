@@ -1,0 +1,28 @@
+.title-post-info-wrapper {
+    padding: 0 0 0 25px;
+  
+    .nft-lock-icon{
+      width: 30px;
+      margin-bottom: 70px;
+    }.title {
+      font-family: 'Georgia';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 48px;
+      line-height: 55px;
+      color: #00113E;
+    }
+      .subtitle {
+        font-family: 'Roboto';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 22px;
+        line-height: 32px;
+        color: #999999;
+      }
+  
+  }
+  .header-image-nft-view{
+    width: 100%;
+    object-fit: contain;
+  }

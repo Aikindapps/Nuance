@@ -1,0 +1,93 @@
+type UpdateCallsAggregatedData = vec nat64;
+type Storage = 
+ service {
+   collectCanisterMetrics: () -> ();
+   getAdmins: () -> (Result_2);
+   getAllDataCanisterIds: () -> (Result_3);
+   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+   getCgUsers: () -> (Result_2) query;
+   getNewContentId: () -> (Result);
+   registerAdmin: (text) -> (Result_1);
+   registerCgUser: (text) -> (Result_1);
+   retiredDataCanisterIdForWriting: (text) -> (Result_1);
+   unregisterAdmin: (text) -> (Result_1);
+   unregisterCgUser: (text) -> (Result_1);
+   uploadBlob: (Content) -> (Result);
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: record {
+         vec principal;
+         vec text;
+       };
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type NumericEntity = 
+ record {
+   avg: nat64;
+   first: nat64;
+   last: nat64;
+   max: nat64;
+   min: nat64;
+ };
+type MetricsGranularity = 
+ variant {
+   daily;
+   hourly;
+ };
+type HourlyMetricsData = 
+ record {
+   canisterCycles: CanisterCyclesAggregatedData;
+   canisterHeapMemorySize: CanisterHeapMemoryAggregatedData;
+   canisterMemorySize: CanisterMemoryAggregatedData;
+   timeMillis: int;
+   updateCalls: UpdateCallsAggregatedData;
+ };
+type GetMetricsParameters = 
+ record {
+   dateFromMillis: nat;
+   dateToMillis: nat;
+   granularity: MetricsGranularity;
+ };
+type DailyMetricsData = 
+ record {
+   canisterCycles: NumericEntity;
+   canisterHeapMemorySize: NumericEntity;
+   canisterMemorySize: NumericEntity;
+   timeMillis: int;
+   updateCalls: nat64;
+ };
+type Content = 
+ record {
+   chunkData: blob;
+   contentId: text;
+   contentSize: nat;
+   mimeType: text;
+   offset: nat;
+   totalChunks: nat;
+ };
+type CanisterMetricsData = 
+ variant {
+   daily: vec DailyMetricsData;
+   hourly: vec HourlyMetricsData;
+ };
+type CanisterMetrics = record {data: CanisterMetricsData;};
+type CanisterMemoryAggregatedData = vec nat64;
+type CanisterHeapMemoryAggregatedData = vec nat64;
+type CanisterCyclesAggregatedData = vec nat64;
+service : () -> Storage

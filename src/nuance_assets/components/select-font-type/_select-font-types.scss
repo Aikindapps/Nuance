@@ -1,0 +1,19 @@
+
+
+.select-font-type{
+    width: 50%;
+    .input{
+        vertical-align: middle;
+        border: none;
+        cursor: default;
+        width: 142px;
+        display: inline-block;
+        font-size: 13pt;
+        min-height: 25px;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        outline: none;
+        border-bottom: solid 1px #00ffc3;
+        margin-top: 25px;
+        align-self: end;
+    }
+}

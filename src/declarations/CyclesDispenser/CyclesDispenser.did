@@ -1,0 +1,82 @@
+type TopUp = 
+ record {
+   amount: nat;
+   balanceAfter: nat;
+   balanceBefore: nat;
+   canisterId: text;
+   time: int;
+ };
+type TimeRange = 
+ variant {
+   day: nat;
+   hour: nat;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: RegisteredCanister;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: TopUp;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type RegisteredCanister = 
+ record {
+   balance: nat;
+   canisterId: text;
+   minimumThreshold: nat;
+   topUpAmount: nat;
+   topUps: vec TopUp;
+ };
+type AddCanisterModel = 
+ record {
+   canisterId: text;
+   minimumThreshold: nat;
+   topUpAmount: nat;
+ };
+service : {
+  acceptCycles: () -> ();
+  addCanister: (AddCanisterModel) -> (Result_4);
+  availableCycles: () -> (nat) query;
+  checkAllRegisteredCanisters: () -> (Result);
+  checkRegisteredCanister: (text) -> (Result_3);
+  getAdmins: () -> (Result_2) query;
+  getAllRegisteredCanisters: () -> (vec RegisteredCanister) query;
+  getAllTopUps: () -> (vec TopUp) query;
+  getCgUsers: () -> (Result_2) query;
+  getCyclesDispenserMinimumValue: () -> (nat) query;
+  getLatestTimerCall: () -> (text, text) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  getRegisteredCanister: (text) -> (Result_4) query;
+  getStatus: () -> (text) query;
+  getTopUp: (text) -> (Result_3) query;
+  getTopUpsByRange: (TimeRange) -> (vec TopUp) query;
+  getTrustedCanisters: () -> (Result_2) query;
+  idQuick: () -> (principal) query;
+  isThereEnoughMemory: () -> (bool) query;
+  registerAdmin: (text) -> (Result);
+  registerCanister: (text) -> (Result);
+  registerCgUser: (text) -> (Result);
+  removeCanister: (text) -> (Result);
+  setMaxMemorySize: (nat) -> (Result_1);
+  unregisterAdmin: (text) -> (Result);
+  unregisterCanister: (text) -> (Result);
+  unregisterCgUser: (text) -> (Result);
+}

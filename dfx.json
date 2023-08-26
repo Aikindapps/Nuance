@@ -1,0 +1,62 @@
+{
+  "canisters": {
+    "CyclesDispenser": {
+      "main": "src/CyclesDispenser/main.mo",
+      "type": "motoko"
+    },
+    "FastBlocks_EmailOptIn": {
+      "main": "src/FastBlocks_EmailOptIn/main.mo",
+      "type": "motoko"
+    },
+    "KinicEndpoint": {
+      "dependencies": ["PostCore"],
+      "main": "src/KinicEndpoint/main.mo",
+      "type": "motoko"
+    },
+    "Post": {
+      "main": "src/Post/main.mo",
+      "type": "motoko"
+    },
+    "PostBucket": {
+      "main": "src/PostBucket/main.mo",
+      "type": "motoko"
+    },
+    "PostCore": {
+      "main": "src/PostCore/main.mo",
+      "type": "motoko"
+    },
+    "PostIndex": {
+      "main": "src/PostIndex/main.mo",
+      "type": "motoko"
+    },
+    "Storage": {
+      "main": "src/Storage/main.mo",
+      "type": "motoko"
+    },
+    "User": {
+      "main": "src/User/main.mo",
+      "type": "motoko"
+    },
+    "nuance_assets": {
+      "dependencies": [
+        "PostIndex",
+        "User",
+        "Post",
+        "Storage",
+        "FastBlocks_EmailOptIn"
+      ],
+      "frontend": {
+        "entrypoint": "dist/index.html"
+      },
+      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "version": 1
+}

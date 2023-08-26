@@ -1,0 +1,386 @@
+import Char "mo:base/Char";
+import Debug "mo:base/Debug";
+import HashMap "mo:base/HashMap";
+import Iter "mo:base/Iter";
+import List "mo:base/List";
+import Nat "mo:base/Nat";
+import Principal "mo:base/Principal";
+import Result "mo:base/Result";
+import Text "mo:base/Text";
+
+import Types "./types";
+import Prelude "mo:base/Prelude";
+import Canistergeek "../canistergeek/canistergeek";
+import StorageState "./storage/storageState";
+import StorageSolution "./storage/storage";
+import Cycles "mo:base/ExperimentalCycles";
+import IC "./ic.types";
+import Blob "mo:base/Blob";
+import Array "mo:base/Array";import Versions "../shared/versions";
+
+
+// actor Storage {
+shared ({caller = initializer}) actor class Storage () = this {
+    let Unauthorized = "Unauthorized";
+    private let ic : IC.Self = actor "aaaaa-aa";
+    stable var globalIdMapEntries: [(Text, Nat)] = [];
+    let maxHashmapSize = 1000000;
+    func isEq(x: Text, y: Text): Bool { x == y };
+
+    //var globalIdMap = HashMap.HashMap<Text, Nat>(5000, Text.equal, Text.hash);
+    var globalIdMap = HashMap.fromIter<Text, Nat>(globalIdMapEntries.vals(), maxHashmapSize, isEq, Text.hash);
+
+    
+
+    let canistergeekMonitor = Canistergeek.Monitor();
+    stable var _canistergeekMonitorUD: ? Canistergeek.UpgradeData = null;
+
+    stable var storageStateStable  = StorageState.emptyStableState();
+    var storageSolution = StorageSolution.StorageSolution(storageStateStable, initializer, initializer);
+
+    //SNS
+    public type Validate =  {
+        #Ok : Text;
+        #Err : Text;
+    };
+
+     public shared func validate(input: Any) : async Validate {
+     
+       return #Ok("success");
+    };
+
+    //#region Security Management
+    
+    stable var admins : List.List<Text> = List.nil<Text>();
+    stable var platformOperators : List.List<Text> = List.nil<Text>();
+    stable var cgusers : List.List<Text> = List.nil<Text>();
+
+    public func acceptCycles() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept(available);
+        assert (accepted == available);
+    };
+
+    public shared query func availableCycles() : async Nat {
+        Cycles.balance()
+    };
+
+    func isAnonymous(caller : Principal) : Bool {
+        Principal.equal(caller, Principal.fromText("2vxsx-fae"));
+    };
+
+    func isAdmin(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        var exists = List.find<Text>(admins, func(val: Text) : Bool { val == c });
+        exists != null;
+    };
+
+    public shared ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        #ok(List.toArray(admins));
+    };
+
+    //platform operators, similar to admins but restricted to a few functions
+
+    public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+        let principal = Principal.toText(caller);
+        
+        if (not isAdmin(caller)) {
+            return #err("Unauthorized");
+        };
+
+        if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
+            platformOperators := List.push<Text>(id, platformOperators);
+        };
+
+        #ok();
+    };
+
+    public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+        if (not isAdmin(caller)) {
+            return #err("Unauthorized");
+        };
+        platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
+        #ok();
+    };
+
+    public shared query func getPlatformOperators() : async List.List<Text> {
+        platformOperators;
+    };
+
+    private func isPlatformOperator(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
+        exists != null;
+    };
+
+    public shared query ({ caller }) func getCgUsers() : async Result.Result<[Text], Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        if (not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+
+        #ok(List.toArray(cgusers));
+    };
+
+    func isCgUser(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        var exists = List.find<Text>(cgusers, func(val: Text) : Bool { val == c });
+        exists != null;
+    };
+
+    public shared ({ caller }) func registerCgUser(id : Text) : async Result.Result<(), Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        canistergeekMonitor.collectMetrics();
+        if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+
+        if (not List.some<Text>(cgusers, func(val: Text) : Bool { val == id })) {
+            cgusers := List.push<Text>(id, cgusers);
+        };
+
+        #ok();
+    };
+
+    public shared ({ caller }) func unregisterCgUser(id : Text) : async Result.Result<(), Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        canistergeekMonitor.collectMetrics();
+        if (not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+        cgusers := List.filter<Text>(cgusers, func(val: Text) : Bool { val != id });
+        #ok();
+    };
+
+
+    //This function should be invoked immediately after the canister is deployed via script.
+    public shared({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        canistergeekMonitor.collectMetrics();
+        if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+
+        if (not List.some<Text>(admins, func(val: Text) : Bool { val == id })) {
+            admins := List.push<Text>(id, admins);
+            await storageSolution.registerAdmin(id);
+        };
+        #ok();
+    };
+
+    public shared({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        canistergeekMonitor.collectMetrics();
+        if (not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+        admins := List.filter<Text>(admins, func(val: Text) : Bool { val != id });
+        #ok();
+    };
+    // admin function to retire any data canister for writing. It will still be used for  reading
+    public shared({caller}) func retiredDataCanisterIdForWriting(canisterId: Text) : async Result.Result<(), Text> {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        canistergeekMonitor.collectMetrics();
+        if (not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+        storageSolution.retiredDataCanisterId(canisterId);
+        #ok();
+    };
+
+    public shared({caller}) func getAllDataCanisterIds() : async Result.Result<([Principal], [Text]), Text>  {
+         if (isAnonymous(caller)) {
+            return #err("Anonymous cannot call this method");
+        };
+
+        canistergeekMonitor.collectMetrics();
+        if (not isAdmin(caller)) {
+            return #err(Unauthorized);
+        };
+        let allDataCanisterId = storageSolution.getAllDataCanisterIds();
+        let retired = storageSolution.getRetiredDataCanisterIdsStable();
+        #ok((allDataCanisterId, retired));
+    };
+    //#endregion
+
+    public shared({caller}) func getNewContentId() : async Result.Result<Text, Text> {
+        canistergeekMonitor.collectMetrics();
+        /*if (isAnonymous(caller)) {
+            return #err(Unauthorized);
+        };*/
+        #ok(generateId(caller, "image"));
+    };
+
+    public shared({caller}) func uploadBlob(content : Types.Content) : async Result.Result<Text, Text>  {
+        canistergeekMonitor.collectMetrics();
+        /*if (isAnonymous(caller)) {
+            return #err(Unauthorized);
+        };*/
+        let dataCanisterId = await storageSolution.putBlobsInDataCanister(content.contentId, content.chunkData, content.offset, content.totalChunks, content.mimeType, content.contentSize);
+        #ok(dataCanisterId);
+    };
+
+    // Generates a semi unique ID
+   func generateId(caller: Principal, category: Text): Text {
+        var count : Nat = 5000;
+        switch(globalIdMap.get(category)){
+        case(?result){
+            count := result;
+        };
+        case(_) ();
+        };
+        count := count + 1;
+        globalIdMap.put(category, count);
+        return Principal.toText(caller) # "-" # category # "-" # (Nat.toText(count));
+    };
+   
+
+    public query ({caller}) func getCanisterMetrics(parameters: Canistergeek.GetMetricsParameters): async ?Canistergeek.CanisterMetrics {
+        if (not isCgUser(caller) and not isAdmin(caller))  {
+            Prelude.unreachable();
+        };
+        Debug.print("Storage->getCanisterMetrics: The method getCanistermetrics was called from the UI successfully");
+        canistergeekMonitor.getMetrics(parameters);
+    };
+
+    public shared ({caller}) func collectCanisterMetrics(): async () {
+         if (isAnonymous(caller)) {
+            return;
+        };
+        if (not isCgUser(caller) and not isAdmin(caller))  {
+            Prelude.unreachable();
+        };
+        canistergeekMonitor.collectMetrics();
+        Debug.print("Storage->collectCanisterMetrics: The method collectCanisterMetrics was called from the UI successfully");
+    };
+
+    //upgrade Storage canisters
+    //holds wasm for upgrade
+    private stable var wasmChunks : Blob = Blob.fromArray([]);
+
+    //adds wasm chunk to wasmChunks
+    public shared ({ caller }) func addWasmChunk(chunk : Blob) : async Result.Result<(), Text> {
+
+        if (isAnonymous(caller)) {
+            return #err("Cannot use this method anonymously.");
+        };
+
+        if (not isAdmin(caller)) {
+            return #err("Unauthorized");
+        };
+
+        wasmChunks := Blob.fromArray(Array.append(Blob.toArray(wasmChunks), Blob.toArray(chunk)));
+        #ok();
+    };
+
+    public shared ({ caller }) func getWasmChunks() : async Result.Result<Blob, Text> {
+
+        if (isAnonymous(caller)) {
+            return #err("Cannot use this method anonymously.");
+        };
+
+        if (not isAdmin(caller)) {
+            return #err("Unauthorized");
+        };
+        #ok(wasmChunks);
+    };
+
+    public shared ({ caller }) func upgradeBucket(canisterId : Text, arg : [Nat8]) : async Result.Result<(), Text> {
+
+        if (isAnonymous(caller)) {
+            return #err("Cannot use this method anonymously.");
+        };
+
+        let wasm = wasmChunks;
+        if (not isAdmin(caller)) {
+
+            return #err("Unauthorized");
+        };
+        switch (await ic.install_code { arg = arg; wasm_module = wasm; mode = #upgrade; canister_id = Principal.fromText(canisterId) }) {
+            case ((_)) {
+                #ok();
+            };
+        };
+    };
+
+    public shared ({ caller }) func resetWasmChunks() {
+        if (isAnonymous(caller)) {
+            return;
+        };
+
+        if (not isAdmin(caller)) {
+            return;
+        };
+        wasmChunks := Blob.fromArray([]);
+    };
+    public shared ({ caller }) func upgradeAllBuckets(canisterId : Text, arg : [Nat8]) : async Result.Result<(), Text> {
+        if (isAnonymous(caller)) {
+            return #err("Cannot use this method anonymously.");
+        };
+
+        if (not isAdmin(caller)) {
+            return #err("Unauthorized");
+        };
+
+        //TODO: add indexing for large number of buckets
+
+        //need to get all buckets from storage to
+        for (bucketCanisterId in globalIdMap.keys()) {
+            Debug.print("Storage->upgradeAllBuckets: Upgrading bucket: " # bucketCanisterId);
+            switch (await upgradeBucket(bucketCanisterId, arg)) {
+                case (ok) {
+                    Debug.print("Storage->upgradeAllBuckets: Upgraded bucket: " # bucketCanisterId);
+                    //TODO: add logging
+                };
+            };
+        };
+
+        #ok();
+    };
+
+    public query func idQuick() : async Principal {
+        return Principal.fromActor(this);
+    };
+
+    public shared query func getCanisterVersion() : async Text{
+        Versions.STORAGE_VERSION;
+    };
+
+    system func preupgrade() {
+        _canistergeekMonitorUD := ? canistergeekMonitor.preupgrade();
+        storageStateStable := storageSolution.getStableState();
+        globalIdMapEntries := Iter.toArray(globalIdMap.entries());
+
+    };
+
+    system func postupgrade() {
+        canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
+        _canistergeekMonitorUD := null;
+        storageSolution := StorageSolution.StorageSolution(storageStateStable, initializer, Principal.fromActor(this));
+        storageStateStable := StorageState.emptyStableState();
+        globalIdMapEntries := [];
+    };
+}
+

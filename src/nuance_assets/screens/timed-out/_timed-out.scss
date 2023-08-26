@@ -1,0 +1,39 @@
+@import '../../shared/styles/Colors';
+
+.homepage-wrapper {
+  .logged-out-mobile {
+    margin-bottom: 40px;
+  }
+  .right {
+    .content {
+      .title {
+        font-family: 'Roboto';
+        font-weight: 700;
+        font-size: 12px;
+        line-height: 24px;
+        color: $darker-border-color;
+      }
+      p {
+        margin-bottom: 40px;
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .homepage-wrapper {
+    .main {
+      display: block;
+    }
+    .left {
+      display: none;
+    }
+    .right {
+      .content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  }
+}

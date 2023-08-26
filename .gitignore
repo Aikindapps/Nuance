@@ -1,0 +1,14 @@
+.dfx/
+.env.*
+.DS_Store
+.idea/
+.vscode/
+build/
+canisters/
+crc8.pyc
+node_modules/
+nohup.out/
+Junk/
+scripts/didc
+dist/
+dist_old/

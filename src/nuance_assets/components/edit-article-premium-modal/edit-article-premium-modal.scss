@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import '../../shared/styles/Colors';
+
+.NFT-icon {
+
+    margin: 0 5px 0 0;
+}
+
+.premium-modal {
+
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(67, 223, 186, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.premium-modal-content {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: $primary-text-color;
+
+    background-color: white;
+    z-index: 101;
+    display: flex;
+    padding: 20px;
+
+    flex-direction: column;
+    align-items: flex-end;
+
+    max-width: 100%;
+    max-height: 90%;
+
+}
+
+.modal-inner-container {
+    color: $primary-text-color;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    height: 100%;
+    max-width: 525px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+
+}
+
+.modal-inputs-container {
+    display: flex;
+
+}
+
+.modal-inputs {
+    font-family: Roboto;
+    font-weight: 700;
+    font-size: 12px;
+    color: rgb(21, 20, 81);
+    display: flex;
+    flex-direction: column;
+}
+
+.NFT-number-of-keys {
+    font-family: Roboto;
+    font-weight: 700;
+    font-size: 12px;
+    color: $darker-border-color;
+
+}
+
+.ICP-units {
+    color: $primary-text-color;
+    display: flex;
+    align-items: center;
+    margin: 20px 0 0px -70px;
+}
+
+.modal-inner-text {
+    color: $primary-text-color;
+    display: flex;
+}
+
+.NFT-terms-and-conditions {
+    display: flex;
+    align-items: baseline;
+    flex-direction: baseline;
+
+}
+
+.NFT-terms-and-conditions-text {
+    color: $primary-text-color;
+    margin-left: 10px;
+}
+
+.NFT-terms-and-conditions-checkbox {
+    margin-top: 10px;
+    display: flex;
+}
+
+.modal-content-block {
+    padding: 30px;
+}

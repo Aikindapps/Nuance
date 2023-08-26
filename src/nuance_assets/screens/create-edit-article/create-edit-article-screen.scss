@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@import '../../shared/styles/Colors';
+
+.edit-article-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100vw;
+    row-gap: 20px;
+
+    .edit-article-content-wrapper {
+        display: flex;
+        max-width: 1400px;
+        width: 75vw;
+        justify-content: center;
+        margin-top: 50px;
+        column-gap: 30px;
+
+        .edit-article-left {
+            display: flex;
+            flex-direction: column;
+            align-items: end;
+            row-gap: 20px;
+            width: 20%;
+
+            .edit-article-date {
+                transform-origin: center;
+                transform: rotate(-90deg);
+                color: #999;
+                margin-top: 28px;
+                margin-right: -22px;
+                margin-bottom: 120px;
+            }
+
+            .edit-article-menus {
+                display: flex;
+                column-gap: 15px;
+                align-items: center;
+
+            }
+
+            .edit-article-horizontal-divider {
+                width: 100%;
+                background-color: #d9d9d9;
+                height: 1px;
+            }
+
+            .edit-article-publication-dropdown {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: -10px;
+            }
+
+            .edit-article-premium-article-owners {
+                display: flex;
+                flex-direction: column;
+                align-items: end;
+
+            }
+        }
+
+        .vertical-divider {
+            width: 1px;
+            height: 100vh;
+            background-color: $vertical-divider;
+        }
+
+        .edit-article-left-text {
+            font-family: Roboto;
+            font-weight: 500;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .edit-article-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            row-gap: 10px;
+            width: 80%;
+
+            .edit-article-right-content {
+                display: flex;
+                align-items: start;
+                flex-direction: column;
+                margin-left: 40px;
+                width: calc(100% - 40px);
+
+                .input-wrapper {
+                    width: 100%;
+                }
+
+                .quill {
+                    margin-top: 20px;
+                }
+
+                .footer-wrapper {
+                    margin-top: 100px;
+                    margin-bottom: 50px;
+                }
+
+                .edit-article-right-text {
+                    font-family: Roboto;
+                    font-weight: 500;
+                    font-size: 12px;
+                    color: #999;
+                }
+
+                .edit-article-uploaded-pic-wrapper {
+                    width: 100%;
+                    overflow: hidden;
+
+                    .uploaded-pic {
+                        width: 100%;
+                        object-fit: contain;
+                    }
+                }
+
+                .edit-article-upload-picture-button {
+                    display: flex;
+                    width: 100%;
+                    justify-content: center;
+                    background: #cafff2;
+                    height: 40px;
+                    align-items: center;
+                    cursor: pointer;
+                    .button-icon{
+                        width: 35px;
+                        height: 23px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.buttons-texts-wrapper {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    row-gap: 20px;
+    width: 100%;
+
+    .edit-article-date {
+        transform-origin: center;
+        transform: rotate(-90deg);
+        color: #999;
+        margin-top: 28px;
+        margin-right: -22px;
+        margin-bottom: 120px;
+    }
+
+    .edit-article-menus {
+        display: flex;
+        column-gap: 15px;
+        align-items: center;
+
+    }
+
+    .edit-article-horizontal-divider {
+        width: 100%;
+        background-color: #d9d9d9;
+        height: 1px;
+    }
+
+    .edit-article-publication-dropdown {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: -10px;
+    }
+
+    .edit-article-premium-article-owners {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        width: 100%;
+
+    }
+}
+
+.NFT-field-wrapper {
+    .NFT-left-text-container {
+        .NFT-left-text {
+            font-family: Roboto;
+            font-weight: 500;
+            font-size: 12px;
+            color: #999;
+            margin: 20px 0 20px 0;
+            text-align: left;
+        }
+    }
+}
+
+@media only screen and (max-width: 950px) {
+    .edit-article-wrapper {
+
+
+        .edit-article-content-wrapper {
+            width: 95vw;
+            column-gap: 5px;
+
+            .edit-article-left {
+                width: 0;
+                visibility: hidden;
+            }
+
+            .edit-article-right {
+                width: 100%;
+
+                .edit-article-right-content {
+                    margin-left: 0;
+                }
+            }
+        }
+    }
+}

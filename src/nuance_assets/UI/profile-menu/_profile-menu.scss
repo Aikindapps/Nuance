@@ -1,0 +1,23 @@
+.meatball-menu {
+  .drop-down-content-menu {
+    position: absolute;
+    margin-left: -200px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    // box-shadow: 0px 2px 10px 5px rgba(117, 117, 117, 0.08);
+    background-color: white;
+    width: 208px;
+    // height: 235px;
+    transition: 0.5s;
+
+    .alignment {
+      width: 70%;
+    }
+  }
+  .drop-down-content-menu:hover {
+    text-decoration: none;
+  }
+}

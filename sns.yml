@@ -1,0 +1,116 @@
+# In this file, 1 year is nominally defined to be 365.25 days.
+#
+# In SNS-Testing repo This gets passed to `sns propose`. See propose_sns.sh.
+#
+# This follows the second configuration file format developed for the `sns`
+# CLI. The first format will be supported for a time, but this format will
+# eventually become the standard format.
+
+name: NUA
+description: >
+  Nuance is the world's first publishing platform built entirely on-chain. In the same way DeFi has taken the middleman out of finance Nuance does the same for the written word.
+
+Principals: [] # TODO(NNS1-2293): This field will be useful in the future.
+
+logo: ./src/nuance_assets/assets/assets/images/nuance-logo.svg
+url: https://nuance.xyz/ ##alternatively we can link forum post https://forum.dfinity.org/thread-where-this-sns-is-discussed
+
+fallback_controller_principals:
+  - nfcvh-tajgf-yg2zg-hd62j-7lrtq-vltzp-kvnyb-knvah-tkwbl-jybux-7ae
+  - 3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe
+
+dapp_canisters:
+  - 'bkyz2-fmaaa-aaaaa-qaaaq-cai'
+  - 'bd3sg-teaaa-aaaaa-qaaba-cai'
+  - 'be2us-64aaa-aaaaa-qaabq-cai'
+  - 'br5f7-7uaaa-aaaaa-qaaca-cai'
+  - 'bw4dl-smaaa-aaaaa-qaacq-cai'
+  - 'b77ix-eeaaa-aaaaa-qaada-cai'
+  - 'by6od-j4aaa-aaaaa-qaadq-cai'
+  - 'avqkn-guaaa-aaaaa-qaaea-cai'
+  - 'asrmz-lmaaa-aaaaa-qaaeq-cai'
+  - 'a3shf-5eaaa-aaaaa-qaafa-cai'
+  - 'aovwi-4maaa-aaaaa-qaagq-cai'
+  - 'ahw5u-keaaa-aaaaa-qaaha-cai'
+  - 'aax3a-h4aaa-aaaaa-qaahq-cai'
+  - 'ctiya-peaaa-aaaaa-qaaja-cai'
+  - 'ajuq4-ruaaa-aaaaa-qaaga-cai'
+  - 'ctiya-peaaa-aaaaa-qaaja-cai'
+  - 'cuj6u-c4aaa-aaaaa-qaajq-cai'
+  - 'c2lt4-zmaaa-aaaaa-qaaiq-cai'
+
+Token:
+  name: Nuance Token
+  symbol: NUA
+  transaction_fee: 100_000 e8s
+
+Proposals:
+  rejection_fee: 1 token
+  initial_voting_period: 4d
+  maximum_wait_for_quiet_deadline_extension: 1 day
+
+Neurons:
+  minimum_creation_stake: 10000 tokens # $750 to create a neuron
+
+Voting:
+  minimum_dissolve_delay: 8.34 weeks
+
+  MaximumVotingPowerBonuses:
+    DissolveDelay:
+      duration: 2 years
+      bonus: 0%
+
+    Age:
+      duration: 8.34 weeks
+      bonus: 0%
+
+  RewardRate:
+    initial: 5%
+    final: 5%
+    transition_duration: 5 years
+
+Distribution: ##add monthly distribution if we decide against the cliff
+  Neurons:
+    - principal: 3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe # Simulated "Aikin"
+      stake: 30_000_000 tokens
+      memo: 0 # This is shown for illustrative purposes, and is not necessary.
+      dissolve_delay: 2 years
+      vesting_period: 2 years # Does this mean we won't have voting power for 2 years? also can we dissolve before the vesting period is over?
+
+    # More neurons can be listed here. Usually, you would have
+    # separate neurons for each person on your team.
+
+  InitialBalances:
+    governance: 50_000_000 tokens # aka "the treasury"
+    swap: 20_000_000 tokens # See also the Swap section below.
+
+  # Optional, but highly recommended. This is a literal
+  # checksum.
+  #          30_000_000    (neuron)
+  #      50_000_000    (governance)
+  # + 20_000_000    (swap)
+  # --------------
+  total: 100_000_000 tokens
+
+Swap:
+  minimum_participants: 100
+
+  minimum_icp: 250_000 tokens
+  maximum_icp: 250_000 tokens
+
+  minimum_participant_icp: 125 tokens
+  maximum_participant_icp: 50_000 tokens
+
+  # confirmation_text: >
+  #     Do you understand the responsibilities and risks associated
+  #     with participating in this token swap?
+
+  restricted_countries:
+    - AQ # Antarctica
+
+  VestingSchedule: #????????????????
+    events: 104
+    interval: 7 d
+
+  start_time: 12:00 UTC # ??????????????????????
+  duration: 7 days

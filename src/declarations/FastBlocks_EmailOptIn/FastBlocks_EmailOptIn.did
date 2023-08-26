@@ -1,0 +1,28 @@
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+service : {
+  acceptCycles: () -> ();
+  availableCycles: () -> (nat) query;
+  createEmailOptInAddress: (text) -> (Result);
+  dumpOptInEmailAddress: () -> (text) query;
+  getAdmins: () -> (Result_2) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  isThereEnoughMemory: () -> (bool) query;
+  registerAdmin: (text) -> (Result);
+  setMaxMemorySize: (nat) -> (Result_1);
+  unregisterAdmin: (text) -> (Result);
+}

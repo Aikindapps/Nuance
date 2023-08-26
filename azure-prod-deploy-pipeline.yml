@@ -1,0 +1,157 @@
+# 
+# 
+# 
+
+# Trigger the pipeline manually
+trigger:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+  
+variables:
+  
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')] # runtime expression  
+  isProd: $[contains(variables['Build.SourceBranch'], 'PROD')] # runtime expression 
+
+steps:
+    
+- task: PowerShell@2
+  name: ConditionalStep
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Stopping the build"
+      if ('$(isProd)' -eq 'False') {
+        $uri = "https://dev.azure.com/DFINIT/AIKIN/_apis/build/builds/$(Build.BuildId)?api-version=5.1"
+        $json = @{status="Cancelling"} | ConvertTo-Json -Compress
+        $build = Invoke-RestMethod -Uri $uri -Method Patch -Headers @{Authorization = "Bearer $(System.AccessToken)"} -ContentType "application/json" -Body $json
+        Write-Host $build
+      }
+      Write-Host "Sent Stop Build Request!"
+    pwsh: true
+- pwsh: Start-Sleep -Seconds 60    
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $uri = "https://dev.azure.com/DFINIT/AIKIN/_apis/build/builds/$(Build.BuildId)?api-version=5.1"
+
+      Write-Host $uri
+      # Invoke the REST call
+      $build = Invoke-RestMethod -Uri $uri -Method Get -Headers @{Authorization = "Bearer $(System.AccessToken)"} -ContentType "application/json"
+
+      $taskResult = $build.records | Where-Object {$_.name -eq "ConditionalStep" } | Select-Object result
+
+      Write-Host $taskResult.result
+
+    pwsh: true
+
+- script: |
+    npm install
+  displayName: 'npm install'
+  
+- task: CmdLine@2
+  inputs:
+    script: 'echo -e "yes" | DFX_VERSION=0.8.4 sh +m -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"'
+    
+- task: CmdLine@2
+  inputs:
+    script: 'dfx start --background'
+    
+- task: DownloadSecureFile@1
+  name: dfxIdentity
+  displayName: 'Download Identity Key'
+  inputs:
+    secureFile: 'identity.pem'
+
+- script: |
+    echo Installing $(dfxIdentity.secureFilePath) to the DFX Build Server
+
+    echo Getting Secure File
+    sudo chown root:root $(dfxIdentity.secureFilePath)
+    sudo chmod a+r $(dfxIdentity.secureFilePath)
+
+    echo Copying Key to Root
+    sudo mkdir -p /root/.config/dfx/identity/default/
+    sudo chmod -R a+r /root/.config/dfx/identity/default/
+    sudo ln -s -t /root/.config/dfx/identity/default/ $(dfxIdentity.secureFilePath)
+
+    echo Copying Key to VSTS
+    sudo mkdir -p /home/vsts/.config/dfx/identity/default/
+    sudo chmod -R a+r /home/vsts/.config/dfx/identity/default/
+    sudo ln -s -t /home/vsts/.config/dfx/identity/default/ $(dfxIdentity.secureFilePath)
+    echo Identity Key copied to Build Server
+  displayName: Installing Identity Key
+
+- task: DownloadSecureFile@1
+  name: dfxWallet
+  displayName: 'Download Wallets JSON'
+  inputs:
+    secureFile: 'wallets.json'
+
+- script: |
+    echo Installing Secure File $(dfxWallet.secureFilePath) to the DFX Build Server
+    sudo chown root:root $(dfxWallet.secureFilePath)
+    sudo chmod a+r $(dfxWallet.secureFilePath)
+    echo Copying Wallet to Root
+    sudo mkdir -p /root/.config/dfx/identity/default/
+    sudo chmod -R a+r /root/.config/dfx/identity/default/
+    sudo ln -s -t /root/.config/dfx/identity/default/ $(dfxWallet.secureFilePath)
+    echo Copying Wallet to VSTS
+    sudo mkdir -p /home/vsts/.config/dfx/identity/default/
+    sudo chmod -R a+r /home/vsts/.config/dfx/identity/default/
+    sudo ln -s -t /home/vsts/.config/dfx/identity/default/ $(dfxWallet.secureFilePath)
+    echo Wallet ID copied to Build Server
+  displayName: Installing Wallet ID
+
+- task: CmdLine@2
+  displayName: 'Check Connectivity'
+  inputs:
+    script: |
+      echo "$PWD"
+      echo Checking Connectivity
+      sudo dfx identity get-principal
+      sudo dfx identity whoami
+      sudo dfx ping ic
+      sudo dfx wallet --network ic balance
+      
+- task: CmdLine@2
+  displayName: 'Switch to PROD Canisters'
+  inputs:
+    script: |
+      echo Switching Canisters
+      mv canister_ids.json canister_ids.json.UAT
+      mv canister_ids.json.PROD canister_ids.json
+      echo Canisters switched to PROD
+
+- task: CmdLine@2
+  displayName: 'Checking Canister Content'
+  inputs:
+    script: |
+      echo Checking Canister Content
+      cat canister_ids.json
+      echo Checked Canister Content
+
+- bash: |
+    echo "##vso[task.setvariable variable=post_canister_id;]$(jq .Post.ic canister_ids.json)"
+    echo "##vso[task.setvariable variable=post_index_canister_id;]$(jq .PostIndex.ic canister_ids.json)"
+    echo "##vso[task.setvariable variable=storage_canister_id;]$(jq .Storage.ic canister_ids.json)"
+    echo "##vso[task.setvariable variable=user_canister_id;]$(jq .User.ic canister_ids.json)"
+    echo "##vso[task.setvariable variable=nuance_assets_canister_id;]$(jq .nuance_assets.ic canister_ids.json)"
+  name: setVarFromJsonFileValue
+
+- script: |
+    echo Post Canister ID is : $(post_canister_id) 
+    echo PostIndex Canister ID is : $(post_index_canister_id) 
+    echo Storage Canister ID is : $(storage_canister_id) 
+    echo User Canister ID is : $(user_canister_id) 
+    echo Nuance_Assets Canister ID is : $(nuance_assets_canister_id) 
+  displayName: output value of json content
+
+- script: |
+    echo starting dfx deploy on the Build Agent
+    sudo dfx deploy
+    sudo dfx deploy --network ic
+  condition: and(eq(variables['post_canister_id'], '"qq4ni-qaaaa-aaaaf-qaalq-cai"'), eq(variables['post_index_canister_id'], '"r5sjg-7iaaa-aaaaf-qaama-cai"'), eq(variables['storage_canister_id'], '"y2pkg-ciaaa-aaaaf-qagbq-cai"'), eq(variables['user_canister_id'], '"rtqeo-eyaaa-aaaaf-qaana-cai"'), eq(variables['nuance_assets_canister_id'], '"exwqn-uaaaa-aaaaf-qaeaa-cai"'))
+  displayName: checking IDs are UAT Canisters

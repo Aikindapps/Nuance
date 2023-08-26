@@ -1,0 +1,70 @@
+.premium-article-owners {
+    align-self: center;
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .sell-info-flex {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
+
+        .sold-info {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 700;
+            font-size: 12px;
+            line-height: 24px;
+            color: #999999;
+        }
+
+        .sold-bar {
+            display: flex;
+
+            .sold-percentage-remaining {
+                background-color: #43DFBA;
+                height: 8px;
+            }
+
+            .sold-percentage-sold {
+                background-color: #151451;
+                height: 8px;
+            }
+        }
+
+
+    }
+
+    .owners {
+        display: flex;
+        flex-direction: column;
+
+        .owner-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .owner {
+                font-family: 'Roboto';
+                font-style: normal;
+                font-weight: 400;
+                font-size: 12px;
+                line-height: 16px;
+                margin-bottom: 5px;
+                margin-top: 5px;
+                color: #151451;
+            }
+
+            .token-index {
+                font-family: 'Roboto';
+                font-style: normal;
+                font-weight: 400;
+                font-size: 12px;
+                line-height: 18px;
+                color: #999999;
+            }
+        }
+
+    }
+}

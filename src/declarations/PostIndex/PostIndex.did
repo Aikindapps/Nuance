@@ -1,0 +1,107 @@
+type UpdateCallsAggregatedData = vec nat64;
+type SearchResultData = 
+ record {
+   postIds: vec text;
+   totalCount: text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type NumericEntity = 
+ record {
+   avg: nat64;
+   first: nat64;
+   last: nat64;
+   max: nat64;
+   min: nat64;
+ };
+type MetricsGranularity = 
+ variant {
+   daily;
+   hourly;
+ };
+type IndexPostResult = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type IndexPostModel = 
+ record {
+   newHtml: text;
+   newTags: vec text;
+   oldHtml: text;
+   oldTags: vec text;
+   postId: text;
+ };
+type HourlyMetricsData = 
+ record {
+   canisterCycles: CanisterCyclesAggregatedData;
+   canisterHeapMemorySize: CanisterHeapMemoryAggregatedData;
+   canisterMemorySize: CanisterMemoryAggregatedData;
+   timeMillis: int;
+   updateCalls: UpdateCallsAggregatedData;
+ };
+type GetMetricsParameters = 
+ record {
+   dateFromMillis: nat;
+   dateToMillis: nat;
+   granularity: MetricsGranularity;
+ };
+type DailyMetricsData = 
+ record {
+   canisterCycles: NumericEntity;
+   canisterHeapMemorySize: NumericEntity;
+   canisterMemorySize: NumericEntity;
+   timeMillis: int;
+   updateCalls: nat64;
+ };
+type ClearIndexResult = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type CanisterMetricsData = 
+ variant {
+   daily: vec DailyMetricsData;
+   hourly: vec HourlyMetricsData;
+ };
+type CanisterMetrics = record {data: CanisterMetricsData;};
+type CanisterMemoryAggregatedData = vec nat64;
+type CanisterHeapMemoryAggregatedData = vec nat64;
+type CanisterCyclesAggregatedData = vec nat64;
+service : {
+  acceptCycles: () -> ();
+  availableCycles: () -> (nat) query;
+  clearIndex: () -> (ClearIndexResult);
+  collectCanisterMetrics: () -> ();
+  getAdmins: () -> (Result_2) query;
+  getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getCgUsers: () -> (Result_2) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  indexPost: (text, text, text, vec text, vec text) -> (IndexPostResult);
+  indexPosts: (vec IndexPostModel) -> (vec IndexPostResult);
+  indexSize: () -> (nat) query;
+  isThereEnoughMemory: () -> (bool) query;
+  populateTags: (vec text, nat32, nat32) -> (SearchResultData) query;
+  registerAdmin: (text) -> (Result);
+  registerCgUser: (text) -> (Result);
+  search: (text, bool, nat32, nat32) -> (SearchResultData) query;
+  searchWithinPublication: (text, bool, nat32, nat32, vec text) ->
+   (SearchResultData) query;
+  setMaxMemorySize: (nat) -> (Result_1);
+  unregisterAdmin: (text) -> (Result);
+  unregisterCgUser: (text) -> (Result);
+}

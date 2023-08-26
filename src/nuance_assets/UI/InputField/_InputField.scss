@@ -1,0 +1,43 @@
+.input-attributes {
+  display: flex;
+  width: 264px;
+  border: none;
+  p {
+    margin: 0 !important;
+  }
+
+  .textarea {
+    width: 264px;
+    outline: none;
+    border: none;
+    padding: 3px;
+    margin: 1px;
+    border-bottom: solid 1px $title-divider-color;
+
+    display: block;
+
+    max-width: 250px;
+    overflow: hidden;
+    resize: none;
+    font-weight: 400;
+    font-size: 14px;
+  }
+  #handle {
+    background-image: url('../../assets/assets/images/icons/at.svg');
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left: 15px;
+  }
+  #no-handle {
+    padding: 3px 10px 2px 3px;
+  }
+  .textarea:hover {
+    border-bottom: solid 1px $highlight-two;
+  }
+  .textarea:focus {
+    border-bottom: solid 1px $highlight-two;
+  }
+}
+.has-error {
+  border-bottom: $error-color !important;
+}

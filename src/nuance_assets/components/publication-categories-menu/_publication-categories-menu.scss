@@ -1,0 +1,108 @@
+.categories-wrapper{
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: flex-start;
+    margin-top: 20px;
+    .categories-header{
+      background: #4C4C52;
+      color: #D9D9D9;
+      width: 240px;
+      word-wrap: break-word;
+      padding: 5px 5px 5px 10px;
+      margin-left: -0.8rem;
+      align-self: center;
+      transition: .1s ease-in;
+    }
+    .categories-header-selected{
+      background: #68686e;
+      color: #fff;
+      width: 150%;
+      margin-left: 2rem;
+      padding: 5px 5px 5px 10px;
+      align-self: center;
+      transition: .1s ease-in;
+    }
+    .categories-header:hover{
+        background: #68686e;
+        color: #fff;
+        cursor: pointer;
+    }
+    .category-element{
+      font-family: 'Roboto';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      color: #151451;
+      width: max-content;
+      transition: .1s ease-in;
+    }
+    .category-element-dark{
+      font-family: 'Roboto';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      color: #ffffff;
+      width: max-content;
+      transition: .1s ease-in;
+    }
+    .category-element-styled{
+      font-family: 'Roboto';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      color: #151451;
+      width: max-content;
+      transition: .1s ease-in;
+    }
+    .selected{
+      color:#02C4A1;
+      font-weight: bold;
+    }
+    .category-element:hover{
+        color:  #02C4A1;
+        cursor: pointer;
+    }
+    .category-element-styled:hover{
+      color: inherit;
+      cursor: pointer;
+  }
+  .category-element-dark:hover{
+    color:  #02C4A1;
+    cursor: pointer;
+}
+
+    .horizontal-divider{
+        border: 1px solid #D9D9D9;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        align-self: center;
+        width: 120%;
+    }
+}
+
+@media only screen and (max-width: 1089px) {
+  .categories-wrapper{
+    .categories-header{
+      width: 180px;
+    }
+  }
+}
+
+
+@media only screen and (max-width: 529px) {
+  .categories-wrapper{
+    .categories-header{
+      width: 150px;
+    }
+  }
+}

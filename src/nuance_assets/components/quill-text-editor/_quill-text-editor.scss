@@ -1,0 +1,78 @@
+.ql-container.ql-snow {
+  //enable scrolling of editor so the toolbar stays on page
+  height: 350px;
+}
+
+.ql-toolbar {
+  border: 1px solid $quill-background !important;
+  border-radius: 5px !important;
+  box-shadow: 0px 2px 5px 6px $quill-box-shadow !important;
+  background: $primary-background-color
+}
+
+.ql-editor.ql-blank::before {
+  font-family: 'Georgia';
+  font-style: italic;
+  color: $medium-border-color !important;
+  font-size: 18px;
+  line-height: 32px;
+  margin-left: -15px;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+  //border-bottom: solid 1px $text-editor-border !important;
+}
+
+.ql-editor {
+  border: none !important;
+  padding: 12px 0 0 0 !important;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'PT Serif';
+  }
+
+  strong {
+    font-family: 'PT Serif' !important;
+  }
+
+  em {
+    font-family: 'PT Serif' !important;
+  }
+
+  p {
+    font-family: 'PT Serif';
+    //color: $primary-text-color;
+    font-size: 18px;
+    line-height: 32px;
+  }
+
+  ul li {
+    font-family: 'PT Serif' !important;
+    //color: $primary-text-color ;
+    font-size: 18px !important;
+    line-height: 32px !important;
+  }
+
+  ol li {
+    font-family: 'PT Serif' !important;
+    //color: $primary-text-color ;
+    font-size: 18px !important;
+    line-height: 32px !important;
+  }
+
+  ::selection {
+    color: white;
+    background: $primary-text-color;
+  }
+
+  .ql-blank {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

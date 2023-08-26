@@ -1,0 +1,26 @@
+{
+  "FastBlocks_EmailOptIn": {
+    "ic": "pvhro-vqaaa-aaaam-qba7q-cai"
+  },
+  "KinicEndpoint": {
+    "ic": "elrdq-oyaaa-aaaam-qbbaa-cai"
+  },
+  "Post": {
+    "ic": "emqfe-daaaa-aaaam-qbbaq-cai"
+  },
+  "PostIndex": {
+    "ic": "eftoy-viaaa-aaaam-qbbba-cai"
+  },
+  "Storage": {
+    "ic": "ecsim-yqaaa-aaaam-qbbbq-cai"
+  },
+  "User": {
+    "ic": "exvzb-zyaaa-aaaam-qbbca-cai"
+  },
+  "nuance_assets": {
+    "ic": "equ7v-uaaaa-aaaam-qbbcq-cai"
+  },
+  "PostCore": {
+    "ic": "rw3vb-eaaaa-aaaak-aet6a-cai"
+  }
+}

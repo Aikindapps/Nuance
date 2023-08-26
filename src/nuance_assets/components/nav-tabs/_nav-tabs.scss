@@ -1,0 +1,144 @@
+@import '../../shared/styles/Colors';
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  padding-left: 0;
+  margin-bottom: 0;
+  list-style: none;
+
+  
+}
+
+.nav-link {
+ 
+  color: #151451;
+ font-weight: bold;
+
+  &:hover,
+  &:focus {
+    color: $accent-color;
+      text-decoration-color: $accent-color;
+   
+  }
+
+  
+  &.disabled {
+    
+  }
+}
+
+
+
+
+
+.nav-tabs {
+ 
+  margin-bottom: 20px;
+
+  .nav-link {
+    border-width: 0px 1px;
+    border-radius: 0px;
+    
+
+    &:hover,
+    &:focus {
+     
+    }
+
+    &.disabled {
+      
+    }
+  }
+
+  .nav-link.active,
+  .nav-item.show .nav-link {
+    color: $accent-color;
+    border-left-style: solid;
+    border-top-style: none;
+    border-bottom-style: none ;
+    border-right-style: solid;
+    background-color: transparent;
+    border-bottom: none;
+    
+  }
+}
+
+
+
+.dark{
+border-bottom: 1px solid #dee2e6;;
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+    color: white;
+   
+    
+  }
+  
+  .nav-link {
+   
+    color: white;
+   font-weight: bold;
+   background: #151451;
+
+    &:hover,
+    &:focus {
+      color: $accent-color;
+      text-decoration-color: $accent-color;
+     
+      
+     
+    }
+  
+    &.disabled {
+     
+    }
+  }
+  
+  .nav-tabs {
+    margin-bottom: 20px;
+  
+    
+  
+  
+    .nav-link {
+
+      border-width: 0px 1px $accent-color;
+      border-radius: 0px;
+      background: #151451;
+     
+      &:hover,
+      &:focus {
+      
+      }
+  
+      &.disabled {
+      }
+    }
+
+   
+  
+    .nav-link.active,
+    .nav-item.show .nav-link {
+      $nav-pills-link-active-color-bg: $accent-color;
+     
+      background-color: #151451;
+      border-left-style: solid;
+      border-top-style: none;
+      border-bottom-style: none ;
+      border-right-style: solid;
+      
+      
+    }
+
+    
+  }
+
+
+  
+}
+

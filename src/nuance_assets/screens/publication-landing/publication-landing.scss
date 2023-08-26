@@ -1,0 +1,358 @@
+.publication-landing-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+  min-height: 100vh;
+  .left {
+    width: 24%;
+    .left-content {
+      margin-top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      .link-report {
+        margin-right: -30%;
+      }
+      .brand-logo-left{
+        width: 180px;
+        height: 57px;
+        margin-top: 0;
+        margin-bottom: 0;
+        object-fit: contain;
+      };
+    }
+    .left-sidebar {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: sticky;
+      top: 5px;
+      padding: 0 auto;
+      margin-top: 0;
+    }
+  }
+
+  .vertical-divider {
+    margin: 70px 0 0 0;
+    padding: 0.1px;
+  }
+
+  .publication-landing-cta{
+
+
+
+  }
+
+  .right {
+    width: 76%;
+    .article-list {
+      border-left: 1px solid #c4c4c4;
+      position: relative;
+      .mainTitle {
+        padding-top: 100px;
+        margin-left: 5%;
+        font-family: Roboto, sans-serif;
+        color: #687487;
+        font-size: 12px;
+        font-weight: 700;
+      }
+    }
+    .footer {
+      margin-left: 5%;
+    }
+  }
+
+  .header-image-container {
+    position: relative;
+    text-align: center;
+    .header-img{
+      width: 100%;
+      max-height: 480px;
+      object-fit: cover;
+    }
+  }
+
+  .nuance-publication {
+    position: absolute;
+    top: 10%;
+    left: 5%;
+    color: #999999;
+  }
+
+  .publication-name {
+    position: absolute;
+    top: 32%;
+    left: 5%;
+    background-color: #4c4c52;
+    color: #fff;
+    font-size: 3em;
+    font-family: Roboto;
+    padding-left: 10px;
+    padding-right: 40px;
+  }
+
+  .publication-subtitle {
+    position: absolute;
+    top: 48%;
+    left: 5%;
+    background-color: #4c4c52;
+    color: #d9d9d9;
+    font-size: 1em;
+    font-family: Roboto;
+    padding-left: 10px;
+    padding-right: 40px;
+  }
+
+  .publication-handle {
+    position: absolute;
+    top: 54%;
+    left: 5%;
+    background-color: #4c4c52;
+    color: #e6e6e6;
+    font-size: 0.7em;
+    font-family: Roboto;
+    padding-left: 10px;
+    padding-right: 40px;
+  }
+
+  .article-grid-large {
+    margin-left: 0;
+    margin-right: 5%;
+    margin-top: 15px;
+    margin-left: 5%;
+  }
+  .article-grid-horizontal {
+    margin-left: 5%;
+    margin-bottom: 10%;
+  }
+  .article-grid {
+    margin-left: 5%;
+  }
+}
+
+.meatball-menu {
+  z-index: 1;
+  
+}
+
+.publication-name-icon-flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.publication-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  margin-top: -0.2rem;
+}
+
+.blurred{
+  filter: blur(5px);
+}
+
+.rowContainer{
+  margin-top: 2%;
+  margin-left: 3%;
+}
+
+.search-summary{
+  margin-left: 3%;
+}
+
+.divider{
+  padding-left: 0;
+}
+
+
+
+@media only screen and (max-width: 1089px) {
+  .publication-landing-wrapper {
+    .left{
+      width: 20px;
+      .left-content{
+        margin-top: 0;
+        .brand-logo-left{
+          margin-bottom: 20px;
+        }
+        .left-sidebar{
+          visibility: hidden;
+        }
+        .link-report{
+          margin-right: 25px;
+        }
+      }
+      .drop-down-content{
+        visibility: hidden;
+      }
+    }
+    .scrolled{
+      width: max-content;
+      .left-content{
+        .left-sidebar{
+          visibility: visible;
+        }
+        .link-report{
+          margin-right: -60%;
+        }
+      }
+      .drop-down-content{
+        visibility: visible;
+      }
+      .categories-header{
+        margin-left: -0.6rem;
+      }
+    }
+    .right{
+      width: 100%;
+
+      .article-list{
+        .article-grid{
+          margin-left: 10%;
+        }
+        .mainTitle{
+          padding-top: 20px;
+        }
+      }
+    }
+    .publication-name {
+      font-size: 2em;
+      top: 66%;
+      left: 5%;
+    }
+  
+    .publication-subtitle {
+      top: 78%;
+      left: 5%;
+    }
+  
+    .publication-handle {
+      top: 85%;
+      left: 5%;
+    }
+  }
+}
+
+@media only screen and (max-width: 557px) {
+  .publication-landing-wrapper {
+    .scrolled{
+      .left-content{
+        .link-report{
+          margin-right: -75%;
+        }
+      }
+      .drop-down-content{
+        visibility: visible;
+      }
+      
+    }
+    .publication-handle {
+      font-size: 0.5em;
+      top: 160px;
+    }
+    .publication-subtitle {
+      font-size: 0.9em;
+      top: 135px;
+    }
+    .publication-name {
+      top: 104px;
+      font-size: 1.2em;
+    }
+  }
+  .right{
+    .header-image-container{
+      .header-img{
+        height: 200px;
+        object-fit: cover;
+      }
+    }
+  }
+}
+@media only screen and (max-width: 432px) {
+  .publication-landing-wrapper {
+    .category-left-scrolled{
+      margin-left: 12vw;
+    }
+  }
+}
+@media only screen and (max-width: 408px) {
+  .publication-landing-wrapper {
+    .scrolled{
+      margin-left: 10vw;
+    }
+    .category-left-scrolled{
+      margin-left: 16vw;
+    }
+  }
+}
+@media only screen and (max-width: 371px) {
+  .publication-landing-wrapper {
+    .scrolled{
+      margin-left: 20vw;
+    }
+    .category-left-scrolled{
+      margin-left: 24vw;
+    }
+    
+  }
+}
+@media only screen and (max-width: 351px) {
+  .publication-landing-wrapper {
+    .category-left-scrolled{
+      margin-left: 90px;
+    }
+    
+  }
+}
+
+@media only screen and (max-width: 338px) {
+  .publication-landing-wrapper {
+    .scrolled{
+      margin-left: 25vw;
+    }
+    .category-left-scrolled{
+      margin-left: 140px;
+    }
+  }
+}
+@media only screen and (max-width: 316px) {
+  .publication-landing-wrapper {
+    .scrolled{
+      margin-left: 45vw;
+    }
+    .category-left-scrolled{
+      margin-left: 180px;
+    }
+    
+  }
+}
+
+
+@media only screen and (max-width: 768px) {
+  .publication-landing-wrapper {
+    font-family: 'Roboto';
+    .right {
+      .latestArticles {
+        width: 100%;
+        .article-grid-large {
+          width: 100%;
+          margin-left: 0;
+        }
+        .article-grid {
+          margin-left: 3rem;
+          margin-top: 1rem;
+          width: 80%;
+        }
+        .article-grid-horizontal {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+  .publication-icon {
+    width: 0;
+    height: 0;
+    visibility: hidden;
+  }
+}

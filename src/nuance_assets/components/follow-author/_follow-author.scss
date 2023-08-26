@@ -1,0 +1,23 @@
+@import '../../shared//styles//Colors';
+
+.followAuthor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+.hideFollowButton {
+  display: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  color: $primary-color;
+  background-color: $primary-background-color;
+}
+
+button[disabled]:hover {
+  color: $primary-color;
+  background-color: $primary-background-color;
+  cursor: not-allowed;
+}

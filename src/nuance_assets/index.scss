@@ -1,0 +1,86 @@
+@import './components/header/header';
+@import './components/footer/footer';
+@import './components/card-vertical/card-vertical';
+@import './components/card-horizontal/card-horizontal';
+@import './components/search-bar/search-bar';
+@import './components/required-field-message/required-field-message';
+@import './UI/InputField2/InputField2';
+@import './UI/meatball-menu/meatball-menu';
+@import './UI/meatball-sidebar/meatball-sidebar';
+@import './UI/profile-menu/profile-menu';
+@import './UI/profile-picture-button/profile-picture-button';
+@import './UI/profile-menu/profile-menu';
+@import './screens/home/homegrid';
+@import './screens/timed-out/timed-out';
+@import './screens/login-registration/login-registration';
+@import './screens/create-edit-article/create-edit-article';
+@import './screens/create-edit-publication/create-edit-publication';
+@import './UI/Button/Button';
+@import './UI/clap-button/clap-button';
+@import './UI/InputField/InputField';
+@import './UI/reader-and-author-edit/reader-and-author-edit';
+@import './components/logged-out-sidebar/logged-out-sidebar';
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Lato&family=Montserrat:wght@500&family=Open+Sans:wght@600&family=Poppins:wght@300&family=Xanh+Mono&display=swap');
+//Fragment Mono, Roboto, Lato, Montserrat, Open Sans, Poppins, Xanh Mono
+
+
+@import './components/tags/tags';
+@import './components/follow-author/follow-author';
+@import './components/text-editor/text-editor';
+@import './UI/meatball-sidebar-articles/meatball-sidebar-articles';
+@import './UI/unpublish-article/unpublish\ article';
+@import './screens/profile/profile';
+@import './screens/profile/profile-author';
+@import './components/text-editor/text-divider/text-divider';
+@import './UI/author-profile-sidebar/author-profile-sidebar';
+@import './components/search-modal/search-modal';
+@import './components/quill-text-editor/quill-text-editor';
+@import './screens/read-article/read-article';
+@import './UI/read-article-sidebar/read-article-sidebar';
+@import './UI/my-profile-sidebar/my-profile-sidebar';
+@import './components/card-large/card-large';
+@import './components/publication-categories-menu/publication-categories-menu';
+@import './components/publication-profile/publication-profile';
+@import './UI/publication-sidebar-mobile/publication-sidebar-mobile';
+@import './components/card-editor-publication/card-editor-publication';
+@import './components/email-opt-in/email-opt-in';
+@import './components/premium-article-info/premium-article-info';
+@import './components/nav-tabs/nav-tabs';
+@import './components/publication-icon-selector/publication-icon-selector';
+
+/* Shared */
+@import './shared/styles/tags.scss';
+
+@import './shared/styles/Colors';
+@import '~bootstrap/scss/bootstrap';
+
+//theme colors, (must be set before importing bootstrap)
+
+
+
+
+
+* {
+  font-family: 'Roboto';
+}
+:root {
+  --nua-blue: $primary-color;
+}
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+

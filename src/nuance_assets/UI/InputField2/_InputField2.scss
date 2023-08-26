@@ -1,0 +1,43 @@
+@import '../../shared/styles/Colors';
+
+.input-attributes2 {
+  margin-bottom: 30px;
+
+  .textarea {
+    // width: 100%;
+    outline: none;
+    border: none;
+    padding: 3px;
+    margin: 1px;
+    border-bottom: solid 1px $title-divider-color;
+    display: block;
+    overflow: hidden;
+    resize: none;
+    font-weight: 400;
+    font-size: 14px;
+  }
+  ::selection {
+    color: $primary-background-color;
+    background: $primary-text-color;
+  }
+  ::placeholder {
+    font-style: italic;
+    color: $tag-placeholder-color;
+  }
+  .has-error {
+    border-bottom: solid 1px $error-color;
+  }
+
+  .textarea[contenteditable]:empty::before {
+    content: attr(content-text);
+    color: $medium-border-color;
+    font-style: italic;
+  }
+}
+
+.textarea:hover {
+  border-bottom: solid 1px $highlight-two;
+}
+.textarea:focus {
+  border-bottom: solid 1px $highlight-two;
+}

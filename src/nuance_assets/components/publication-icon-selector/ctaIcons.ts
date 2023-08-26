@@ -1,0 +1,183 @@
+import {
+    faCheckSquare,
+    faCoffee,
+    faHeart,
+    faTrashAlt,
+    faEdit,
+    faSave,
+    faEye,
+    faEyeSlash,
+    faEnvelope,
+    faCalendarAlt,
+    faComment,
+    faBell,
+    faShareSquare,
+    faUser,
+    faSignInAlt,
+    faSignOutAlt,
+    faEllipsisV,
+    faCog,
+    faInfoCircle,
+    faExclamationTriangle,
+    faSearch,
+    faFile,
+    faFileAlt,
+    faFolder,
+    faFolderOpen,
+    faPrint,
+    faAngleLeft,
+    faAngleRight,
+    faAngleUp,
+    faAngleDown,
+    faBars,
+    faStar,
+    faStarHalfAlt,
+    faThumbsUp,
+    faThumbsDown,
+    faBomb,
+    faPoo,
+    faSmile,
+    faFrown,
+    faMeh,
+    faLaugh,
+    faLaughBeam,
+    faLaughSquint,
+    faLaughWink,
+    faCameraRetro,
+    faGhost,
+    faFire,
+    faCode,
+    faBrush,
+    faDumpsterFire,
+    faBusinessTime,
+    faMugSaucer,
+    faPooStorm,
+    faUserSecret,
+    faMotorcycle,
+    faBicycle,
+    faCar,
+    faRecordVinyl,
+    faVirus,
+    faDragon,
+    faUmbrellaBeach,
+    faHiking,
+    faSwimmer,
+    faRunning,
+    faDumbbell,
+    faChess,
+    faChessBishop,
+    faChessKing,
+    faChessKnight,
+    faChessPawn,
+    faChessQueen,
+    faChessRook,
+    faChessBoard,
+    faWhiskeyGlass,
+    faUserAstronaut,
+    faStroopwafel,
+    faSocks,
+    faSkullCrossbones,
+    faSkull,
+    faMeteor,
+    faSpaceShuttle,
+    faSatellite,
+    faBook,
+    faBookOpen,
+    faBeer,
+    faPencil,
+    faPen,
+    faPenAlt,
+    faPenFancy,
+    faPenNib,
+    faPenSquare,
+    faHighlighter,
+    faPaintBrush,
+    faCartArrowDown,
+    faCarrot,
+    faCaretDown,
+  } from '@fortawesome/free-solid-svg-icons';
+  import { findIconDefinition, library } from '@fortawesome/fontawesome-svg-core';
+  import { IconDefinition } from '@fortawesome/free-regular-svg-icons';
+  import { func } from 'prop-types';
+  
+  export const ctaIcons = [
+     
+      { name: 'coffee', icon: faCoffee },
+      { name: 'heart', icon: faHeart },
+    
+     
+     
+      { name: 'eye', icon: faEye },
+      { name: 'eye-slash', icon: faEyeSlash },
+      { name: 'envelope', icon: faEnvelope },
+     
+      { name: 'comment', icon: faComment },
+      { name: 'bell', icon: faBell },
+     
+      { name: 'user', icon: faUser },
+      
+     
+     
+     
+    
+      { name: 'file', icon: faFile },
+      
+      { name: 'folder', icon: faFolder },
+      { name: 'folder-open', icon: faFolderOpen },
+      { name: 'print', icon: faPrint },
+      { name: 'angle-left', icon: faAngleLeft },
+      { name: 'angle-right', icon: faAngleRight },
+      { name: 'angle-up', icon: faAngleUp },
+      { name: 'angle-down', icon: faAngleDown },
+      { name: 'bars', icon: faBars },
+      { name: 'star', icon: faStar },
+   
+      { name: 'thumbs-up', icon: faThumbsUp },
+      { name: 'thumbs-down', icon: faThumbsDown },
+      { name: 'bomb', icon: faBomb },
+      { name: 'poo', icon: faPoo },
+    
+     
+      { name: 'camera-retro', icon: faCameraRetro },
+      { name: 'ghost', icon: faGhost },
+      { name: 'fire', icon: faFire },
+      { name: 'brush', icon: faBrush },
+      { name: 'code', icon: faCode },
+      { name: 'dumpster-fire', icon: faDumpsterFire },
+      { name: 'business-time', icon: faBusinessTime },
+      { name: 'mug-saucer', icon: faMugSaucer },
+      { name: 'poo-storm', icon: faPooStorm },
+      { name: 'user-secret', icon: faUserSecret },
+      { name: 'motorcycle', icon: faMotorcycle },
+      { name: 'bicycle', icon: faBicycle },
+      { name: 'car', icon: faCar },
+      { name: 'record-vinyl', icon: faRecordVinyl },
+      { name: 'virus', icon: faVirus },
+      { name: 'dragon', icon: faDragon },
+      { name: 'umbrella-beach', icon: faUmbrellaBeach },
+     
+     
+      { name: 'dumbbell', icon: faDumbbell },
+     
+
+      { name: 'chess', icon: faChess },
+      { name: 'chess-board', icon: faChessBoard },
+      { name: 'whiskey-glass', icon: faWhiskeyGlass },
+      { name: 'user-astronaut', icon: faUserAstronaut },
+      { name: 'stroopwafel', icon: faStroopwafel },
+      { name: 'socks', icon: faSocks },
+      { name: 'skull-crossbones', icon: faSkullCrossbones },
+      { name: 'skull', icon: faSkull },
+      { name: 'meteor', icon: faMeteor },
+      { name: 'satellite', icon: faSatellite },
+      
+      { name: 'book', icon: faBook },
+     
+     
+      { name: 'pencil', icon: faPencil },
+  
+    
+    ];
+  
+  
+  

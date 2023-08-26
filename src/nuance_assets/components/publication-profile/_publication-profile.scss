@@ -1,0 +1,89 @@
+.publication-profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 494px;
+    margin: auto;
+    .publication-avatar{
+        position: relative;
+        .publication-logo {
+          height: 105px;
+          width: 105px;
+          border-radius: 100%;
+          margin-top: 10px;
+          margin-bottom: 10px;
+          }
+        .publication-icon{
+          height: 32px;
+          width: 32px;
+          margin-left: -32px;
+          margin-top: 85px;
+          position: absolute;
+        }
+    }
+    
+    .publication-title {
+      font-weight: 400;
+      font-family: 'Roboto';
+      font-size: 16px;
+      line-height: 24px;
+      color: $darker-border-color;
+      text-align: center;
+      margin-top: 5px;
+      margin-bottom: 5px;
+      color: #666666;
+
+    }
+    .handle {
+      font-weight: 400;
+      font-family: 'Roboto';
+      font-size: 16px;
+      line-height: 24px;
+      color: $primary-text-color;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .publication-description{
+        font-weight: 400;
+        font-family: 'Roboto';
+        font-size: 16px;
+        line-height: 24px;
+        color: $primary-text-color;
+        text-align: center;
+        margin-bottom: 20px;
+        margin-top: 20px;
+        width: 200px;
+    }
+    
+    .publication-stats{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .article-writer-flex{
+            display: flex;
+            flex-direction: row;
+            .small-divider{
+              width: 2px;
+              height: 14px;
+              margin-right: 5px;
+              margin-left: 5px;
+              align-self: center;
+              background-color: #8c8c8c;
+            }
+            .articles-count{
+                color: #666666;
+            }
+            .writers-count{
+                color: #666666
+            }
+        }
+        .followers-count{
+          color: #666666
+        }
+        p{
+            margin-bottom: 0;
+            margin-top: 5;
+        }
+    }
+  }
