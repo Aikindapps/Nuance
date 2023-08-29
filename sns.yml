@@ -76,7 +76,7 @@ logo: nuance-logo.png # ✅
 
 # URL to the dapp controlled by the SNS project.
 # Must be a string from 10 to 512 bytes.
-url: https://forum.dfinity.org/thread-where-this-sns-is-discussed # 🛑
+url: https://nuance.xyz # ✅
 
 # Metadata for the NNS proposal required to create the SNS. This data will be
 # shown only in the NNS proposal.
@@ -189,7 +189,7 @@ Proposals:
 Neurons: # ✅
     # The minimum amount of SNS tokens to stake a neuron. This field is specified
     # as a token. For instance, "1 token".
-    minimum_creation_stake: 5999 tokens # ✅
+    minimum_creation_stake: 1999 tokens # ✅
 
 # Configuration of SNS voting.
 Voting: # ✅
@@ -263,7 +263,7 @@ Voting: # ✅
             # the maximum age bonus. Once this age is reached, the neuron will
             # continue to age, but no more bonus will be applied. This field
             # is specified as a duration. For example: "2 years".
-            duration: 0.160 years # 🛑
+            duration: 2 months # 🛑
             # If a neuron's age is `duration` or older, its voting power will be
             # multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "25%".
