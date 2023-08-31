@@ -344,127 +344,127 @@ Distribution:
           stake: 1_200_000 tokens
           memo: 0
           dissolve_delay: 2 years
-          vesting_period: 1 month
+          vesting_period: 0 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 1
           dissolve_delay: 2 years
-          vesting_period: 2 months
+          vesting_period: 1 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 2
           dissolve_delay: 2 years
-          vesting_period: 3 months
+          vesting_period: 2 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 3
           dissolve_delay: 2 years
-          vesting_period: 4 months
+          vesting_period: 3 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 4
           dissolve_delay: 2 years
-          vesting_period: 5 months
+          vesting_period: 4 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 5
           dissolve_delay: 2 years
-          vesting_period: 6 months
+          vesting_period: 5 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 6
           dissolve_delay: 2 years
-          vesting_period: 7 months
+          vesting_period: 6 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 7
           dissolve_delay: 2 years
-          vesting_period: 8 months
+          vesting_period: 7 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 8
           dissolve_delay: 2 years
-          vesting_period: 9 months
+          vesting_period: 8 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 9
           dissolve_delay: 2 years
-          vesting_period: 10 months
+          vesting_period: 9 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 10
           dissolve_delay: 2 years
-          vesting_period: 11 months
+          vesting_period: 10 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 11
           dissolve_delay: 2 years
-          vesting_period: 12 months
+          vesting_period: 11 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 12
           dissolve_delay: 2 years
-          vesting_period: 13 months
+          vesting_period: 12 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 13
           dissolve_delay: 2 years
-          vesting_period: 14 months
+          vesting_period: 13 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 14
           dissolve_delay: 2 years
-          vesting_period: 15 months
+          vesting_period: 14 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 15
           dissolve_delay: 2 years
-          vesting_period: 16 months
+          vesting_period: 15 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 16
           dissolve_delay: 2 years
-          vesting_period: 17 months
+          vesting_period: 16 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 17
           dissolve_delay: 2 years
-          vesting_period: 18 months
+          vesting_period: 17 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 18
           dissolve_delay: 2 years
-          vesting_period: 19 months
+          vesting_period: 18 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 19
           dissolve_delay: 2 years
-          vesting_period: 20 months
+          vesting_period: 19 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 20
           dissolve_delay: 2 years
-          vesting_period: 21 months
+          vesting_period: 20 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 21
           dissolve_delay: 2 years
-          vesting_period: 22 months
+          vesting_period: 21 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 22
           dissolve_delay: 2 years
-          vesting_period: 23 months
+          vesting_period: 22 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 23
           dissolve_delay: 2 years
-          vesting_period: 24 months
+          vesting_period: 23 months
         - principal: keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae
           stake: 1_200_000 tokens
           memo: 24
           dissolve_delay: 2 years
-          vesting_period: 25 months
+          vesting_period: 24 months
     # The initial SNS token balances of the various canisters of the SNS.
     InitialBalances: 
         # The initial SNS token balance of the SNS Governance canister is known
