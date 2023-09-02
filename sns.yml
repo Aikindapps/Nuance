@@ -246,7 +246,7 @@ Voting:
             # If a neuron's dissolve delay is `duration`, its voting power will
             # be multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "100%".
-            bonus: 0% 
+            bonus: 100% 
 
         # Users with neurons staked in the non-dissolving state for a long
         # period of time are incentivized to take the long-term interests of
@@ -277,7 +277,7 @@ Voting:
             # If a neuron's age is `duration` or older, its voting power will be
             # multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "25%".
-            bonus: 0% 
+            bonus: 100% 
 
     # Configuration of SNS voting reward parameters.
     #
