@@ -603,7 +603,7 @@ Swap:
     # The duration of the decentralization swap. When `start_time` is calculated
     # during CreateServiceNervousSystem proposal execution, this `duration` will
     # be added to that absolute time and set as the swap's deadline.
-    duration: 7 days 
+    duration: 14 days 
 
     # The amount of ICP that will be contributed to the decentralization swap by
     # the Neurons' Fund if the CreateServiceNervousSystem proposal is adopted.
