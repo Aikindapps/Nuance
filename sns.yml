@@ -90,9 +90,19 @@ NnsProposal:
 
     # The description of the proposal. Must be a string of 10 to 2,000 bytes.
     summary: > 
-        Proposal to create an SNS for the project XX.
-        The SNS will be initialized with the following neurons:
-        ...
+        Proposal to create an SNS-DAO for Nuance, the world's first on-chain publishing platform.
+
+        - **Nuance aims to revolutionize the written word in the same way DeFi has transformed finance.**
+        
+        - **The platform is built with Web 3 benefits like anonymity, self-sovereignty, and censorship resistance.**
+
+        - **It also incorporates community governance and tokenization, offering a Medium-style content hosting platform.**
+
+        - **The SNS will be initialized with a target funding of 250,000 to 300,000 ICP, providing an 18-month runway.**
+
+        - **The proposal also outlines token allocations, governance mechanisms, and incentives for community participation.**
+
+        For more details, refer to the [whitepaper](https://nuance.xyz/publication/nuance/white-paper), [SNS slide deck](https://www.dropbox.com/scl/fi/kpdicre5gzlx9r9br86q2/SNS-Deck.pdf?rlkey=zn4l2hp84bjchkovow0m0j53x&dl=0), and [initialization file](https://github.com/Aikindapps/Nuance/blob/master/sns.yml).
 
 # If the SNS launch attempt fails, control over the dapp canister(s) is given to
 # these principals. In most use cases, this is chosen to be the original set of
@@ -118,15 +128,15 @@ dapp_canisters:
     # IDs of the canisters comprising your to-be-decentralized dapp.
     #
     # For testing, propose_sns.sh will fill this in automatically.
-    - exwqn-uaaaa-aaaaf-qaeaa-cai # nuance_assets
     - rtqeo-eyaaa-aaaaf-qaana-cai # User
     - y2pkg-ciaaa-aaaaf-qagbq-cai # Storage
-    - r5sjg-7iaaa-aaaaf-qaama-cai # PostIndex
     - 322sd-3iaaa-aaaaf-qakgq-cai # PostCore
-    - 4m3sz-lqaaa-aaaaf-qagza-cai # KinicEndpoint
-    - dgwwd-jaaaa-aaaaf-qai7a-cai # FastBlocks_EmailOptIn
-    - 353ux-wqaaa-aaaaf-qakga-cai # CyclesDispenser
+    - r5sjg-7iaaa-aaaaf-qaama-cai # PostIndex
     - kzzqe-waaaa-aaaaf-qajna-cai # NFT factory
+    - 4m3sz-lqaaa-aaaaf-qagza-cai # KinicEndpoint
+    - exwqn-uaaaa-aaaaf-qaeaa-cai # nuance_assets
+    - 353ux-wqaaa-aaaaf-qakga-cai # CyclesDispenser
+    - dgwwd-jaaaa-aaaaf-qai7a-cai # FastBlocks_EmailOptIn
     - kx35m-nqaaa-aaaaf-qajma-cai # Publication management
 
 
