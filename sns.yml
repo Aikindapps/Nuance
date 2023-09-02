@@ -90,19 +90,60 @@ NnsProposal:
 
     # The description of the proposal. Must be a string of 10 to 2,000 bytes.
     summary: > 
-        Proposal to create an SNS-DAO for Nuance, the world's first on-chain publishing platform.
+        # Summary
 
-        - **Nuance aims to revolutionize the written word in the same way DeFi has transformed finance.**
-        
-        - **The platform is built with Web 3 benefits like anonymity, self-sovereignty, and censorship resistance.**
+        This is the proposal for the NNS to create an SNS DAO to govern Nuance.
 
-        - **It also incorporates community governance and tokenization, offering a Medium-style content hosting platform.**
+        # Purpose
 
-        - **The SNS will be initialized with a target funding of 250,000 to 300,000 ICP, providing an 18-month runway.**
+        Nuance is the world's first publishing platform built entirely on-chain. It aims to revolutionize the written word in the same way DeFi has transformed finance.
 
-        - **The proposal also outlines token allocations, governance mechanisms, and incentives for community participation.**
+        # Proposed Token Distribution
 
-        For more details, refer to the [whitepaper](https://nuance.xyz/publication/nuance/white-paper), [SNS slide deck](https://www.dropbox.com/scl/fi/kpdicre5gzlx9r9br86q2/SNS-Deck.pdf?rlkey=zn4l2hp84bjchkovow0m0j53x&dl=0), and [initialization file](https://github.com/Aikindapps/Nuance/blob/master/sns.yml).
+        - **Total token supply:** 100,000,000 NUA
+        - **Initially distributed:**
+            - 40%: Reserved for the SNS treasury
+            - 30%: To be distributed by the NNS-run decentralization swap which includes the Community Fund
+            - 30%: Allocated to the Nuance founding team (Aikin) which vests over 2 years
+        - **Ledger transaction fee:** 100,000 e8s
+
+
+        # Governance
+
+        The governance model includes staking, voting, and other relevant details. The minimum amount of SNS tokens to stake a neuron is 999 tokens. The minimum dissolve delay a neuron must have to be able to cast votes on proposals is 2 months.
+
+        # Decentralization Sale
+
+        The decentralization sale requires a minimum of 100 participants and aims to raise between 250,000 and 300,000 ICP. The minimum and maximum ICP contributions per participant are 50 and 50,000 tokens, respectively.
+
+        # The DApp
+
+        Nuance consists of a set of canister smart contracts. Top-level canisters controlled by the Nuance SNS root canister include:
+
+        - rtqeo-eyaaa-aaaaf-qaana-cai  User
+
+        - y2pkg-ciaaa-aaaaf-qagbq-cai  Storage
+
+        - 322sd-3iaaa-aaaaf-qakgq-cai  PostCore
+
+        - r5sjg-7iaaa-aaaaf-qaama-cai  PostIndex
+
+        - kzzqe-waaaa-aaaaf-qajna-cai  NFT factory
+
+        - 4m3sz-lqaaa-aaaaf-qagza-cai  KinicEndpoint
+
+        - exwqn-uaaaa-aaaaf-qaeaa-cai  nuance_assets
+
+        - 353ux-wqaaa-aaaaf-qakga-cai  CyclesDispenser
+
+        - dgwwd-jaaaa-aaaaf-qai7a-cai  FastBlocks_EmailOptIn
+
+        - kx35m-nqaaa-aaaaf-qajma-cai  Publication management   
+
+
+        # Verification
+
+        All the details can be verified through the [whitepaper](https://nuance.xyz/publication/nuance/white-paper), [SNS slide deck](https://www.dropbox.com/scl/fi/kpdicre5gzlx9r9br86q2/SNS-Deck.pdf?rlkey=zn4l2hp84bjchkovow0m0j53x&dl=0), [reproduceable build](https://github.com/Aikindapps/Nuance/blob/master/README.md) and [initialization file](https://github.com/Aikindapps/Nuance/blob/master/sns.yml).
 
 # If the SNS launch attempt fails, control over the dapp canister(s) is given to
 # these principals. In most use cases, this is chosen to be the original set of
