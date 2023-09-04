@@ -613,7 +613,7 @@ Swap:
         # neurons. While neuron basket neurons do not use `vesting_period`, they
         # have a vesting schedule. This field is specified as a duration. For
         # example: "1 month".
-        interval: 5 month 
+        interval: 6 month 
 
     # Absolute time of day when the decentralization swap is supposed to start.
     #
