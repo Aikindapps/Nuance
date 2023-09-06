@@ -287,7 +287,7 @@ Voting:
             # If a neuron's dissolve delay is `duration`, its voting power will
             # be multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "100%".
-            bonus: 100% 
+            bonus: 200% 
 
         # Users with neurons staked in the non-dissolving state for a long
         # period of time are incentivized to take the long-term interests of
@@ -318,7 +318,7 @@ Voting:
             # If a neuron's age is `duration` or older, its voting power will be
             # multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "25%".
-            bonus: 100% 
+            bonus: 200% 
 
     # Configuration of SNS voting reward parameters.
     #
@@ -355,7 +355,7 @@ Voting:
         # Values of 0 result in the reward rate always being `final`.
         #
         # This field is specified as a duration. For example: "8 years".
-        transition_duration: 5 years 
+        transition_duration: 2 years 
 
 # Configuration of the initial token distribution of the SNS. You can configure
 # how SNS tokens are distributed in each of the three groups:
@@ -613,7 +613,7 @@ Swap:
         # neurons. While neuron basket neurons do not use `vesting_period`, they
         # have a vesting schedule. This field is specified as a duration. For
         # example: "1 month".
-        interval: 6 month 
+        interval: 5 month 
 
     # Absolute time of day when the decentralization swap is supposed to start.
     #
