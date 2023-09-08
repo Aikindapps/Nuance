@@ -37,7 +37,9 @@ prompt('Choose network: local or ic? ')
       Promise.all(canisterCommands.map(cmd => {
         return executeCommand(cmd + ` --network=${network}`)
           .then(canisterId => {
-            return executeCommand(`dfx canister --network=${network} update-settings --add-controller r7inp-6aaaa-aaaaa-aaabq-cai ${canisterId}`)
+            return executeCommand(`dfx canister --network=${network} update-settings --add-controller r7inp-6aaaa-aaaaa-aaabq-cai  ${canisterId}
+              dfx canister --network=${network} update-settings --add-controller 3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe  ${canisterId}
+            `)
               .then((output) => {
                 console.log(`${output}`);  // log the output here
                 return canisterId;  // return canisterId after adding it as controller
