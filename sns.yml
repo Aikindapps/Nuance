@@ -240,7 +240,7 @@ Proposals:
 Neurons: 
     # The minimum amount of SNS tokens to stake a neuron. This field is specified
     # as a token. For instance, "1 token".
-    minimum_creation_stake: 999 tokens 
+    minimum_creation_stake: 199 tokens 
 
 # Configuration of SNS voting.
 Voting: 
@@ -287,7 +287,7 @@ Voting:
             # If a neuron's dissolve delay is `duration`, its voting power will
             # be multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "100%".
-            bonus: 200% 
+            bonus: 100% 
 
         # Users with neurons staked in the non-dissolving state for a long
         # period of time are incentivized to take the long-term interests of
@@ -318,7 +318,7 @@ Voting:
             # If a neuron's age is `duration` or older, its voting power will be
             # multiplied by this `bonus` amount. This field is specified
             # as a percentage. For example: "25%".
-            bonus: 200% 
+            bonus: 100% 
 
     # Configuration of SNS voting reward parameters.
     #
@@ -568,7 +568,7 @@ Swap:
     # The minimum amount of ICP that each participant must contribute
     # to participate. This field is specified as a token. For instance,
     # "1 token".
-    minimum_participant_icp: 50 tokens 
+    minimum_participant_icp: 10 tokens 
 
     # The maximum amount of ICP that each participant must contribute
     # to participate. This field is specified as a token. For instance,
