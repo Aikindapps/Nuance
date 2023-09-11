@@ -173,12 +173,12 @@ dapp_canisters:
     - y2pkg-ciaaa-aaaaf-qagbq-cai # Storage
     - 322sd-3iaaa-aaaaf-qakgq-cai # PostCore
     - r5sjg-7iaaa-aaaaf-qaama-cai # PostIndex
-    - kzzqe-waaaa-aaaaf-qajna-cai # NFT factory
+    - kc4mb-myaaa-aaaaf-qajpq-cai # NFT factory
     - 4m3sz-lqaaa-aaaaf-qagza-cai # KinicEndpoint
     - exwqn-uaaaa-aaaaf-qaeaa-cai # nuance_assets
     - 353ux-wqaaa-aaaaf-qakga-cai # CyclesDispenser
     - dgwwd-jaaaa-aaaaf-qai7a-cai # FastBlocks_EmailOptIn
-    - kx35m-nqaaa-aaaaf-qajma-cai # Publication management
+    - kq23y-aiaaa-aaaaf-qajmq-cai # Publication management
 
 
 # Configuration of SNS tokens in the SNS Ledger canister deployed as part
@@ -547,7 +547,7 @@ Swap:
     # to the deadline or the maximum target being reached, and if there are less
     # than `minimum_participants`, the swap will fail. This field is specified
     # as an integer. For example: "50".
-    minimum_participants: 100 
+    minimum_participants: 50 
 
     # The minimum number of ICP that is required for a decentralization swap to
     # succeed. This number divided by the number of SNS tokens being offered
