@@ -110,11 +110,11 @@ NnsProposal:
 
         # Governance
 
-        The governance model includes staking, voting, and other relevant details. The minimum amount of SNS tokens to stake a neuron is 999 tokens. The minimum dissolve delay a neuron must have to be able to cast votes on proposals is 2 months.
+        The governance model includes staking, voting, and other relevant details. The minimum amount of SNS tokens to stake a neuron is 199 tokens. The minimum dissolve delay a neuron must have to be able to cast votes on proposals is 2 months.
 
         # Decentralization Sale
 
-        The decentralization sale requires a minimum of 100 participants and aims to raise between 250,000 and 300,000 ICP. The minimum and maximum ICP contributions per participant are 50 and 50,000 tokens, respectively.
+        The decentralization sale requires a minimum of 50 participants and aims to raise between 250,000 and 300,000 ICP. The minimum and maximum ICP contributions per participant are 10 and 50,000 tokens, respectively.
 
         # The DApp
 
