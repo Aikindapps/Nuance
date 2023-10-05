@@ -110,11 +110,11 @@ NnsProposal:
 
         # Governance
 
-        The governance model includes staking, voting, and other relevant details. The minimum amount of SNS tokens to stake a neuron is 199 tokens. The minimum dissolve delay a neuron must have to be able to cast votes on proposals is 2 months.
+        The governance model includes staking, voting, and other relevant details. The minimum amount of SNS tokens to stake a neuron is 999 tokens. The minimum dissolve delay a neuron must have to be able to cast votes on proposals is 2 months.
 
         # Decentralization Sale
 
-        The decentralization sale requires a minimum of 50 participants and aims to raise between 250,000 and 300,000 ICP. The minimum and maximum ICP contributions per participant are 10 and 50,000 tokens, respectively.
+        The decentralization sale requires a minimum of 100 participants and aims to raise between 250,000 and 300,000 ICP. The minimum and maximum ICP contributions per participant are 50 and 50,000 tokens, respectively.
 
         # The DApp
 
@@ -128,7 +128,7 @@ NnsProposal:
 
         - r5sjg-7iaaa-aaaaf-qaama-cai  PostIndex
 
-        - kc4mb-myaaa-aaaaf-qajpq-cai  NFT factory
+        - kzzqe-waaaa-aaaaf-qajna-cai  NFT factory
 
         - 4m3sz-lqaaa-aaaaf-qagza-cai  KinicEndpoint
 
@@ -138,7 +138,7 @@ NnsProposal:
 
         - dgwwd-jaaaa-aaaaf-qai7a-cai  FastBlocks_EmailOptIn
 
-        - kq23y-aiaaa-aaaaf-qajmq-cai  Publication management   
+        - kx35m-nqaaa-aaaaf-qajma-cai  Publication management   
 
 
         # Verification
@@ -173,12 +173,12 @@ dapp_canisters:
     - y2pkg-ciaaa-aaaaf-qagbq-cai # Storage
     - 322sd-3iaaa-aaaaf-qakgq-cai # PostCore
     - r5sjg-7iaaa-aaaaf-qaama-cai # PostIndex
-    - kc4mb-myaaa-aaaaf-qajpq-cai # NFT factory
+    - kzzqe-waaaa-aaaaf-qajna-cai # NFT factory
     - 4m3sz-lqaaa-aaaaf-qagza-cai # KinicEndpoint
     - exwqn-uaaaa-aaaaf-qaeaa-cai # nuance_assets
     - 353ux-wqaaa-aaaaf-qakga-cai # CyclesDispenser
     - dgwwd-jaaaa-aaaaf-qai7a-cai # FastBlocks_EmailOptIn
-    - kq23y-aiaaa-aaaaf-qajmq-cai # Publication management
+    - kx35m-nqaaa-aaaaf-qajma-cai # Publication management
 
 
 # Configuration of SNS tokens in the SNS Ledger canister deployed as part
@@ -547,7 +547,7 @@ Swap:
     # to the deadline or the maximum target being reached, and if there are less
     # than `minimum_participants`, the swap will fail. This field is specified
     # as an integer. For example: "50".
-    minimum_participants: 50 
+    minimum_participants: 100 
 
     # The minimum number of ICP that is required for a decentralization swap to
     # succeed. This number divided by the number of SNS tokens being offered

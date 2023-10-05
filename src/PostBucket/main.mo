@@ -172,11 +172,13 @@ actor class PostBucket() = this {
         #Err : Text;
     };
 
-     public shared func validate(input: Any) : async Validate {
-     
-       return #Ok("success");
-    };
+public shared ({ caller }) func validate(input : Any) : async Validate {
+        if (isAdmin(caller)) {
+            return #Ok("success");
+        }else {
 
+    return #Err("Cannot use this method anonymously.");}
+    };
    
     private func isCallerOwner( p : Principal) : async Bool {
         try {
@@ -1191,7 +1193,7 @@ actor class PostBucket() = this {
         //if the publication canister id is not stored in the bucket canister, fetch it from user canister and store it first.
         if(publicationPrincipalId == ""){
             let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
-            let userReturn = await UserCanister.getPrincipalByHandle(publicationHandle);
+            let userReturn = await UserCanister.getPrincipalByHandle(U.lowerCase(publicationHandle));
             switch(userReturn){
                 case(#ok(principal)){
                     switch(principal) {
@@ -2109,14 +2111,12 @@ actor class PostBucket() = this {
 
         //func buildPostUrl(postId : Text, handle : Text, title : Text)
         
+        
+        let property = if (frontendCanisterId == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+            "https://nuance.xyz"
 
-        let property = if (frontendCanisterId == "equ7v-uaaaa-aaaam-qbbcq-cai") {
-            "https://nuancedevs.xyz"
-
-        } else if (frontendCanisterId == "aaa=-aaa") {
-            "https://aaa-aaa.ic0.app"
         } else {
-           "https://nuance.xyz"
+           "https://" # frontendCanisterId #".ic0.app"
         };
         
         var content = " <!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> <title>" 

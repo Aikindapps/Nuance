@@ -242,7 +242,6 @@ function CategoryLanding() {
     }
     return {};
   };
-  console.log(screenWidth);
 
   if (
     publicationDoesNotExist ||

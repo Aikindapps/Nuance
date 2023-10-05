@@ -16,7 +16,7 @@ import U "../shared/utils";
 import Buffer "mo:base/Buffer";
 import Int "mo:base/Int";
 import Array "mo:base/Array";
-import MC "../Post/modclub/modclub";
+import MC "modclub/modclub";
 import Prelude "mo:base/Prelude";
 import Error "mo:base/Error";
 import Nat32 "mo:base/Nat32";
@@ -767,6 +767,35 @@ actor PostCore{
         Debug.print("PostCore->CurrentId");
         postId;
     };
+
+
+    public shared ({caller}) func deletePostFromUserDebug(handle: Text, postId:Text) : async Result.Result<[Text], Text>{
+        if(not isAdmin(caller)){
+            return #err(Unauthorized)
+        };
+
+        let trimmedHandle = U.trim(handle);
+        let authorPrincipalId = U.safeGet(lowercaseHandleReverseHashMap, trimmedHandle, "");
+
+        if(authorPrincipalId == ""){
+            return #err(UserNotFound)
+        };
+
+        let existingPostIds = U.safeGet(userPostsHashMap, authorPrincipalId, List.nil());
+
+        let filteredPostIds = Buffer.Buffer<Text>(0);
+        
+        for(existingPostId in List.toArray(existingPostIds).vals()){
+            if(postId != existingPostId){
+                filteredPostIds.add(existingPostId);
+            };
+        };
+        userPostsHashMap.put(authorPrincipalId, List.fromArray(Buffer.toArray(filteredPostIds)));
+        
+        return #ok(Buffer.toArray(filteredPostIds))
+        
+    };
+
     //call deleteUserPosts method from each bucket canister that has the post from the given user
     public shared ({ caller }) func deleteUserPosts(principalId: Text) : async Result.Result<Nat, Text> {
          if (isAnonymous(caller)) {
@@ -1155,11 +1184,13 @@ actor PostCore{
         #Err : Text;
     };
 
-     public shared func validate(input: Any) : async Validate {
-     
-       return #Ok("success");
-    };
+public shared ({ caller }) func validate(input : Any) : async Validate {
+        if (isAdmin(caller)) {
+            return #Ok("success");
+        }else {
 
+    return #Err("Cannot use this method anonymously.");}
+    };
    
 
     private func addOrUpdatePost(isNew: Bool, principal: Text, tagIds: [Text], bucketCanisterId: Text, saveReturn: PostBucketType) : () {
@@ -1635,7 +1666,7 @@ actor PostCore{
         //if the publication canister id is not stored in the bucket canister, fetch it from user canister and store it first.
         if(publicationPrincipalId == ""){
             let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
-            let userReturn = await UserCanister.getPrincipalByHandle(publicationHandle);
+            let userReturn = await UserCanister.getPrincipalByHandle(U.lowerCase(publicationHandle));
             switch(userReturn){
                 case(#ok(principal)){
                     switch(principal) {

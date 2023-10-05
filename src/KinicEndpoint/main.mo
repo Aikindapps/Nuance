@@ -15,7 +15,7 @@ import Prelude "mo:base/Prelude";
 import U "../shared/utils";
 import Types "./types";
 import Canistergeek "../canistergeek/canistergeek";
-import PostTypes "../Post/types";
+import PostTypes "../PostCore/types";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import CanisterDeclarations "../shared/CanisterDeclarations";
@@ -47,11 +47,13 @@ actor KinicEndpoint {
         #Err : Text;
     };
 
-     public shared func validate(input: Any) : async Validate {
-     
-       return #Ok("success");
-    };
+public shared ({ caller }) func validate(input : Any) : async Validate {
+        if (isAdmin(caller)) {
+            return #Ok("success");
+        }else {
 
+    return #Err("Cannot use this method anonymously.");}
+    };
     // permanent in-memory state (data types are not lost during upgrades)
     stable var _canistergeekMonitorUD: ? Canistergeek.UpgradeData = null;
     stable var admins : List.List<Text> = List.nil<Text>();

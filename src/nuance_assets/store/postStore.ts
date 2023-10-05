@@ -1210,7 +1210,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         const postsWithAvatars = await mergeAuthorAvatars(posts);
         set({
           postsByFollowers: postsWithAvatars,
-          postTotalCount: Number(totalCount) || 0,
+          postsByCategoryTotalCount: Number(totalCount) || 0,
         });
         return postsWithAvatars;
       }

@@ -25,11 +25,15 @@ reportWebVitals();
 
 //init usergeek
 // see: https://github.com/usergeek/usergeek-ic-js
+
+const userGeekApiKey = process.env.USERGEEK_API_KEY || '';
+const userGeekSecondaryApiKey = process.env.USERGEEK_API_KEY_SECONDARY || '';
+
 if (process.env.NODE_ENV === 'development') {
   Usergeek.init({
-    apiKey: '',
+    apiKey: userGeekApiKey,
     host: 'https://fbbjb-oyaaa-aaaah-qaojq-cai.raw.ic0.app/',
   });
 } else {
-  Usergeek.init({ apiKey: '' });
+  Usergeek.init({ apiKey: userGeekSecondaryApiKey });
 }

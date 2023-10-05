@@ -17,18 +17,9 @@ const CopyArticle: React.FC<CopyArticleProps> = (props): JSX.Element => {
   const copyLinkToArticle = () => {
     console.log(window.location.origin);
     // This ensures that the links work locally, in UAT and PROD; When in PROD they display NAUNCE.XYZ
-    if (
-      window.location.origin ==
-      'https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app'
-    ) {
-      navigator.clipboard.writeText(
-        'http://www.nuance.xyz/share/' + props.postId
-      );
-    } else {
-      navigator.clipboard.writeText(
-        window.location.origin + '/share/' + props.postId
-      );
-    }
+    navigator.clipboard.writeText(
+      window.location.href
+    );
     setTimeout(() => {
       CloseMenu();
     }, 2000);

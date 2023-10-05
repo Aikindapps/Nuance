@@ -44,11 +44,13 @@ shared ({caller = initializer}) actor class Storage () = this {
         #Err : Text;
     };
 
-     public shared func validate(input: Any) : async Validate {
-     
-       return #Ok("success");
-    };
+public shared ({ caller }) func validate(input : Any) : async Validate {
+        if (isAdmin(caller)) {
+            return #Ok("success");
+        }else {
 
+    return #Err("Cannot use this method anonymously.");}
+    };
     //#region Security Management
     
     stable var admins : List.List<Text> = List.nil<Text>();

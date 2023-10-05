@@ -13,10 +13,6 @@
       "main": "src/KinicEndpoint/main.mo",
       "type": "motoko"
     },
-    "Post": {
-      "main": "src/Post/main.mo",
-      "type": "motoko"
-    },
     "PostBucket": {
       "main": "src/PostBucket/main.mo",
       "type": "motoko"
@@ -41,7 +37,7 @@
       "dependencies": [
         "PostIndex",
         "User",
-        "Post",
+        "PostCore",
         "Storage",
         "FastBlocks_EmailOptIn"
       ],
