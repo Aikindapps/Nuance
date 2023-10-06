@@ -39,5 +39,4 @@ module {
     seconds : Nat;
     milliseconds : Nat;
   };
-}
-
+};

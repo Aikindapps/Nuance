@@ -34,6 +34,7 @@ export interface HourlyMetricsData {
   'canisterMemorySize' : CanisterMemoryAggregatedData,
   'timeMillis' : bigint,
 }
+export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
 export interface NumericEntity {
@@ -47,26 +48,43 @@ export type Result = { 'ok' : string } |
   { 'err' : string };
 export type Result_1 = { 'ok' : null } |
   { 'err' : string };
-export type Result_2 = { 'ok' : Array<string> } |
+export type Result_2 = { 'ok' : Uint8Array | number[] } |
   { 'err' : string };
-export type Result_3 = { 'ok' : [Array<Principal>, Array<string>] } |
+export type Result_3 = { 'ok' : Array<string> } |
+  { 'err' : string };
+export type Result_4 = { 'ok' : [Array<Principal>, Array<string>] } |
   { 'err' : string };
 export interface Storage {
+  'acceptCycles' : ActorMethod<[], undefined>,
+  'addWasmChunk' : ActorMethod<[Uint8Array | number[]], Result_1>,
+  'availableCycles' : ActorMethod<[], bigint>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
-  'getAdmins' : ActorMethod<[], Result_2>,
-  'getAllDataCanisterIds' : ActorMethod<[], Result_3>,
+  'getAdmins' : ActorMethod<[], Result_3>,
+  'getAllDataCanisterIds' : ActorMethod<[], Result_4>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
-  'getCgUsers' : ActorMethod<[], Result_2>,
+  'getCanisterVersion' : ActorMethod<[], string>,
+  'getCgUsers' : ActorMethod<[], Result_3>,
   'getNewContentId' : ActorMethod<[], Result>,
+  'getPlatformOperators' : ActorMethod<[], List>,
+  'getWasmChunks' : ActorMethod<[], Result_2>,
+  'idQuick' : ActorMethod<[], Principal>,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,
+  'registerPlatformOperator' : ActorMethod<[string], Result_1>,
+  'resetWasmChunks' : ActorMethod<[], undefined>,
   'retiredDataCanisterIdForWriting' : ActorMethod<[string], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result_1>,
   'unregisterCgUser' : ActorMethod<[string], Result_1>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result_1>,
+  'upgradeAllBuckets' : ActorMethod<[string, Uint8Array | number[]], Result_1>,
+  'upgradeBucket' : ActorMethod<[string, Uint8Array | number[]], Result_1>,
   'uploadBlob' : ActorMethod<[Content], Result>,
+  'validate' : ActorMethod<[any], Validate>,
 }
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE extends Storage {}

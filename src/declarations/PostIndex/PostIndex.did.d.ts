@@ -37,6 +37,7 @@ export interface IndexPostModel {
 }
 export type IndexPostResult = { 'ok' : string } |
   { 'err' : string };
+export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
 export interface NumericEntity {
@@ -57,6 +58,8 @@ export interface SearchResultData {
   'totalCount' : string,
 }
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
@@ -67,9 +70,11 @@ export interface _SERVICE {
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
+  'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_2>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
+  'getPlatformOperators' : ActorMethod<[], List>,
   'indexPost' : ActorMethod<
     [string, string, string, Array<string>, Array<string>],
     IndexPostResult
@@ -83,6 +88,7 @@ export interface _SERVICE {
   >,
   'registerAdmin' : ActorMethod<[string], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
+  'registerPlatformOperator' : ActorMethod<[string], Result>,
   'search' : ActorMethod<[string, boolean, number, number], SearchResultData>,
   'searchWithinPublication' : ActorMethod<
     [string, boolean, number, number, Array<string>],
@@ -91,4 +97,6 @@ export interface _SERVICE {
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result>,
+  'validate' : ActorMethod<[any], Validate>,
 }

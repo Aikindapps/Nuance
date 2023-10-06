@@ -1,3 +1,8 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type User__1 = 
  record {
    accountCreated: text;
@@ -187,6 +192,7 @@ service : {
   getAdmins: () -> (Result_4) query;
   getAllHandles: () -> (vec text) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_4) query;
   getDailyMaxRegistration: () -> (nat) query;
   getFollowersCount: (text) -> (text) query;
@@ -198,6 +204,7 @@ service : {
   getNftCanisters: () -> (vec NftCanisterEntry) query;
   getNuaBalance: (text) -> (NuaBalanceResult) query;
   getNumberOfAllRegisteredUsers: () -> (nat) query;
+  getPlatformOperators: () -> (List) query;
   getPrincipalByHandle: (text) -> (GetPrincipalByHandleReturn) query;
   getPrincipalsByHandles: (vec text) -> (vec text) query;
   getRegistrationNumberLastDay: () -> (nat) query;
@@ -216,6 +223,7 @@ service : {
   registerCanister: (text) -> (Result_1);
   registerCgUser: (text) -> (Result_1);
   registerNftCanisterId: (text) -> (Result_3);
+  registerPlatformOperator: (text) -> (Result_1);
   registerUser: (text, text, text) -> (RegisterUserReturn);
   removePublication: (PublicationObject__1, text) ->
    (RemovePublicationReturn);
@@ -228,10 +236,12 @@ service : {
   unregisterAdmin: (text) -> (Result_1);
   unregisterCanister: (text) -> (Result_1);
   unregisterCgUser: (text) -> (Result_1);
+  unregisterPlatformOperator: (text) -> (Result_1);
   updateAvatar: (text) -> (Result);
   updateBio: (text) -> (Result);
   updateDisplayName: (text) -> (Result);
   updateFontType: (text) -> (Result);
   updateHandle: (text, text, text, opt vec text) -> (Result);
   updateLastLogin: () -> () oneway;
+  validate: (reserved) -> (Validate);
 }

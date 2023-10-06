@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const List = IDL.Rec();
   const ClearIndexResult = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const MetricsGranularity = IDL.Variant({
@@ -40,6 +41,7 @@ export const idlFactory = ({ IDL }) => {
     'daily' : IDL.Vec(DailyMetricsData),
   });
   const CanisterMetrics = IDL.Record({ 'data' : CanisterMetricsData });
+  List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const IndexPostResult = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const IndexPostModel = IDL.Record({
     'oldTags' : IDL.Vec(IDL.Text),
@@ -54,6 +56,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
@@ -65,9 +68,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(CanisterMetrics)],
         ['query'],
       ),
+    'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_2], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
+    'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'indexPost' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)],
         [IndexPostResult],
@@ -87,6 +92,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result], []),
+    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
     'search' : IDL.Func(
         [IDL.Text, IDL.Bool, IDL.Nat32, IDL.Nat32],
         [SearchResultData],
@@ -100,6 +106,8 @@ export const idlFactory = ({ IDL }) => {
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result], []),
+    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
+    'validate' : IDL.Func([IDL.Reserved], [Validate], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

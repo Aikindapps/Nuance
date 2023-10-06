@@ -118,6 +118,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : User__1,
     'err' : IDL.Text,
   });
+  const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'addNuaBalance' : IDL.Func([IDL.Text], [], ['oneway']),
@@ -147,6 +148,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(CanisterMetrics)],
         ['query'],
       ),
+    'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_4], ['query']),
     'getDailyMaxRegistration' : IDL.Func([], [IDL.Nat], ['query']),
     'getFollowersCount' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
@@ -166,6 +168,7 @@ export const idlFactory = ({ IDL }) => {
     'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
     'getNuaBalance' : IDL.Func([IDL.Text], [NuaBalanceResult], ['query']),
     'getNumberOfAllRegisteredUsers' : IDL.Func([], [IDL.Nat], ['query']),
+    'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPrincipalByHandle' : IDL.Func(
         [IDL.Text],
         [GetPrincipalByHandleReturn],
@@ -196,6 +199,7 @@ export const idlFactory = ({ IDL }) => {
     'registerCanister' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_1], []),
     'registerNftCanisterId' : IDL.Func([IDL.Text], [Result_3], []),
+    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
     'registerUser' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [RegisterUserReturn],
@@ -215,6 +219,7 @@ export const idlFactory = ({ IDL }) => {
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result_1], []),
     'unregisterCanister' : IDL.Func([IDL.Text], [Result_1], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result_1], []),
+    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
     'updateAvatar' : IDL.Func([IDL.Text], [Result], []),
     'updateBio' : IDL.Func([IDL.Text], [Result], []),
     'updateDisplayName' : IDL.Func([IDL.Text], [Result], []),
@@ -225,6 +230,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateLastLogin' : IDL.Func([], [], ['oneway']),
+    'validate' : IDL.Func([IDL.Reserved], [Validate], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

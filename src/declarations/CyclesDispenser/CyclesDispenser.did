@@ -1,3 +1,8 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type TopUp = 
  record {
    amount: nat;
@@ -44,6 +49,11 @@ type RegisteredCanister =
    topUpAmount: nat;
    topUps: vec TopUp;
  };
+type List = 
+ opt record {
+       text;
+       List;
+     };
 type AddCanisterModel = 
  record {
    canisterId: text;
@@ -54,16 +64,22 @@ service : {
   acceptCycles: () -> ();
   addCanister: (AddCanisterModel) -> (Result_4);
   availableCycles: () -> (nat) query;
+  batchRegisterAdmin: (principal) -> (Result_2);
+  batchRegisterPlatformOperator: (principal) -> (Result_2);
+  batchUnregisterAdmin: (principal) -> (Result_2);
+  batchUnregisterPlatformOperator: (principal) -> (Result_2);
   checkAllRegisteredCanisters: () -> (Result);
   checkRegisteredCanister: (text) -> (Result_3);
   getAdmins: () -> (Result_2) query;
   getAllRegisteredCanisters: () -> (vec RegisteredCanister) query;
   getAllTopUps: () -> (vec TopUp) query;
+  getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_2) query;
   getCyclesDispenserMinimumValue: () -> (nat) query;
   getLatestTimerCall: () -> (text, text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
+  getPlatformOperators: () -> (List) query;
   getRegisteredCanister: (text) -> (Result_4) query;
   getStatus: () -> (text) query;
   getTopUp: (text) -> (Result_3) query;
@@ -74,9 +90,12 @@ service : {
   registerAdmin: (text) -> (Result);
   registerCanister: (text) -> (Result);
   registerCgUser: (text) -> (Result);
+  registerPlatformOperator: (text) -> (Result);
   removeCanister: (text) -> (Result);
   setMaxMemorySize: (nat) -> (Result_1);
   unregisterAdmin: (text) -> (Result);
   unregisterCanister: (text) -> (Result);
   unregisterCgUser: (text) -> (Result);
+  unregisterPlatformOperator: (text) -> (Result);
+  validate: (reserved) -> (Validate);
 }

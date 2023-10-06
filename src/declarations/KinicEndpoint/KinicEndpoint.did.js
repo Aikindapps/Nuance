@@ -1,5 +1,6 @@
 export const idlFactory = ({ IDL }) => {
-  const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const List = IDL.Rec();
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const MetricsGranularity = IDL.Variant({
     'hourly' : IDL.Null,
     'daily' : IDL.Null,
@@ -43,31 +44,40 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(IDL.Text),
     'err' : IDL.Text,
   });
+  List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'collectCanisterMetrics' : IDL.Func([], [], []),
-    'getAdmins' : IDL.Func([], [Result_2], ['query']),
+    'getAdmins' : IDL.Func([], [Result_3], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
         [IDL.Opt(CanisterMetrics)],
         ['query'],
       ),
-    'getCgUsers' : IDL.Func([], [Result_2], ['query']),
+    'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
+    'getCgUsers' : IDL.Func([], [Result_3], ['query']),
     'getKinicUrlList' : IDL.Func([], [KinicReturn], []),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
-    'getTrustedPrincipals' : IDL.Func([], [Result_2], ['query']),
+    'getPlatformOperators' : IDL.Func([], [List], ['query']),
+    'getTrustedPrincipals' : IDL.Func([], [Result_3], ['query']),
+    'initializeCanister' : IDL.Func([IDL.Text], [Result_2], []),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result], []),
+    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
     'registerPrincipal' : IDL.Func([IDL.Text], [Result], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result], []),
+    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
     'unregisterPrincipal' : IDL.Func([IDL.Text], [Result], []),
+    'validate' : IDL.Func([IDL.Reserved], [Validate], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

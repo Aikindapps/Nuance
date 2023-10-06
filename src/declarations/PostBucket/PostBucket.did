@@ -1,3 +1,8 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type SaveResult = 
  variant {
    err: text;
@@ -142,6 +147,7 @@ type PostBucket =
                                 text;
                               }) query;
    getBucketCanisterVersion: () -> (text) query;
+   getCanisterVersion: () -> (text) query;
    getCgUsers: () -> (Result_6) query;
    getFrontendCanisterId: () -> (text) query;
    getKinicList: () -> (Result_6) query;
@@ -150,6 +156,7 @@ type PostBucket =
    getMemorySize: () -> (nat) query;
    getMetadata: (text, nat) -> (Result_7) query;
    getNftCanisters: () -> (vec NftCanisterEntry) query;
+   getPlatformOperators: () -> (List) query;
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_1) query;
    getPostWithPublicationControl: (text) -> (Result_4);
@@ -162,7 +169,8 @@ type PostBucket =
     vec record {
           text;
           text;
-        }, text, text) -> (Result_1);
+        }, text, text, text, text) -> (Result_1);
+   initializeCanister: (text, text) -> (Result_1);
    isBucketCanisterActivePublic: () -> (bool) query;
    makeBucketCanisterNonActive: () -> (Result_5);
    makePostPremium: (text) -> (bool);
@@ -172,6 +180,7 @@ type PostBucket =
    registerCgUser: (text) -> (Result_2);
    registerNftCanisterId: (text, text) -> (Result_1);
    registerNftCanisterIdAdminFunction: (text, text) -> (Result_1);
+   registerPlatformOperator: (text) -> (Result_2);
    reindex: () -> (Result_1);
    rejectPostByModclub: (text) -> () oneway;
    removePostCategory: (text) -> (Result_4);
@@ -190,8 +199,10 @@ type PostBucket =
    unregisterAdmin: (text) -> (Result_2);
    unregisterCanister: (text) -> (Result_2);
    unregisterCgUser: (text) -> (Result_2);
+   unregisterPlatformOperator: (text) -> (Result_2);
    updateHandle: (text, text) -> (Result_1);
    updatePostDraft: (text, bool) -> (Result);
+   validate: (reserved) -> (Validate);
  };
 type Post = 
  record {
@@ -254,4 +265,9 @@ type Metadata =
       thumbnail: text;
     };
  };
+type List = 
+ opt record {
+       text;
+       List;
+     };
 service : () -> PostBucket

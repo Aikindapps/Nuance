@@ -109,6 +109,8 @@ export interface User__1 {
   'followers' : Followers,
   'avatar' : string,
 }
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addNuaBalance' : ActorMethod<[string], undefined>,
@@ -132,6 +134,7 @@ export interface _SERVICE {
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
+  'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_4>,
   'getDailyMaxRegistration' : ActorMethod<[], bigint>,
   'getFollowersCount' : ActorMethod<[string], string>,
@@ -146,6 +149,7 @@ export interface _SERVICE {
   'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
   'getNuaBalance' : ActorMethod<[string], NuaBalanceResult>,
   'getNumberOfAllRegisteredUsers' : ActorMethod<[], bigint>,
+  'getPlatformOperators' : ActorMethod<[], List>,
   'getPrincipalByHandle' : ActorMethod<[string], GetPrincipalByHandleReturn>,
   'getPrincipalsByHandles' : ActorMethod<[Array<string>], Array<string>>,
   'getRegistrationNumberLastDay' : ActorMethod<[], bigint>,
@@ -164,6 +168,7 @@ export interface _SERVICE {
   'registerCanister' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,
   'registerNftCanisterId' : ActorMethod<[string], Result_3>,
+  'registerPlatformOperator' : ActorMethod<[string], Result_1>,
   'registerUser' : ActorMethod<[string, string, string], RegisterUserReturn>,
   'removePublication' : ActorMethod<
     [PublicationObject__1, string],
@@ -178,6 +183,7 @@ export interface _SERVICE {
   'unregisterAdmin' : ActorMethod<[string], Result_1>,
   'unregisterCanister' : ActorMethod<[string], Result_1>,
   'unregisterCgUser' : ActorMethod<[string], Result_1>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result_1>,
   'updateAvatar' : ActorMethod<[string], Result>,
   'updateBio' : ActorMethod<[string], Result>,
   'updateDisplayName' : ActorMethod<[string], Result>,
@@ -187,4 +193,5 @@ export interface _SERVICE {
     Result
   >,
   'updateLastLogin' : ActorMethod<[], undefined>,
+  'validate' : ActorMethod<[any], Validate>,
 }
