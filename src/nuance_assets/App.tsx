@@ -57,7 +57,7 @@ const Routes = () => {
     { path: '/:handle/:id/:title', element: <ReadArticle /> },
     { path: '/article/new', element: <CreateEditArticle /> },
     { path: '/article/edit/:id', element: <CreateEditArticle /> },
-    { path: '/publication/:handle', element: <PublicationLanding /> },
+    { path: '/publication/:handle', element: <PublicationLanding />, },
     {
       path: '/publication/:handle/subscription',
       element: <PublicationLanding />,

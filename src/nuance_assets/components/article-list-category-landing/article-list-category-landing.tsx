@@ -25,9 +25,8 @@ type ArticleListCategoryLandingProps = {
 
 const ArticleListCategoryLanding: React.FC<ArticleListCategoryLandingProps> = (props): JSX.Element => {
   const navigate = useNavigate();
-
     if(!props.validCategory){
-      navigate(`/publication/${props.publicationHandle}`)
+      //navigate(`/publication/${props.publicationHandle}`)
     }
 
     return (
@@ -62,7 +61,7 @@ const ArticleListCategoryLanding: React.FC<ArticleListCategoryLandingProps> = (p
                 <CardHorizontal post={post} key={post.postId} />
               ))}
             </div>
-            {props.totalPostCount && props.posts && props.categoryPostCount > props.posts.length ?
+            {props.totalPostCount && props.posts && props.categoryPostCount.valueOf() > props.posts.length ?
             <div className='load-more-container'>
               <Button
                 styleType='secondary'

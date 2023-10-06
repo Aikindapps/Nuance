@@ -1,5 +1,5 @@
 // snsConfig.js
-exports.developerNeuronId = "c36ac1899f86d40ebddee713ab667b57717b912ded90ec37ac24deec12a01abe";
+exports.developerNeuronId = "a0e3889b406b7686640619648d848d5a0d800f2b5a7a2a44ff7cda7b2d264131";
 exports.pemFilePath = `../.config/dfx/identity/$(dfx identity whoami)/identity.pem`;
 exports.canisterCommands = [
     'dfx canister id FastBlocks_EmailOptIn',
@@ -10,4 +10,6 @@ exports.canisterCommands = [
     'dfx canister id nuance_assets',
     'dfx canister id PostCore',
     'dfx canister id CyclesDispenser',
+    'dfx canister id kc4mb-myaaa-aaaaf-qajpq-cai', // NFT Factory
+    'dfx canister id kq23y-aiaaa-aaaaf-qajmq-cai', // Publication Management
 ];

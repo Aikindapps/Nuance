@@ -29,4 +29,3 @@ Change the variable `NUANCE_MAIN_REPO_PATH` in the `.env` file with the path of 
 To install all the necessary canisters (Nuance and NNS), run `sudo bash ./scripts/DevInstall.sh`
 
 To run the website, run `npm start`
-

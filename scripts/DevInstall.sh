@@ -69,7 +69,7 @@ echo "##### Download Didc Tool (Candid Generator) #####"
 echo ""
 bash ./scripts/InstallDidc.sh
 # comment out nns install if you do not want to run dfx start --clean
-dfx nns install
+#dfx nns install
 
 echo ""
 echo "##### Build Nuance #####"

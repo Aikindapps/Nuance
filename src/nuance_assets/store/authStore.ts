@@ -40,9 +40,8 @@ const fakeProvider: boolean = process.env.II_PROVIDER_USE_FAKE == 'true';
 var authClient: AuthClient;
 
 //check derivation origin is PROD or UAT
-const NuanceUATCanisterId = '';
-const NuanceUAT = 'https://aaa-aaa.ic0.app';
-const NuanceUATRaw = 'https://aaa-aaa.raw.ic0.app';
+const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
+const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
 const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
 
 const isLocal: boolean =
@@ -105,7 +104,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
         }
-      } else if (get().loginMethod === 'bitfinity') {
+      } else if(get().loginMethod==='bitfinity'){
         await get().logout();
         window.location.pathname = window.location.pathname;
       }
@@ -127,8 +126,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         const navigator = window.navigator as any;
         (navigator.brave && (await navigator.brave.isBrave())) || false
           ? alert(
-            'Must enable all cookies for Stoic wallet to work with Brave browser'
-          )
+              'Must enable all cookies for Stoic wallet to work with Brave browser'
+            )
           : console.log('Not a brave browser');
         window.location.href = '/register';
       }
@@ -137,7 +136,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       try {
         let window_any = window as any;
         window_any.ic.bitfinityWallet.disconnect();
-      } catch (err) { }
+      } catch (err) {}
       set({ loginMethod: 'ii' });
       if (!(await authClient?.isAuthenticated())) {
         if (fakeProvider) {
@@ -196,7 +195,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       try {
         let window_any = window as any;
         window_any.ic.bitfinityWallet.disconnect();
-      } catch (err) { }
+      } catch (err) {}
       set({ loginMethod: 'NFID' });
       if (!(await authClient?.isAuthenticated())) {
         if (fakeProvider) {
@@ -254,14 +253,14 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       } catch (error) {
         toastError('Bitfinity wallet not detected in browser.')
         set({ isLoggedIn: false, loginMethod: undefined });
-        setTimeout(() => {
+        setTimeout(()=>{
           window.open(
             'https://chrome.google.com/webstore/detail/bitfinity-wallet/jnldfbidonfeldmalbflbmlebbipcnle',
             '_blank'
           );
-        }, 500)
+        },500)
         return;
-
+        
       }
       try {
         await window_any?.ic?.bitfinityWallet?.requestConnect({
@@ -371,7 +370,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       let window_any = window as any;
 
       window_any.ic.bitfinityWallet.disconnect();
-    } catch (err) { }
+    } catch (err) {}
   },
 });
 
