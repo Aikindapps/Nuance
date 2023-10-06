@@ -15,17 +15,17 @@ import Blob "mo:base/Blob";
 import Option "mo:base/Option";
 import Array "mo:base/Array";
 import List "mo:base/List";
+import Result "mo:base/Result";
+import Debug "mo:base/Debug";
 import SHA224 "./SHA224";
 import CRC32 "./CRC32";
 import Hex "./Hex";
 
-
 module {
 
   private func trimPattern(char : Char) : Bool {
-      Char.equal(' ', char) or Char.equal('\r', char) or Char.equal('\n', char);
+    Char.equal(' ', char) or Char.equal('\r', char) or Char.equal('\n', char);
   };
-  
 
   // Gets the epoch time in milliseconds,
   // the best format for JavaScript dates.
@@ -40,12 +40,12 @@ module {
   // So it's a bigint in TypeScript, but can be used safely as follows:
   //   new Date(Number(post.created))
   public func epochTime() : Int {
-      let ms : Int = Time.now() / 1000000;
-      return ms;
+    let ms : Int = Time.now() / 1000000;
+    return ms;
   };
 
-  public func safeGet<K, V>(hashMap: HashMap.HashMap<K, V>, key : K, defaultValue : V) : V {
-    switch(hashMap.get(key)) {
+  public func safeGet<K, V>(hashMap : HashMap.HashMap<K, V>, key : K, defaultValue : V) : V {
+    switch (hashMap.get(key)) {
       case null defaultValue;
       case (?value) value;
     };
@@ -54,28 +54,28 @@ module {
   public func isTextLengthValid(text : Text, maxLength : Nat) : Bool {
     let size = text.size();
     if (size > maxLength) {
-      false
+      false;
     } else {
-      true
+      true;
     };
-    
+
   };
 
   public func isNatSizeValid(nat : Nat, maxSize : Nat) : Bool {
-   
+
     if (nat > maxSize) {
-      false
+      false;
     } else {
-      true
+      true;
     };
   };
 
   public func isIntSizeValid(int : Int, maxSize : Int) : Bool {
-    
+
     if (int > maxSize) {
-      false
+      false;
     } else {
-      true
+      true;
     };
   };
 
@@ -95,43 +95,41 @@ module {
     };
   };
 
-  public func doesNotContainXss (text : Text) : Bool {
+  public func doesNotContainXss(text : Text) : Bool {
     let lowerText = lowerCase(text);
 
     if (
-      Text.contains(lowerText, #text "<script>") or 
-      Text.contains(lowerText, #text "</script>") or 
-      Text.contains(lowerText, #text "data:") or 
-      Text.contains(lowerText, #text "vbscript:") or 
-      Text.contains(lowerText, #text "onerror") or 
-      Text.contains(lowerText, #text "onload") or 
-      Text.contains(lowerText, #text "eval(") or 
-      Text.contains(lowerText, #text "document.cookie") or 
-      Text.contains(lowerText, #text "window.location") or 
-      Text.contains(lowerText, #text "%3Cscript%3E") or 
-      Text.contains(lowerText, #text "%3C/script%3E") or 
-      Text.contains(lowerText, #text "<div") or 
-      Text.contains(lowerText, #text "<a") or 
-      Text.contains(lowerText, #text "<span") or 
-      Text.contains(lowerText, #text "<img") or 
-      Text.contains(lowerText, #text "%3C") or 
-      Text.contains(lowerText, #text "%3E") or 
-      Text.contains(lowerText, #text "%2F") or 
-      Text.contains(lowerText, #text "&#x3C") or 
-      Text.contains(lowerText, #text "&#x3E") or 
-      Text.contains(lowerText, #text "&#x2F") or 
-      Text.contains(lowerText, #text "&lt;") or 
-      Text.contains(lowerText, #text "&gt;") or 
-      Text.contains(lowerText, #text "&#60;") or 
+      Text.contains(lowerText, #text "<script>") or
+      Text.contains(lowerText, #text "</script>") or
+      Text.contains(lowerText, #text "data:") or
+      Text.contains(lowerText, #text "vbscript:") or
+      Text.contains(lowerText, #text "onerror") or
+      Text.contains(lowerText, #text "onload") or
+      Text.contains(lowerText, #text "eval(") or
+      Text.contains(lowerText, #text "document.cookie") or
+      Text.contains(lowerText, #text "window.location") or
+      Text.contains(lowerText, #text "%3Cscript%3E") or
+      Text.contains(lowerText, #text "%3C/script%3E") or
+      Text.contains(lowerText, #text "<div") or
+      Text.contains(lowerText, #text "<a") or
+      Text.contains(lowerText, #text "<span") or
+      Text.contains(lowerText, #text "<img") or
+      Text.contains(lowerText, #text "%3C") or
+      Text.contains(lowerText, #text "%3E") or
+      Text.contains(lowerText, #text "%2F") or
+      Text.contains(lowerText, #text "&#x3C") or
+      Text.contains(lowerText, #text "&#x3E") or
+      Text.contains(lowerText, #text "&#x2F") or
+      Text.contains(lowerText, #text "&lt;") or
+      Text.contains(lowerText, #text "&gt;") or
+      Text.contains(lowerText, #text "&#60;") or
       Text.contains(lowerText, #text "&#62;")
     ) {
       return false;
     } else {
       return true;
     };
-};
-
-
+  };
 
   public func trim(value : Text) : Text {
     Text.trim(value, #predicate(trimPattern));
@@ -149,57 +147,57 @@ module {
     lowerCase(x) == lowerCase(y);
   };
 
-  public func filterArrayByIndexes<T>(indexStart: Nat, indexEnd: Nat, array: [T]) : [T]{
+  public func filterArrayByIndexes<T>(indexStart : Nat, indexEnd : Nat, array : [T]) : [T] {
 
     let size = array.size();
 
-    if(indexStart > size){
-      return []
+    if (indexStart > size) {
+      return [];
     };
 
     var start = indexStart;
-    let end = if(indexEnd > size){size} else{indexEnd};
+    let end = if (indexEnd > size) { size } else { indexEnd };
 
     var resultBuffer = Buffer.Buffer<T>(0);
 
-    while(start < end){
+    while (start < end) {
       resultBuffer.add(array[start]);
       start += 1;
     };
 
-    Buffer.toArray(resultBuffer)
+    Buffer.toArray(resultBuffer);
   };
 
   public func concatArrays<T>(a1 : [T], a2 : [T]) : [T] {
     var b : Buffer.Buffer<T> = Buffer.Buffer<T>(10);
     for (val in Iter.fromArray(a1)) {
-        b.add(val);
+      b.add(val);
     };
     for (val in Iter.fromArray(a2)) {
-        b.add(val);
+      b.add(val);
     };
     b.toArray();
   };
 
   // mimics JavaScript substring function
-  public func subText(value : Text, indexStart: Nat, indexEnd : Nat) : Text {
+  public func subText(value : Text, indexStart : Nat, indexEnd : Nat) : Text {
     if (indexStart == 0 and indexEnd >= value.size()) {
-        return value;
+      return value;
     };
     if (indexStart >= value.size()) {
-        return "";
+      return "";
     };
 
     var result : Text = "";
     var i : Nat = 0;
     label l for (c in value.chars()) {
-        if (i >= indexStart and i < indexEnd) {
-            result := result # Char.toText(c);
-        };
-        if (i == indexEnd) {
-            break l;
-        };
-        i += 1;
+      if (i >= indexStart and i < indexEnd) {
+        result := result # Char.toText(c);
+      };
+      if (i == indexEnd) {
+        break l;
+      };
+      i += 1;
     };
 
     result;
@@ -213,7 +211,7 @@ module {
     if (l == 0) {
       return [];
     };
-    
+
     // used only for creating a unique list of words
     // a Set data structure would probably be better, but no time to learn it rn
     var words = HashMap.HashMap<Text, ?Text>(1000000, Text.equal, Text.hash);
@@ -230,47 +228,47 @@ module {
       switch (cs.next()) {
         case null ();
         case (?c) {
-            if (c == '<') {
-                endOfWord := true;
-                inside := true;
-            } else if (c == '>') {
-                inside := false;
-            } else if (c == '&') {
-                endOfWord := true;
-                inside_ce := true;
-            } else if (c == ';') {
-                inside_ce := false;
-            };
+          if (c == '<') {
+            endOfWord := true;
+            inside := true;
+          } else if (c == '>') {
+            inside := false;
+          } else if (c == '&') {
+            endOfWord := true;
+            inside_ce := true;
+          } else if (c == ';') {
+            inside_ce := false;
+          };
 
-            if (endOfWord) {
-                w := trim(w);
-                if (w.size() > 1) {
-                    w := upperCase(w);
-                    words.put(w, null);
-                };
-                w := "";
-            } else if (not inside and not inside_ce) {
-                if (Char.isWhitespace(c) and w.size() > 0) {
-                    w := trim(w);
-                    if (w.size() > 1) {
-                        w := upperCase(w);
-                        words.put(w, null);
-                    };
-                    w := "";
-                } else if (Char.isAlphabetic(c)) {
-                    w #= Prim.charToText(c);
-                };
+          if (endOfWord) {
+            w := trim(w);
+            if (w.size() > 1) {
+              w := upperCase(w);
+              words.put(w, null);
             };
+            w := "";
+          } else if (not inside and not inside_ce) {
+            if (Char.isWhitespace(c) and w.size() > 0) {
+              w := trim(w);
+              if (w.size() > 1) {
+                w := upperCase(w);
+                words.put(w, null);
+              };
+              w := "";
+            } else if (Char.isAlphabetic(c)) {
+              w #= Prim.charToText(c);
+            };
+          };
 
-            if (i == lastIndex) {
-                w := trim(w);
-                if (w.size() > 1) {
-                    w := upperCase(w);
-                    words.put(w, null);
-                };
-                w := "";
+          if (i == lastIndex) {
+            w := trim(w);
+            if (w.size() > 1) {
+              w := upperCase(w);
+              words.put(w, null);
             };
-            endOfWord := false;
+            w := "";
+          };
+          endOfWord := false;
         };
       };
       i += 1;
@@ -292,15 +290,15 @@ module {
       switch (cs.next()) {
         case null ();
         case (?c) {
-            if (Char.isAlphabetic(c) or Char.isDigit(c)) {
-                seg #= lowerCase(Prim.charToText(c));
-                prevHyphen := false;
-            } else if (c == '-' or Char.isWhitespace(c)) {
-                if (not prevHyphen) {
-                    seg #= "-";
-                    prevHyphen := true;
-                }
+          if (Char.isAlphabetic(c) or Char.isDigit(c)) {
+            seg #= lowerCase(Prim.charToText(c));
+            prevHyphen := false;
+          } else if (c == '-' or Char.isWhitespace(c)) {
+            if (not prevHyphen) {
+              seg #= "-";
+              prevHyphen := true;
             };
+          };
         };
       };
       i += 1;
@@ -309,39 +307,40 @@ module {
     seg;
   };
   //gets Nat from Text
-  public func textToNat( txt : Text) : Nat {
-        assert(txt.size() > 0);
-        let chars = txt.chars();
+  public func textToNat(txt : Text) : Nat {
+    assert (txt.size() > 0);
+    let chars = txt.chars();
 
-        var num : Nat = 0;
-        for (v in chars){
-            let charToNum = Nat32.toNat(Char.toNat32(v)-48);
-            assert(charToNum >= 0 and charToNum <= 9);
-            num := num * 10 +  charToNum;          
-        };
+    var num : Nat = 0;
+    for (v in chars) {
+      let charToNum = Nat32.toNat(Char.toNat32(v) -48);
+      assert (charToNum >= 0 and charToNum <= 9);
+      num := num * 10 + charToNum;
+    };
 
-        num;
+    num;
   };
-  public func arrayContains(array:[Text], element:Text): Bool{
-    for(el in array.vals()){
-      if(Text.equal(el, element)){
+  public func arrayContains(array : [Text], element : Text) : Bool {
+    for (el in array.vals()) {
+      if (Text.equal(el, element)) {
         return true;
       };
     };
     return false;
   };
   public func trim_category_name(phrase : Text) : Text {
-    let lowerCase = Text.map(phrase , Prim.charToLower);
-    return Text.map(lowerCase, func (char : Char) : Char {
-      if(Char.equal(Char.fromNat32(32), char)){
-        return Char.fromNat32(45);
-      }
-      else{
-        return char;
-      }
-    });
+    let lowerCase = Text.map(phrase, Prim.charToLower);
+    return Text.map(
+      lowerCase,
+      func(char : Char) : Char {
+        if (Char.equal(Char.fromNat32(32), char)) {
+          return Char.fromNat32(45);
+        } else {
+          return char;
+        };
+      },
+    );
   };
-
 
   public func calculate_total_word_count(body : Text) : Nat {
     var i = 0;
@@ -350,78 +349,78 @@ module {
     let lessThan = Char.fromNat32(60);
     let greaterThan = Char.fromNat32(62);
     let charsBuffer = Buffer.Buffer<Char>(0);
-    for(body_iter in body.chars()){
+    for (body_iter in body.chars()) {
       charsBuffer.add(body_iter);
     };
     let charSize = charsBuffer.size();
-    let elementsPositionsBuffer = Buffer.Buffer<({startingPoint:Nat;endingPoint:Nat})>(0);
+    let elementsPositionsBuffer = Buffer.Buffer<({ startingPoint : Nat; endingPoint : Nat })>(0);
     let values = Buffer.Buffer<Text>(0);
     var totalWordCount = 0;
 
-    switch(charsBuffer.getOpt(0)){
-      case(null) return 0;
-      case(?firstEl){
-        if(not Char.equal(lessThan,firstEl)){
+    switch (charsBuffer.getOpt(0)) {
+      case (null) return 0;
+      case (?firstEl) {
+        if (not Char.equal(lessThan, firstEl)) {
           return 0;
         };
-      }
-    };
-
-
-    while(i+1 < charSize){
-      if(Char.equal(charsBuffer.get(i),greaterThan) and not Char.equal(charsBuffer.get(i+1),lessThan)){
-        i := i+1;
-        let startingIndex = i;
-        while(not Char.equal(charsBuffer.get(i), lessThan)){
-          i:=i+1;
-        };
-        let endIndex = i;
-        elementsPositionsBuffer.add({startingPoint=startingIndex; endingPoint=endIndex;});
-      }
-      else{
-        i := i+1;
       };
     };
 
-    for(elementPositionObject in elementsPositionsBuffer.vals()){
+    while (i +1 < charSize) {
+      if (Char.equal(charsBuffer.get(i), greaterThan) and not Char.equal(charsBuffer.get(i +1), lessThan)) {
+        i := i +1;
+        let startingIndex = i;
+        while (not Char.equal(charsBuffer.get(i), lessThan)) {
+          i := i +1;
+        };
+        let endIndex = i;
+        elementsPositionsBuffer.add({
+          startingPoint = startingIndex;
+          endingPoint = endIndex;
+        });
+      } else {
+        i := i +1;
+      };
+    };
+
+    for (elementPositionObject in elementsPositionsBuffer.vals()) {
       var start = elementPositionObject.startingPoint;
       let end = elementPositionObject.endingPoint;
       var value = "";
-      while(start < end){
+      while (start < end) {
         value := value # Char.toText(charsBuffer.get(start));
         start := start + 1;
       };
       values.add(value);
     };
 
-    for(value in values.vals()){
+    for (value in values.vals()) {
       var iter = 0;
       let valueCharsBuffer = Buffer.Buffer<Char>(0);
-      for(value_iter in value.chars()){
+      for (value_iter in value.chars()) {
         valueCharsBuffer.add(value_iter);
       };
       let valueLength = valueCharsBuffer.size();
-      while(iter+1 < valueLength){
+      while (iter +1 < valueLength) {
         let char = valueCharsBuffer.get(iter);
-        let nextChar = valueCharsBuffer.get(iter+1);
-        if(Char.equal(space,char)){
-          totalWordCount +=1;
-          if(Char.equal(nextChar,space)){
-            totalWordCount-=1;
-          };         
-        }
-        else if(Text.equal(newLine,Char.toText(char)#Char.toText(nextChar))){
+        let nextChar = valueCharsBuffer.get(iter +1);
+        if (Char.equal(space, char)) {
+          totalWordCount += 1;
+          if (Char.equal(nextChar, space)) {
+            totalWordCount -= 1;
+          };
+        } else if (Text.equal(newLine, Char.toText(char) #Char.toText(nextChar))) {
           totalWordCount += 1;
           iter += 1;
         };
-        iter+=1;
+        iter += 1;
       };
-      totalWordCount+=1;
+      totalWordCount += 1;
     };
     return totalWordCount;
   };
 
-  public func principalToAID(principal:Text): Text{
+  public func principalToAID(principal : Text) : Text {
     return fromText(principal, null);
   };
   public func fromText(t : Text, sa : ?[Nat8]) : Text {
@@ -434,7 +433,7 @@ module {
     return fromBytes(Blob.toArray(b), sa);
   };
   public func fromBytes(data : [Nat8], sa : ?[Nat8]) : Text {
-    let SUBACCOUNT_ZERO : [Nat8] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    let SUBACCOUNT_ZERO : [Nat8] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let ads : [Nat8] = [10, 97, 99, 99, 111, 117, 110, 116, 45, 105, 100];
     var _sa : [Nat8] = SUBACCOUNT_ZERO;
     if (Option.isSome(sa)) {
@@ -444,9 +443,17 @@ module {
     var crc : [Nat8] = CRC32.crc32(hash);
     return Hex.encode(Array.append(crc, hash));
   };
-  public func arraySize<T>(array: [T]) : Nat{
-    List.size(List.fromArray(array))
+  public func arraySize<T>(array : [T]) : Nat {
+    List.size(List.fromArray(array));
+  };
+
+  let MetricsCanisterId : Text = "br5f7-7uaaa-aaaaa-qaaca-cai";
+  let MetricsActor = actor (MetricsCanisterId) : actor {
+    logCommand : (commandName : Text, operator : Text) -> async Result.Result<(), Text>;
+  };
+
+  public func logMetrics(commandName : Text, operator : Text) : async Result.Result<(), Text> {
+    await MetricsActor.logCommand(commandName, operator);
   };
 
 };
-

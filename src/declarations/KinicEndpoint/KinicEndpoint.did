@@ -1,8 +1,18 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type UpdateCallsAggregatedData = vec nat64;
-type Result_2 = 
+type Result_3 = 
  variant {
    err: text;
    ok: vec text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: text;
  };
 type Result_1 = 
  variant {
@@ -27,6 +37,11 @@ type MetricsGranularity =
    daily;
    hourly;
  };
+type List = 
+ opt record {
+       text;
+       List;
+     };
 type KinicReturn = 
  variant {
    err: text;
@@ -67,19 +82,25 @@ service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
   collectCanisterMetrics: () -> ();
-  getAdmins: () -> (Result_2) query;
+  getAdmins: () -> (Result_3) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
-  getCgUsers: () -> (Result_2) query;
+  getCanisterVersion: () -> (text) query;
+  getCgUsers: () -> (Result_3) query;
   getKinicUrlList: () -> (KinicReturn);
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getTrustedPrincipals: () -> (Result_2) query;
+  getPlatformOperators: () -> (List) query;
+  getTrustedPrincipals: () -> (Result_3) query;
+  initializeCanister: (text) -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
   registerAdmin: (text) -> (Result);
   registerCgUser: (text) -> (Result);
+  registerPlatformOperator: (text) -> (Result);
   registerPrincipal: (text) -> (Result);
   setMaxMemorySize: (nat) -> (Result_1);
   unregisterAdmin: (text) -> (Result);
   unregisterCgUser: (text) -> (Result);
+  unregisterPlatformOperator: (text) -> (Result);
   unregisterPrincipal: (text) -> (Result);
+  validate: (reserved) -> (Validate);
 }

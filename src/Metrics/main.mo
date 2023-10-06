@@ -18,8 +18,13 @@ import Types "./types";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import Versions "../shared/versions";
+import Time "mo:base/Time";
+import Hash "mo:base/Hash";
 
-actor FastBlocks_EmailOptIn {
+actor Metrics {
+
+  //types
+  type OperationLog = Types.OperationLog;
   // local variables
   func isEq(x : Text, y : Text) : Bool { x == y };
   private func isAnonymous(caller : Principal) : Bool {
@@ -29,8 +34,6 @@ actor FastBlocks_EmailOptIn {
 
   // error messages
   let Unauthorized = "Unauthorized";
-  let EmailAddressUnavailable = "No email address provided";
-  let NotTrustedPrincipal = "Not a trusted principal, unauthorized";
 
   //SNS
   public type Validate = {
@@ -53,11 +56,9 @@ actor FastBlocks_EmailOptIn {
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
   stable var platformOperators : List.List<Text> = List.nil<Text>();
-  stable var emailIdEntries : [(Text, Text)] = [];
 
   stable var index : [(Text, [Text])] = [];
   var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
-  var emailIdHashMap = HashMap.fromIter<Text, Text>(emailIdEntries.vals(), maxHashmapSize, isEq, Text.hash);
 
   public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
     if (isAnonymous(caller)) {
@@ -142,45 +143,6 @@ actor FastBlocks_EmailOptIn {
     exists != null;
   };
 
-  public shared ({ caller }) func createEmailOptInAddress(emailAddress : Text) : async Result.Result<(), Text> {
-    //canistergeekMonitor.collectMetrics();
-
-    //validate input
-    if (not U.isTextLengthValid(emailAddress, 100)) {
-      return #err("invalid email address");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    let now = Int.toText(U.epochTime());
-
-    if (emailAddress == "") {
-      Debug.print("EmailOptIn->createEmailOptInAddress: Invalid email address");
-      return #err(EmailAddressUnavailable);
-    };
-
-    emailIdHashMap.put(emailAddress, now);
-    Debug.print("EmailOptIn->createEmailOptInAddress: New User Detected - Signed up successfully");
-    #ok();
-  };
-
-  public shared query ({ caller }) func dumpOptInEmailAddress() : async Text {
-    if (isAnonymous(caller)) {
-      return ("Cannot use this method anonymously.");
-    };
-
-    if (not isAdmin(caller)) {
-      return "Unauthorized";
-    };
-    var optInEmailAddress : Text = "";
-    for ((emailAddress, now) in emailIdHashMap.entries()) {
-      optInEmailAddress := optInEmailAddress # " USER: OptInEmailAddress: " # emailAddress;
-    };
-    optInEmailAddress;
-  };
-
   public func acceptCycles() : async () {
     let available = Cycles.available();
     let accepted = Cycles.accept(available);
@@ -230,19 +192,37 @@ actor FastBlocks_EmailOptIn {
   };
 
   public shared query func getCanisterVersion() : async Text {
-    Versions.FASTBLOCKSEMAILOPTIN_VERSION;
+    Versions.METRICS_VERSION;
+  };
+
+  stable var platformOperatorsLog : [OperationLog] = [];
+
+  public shared ({ caller }) func getPlatformOperatorsLog() : async Result.Result<[OperationLog], Text> {
+    #ok(platformOperatorsLog);
+  };
+
+  public shared ({ caller }) func logCommand(commandName : Text, operator : Text) : async Result.Result<(), Text> {
+    //admin permisions
+
+    let timestamp = Time.now();
+    let log = {
+      operation = commandName;
+      principal = operator;
+      timestamp = timestamp;
+    };
+    let logBuffer = Buffer.fromArray<OperationLog>(platformOperatorsLog);
+    logBuffer.add(log);
+    platformOperatorsLog := Buffer.toArray(logBuffer);
+    #ok();
   };
 
   //Pre and post upgrades, currently here for future use if we need to store data.
   system func preupgrade() {
-    Debug.print("EmailOptIn->preupgrade: hashmap size: " # Nat.toText(index.size()));
-    Debug.print("EmailOptIn->preupgrade:Inside preupgrade method");
+
     index := Iter.toArray(hashMap.entries());
   };
 
   system func postupgrade() {
-    Debug.print("EmailOptIn->postupgrade: hashmap size: " # Nat.toText(index.size()));
-    Debug.print("EmailOptIn->postupgrade:Inside postupgrade method");
     hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
     index := [];
   };

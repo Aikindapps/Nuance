@@ -9,7 +9,9 @@
       "type": "motoko"
     },
     "KinicEndpoint": {
-      "dependencies": ["PostCore"],
+      "dependencies": [
+        "PostCore"
+      ],
       "main": "src/KinicEndpoint/main.mo",
       "type": "motoko"
     },
@@ -33,6 +35,10 @@
       "main": "src/User/main.mo",
       "type": "motoko"
     },
+    "Metrics": {
+      "main": "src/Metrics/main.mo",
+      "type": "motoko"
+    },
     "nuance_assets": {
       "dependencies": [
         "PostIndex",
@@ -44,7 +50,11 @@
       "frontend": {
         "entrypoint": "dist/index.html"
       },
-      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "source": [
+        "dist/",
+        "src/well-known/",
+        "src/SEO/"
+      ],
       "type": "assets"
     }
   },

@@ -1,3 +1,8 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type UpdateCallsAggregatedData = vec nat64;
 type SearchResultData = 
  record {
@@ -32,6 +37,11 @@ type MetricsGranularity =
    daily;
    hourly;
  };
+type List = 
+ opt record {
+       text;
+       List;
+     };
 type IndexPostResult = 
  variant {
    err: text;
@@ -88,9 +98,11 @@ service : {
   collectCanisterMetrics: () -> ();
   getAdmins: () -> (Result_2) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_2) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
+  getPlatformOperators: () -> (List) query;
   indexPost: (text, text, text, vec text, vec text) -> (IndexPostResult);
   indexPosts: (vec IndexPostModel) -> (vec IndexPostResult);
   indexSize: () -> (nat) query;
@@ -98,10 +110,13 @@ service : {
   populateTags: (vec text, nat32, nat32) -> (SearchResultData) query;
   registerAdmin: (text) -> (Result);
   registerCgUser: (text) -> (Result);
+  registerPlatformOperator: (text) -> (Result);
   search: (text, bool, nat32, nat32) -> (SearchResultData) query;
   searchWithinPublication: (text, bool, nat32, nat32, vec text) ->
    (SearchResultData) query;
   setMaxMemorySize: (nat) -> (Result_1);
   unregisterAdmin: (text) -> (Result);
   unregisterCgUser: (text) -> (Result);
+  unregisterPlatformOperator: (text) -> (Result);
+  validate: (reserved) -> (Validate);
 }

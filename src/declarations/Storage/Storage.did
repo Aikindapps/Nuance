@@ -1,20 +1,38 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type UpdateCallsAggregatedData = vec nat64;
 type Storage = 
  service {
+   acceptCycles: () -> ();
+   addWasmChunk: (blob) -> (Result_1);
+   availableCycles: () -> (nat) query;
    collectCanisterMetrics: () -> ();
-   getAdmins: () -> (Result_2);
-   getAllDataCanisterIds: () -> (Result_3);
+   getAdmins: () -> (Result_3);
+   getAllDataCanisterIds: () -> (Result_4);
    getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
-   getCgUsers: () -> (Result_2) query;
+   getCanisterVersion: () -> (text) query;
+   getCgUsers: () -> (Result_3) query;
    getNewContentId: () -> (Result);
+   getPlatformOperators: () -> (List) query;
+   getWasmChunks: () -> (Result_2);
+   idQuick: () -> (principal) query;
    registerAdmin: (text) -> (Result_1);
    registerCgUser: (text) -> (Result_1);
+   registerPlatformOperator: (text) -> (Result_1);
+   resetWasmChunks: () -> () oneway;
    retiredDataCanisterIdForWriting: (text) -> (Result_1);
    unregisterAdmin: (text) -> (Result_1);
    unregisterCgUser: (text) -> (Result_1);
+   unregisterPlatformOperator: (text) -> (Result_1);
+   upgradeAllBuckets: (text, vec nat8) -> (Result_1);
+   upgradeBucket: (text, vec nat8) -> (Result_1);
    uploadBlob: (Content) -> (Result);
+   validate: (reserved) -> (Validate);
  };
-type Result_3 = 
+type Result_4 = 
  variant {
    err: text;
    ok: record {
@@ -22,10 +40,15 @@ type Result_3 =
          vec text;
        };
  };
-type Result_2 = 
+type Result_3 = 
  variant {
    err: text;
    ok: vec text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: blob;
  };
 type Result_1 = 
  variant {
@@ -50,6 +73,11 @@ type MetricsGranularity =
    daily;
    hourly;
  };
+type List = 
+ opt record {
+       text;
+       List;
+     };
 type HourlyMetricsData = 
  record {
    canisterCycles: CanisterCyclesAggregatedData;

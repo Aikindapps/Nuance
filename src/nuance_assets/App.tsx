@@ -10,6 +10,7 @@ import { ThemeProvider, useTheme } from './ThemeContext';
 import { images, colors } from './shared/constants';
 
 const HomePageGrid = lazy(() => import('./screens/home/homegrid'));
+const Metrics = lazy(() => import('./screens/metrics/metrics'));
 const TimedOut = lazy(() => import('./screens/timed-out/timedOut'));
 const LoginRegistration = lazy(
   () => import('./screens/login-registration/login-registration')
@@ -51,6 +52,7 @@ import Followers from './screens/profile/followers';
 const Routes = () => {
   return useRoutes([
     { path: '/', element: <HomePageGrid /> },
+    { path: '/metrics', element: <Metrics/> },
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
     { path: '/:handle', element: <Profile /> },
