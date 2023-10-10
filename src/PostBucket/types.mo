@@ -85,6 +85,20 @@ module {
         modified: Text; //may remove it if it's not needed
     };
 
+    public type Comment = {
+      commentId: Text; //unique id of this comment
+      content: Text; //stores the content of the comment
+      postId: Text; //the postId of the post that this comment sent to
+      bucketCanisterId: Text; //canister id of the bucket canister
+      upVotes: [Text]; //principal ids of the users upvoted the comment. 
+      downVotes: [Text]; //principal ids of the users downvoted the comment. 
+      createdAt: Text; //created time of the comment
+      editedAt: ?Text; //last edited time of the comment -> it's null if the comment is not edited
+      creator: Text; //principal id of the creator of the comment
+      replies: [Comment]; //an array of Comments to enable replying -> As the MVP of the feature is restricted with 400 chars and 100 comments per post, this field directly contains the Comment. It can be converted to [commentId] for pagination
+      repliedCommentId: ?Text; //if this comment is a reply, holds the commentId. if not it's null 
+    };
+
     public type Post = {
         postId: Text;
         handle: Text;
