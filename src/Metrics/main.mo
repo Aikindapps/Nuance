@@ -26,6 +26,7 @@ actor Metrics {
 
   //types
   type OperationLog = Types.OperationLog;
+  type RegisteredCanister = Types.RegisteredCanister;
   // local variables
   func isEq(x : Text, y : Text) : Bool { x == y };
   private func isAnonymous(caller : Principal) : Bool {
@@ -68,21 +69,6 @@ actor Metrics {
     };
 
     #ok(List.toArray(admins));
-  };
-
-  public type TopUp = {
-    canisterId : Text;
-    time : Int;
-    amount : Nat;
-    balanceBefore : Nat;
-    balanceAfter : Nat;
-  };
-  public type RegisteredCanister = {
-    canisterId : Text;
-    minimumThreshold : Nat;
-    topUpAmount : Nat;
-    balance : Nat;
-    topUps : [TopUp];
   };
 
   public type CyclesDispenserActorType = actor {
