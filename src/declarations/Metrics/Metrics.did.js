@@ -1,13 +1,13 @@
 export const idlFactory = ({ IDL }) => {
   const List = IDL.Rec();
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const OperationLog = IDL.Record({
     'principal' : IDL.Text,
     'operation' : IDL.Text,
     'timestamp' : IDL.Int,
   });
-  const Result_2 = IDL.Variant({
+  const Result_3 = IDL.Variant({
     'ok' : IDL.Vec(OperationLog),
     'err' : IDL.Text,
   });
@@ -17,12 +17,13 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
-    'getAdmins' : IDL.Func([], [Result_3], ['query']),
+    'getAdmins' : IDL.Func([], [Result_2], ['query']),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
-    'getPlatformOperatorsLog' : IDL.Func([], [Result_2], []),
+    'getPlatformOperatorsLog' : IDL.Func([], [Result_3], []),
+    'initNuanceCanisters' : IDL.Func([], [Result_2], []),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'logCommand' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),

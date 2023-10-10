@@ -20,6 +20,7 @@ import Debug "mo:base/Debug";
 import SHA224 "./SHA224";
 import CRC32 "./CRC32";
 import Hex "./Hex";
+import ENV "../shared/env";
 
 module {
 
@@ -447,7 +448,7 @@ module {
     List.size(List.fromArray(array));
   };
 
-  let MetricsCanisterId : Text = "br5f7-7uaaa-aaaaa-qaaca-cai";
+  let MetricsCanisterId : Text = ENV.METRICS_CANISTER_ID;
   let MetricsActor = actor (MetricsCanisterId) : actor {
     logCommand : (commandName : Text, operator : Text) -> async Result.Result<(), Text>;
   };

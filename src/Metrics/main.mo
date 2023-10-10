@@ -20,6 +20,7 @@ import Prim "mo:prim";
 import Versions "../shared/versions";
 import Time "mo:base/Time";
 import Hash "mo:base/Hash";
+import ENV "../shared/env";
 
 actor Metrics {
 
@@ -56,6 +57,7 @@ actor Metrics {
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
   stable var platformOperators : List.List<Text> = List.nil<Text>();
+  stable var nuanceCanisters : [Text] = [];
 
   stable var index : [(Text, [Text])] = [];
   var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
@@ -68,7 +70,45 @@ actor Metrics {
     #ok(List.toArray(admins));
   };
 
-  // admin and canister functions
+  public type TopUp = {
+    canisterId : Text;
+    time : Int;
+    amount : Nat;
+    balanceBefore : Nat;
+    balanceAfter : Nat;
+  };
+  public type RegisteredCanister = {
+    canisterId : Text;
+    minimumThreshold : Nat;
+    topUpAmount : Nat;
+    balance : Nat;
+    topUps : [TopUp];
+  };
+
+  public type CyclesDispenserActorType = actor {
+    getAllRegisteredCanisters : () -> async [RegisteredCanister];
+  };
+
+  public shared ({ caller }) func initNuanceCanisters() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    let cyclesdispenser : CyclesDispenserActorType = actor (ENV.CYCLES_DISPENSER_CANISTER_ID);
+    let registeredCanisters = await cyclesdispenser.getAllRegisteredCanisters();
+    let canisterBuffer = Buffer.Buffer<Text>(1);
+    for (registeredCanister in Iter.fromArray(registeredCanisters)) {
+      let canisterId = registeredCanister.canisterId;
+      canisterBuffer.add(canisterId);
+    };
+
+    nuanceCanisters := Buffer.toArray(canisterBuffer);
+    #ok(nuanceCanisters);
+  };
 
   public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
     if (isAnonymous(caller)) {
@@ -106,6 +146,11 @@ actor Metrics {
   private func isAdmin(caller : Principal) : Bool {
     var c = Principal.toText(caller);
     var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
+    exists != null;
+  };
+
+  private func isNuanceCanister(canisterId : Text) : Bool {
+    var exists = Array.find<Text>(nuanceCanisters, func(val : Text) : Bool { val == canisterId });
     exists != null;
   };
 
@@ -197,12 +242,14 @@ actor Metrics {
 
   stable var platformOperatorsLog : [OperationLog] = [];
 
-  public shared ({ caller }) func getPlatformOperatorsLog() : async Result.Result<[OperationLog], Text> {
+  public shared query ({ caller }) func getPlatformOperatorsLog() : async Result.Result<[OperationLog], Text> {
     #ok(platformOperatorsLog);
   };
 
-  public shared ({ caller }) func logCommand(commandName : Text, operator : Text) : async Result.Result<(), Text> {
-    //admin permisions
+  public shared query ({ caller }) func logCommand(commandName : Text, operator : Text) : async Result.Result<(), Text> {
+    if (not isAdmin(caller) and not isNuanceCanister(Principal.toText(caller))) {
+      return #err(Unauthorized);
+    };
 
     let timestamp = Time.now();
     let log = {

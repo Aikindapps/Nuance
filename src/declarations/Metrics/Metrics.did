@@ -6,12 +6,12 @@ type Validate =
 type Result_3 = 
  variant {
    err: text;
-   ok: vec text;
+   ok: vec OperationLog;
  };
 type Result_2 = 
  variant {
    err: text;
-   ok: vec OperationLog;
+   ok: vec text;
  };
 type Result_1 = 
  variant {
@@ -37,12 +37,13 @@ type List =
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
-  getAdmins: () -> (Result_3) query;
+  getAdmins: () -> (Result_2) query;
   getCanisterVersion: () -> (text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
-  getPlatformOperatorsLog: () -> (Result_2);
+  getPlatformOperatorsLog: () -> (Result_3);
+  initNuanceCanisters: () -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
   logCommand: (text, text) -> (Result);
   registerAdmin: (text) -> (Result);

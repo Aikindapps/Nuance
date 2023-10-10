@@ -11,21 +11,22 @@ export type Result = { 'ok' : null } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_2 = { 'ok' : Array<OperationLog> } |
+export type Result_2 = { 'ok' : Array<string> } |
   { 'err' : string };
-export type Result_3 = { 'ok' : Array<string> } |
+export type Result_3 = { 'ok' : Array<OperationLog> } |
   { 'err' : string };
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
-  'getAdmins' : ActorMethod<[], Result_3>,
+  'getAdmins' : ActorMethod<[], Result_2>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
-  'getPlatformOperatorsLog' : ActorMethod<[], Result_2>,
+  'getPlatformOperatorsLog' : ActorMethod<[], Result_3>,
+  'initNuanceCanisters' : ActorMethod<[], Result_2>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'logCommand' : ActorMethod<[string, string], Result>,
   'registerAdmin' : ActorMethod<[string], Result>,
