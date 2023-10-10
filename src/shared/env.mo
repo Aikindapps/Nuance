@@ -7,5 +7,5 @@ module {
   public let STORAGE_CANISTER_ID = "y2pkg-ciaaa-aaaaf-qagbq-cai";
   public let CYCLES_DISPENSER_CANISTER_ID = "353ux-wqaaa-aaaaf-qakga-cai";
   public let NUANCE_ASSETS_CANISTER_ID = "exwqn-uaaaa-aaaaf-qaeaa-cai";
-  public let METRICS_CANISTER_ID = "bkyz2-fmaaa-aaaaa-qaaaq-cai"; //temp until mainnet is created
+  public let METRICS_CANISTER_ID = "xjlvo-hyaaa-aaaam-qbcga-cai";
 };
