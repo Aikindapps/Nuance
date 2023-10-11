@@ -85,6 +85,13 @@ module {
         modified: Text; //may remove it if it's not needed
     };
 
+    public type SaveCommentModel = {
+      postId: Text;
+      commentId: ?Text;
+      content: Text;
+      replyToCommentId: ?Text;
+    };
+
     public type Comment = {
       commentId: Text; //unique id of this comment
       content: Text; //stores the content of the comment

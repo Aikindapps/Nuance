@@ -88,6 +88,7 @@ actor class PostBucket() = this {
 
     //comment types
     type Comment = Types.Comment;
+    type SaveCommentModel = Types.SaveCommentModel;
 
 
     // permanent in-memory state (data types are not lost during upgrades)
@@ -2271,7 +2272,18 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         };
         return Buffer.toArray(comments);
     };
-
+    //returns the comment by a commentId
+    public shared query func getComment(commentId: Text) : async Result.Result<Comment, Text>{
+        switch(commentIdToUserPrincipalIdHashMap.get(commentId)) {
+            case(?val) {
+                return #ok(buildComment(commentId));
+            };
+            case(null) {
+                #err("Comment not found.")
+            };
+        };
+    };
+    //returns all the comments of the given postId (replies included, no pagination)
     public shared query func getPostComments(postId: Text) : async Result.Result<[Comment], Text>{
         switch(principalIdHashMap.get(postId)) {
             case(?val) {
@@ -2284,7 +2296,14 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         };
     };
 
-    public shared ({caller}) func saveComment(postId: Text, commentId: ?Text, content: Text, replyToCommentId: ?Text) : async Result.Result<[Comment], Text>{
+    //enables editing & creating comments
+    //postId -> use the postId you want to comment
+    //commentId -> if you want to edit an existing comment, use this argument to specify the comment you're editing. if not an edit, pass null
+    //content -> content of the comment
+    //replytoCommentId -> if this is a reply to another comment, use this arg to specify the comment you're replying. if not a reply, pass null
+    public shared ({caller}) func saveComment(input: SaveCommentModel) : async Result.Result<[Comment], Text>{
+        let {postId; commentId; content; replyToCommentId} = input;
+
         switch(principalIdHashMap.get(postId)) {
             case(?val) {
                 //post exists
@@ -2310,9 +2329,19 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
                     return #err("An article can have maximum of 100 comments!");
                 };
 
+                //check the canister memory threshold
+                if(not isThereEnoughMemoryPrivate()){
+                    return #err("Canister reached the maximum memory threshold. Please try again later.")
+                };
+
                 //check the length of content
                 if(not U.isTextLengthValid(content, 400)){
                     return #err("Your comment is too long. It can be maximum of 400 characters!")
+                };
+
+                //check if the content is empty
+                if(U.isTextEmpty(content)){
+                    return #err("Comment can not be empty!")
                 };
 
                 //if caller claims that this is an edit, check if the editing comment exists
@@ -2473,7 +2502,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
                     else{
                         //creating a new simple comment
                         //put the comment id to the list of comment ids corresponds to the post
-                        let existingComments = List.fromArray(U.safeGet(postIdToCommentIdsHashMap, validCommentId, []));
+                        let existingComments = List.fromArray(U.safeGet(postIdToCommentIdsHashMap, postId, []));
                         let newComments = List.push(validCommentId, existingComments);
                         postIdToCommentIdsHashMap.put(postId, List.toArray(newComments));
                         //put the createdAt field
@@ -2486,6 +2515,164 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
             };
             case(null) {
                 return #err(ArticleNotFound)
+            };
+        };
+    };
+
+    //private function to add the principal id to the comment upvotes
+    private func addCommentUpvote(commentId: Text, userPrincipalId: Text) : () {
+        //add the principal id to the array if it doesn't already exist
+        var upvotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
+        if(not U.arrayContains(upvotes, userPrincipalId)){
+            let upvotesList = List.fromArray(upvotes);
+            upvotes := List.toArray(List.push(userPrincipalId, upvotesList))
+        };
+        commentIdToUpvotedPrincipalIdsHashMap.put(commentId, upvotes);
+    };
+
+    //private function to remove the principal id from the comment upvotes
+    private func removeCommentUpvote(commentId: Text, userPrincipalId: Text) : () {
+        //remove the caller's principal id from the upVotes if it exists
+        let upvotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
+        let upvotesFiltered = Array.filter<Text>(upvotes, func (upvoter: Text) {
+            return upvoter != userPrincipalId;
+        });
+        commentIdToUpvotedPrincipalIdsHashMap.put(commentId, upvotesFiltered);
+    };
+
+    //private function to add the principal id to the comment downvotes
+    private func addCommentDownvote(commentId: Text, userPrincipalId: Text) : () {
+        //add the principal id to the array if it doesn't already exist
+        var downvotes = U.safeGet(commentIdToDownvotedPrincipalIdsHashMap, commentId, []);
+        if(not U.arrayContains(downvotes, userPrincipalId)){
+            let downvotesList = List.fromArray(downvotes);
+            downvotes := List.toArray(List.push(userPrincipalId, downvotesList))
+        };
+        commentIdToDownvotedPrincipalIdsHashMap.put(commentId, downvotes);
+    };
+
+    //private function to remove the principal id from the comment downvotes
+    private func removeCommentDownvote(commentId: Text, userPrincipalId: Text) : () {
+        //remove the caller's principal id from the downVotes if it exists
+        let downvotes = U.safeGet(commentIdToDownvotedPrincipalIdsHashMap, commentId, []);
+        let downvotesFiltered = Array.filter<Text>(downvotes, func (downvoter: Text) {
+            return downvoter != userPrincipalId;
+        });
+        commentIdToDownvotedPrincipalIdsHashMap.put(commentId, downvotesFiltered);
+    };
+    
+    //upvote a comment by a commentId
+    public shared ({caller}) func upvoteComment(commentId: Text) : async Result.Result<[Comment], Text>{
+        switch(commentIdToPostIdHashMap.get(commentId)) {
+            case(?postId) {
+                //check if caller has a nuance account
+                let userPrincipalId = Principal.toText(caller);
+                let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+                var user: ?User = await UserCanister.getUserInternal(userPrincipalId);
+                switch(user) {
+                    case(?val) {
+                        //user exists
+                        //add the caller's principal id to upvotes list if it's not added already
+                        addCommentUpvote(commentId, userPrincipalId);
+
+                        //remove the caller's principal id from the downVotes if it exists
+                        removeCommentDownvote(commentId, userPrincipalId);
+
+                        //return all the comments of the post to refresh the UI
+                        return #ok(buildPostComments(postId))
+                    };
+                    case(null) {
+                        //user doesn't exist, return an error
+                        return #err("You don't have an Nuance account to upvote a comment!")
+                    };
+                };
+            };
+            case(null) {
+                return #err("Comment not found.")
+            };
+        };
+    };
+
+    //downvote a comment by a commentId
+    public shared ({caller}) func downvoteComment(commentId: Text) : async Result.Result<[Comment], Text>{
+        switch(commentIdToPostIdHashMap.get(commentId)) {
+            case(?postId) {
+                //check if caller has a nuance account
+                let userPrincipalId = Principal.toText(caller);
+                let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+                var user: ?User = await UserCanister.getUserInternal(userPrincipalId);
+                switch(user) {
+                    case(?val) {
+                        //user exists
+                        //add the caller's principal id to downvotes list if it's not added already
+                        addCommentDownvote(commentId, userPrincipalId);
+
+                        //remove the caller's principal id from the upVotes if it exists
+                        removeCommentUpvote(commentId, userPrincipalId);
+
+                        //return all the comments of the post to refresh the UI
+                        return #ok(buildPostComments(postId))
+                    };
+                    case(null) {
+                        //user doesn't exist, return an error
+                        return #err("You don't have an Nuance account to downvote a comment!")
+                    };
+                };
+            };
+            case(null) {
+                return #err("Comment not found.")
+            };
+        };
+    };
+
+    //remove both the upvote and downvote of the comment
+    public shared ({caller}) func removeCommentVote(commentId: Text) : async Result.Result<[Comment], Text>{
+        switch(commentIdToPostIdHashMap.get(commentId)) {
+            case(?postId) {
+                //check if caller has a nuance account
+                let userPrincipalId = Principal.toText(caller);
+                let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+                var user: ?User = await UserCanister.getUserInternal(userPrincipalId);
+                switch(user) {
+                    case(?val) {
+                        //user exists
+                        //remove the caller's principal id from the downVotes if it exists
+                        removeCommentDownvote(commentId, userPrincipalId);
+
+                        //remove the caller's principal id from the upVotes if it exists
+                        removeCommentUpvote(commentId, userPrincipalId);
+
+                        //return all the comments of the post to refresh the UI
+                        return #ok(buildPostComments(postId))
+                    };
+                    case(null) {
+                        //user doesn't exist, return an error
+                        return #err("You don't have an Nuance account to vote on a comment!")
+                    };
+                };
+            };
+            case(null) {
+                return #err("Comment not found.")
+            };
+        };
+    };
+
+    //Just deletes the content of the comment to not break anything -> admin function for now
+    public shared ({caller}) func deleteComment(commentId: Text) : async Result.Result<Comment, Text>{
+        switch(commentIdToUserPrincipalIdHashMap.get(commentId)) {
+            case(?commentOwner) {
+                //check if the caller is admin
+                if(not isAdmin(caller)){
+                    return #err(Unauthorized);
+                };
+                //in order to not break anything, just delete the content of the article and put a warning on frontend
+                commentIdToContentHashMap.delete(commentId);
+
+                return #ok(buildComment(commentId));
+
+            };
+            case(null) {
+                return #err("Comment not found.");
             };
         };
     };

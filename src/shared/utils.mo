@@ -130,7 +130,15 @@ module {
       return true;
     };
 };
-
+  public func isTextEmpty(content: Text) : Bool{
+    var counter = 0;
+    for(char in content.chars()){
+      if(char != ' '){
+        counter += 1;
+      }
+    };
+    return counter == 0;
+  };
 
 
   public func trim(value : Text) : Text {
