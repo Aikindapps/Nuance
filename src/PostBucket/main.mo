@@ -2090,7 +2090,6 @@ actor class PostBucket() = this {
     if (not isAdmin(caller) and Principal.toText(caller) != postCanister and not isPlatformOperator(caller)) {
       return #err("Not authorized");
     };
-    ignore U.logMetrics("StoreAllSEO", Principal.toText(caller));
 
     let FrontEndCanister = actor (frontendCanisterId) : FrontendInterface;
 
