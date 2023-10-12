@@ -232,7 +232,7 @@ actor Metrics {
     #ok(platformOperatorsLog);
   };
 
-  public shared query ({ caller }) func logCommand(commandName : Text, operator : Text) : async Result.Result<(), Text> {
+  public shared ({ caller }) func logCommand(commandName : Text, operator : Text) : async Result.Result<(), Text> {
     if (not isAdmin(caller) and not isNuanceCanister(Principal.toText(caller))) {
       return #err(Unauthorized);
     };
