@@ -6,6 +6,7 @@ export interface AddCanisterModel {
   'minimumThreshold' : bigint,
   'canisterId' : string,
 }
+export type List = [] | [[string, List]];
 export interface RegisteredCanister {
   'balance' : bigint,
   'topUpAmount' : bigint,
@@ -32,20 +33,28 @@ export interface TopUp {
   'amount' : bigint,
   'canisterId' : string,
 }
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addCanister' : ActorMethod<[AddCanisterModel], Result_4>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'batchRegisterAdmin' : ActorMethod<[Principal], Result_2>,
+  'batchRegisterPlatformOperator' : ActorMethod<[Principal], Result_2>,
+  'batchUnregisterAdmin' : ActorMethod<[Principal], Result_2>,
+  'batchUnregisterPlatformOperator' : ActorMethod<[Principal], Result_2>,
   'checkAllRegisteredCanisters' : ActorMethod<[], Result>,
   'checkRegisteredCanister' : ActorMethod<[string], Result_3>,
   'getAdmins' : ActorMethod<[], Result_2>,
   'getAllRegisteredCanisters' : ActorMethod<[], Array<RegisteredCanister>>,
   'getAllTopUps' : ActorMethod<[], Array<TopUp>>,
+  'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_2>,
   'getCyclesDispenserMinimumValue' : ActorMethod<[], bigint>,
   'getLatestTimerCall' : ActorMethod<[], [string, string]>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
+  'getPlatformOperators' : ActorMethod<[], List>,
   'getRegisteredCanister' : ActorMethod<[string], Result_4>,
   'getStatus' : ActorMethod<[], string>,
   'getTopUp' : ActorMethod<[string], Result_3>,
@@ -56,9 +65,12 @@ export interface _SERVICE {
   'registerAdmin' : ActorMethod<[string], Result>,
   'registerCanister' : ActorMethod<[string], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
+  'registerPlatformOperator' : ActorMethod<[string], Result>,
   'removeCanister' : ActorMethod<[string], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result>,
   'unregisterCanister' : ActorMethod<[string], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result>,
+  'validate' : ActorMethod<[any], Validate>,
 }

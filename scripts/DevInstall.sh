@@ -128,6 +128,10 @@ node ./scripts/adminAll.js registerAdmin $(dfx canister id CyclesDispenser)
 node ./scripts/cyclesDispenserAdd.js -devInstall
 dfx canister call CyclesDispenser batchRegisterAdmin '(principal "'$(dfx identity get-principal --identity nuance-identity-admin)'")'
 
+echo ""
+echo "##### Initialize Nuance Canisters for Metrics canister #####"
+dfx canister call Metrics initNuanceCanisters
+echo ""
 
 echo "End of the DevInstall script"
 

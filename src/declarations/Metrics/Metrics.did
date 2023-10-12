@@ -3,6 +3,11 @@ type Validate =
    Err: text;
    Ok: text;
  };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: vec OperationLog;
+ };
 type Result_2 = 
  variant {
    err: text;
@@ -18,6 +23,12 @@ type Result =
    err: text;
    ok;
  };
+type OperationLog = 
+ record {
+   operation: text;
+   "principal": text;
+   timestamp: int;
+ };
 type List = 
  opt record {
        text;
@@ -26,14 +37,15 @@ type List =
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
-  createEmailOptInAddress: (text) -> (Result);
-  dumpOptInEmailAddress: () -> (text) query;
   getAdmins: () -> (Result_2) query;
   getCanisterVersion: () -> (text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
+  getPlatformOperatorsLog: () -> (Result_3);
+  initNuanceCanisters: () -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
+  logCommand: (text, text) -> (Result);
   registerAdmin: (text) -> (Result);
   registerPlatformOperator: (text) -> (Result);
   setMaxMemorySize: (nat) -> (Result_1);

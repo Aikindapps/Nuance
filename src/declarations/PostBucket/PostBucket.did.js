@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const List = IDL.Rec();
   const PostBucketType__1 = IDL.Record({
     'url' : IDL.Text,
     'bucketCanisterId' : IDL.Text,
@@ -55,6 +56,7 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'canisterId' : IDL.Text,
   });
+  List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_5 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const PostTagModel = IDL.Record({ 'tagId' : IDL.Text, 'tagName' : IDL.Text });
@@ -134,6 +136,7 @@ export const idlFactory = ({ IDL }) => {
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
   });
+  const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   const PostBucket = IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'addPostCategory' : IDL.Func([IDL.Text, IDL.Text], [Result_4], []),
@@ -153,6 +156,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getBucketCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
+    'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_6], ['query']),
     'getFrontendCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getKinicList' : IDL.Func([], [Result_6], ['query']),
@@ -165,6 +169,7 @@ export const idlFactory = ({ IDL }) => {
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMetadata' : IDL.Func([IDL.Text, IDL.Nat], [Result_7], ['query']),
     'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
+    'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPostCoreCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getPostUrls' : IDL.Func([], [Result_1], ['query']),
     'getPostWithPublicationControl' : IDL.Func([IDL.Text], [Result_4], []),
@@ -189,10 +194,13 @@ export const idlFactory = ({ IDL }) => {
           IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
           IDL.Text,
           IDL.Text,
+          IDL.Text,
+          IDL.Text,
         ],
         [Result_1],
         [],
       ),
+    'initializeCanister' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
     'isBucketCanisterActivePublic' : IDL.Func([], [IDL.Bool], ['query']),
     'makeBucketCanisterNonActive' : IDL.Func([], [Result_5], []),
     'makePostPremium' : IDL.Func([IDL.Text], [IDL.Bool], []),
@@ -210,6 +218,7 @@ export const idlFactory = ({ IDL }) => {
         [Result_1],
         [],
       ),
+    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_2], []),
     'reindex' : IDL.Func([], [Result_1], []),
     'rejectPostByModclub' : IDL.Func([IDL.Text], [], ['oneway']),
     'removePostCategory' : IDL.Func([IDL.Text], [Result_4], []),
@@ -233,8 +242,10 @@ export const idlFactory = ({ IDL }) => {
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result_2], []),
     'unregisterCanister' : IDL.Func([IDL.Text], [Result_2], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result_2], []),
+    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result_2], []),
     'updateHandle' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
     'updatePostDraft' : IDL.Func([IDL.Text, IDL.Bool], [Result], []),
+    'validate' : IDL.Func([IDL.Reserved], [Validate], []),
   });
   return PostBucket;
 };

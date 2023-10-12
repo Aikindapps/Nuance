@@ -5,18 +5,26 @@ network="local"
 
 publicationCanisterIdsPath=$publicationsRepoPath/.dfx/local/canister_ids.json
 nuanceCanisterIdsPath=$nuanceMainRepoPath/.dfx/local/canister_ids.json
+productionCanisterIdsPath=$publicationsRepoPath/canister_ids.json
 
 principalId=$(dfx identity get-principal)
 
 
 cd $publicationsRepoPath
 
-echo "Before deploying the publication canisters, installing the nns canisters."
-#dfx nns install
+echo ""
+echo "##### Delete .dfx Folder #####"
+echo ""
+sudo rm -rf .dfx
 
+echo "Deploying the PublicationManagement and NftFactory canisters that mirror the production canisters"
 
+PROD_PUBLICATION_MANAGEMENT_CANISTER_ID="$(grep -A2 '"PublicationManagement"' $productionCanisterIdsPath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
+dfx canister --network $network create PublicationManagement --specified-id "$PROD_PUBLICATION_MANAGEMENT_CANISTER_ID"
 
-echo "Deploying the PublicationManagement and NftFactory canisters"
+PROD_NFT_FACTORY_CANISTER_ID="$(grep -A2 '"NftFactory"' $productionCanisterIdsPath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
+dfx canister --network $network create NftFactory --specified-id "$PROD_NFT_FACTORY_CANISTER_ID"
+
 dfx deploy
 
 dfx ledger fabricate-cycles --all

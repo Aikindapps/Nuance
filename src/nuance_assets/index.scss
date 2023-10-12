@@ -48,6 +48,7 @@
 @import './components/premium-article-info/premium-article-info';
 @import './components/nav-tabs/nav-tabs';
 @import './components/publication-icon-selector/publication-icon-selector';
+@import './screens/metrics/metrics';
 
 /* Shared */
 @import './shared/styles/tags.scss';
@@ -64,9 +65,11 @@
 * {
   font-family: 'Roboto';
 }
+
 :root {
   --nua-blue: $primary-color;
 }
+
 body {
   margin: 0;
   width: 100%;
@@ -83,4 +86,3 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-

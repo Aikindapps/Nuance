@@ -28,6 +28,7 @@ export interface HourlyMetricsData {
 }
 export type KinicReturn = { 'ok' : Array<string> } |
   { 'err' : string };
+export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
 export interface NumericEntity {
@@ -41,29 +42,39 @@ export type Result = { 'ok' : null } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_2 = { 'ok' : Array<string> } |
+export type Result_2 = { 'ok' : string } |
+  { 'err' : string };
+export type Result_3 = { 'ok' : Array<string> } |
   { 'err' : string };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
-  'getAdmins' : ActorMethod<[], Result_2>,
+  'getAdmins' : ActorMethod<[], Result_3>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
-  'getCgUsers' : ActorMethod<[], Result_2>,
+  'getCanisterVersion' : ActorMethod<[], string>,
+  'getCgUsers' : ActorMethod<[], Result_3>,
   'getKinicUrlList' : ActorMethod<[], KinicReturn>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getTrustedPrincipals' : ActorMethod<[], Result_2>,
+  'getPlatformOperators' : ActorMethod<[], List>,
+  'getTrustedPrincipals' : ActorMethod<[], Result_3>,
+  'initializeCanister' : ActorMethod<[string], Result_2>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'registerAdmin' : ActorMethod<[string], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
+  'registerPlatformOperator' : ActorMethod<[string], Result>,
   'registerPrincipal' : ActorMethod<[string], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result>,
   'unregisterPrincipal' : ActorMethod<[string], Result>,
+  'validate' : ActorMethod<[any], Validate>,
 }

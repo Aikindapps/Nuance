@@ -9,6 +9,7 @@ export interface GetPostsByFollowers {
   'totalCount' : string,
   'posts' : Array<PostKeyProperties__1>,
 }
+export type List = [] | [[string, List]];
 export interface NftCanisterEntry { 'handle' : string, 'canisterId' : string }
 export type PopularityType = { 'month' : null } |
   { 'today' : null } |
@@ -130,6 +131,8 @@ export interface UserPostCounts {
   'handle' : string,
   'totalPostCount' : string,
 }
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addCanisterToCyclesDispenser' : ActorMethod<
@@ -152,6 +155,7 @@ export interface _SERVICE {
     [Array<[string, bigint]>, Array<[string, PostModerationStatus]>]
   >,
   'delete' : ActorMethod<[string], Result_2>,
+  'deletePostFromUserDebug' : ActorMethod<[string, string], Result_7>,
   'deleteUserPosts' : ActorMethod<[string], Result_2>,
   'dumpIds' : ActorMethod<[], Result>,
   'dumpPosts' : ActorMethod<[], Result>,
@@ -164,6 +168,7 @@ export interface _SERVICE {
   'getAllBuckets' : ActorMethod<[], Result_7>,
   'getAllTags' : ActorMethod<[], Array<TagModel>>,
   'getBucketCanisters' : ActorMethod<[], Array<[string, string]>>,
+  'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_7>,
   'getFrontendCanisterId' : ActorMethod<[], Result_1>,
   'getKinicList' : ActorMethod<[], Result_7>,
@@ -184,6 +189,7 @@ export interface _SERVICE {
   'getMyTags' : ActorMethod<[], Array<PostTagModel__1>>,
   'getNextPostId' : ActorMethod<[], Result_1>,
   'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
+  'getPlatformOperators' : ActorMethod<[], List>,
   'getPopular' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularThisMonth' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularThisWeek' : ActorMethod<[number, number], GetPostsByFollowers>,
@@ -211,6 +217,7 @@ export interface _SERVICE {
   'getRegisteredRules' : ActorMethod<[], Array<Rule>>,
   'getTagsByUser' : ActorMethod<[string], Array<PostTag>>,
   'getTotalArticleViews' : ActorMethod<[], bigint>,
+  'getTotalClaps' : ActorMethod<[], bigint>,
   'getTotalPostCount' : ActorMethod<[], bigint>,
   'getTrustedCanisters' : ActorMethod<[], Result_7>,
   'getUserDailyAllowedPostNumber' : ActorMethod<[], bigint>,
@@ -222,6 +229,7 @@ export interface _SERVICE {
   'handleModclubMigration' : ActorMethod<[string], Result_1>,
   'idQuick' : ActorMethod<[], Principal>,
   'indexPopular' : ActorMethod<[], undefined>,
+  'initializeCanister' : ActorMethod<[string, string, string], Result_1>,
   'initializePostCoreCanister' : ActorMethod<[], Result_1>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'makePostPublication' : ActorMethod<
@@ -238,6 +246,7 @@ export interface _SERVICE {
   'registerCanister' : ActorMethod<[string], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
   'registerNftCanisterId' : ActorMethod<[string, string], Result_1>,
+  'registerPlatformOperator' : ActorMethod<[string], Result>,
   'registerPublisher' : ActorMethod<[], undefined>,
   'reindex' : ActorMethod<[], Result_1>,
   'removeExistingRules' : ActorMethod<[Array<string>], undefined>,
@@ -255,6 +264,7 @@ export interface _SERVICE {
   'unregisterAdmin' : ActorMethod<[string], Result>,
   'unregisterCanister' : ActorMethod<[string], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result>,
   'updateHandle' : ActorMethod<[string, string], Result_1>,
   'updatePostDraft' : ActorMethod<
     [string, boolean, bigint, string],
@@ -262,5 +272,6 @@ export interface _SERVICE {
   >,
   'upgradeAllBuckets' : ActorMethod<[string, Uint8Array | number[]], Result>,
   'upgradeBucket' : ActorMethod<[string, Uint8Array | number[]], Result>,
+  'validate' : ActorMethod<[any], Validate>,
   'viewPost' : ActorMethod<[string], undefined>,
 }

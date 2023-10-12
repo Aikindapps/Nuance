@@ -1,3 +1,8 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
 type UserPostCounts = 
  record {
    draftCount: text;
@@ -184,6 +189,11 @@ type NftCanisterEntry =
    canisterId: text;
    handle: text;
  };
+type List = 
+ opt record {
+       text;
+       List;
+     };
 type GetPostsByFollowers = 
  record {
    posts: vec PostKeyProperties__1;
@@ -223,6 +233,7 @@ service : {
          PostModerationStatus;
        }) query;
   delete: (text) -> (Result_2);
+  deletePostFromUserDebug: (text, text) -> (Result_7);
   deleteUserPosts: (text) -> (Result_2);
   dumpIds: () -> (Result);
   dumpPosts: () -> (Result);
@@ -238,6 +249,7 @@ service : {
                                    text;
                                    text;
                                  }) query;
+  getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_7) query;
   getFrontendCanisterId: () -> (Result_1) query;
   getKinicList: () -> (Result_7);
@@ -252,6 +264,7 @@ service : {
   getMyTags: () -> (vec PostTagModel__1) query;
   getNextPostId: () -> (Result_1);
   getNftCanisters: () -> (vec NftCanisterEntry) query;
+  getPlatformOperators: () -> (List) query;
   getPopular: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularThisMonth: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularThisWeek: (nat32, nat32) -> (GetPostsByFollowers) query;
@@ -278,6 +291,7 @@ service : {
   getRegisteredRules: () -> (vec Rule);
   getTagsByUser: (text) -> (vec PostTag) query;
   getTotalArticleViews: () -> (nat) query;
+  getTotalClaps: () -> (nat) query;
   getTotalPostCount: () -> (nat) query;
   getTrustedCanisters: () -> (Result_7) query;
   getUserDailyAllowedPostNumber: () -> (nat) query;
@@ -289,6 +303,7 @@ service : {
   handleModclubMigration: (text) -> (Result_1);
   idQuick: () -> (principal) query;
   indexPopular: () -> ();
+  initializeCanister: (text, text, text) -> (Result_1);
   initializePostCoreCanister: () -> (Result_1);
   isThereEnoughMemory: () -> (bool) query;
   makePostPublication: (text, text, text, bool) -> ();
@@ -299,6 +314,7 @@ service : {
   registerCanister: (text) -> (Result);
   registerCgUser: (text) -> (Result);
   registerNftCanisterId: (text, text) -> (Result_1);
+  registerPlatformOperator: (text) -> (Result);
   registerPublisher: () -> ();
   reindex: () -> (Result_1);
   removeExistingRules: (vec text) -> ();
@@ -316,9 +332,11 @@ service : {
   unregisterAdmin: (text) -> (Result);
   unregisterCanister: (text) -> (Result);
   unregisterCgUser: (text) -> (Result);
+  unregisterPlatformOperator: (text) -> (Result);
   updateHandle: (text, text) -> (Result_1);
   updatePostDraft: (text, bool, int, text) -> (PostKeyProperties);
   upgradeAllBuckets: (text, vec nat8) -> (Result);
   upgradeBucket: (text, vec nat8) -> (Result);
+  validate: (reserved) -> (Validate);
   viewPost: (text) -> () oneway;
 }

@@ -1,6 +1,7 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
+export type List = [] | [[string, List]];
 export type Metadata = {
     'fungible' : {
       'decimals' : number,
@@ -65,6 +66,7 @@ export interface PostBucket {
   'getAdmins' : ActorMethod<[], Result_6>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
+  'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_6>,
   'getFrontendCanisterId' : ActorMethod<[], string>,
   'getKinicList' : ActorMethod<[], Result_6>,
@@ -73,6 +75,7 @@ export interface PostBucket {
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMetadata' : ActorMethod<[string, bigint], Result_7>,
   'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
+  'getPlatformOperators' : ActorMethod<[], List>,
   'getPostCoreCanisterId' : ActorMethod<[], string>,
   'getPostUrls' : ActorMethod<[], Result_1>,
   'getPostWithPublicationControl' : ActorMethod<[string], Result_4>,
@@ -92,9 +95,12 @@ export interface PostBucket {
       Array<[string, string]>,
       string,
       string,
+      string,
+      string,
     ],
     Result_1
   >,
+  'initializeCanister' : ActorMethod<[string, string], Result_1>,
   'isBucketCanisterActivePublic' : ActorMethod<[], boolean>,
   'makeBucketCanisterNonActive' : ActorMethod<[], Result_5>,
   'makePostPremium' : ActorMethod<[string], boolean>,
@@ -107,6 +113,7 @@ export interface PostBucket {
     [string, string],
     Result_1
   >,
+  'registerPlatformOperator' : ActorMethod<[string], Result_2>,
   'reindex' : ActorMethod<[], Result_1>,
   'rejectPostByModclub' : ActorMethod<[string], undefined>,
   'removePostCategory' : ActorMethod<[string], Result_4>,
@@ -128,8 +135,10 @@ export interface PostBucket {
   'unregisterAdmin' : ActorMethod<[string], Result_2>,
   'unregisterCanister' : ActorMethod<[string], Result_2>,
   'unregisterCgUser' : ActorMethod<[string], Result_2>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result_2>,
   'updateHandle' : ActorMethod<[string, string], Result_1>,
   'updatePostDraft' : ActorMethod<[string, boolean], Result>,
+  'validate' : ActorMethod<[any], Validate>,
 }
 export interface PostBucketType {
   'url' : string,
@@ -221,4 +230,6 @@ export type Result_7 = { 'ok' : Metadata } |
   { 'err' : string };
 export type SaveResult = { 'ok' : PostBucketType } |
   { 'err' : string };
+export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
 export interface _SERVICE extends PostBucket {}

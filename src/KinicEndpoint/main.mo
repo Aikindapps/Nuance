@@ -22,349 +22,344 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 
 actor KinicEndpoint {
-    // local variables
-    let canistergeekMonitor = Canistergeek.Monitor();
-    func isEq(x: Text, y: Text): Bool { x == y };
-    var maxHashmapSize = 1000000;
+  // local variables
+  let canistergeekMonitor = Canistergeek.Monitor();
+  func isEq(x : Text, y : Text) : Bool { x == y };
+  var maxHashmapSize = 1000000;
 
+  // error messages
+  let Unauthorized = "Unauthorized";
+  let NotTrustedPrincipal = "Not a trusted principal, unauthorized";
 
+  //data type aliases
+  type List<T> = List.List<T>;
+  type KinicUrls = Types.KinicUrls;
+  type KinicReturn = Types.KinicReturn;
 
+  //SNS
+  public type Validate = {
+    #Ok : Text;
+    #Err : Text;
+  };
 
-     // error messages
-    let Unauthorized = "Unauthorized";
-    let NotTrustedPrincipal = "Not a trusted principal, unauthorized";
-    
+  public shared ({ caller }) func validate(input : Any) : async Validate {
+    if (isAdmin(caller)) {
+      return #Ok("success");
+    } else {
 
+      return #Err("Cannot use this method anonymously.");
+    };
+  };
+  // permanent in-memory state (data types are not lost during upgrades)
+  stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
+  stable var admins : List.List<Text> = List.nil<Text>();
+  stable var platformOperators : List.List<Text> = List.nil<Text>();
+  stable var cgusers : List.List<Text> = List.nil<Text>();
+  stable var kinicPrincipals : List.List<Text> = List.nil<Text>();
 
-    //data type aliases
-    type List<T> = List.List<T>;
-    type KinicUrls = Types.KinicUrls;
-    type KinicReturn = Types.KinicReturn;
+  stable var postCoreCanisterId = "";
+  stable var index : [(Text, [Text])] = [];
+  var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
 
-    //SNS
-    public type Validate =  {
-        #Ok : Text;
-        #Err : Text;
+  private func isAnonymous(caller : Principal) : Bool {
+    Principal.equal(caller, Principal.fromText("2vxsx-fae"));
+  };
+
+  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-public shared ({ caller }) func validate(input : Any) : async Validate {
-        if (isAdmin(caller)) {
-            return #Ok("success");
-        }else {
+    #ok(List.toArray(admins));
+  };
 
-    return #Err("Cannot use this method anonymously.");}
-    };
-    // permanent in-memory state (data types are not lost during upgrades)
-    stable var _canistergeekMonitorUD: ? Canistergeek.UpgradeData = null;
-    stable var admins : List.List<Text> = List.nil<Text>();
-    stable var platformOperators : List.List<Text> = List.nil<Text>();
-    stable var cgusers : List.List<Text> = List.nil<Text>();
-    stable var kinicPrincipals : List.List<Text> = List.nil<Text>();
+  //platform operators, similar to admins but restricted to a few functions
+  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    let principal = Principal.toText(caller);
 
-
-    stable var postCoreCanisterId = "";
-    stable var index : [(Text, [Text])] = [];
-    var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
-
-    private func isAnonymous(caller : Principal) : Bool {
-        Principal.equal(caller, Principal.fromText("2vxsx-fae"))
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized");
     };
 
-    public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-
-        #ok(List.toArray(admins));
+    if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
+      platformOperators := List.push<Text>(id, platformOperators);
     };
 
-    //platform operators, similar to admins but restricted to a few functions
-    public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-        let principal = Principal.toText(caller);
-        
-        if (not isAdmin(caller)) {
-            return #err("Unauthorized");
-        };
+    #ok();
+  };
 
-        if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-            platformOperators := List.push<Text>(id, platformOperators);
-        };
+  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized");
+    };
+    platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
+    #ok();
+  };
 
-        #ok();
+  public shared query func getPlatformOperators() : async List.List<Text> {
+    platformOperators;
+  };
+
+  private func isPlatformOperator(caller : Principal) : Bool {
+    var c = Principal.toText(caller);
+    var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
+    exists != null;
+  };
+
+  //initialize method to store the canister ids that this canister interacts with
+  public shared ({ caller }) func initializeCanister(postCoreCai : Text) : async Result.Result<Text, Text> {
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
+    };
+    postCoreCanisterId := postCoreCai;
+    #ok(postCoreCanisterId);
+  };
+
+  // admin and canister functions
+
+  public shared query ({ caller }) func getCgUsers() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
     };
 
-    public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-        if (not isAdmin(caller)) {
-            return #err("Unauthorized");
-        };
-        platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
-        #ok();
+    #ok(List.toArray(cgusers));
+  };
+
+  public shared ({ caller }) func registerCgUser(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-    public shared query func getPlatformOperators() : async List.List<Text> {
-        platformOperators;
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    private func isPlatformOperator(caller : Principal) : Bool {
-        var c = Principal.toText(caller);
-        var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
-        exists != null;
+    canistergeekMonitor.collectMetrics();
+    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
+      return #err(Unauthorized);
     };
 
-    //initialize method to store the canister ids that this canister interacts with
-    public shared ({caller}) func initializeCanister(postCoreCai: Text) : async Result.Result<Text, Text>{
-        if(not isAdmin(caller)){
-            return #err(Unauthorized)
-        };
-        postCoreCanisterId := postCoreCai;
-        #ok(postCoreCanisterId)
+    if (not List.some<Text>(cgusers, func(val : Text) : Bool { val == id })) {
+      cgusers := List.push<Text>(id, cgusers);
     };
 
-    // admin and canister functions
+    #ok();
+  };
 
-    public shared query ({ caller }) func getCgUsers() : async Result.Result<[Text], Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
+  public shared ({ caller }) func unregisterCgUser(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+    canistergeekMonitor.collectMetrics();
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
+    };
+    cgusers := List.filter<Text>(cgusers, func(val : Text) : Bool { val != id });
+    #ok();
+  };
 
-        #ok(List.toArray(cgusers));
+  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-    public shared ({ caller }) func registerCgUser(id : Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-
-        if(not isThereEnoughMemoryPrivate()){
-            return #err("Canister reached the maximum memory threshold. Please try again later.")
-        };
-
-        canistergeekMonitor.collectMetrics();
-        if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-
-        if (not List.some<Text>(cgusers, func(val: Text) : Bool { val == id })) {
-            cgusers := List.push<Text>(id, cgusers);
-        };
-
-        #ok();
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    public shared ({ caller }) func unregisterCgUser(id : Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-        canistergeekMonitor.collectMetrics();
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-        cgusers := List.filter<Text>(cgusers, func(val: Text) : Bool { val != id });
-        #ok();
+    let principalFromText = Principal.fromText(id);
+
+    canistergeekMonitor.collectMetrics();
+    if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
+      return #err(Unauthorized);
     };
 
-    public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-
-        if(not isThereEnoughMemoryPrivate()){
-            return #err("Canister reached the maximum memory threshold. Please try again later.")
-        };
-
-        let principalFromText = Principal.fromText(id);
-
-        canistergeekMonitor.collectMetrics();
-        if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-
-        if (not List.some<Text>(admins, func(val: Text) : Bool { val == id })) {
-            admins := List.push<Text>(id, admins);
-        };
-
-        #ok();
+    if (not List.some<Text>(admins, func(val : Text) : Bool { val == id })) {
+      admins := List.push<Text>(id, admins);
     };
 
-    public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-        canistergeekMonitor.collectMetrics();
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-        admins := List.filter<Text>(admins, func(val: Text) : Bool { val != id });
-        #ok();
+    #ok();
+  };
+
+  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+    canistergeekMonitor.collectMetrics();
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
+    };
+    admins := List.filter<Text>(admins, func(val : Text) : Bool { val != id });
+    #ok();
+  };
+
+  func isKinicPrincipal(caller : Principal) : Bool {
+    var c = Principal.toText(caller);
+    var exists = List.find<Text>(kinicPrincipals, func(val : Text) : Bool { val == c });
+    exists != null;
+  };
+
+  public shared ({ caller }) func registerPrincipal(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-    func isKinicPrincipal (caller : Principal) : Bool {
-        var c = Principal.toText(caller);
-        var exists = List.find<Text>(kinicPrincipals, func(val: Text) : Bool { val == c });
-        exists != null;
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-     public shared ({caller}) func registerPrincipal(id: Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
+    let principalFromText = Principal.fromText(id);
 
-        if(not isThereEnoughMemoryPrivate()){
-            return #err("Canister reached the maximum memory threshold. Please try again later.")
-        };
+    canistergeekMonitor.collectMetrics();
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
+    };
+    if (not List.some<Text>(kinicPrincipals, func(val : Text) : Bool { val == id })) {
+      kinicPrincipals := List.push<Text>(id, kinicPrincipals);
+    };
+    #ok();
+  };
 
-        let principalFromText = Principal.fromText(id);
+  public shared ({ caller }) func unregisterPrincipal(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+    canistergeekMonitor.collectMetrics();
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
+    };
+    kinicPrincipals := List.filter<Text>(kinicPrincipals, func(val : Text) : Bool { val != id });
+    #ok();
+  };
 
-        canistergeekMonitor.collectMetrics();
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-        if (not List.some<Text>(kinicPrincipals, func(val: Text) : Bool { val == id })) {
-            kinicPrincipals := List.push<Text>(id, kinicPrincipals);
-        };
-        #ok();
+  public shared query ({ caller }) func getTrustedPrincipals() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-    public shared ({caller}) func unregisterPrincipal(id: Text) : async Result.Result<(), Text> {
-            if (isAnonymous(caller)) {
-                return #err("Cannot use this method anonymously.");
-            };
-        canistergeekMonitor.collectMetrics();
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-        kinicPrincipals := List.filter<Text>(kinicPrincipals, func(val: Text) : Bool { val != id });
-        #ok();
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
     };
 
-    public shared query ({ caller }) func getTrustedPrincipals() : async Result.Result<[Text], Text> {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
+    #ok(List.toArray(kinicPrincipals));
+  };
 
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
+  private func isAdmin(caller : Principal) : Bool {
+    var c = Principal.toText(caller);
+    var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
+    exists != null;
+  };
 
-        #ok(List.toArray(kinicPrincipals));
+  func isCgUser(caller : Principal) : Bool {
+    var c = Principal.toText(caller);
+    var exists = List.find<Text>(cgusers, func(val : Text) : Bool { val == c });
+    exists != null;
+  };
+
+  // Kinic function
+  public shared ({ caller }) func getKinicUrlList() : async KinicReturn {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+    let PostCoreCanister = CanisterDeclarations.getPostCoreCanister(postCoreCanisterId);
+    var list : KinicReturn = await PostCoreCanister.getKinicList();
+    if (not isKinicPrincipal(caller)) {
+      return #err(NotTrustedPrincipal);
+    };
+    return (list);
+  };
+
+  //#region Canister Geek
+
+  public shared query ({ caller }) func getCanisterMetrics(parameters : Canistergeek.GetMetricsParameters) : async ?Canistergeek.CanisterMetrics {
+
+    if (not isCgUser(caller) and not isAdmin(caller)) {
+      Prelude.unreachable();
+    };
+    Debug.print("KinicEndpoint->getCanisterMetrics: The method getCanistermetrics was called from the UI successfully");
+    canistergeekMonitor.getMetrics(parameters);
+  };
+
+  public shared ({ caller }) func collectCanisterMetrics() : async () {
+    if (not isCgUser(caller) and not isAdmin(caller)) {
+      Prelude.unreachable();
+    };
+    canistergeekMonitor.collectMetrics();
+    Debug.print("KinicEndpoint->collectCanisterMetrics: The method collectCanisterMetrics was called from the UI successfully");
+  };
+
+  //#region memory management
+  stable var MAX_MEMORY_SIZE = 380000000;
+
+  public shared ({ caller }) func setMaxMemorySize(newValue : Nat) : async Result.Result<Nat, Text> {
+
+    if (isAnonymous(caller)) {
+      return #err("Anonymous user cannot run this method");
     };
 
-    private func isAdmin(caller : Principal) : Bool {
-        var c = Principal.toText(caller);
-        var exists = List.find<Text>(admins, func(val: Text) : Bool { val == c });
-        exists != null;
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
     };
 
-    func isCgUser(caller : Principal) : Bool {
-        var c = Principal.toText(caller);
-        var exists = List.find<Text>(cgusers, func(val: Text) : Bool { val == c });
-        exists != null;
-    };
+    ignore U.logMetrics("setMaxMemorySize", Principal.toText(caller));
+    MAX_MEMORY_SIZE := newValue;
 
-    
-    // Kinic function
-    public shared ({ caller }) func getKinicUrlList() : async KinicReturn {
-         if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister(postCoreCanisterId);
-        var list : KinicReturn = await PostCoreCanister.getKinicList();
-        if (not isKinicPrincipal(caller)) {
-            return #err(NotTrustedPrincipal);
-        };
-     return (list);
-    };
+    #ok(MAX_MEMORY_SIZE);
+  };
 
-    //#region Canister Geek
+  public shared query func getMaxMemorySize() : async Nat {
+    MAX_MEMORY_SIZE;
+  };
 
-    public shared query ({caller}) func getCanisterMetrics(parameters: Canistergeek.GetMetricsParameters): async ?Canistergeek.CanisterMetrics {
-        
-        if (not isCgUser(caller) and not isAdmin(caller))  {
-            Prelude.unreachable();
-        };
-        Debug.print("KinicEndpoint->getCanisterMetrics: The method getCanistermetrics was called from the UI successfully");
-        canistergeekMonitor.getMetrics(parameters);
-    };
+  public shared query func isThereEnoughMemory() : async Bool {
+    isThereEnoughMemoryPrivate();
+  };
 
-    public shared ({caller}) func collectCanisterMetrics(): async () {
-        if (not isCgUser(caller) and not isAdmin(caller))  {
-            Prelude.unreachable();
-        };
-        canistergeekMonitor.collectMetrics();
-        Debug.print("KinicEndpoint->collectCanisterMetrics: The method collectCanisterMetrics was called from the UI successfully");
-    };
+  private func isThereEnoughMemoryPrivate() : Bool {
+    MAX_MEMORY_SIZE > getMemorySizePrivate();
+  };
 
-    //#region memory management
-    stable var MAX_MEMORY_SIZE = 380000000;
+  public shared query func getMemorySize() : async Nat {
+    getMemorySizePrivate();
+  };
 
-    public shared ({caller}) func setMaxMemorySize(newValue: Nat) : async Result.Result<Nat, Text>{
+  private func getMemorySizePrivate() : Nat {
+    Prim.rts_memory_size();
+  };
 
-         if (isAnonymous(caller)) {
-            return #err("Anonymous user cannot run this method");
-        };
+  //#endregion
 
-        if(not isAdmin(caller)){
-            return #err(Unauthorized);
-        };
-        MAX_MEMORY_SIZE := newValue;
+  public func acceptCycles() : async () {
+    let available = Cycles.available();
+    let accepted = Cycles.accept(available);
+    assert (accepted == available);
+  };
 
-        #ok(MAX_MEMORY_SIZE)
-    };
+  public shared query func availableCycles() : async Nat {
+    Cycles.balance();
+  };
 
-    public shared query func getMaxMemorySize() : async Nat{
-        MAX_MEMORY_SIZE
-    };
+  public shared query func getCanisterVersion() : async Text {
+    Versions.KINICENDPOINT_VERSION;
+  };
 
-    public shared query func isThereEnoughMemory() : async Bool {
-        isThereEnoughMemoryPrivate()
-    };
+  //Pre and post upgrades, currently here for future use if we need to store data.
+  system func preupgrade() {
+    Debug.print("KinicEndpoint->preupgrade: hashmap size: " # Nat.toText(index.size()));
+    _canistergeekMonitorUD := ?canistergeekMonitor.preupgrade();
+    Debug.print("KinicEndpoint->preupgrade:Inside Canistergeek preupgrade method");
+    index := Iter.toArray(hashMap.entries());
+  };
 
-    private func isThereEnoughMemoryPrivate() : Bool {
-        MAX_MEMORY_SIZE > getMemorySizePrivate();
-    };
-
-    public shared query func getMemorySize() : async Nat{
-        getMemorySizePrivate()
-    };
-
-    private func getMemorySizePrivate() : Nat{
-        Prim.rts_memory_size()
-    };
-
-    //#endregion
-
-    public func acceptCycles() : async () {
-        let available = Cycles.available();
-        let accepted = Cycles.accept(available);
-        assert (accepted == available);
-    };
-
-    public shared query func availableCycles() : async Nat {
-        Cycles.balance()
-    };
-
-
-    public shared query func getCanisterVersion() : async Text{
-        Versions.KINICENDPOINT_VERSION;
-    };
-
-//Pre and post upgrades, currently here for future use if we need to store data.
-    system func preupgrade() {
-        Debug.print("KinicEndpoint->preupgrade: hashmap size: " # Nat.toText(index.size()));
-        _canistergeekMonitorUD := ? canistergeekMonitor.preupgrade();
-        Debug.print("KinicEndpoint->preupgrade:Inside Canistergeek preupgrade method");
-        index := Iter.toArray(hashMap.entries());
-    };
-
-    system func postupgrade() {
-        Debug.print("KinicEndpoint->postupgrade: hashmap size: " # Nat.toText(index.size()));
-        canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
-        Debug.print("KinicEndpoint->postupgrade:Inside Canistergeek postupgrade method");
-        hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
-        _canistergeekMonitorUD := null;
-        index := [];
-    };
-}
+  system func postupgrade() {
+    Debug.print("KinicEndpoint->postupgrade: hashmap size: " # Nat.toText(index.size()));
+    canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
+    Debug.print("KinicEndpoint->postupgrade:Inside Canistergeek postupgrade method");
+    hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
+    _canistergeekMonitorUD := null;
+    index := [];
+  };
+};
