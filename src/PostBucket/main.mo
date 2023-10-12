@@ -84,6 +84,10 @@ actor class PostBucket() = this {
   //asset canister types
   type Key = Types.Key;
 
+  //comment types
+  type Comment = Types.Comment;
+  type SaveCommentModel = Types.SaveCommentModel;
+
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
   stable var platformOperators : List.List<Text> = List.nil<Text>();
@@ -93,6 +97,7 @@ actor class PostBucket() = this {
   stable var MAX_BUCKET_CANISTER_MEMORY = 380000000;
   stable var isStoreSEOcalled = false;
   stable var isActive = true;
+  stable var commentId = 0;
 
   // in-memory state swap (holds hashmap entries between preupgrade and postupgrade) then is cleared
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
@@ -124,6 +129,19 @@ actor class PostBucket() = this {
   stable var postCoreCanisterId : Text = "post-core";
   stable var postIndexCanisterId = "";
   stable var userCanisterId = "";
+
+  //comment data
+  stable var postIdToCommentIdsEntries : [(Text, [Text])] = [];
+  stable var postIdToNumberOfCommentsEntries : [(Text, Nat)] = [];
+  stable var commentIdToPostIdEntries : [(Text, Text)] = [];
+  stable var commentIdToUserPrincipalIdEntries : [(Text, Text)] = [];
+  stable var commentIdToContentEntries : [(Text, Text)] = [];
+  stable var commentIdToCreatedAtEntries : [(Text, Int)] = [];
+  stable var commentIdToEditedAtEntries : [(Text, Int)] = [];
+  stable var commentIdToUpvotedPrincipalIdsEntries : [(Text, [Text])] = [];
+  stable var commentIdToDownvotedPrincipalIdsEntries : [(Text, [Text])] = [];
+  stable var commentIdToReplyCommentIdsEntries : [(Text, [Text])] = [];
+  stable var replyCommentIdToCommentIdEntries : [(Text, Text)] = [];
 
   // in-memory state (holds object field data) - hashmaps must match entires in above stable vars and in preupgrade and postupgrade
   // HashMaps with one entry per user
@@ -157,6 +175,31 @@ actor class PostBucket() = this {
   var isPremiumHashMap = HashMap.fromIter<Text, Bool>(isPremiumEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var tagNamesHashMap = HashMap.fromIter<Text, [Text]>(tagNamesEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var rejectedByModclubPostIdsHashmap = HashMap.fromIter<Text, Text>(rejectedByModclubPostIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+
+  //comment hashmaps
+
+  //key: postId, value: [commentId]
+  var postIdToCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(postIdToCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: postId, value: numberOfComments
+  var postIdToNumberOfCommentsHashMap = HashMap.fromIter<Text, Nat>(postIdToNumberOfCommentsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: postId
+  var commentIdToPostIdHashMap = HashMap.fromIter<Text, Text>(commentIdToPostIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: principalId
+  var commentIdToUserPrincipalIdHashMap = HashMap.fromIter<Text, Text>(commentIdToUserPrincipalIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: content
+  var commentIdToContentHashMap = HashMap.fromIter<Text, Text>(commentIdToContentEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: createdAt
+  var commentIdToCreatedAtHashMap = HashMap.fromIter<Text, Int>(commentIdToCreatedAtEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: EditedAt
+  var commentIdToEditedAtHashMap = HashMap.fromIter<Text, Int>(commentIdToEditedAtEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: [upvotedPrincipalId]
+  var commentIdToUpvotedPrincipalIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToUpvotedPrincipalIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: [downvotedPrincipalId]
+  var commentIdToDownvotedPrincipalIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToDownvotedPrincipalIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: [replyCommentId] -> The replies will not be added to postIdToCommentIdsHashmap. They are mapped to the ancestor commentId
+  var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: replyCommentId, value: commentId
+  var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //key: pub-handle, value: nft canister id
   var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -277,6 +320,7 @@ actor class PostBucket() = this {
       return #err(Unauthorized);
     };
     ignore U.logMetrics("setMaxMemorySize", Principal.toText(caller));
+
     MAX_BUCKET_CANISTER_MEMORY := newValue;
 
     #ok(MAX_BUCKET_CANISTER_MEMORY);
@@ -1023,6 +1067,7 @@ actor class PostBucket() = this {
       return #err(Unauthorized);
     };
     ignore U.logMetrics("deleteUserPosts", Principal.toText(caller));
+
     Debug.print("PostBucket->deleteUserPosts for PrincipalId: " # principalId);
 
     let userPosts = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
@@ -2045,6 +2090,7 @@ actor class PostBucket() = this {
     if (not isAdmin(caller) and Principal.toText(caller) != postCanister and not isPlatformOperator(caller)) {
       return #err("Not authorized");
     };
+    ignore U.logMetrics("StoreAllSEO", Principal.toText(caller));
 
     let FrontEndCanister = actor (frontendCanisterId) : FrontendInterface;
 
@@ -2190,6 +2236,460 @@ actor class PostBucket() = this {
     Versions.POSTBUCKET_VERSION;
   };
 
+  //#region commenting
+  private func getNextCommentId() : Text {
+    commentId += 1;
+    Nat.toText(commentId);
+  };
+
+  //build a comment by commentId
+  private func buildComment(commentId : Text) : Comment {
+    let editedAt : ?Text = switch (commentIdToEditedAtHashMap.get(commentId)) {
+      case (?val) {
+        ?Int.toText(val);
+      };
+      case (null) {
+        null;
+      };
+    };
+    //since the posts are limited with 100 comments and each comment is maximum 400 chars, each Comment object directly
+    //contains the replies. Once we need more scalability, we can return the commentIds instead of the whole Comment object
+    var replies = Buffer.Buffer<Comment>(0);
+    for (replyCommentId in U.safeGet(commentIdToReplyCommentIdsHashMap, commentId, []).vals()) {
+      replies.add(buildComment(replyCommentId));
+    };
+
+    return {
+      commentId = commentId;
+      content = U.safeGet(commentIdToContentHashMap, commentId, "");
+      postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
+      bucketCanisterId = Principal.toText(Principal.fromActor(this));
+      upVotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
+      downVotes = U.safeGet(commentIdToDownvotedPrincipalIdsHashMap, commentId, []);
+      createdAt = Int.toText(U.safeGet(commentIdToCreatedAtHashMap, commentId, 0));
+      editedAt = editedAt;
+      creator = U.safeGet(commentIdToUserPrincipalIdHashMap, commentId, "");
+      replies = Buffer.toArray(replies);
+      repliedCommentId = replyCommentIdToCommentIdHashMap.get(commentId);
+    };
+  };
+
+  //returns the array of coments of the post
+  private func buildPostComments(postId : Text) : [Comment] {
+    let commentIds = U.safeGet(postIdToCommentIdsHashMap, postId, []);
+    var comments = Buffer.Buffer<Comment>(0);
+    for (commentId in commentIds.vals()) {
+      comments.add(buildComment(commentId));
+    };
+    return Buffer.toArray(comments);
+  };
+  //returns the comment by a commentId
+  public shared query func getComment(commentId : Text) : async Result.Result<Comment, Text> {
+    switch (commentIdToUserPrincipalIdHashMap.get(commentId)) {
+      case (?val) {
+        return #ok(buildComment(commentId));
+      };
+      case (null) {
+        #err("Comment not found.");
+      };
+    };
+  };
+  //returns all the comments of the given postId (replies included, no pagination)
+  public shared query func getPostComments(postId : Text) : async Result.Result<[Comment], Text> {
+    switch (principalIdHashMap.get(postId)) {
+      case (?val) {
+        //post exists
+        return #ok(buildPostComments(postId));
+      };
+      case (null) {
+        return #err(ArticleNotFound);
+      };
+    };
+  };
+
+  //enables editing & creating comments
+  //postId -> use the postId you want to comment
+  //commentId -> if you want to edit an existing comment, use this argument to specify the comment you're editing. if not an edit, pass null
+  //content -> content of the comment
+  //replytoCommentId -> if this is a reply to another comment, use this arg to specify the comment you're replying. if not a reply, pass null
+  public shared ({ caller }) func saveComment(input : SaveCommentModel) : async Result.Result<[Comment], Text> {
+    let { postId; commentId; content; replyToCommentId } = input;
+
+    switch (principalIdHashMap.get(postId)) {
+      case (?val) {
+        //post exists
+        let post = buildPost(postId);
+
+        //check if caller has a nuance account
+        let userPrincipalId = Principal.toText(caller);
+        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
+        switch (user) {
+          case (?val) {
+            //user exists -> keep going
+          };
+          case (null) {
+            //user doesn't exist, return an error
+            return #err("You don't have an Nuance account to comment!");
+          };
+        };
+
+        //check the number of comments in the post
+        let numberOfComments = U.safeGet(postIdToNumberOfCommentsHashMap, postId, 0);
+        if (numberOfComments > 99) {
+          return #err("An article can have maximum of 100 comments!");
+        };
+
+        //check the canister memory threshold
+        if (not isThereEnoughMemoryPrivate()) {
+          return #err("Canister reached the maximum memory threshold. Please try again later.");
+        };
+
+        //check the length of content
+        if (not U.isTextLengthValid(content, 400)) {
+          return #err("Your comment is too long. It can be maximum of 400 characters!");
+        };
+
+        //check if the content is empty
+        if (U.isTextEmpty(content)) {
+          return #err("Comment can not be empty!");
+        };
+
+        //if caller claims that this is an edit, check if the editing comment exists
+        //also check if the caller is authorized
+        switch (commentId) {
+          case (?editingCommentId) {
+            //caller claims that this is an edit. check if the editing comment exists & user is allowed to edit the comment
+            switch (commentIdToUserPrincipalIdHashMap.get(editingCommentId)) {
+              case (?commentOwner) {
+                //editing comment id exists
+                //if the caller is not the owner, return an error
+                if (userPrincipalId != commentOwner) {
+                  return #err(Unauthorized);
+                };
+              };
+              case (null) {
+                //given comment id doesn't exist
+                //return an error
+                return #err("The editing comment doesn't exist!");
+              };
+            };
+          };
+          case (null) {
+            //not an edit, nothing to check
+          };
+        };
+
+        //if this is a reply, check if the replying comment exists
+        switch (replyToCommentId) {
+          case (?replyingCommentId) {
+            //this is a reply. check if the replying comment exists
+            switch (commentIdToUserPrincipalIdHashMap.get(replyingCommentId)) {
+              case (?val) {
+                //replying comment exists -> keep going
+              };
+              case (null) {
+                //replying comment id doesn't exist
+                //return an error
+                return #err("The replying comment doesn't exist!");
+              };
+            };
+          };
+          case (null) {
+            //not a reply, nothing to check
+          };
+        };
+
+        //verify the given 4 arguments are correct for all 4 scenarios
+        switch (commentId) {
+          case (?editingCommentId) {
+            //edit request
+            switch (replyToCommentId) {
+              case (?givenCommentIdToReply) {
+                //edit & reply
+
+                //check if the editingCommentId exists in the replies of the givenCommentIdToReply
+                let existingReplies = U.safeGet(commentIdToReplyCommentIdsHashMap, givenCommentIdToReply, []);
+                if (not U.arrayContains(existingReplies, editingCommentId)) {
+                  return #err("Invalid comment id to reply!");
+                };
+
+                //check if the mapped post ids of the givenCommentIdToReply, editingCommentId and postId(argument) are same
+                let editingCommentPostId = U.safeGet(commentIdToPostIdHashMap, editingCommentId, "");
+                let replyingCommentPostId = U.safeGet(commentIdToPostIdHashMap, givenCommentIdToReply, "");
+                if (not (editingCommentPostId == replyingCommentPostId and postId == replyingCommentPostId and editingCommentPostId == postId)) {
+                  return #err("Post ids in the arguments doesn't match!");
+                };
+
+              };
+              case (null) {
+                //edit a non-reply
+
+                //check if the given postId value and the mapped post id to the existing comment matches
+                let editingCommentPostId = U.safeGet(commentIdToPostIdHashMap, editingCommentId, "");
+                if (editingCommentPostId != postId) {
+                  return #err("Post ids in the arguments doesn't match.");
+                };
+              };
+            };
+          };
+          case (null) {
+            //create a new comment request
+            switch (replyToCommentId) {
+              case (?givenCommentIdToReply) {
+                //new reply
+                //check if the given postId in the arguments and the mapped post id of the replying comment matches
+                let replyingCommentPostId = U.safeGet(commentIdToPostIdHashMap, givenCommentIdToReply, "");
+                if (postId != replyingCommentPostId) {
+                  return #err("Post ids in the arguments doesn't match.");
+                };
+              };
+              case (null) {
+                //new non-reply
+                //nothing to check here
+              };
+            };
+          };
+        };
+
+        //verify draft
+        if (post.isDraft) {
+          return #err(Unauthorized);
+        };
+
+        //if here, everything is ok
+        //store the values in the hashmaps
+        let validCommentId = switch (commentId) {
+          case (?val) { val };
+          case (null) { getNextCommentId() };
+        };
+        let isEdit = switch (commentId) {
+          case (?val) { true };
+          case (null) { false };
+        };
+        let validReplyingCommentId = switch (replyToCommentId) {
+          case (?val) { val };
+          case (null) { "" };
+        };
+        let isReply = switch (replyToCommentId) {
+          case (?val) { true };
+          case (null) { false };
+        };
+
+        //increment the number of comments counter
+        postIdToNumberOfCommentsHashMap.put(postId, numberOfComments + 1);
+        //map the comment with the post
+        commentIdToPostIdHashMap.put(validCommentId, postId);
+        //map the comment with the caller
+        commentIdToUserPrincipalIdHashMap.put(validCommentId, userPrincipalId);
+        //map the comment with the content
+        commentIdToContentHashMap.put(validCommentId, content);
+
+        let now = U.epochTime();
+        if (isReply) {
+          if (isEdit) {
+            //edit & reply to an another comment
+            //update the editedAt field
+            commentIdToEditedAtHashMap.put(validCommentId, now);
+          } else {
+            //new reply to an another comment
+            commentIdToCreatedAtHashMap.put(validCommentId, now);
+            //put the comment id to the replying comment's replies list
+            let existingReplies = List.fromArray(U.safeGet(commentIdToReplyCommentIdsHashMap, validReplyingCommentId, []));
+            let newReplies = List.push(validCommentId, existingReplies);
+            commentIdToReplyCommentIdsHashMap.put(validReplyingCommentId, List.toArray(newReplies));
+            replyCommentIdToCommentIdHashMap.put(validCommentId, validReplyingCommentId);
+
+          };
+        } else {
+          if (isEdit) {
+            //editing a comment which is not a reply
+            //edit the editedAt field
+            commentIdToEditedAtHashMap.put(validCommentId, now);
+          } else {
+            //creating a new simple comment
+            //put the comment id to the list of comment ids corresponds to the post
+            let existingComments = List.fromArray(U.safeGet(postIdToCommentIdsHashMap, postId, []));
+            let newComments = List.push(validCommentId, existingComments);
+            postIdToCommentIdsHashMap.put(postId, List.toArray(newComments));
+            //put the createdAt field
+            commentIdToCreatedAtHashMap.put(validCommentId, now);
+          };
+        };
+
+        return #ok(buildPostComments(postId));
+
+      };
+      case (null) {
+        return #err(ArticleNotFound);
+      };
+    };
+  };
+
+  //private function to add the principal id to the comment upvotes
+  private func addCommentUpvote(commentId : Text, userPrincipalId : Text) : () {
+    //add the principal id to the array if it doesn't already exist
+    var upvotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
+    if (not U.arrayContains(upvotes, userPrincipalId)) {
+      let upvotesList = List.fromArray(upvotes);
+      upvotes := List.toArray(List.push(userPrincipalId, upvotesList));
+    };
+    commentIdToUpvotedPrincipalIdsHashMap.put(commentId, upvotes);
+  };
+
+  //private function to remove the principal id from the comment upvotes
+  private func removeCommentUpvote(commentId : Text, userPrincipalId : Text) : () {
+    //remove the caller's principal id from the upVotes if it exists
+    let upvotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
+    let upvotesFiltered = Array.filter<Text>(
+      upvotes,
+      func(upvoter : Text) {
+        return upvoter != userPrincipalId;
+      },
+    );
+    commentIdToUpvotedPrincipalIdsHashMap.put(commentId, upvotesFiltered);
+  };
+
+  //private function to add the principal id to the comment downvotes
+  private func addCommentDownvote(commentId : Text, userPrincipalId : Text) : () {
+    //add the principal id to the array if it doesn't already exist
+    var downvotes = U.safeGet(commentIdToDownvotedPrincipalIdsHashMap, commentId, []);
+    if (not U.arrayContains(downvotes, userPrincipalId)) {
+      let downvotesList = List.fromArray(downvotes);
+      downvotes := List.toArray(List.push(userPrincipalId, downvotesList));
+    };
+    commentIdToDownvotedPrincipalIdsHashMap.put(commentId, downvotes);
+  };
+
+  //private function to remove the principal id from the comment downvotes
+  private func removeCommentDownvote(commentId : Text, userPrincipalId : Text) : () {
+    //remove the caller's principal id from the downVotes if it exists
+    let downvotes = U.safeGet(commentIdToDownvotedPrincipalIdsHashMap, commentId, []);
+    let downvotesFiltered = Array.filter<Text>(
+      downvotes,
+      func(downvoter : Text) {
+        return downvoter != userPrincipalId;
+      },
+    );
+    commentIdToDownvotedPrincipalIdsHashMap.put(commentId, downvotesFiltered);
+  };
+
+  //upvote a comment by a commentId
+  public shared ({ caller }) func upvoteComment(commentId : Text) : async Result.Result<[Comment], Text> {
+    switch (commentIdToPostIdHashMap.get(commentId)) {
+      case (?postId) {
+        //check if caller has a nuance account
+        let userPrincipalId = Principal.toText(caller);
+        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
+        switch (user) {
+          case (?val) {
+            //user exists
+            //add the caller's principal id to upvotes list if it's not added already
+            addCommentUpvote(commentId, userPrincipalId);
+
+            //remove the caller's principal id from the downVotes if it exists
+            removeCommentDownvote(commentId, userPrincipalId);
+
+            //return all the comments of the post to refresh the UI
+            return #ok(buildPostComments(postId));
+          };
+          case (null) {
+            //user doesn't exist, return an error
+            return #err("You don't have an Nuance account to upvote a comment!");
+          };
+        };
+      };
+      case (null) {
+        return #err("Comment not found.");
+      };
+    };
+  };
+
+  //downvote a comment by a commentId
+  public shared ({ caller }) func downvoteComment(commentId : Text) : async Result.Result<[Comment], Text> {
+    switch (commentIdToPostIdHashMap.get(commentId)) {
+      case (?postId) {
+        //check if caller has a nuance account
+        let userPrincipalId = Principal.toText(caller);
+        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
+        switch (user) {
+          case (?val) {
+            //user exists
+            //add the caller's principal id to downvotes list if it's not added already
+            addCommentDownvote(commentId, userPrincipalId);
+
+            //remove the caller's principal id from the upVotes if it exists
+            removeCommentUpvote(commentId, userPrincipalId);
+
+            //return all the comments of the post to refresh the UI
+            return #ok(buildPostComments(postId));
+          };
+          case (null) {
+            //user doesn't exist, return an error
+            return #err("You don't have an Nuance account to downvote a comment!");
+          };
+        };
+      };
+      case (null) {
+        return #err("Comment not found.");
+      };
+    };
+  };
+
+  //remove both the upvote and downvote of the comment
+  public shared ({ caller }) func removeCommentVote(commentId : Text) : async Result.Result<[Comment], Text> {
+    switch (commentIdToPostIdHashMap.get(commentId)) {
+      case (?postId) {
+        //check if caller has a nuance account
+        let userPrincipalId = Principal.toText(caller);
+        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
+        switch (user) {
+          case (?val) {
+            //user exists
+            //remove the caller's principal id from the downVotes if it exists
+            removeCommentDownvote(commentId, userPrincipalId);
+
+            //remove the caller's principal id from the upVotes if it exists
+            removeCommentUpvote(commentId, userPrincipalId);
+
+            //return all the comments of the post to refresh the UI
+            return #ok(buildPostComments(postId));
+          };
+          case (null) {
+            //user doesn't exist, return an error
+            return #err("You don't have an Nuance account to vote on a comment!");
+          };
+        };
+      };
+      case (null) {
+        return #err("Comment not found.");
+      };
+    };
+  };
+
+  //Just deletes the content of the comment to not break anything -> admin function for now
+  public shared ({ caller }) func deleteComment(commentId : Text) : async Result.Result<Comment, Text> {
+    switch (commentIdToUserPrincipalIdHashMap.get(commentId)) {
+      case (?commentOwner) {
+        //check if the caller is admin
+        if (not isAdmin(caller)) {
+          return #err(Unauthorized);
+        };
+        //in order to not break anything, just delete the content of the article and put a warning on frontend
+        commentIdToContentHashMap.delete(commentId);
+
+        return #ok(buildComment(commentId));
+
+      };
+      case (null) {
+        return #err("Comment not found.");
+      };
+    };
+  };
+
   //#region System Hooks
 
   system func preupgrade() {
@@ -2221,6 +2721,17 @@ actor class PostBucket() = this {
     nftCanisterIds := Iter.toArray(nftCanisterIdsHashmap.entries());
     accountIdsToHandleEntries := Iter.toArray(accountIdsToHandleHashMap.entries());
     rejectedByModclubPostIdsEntries := Iter.toArray(rejectedByModclubPostIdsHashmap.entries());
+    postIdToCommentIdsEntries := Iter.toArray(postIdToCommentIdsHashMap.entries());
+    postIdToNumberOfCommentsEntries := Iter.toArray(postIdToNumberOfCommentsHashMap.entries());
+    commentIdToPostIdEntries := Iter.toArray(commentIdToPostIdHashMap.entries());
+    commentIdToUserPrincipalIdEntries := Iter.toArray(commentIdToUserPrincipalIdHashMap.entries());
+    commentIdToContentEntries := Iter.toArray(commentIdToContentHashMap.entries());
+    commentIdToCreatedAtEntries := Iter.toArray(commentIdToCreatedAtHashMap.entries());
+    commentIdToEditedAtEntries := Iter.toArray(commentIdToEditedAtHashMap.entries());
+    commentIdToUpvotedPrincipalIdsEntries := Iter.toArray(commentIdToUpvotedPrincipalIdsHashMap.entries());
+    commentIdToDownvotedPrincipalIdsEntries := Iter.toArray(commentIdToDownvotedPrincipalIdsHashMap.entries());
+    commentIdToReplyCommentIdsEntries := Iter.toArray(commentIdToReplyCommentIdsHashMap.entries());
+    replyCommentIdToCommentIdEntries := Iter.toArray(replyCommentIdToCommentIdHashMap.entries());
 
   };
 
@@ -2256,6 +2767,18 @@ actor class PostBucket() = this {
     accountIdsToHandleEntries := [];
     rejectedByModclubPostIdsEntries := [];
     isStoreSEOcalled := false;
+
+    postIdToCommentIdsEntries := [];
+    postIdToNumberOfCommentsEntries := [];
+    commentIdToPostIdEntries := [];
+    commentIdToUserPrincipalIdEntries := [];
+    commentIdToContentEntries := [];
+    commentIdToCreatedAtEntries := [];
+    commentIdToEditedAtEntries := [];
+    commentIdToUpvotedPrincipalIdsEntries := [];
+    commentIdToDownvotedPrincipalIdsEntries := [];
+    commentIdToReplyCommentIdsEntries := [];
+    replyCommentIdToCommentIdEntries := [];
 
   };
 };
