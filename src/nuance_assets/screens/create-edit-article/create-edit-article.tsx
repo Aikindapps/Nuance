@@ -518,7 +518,7 @@ const CreateEditArticle = () => {
             //if the user is writer -> toast a success message and navigate to my-profile screen
             if(!notNavigate && userPublicationsWriter.includes(migratePostResult.handle)){
               toast(
-                'The post has been submitted to the publication.',
+                'Post submitted for review!',
                 ToastType.Success
               );
               setTimeout(()=>{
@@ -587,11 +587,11 @@ const CreateEditArticle = () => {
           //else if the user is editor -> navigate to edit-article screen
           if(!notNavigate && userPublicationsWriter.includes(savePublicationResult.handle)){
             toast(
-              'The post has been submitted to the publication.',
+              'Post submitted for review!',
               ToastType.Success
             );
             setTimeout(()=>{
-              navigate('/my-profile')
+              navigate('/my-profile/submitted-for-review')
             }, 500)
           }
           else if (!notNavigate) {

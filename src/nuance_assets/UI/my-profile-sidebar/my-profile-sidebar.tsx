@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useUserStore, usePostStore } from '../../store';
+import { useUserStore, usePostStore, usePublisherStore } from '../../store';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../Button/Button';
 import { icons, colors } from '../../shared/constants';
@@ -34,6 +34,8 @@ const MyProfileSidebar: React.FC<MyProfileSidebarProps> = (
     getCounts: state.getUserPostCounts,
     counts: state.userPostCounts,
   }));
+
+  const { getAllWriterDrafts, allDrafts } = usePublisherStore((state) => ({ allDrafts: state.allDrafts, getAllWriterDrafts: state.getAllWriterDrafts }));
 
   const { getMyTags, myTags } = usePostStore((state) => ({
     getMyTags: state.getMyTags,
@@ -100,6 +102,10 @@ const MyProfileSidebar: React.FC<MyProfileSidebarProps> = (
         {
           title: 'My Profile',
           goto: '/my-profile',
+        },
+        {
+        title: `Submitted for Review (${allDrafts?.length || 0})`,
+        goto: '/my-profile/submitted-for-review',
         },
         {
           title: `Draft Articles (${counts?.draftCount || 0})`,

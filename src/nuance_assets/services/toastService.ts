@@ -17,7 +17,7 @@ export const toastError = (err: any, preText: string = ''): void => {
 export const toast = (message: string, toastType: ToastType): void => {
   switch (toastType) {
     case ToastType.Success:
-      _toast.success(message);
+      _toast.success(message, { duration: 6000 });
       break;
     case ToastType.Error:
       _toast.error(message);
