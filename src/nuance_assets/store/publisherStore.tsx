@@ -22,21 +22,20 @@ import {
   TagModel,
   getExtActor,
 } from '../services/actorService';
-import { GetPremiumArticleInfoReturn } from '../services/publisher-service/Publisher0/Publisher0.did';
 import { Listing, Metadata } from '../services/ext-service/ext_v2.did';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const ArticleNotFound = 'Article not found';
+const  user = useUserStore.getState().user;
 
-// fetch and merge author avatars into a list of posts
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   const authorHandles = posts.map((p) => p.handle);
 
   const authors = await (await getUserActor()).getUsersByHandles(authorHandles);
 
   return posts.map((p) => {
-    const author = authors.find((a) => a.handle === p.handle);
+    const author = authors.find((a : any) => a.handle === p.handle);
     if (author) {
       return { ...p, avatar: author.avatar };
     }
@@ -95,6 +94,7 @@ export interface PublisherStore {
   savedPublicationPost: PostType | undefined;
   publicationDraftPosts: PostType[] | undefined;
   publicationPosts: PostType[] | undefined;
+  allDrafts: PostType[] | undefined;
   publicationPost: PostType | undefined;
   getPublicationPostError: string | undefined;
   savePublicationPostError: string | undefined;
@@ -154,6 +154,7 @@ export interface PublisherStore {
   clearSavePublicationPostError: () => void;
   clearPremiumArticleInfo: () => void;
   getCanisterIdByHandle: (handle: string) => Promise<string | undefined>;
+  getAllWriterDrafts: (userHandle: string) => Promise<PostType[]>;
   clearAll: () => void;
 }
 
@@ -178,6 +179,7 @@ const createPublisherStore:
   savePublicationPostError: undefined,
   premiumArticleInfo: undefined,
   getPremiumArticleInfoError: undefined,
+  allDrafts: undefined,
 
   getPublication: async (
     publicationHandle: string
@@ -559,7 +561,7 @@ const createPublisherStore:
   ): Promise<string | undefined> => {
     const existing_canister_ids = get().publicationCanisterIds;
     var canisterId = '';
-    existing_canister_ids.forEach((el) => {
+    existing_canister_ids.forEach((el : any) => {
       if (el[0] === handle.toLowerCase()) {
         canisterId = el[1];
       }
@@ -582,6 +584,34 @@ const createPublisherStore:
     }
   },
 
+  getAllWriterDrafts: async (userHandle: string): Promise<PostType[]> => {
+    try {
+     
+      const userPublications = user?.publicationsArray || undefined;
+      let allDrafts: PostType[] = [];
+  
+      for (const publication of userPublications || []) {
+        const canisterId = await get().getCanisterIdByHandle(publication.publicationName);
+        
+        const drafts = await (
+          await getPublisherActor(canisterId)
+        ).getWritersDrafts(); 
+  
+        const userDrafts = drafts.filter((draft : PostType) => draft?.creator?.toLowerCase() === userHandle.toLowerCase());
+       
+        allDrafts = [...allDrafts, ...userDrafts];
+      }
+     
+      set({ allDrafts });
+      return allDrafts;
+    } catch (err) {
+      handleError(err, Unexpected);
+      console.log(err, "ERR")
+      return [];
+    }
+  },
+  
+
   getPremiumArticleInfo: async (
     postId: string,
     publicationHandle: string
@@ -602,7 +632,7 @@ const createPublisherStore:
         let tokenIndexEnd =
           tokenIndexStart + parseInt(premiumArticleDetails.totalSupply);
         var current_post_listings: [number, Listing, Metadata][] = [];
-        all_listings.forEach((listing) => {
+        all_listings.forEach((listing : any) => {
           if (listing[0] >= tokenIndexStart && listing[0] < tokenIndexEnd) {
             current_post_listings.push(listing);
           }

@@ -48,6 +48,7 @@ import { LoginModal } from './components/login-modal/login-modal';
 import { WithdrawIcpModal } from './components/withdraw-icp-modal/withdraw-icp-modal';
 import { Context } from './Context';
 import Followers from './screens/profile/followers';
+import SubmittedArticles from './screens/profile/SubmittedArticles';
 
 const Routes = () => {
   return useRoutes([
@@ -72,6 +73,7 @@ const Routes = () => {
       children: [
         { path: '', element: <MyProfile /> },
         { path: 'edit', element: <EditProfile /> },
+        { path: 'submitted-for-review', element: <SubmittedArticles />},
         { path: 'draft', element: <DraftArticles /> },
         { path: 'published', element: <PublishedArticles /> },
         { path: 'topics', element: <FollowedTags /> },

@@ -8,4 +8,5 @@ module {
   public let CYCLES_DISPENSER_CANISTER_ID = "353ux-wqaaa-aaaaf-qakga-cai";
   public let NUANCE_ASSETS_CANISTER_ID = "exwqn-uaaaa-aaaaf-qaeaa-cai";
   public let METRICS_CANISTER_ID = "xjlvo-hyaaa-aaaam-qbcga-cai";
+  public let NFT_FACTORY_CANISTER_ID = "kc4mb-myaaa-aaaaf-qajpq-cai";
 };
