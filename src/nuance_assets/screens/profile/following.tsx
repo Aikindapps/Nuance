@@ -80,7 +80,7 @@ const Following = () => {
           <div className='list-container wrapper' key={follower.handle}>
             <li className='follower-container'>
               <FollowAuthor
-                AuthorHandle={user.handle}
+                AuthorHandle={follower.handle}
                 Followers={user.followersArray}
                 user={user.handle}
                 isPublication={false}

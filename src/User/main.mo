@@ -593,7 +593,63 @@ actor User {
         lowercaseHandleReverseHashMap.delete(U.lowerCase(existingHandle));
         lowercaseHandleReverseHashMap.put(U.lowerCase(handleTrimmed), principalId);
         accountIdsToHandleHashMap.put(accountId, handleTrimmed);
-        //if the argument is given, it's a publication post
+
+        //update the arrays related to followers
+
+        //update the following handles list of the followers
+        let followersHandlesArray = U.safeGet(myFollowersHashMap, principalId, []);
+        for(followerHandle in followersHandlesArray.vals()){
+          let followerPrincipalId = U.safeGet(handleReverseHashMap, followerHandle, "");
+          if(followerPrincipalId != ""){
+            //this array includes the old handle of the user -> update it
+            let oldFollowingArray = U.safeGet(followersArrayHashMap, followerPrincipalId, []);
+            var newFollowingBuffer = Buffer.Buffer<Text>(0);
+            for(handle in oldFollowingArray.vals()){
+              if(handle == existingHandle){
+                newFollowingBuffer.add(handleTrimmed);
+              }
+              else{
+                newFollowingBuffer.add(handle);
+              }
+            };
+            followersArrayHashMap.put(followerPrincipalId, Buffer.toArray(newFollowingBuffer));
+
+
+            let oldFollowingList = U.safeGet(followersHashMap, followerPrincipalId, List.nil<Text>());
+            var newFollowingList = List.nil<Text>();
+            for(handle in List.toIter(oldFollowingList)){
+              if(handle == existingHandle){
+                newFollowingList := List.push(handleTrimmed, newFollowingList);
+              }
+              else{
+                newFollowingList := List.push(handle, newFollowingList);
+              }
+            };
+            followersHashMap.put(followerPrincipalId, newFollowingList);
+
+            
+          }
+        };
+
+        //update the followers handles list of the following users
+        let followingHandlesArray = U.safeGet(followersArrayHashMap, principalId, []);
+        for(followingHandle in followingHandlesArray.vals()){
+          let followingUserPrincipalId = U.safeGet(handleReverseHashMap, followingHandle, "");
+          //contains the old handle of the user
+          let oldFollowersArray = U.safeGet(myFollowersHashMap, followingUserPrincipalId, []);
+          let newFollowersBuffer = Buffer.Buffer<Text>(0);
+          for(handle in oldFollowersArray.vals()){
+            if(handle == existingHandle){
+              newFollowersBuffer.add(handleTrimmed);
+            }
+            else{
+              newFollowersBuffer.add(handle);
+            }
+          };
+          myFollowersHashMap.put(followingUserPrincipalId, Buffer.toArray(newFollowersBuffer));
+        };
+
+        //if the argument is given, it's a publication handle change
         //loop through all the editors and writers and update the publicationObject arrays of each user
         switch (publicationWritersEditorsPrincipals) {
           case (?principalsArray) {
@@ -644,6 +700,19 @@ actor User {
           };
           case (null) {};
 
+        };
+
+        //if the user is an editor or writer in a publication, inform that publication canister about the handle change
+        let userPublicationsArray = U.safeGet(publicationsArrayHashMap, principalId, []);
+        for(publicationObject in userPublicationsArray.vals()){
+          let publicationHandle = publicationObject.publicationName;
+          let publicationCanisterId = U.safeGet(handleReverseHashMap, publicationHandle, "");
+          if(publicationCanisterId != ""){
+            let publicationActor = actor(publicationCanisterId) : actor{
+              updateEditorOrWriterHandle : (existingHandle: Text, newHandle: Text) -> async ()
+            };
+            ignore publicationActor.updateEditorOrWriterHandle(existingHandle, newHandle);
+          };
         };
 
         return #ok(buildUser(principalId));
