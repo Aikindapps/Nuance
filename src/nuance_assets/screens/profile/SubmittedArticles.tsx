@@ -20,8 +20,6 @@ const SubmittedArticles = () => {
 
   useEffect(() => {
     getAllWriterDrafts(user?.handle || '');
-    console.log('user', user);
-    console.log(getAllWriterDrafts(user?.handle || ''));
   }
   , [user]);
 
@@ -43,12 +41,6 @@ const SubmittedArticles = () => {
     }
   }, [isLoggedIn, user]);
 
-  useEffect(() => {
-    
-    console.log('allDrafts', allDrafts);
-
-  }
-  , [allDrafts]);
 
   
 
