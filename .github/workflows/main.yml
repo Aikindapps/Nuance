@@ -1,0 +1,22 @@
+name: Dfinity Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: npm install
+      run: npm install
+
+    - name: Install DFX
+      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+    - name: Start DFX background
+      run: dfx start --background
+
