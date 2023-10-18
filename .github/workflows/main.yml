@@ -1,4 +1,4 @@
-name: Dfinity Workflow
+name: Deploy SNS UAT
 
 on:
   workflow_dispatch:
@@ -19,4 +19,6 @@ jobs:
 
     - name: Start DFX background
       run: dfx start --background
-
+      
+    - name: Deploy local
+      run: dfx deploy 
