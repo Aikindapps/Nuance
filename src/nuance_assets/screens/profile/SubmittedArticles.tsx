@@ -59,7 +59,7 @@ const SubmittedArticles = () => {
       <div
         className='article-grid-horizontal'
         style={{
-          filter: 'grayscale(100%)', // Makes it grey
+          filter: loading ? 'none' : 'grayscale(100%)', // Makes it grey
           pointerEvents: 'none', // Disables all pointer events like clicking
         }}
       >
