@@ -167,6 +167,10 @@ export interface _SERVICE {
   'getAdmins' : ActorMethod<[], Result_7>,
   'getAllBuckets' : ActorMethod<[], Result_7>,
   'getAllTags' : ActorMethod<[], Array<TagModel>>,
+  'getBucketCanisterIdsOfGivenHandles' : ActorMethod<
+    [Array<string>],
+    Array<string>
+  >,
   'getBucketCanisters' : ActorMethod<[], Array<[string, string]>>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_7>,

@@ -1,6 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore, useUserStore, usePostStore, usePublisherStore } from '../../store';
+import {
+  useAuthStore,
+  useUserStore,
+  usePostStore,
+  usePublisherStore,
+} from '../../store';
 import Header from '../../components/header/header';
 import Button from '../../UI/Button/Button';
 import MyProfileSidebar from '../../UI/my-profile-sidebar/my-profile-sidebar';
@@ -34,18 +39,24 @@ const ProfileSidebar = () => {
       clearAuthor: state.clearAuthor,
     }));
 
-    const { getAllWriterDrafts, allDrafts } = usePublisherStore((state) => ({ allDrafts: state.allDrafts , getAllWriterDrafts: state.getAllWriterDrafts }));
-
-
-  const { getMyTags, myTags } = usePostStore((state) => ({
+  const {
+    getMyTags,
+    myTags,
+    submittedForReviewPosts,
+    getSubmittedForReviewPosts,
+  } = usePostStore((state) => ({
     getMyTags: state.getMyTags,
     myTags: state.myTags,
+    submittedForReviewPosts: state.submittedForReviewPosts,
+    getSubmittedForReviewPosts: state.getSubmittedForReviewPosts,
   }));
 
   useEffect(() => {
     if (user) {
       getCounts(user.handle);
-      getAllWriterDrafts(user.handle);
+      getSubmittedForReviewPosts(
+        user.publicationsArray.map((obj) => obj.publicationName)
+      );
       getMyTags();
       setUserPublications(
         user.publicationsArray.filter((publication) => publication.isEditor)
@@ -83,7 +94,9 @@ const ProfileSidebar = () => {
           goto: '/my-profile/draft',
         },
         {
-          title: `Submitted for Review (${allDrafts?.length || 0})`,
+          title: `Submitted for Review (${
+            submittedForReviewPosts?.length || 0
+          })`,
           goto: '/my-profile/submitted-for-review',
         },
         {

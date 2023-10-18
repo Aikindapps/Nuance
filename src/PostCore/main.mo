@@ -1230,6 +1230,27 @@ actor PostCore {
 
     Buffer.toArray(postsBuffer);
   };
+
+
+  //returns the list of bucket canister ids that stores the posts of given handles
+  public shared query func getBucketCanisterIdsOfGivenHandles(handles: [Text]) : async [Text]{
+    var usingBucketCanisterIds = Buffer.Buffer<Text>(0);
+    for(handle in handles.vals()){
+      let principalId = U.safeGet(handleReverseHashMap, handle, "");
+      if(principalId != ""){
+        let postIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
+        for(postId in Iter.fromList(postIds)){
+          let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
+          if(bucketCanisterId != "" and not U.arrayContains(Buffer.toArray(usingBucketCanisterIds), bucketCanisterId)){
+            usingBucketCanisterIds.add(bucketCanisterId)
+          };
+        };
+      };
+    };
+    return Buffer.toArray(usingBucketCanisterIds)
+  };
+
+
   //returns the posts of given postIds excluding the drafts
   public shared query func getPostsByPostIds(postIds : [Text]) : async [PostKeyProperties] {
     Debug.print("PostCore->GetPostsByPostIds");

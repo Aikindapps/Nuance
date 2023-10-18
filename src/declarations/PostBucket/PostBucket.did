@@ -8,45 +8,62 @@ type SaveResult =
    err: text;
    ok: PostBucketType;
  };
-type Result_7 = 
+type SaveCommentModel = 
+ record {
+   commentId: opt text;
+   content: text;
+   postId: text;
+   replyToCommentId: opt text;
+ };
+type Result_9 = 
+ variant {
+   err: text;
+   ok: Comment;
+ };
+type Result_8 = 
  variant {
    err: text;
    ok: Metadata;
  };
-type Result_6 = 
+type Result_7 = 
  variant {
    err: text;
    ok: vec text;
  };
-type Result_5 = 
+type Result_6 = 
  variant {
    err: text;
    ok: bool;
  };
-type Result_4 = 
+type Result_5 = 
  variant {
    err: text;
    ok: PostBucketType__1;
  };
-type Result_3 = 
+type Result_4 = 
  variant {
    err: text;
    ok: nat;
  };
-type Result_2 = 
+type Result_3 = 
  variant {
    err: text;
    ok;
  };
-type Result_1 = 
+type Result_2 = 
  variant {
    err: text;
    ok: text;
  };
-type Result = 
+type Result_1 = 
  variant {
    err: text;
    ok: Post;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: vec Comment;
  };
 type PostTagModel = 
  record {
@@ -131,77 +148,85 @@ type PostBucketType =
 type PostBucket = 
  service {
    acceptCycles: () -> ();
-   addPostCategory: (text, text) -> (Result_4);
+   addPostCategory: (text, text) -> (Result_5);
    availableCycles: () -> (nat) query;
-   delete: (text) -> (Result_3);
-   deleteUserPosts: (text) -> (Result_3);
-   dumpIds: () -> (Result_2);
-   dumpPosts: () -> (Result_2);
-   dumpUserIds: () -> (Result_2);
+   delete: (text) -> (Result_4);
+   deleteComment: (text) -> (Result_9);
+   deleteUserPosts: (text) -> (Result_4);
+   downvoteComment: (text) -> (Result);
+   dumpIds: () -> (Result_3);
+   dumpPosts: () -> (Result_3);
+   dumpUserIds: () -> (Result_3);
    generateContent: (text) -> (text);
    generatePublishedDates: () -> ();
-   get: (text) -> (Result_4) query;
-   getAdmins: () -> (Result_6) query;
+   get: (text) -> (Result_5) query;
+   getAdmins: () -> (Result_7) query;
    getAllRejected: () -> (vec record {
                                 text;
                                 text;
                               }) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
-   getCgUsers: () -> (Result_6) query;
+   getCgUsers: () -> (Result_7) query;
+   getComment: (text) -> (Result_9) query;
    getFrontendCanisterId: () -> (text) query;
-   getKinicList: () -> (Result_6) query;
+   getKinicList: () -> (Result_7) query;
    getList: (vec text) -> (vec PostBucketType__1) query;
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
-   getMetadata: (text, nat) -> (Result_7) query;
+   getMetadata: (text, nat) -> (Result_8) query;
    getNftCanisters: () -> (vec NftCanisterEntry) query;
    getPlatformOperators: () -> (List) query;
+   getPostComments: (text) -> (Result) query;
    getPostCoreCanisterId: () -> (text) query;
-   getPostUrls: () -> (Result_1) query;
-   getPostWithPublicationControl: (text) -> (Result_4);
+   getPostUrls: () -> (Result_2) query;
+   getPostWithPublicationControl: (text) -> (Result_5);
    getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
-   getPremiumArticle: (text) -> (Result_4);
+   getPremiumArticle: (text) -> (Result_5);
+   getSubmittedForReview: (vec text) -> (vec PostBucketType__1) query;
    getTotalPostCount: () -> (nat) query;
-   getTrustedCanisters: () -> (Result_6) query;
+   getTrustedCanisters: () -> (Result_7) query;
    getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
    initializeBucketCanister: (vec text, vec text, vec text,
     vec record {
           text;
           text;
-        }, text, text, text, text) -> (Result_1);
-   initializeCanister: (text, text) -> (Result_1);
+        }, text, text, text, text) -> (Result_2);
+   initializeCanister: (text, text) -> (Result_2);
    isBucketCanisterActivePublic: () -> (bool) query;
-   makeBucketCanisterNonActive: () -> (Result_5);
+   makeBucketCanisterNonActive: () -> (Result_6);
    makePostPremium: (text) -> (bool);
-   migratePostToPublication: (text, text, bool) -> (Result);
-   registerAdmin: (text) -> (Result_2);
-   registerCanister: (text) -> (Result_2);
-   registerCgUser: (text) -> (Result_2);
-   registerNftCanisterId: (text, text) -> (Result_1);
-   registerNftCanisterIdAdminFunction: (text, text) -> (Result_1);
-   registerPlatformOperator: (text) -> (Result_2);
-   reindex: () -> (Result_1);
+   migratePostToPublication: (text, text, bool) -> (Result_1);
+   registerAdmin: (text) -> (Result_3);
+   registerCanister: (text) -> (Result_3);
+   registerCgUser: (text) -> (Result_3);
+   registerNftCanisterId: (text, text) -> (Result_2);
+   registerNftCanisterIdAdminFunction: (text, text) -> (Result_2);
+   registerPlatformOperator: (text) -> (Result_3);
+   reindex: () -> (Result_2);
    rejectPostByModclub: (text) -> () oneway;
-   removePostCategory: (text) -> (Result_4);
+   removeCommentVote: (text) -> (Result);
+   removePostCategory: (text) -> (Result_5);
    save: (PostSaveModel) -> (SaveResult);
+   saveComment: (SaveCommentModel) -> (Result);
    saveMultiple: (vec PostSaveModelBucketMigration) -> (vec SaveResult);
-   setMaxMemorySize: (nat) -> (Result_3);
+   setMaxMemorySize: (nat) -> (Result_4);
    simulatePremiumArticle: (text, bool) -> ();
-   storeAllSEO: () -> (Result_2);
+   storeAllSEO: () -> (Result_3);
    storeHandlesAndPrincipals: (vec record {
                                      text;
                                      text;
-                                   }) -> (Result_1);
-   storeSEO: (text, bool) -> (Result_2);
+                                   }) -> (Result_2);
+   storeSEO: (text, bool) -> (Result_3);
    testInstructionSize: () -> (text);
    unRejectPostByModclub: (text) -> () oneway;
-   unregisterAdmin: (text) -> (Result_2);
-   unregisterCanister: (text) -> (Result_2);
-   unregisterCgUser: (text) -> (Result_2);
-   unregisterPlatformOperator: (text) -> (Result_2);
-   updateHandle: (text, text) -> (Result_1);
-   updatePostDraft: (text, bool) -> (Result);
+   unregisterAdmin: (text) -> (Result_3);
+   unregisterCanister: (text) -> (Result_3);
+   unregisterCgUser: (text) -> (Result_3);
+   unregisterPlatformOperator: (text) -> (Result_3);
+   updateHandle: (text, text) -> (Result_2);
+   updatePostDraft: (text, bool) -> (Result_1);
+   upvoteComment: (text) -> (Result);
    validate: (reserved) -> (Validate);
  };
 type Post = 
@@ -270,4 +295,32 @@ type List =
        text;
        List;
      };
+type Comment__1 = 
+ record {
+   bucketCanisterId: text;
+   commentId: text;
+   content: text;
+   createdAt: text;
+   creator: text;
+   downVotes: vec text;
+   editedAt: opt text;
+   postId: text;
+   repliedCommentId: opt text;
+   replies: vec Comment__1;
+   upVotes: vec text;
+ };
+type Comment = 
+ record {
+   bucketCanisterId: text;
+   commentId: text;
+   content: text;
+   createdAt: text;
+   creator: text;
+   downVotes: vec text;
+   editedAt: opt text;
+   postId: text;
+   repliedCommentId: opt text;
+   replies: vec Comment__1;
+   upVotes: vec text;
+ };
 service : () -> PostBucket

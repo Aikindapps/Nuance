@@ -245,6 +245,7 @@ service : {
   getAdmins: () -> (Result_7) query;
   getAllBuckets: () -> (Result_7);
   getAllTags: () -> (vec TagModel) query;
+  getBucketCanisterIdsOfGivenHandles: (vec text) -> (vec text) query;
   getBucketCanisters: () -> (vec record {
                                    text;
                                    text;

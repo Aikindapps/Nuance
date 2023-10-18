@@ -34,7 +34,10 @@ import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
 import { getFieldsFromMetadata, icpPriceToString } from '../shared/utils';
 import { Principal } from '@dfinity/principal';
 import { PostKeyProperties } from '../../declarations/PostCore/PostCore.did';
-import { PostBucketType } from 'src/declarations/PostBucket/PostBucket.did';
+import {
+  PostBucketType,
+  PostBucketType__1,
+} from '../../../src/declarations/PostBucket/PostBucket.did';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -180,6 +183,7 @@ export interface PostStore {
   userPosts: PostType[] | undefined;
   myDraftPosts: PostType[] | undefined;
   myPublishedPosts: PostType[] | undefined;
+  submittedForReviewPosts: PostType[] | undefined;
   claps: string | undefined;
   isTagScreen: boolean;
   userPostIds: Array<string> | undefined;
@@ -262,6 +266,7 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number
   ) => Promise<PostType[] | undefined>;
+  getSubmittedForReviewPosts: (handles: string[]) => Promise<void>;
   clearPostsByCategory: () => void;
   clearPostsByFollowers: () => void;
   clapPost: (postId: string) => Promise<void>;
@@ -329,7 +334,9 @@ export interface PostStore {
   followTag: (tag: string) => Promise<void>;
   unfollowTag: (tag: string) => Promise<void>;
   getOwnersOfPost: (postId: string) => Promise<void>;
-  getOwnersOfPremiumArticleReturnOnly: (postId: string)=> Promise<PremiumArticleOwners | undefined>;
+  getOwnersOfPremiumArticleReturnOnly: (
+    postId: string
+  ) => Promise<PremiumArticleOwners | undefined>;
   lockToken: (
     tokenId: string,
     price: bigint,
@@ -377,6 +384,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   userPostIds: undefined,
   myDraftPosts: undefined,
   myPublishedPosts: undefined,
+  submittedForReviewPosts: undefined,
   claps: undefined,
   ClearSearchBar: false,
   isTagScreen: false,
@@ -1186,6 +1194,31 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     } catch (err) {
       handleError(err, Unexpected);
     }
+  },
+
+  getSubmittedForReviewPosts: async (handles: string[]): Promise<void> => {
+    try {
+      let postCoreCanister = await getPostCoreActor();
+      let bucketCanisterIds = await postCoreCanister.getBucketCanisterIdsOfGivenHandles(
+        handles
+      );
+      let promises: Promise<PostBucketType[]>[] = []
+      for(const bucketCanisterId of bucketCanisterIds){
+        let bucketActor = await getPostBucketActor(bucketCanisterId);
+        promises.push(bucketActor.getSubmittedForReview(handles))
+      }
+      let results = (await Promise.all(promises)).flat(1);
+      set({
+        submittedForReviewPosts: results.map((postBucketReturn) => {
+          return { ...postBucketReturn, views: '0', claps: '0', tags: [] };
+        }),
+      });
+
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+    
+
   },
 
   getPostsByCategory: async (

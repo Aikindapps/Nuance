@@ -180,6 +180,11 @@ export const idlFactory = ({ IDL }) => {
     'getAdmins' : IDL.Func([], [Result_7], ['query']),
     'getAllBuckets' : IDL.Func([], [Result_7], []),
     'getAllTags' : IDL.Func([], [IDL.Vec(TagModel)], ['query']),
+    'getBucketCanisterIdsOfGivenHandles' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getBucketCanisters' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],

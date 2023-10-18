@@ -22,7 +22,7 @@ export const idlFactory = ({ IDL }) => {
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
-    'getPlatformOperatorsLog' : IDL.Func([], [Result_3], []),
+    'getPlatformOperatorsLog' : IDL.Func([], [Result_3], ['query']),
     'initNuanceCanisters' : IDL.Func([], [Result_2], []),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'logCommand' : IDL.Func([IDL.Text, IDL.Text], [Result], []),
