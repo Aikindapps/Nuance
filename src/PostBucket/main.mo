@@ -1506,6 +1506,37 @@ actor class PostBucket() = this {
 
     Buffer.toArray(postsBuffer);
   };
+
+
+  //returns the submitted for review posts of the caller
+  public shared query ({caller}) func getSubmittedForReview(publicationHandles: [Text]) : async [PostBucketType] {
+    let callerPrincipalId = Principal.toText(caller);
+    let callerHandle = U.safeGet(handleHashMap, callerPrincipalId, "");
+    if(callerHandle == ""){
+      //if the principal id of the caller is not stored in the hashmap, caller has no post submitted for review
+      return [];
+    };
+
+    var result = Buffer.Buffer<PostBucketType>(0);
+
+    for(publicationHandle in publicationHandles.vals()){
+      let publicationCanisterId = U.safeGet(handleReverseHashMap, publicationHandle, "");
+      if(publicationCanisterId != ""){
+        let postIdsOfPublication = U.safeGet(userPostsHashMap, publicationCanisterId, List.nil<Text>());
+        for(postId in Iter.fromList(postIdsOfPublication)){
+          let creator = U.safeGet(creatorHashMap, postId, "");
+          let isDraft = U.safeGet(isDraftHashMap, postId, false);
+          if(creator == callerHandle and isDraft){
+            result.add(buildPost(postId));
+          };
+        };
+      };
+      
+    };
+
+    Buffer.toArray(result);
+  };
+
   //Allows getting posts by postIds including drafts
   public shared query ({ caller }) func getPostsByPostIds(postIds : [Text], includeDraft : Bool) : async [PostBucketType] {
     Debug.print("PostBucket->GetPostsByPostIds");

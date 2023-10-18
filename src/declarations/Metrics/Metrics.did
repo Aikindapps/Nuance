@@ -42,7 +42,7 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
-  getPlatformOperatorsLog: () -> (Result_3);
+  getPlatformOperatorsLog: () -> (Result_3) query;
   initNuanceCanisters: () -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
   logCommand: (text, text) -> (Result);
