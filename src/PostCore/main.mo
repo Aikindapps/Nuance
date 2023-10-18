@@ -2580,7 +2580,7 @@ actor PostCore {
     let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
     // On local, don't send posts to Modclub
     if (environment != "local") {
-      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title);
+      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null);
     };
     postModerationStatusMap.put(postIdWithVersion, #reviewRequired);
   };
