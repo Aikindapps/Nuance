@@ -1202,15 +1202,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       let bucketCanisterIds = await postCoreCanister.getBucketCanisterIdsOfGivenHandles(
         handles
       );
-      console.log('getSubmittedForReviewPosts, args: ', handles)
-      console.log('getSubmittedForReviewPosts, bucketCanisterIds: ', bucketCanisterIds)
       let promises: Promise<PostBucketType[]>[] = []
       for(const bucketCanisterId of bucketCanisterIds){
         let bucketActor = await getPostBucketActor(bucketCanisterId);
         promises.push(bucketActor.getSubmittedForReview(handles))
       }
       let results = (await Promise.all(promises)).flat(1);
-      console.log('getSubmittedForReviewPosts, results: ', results);
       set({
         submittedForReviewPosts: results.map((postBucketReturn) => {
           return { ...postBucketReturn, views: '0', claps: '0', tags: [] };
