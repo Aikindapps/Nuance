@@ -666,7 +666,7 @@ actor PostCore {
   };
 
   public shared ({ caller }) func deletePostFromUserDebug(handle : Text, postId : Text) : async Result.Result<[Text], Text> {
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
