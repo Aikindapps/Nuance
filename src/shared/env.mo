@@ -11,9 +11,9 @@ module {
   public let METRICS_CANISTER_ID = "xjlvo-hyaaa-aaaam-qbcga-cai";
   public let PUBLICATION_MANAGEMENT_CANISTER_ID = "kq23y-aiaaa-aaaaf-qajmq-cai";
   public let NFT_FACTORY_CANISTER_ID = "kc4mb-myaaa-aaaaf-qajpq-cai";
-  public let SNS_GOVERNANCE_CANISTER = "rzbmc-yiaaa-aaaaq-aabsq-cai";
+  public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";
-  public let MITCH_PRINCIPAL_ID = "3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe";
+  public let MITCH_PRINCIPAL_ID = "nfcvh-tajgf-yg2zg-hd62j-7lrtq-vltzp-kvnyb-knvah-tkwbl-jybux-7ae";
   public let BARAN_PRINCIPAL_ID = "wvhee-rnvlo-p6u4o-6fm55-jmxlu-yy2yt-dx47v-rxswo-u7kuk-dofj5-aae";
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
 
@@ -21,39 +21,39 @@ module {
     PAUL_PRINCIPAL_ID,
     MITCH_PRINCIPAL_ID,
     BARAN_PRINCIPAL_ID,
-    NICK_PRINCIPAL_ID
+    NICK_PRINCIPAL_ID,
   ];
 
-  public func isPlatformOperator(caller: Principal) : Bool{
+  public func isPlatformOperator(caller : Principal) : Bool {
     let c = Principal.toText(caller);
-    for(operator in PLATFORM_OPERATORS.vals()){
-      if(operator == c){
+    for (operator in PLATFORM_OPERATORS.vals()) {
+      if (operator == c) {
         return true;
-      }
+      };
     };
-    return false
+    return false;
   };
 
   public let CYCLES_DISPENSER_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
-    POST_CORE_CANISTER_ID
+    POST_CORE_CANISTER_ID,
   ];
 
   public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
-    CYCLES_DISPENSER_CANISTER_ID
+    CYCLES_DISPENSER_CANISTER_ID,
   ];
 
   public let KINIC_ENDPOINT_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
-    CYCLES_DISPENSER_CANISTER_ID
+    CYCLES_DISPENSER_CANISTER_ID,
   ];
 
   public let METRICS_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
-    POST_CORE_CANISTER_ID
+    POST_CORE_CANISTER_ID,
   ];
 
   public let POSTBUCKET_CANISTER_ADMINS = [
@@ -61,34 +61,32 @@ module {
     CYCLES_DISPENSER_CANISTER_ID,
     POST_CORE_CANISTER_ID,
     PUBLICATION_MANAGEMENT_CANISTER_ID,
-    USER_CANISTER_ID
+    USER_CANISTER_ID,
   ];
 
   public let POSTCORE_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
     USER_CANISTER_ID,
-    PUBLICATION_MANAGEMENT_CANISTER_ID
+    PUBLICATION_MANAGEMENT_CANISTER_ID,
   ];
 
   public let POSTINDEX_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
-    POST_CORE_CANISTER_ID
+    POST_CORE_CANISTER_ID,
   ];
 
   public let STORAGE_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
-    CYCLES_DISPENSER_CANISTER_ID
+    CYCLES_DISPENSER_CANISTER_ID,
   ];
 
   public let USER_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
     USER_CANISTER_ID,
-    PUBLICATION_MANAGEMENT_CANISTER_ID
+    PUBLICATION_MANAGEMENT_CANISTER_ID,
   ];
-
-
 
 };
