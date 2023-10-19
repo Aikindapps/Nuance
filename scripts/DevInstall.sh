@@ -124,10 +124,7 @@ echo "##### Cycles Dispenser setup #####"
 echo ""
 dfx canister call Storage uploadBlob '(record { contentId = ""; chunkData = vec {}; offset = 0; totalChunks = 0; mimeType = ""; contentSize = 0; })'
 node ./scripts/GetAllCanisterIds.js -CyclesDispenser
-node ./scripts/adminAll.js registerAdmin $(dfx identity get-principal)
-node ./scripts/adminAll.js registerAdmin $(dfx canister id CyclesDispenser)
 node ./scripts/cyclesDispenserAdd.js -devInstall
-dfx canister call CyclesDispenser batchRegisterAdmin '(principal "'$(dfx identity get-principal --identity nuance-identity-admin)'")'
 
 echo ""
 echo "##### Initialize Nuance Canisters for Metrics canister #####"

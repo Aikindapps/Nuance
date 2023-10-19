@@ -1,5 +1,6 @@
 import Result "mo:base/Result";
 import List "mo:base/List";
+import ENV "env";
 module{
 
 
@@ -60,8 +61,8 @@ module{
         updateHandle : (existingHandle : Text, newHandle : Text, postCanisterId : Text, publicationWritersEditorsPrincipals : ?[Text]) -> async Result.Result<User, Text>;
     };
 
-    public func getUserCanister(canisterId: Text) : UserCanisterInterface {
-        let canister : UserCanisterInterface = actor(canisterId);
+    public func getUserCanister() : UserCanisterInterface {
+        let canister : UserCanisterInterface = actor(ENV.USER_CANISTER_ID);
         return canister;
     };
 
@@ -145,10 +146,14 @@ module{
         getPostKeyProperties : (postId : Text) -> async Result.Result<PostKeyProperties, Text>;
         registerNftCanisterId : (canisterId : Text, handle : Text) -> async Result.Result<Text, Text>;
         addCanisterToCyclesDispenser : (canisterId : Text, minimumThreshold : Nat, topUpAmount : Nat) -> async Result.Result<(), Text>;
+        updatePostDraft : (postId : Text, isDraft : Bool, time : Int, writerPrincipalId : Text) -> async PostKeyProperties;
+        makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) -> async ();
+        getNextPostId : () -> async Result.Result<Text, Text>;
+        addPostCategory : (postId : Text, category : Text, time : Int) -> async ()
     };
 
-    public func getPostCoreCanister(canisterId: Text) : PostCoreCanisterInterface {
-        let canister : PostCoreCanisterInterface = actor(canisterId);
+    public func getPostCoreCanister() : PostCoreCanisterInterface {
+        let canister : PostCoreCanisterInterface = actor(ENV.POST_CORE_CANISTER_ID);
         return canister;
     };
 
@@ -167,11 +172,12 @@ module{
         indexPost : (postId : Text, oldHtml : Text, newHtml : Text, oldTags: [Text], newTags: [Text]) -> async IndexPostResult;
         indexPosts : (indexPostModels: [IndexPostModel]) -> async [IndexPostResult];
         clearIndex : () -> async ClearIndexResult;
-        registerAdmin : (id : Text) -> async Result.Result<(), Text>
+        registerAdmin : (id : Text) -> async Result.Result<(), Text>;
+        registerCanister : (id : Text) -> async Result.Result<(), Text>
     };
 
-    public func getPostIndexCanister(canisterId: Text) : PostIndexCanisterInterface {
-        let canister : PostIndexCanisterInterface = actor(canisterId);
+    public func getPostIndexCanister() : PostIndexCanisterInterface {
+        let canister : PostIndexCanisterInterface = actor(ENV.POST_INDEX_CANISTER_ID);
         return canister;
     };
 
@@ -180,8 +186,8 @@ module{
     //****************KINICENDPOINT CANISTER*****************
     public type KinicEndpointCanisterInterface = actor{};
 
-    public func getKinicEndpointCanister(canisterId: Text) : KinicEndpointCanisterInterface {
-        let canister : KinicEndpointCanisterInterface = actor(canisterId);
+    public func getKinicEndpointCanister() : KinicEndpointCanisterInterface {
+        let canister : KinicEndpointCanisterInterface = actor(ENV.KINIC_ENDPOINT_CANISTER_ID);
         return canister;
     };
 
@@ -189,8 +195,8 @@ module{
     //****************FASTBLOCKSEMAILOPTIN CANISTER*****************
     public type FastBlocksEmailOptInCanisterInterface = actor{};
 
-    public func getFastblocksEmailOptInCanister(canisterId: Text) : FastBlocksEmailOptInCanisterInterface {
-        let canister : FastBlocksEmailOptInCanisterInterface = actor(canisterId);
+    public func getFastblocksEmailOptInCanister() : FastBlocksEmailOptInCanisterInterface {
+        let canister : FastBlocksEmailOptInCanisterInterface = actor(ENV.FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID);
         return canister;
     };
 
@@ -221,8 +227,8 @@ module{
         addCanister : (canister: AddCanisterModel) -> async Result.Result<RegisteredCanister, Text>
     };
 
-    public func getCyclesDispenserCanister(canisterId: Text) : CyclesDispenserCanisterInterface {
-        let canister : CyclesDispenserCanisterInterface = actor(canisterId);
+    public func getCyclesDispenserCanister() : CyclesDispenserCanisterInterface {
+        let canister : CyclesDispenserCanisterInterface = actor(ENV.CYCLES_DISPENSER_CANISTER_ID);
         return canister;
     };
 
@@ -233,8 +239,8 @@ module{
         createNftCanister : () -> async Result.Result<Text, Text>
     };
 
-    public func getNftFactoryCanister(canisterId: Text) : NftFactoryCanisterInterface {
-        let canister : NftFactoryCanisterInterface = actor(canisterId);
+    public func getNftFactoryCanister() : NftFactoryCanisterInterface {
+        let canister : NftFactoryCanisterInterface = actor(ENV.NFT_FACTORY_CANISTER_ID);
         return canister;
     };
 
@@ -308,4 +314,59 @@ module{
     };
 
 
+
+    //##########################FRONTEND_CANISTER############################
+
+    public  type BatchId = Nat;
+    public type ChunkId = Nat;
+    public type Key = Text;
+    public type Time = Int;
+
+    // Add or change content for an asset, by content encoding
+    public type SetAssetContentArguments =  {
+        key: Key;
+        content_encoding: Text;
+        chunk_ids:  [ChunkId];
+        sha256: ?Blob;
+    };
+
+    // Remove content for an asset, by content encoding
+    public type UnsetAssetContentArguments =  {
+        key: Key;
+        content_encoding: Text;
+    };
+
+    // Delete an asset
+    public type DeleteAssetArguments =  {
+        key: Key;
+    };
+
+    // Reset everything
+    public type ClearArguments =  {};
+    public type FrontendInterface = actor {
+        store: ({
+            key: Key;
+            content_type: Text;
+            content_encoding: Text;
+            content: Blob;
+            sha256: ?Blob}) -> ();
+        delete_asset: ({key: Key;}) -> ();  
+        authorize: (principal: Principal) -> async ();
+        take_ownership: () -> async ();
+    };
+
+    public func getFrontendCanister() : FrontendInterface {
+        let canister : FrontendInterface = actor(ENV.NUANCE_ASSETS_CANISTER_ID);
+        return canister;
+    };
+
+    //###########################__METRICS_CANISTER__
+    public type MetricsCanisterInterface = actor{
+        registerCanister : (id : Text) -> async Result.Result<(), Text>
+    };
+
+    public func getMetricsCanister() : MetricsCanisterInterface {
+        let canister : MetricsCanisterInterface = actor(ENV.METRICS_CANISTER_ID);
+        return canister;
+    };
 }

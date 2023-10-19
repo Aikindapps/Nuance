@@ -16,7 +16,10 @@ import StorageSolution "./storage/storage";
 import Cycles "mo:base/ExperimentalCycles";
 import IC "./ic.types";
 import Blob "mo:base/Blob";
-import Array "mo:base/Array";import Versions "../shared/versions";
+import Array "mo:base/Array";
+import Versions "../shared/versions";
+import ENV "../shared/env";
+import U "../shared/utils";
 
 
 // actor Storage {
@@ -71,53 +74,45 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         Principal.equal(caller, Principal.fromText("2vxsx-fae"));
     };
 
-    func isAdmin(caller : Principal) : Bool {
+    private func isAdmin(caller : Principal) : Bool {
         var c = Principal.toText(caller);
-        var exists = List.find<Text>(admins, func(val: Text) : Bool { val == c });
-        exists != null;
+        U.arrayContains(ENV.STORAGE_CANISTER_ADMINS, c);
     };
 
-    public shared ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
-         if (isAnonymous(caller)) {
-            return #err("Anonymous cannot call this method");
+    public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
+        if (isAnonymous(caller)) {
+        return #err("Cannot use this method anonymously.");
         };
 
-        #ok(List.toArray(admins));
-    };
-
-    //platform operators, similar to admins but restricted to a few functions
-
-    public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-        let principal = Principal.toText(caller);
-        
-        if (not isAdmin(caller)) {
-            return #err("Unauthorized");
-        };
-
-        if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-            platformOperators := List.push<Text>(id, platformOperators);
-        };
-
-        #ok();
-    };
-
-    public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-        if (not isAdmin(caller)) {
-            return #err("Unauthorized");
-        };
-        platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
-        #ok();
-    };
-
-    public shared query func getPlatformOperators() : async List.List<Text> {
-        platformOperators;
+        #ok(ENV.STORAGE_CANISTER_ADMINS);
     };
 
     private func isPlatformOperator(caller : Principal) : Bool {
-        var c = Principal.toText(caller);
-        var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
-        exists != null;
+        ENV.isPlatformOperator(caller)
     };
+
+    public shared query func getPlatformOperators() : async List.List<Text> {
+        List.fromArray(ENV.PLATFORM_OPERATORS);
+    };
+
+    //These methods are deprecated. Admins are handled by env.mo file
+    public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+        #err("Deprecated function")
+    };
+
+    public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+        #err("Deprecated function")
+    };
+
+    //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
+    public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+        #err("Deprecated function.")
+    };
+
+    public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+        #err("Deprecated function.")
+    };
+
 
     public shared query ({ caller }) func getCgUsers() : async Result.Result<[Text], Text> {
          if (isAnonymous(caller)) {
@@ -168,36 +163,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
     };
 
 
-    //This function should be invoked immediately after the canister is deployed via script.
-    public shared({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Anonymous cannot call this method");
-        };
 
-        canistergeekMonitor.collectMetrics();
-        if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-
-        if (not List.some<Text>(admins, func(val: Text) : Bool { val == id })) {
-            admins := List.push<Text>(id, admins);
-            await storageSolution.registerAdmin(id);
-        };
-        #ok();
-    };
-
-    public shared({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-         if (isAnonymous(caller)) {
-            return #err("Anonymous cannot call this method");
-        };
-
-        canistergeekMonitor.collectMetrics();
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
-        admins := List.filter<Text>(admins, func(val: Text) : Bool { val != id });
-        #ok();
-    };
     // admin function to retire any data canister for writing. It will still be used for  reading
     public shared({caller}) func retiredDataCanisterIdForWriting(canisterId: Text) : async Result.Result<(), Text> {
          if (isAnonymous(caller)) {
