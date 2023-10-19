@@ -23,6 +23,7 @@ import Prelude "mo:base/Prelude";
 import Cycles "mo:base/ExperimentalCycles";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
+import ENV "../shared/env";
 
 actor class PostBucket() = this {
   let canistergeekMonitor = Canistergeek.Monitor();
@@ -70,9 +71,6 @@ actor class PostBucket() = this {
   type NftCanisterEntry = Types.NftCanisterEntry;
 
   type Order = { #less; #equal; #greater };
-
-  type FrontendInterface = Types.FrontendInterface;
-  type PostCoreInterface = Types.PostCoreInterface;
 
   type PostSaveModelBucketMigration = Types.PostSaveModelBucketMigration;
 
@@ -125,10 +123,6 @@ actor class PostBucket() = this {
   stable var nftCanisterIds : [(Text, Text)] = [];
   stable var testEntries : [(Text, Text)] = [];
   stable var rejectedByModclubPostIdsEntries : [(Text, Text)] = [];
-  stable var frontendCanisterId : Text = "frontend";
-  stable var postCoreCanisterId : Text = "post-core";
-  stable var postIndexCanisterId = "";
-  stable var userCanisterId = "";
 
   //comment data
   stable var postIdToCommentIdsEntries : [(Text, [Text])] = [];
@@ -240,20 +234,13 @@ actor class PostBucket() = this {
     if (isAnonymous(caller)) {
       return #err("Anonymous user cannot initialize bucket canister");
     };
-
     let _isCallerOwner = await isCallerOwner(caller);
     Debug.print("PostBucket -> initializeBucketCanister");
     Debug.print("isCallerOwner-> " # Bool.toText(_isCallerOwner));
     if (_isCallerOwner or isAdmin(caller)) {
       if (List.size(admins) == 0) {
-        postCoreCanisterId := initPostCoreCanisterId;
-
-        admins := List.push(postCoreCanisterId, List.fromArray(adminsInitial));
         cgusers := List.fromArray(cgUsersInitial);
-        nuanceCanisters := List.push(postCoreCanisterId, List.fromArray(nuanceCanistersInitial));
-        frontendCanisterId := initFrontendCanisterId;
-        postIndexCanisterId := initPostIndexCanisterId;
-        userCanisterId := initUserCanisterId;
+        nuanceCanisters := List.push(initPostCoreCanisterId, List.fromArray(nuanceCanistersInitial));
         for (nftCanisterEntry in nftCanistersInitial.vals()) {
           nftCanisterIdsHashmap.put(nftCanisterEntry.0, nftCanisterEntry.1);
         };
@@ -265,22 +252,17 @@ actor class PostBucket() = this {
     };
 
   };
-
+  //deprecated function
   public shared ({ caller }) func initializeCanister(postIndexCai : Text, userCai : Text) : async Result.Result<Text, Text> {
-    if (not isAdmin(caller) and Principal.toText(caller) != postCoreCanisterId) {
-      return #err(Unauthorized);
-    };
-    postIndexCanisterId := postIndexCai;
-    userCanisterId := userCai;
-    #ok(postIndexCanisterId # ", " # userCanisterId);
+    #err("Deprecated function.")
   };
 
   public shared query func getFrontendCanisterId() : async Text {
-    frontendCanisterId;
+    ENV.NUANCE_ASSETS_CANISTER_ID;
   };
 
   public shared query func getPostCoreCanisterId() : async Text {
-    postCoreCanisterId;
+    ENV.POST_CORE_CANISTER_ID;
   };
 
   public shared query func getBucketCanisterVersion() : async Text {
@@ -346,7 +328,7 @@ actor class PostBucket() = this {
     if (isAnonymous(caller)) {
       return #err("Anonymous user cannot run this method");
     };
-    if (not Principal.equal(caller, Principal.fromText(postCoreCanisterId))) {
+    if (not isAdmin(caller)) {
       return #err(Unauthorized);
     };
     isActive := false;
@@ -387,8 +369,41 @@ actor class PostBucket() = this {
 
   private func isAdmin(caller : Principal) : Bool {
     var c = Principal.toText(caller);
-    var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
-    exists != null;
+    U.arrayContains(ENV.POSTBUCKET_CANISTER_ADMINS, c);
+  };
+
+  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    #ok(ENV.POSTBUCKET_CANISTER_ADMINS);
+  };
+
+  private func isPlatformOperator(caller : Principal) : Bool {
+    ENV.isPlatformOperator(caller)
+  };
+
+  public shared query func getPlatformOperators() : async List.List<Text> {
+    List.fromArray(ENV.PLATFORM_OPERATORS);
+  };
+
+  //These methods are deprecated. Admins are handled by env.mo file
+  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
+  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
+  };
+
+  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
   };
 
   func isNuanceCanister(caller : Principal) : Bool {
@@ -397,47 +412,6 @@ actor class PostBucket() = this {
     exists != null;
   };
 
-  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
-    if (isAnonymous(caller)) {
-      return #err(Unauthorized);
-    };
-
-    #ok(List.toArray(admins));
-  };
-
-  //platform operators, similar to admins but restricted to a few functions
-
-  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    let principal = Principal.toText(caller);
-
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-
-    if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-      platformOperators := List.push<Text>(id, platformOperators);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-    platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
-    #ok();
-  };
-
-  public shared query func getPlatformOperators() : async List.List<Text> {
-    platformOperators;
-  };
-
-  private func isPlatformOperator(caller : Principal) : Bool {
-    var c = Principal.toText(caller);
-    var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
-    exists != null;
-  };
 
   public shared query ({ caller }) func getTrustedCanisters() : async Result.Result<[Text], Text> {
     /*if (not isAdmin(caller)) {
@@ -460,7 +434,7 @@ actor class PostBucket() = this {
       return #err(Unauthorized);
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -508,7 +482,7 @@ actor class PostBucket() = this {
     let principalFromText = Principal.fromText(id);
 
     canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
+    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -525,48 +499,10 @@ actor class PostBucket() = this {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     cgusers := List.filter<Text>(cgusers, func(val : Text) : Bool { val != id });
-    #ok();
-  };
-
-  //This function should be invoked immediately after the canister is deployed via script.
-  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Anonymous user cannot run this method");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    //validate input
-    let principalFromText = Principal.fromText(id);
-
-    canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    if (not List.some<Text>(admins, func(val : Text) : Bool { val == id })) {
-      admins := List.push<Text>(id, admins);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Anonymous user cannot run this method");
-    };
-
-    canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    admins := List.filter<Text>(admins, func(val : Text) : Bool { val != id });
     #ok();
   };
 
@@ -644,7 +580,7 @@ actor class PostBucket() = this {
             let size = postIdsArray.size();
             let chunkCount = size / 20 + 1;
             var iter = 0;
-            let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+            let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
             var indexingArguments = Buffer.Buffer<CanisterDeclarations.IndexPostModel>(0);
             while (iter < chunkCount) {
               let chunkPostIds = U.filterArrayByIndexes(iter * 20, (iter + 1) * 20, postIdsArray);
@@ -984,7 +920,7 @@ actor class PostBucket() = this {
         var callerHandle = U.safeGet(handleHashMap, userPrincipalId, "");
 
         if (Text.equal(callerHandle, "")) {
-          let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+          let UserCanister = CanisterDeclarations.getUserCanister();
           var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
           switch (user) {
             case (?user) {
@@ -1162,7 +1098,7 @@ actor class PostBucket() = this {
     if (U.safeGet(isPremiumHashMap, postId, false)) {
       return #err(ArticleNotEditable);
     };
-    let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+    let UserCanister = CanisterDeclarations.getUserCanister();
     let user = await UserCanister.getUserByPrincipalId(Principal.toText(caller));
     var userHandle = "";
     var isEditor = false;
@@ -1191,7 +1127,7 @@ actor class PostBucket() = this {
     };
 
     Debug.print("PostBucket->MigratePostToPublication: " # postId);
-    let postCoreActor = actor (postCoreCanisterId) : PostCoreInterface;
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     //make the post publication post in PostCore canister
     await postCoreActor.makePostPublication(postId, publicationHandle, userHandle, isDraft);
     await makePostPublication(postId, publicationHandle, userHandle, isDraft);
@@ -1231,7 +1167,7 @@ actor class PostBucket() = this {
 
     //if the publication canister id is not stored in the bucket canister, fetch it from user canister and store it first.
     if (publicationPrincipalId == "") {
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       let userReturn = await UserCanister.getPrincipalByHandle(U.lowerCase(publicationHandle));
       switch (userReturn) {
         case (#ok(principal)) {
@@ -1338,7 +1274,7 @@ actor class PostBucket() = this {
     if (not isPublication and postModel.creator != "") {
       return #err(Unauthorized);
     };
-    let postCoreActor = actor (postCoreCanisterId) : PostCoreInterface;
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
 
     let principalId = Principal.toText(caller);
     var savedCreatedDate : Int = 0;
@@ -1374,7 +1310,7 @@ actor class PostBucket() = this {
     // retrieve user handle if it's not already mapped to the principalId
     var userHandle = U.safeGet(handleHashMap, principalId, "");
     if (userHandle == "") {
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       var user : ?User = await UserCanister.getUserInternal(principalId);
       switch (user) {
         case (null) return #err("cross canister User not found");
@@ -1392,7 +1328,7 @@ actor class PostBucket() = this {
     //check if the given creator is valid - only for publication posts
     let creatorHandle = U.safeGet(handleHashMap, postModel.creator, "");
     if (creatorHandle == "" and isPublication) {
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       var user : ?User = await UserCanister.getUserInternal(postModel.creator);
       switch (user) {
         case (null) {
@@ -1611,7 +1547,7 @@ actor class PostBucket() = this {
     modifiedHashMap.put(postId, now);
 
     categoryHashMap.delete(postId);
-    let postCoreActor = actor (postCoreCanisterId) : PostCoreInterface;
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     //removes the post category from the PostCore canister
     await postCoreActor.addPostCategory(postId, "", now);
     #ok(buildPost(postId));
@@ -1649,7 +1585,7 @@ actor class PostBucket() = this {
     modifiedHashMap.put(postId, now);
 
     categoryHashMap.put(postId, category);
-    let postCoreActor = actor (postCoreCanisterId) : PostCoreInterface;
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     //add the post category in the PostCore canister
     await postCoreActor.addPostCategory(postId, category, now);
 
@@ -1689,7 +1625,7 @@ actor class PostBucket() = this {
     let now = U.epochTime();
     modifiedHashMap.put(postId, now);
     isDraftHashMap.put(postId, isDraft);
-    let postCoreActor = actor (postCoreCanisterId) : PostCoreInterface;
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     let writerHandle = updatingPost.creator;
     let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
     let keyProperties = await postCoreActor.updatePostDraft(postId, isDraft, now, writerPrincipalId);
@@ -1774,7 +1710,7 @@ actor class PostBucket() = this {
         resultsHashmap.put(postId, #err(Unauthorized));
         isValid := false;
       };
-      let postCoreActor = actor (postCoreCanisterId) : PostCoreInterface;
+      let postCoreActor = CanisterDeclarations.getPostCoreCanister();
 
       let principalId = Principal.toText(caller);
       var savedCreatedDate : Int = 0;
@@ -1894,7 +1830,7 @@ actor class PostBucket() = this {
       let content = U.safeGet(contentHashMap, postId, "");
       let current = handle # " " # title # " " # subtitle;
       let tags = U.safeGet(tagNamesHashMap, postId, []);
-      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
       ignore PostIndexCanister.indexPost(postId, "", current, [], tags);
 
     };
@@ -2122,7 +2058,7 @@ actor class PostBucket() = this {
       return #err("Not authorized");
     };
 
-    let FrontEndCanister = actor (frontendCanisterId) : FrontendInterface;
+    let FrontEndCanister = CanisterDeclarations.getFrontendCanister();
 
     var count = principalIdHashMap.size();
     // var postId = "2";
@@ -2153,7 +2089,7 @@ actor class PostBucket() = this {
       return #err("Not authorized");
     };
 
-    let FrontEndCanister = actor (frontendCanisterId) : Types.FrontendInterface;
+    let FrontEndCanister = CanisterDeclarations.getFrontendCanister();
 
     var post : PostBucketType = buildPost(postId);
     var content = await generateContent(postId);
@@ -2200,11 +2136,11 @@ actor class PostBucket() = this {
 
     //func buildPostUrl(postId : Text, handle : Text, title : Text)
 
-    let property = if (frontendCanisterId == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+    let property = if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
       "https://nuance.xyz"
 
     } else {
-      "https://" # frontendCanisterId # ".ic0.app";
+      "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app";
     };
 
     var content = " <!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"UTF-8\"> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"> <title>"
@@ -2352,7 +2288,7 @@ actor class PostBucket() = this {
 
         //check if caller has a nuance account
         let userPrincipalId = Principal.toText(caller);
-        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        let UserCanister = CanisterDeclarations.getUserCanister();
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {
@@ -2610,7 +2546,7 @@ actor class PostBucket() = this {
       case (?postId) {
         //check if caller has a nuance account
         let userPrincipalId = Principal.toText(caller);
-        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        let UserCanister = CanisterDeclarations.getUserCanister();
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {
@@ -2642,7 +2578,7 @@ actor class PostBucket() = this {
       case (?postId) {
         //check if caller has a nuance account
         let userPrincipalId = Principal.toText(caller);
-        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        let UserCanister = CanisterDeclarations.getUserCanister();
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {
@@ -2674,7 +2610,7 @@ actor class PostBucket() = this {
       case (?postId) {
         //check if caller has a nuance account
         let userPrincipalId = Principal.toText(caller);
-        let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+        let UserCanister = CanisterDeclarations.getUserCanister();
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {

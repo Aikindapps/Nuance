@@ -82,7 +82,6 @@ dfx canister --network $network call $postCoreCanisterId registerAdmin '("'$publ
 echo ""
 echo "Initializing the PublicationManagement canister"
 echo ""
-dfx canister --network $network call PublicationManagement initializeCanister '("'$postCoreCanisterId'", "'$userCanisterId'", "'$nftFactoryCanisterId'")'
 dfx canister --network $network call PublicationManagement initManagementCanister
 
 

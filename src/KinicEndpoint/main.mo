@@ -20,6 +20,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
+import ENV "../shared/env";
 
 actor KinicEndpoint {
   // local variables
@@ -57,7 +58,6 @@ actor KinicEndpoint {
   stable var cgusers : List.List<Text> = List.nil<Text>();
   stable var kinicPrincipals : List.List<Text> = List.nil<Text>();
 
-  stable var postCoreCanisterId = "";
   stable var index : [(Text, [Text])] = [];
   var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
 
@@ -65,54 +65,10 @@ actor KinicEndpoint {
     Principal.equal(caller, Principal.fromText("2vxsx-fae"));
   };
 
-  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    #ok(List.toArray(admins));
-  };
-
-  //platform operators, similar to admins but restricted to a few functions
-  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    let principal = Principal.toText(caller);
-
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-
-    if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-      platformOperators := List.push<Text>(id, platformOperators);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-    platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
-    #ok();
-  };
-
-  public shared query func getPlatformOperators() : async List.List<Text> {
-    platformOperators;
-  };
-
-  private func isPlatformOperator(caller : Principal) : Bool {
-    var c = Principal.toText(caller);
-    var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
-    exists != null;
-  };
-
   //initialize method to store the canister ids that this canister interacts with
+  //deprecated
   public shared ({ caller }) func initializeCanister(postCoreCai : Text) : async Result.Result<Text, Text> {
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    postCoreCanisterId := postCoreCai;
-    #ok(postCoreCanisterId);
+    #err("Deprecated function.")
   };
 
   // admin and canister functions
@@ -138,7 +94,7 @@ actor KinicEndpoint {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
+    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -154,45 +110,10 @@ actor KinicEndpoint {
       return #err("Cannot use this method anonymously.");
     };
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     cgusers := List.filter<Text>(cgusers, func(val : Text) : Bool { val != id });
-    #ok();
-  };
-
-  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    let principalFromText = Principal.fromText(id);
-
-    canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    if (not List.some<Text>(admins, func(val : Text) : Bool { val == id })) {
-      admins := List.push<Text>(id, admins);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-    canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    admins := List.filter<Text>(admins, func(val : Text) : Bool { val != id });
     #ok();
   };
 
@@ -249,8 +170,41 @@ actor KinicEndpoint {
 
   private func isAdmin(caller : Principal) : Bool {
     var c = Principal.toText(caller);
-    var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
-    exists != null;
+    U.arrayContains(ENV.KINIC_ENDPOINT_CANISTER_ADMINS, c);
+  };
+
+  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    #ok(ENV.KINIC_ENDPOINT_CANISTER_ADMINS);
+  };
+
+  private func isPlatformOperator(caller : Principal) : Bool {
+    ENV.isPlatformOperator(caller)
+  };
+
+  public shared query func getPlatformOperators() : async List.List<Text> {
+    List.fromArray(ENV.PLATFORM_OPERATORS);
+  };
+
+  //These methods are deprecated. Admins are handled by env.mo file
+  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
+  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
+  };
+
+  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
   };
 
   func isCgUser(caller : Principal) : Bool {
@@ -264,7 +218,7 @@ actor KinicEndpoint {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
     };
-    let PostCoreCanister = CanisterDeclarations.getPostCoreCanister(postCoreCanisterId);
+    let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
     var list : KinicReturn = await PostCoreCanister.getKinicList();
     if (not isKinicPrincipal(caller)) {
       return #err(NotTrustedPrincipal);

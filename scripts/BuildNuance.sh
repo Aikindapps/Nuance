@@ -194,10 +194,6 @@ userCanisterId="$(grep -A2 '"User"' $canisterFilePath | grep $network | grep -o 
 echo "User Canister id: $userCanisterId"
 echo ""
 
-echo "Getting Post canister Id to register as admin of PostIndex canister"
-postCanisterId="$(grep -A2 '"Post"' $canisterFilePath | grep $network | grep -o '[A-Za-z0-9\-]\{27\}')"
-echo "Post Canister id: $postCanisterId"
-echo ""
 
 echo "Getting PostCore canister Id to register as admin of PostIndex canister"
 postCoreCanisterId="$(grep -A2 '"PostCore"' $canisterFilePath | grep $network | grep -o '[A-Za-z0-9\-]\{27\}')"
@@ -220,94 +216,12 @@ assetCanisterId="$(grep -A2 '"nuance_assets"' $canisterFilePath | grep $network 
 echo "nuance_assets Canister id: $assetCanisterId"
 echo ""
 
-echo "Registering admins for KinicEndpoint canister"
-dfx canister --network $network call KinicEndpoint registerAdmin "$defaultPrincipal"
-dfx canister --network $network call KinicEndpoint registerAdmin "$userCanisterId"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call KinicEndpoint registerAdmin "$p"
-done
 
-echo "Registering admins for Post canister"
-dfx canister --network $network call Post registerAdmin "$defaultPrincipal"
-dfx canister --network $network call Post registerAdmin "$userCanisterId"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call Post registerAdmin "$p"
-done
-
-echo "Registering admins for PostCore canister"
-dfx canister --network $network call PostCore registerAdmin "$defaultPrincipal"
-dfx canister --network $network call PostCore registerAdmin "$userCanisterId"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call PostCore registerAdmin "$p"
-done
-dfx canister --network $network call PostCore getAdmins
-echo ""
-
-echo "Registering admins for CyclesDispenser canister"
-dfx canister --network $network call CyclesDispenser registerAdmin "$defaultPrincipal"
+echo "Registering Canisters for CyclesDispenser canister"
 dfx canister --network $network call CyclesDispenser registerCanister "$postCoreCanisterId"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call CyclesDispenser registerAdmin "$p"
-done
-dfx canister --network $network call CyclesDispenser getAdmins
+dfx canister --network $network call CyclesDispenser getTrustedCanisters
 echo ""
 
-echo "Registering admins for PostIndex canister"
-dfx canister --network $network call PostIndex registerAdmin "$defaultPrincipal"
-dfx canister --network $network call PostIndex registerAdmin "$postCanisterId"
-dfx canister --network $network call PostIndex registerAdmin "$postCoreCanisterId"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call PostIndex registerAdmin "$p"
-done
-dfx canister --network $network call PostIndex getAdmins
-echo ""
-
-echo "Registering admins for User canister"
-dfx canister --network $network call User registerAdmin "$defaultPrincipal"
-dfx canister --network $network call User registerAdmin "$postCanisterId"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call User registerAdmin "$p"
-done
-dfx canister --network $network call User getAdmins
-echo ""
-
-echo "Registering admins for Storage canister"
-dfx canister --network $network call Storage registerAdmin "$defaultPrincipal"
-for p in "${userPrincipals[@]}"
-do
-    dfx canister --network $network call Storage registerAdmin "$p"
-done
-dfx canister --network $network call User getAdmins
-echo ""
-
-echo "Initializing the KinicEndpoint canister"
-dfx canister --network $network call KinicEndpoint initializeCanister '("'$postCoreCanisterId'")'
-
-echo "Initializing the Post canister"
-dfx canister --network $network call Post initializeCanister '("'$postIndexCanisterId'", "'$userCanisterId'")'
-
-echo "Initializing the PostCore canister"
-dfx canister --network $network call PostCore initializeCanister '("'$postIndexCanisterId'", "'$userCanisterId'", "'$cyclesDispenserCanisterId'")'
-
-
-echo "Setting up Nuance as data provider to modclub"
-dfx canister --network $network call Post setUpModClub staging
-echo "Modclub Set up Completed"
-
-echo "Registering Users for Canistergeek (Post Canister)"
-
-for c in "${cgUserPrincipals[@]}"
-do
-dfx canister --network $network call Post registerCgUser "$c"
-done
-dfx canister --network $network call Post getCgUsers
-echo ""
 
 echo "Registering Users for Canistergeek (PostIndex Canister)"
 
@@ -362,8 +276,6 @@ echo "AUTHORIZE PostCore as admin to nuance_assets"
 echo ""
 dfx canister --network $network call nuance_assets authorize '(principal "'$postCoreCanisterId'")'
 dfx canister --network $network update-settings nuance_assets --add-controller $postCoreCanisterId
-dfx canister --network $network call PostCore setFrontendCanisterId '("'$assetCanisterId'")'
-
 echo "Completed!"
 
 #endregion

@@ -18,6 +18,7 @@ import Types "./types";
 import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import Versions "../shared/versions";
+import ENV "../shared/env";
 
 actor PostIndex {
   let Unauthorized = "Unauthorized";
@@ -55,6 +56,7 @@ actor PostIndex {
   //#region Security Management
 
   stable var admins : List.List<Text> = List.nil<Text>();
+  stable var trustedCanisters : List.List<Text> = List.nil<Text>();
   stable var platformOperators : List.List<Text> = List.nil<Text>();
   stable var cgusers : List.List<Text> = List.nil<Text>();
 
@@ -64,8 +66,7 @@ actor PostIndex {
 
   private func isAdmin(caller : Principal) : Bool {
     var c = Principal.toText(caller);
-    var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
-    exists != null;
+    U.arrayContains(ENV.POSTINDEX_CANISTER_ADMINS, c);
   };
 
   public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
@@ -73,42 +74,41 @@ actor PostIndex {
       return #err("Cannot use this method anonymously.");
     };
 
-    #ok(List.toArray(admins));
-  };
-
-  //platform operators, similar to admins but restricted to a few functions
-
-  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    let principal = Principal.toText(caller);
-
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-
-    if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-      platformOperators := List.push<Text>(id, platformOperators);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-    platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
-    #ok();
-  };
-
-  public shared query func getPlatformOperators() : async List.List<Text> {
-    platformOperators;
+    #ok(ENV.POSTINDEX_CANISTER_ADMINS);
   };
 
   private func isPlatformOperator(caller : Principal) : Bool {
+    ENV.isPlatformOperator(caller)
+  };
+
+  public shared query func getPlatformOperators() : async List.List<Text> {
+    List.fromArray(ENV.PLATFORM_OPERATORS);
+  };
+
+  //These methods are deprecated. Admins are handled by env.mo file
+  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
+  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
+  };
+
+  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
+  };
+
+  private func isTrustedCanister(caller : Principal) : Bool {
     var c = Principal.toText(caller);
-    var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
+    var exists = List.find<Text>(trustedCanisters, func(val : Text) : Bool { val == c });
     exists != null;
   };
+
 
   public shared query ({ caller }) func getCgUsers() : async Result.Result<[Text], Text> {
     if (isAnonymous(caller)) {
@@ -138,7 +138,7 @@ actor PostIndex {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
+    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -155,16 +155,15 @@ actor PostIndex {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     cgusers := List.filter<Text>(cgusers, func(val : Text) : Bool { val != id });
     #ok();
   };
 
-  //This function should be invoked immediately after the canister is deployed via script.
-  //The Post canister id should be added as an admin.
-  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+  //Registers a trusted canister
+  public shared ({ caller }) func registerCanister(id : Text) : async Result.Result<(), Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
     };
@@ -174,28 +173,32 @@ actor PostIndex {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
+    if (not isPlatformOperator(caller) and not isAdmin(caller)) {
       return #err(Unauthorized);
     };
 
-    if (not List.some<Text>(admins, func(val : Text) : Bool { val == id })) {
-      admins := List.push<Text>(id, admins);
+    if (not List.some<Text>(trustedCanisters, func(val : Text) : Bool { val == id })) {
+      trustedCanisters := List.push<Text>(id, trustedCanisters);
     };
 
     #ok();
   };
 
-  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+  public shared ({ caller }) func unregisterCanister(id : Text) : async Result.Result<(), Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
     };
 
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
-    admins := List.filter<Text>(admins, func(val : Text) : Bool { val != id });
+    trustedCanisters := List.filter<Text>(trustedCanisters, func(val : Text) : Bool { val != id });
     #ok();
+  };
+
+  public shared query ({ caller }) func getTrustedCanisters() : async Result.Result<[Text], Text> {
+    #ok(List.toArray(trustedCanisters));
   };
 
   //#endregion
@@ -234,7 +237,7 @@ actor PostIndex {
     canistergeekMonitor.collectMetrics();
     Debug.print("PostIndex->IndexPosts");
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isTrustedCanister(caller)) {
       return [#err("PostIndex->IndexPost Unauthorized")];
     };
 
@@ -310,7 +313,7 @@ actor PostIndex {
     canistergeekMonitor.collectMetrics();
     Debug.print("PostIndex->IndexPost PostId: " # postId);
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isTrustedCanister(caller)) {
       return #err("PostIndex->IndexPost Unauthorized");
     };
 
@@ -599,7 +602,7 @@ actor PostIndex {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isTrustedCanister(caller)) {
       return #err(Unauthorized);
     };
 

@@ -63,14 +63,6 @@ actor Metrics {
   stable var index : [(Text, [Text])] = [];
   var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
 
-  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    #ok(List.toArray(admins));
-  };
-
   public type CyclesDispenserActorType = actor {
     getAllRegisteredCanisters : () -> async [RegisteredCanister];
   };
@@ -96,43 +88,51 @@ actor Metrics {
     #ok(nuanceCanisters);
   };
 
-  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+  private func isAdmin(caller : Principal) : Bool {
+    var c = Principal.toText(caller);
+    U.arrayContains(ENV.METRICS_CANISTER_ADMINS, c);
+  };
+
+  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
     };
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-    //validate input
-    let principalFromText = Principal.fromText(id);
 
-    if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
+    #ok(ENV.METRICS_CANISTER_ADMINS);
+  };
 
-    if (not List.some<Text>(admins, func(val : Text) : Bool { val == id })) {
-      admins := List.push<Text>(id, admins);
+  public shared query ({ caller }) func getNuanceCanisters() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-    #ok();
+    #ok(nuanceCanisters);
+  };
+
+  private func isPlatformOperator(caller : Principal) : Bool {
+    ENV.isPlatformOperator(caller)
+  };
+
+  public shared query func getPlatformOperators() : async List.List<Text> {
+    List.fromArray(ENV.PLATFORM_OPERATORS);
+  };
+
+  //These methods are deprecated. Admins are handled by env.mo file
+  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
   };
 
   public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    admins := List.filter<Text>(admins, func(val : Text) : Bool { val != id });
-    #ok();
+    #err("Deprecated function")
   };
 
-  private func isAdmin(caller : Principal) : Bool {
-    var c = Principal.toText(caller);
-    var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
-    exists != null;
+  //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
+  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
+  };
+
+  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
   };
 
   private func isNuanceCanister(canisterId : Text) : Bool {
@@ -140,38 +140,35 @@ actor Metrics {
     exists != null;
   };
 
-  //platform operators, similar to admins but restricted to a few functions
-
-  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    let principal = Principal.toText(caller);
-
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
+  public shared ({ caller }) func registerCanister(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
 
-    if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-      platformOperators := List.push<Text>(id, platformOperators);
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    if (not U.arrayContains(nuanceCanisters, id)) {
+      nuanceCanisters := List.toArray(List.push<Text>(id, List.fromArray(nuanceCanisters)));
     };
 
     #ok();
   };
 
-  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
+  public shared ({ caller }) func unregisterCanister(id : Text) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
     };
-    platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
+
+    if (not isAdmin(caller)) {
+      return #err(Unauthorized);
+    };
+    nuanceCanisters := Array.filter<Text>(nuanceCanisters, func(val : Text) : Bool { val != id });
     #ok();
-  };
-
-  public shared query func getPlatformOperators() : async List.List<Text> {
-    platformOperators;
-  };
-
-  private func isPlatformOperator(caller : Principal) : Bool {
-    var c = Principal.toText(caller);
-    var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
-    exists != null;
   };
 
   public func acceptCycles() : async () {

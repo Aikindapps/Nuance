@@ -32,6 +32,7 @@ import Prim "mo:prim";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import OperationLog "../shared/Types";
+import ENV "../shared/env";
 
 actor PostCore {
 
@@ -84,11 +85,6 @@ actor PostCore {
   stable var totalViewsToday : Nat = 0; //stored by date and reset by timer daily, incremented by viewPost func
   stable var totalDailyViewsDate : Text = "20230101";
   stable var isStoreSEOcalled = false;
-  stable var frontendCanisterId = "";
-  //other canister ids that this canister interacts with
-  stable var userCanisterId = "";
-  stable var postIndexCanisterId = "";
-  stable var cyclesDispenserCanisterId = "";
 
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
   stable var bucketCanisterIdsEntries : [(Text, Text)] = [];
@@ -183,12 +179,8 @@ actor PostCore {
     };
 
     //check the caller is admin or the canister's itself
-    if (not isAdmin(caller) and not Principal.equal(caller, Principal.fromActor(PostCore))) {
+    if (not isAdmin(caller) and not Principal.equal(caller, Principal.fromActor(PostCore)) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
-    };
-
-    if (frontendCanisterId == "") {
-      return #err("Frontend canister hasn't been initialized yet.");
     };
 
     if (activeBucketCanisterId != "") {
@@ -206,26 +198,35 @@ actor PostCore {
       Cycles.add(5_000_000_000_000);
       let bucketCanister = await PostBucket.PostBucket();
       let canisterId = Principal.toText(Principal.fromActor(bucketCanister));
-      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
-      switch (await PostIndexCanister.registerAdmin(canisterId)) {
+      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
+      switch (await PostIndexCanister.registerCanister(canisterId)) {
         case (#err(err)) {
           return #err("An error occured while registering the bucket canister as admin in PostIndex canister.");
         };
         case (_) {};
       };
 
-      let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister(cyclesDispenserCanisterId);
+      let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister();
       switch (await CyclesDispenserCanister.addCanister({ canisterId = canisterId; minimumThreshold = 10_000_000_000_000; topUpAmount = 5_000_000_000_000 })) {
         case (#err(err)) {
           return #err("An error occured while adding the bucket canister in CyclesDispenser.");
         };
         case (_) {};
       };
+
+      let MetricsCanister = CanisterDeclarations.getMetricsCanister();
+      switch (await MetricsCanister.registerCanister(canisterId)) {
+        case (#err(err)) {
+          return #err("An error occured while adding the bucket canister to Metrics canister.");
+        };
+        case (_) {};
+      };
+
       Debug.print("Newly created bucket canister canister id is " # canisterId);
 
       try {
         //authorize bucket canister in frontend canister
-        let frontendActor = actor (frontendCanisterId) : FrontendInterface;
+        let frontendActor = CanisterDeclarations.getFrontendCanister();
         Debug.print("frontend actor defined successfully");
         await frontendActor.authorize(Principal.fromActor(bucketCanister));
         Debug.print("frontend actor authorize went succesful");
@@ -233,7 +234,7 @@ actor PostCore {
         Debug.print("authorize error");
       };
 
-      switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), Iter.toArray(nftCanisterIdsHashmap.entries()), Principal.toText(Principal.fromActor(PostCore)), frontendCanisterId, postIndexCanisterId, userCanisterId)) {
+      switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), Iter.toArray(nftCanisterIdsHashmap.entries()), Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
         case (#ok(cai)) {
           activeBucketCanisterId := canisterId;
           bucketCanisterIdsHashMap.put(canisterId, Nat.toText(postId + 1));
@@ -264,48 +265,15 @@ actor PostCore {
 
   //initialize method to store the canister ids that this canister interacts with
   public shared ({ caller }) func initializeCanister(postIndexCai : Text, userCai : Text, cyclesDispenserCai : Text) : async Result.Result<Text, Text> {
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
-
-      switch (await bucketActor.initializeCanister(postIndexCai, userCai)) {
-        case (#ok(list)) {};
-        case (_) {
-          return #err("Error while initializing the bucket canister " # bucketCanisterId);
-        };
-      };
-    };
-    postIndexCanisterId := postIndexCai;
-    userCanisterId := userCai;
-    cyclesDispenserCanisterId := cyclesDispenserCai;
-    #ok(postIndexCanisterId # ", " # userCanisterId # ", " # cyclesDispenserCanisterId);
+    return #err("Deprecated function.");
   };
 
   public shared ({ caller }) func setFrontendCanisterId(canisterId : Text) : async Result.Result<Text, Text> {
-
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    frontendCanisterId := canisterId;
-    #ok(frontendCanisterId);
+    return #err("Deprecated function.");
   };
 
   public shared query ({ caller }) func getFrontendCanisterId() : async Result.Result<Text, Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    #ok(frontendCanisterId);
+    #ok(ENV.NUANCE_ASSETS_CANISTER_ID);
   };
 
   public shared ({ caller }) func testInstructionSize() : async Text {
@@ -340,8 +308,41 @@ actor PostCore {
 
   private func isAdmin(caller : Principal) : Bool {
     var c = Principal.toText(caller);
-    var exists = List.find<Text>(admins, func(val : Text) : Bool { val == c });
-    exists != null;
+    U.arrayContains(ENV.POSTCORE_CANISTER_ADMINS, c);
+  };
+
+  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    #ok(ENV.POSTCORE_CANISTER_ADMINS);
+  };
+
+  private func isPlatformOperator(caller : Principal) : Bool {
+    ENV.isPlatformOperator(caller)
+  };
+
+  public shared query func getPlatformOperators() : async List.List<Text> {
+    List.fromArray(ENV.PLATFORM_OPERATORS);
+  };
+
+  //These methods are deprecated. Admins are handled by env.mo file
+  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function")
+  };
+
+  //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
+  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
+  };
+
+  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
+    #err("Deprecated function.")
   };
 
   private func isAuthor(caller : Principal, postId : Text) : Bool {
@@ -353,48 +354,7 @@ actor PostCore {
     var exists = List.find<Text>(nuanceCanisters, func(val : Text) : Bool { val == c });
     exists != null;
   };
-
-  public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    #ok(List.toArray(admins));
-  };
-
-  //platform operators, similar to admins but restricted to a few functions
-
-  public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    let principal = Principal.toText(caller);
-
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-
-    if (not List.some<Text>(platformOperators, func(val : Text) : Bool { val == id })) {
-      platformOperators := List.push<Text>(id, platformOperators);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    if (not isAdmin(caller)) {
-      return #err("Unauthorized");
-    };
-    platformOperators := List.filter<Text>(platformOperators, func(val : Text) : Bool { val != id });
-    #ok();
-  };
-
-  public shared query func getPlatformOperators() : async List.List<Text> {
-    platformOperators;
-  };
-
-  private func isPlatformOperator(caller : Principal) : Bool {
-    var c = Principal.toText(caller);
-    var exists = List.find<Text>(platformOperators, func(val : Text) : Bool { val == c });
-    exists != null;
-  };
+  
 
   public shared query ({ caller }) func getTrustedCanisters() : async Result.Result<[Text], Text> {
     /*if (not isAdmin(caller)) {
@@ -421,7 +381,7 @@ actor PostCore {
       return #err("Cannot use this method anonymously.");
     };
 
-    if (not isAdmin(caller) and not Principal.equal(Principal.fromActor(PostCore), caller)) {
+    if (not isAdmin(caller) and not Principal.equal(Principal.fromActor(PostCore), caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -470,7 +430,7 @@ actor PostCore {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller)) {
+    if (List.size<Text>(cgusers) > 0 and not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -487,7 +447,7 @@ actor PostCore {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     cgusers := List.filter<Text>(cgusers, func(val : Text) : Bool { val != id });
@@ -497,43 +457,6 @@ actor PostCore {
     return Principal.fromActor(PostCore);
   };
 
-  //This function should be invoked immediately after the canister is deployed via script.
-  public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    //validate input
-    let principalFromText = Principal.fromText(id);
-
-    canistergeekMonitor.collectMetrics();
-    if (List.size<Text>(admins) > 0 and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    if (not List.some<Text>(admins, func(val : Text) : Bool { val == id })) {
-      admins := List.push<Text>(id, admins);
-    };
-
-    #ok();
-  };
-
-  public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    admins := List.filter<Text>(admins, func(val : Text) : Bool { val != id });
-    #ok();
-  };
 
   //#region Post Management
   //getNextPostId method can be called by bucket canisters only
@@ -614,7 +537,7 @@ actor PostCore {
       return #err("Author Text length exceeded");
     };
 
-    if (not Principal.equal(caller, Principal.fromText(userCanisterId))) {
+    if (not Principal.equal(caller, Principal.fromText(ENV.USER_CANISTER_ID))) {
       return #err(Unauthorized);
     };
 
@@ -743,7 +666,7 @@ actor PostCore {
   };
 
   public shared ({ caller }) func deletePostFromUserDebug(handle : Text, postId : Text) : async Result.Result<[Text], Text> {
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -882,7 +805,7 @@ actor PostCore {
     };
 
     let callerPrincipalId = Principal.toText(caller);
-    let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+    let UserCanister = CanisterDeclarations.getUserCanister();
     var user = await UserCanister.getUserInternal(callerPrincipalId);
     switch (user) {
       case (null) {};
@@ -994,7 +917,7 @@ actor PostCore {
     // retrieve user handle if it's not already mapped to the principalId
     var userHandle = U.safeGet(handleHashMap, principalId, "");
     if (userHandle == "") {
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       var user = await UserCanister.getUserInternal(principalId);
       switch (user) {
         case (null) return #err("cross canister User not found");
@@ -1011,7 +934,7 @@ actor PostCore {
     //check if the given creator is valid - only for publication posts
     let creatorHandle = U.safeGet(handleHashMap, postModel.creator, "");
     if (creatorHandle == "" and isPublication) {
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       var user = await UserCanister.getUserInternal(postModel.creator);
       switch (user) {
         case (null) {
@@ -1109,7 +1032,7 @@ actor PostCore {
         let current = handle # " " # postModel.title # " " # postModel.subtitle;
         let prevTags = getTagNamesByPostId(postBucketReturn.postId);
         let currentTags = getTagNamesByTagIds(postModel.tagIds);
-        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
         var indexResult = await PostIndexCanister.indexPost(postBucketReturn.postId, previous, current, prevTags, currentTags);
 
         switch (indexResult) {
@@ -1662,7 +1585,7 @@ actor PostCore {
 
     //if the publication canister id is not stored in the bucket canister, fetch it from user canister and store it first.
     if (publicationPrincipalId == "") {
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       let userReturn = await UserCanister.getPrincipalByHandle(U.lowerCase(publicationHandle));
       switch (userReturn) {
         case (#ok(principal)) {
@@ -1879,7 +1802,7 @@ actor PostCore {
     //this if statement is executed only for the first chunk
     if (indexStart == 0) {
       //clear the PostIndex canister at start
-      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
       ignore PostIndexCanister.clearIndex();
       //migrate the views history
       let viewsHistory = await oldPostCanister.getViewsHistoryHashmap();
@@ -2093,7 +2016,7 @@ actor PostCore {
             };
           };
         };
-        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
         ignore await PostIndexCanister.indexPosts(Buffer.toArray(indexingArguments));
 
         return #ok(Buffer.toArray(resultsBuffer));
@@ -2122,7 +2045,7 @@ actor PostCore {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+    let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
     var result = await PostIndexCanister.clearIndex();
 
     switch (result) {
@@ -2187,7 +2110,7 @@ actor PostCore {
     if (Principal.toText(caller) != principalId) {
 
       // check if user has enough tokens to clap
-      let UserCanister = CanisterDeclarations.getUserCanister(userCanisterId);
+      let UserCanister = CanisterDeclarations.getUserCanister();
       var tokenAmounts = await UserCanister.getNuaBalance(Principal.toText(caller));
       switch (tokenAmounts) {
         case (#ok(balance)) Debug.print("balance: " # balance);
@@ -2750,7 +2673,7 @@ actor PostCore {
         let prevContent = post.content;
         let previous = handle # " " # prevTitle # " " # prevSubtitle;
         let prevTags = getTagNamesByPostId(postId);
-        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister(postIndexCanisterId);
+        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
         var indexResult = await PostIndexCanister.indexPost(postId, previous, "", prevTags, [""]);
       };
       case (_) {};
@@ -3005,7 +2928,7 @@ actor PostCore {
 
     canistergeekMonitor.collectMetrics();
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -3842,13 +3765,15 @@ actor PostCore {
     if (not isAdmin(caller) and not isNuanceCanister(caller)) {
       return #err(Unauthorized);
     };
-    let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister(cyclesDispenserCanisterId);
+    let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister();
     ignore await CyclesDispenserCanister.addCanister({
       canisterId = canisterId;
       minimumThreshold = minimumThreshold;
       topUpAmount = topUpAmount;
     });
 
+    //add the canister to Metrics canister
+    ignore await CanisterDeclarations.getMetricsCanister().registerCanister(canisterId);
     return #ok();
   };
 
@@ -3872,7 +3797,7 @@ actor PostCore {
     };
 
     Debug.print("PostCore -> Active bucket canister id: " # activeBucketCanisterId);
-    if (activeBucketCanisterId == "" and frontendCanisterId != "") {
+    if (activeBucketCanisterId == "") {
       try {
         switch (await createNewBucketCanister()) {
           case (#ok(result)) {
