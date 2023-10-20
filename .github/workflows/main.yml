@@ -23,10 +23,10 @@ jobs:
     - name: Set up dfx identity
       run: |
           mkdir -p ~/.config/dfx/identity/default/
-          echo "$SNS_UAT_IDENTITIY" > ~/.config/dfx/identity/default/identity.pem
+          echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/default/identity.pem
           dfx identity get-principal
       env:
-         SNS_UAT_IDENTITIY: ${{ secrets.SNS_UAT_IDENTITY }}  
+         SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}  
 
     - name: Generate canister_ids.json in main repo
       run: |
