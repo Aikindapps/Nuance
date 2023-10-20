@@ -25,10 +25,11 @@ jobs:
           mkdir -p ~/.config/dfx/identity/default/
           touch ~/.config/dfx/identity/default/identity.pem
           echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/default/identity.pem
-          dfx identity get-principal
+         
       env:
         SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
-
+    - name: Get Principal
+      run:  dfx identity get-principal
 
     - name: Generate canister_ids.json in main repo
       run: |
