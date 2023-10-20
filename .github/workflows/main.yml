@@ -27,7 +27,7 @@ jobs:
           dfx identity get-principal
           cat ./home/runner/.config/dfx/identity/default/identity.pem
       env:
-          SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
+        SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
           
     - name: Get Principal
       run:  dfx identity get-principal
