@@ -21,10 +21,7 @@ jobs:
       run: dfx start --background
 
     - name: Use SNS UAT wallet
-      run: mkdir -p ~/.config/dfx/identity/SNS_UAT/
-       echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/SNS_UAT/identity.pem
-       dfx identity use SNS_UAT
-       dfx identity get-principal
+      run: mkdir -p ~/.config/dfx/identity/SNS_UAT/ && echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/SNS_UAT/identity.pem && dfx identity use SNS_UAT && dfx identity get-principal
 
     - name: Generate canister_ids.json in main repo
       run: |
