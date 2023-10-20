@@ -25,6 +25,7 @@ jobs:
           mkdir -p ~/.config/dfx/identity/default/
           touch ~/.config/dfx/identity/default/identity.pem
           echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/default/identity.pem
+          cat ~/.config/dfx/identity/default/identity.pem
          
       env:
         SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
