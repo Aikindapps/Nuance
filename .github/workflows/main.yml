@@ -23,7 +23,7 @@ jobs:
     - name: Set up dfx identity
       run: |
           mkdir -p ~/.config/dfx/identity/default/
-          mv ~/.config/dfx/identity/default/identity.pem ~/.config/dfx/identity/default/identity.pem.bak || true
+          touch ~/.config/dfx/identity/default/identity.pem
           echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/default/identity.pem
           dfx identity get-principal
       env:
