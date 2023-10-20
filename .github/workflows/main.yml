@@ -20,31 +20,40 @@ jobs:
     - name: Start DFX background
       run: dfx start --background
 
-    - name: Generate canister_ids.json
+    - name: Use SNS UAT wallet
+      run: mkdir -p ~/.config/dfx/identity/SNS_UAT/
+       echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/SNS_UAT/identity.pem
+       dfx identity use SNS_UAT
+       dfx identity get-principal
+
+    - name: Generate canister_ids.json in main repo
       run: |
         echo '{
-          "FastBlocks_EmailOptIn": { "ic": "'"$SNSUATFASTBLOCKSEMAILOPTIN"'" },
-          "KinicEndpoint": { "ic": "'"$SNSUATKINICENDPOINT"'" },
-          "CyclesDispenser": { "ic": "'"$SNSUATCYCLESDISPENSER"'" },
-          "PostIndex": { "ic": "'"$SNSUATPOSTINDEX"'" },
-          "Storage": { "ic": "'"$SNSUATSTORAGE"'" },
-          "User": { "ic": "'"$SNSUATUSER"'" },
-          "nuance_assets": { "ic": "'"$SNSUATNUANCEASSETS"'" },
-          "PostCore": { "ic": "'"$SNSUATPOSTCORE"'" },
-          "PostBucket": { "ic": "'"$SNSUATPOSTBUCKET"'" },
-          "Metrics": { "ic": "'"$SNSUATMETRICS"'" }
+          "FastBlocks_EmailOptIn": { "ic": "'"$FASTBLOCKS_EMAILOPTIN"'" },
+          "KinicEndpoint": { "ic": "'"$KINICENDPOINT"'" },
+          "CyclesDispenser": { "ic": "'"$CYCLESDISPENSER"'" },
+          "PostIndex": { "ic": "'"$POSTINDEX"'" },
+          "Storage": { "ic": "'"$STORAGE"'" },
+          "User": { "ic": "'"$USER"'" },
+          "nuance_assets": { "ic": "'"$NUANCE_ASSETS"'" },
+          "PostCore": { "ic": "'"$POSTCORE"'" },
+          "PostBucket": { "ic": "'"$POSTBUCKET"'" },
+          "Metrics": { "ic": "'"$METRICS"'" }
         }' > canister_ids.json
       env:
-        SNSUATFASTBLOCKSEMAILOPTIN: ${{ secrets.SNSUATFASTBLOCKSEMAILOPTIN }}
-        SNSUATKINICENDPOINT: ${{ secrets.SNSUATKINICENDPOINT }}
-        SNSUATCYCLESDISPENSER: ${{ secrets.SNSUATCYCLESDISPENSER }}
-        SNSUATPOSTINDEX: ${{ secrets.SNSUATPOSTINDEX }}
-        SNSUATSTORAGE: ${{ secrets.SNSUATSTORAGE }}
-        SNSUATUSER: ${{ secrets.SNSUATUSER }}
-        SNSUATNUANCEASSETS: ${{ secrets.SNSUATNUANCEASSETS }}
-        SNSUATPOSTCORE: ${{ secrets.SNSUATPOSTCORE }}
-        SNSUATPOSTBUCKET: ${{ secrets.SNSUATPOSTBUCKET }}
-        SNSUATMETRICS: ${{ secrets.SNSUATMETRICS }}
+        FASTBLOCKS_EMAILOPTIN: ${{ secrets.FASTBLOCKS_EMAILOPTIN }}
+        KINICENDPOINT: ${{ secrets.KINICENDPOINT }}
+        CYCLESDISPENSER: ${{ secrets.CYCLESDISPENSER }}
+        POSTINDEX: ${{ secrets.POSTINDEX }}
+        STORAGE: ${{ secrets.STORAGE }}
+        USER: ${{ secrets.USER }}
+        NUANCE_ASSETS: ${{ secrets.NUANCE_ASSETS }}
+        POSTCORE: ${{ secrets.POSTCORE }}
+        POSTBUCKET: ${{ secrets.POSTBUCKET }}
+        METRICS: ${{ secrets.METRICS }}
+        SNS_UAT_IDENTITIY: ${{ secrets.SNS_UAT_IDENTITY }}
+
+
       
     - name: Deploy local
       run: dfx deploy --network ic
