@@ -19,6 +19,32 @@ jobs:
 
     - name: Start DFX background
       run: dfx start --background
+
+    - name: Generate canister_ids.json
+      run: |
+        echo '{
+          "FastBlocks_EmailOptIn": { "ic": "'"$SNSUATFASTBLOCKSEMAILOPTIN"'" },
+          "KinicEndpoint": { "ic": "'"$SNSUATKINICENDPOINT"'" },
+          "CyclesDispenser": { "ic": "'"$SNSUATCYCLESDISPENSER"'" },
+          "PostIndex": { "ic": "'"$SNSUATPOSTINDEX"'" },
+          "Storage": { "ic": "'"$SNSUATSTORAGE"'" },
+          "User": { "ic": "'"$SNSUATUSER"'" },
+          "nuance_assets": { "ic": "'"$SNSUATNUANCEASSETS"'" },
+          "PostCore": { "ic": "'"$SNSUATPOSTCORE"'" },
+          "PostBucket": { "ic": "'"$SNSUATPOSTBUCKET"'" },
+          "Metrics": { "ic": "'"$SNSUATMETRICS"'" }
+        }' > canister_ids.json
+      env:
+        SNSUATFASTBLOCKSEMAILOPTIN: ${{ secrets.SNSUATFASTBLOCKSEMAILOPTIN }}
+        SNSUATKINICENDPOINT: ${{ secrets.SNSUATKINICENDPOINT }}
+        SNSUATCYCLESDISPENSER: ${{ secrets.SNSUATCYCLESDISPENSER }}
+        SNSUATPOSTINDEX: ${{ secrets.SNSUATPOSTINDEX }}
+        SNSUATSTORAGE: ${{ secrets.SNSUATSTORAGE }}
+        SNSUATUSER: ${{ secrets.SNSUATUSER }}
+        SNSUATNUANCEASSETS: ${{ secrets.SNSUATNUANCEASSETS }}
+        SNSUATPOSTCORE: ${{ secrets.SNSUATPOSTCORE }}
+        SNSUATPOSTBUCKET: ${{ secrets.SNSUATPOSTBUCKET }}
+        SNSUATMETRICS: ${{ secrets.SNSUATMETRICS }}
       
     - name: Deploy local
-      run: dfx deploy 
+      run: dfx deploy --network ic
