@@ -22,10 +22,10 @@ jobs:
 
     - name: Set up dfx identity
       run: |
-          mkdir -p ./home/runner/.config/dfx/identity/default/
-          echo "$SNS_UAT_IDENTITY" > ./home/runner/.config/dfx/identity/default/identity.pem
+          mkdir -p ~/.config/dfx/identity/default/
+          echo "$SNS_UAT_IDENTITY" > ~/.config/dfx/identity/default/identity.pem
           dfx identity get-principal
-          cat ./home/runner/.config/dfx/identity/default/identity.pem
+          cat ~/.config/dfx/identity/default/identity.pem
       env:
         SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
           
