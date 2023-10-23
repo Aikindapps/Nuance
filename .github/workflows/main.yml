@@ -22,12 +22,14 @@ jobs:
 
     - name: Set up dfx identity
       run: |
-          mkdir -p ~/.config/dfx/identity/default/
-          echo "$SNS_UAT_IDENTITY" | base64 --decode > ~/.config/dfx/identity/default/identity.pem
-          dfx identity get-principal
-          cat ~/.config/dfx/identity/default/identity.pem
+        rm -f ~/.config/dfx/identity/sns_uat/identity.pem
+        mkdir -p ~/.config/dfx/identity/sns_uat/
+        echo "$SNS_UAT_IDENTITY" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
+        dfx identity use sns_uat
+        dfx identity get-principal
       env:
         SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
+
           
     - name: Get Principal
       run:  dfx identity get-principal
