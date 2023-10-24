@@ -63,10 +63,27 @@ jobs:
         POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
         POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
         METRICS: ${{ secrets.SNS_UAT_METRICS }}
-
+    
+    - name: Generate canister_ids.json in for NFTs and Publications
+      run: |
+        echo '{
+          "NftFactory": {
+            "ic": "`$NFTFACTORY`"
+          },
+          "PublicationManagement": {
+            "ic": "`$PUBLICATIONMANAGEMENT`"
+          },
+          "Publisher": {
+            "ic": "`$PUBLISHER`"
+          }
+        }' > Nuance-NFTs-and-Publications/canister_ids.json
+      env:
+        NFTFACTORY: ${{ secrets.SNS_UAT_NFTFACTORY }}
+        PUBLICATIONMANAGEMENT: ${{ secrets.SNS_UAT_PUBLICATIONMANAGEMENT }}
+        PUBLISHER: ${{ secrets.SNS_UAT_PUBLISHER }}
         
 
 
       
     - name: Deploy SNS UAT --network ic
-      run: dfx deploy --network ic
+      run: bash ./scripts/deployments/SNS_UAT_Deploy.sh
