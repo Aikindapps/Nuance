@@ -58,16 +58,17 @@ jobs:
           "Metrics": { "ic": "'"$METRICS"'" }
         }' > canister_ids.json
       env:
-        FASTBLOCKS_EMAILOPTIN: ${{ secrets.FASTBLOCKS_EMAILOPTIN }}
-        KINICENDPOINT: ${{ secrets.KINICENDPOINT }}
-        CYCLESDISPENSER: ${{ secrets.CYCLESDISPENSER }}
-        POSTINDEX: ${{ secrets.POSTINDEX }}
-        STORAGE: ${{ secrets.STORAGE }}
-        USER: ${{ secrets.USER }}
-        NUANCE_ASSETS: ${{ secrets.NUANCE_ASSETS }}
-        POSTCORE: ${{ secrets.POSTCORE }}
-        POSTBUCKET: ${{ secrets.POSTBUCKET }}
-        METRICS: ${{ secrets.METRICS }}
+        FASTBLOCKS_EMAILOPTIN: ${{ secrets.SNS_UAT_FASTBLOCKS_EMAILOPTIN }}
+        KINICENDPOINT: ${{ secrets.SNS_UAT_KINICENDPOINT }}
+        CYCLESDISPENSER: ${{ secrets.SNS_UAT_CYCLESDISPENSER }}
+        POSTINDEX: ${{ secrets.SNS_UAT_POSTINDEX }}
+        STORAGE: ${{ secrets.SNS_UAT_STORAGE }}
+        USER: ${{ secrets.SNS_UAT_USER }}
+        NUANCE_ASSETS: ${{ secrets.SNS_UAT_NUANCE_ASSETS }}
+        POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
+        POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
+        METRICS: ${{ secrets.SNS_UAT_METRICS }}
+
         
 
 
