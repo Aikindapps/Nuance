@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: Debug SNS_UAT_IDENTITY
+      run: echo "SNS_UAT_IDENTITY exists ${{ env.SNS_UAT_IDENTITY }}"
+      env:
+        SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENTITY }}
+      
     - name: Checkout code
       uses: actions/checkout@v2
 
