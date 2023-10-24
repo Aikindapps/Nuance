@@ -8,12 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: Debug SNS_UAT_IDENTITY
-      run: echo "SNS_UAT_IDENTITY exists ${{ env.SNS_UAT_IDENT }}"
-      env:
-        SNS_UAT_IDENTITY: ${{ secrets.SNS_UAT_IDENT }}
-      
+    
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -73,5 +68,5 @@ jobs:
 
 
       
-    - name: Deploy local
+    - name: Deploy SNS UAT --network ic
       run: dfx deploy --network ic
