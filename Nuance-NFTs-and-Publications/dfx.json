@@ -1,0 +1,23 @@
+{
+  "canisters": {
+    "PublicationManagement": {
+      "main": "src/publication-management/main.mo",
+      "type": "motoko"
+    },
+    "NftFactory": {
+      "main": "src/nft-factory/main.mo",
+      "type": "motoko"
+    },
+    "Publisher": {
+      "main": "src/publisher/main.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": "vessel sources"
+    }
+  },
+  "version": 1
+}
