@@ -34,6 +34,7 @@ jobs:
         echo "$SNS_UAT_WALLET" > ~/.config/dfx/identity/sns_uat/wallets.json
         dfx identity use sns_uat
         dfx identity get-principal
+        dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
       env:
         SNS_UAT_IDENT: ${{ secrets.SNS_UAT_IDENT }}
         SNS_UAT_WALLET: ${{ secrets.SNS_UAT_WALLET }}
