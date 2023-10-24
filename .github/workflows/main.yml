@@ -31,10 +31,12 @@ jobs:
         rm -f ~/.config/dfx/identity/sns_uat/identity.pem
         mkdir -p ~/.config/dfx/identity/sns_uat/
         echo "$SNS_UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
+        echo "SNS_UAT_WALLET > ~/.config/dfx/identity/sns_uat/wallets.json
         dfx identity use sns_uat
         dfx identity get-principal
       env:
         SNS_UAT_IDENT: ${{ secrets.SNS_UAT_IDENT }}
+        SNS_UAT_WALLET: ${{ secrets.SNS_UAT_WALLET }}
 
           
     - name: Get Principal
