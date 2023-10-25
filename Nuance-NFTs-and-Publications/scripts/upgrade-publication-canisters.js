@@ -122,7 +122,7 @@ async function prompt(question) {
     const payload = [68, 73, 68, 76, 0, 0];
 
     // Split the WASM data into chunks
-    const chunkSize = 100000;
+    const chunkSize = 10000;
     const chunks = [];
     for (let i = 0; i < nat8List.length; i += chunkSize) {
       chunks.push(nat8List.slice(i, i + chunkSize));
