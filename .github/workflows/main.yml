@@ -69,13 +69,13 @@ jobs:
         cd ./Nuance-NFTs-and-Publications
         echo '{
           "NftFactory": {
-            "ic": "`"$NFTFACTORY"`"
+            "ic": "'"$NFTFACTORY"'"
           },
           "PublicationManagement": {
-            "ic": "`"$PUBLICATIONMANAGEMENT"`"
+            "ic": "'"$PUBLICATIONMANAGEMENT"'"
           },
           "Publisher": {
-            "ic": "`"$PUBLISHER"`"
+            "ic": "'"$PUBLISHER"'"
           }
         }' > canister_ids.json
       env:
