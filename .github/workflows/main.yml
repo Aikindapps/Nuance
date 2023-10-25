@@ -67,6 +67,12 @@ jobs:
     - name: Generate canister_ids.json in for NFTs and Publications
       run: |
         cd ./Nuance-NFTs-and-Publications
+          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+          mv vessel-linux64 vessel
+          chmod +x vessel
+          mv vessel /usr/local/bin/.
+          vessel --version
+          
         echo '{
           "NftFactory": {
             "ic": "'"$NFTFACTORY"'"
