@@ -1,0 +1,96 @@
+name: Deploy UAT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: npm install
+      run: npm install
+
+    - name: Install DFX
+      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+    - name: Start DFX background
+      run: dfx start --background
+
+    - name: Set up dfx identity
+      run: |
+        rm -f ~/.config/dfx/identity/uat/identity.pem
+        mkdir -p ~/.config/dfx/identity/uat/
+        echo "$UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/uat/identity.pem
+        echo "$UAT_WALLET" > ~/.config/dfx/identity/uat/wallets.json
+        dfx identity use uat
+        dfx identity get-principal
+        dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
+      env:
+        SNS_UAT_IDENT: ${{ secrets.UAT_IDENT }}
+        SNS_UAT_WALLET: ${{ secrets.UAT_WALLET }}
+
+          
+    - name: Get Principal
+      run:  dfx identity get-principal
+
+    - name: Generate canister_ids.json in main repo
+      run: |
+        echo '{
+          "FastBlocks_EmailOptIn": { "ic": "'"$FASTBLOCKS_EMAILOPTIN"'" },
+          "KinicEndpoint": { "ic": "'"$KINICENDPOINT"'" },
+          "CyclesDispenser": { "ic": "'"$CYCLESDISPENSER"'" },
+          "PostIndex": { "ic": "'"$POSTINDEX"'" },
+          "Storage": { "ic": "'"$STORAGE"'" },
+          "User": { "ic": "'"$USER"'" },
+          "nuance_assets": { "ic": "'"$NUANCE_ASSETS"'" },
+          "PostCore": { "ic": "'"$POSTCORE"'" },
+          "PostBucket": { "ic": "'"$POSTBUCKET"'" },
+          "Metrics": { "ic": "'"$METRICS"'" }
+        }' > canister_ids.json
+      env:
+        FASTBLOCKS_EMAILOPTIN: ${{ secrets.UAT_FASTBLOCKS_EMAILOPTIN }}
+        KINICENDPOINT: ${{ secrets.UAT_KINICENDPOINT }}
+        CYCLESDISPENSER: ${{ secrets.UAT_CYCLESDISPENSER }}
+        POSTINDEX: ${{ secrets.UAT_POSTINDEX }}
+        STORAGE: ${{ secrets.UAT_STORAGE }}
+        USER: ${{ secrets.UAT_USER }}
+        NUANCE_ASSETS: ${{ secrets.UAT_NUANCE_ASSETS }}
+        POSTCORE: ${{ secrets.UAT_POST_CORE }}
+        POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
+        METRICS: ${{ secrets.UAT_METRICS }}
+    
+    - name: Generate canister_ids.json in for NFTs and Publications
+      run: |
+        cd ./Nuance-NFTs-and-Publications
+          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+          mv vessel-linux64 vessel
+          chmod +x vessel
+          mv vessel /usr/local/bin/.
+          vessel --version
+          
+        echo '{
+          "NftFactory": {
+            "ic": "'"$NFTFACTORY"'"
+          },
+          "PublicationManagement": {
+            "ic": "'"$PUBLICATIONMANAGEMENT"'"
+          },
+          "Publisher": {
+            "ic": "'"$PUBLISHER"'"
+          }
+        }' > canister_ids.json
+      env:
+        NFTFACTORY: ${{ secrets.UAT_NFTFACTORY }}
+        PUBLICATIONMANAGEMENT: ${{ secrets.UAT_PUBLICATIONMANAGEMENT }}
+        PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
+        
+
+
+      
+    - name: Deploy UAT --network ic
+      run: bash ./scripts/deployment/UAT_Deploy.sh
