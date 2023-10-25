@@ -1,1 +1,97 @@
+name: Deploy SNS UAT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: npm install
+      run: npm install
+
+    - name: Install DFX
+      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+    - name: Start DFX background
+      run: dfx start --background
+
+    - name: Set up dfx identity
+      run: |
+        rm -f ~/.config/dfx/identity/sns_uat/identity.pem
+        mkdir -p ~/.config/dfx/identity/sns_uat/
+        echo "$SNS_UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
+        echo "$SNS_UAT_WALLET" > ~/.config/dfx/identity/sns_uat/wallets.json
+        dfx identity use sns_uat
+        dfx identity get-principal
+        dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
+      env:
+        SNS_UAT_IDENT: ${{ secrets.SNS_UAT_IDENT }}
+        SNS_UAT_WALLET: ${{ secrets.SNS_UAT_WALLET }}
+
+          
+    - name: Get Principal
+      run:  dfx identity get-principal
+
+    - name: Generate canister_ids.json in main repo
+      run: |
+        echo '{
+          "FastBlocks_EmailOptIn": { "ic": "'"$FASTBLOCKS_EMAILOPTIN"'" },
+          "KinicEndpoint": { "ic": "'"$KINICENDPOINT"'" },
+          "CyclesDispenser": { "ic": "'"$CYCLESDISPENSER"'" },
+          "PostIndex": { "ic": "'"$POSTINDEX"'" },
+          "Storage": { "ic": "'"$STORAGE"'" },
+          "User": { "ic": "'"$USER"'" },
+          "nuance_assets": { "ic": "'"$NUANCE_ASSETS"'" },
+          "PostCore": { "ic": "'"$POSTCORE"'" },
+          "PostBucket": { "ic": "'"$POSTBUCKET"'" },
+          "Metrics": { "ic": "'"$METRICS"'" }
+        }' > canister_ids.json
+      env:
+        FASTBLOCKS_EMAILOPTIN: ${{ secrets.SNS_UAT_FASTBLOCKS_EMAILOPTIN }}
+        KINICENDPOINT: ${{ secrets.SNS_UAT_KINICENDPOINT }}
+        CYCLESDISPENSER: ${{ secrets.SNS_UAT_CYCLESDISPENSER }}
+        POSTINDEX: ${{ secrets.SNS_UAT_POSTINDEX }}
+        STORAGE: ${{ secrets.SNS_UAT_STORAGE }}
+        USER: ${{ secrets.SNS_UAT_USER }}
+        NUANCE_ASSETS: ${{ secrets.SNS_UAT_NUANCE_ASSETS }}
+        POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
+        POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
+        METRICS: ${{ secrets.SNS_UAT_METRICS }}
+    
+    - name: Generate canister_ids.json in for NFTs and Publications
+      run: |
+        cd ./Nuance-NFTs-and-Publications
+          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+          mv vessel-linux64 vessel
+          chmod +x vessel
+          mv vessel /usr/local/bin/.
+          vessel --version
+          
+        echo '{
+          "NftFactory": {
+            "ic": "'"$NFTFACTORY"'"
+          },
+          "PublicationManagement": {
+            "ic": "'"$PUBLICATIONMANAGEMENT"'"
+          },
+          "Publisher": {
+            "ic": "'"$PUBLISHER"'"
+          }
+        }' > canister_ids.json
+      env:
+        NFTFACTORY: ${{ secrets.SNS_UAT_NFTFACTORY }}
+        PUBLICATIONMANAGEMENT: ${{ secrets.SNS_UAT_PUBLICATIONMANAGEMENT }}
+        PUBLISHER: ${{ secrets.SNS_UAT_PUBLISHER }}
+        
+
+
+      
+    - name: Deploy SNS UAT --network ic
+      run: bash ./scripts/deployment/SNS_UAT_Deploy.sh
 
