@@ -1,4 +1,4 @@
-name: Deploy SNS UAT
+name: Deploy UAT
 
 on:
   workflow_dispatch:
@@ -23,16 +23,16 @@ jobs:
 
     - name: Set up dfx identity
       run: |
-        rm -f ~/.config/dfx/identity/sns_uat/identity.pem
-        mkdir -p ~/.config/dfx/identity/sns_uat/
-        echo "$SNS_UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
-        echo "$SNS_UAT_WALLET" > ~/.config/dfx/identity/sns_uat/wallets.json
-        dfx identity use sns_uat
+        rm -f ~/.config/dfx/identity/uat/identity.pem
+        mkdir -p ~/.config/dfx/identity/uat/
+        echo "$UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/uat/identity.pem
+        echo "$UAT_WALLET" > ~/.config/dfx/identity/uat/wallets.json
+        dfx identity use uat
         dfx identity get-principal
         dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
       env:
-        SNS_UAT_IDENT: ${{ secrets.SNS_UAT_IDENT }}
-        SNS_UAT_WALLET: ${{ secrets.SNS_UAT_WALLET }}
+        SNS_UAT_IDENT: ${{ secrets.UAT_IDENT }}
+        SNS_UAT_WALLET: ${{ secrets.UAT_WALLET }}
 
           
     - name: Get Principal
@@ -53,16 +53,16 @@ jobs:
           "Metrics": { "ic": "'"$METRICS"'" }
         }' > canister_ids.json
       env:
-        FASTBLOCKS_EMAILOPTIN: ${{ secrets.SNS_UAT_FASTBLOCKS_EMAILOPTIN }}
-        KINICENDPOINT: ${{ secrets.SNS_UAT_KINICENDPOINT }}
-        CYCLESDISPENSER: ${{ secrets.SNS_UAT_CYCLESDISPENSER }}
-        POSTINDEX: ${{ secrets.SNS_UAT_POSTINDEX }}
-        STORAGE: ${{ secrets.SNS_UAT_STORAGE }}
-        USER: ${{ secrets.SNS_UAT_USER }}
-        NUANCE_ASSETS: ${{ secrets.SNS_UAT_NUANCE_ASSETS }}
-        POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
-        POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
-        METRICS: ${{ secrets.SNS_UAT_METRICS }}
+        FASTBLOCKS_EMAILOPTIN: ${{ secrets.UAT_FASTBLOCKS_EMAILOPTIN }}
+        KINICENDPOINT: ${{ secrets.UAT_KINICENDPOINT }}
+        CYCLESDISPENSER: ${{ secrets.UAT_CYCLESDISPENSER }}
+        POSTINDEX: ${{ secrets.UAT_POSTINDEX }}
+        STORAGE: ${{ secrets.UAT_STORAGE }}
+        USER: ${{ secrets.UAT_USER }}
+        NUANCE_ASSETS: ${{ secrets.UAT_NUANCE_ASSETS }}
+        POSTCORE: ${{ secrets.UAT_POST_CORE }}
+        POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
+        METRICS: ${{ secrets.UAT_METRICS }}
     
     - name: Generate canister_ids.json in for NFTs and Publications
       run: |
@@ -85,12 +85,12 @@ jobs:
           }
         }' > canister_ids.json
       env:
-        NFTFACTORY: ${{ secrets.SNS_UAT_NFTFACTORY }}
-        PUBLICATIONMANAGEMENT: ${{ secrets.SNS_UAT_PUBLICATIONMANAGEMENT }}
-        PUBLISHER: ${{ secrets.SNS_UAT_PUBLISHER }}
+        NFTFACTORY: ${{ secrets.UAT_NFTFACTORY }}
+        PUBLICATIONMANAGEMENT: ${{ secrets.UAT_PUBLICATIONMANAGEMENT }}
+        PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
         
 
 
       
-    - name: Deploy SNS UAT --network ic
-      run: bash ./scripts/deployment/SNS_UAT_Deploy.sh
+    - name: Deploy UAT --network ic
+      run: bash ./scripts/deployment/UAT_Deploy.sh
