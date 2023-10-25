@@ -9,7 +9,7 @@
       "type": "motoko"
     },
     "Publisher": {
-      "main": "src/publisher/main.mo",
+      "main": "src/Publisher/main.mo",
       "type": "motoko"
     }
   },
