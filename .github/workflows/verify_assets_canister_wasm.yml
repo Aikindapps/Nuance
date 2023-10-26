@@ -1,0 +1,45 @@
+name: verify assets canister wasm hash
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: npm install
+      run: npm install
+
+    - name: Install DFX
+      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+    
+    - name: Install Vessel
+      run: |
+        cd ./Nuance-NFTs-and-Publications
+          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+          mv vessel-linux64 vessel
+          chmod +x vessel
+          mv vessel /usr/local/bin/.
+          vessel --version
+        cd ..
+
+    - name: Start DFX background
+      run: dfx start --background
+
+          
+    - name: Build all canisters
+      run: | 
+        dfx canister create nuance_assets
+        dfx build nuance_assets
+        
+        
+
+    - name: Get wasm hash for all
+      run: |
+        sha256sum .dfx/local/canisters/nuance_assets/nuance_assets.wasm
+        
