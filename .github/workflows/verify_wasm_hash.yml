@@ -25,7 +25,22 @@ jobs:
     - name: Build all canisters
       run: | 
         dfx canister create --all
-        dfx build --all
+        dfx build CyclesDispenser
+        dfx build FastBlocks_EmailOptIn
+        dfx build KinicEndpoint
+        dfx build Metrics
+        dfx build PostBucket
+        dfx build PostCore
+        dfx build PostIndex
+        dfx build Storage
+        dfx build User
+        
+        
+        
 
     - name: Get wasm hash for all
-      run: sha256sum .dfx/local/canisters/User/User.wasm   
+      run: |
+        for canister in CyclesDispenser FastBlocks_EmailOptIn KinicEndpoint Metrics PostBucket PostCore PostIndex Storage User; do
+          sha256sum .dfx/local/canisters/$canister/$canister.wasm
+        done
+
