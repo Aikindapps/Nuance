@@ -1,0 +1,30 @@
+name: Deploy by proposal
+
+on:
+  workflow_dispatch:
+    inputs:
+      wasms:
+        description: 'Which WASMs to build? (all, User, PostCore, etc.)'
+        required: true
+        default: 'all'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Conditional build
+      run: |
+        wasms="${{ github.event.inputs.wasms }}"
+        all_wasms=("User" "PostCore")
+        
+        if [[ $wasms == "all" ]]; then
+          wasms="${all_wasms[@]}"
+        fi
+        
+        for wasm in $wasms; do
+          echo "Building $wasm"
+        done
