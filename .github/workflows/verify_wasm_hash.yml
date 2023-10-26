@@ -1,4 +1,4 @@
-name: Deploy SNS UAT
+name: verify wasm hash
 
 on:
   workflow_dispatch:
