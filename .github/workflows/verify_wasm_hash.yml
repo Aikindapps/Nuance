@@ -23,7 +23,9 @@ jobs:
 
           
     - name: Build all canisters
-      run: dfx build --all
+      run: | 
+        dfx create --all
+        dfx build --all
 
     - name: Get wasm hash for all
       run: sha256sum .dfx/local/canisters/User/User.wasm   
