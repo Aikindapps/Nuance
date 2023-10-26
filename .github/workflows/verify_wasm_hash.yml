@@ -57,6 +57,6 @@ jobs:
           sha256sum .dfx/local/canisters/$canister/$canister.wasm
         done
         cd Nuance-NFTs-and-Publications
-        for canister in PublicationManagement NftFactory Publisher
+        for canister in PublicationManagement NftFactory Publisher; do
           sha256sum .dfx/local/canisters/$canister/$canister.wasm
         done
