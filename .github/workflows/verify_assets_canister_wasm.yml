@@ -34,7 +34,7 @@ jobs:
           
     - name: Build all canisters
       run: | 
-        dfx canister create nuance_assets
+        dfx canister --all
         dfx build nuance_assets
         
         
