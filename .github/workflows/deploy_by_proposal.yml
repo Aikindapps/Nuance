@@ -37,6 +37,7 @@ jobs:
       run: |
         mkdir scripts/sns/install/bin
         bash scripts/sns/install/install.sh
+        bash scripts/sns/install/move.sh
 
     - name: Start DFX background
       run: dfx start --background
