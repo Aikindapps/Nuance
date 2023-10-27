@@ -143,7 +143,7 @@ jobs:
           echo "Processing $wasm..."
           dfx canister create $wasm
           dfx build $wasm --network $network
-          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$canisterName --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath="./identity.pem"
+          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$canisterName --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath=./identity.pem
         done
       env:
         SNS_UAT_PEM_FILE: ${{ secrets.SNS_UAT_PEM_FILE }}
