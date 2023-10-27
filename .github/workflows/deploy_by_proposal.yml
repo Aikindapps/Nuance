@@ -1,13 +1,24 @@
-name: Build and Deploy
+name: Deploy SNS_UAT by Proposal
 
 on:
   workflow_dispatch:
     inputs:
-      wasms:
-        description: 'Which WASMs to build? (**all**, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics)'
+      canisterName:
+        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics)'
         required: true
-        default: 'all'
-
+      network:
+        description: 'ic or local'
+        required: true
+      title:
+        description: 'Title of proposal'
+        required: true
+      url:
+        description: 'URL of discussion or additional info'
+        required: true
+        default: 'https://nuance.xyz/'
+      summary:
+        description: 'Summary of proposal'
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -96,13 +107,20 @@ jobs:
     - name: Create, Build and Proposal
       run: |
         wasms="${{ github.event.inputs.wasms }}"
-        all_wasms=("FastBlocks_EmailOptIn" "KinicEndpoint" "CyclesDispenser" "PostIndex" "Storage" "User" "PostCore" "PostBucket" "Metrics")
+        all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "Metrics" "PostBucket" "PostCore" "PostIndex" "Storage" "User")
         
         if [[ $wasms == "all" ]]; then
           wasms="${all_wasms[@]}"
         fi
+
+        canisterName=${{ github.event.inputs.canisterName }}
+        network=${{ github.event.inputs.network }}
+        title=${{ github.event.inputs.title }}
+        url=${{ github.event.inputs.url }}
+        summary=${{ github.event.inputs.summary }}
         
         for wasm in $wasms; do
           dfx canister create $wasm
           dfx build $wasm
+          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$canisterName --network=$network --title=$title --url=$url --summary=$summary
         done
