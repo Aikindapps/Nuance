@@ -141,8 +141,7 @@ jobs:
         
         for wasm in $wasms; do
           echo "Processing $wasm..."
-          dfx canister create $wasm
-          dfx build $wasm --network github.event.inputs.network
+          dfx build $wasm --network $network
           node scripts/sns/CanisterUpgradeProposal.js --canisterName=$canisterName --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath="./identity.pem"
         done
       env:
