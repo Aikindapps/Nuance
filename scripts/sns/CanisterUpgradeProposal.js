@@ -1,12 +1,22 @@
 const path = require('path');
 const readline = require('readline');
 const { spawn } = require('child_process');
-const { developerNeuronId, pemFilePath, canisterCommands } = require('./snsConfig');
+const { developerNeuronId: defaultDevNeuronId, pemFilePath: defaultPemFilePath, canisterCommands } = require('./snsConfig');
 const canisterIds = require(path.join(process.cwd(), './.dfx/local/canister_ids.json'));
 const canisterIdsProd = require(path.join(process.cwd(), './canister_ids.json'));
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
-const argv = yargs(hideBin(process.argv)).argv;
+
+const argv = yargs(hideBin(process.argv))
+  .option('devNeuronId', {
+    describe: 'Developer Neuron ID',
+    type: 'string',
+  })
+  .option('pemFilePath', {
+    describe: 'Path to the PEM file',
+    type: 'string',
+  })
+  .argv;
 
 async function prompt(question) {
   const rl = readline.createInterface({
@@ -38,21 +48,18 @@ function execShellCommand(cmd) {
 }
 
 (async () => {
-  console.log('🚀 Canister Upgrade Script...');
-
-  let canisterName = argv.canisterName || await prompt('🔖 Enter the canister Name: ');
-  let network = argv.network || await prompt('🌐 Do you want to deploy to the local or ic? (Enter "local" or "ic"): ');
-  let title = argv.title || await prompt('🔖 Enter proposal title: ');
-  let url = argv.url || await prompt('🔖 Enter the url: ');
-  let summary = argv.summary || await prompt('🔖 Enter proposal summary: ');
-
+  const canisterName = argv.canisterName || await prompt('🔖 Enter the canister Name: ');
+  const network = argv.network || await prompt('🌐 Do you want to deploy to the local or ic? (Enter "local" or "ic"): ');
+  const title = argv.title || await prompt('🔖 Enter proposal title: ');
+  const url = argv.url || await prompt('🔖 Enter the url: ');
+  const summary = argv.summary || await prompt('🔖 Enter proposal summary: ');
+  const developerNeuronId = argv.devNeuronId || defaultDevNeuronId;
+  const pemFilePath = argv.pemFilePath || defaultPemFilePath;
 
   const snsCanisterIdsFile = "./sns_canister_ids.json";
   const canisterId = network === 'local' ? canisterIds[canisterName].local : canisterIdsProd[canisterName].ic;
 
-
-
-  var wasmPath = path.join(
+  const wasmPath = path.join(
     process.cwd(),
     '.dfx',
     network,
@@ -62,20 +69,14 @@ function execShellCommand(cmd) {
   );
 
   try {
-    console.log("🚀 Preparing upgrade proposal...");
     const makeProposalCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-upgrade-canister-proposal --summary "${summary}" --title "${title}" --url "${url}" --target-canister-id ${canisterId} --wasm-path "${wasmPath}" ${developerNeuronId} > upgrade.json`;
     await execShellCommand(makeProposalCommand);
 
-
-    console.log("✅ Preparing proposal...");
-    const sendCommand = `quill send upgrade.json ${network == 'ic' ? "" : "--insecure-local-dev-mode"} -y | grep -v "^ *new_canister_wasm"`;
-    //await execShellCommand(sendCommand);
-
+    const sendCommand = `quill send upgrade.json ${network === 'ic' ? "" : "--insecure-local-dev-mode"} -y | grep -v "^ *new_canister_wasm"`;
     console.log("✅ Proposal ready to be sent.");
     console.log('\x1b[36m%s\x1b[0m', "Run the following command to send the proposal: \n");
     console.log(sendCommand);
-    console.log("\n")
-
+    console.log("\n");
   } catch (err) {
     console.error('❌ Error:', err);
     console.log("err proposal for debugging: " + makeProposalCommand);
