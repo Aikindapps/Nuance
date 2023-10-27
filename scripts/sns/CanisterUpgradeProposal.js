@@ -69,14 +69,14 @@ function execShellCommand(cmd) {
   );
 
   try {
-    const makeProposalCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-upgrade-canister-proposal --summary "${summary}" --title "${title}" --url "${url}" --target-canister-id ${canisterId} --wasm-path "${wasmPath}" ${developerNeuronId} > upgrade.json`;
+    const makeProposalCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-upgrade-canister-proposal --summary "${summary}" --title "${title}" --url "${url}" --target-canister-id ${canisterId} --wasm-path "${wasmPath}" ${developerNeuronId} > upgrade${canisterName}.json`;
     await execShellCommand(makeProposalCommand);
 
-    const sendCommand = `quill send upgrade.json ${network === 'ic' ? "" : "--insecure-local-dev-mode"} -y | grep -v "^ *new_canister_wasm"`;
-    console.log("✅ Proposal ready to be sent.");
-    console.log('\x1b[36m%s\x1b[0m', "Run the following command to send the proposal: \n");
-    console.log(sendCommand);
-    console.log("\n");
+    const sendCommand = `quill send upgrade${canisterName}.json ${network === 'ic' ? "" : "--insecure-local-dev-mode"} -y | grep -v "^ *new_canister_wasm"`;
+    await execShellCommand(sendCommand);
+    // console.log('\x1b[36m%s\x1b[0m', "Run the following command to send the proposal: \n");
+    // console.log(sendCommand);
+    // console.log("\n");
   } catch (err) {
     console.error('❌ Error:', err);
     console.log("err proposal for debugging: " + makeProposalCommand);
