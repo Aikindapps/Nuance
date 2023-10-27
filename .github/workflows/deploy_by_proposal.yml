@@ -33,6 +33,9 @@ jobs:
     - name: Install DFX
       run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
 
+    - name: Install Quill
+      run: bash scripts/sns/install/install.sh
+
     - name: Start DFX background
       run: dfx start --background
 
@@ -67,6 +70,15 @@ jobs:
           "PostBucket": { "ic": "'"$POSTBUCKET"'" },
           "Metrics": { "ic": "'"$METRICS"'" }
         }' > canister_ids.json
+
+         echo '{
+          "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
+          "index_canister_id": "'"$INDEX_CANISTER_ID"'",
+          "ledger_canister_id": "'"$LEDGER_CANISTER_ID"'",
+          "root_canister_id": "'"$ROOT_CANISTER_ID"'",
+          "swap_canister_id": "'"$SWAP_CANISTER_ID"'"
+        }' > sns_canister_ids.json
+        
       env:
         FASTBLOCKS_EMAILOPTIN: ${{ secrets.SNS_UAT_FASTBLOCKS_EMAILOPTIN }}
         KINICENDPOINT: ${{ secrets.SNS_UAT_KINICENDPOINT }}
@@ -78,6 +90,11 @@ jobs:
         POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
         POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
         METRICS: ${{ secrets.SNS_UAT_METRICS }}
+        GOVERNANCE_CANISTER_ID: ${{ secrets.SNS_UAT_GOVERNANCE_CANISTER_ID }}
+        INDEX_CANISTER_ID: ${{ secrets.SNS_UAT_INDEX_CANISTER_ID }}
+        LEDGER_CANISTER_ID: ${{ secrets.SNS_UAT_LEDGER_CANISTER_ID }}
+        ROOT_CANISTER_ID: ${{ secrets.SNS_UAT_ROOT_CANISTER_ID }}
+        SWAP_CANISTER_ID: ${{ secrets.SNS_UAT_SWAP_CANISTER_ID }}
     
     - name: Generate canister_ids.json in for NFTs and Publications
       run: |
