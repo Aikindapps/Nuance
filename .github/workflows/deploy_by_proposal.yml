@@ -125,13 +125,12 @@ jobs:
 
     - name: Create, Build and Proposal
       run: |
-        wasms="${{ github.event.inputs.wasms }}"
+        wasms="${{ github.event.inputs.canisterName }}"
         all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "Metrics" "PostBucket" "PostCore" "PostIndex" "Storage" "User")
         
         if [[ $wasms == "all" ]]; then
           wasms="${all_wasms[@]}"
         fi
-
         canisterName=${{ github.event.inputs.canisterName }}
         network=${{ github.event.inputs.network }}
         title=${{ github.event.inputs.title }}
@@ -139,6 +138,7 @@ jobs:
         summary=${{ github.event.inputs.summary }}
         
         for wasm in $wasms; do
+          echo "Processing $wasm..."
           dfx canister create $wasm
           dfx build $wasm
           node scripts/sns/CanisterUpgradeProposal.js --canisterName=$canisterName --network=$network --title=$title --url=$url --summary=$summary
