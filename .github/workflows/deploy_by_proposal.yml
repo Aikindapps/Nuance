@@ -126,7 +126,7 @@ jobs:
 
     - name: Create, Build and Proposal
       run: |
-        echo 'SNS_UAT_PEM_FILE' > identity.pem
+        echo "SNS_UAT_PEM_FILE" > identity.pem
         wasms="${{ github.event.inputs.canisterName }}"
         all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "Metrics" "PostBucket" "PostCore" "PostIndex" "Storage" "User")
         
