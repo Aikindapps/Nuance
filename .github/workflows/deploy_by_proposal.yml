@@ -1,13 +1,24 @@
-name: Build and Deploy
+name: Deploy SNS_UAT by Proposal
 
 on:
   workflow_dispatch:
     inputs:
-      wasms:
-        description: 'Which WASMs to build? (**all**, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics)'
+      canisterName:
+        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics)'
         required: true
-        default: 'all'
-
+      network:
+        description: 'ic or local'
+        required: true
+      title:
+        description: 'Title of proposal'
+        required: true
+      url:
+        description: 'URL of discussion or additional info'
+        required: true
+        default: 'https://nuance.xyz/'
+      summary:
+        description: 'Summary of proposal'
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,6 +32,12 @@ jobs:
 
     - name: Install DFX
       run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+    - name: Install Quill
+      run: |
+        mkdir scripts/sns/install/bin
+        bash scripts/sns/install/install.sh
+        bash scripts/sns/install/move.sh
 
     - name: Start DFX background
       run: dfx start --background
@@ -56,6 +73,15 @@ jobs:
           "PostBucket": { "ic": "'"$POSTBUCKET"'" },
           "Metrics": { "ic": "'"$METRICS"'" }
         }' > canister_ids.json
+
+         echo '{
+          "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
+          "index_canister_id": "'"$INDEX_CANISTER_ID"'",
+          "ledger_canister_id": "'"$LEDGER_CANISTER_ID"'",
+          "root_canister_id": "'"$ROOT_CANISTER_ID"'",
+          "swap_canister_id": "'"$SWAP_CANISTER_ID"'"
+        }' > sns_canister_ids.json
+        
       env:
         FASTBLOCKS_EMAILOPTIN: ${{ secrets.SNS_UAT_FASTBLOCKS_EMAILOPTIN }}
         KINICENDPOINT: ${{ secrets.SNS_UAT_KINICENDPOINT }}
@@ -67,6 +93,11 @@ jobs:
         POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
         POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
         METRICS: ${{ secrets.SNS_UAT_METRICS }}
+        GOVERNANCE_CANISTER_ID: ${{ secrets.SNS_UAT_GOVERNANCE_CANISTER_ID }}
+        INDEX_CANISTER_ID: ${{ secrets.SNS_UAT_INDEX_CANISTER_ID }}
+        LEDGER_CANISTER_ID: ${{ secrets.SNS_UAT_LEDGER_CANISTER_ID }}
+        ROOT_CANISTER_ID: ${{ secrets.SNS_UAT_ROOT_CANISTER_ID }}
+        SWAP_CANISTER_ID: ${{ secrets.SNS_UAT_SWAP_CANISTER_ID }}
     
     - name: Generate canister_ids.json in for NFTs and Publications
       run: |
@@ -95,14 +126,21 @@ jobs:
 
     - name: Create, Build and Proposal
       run: |
-        wasms="${{ github.event.inputs.wasms }}"
-        all_wasms=("FastBlocks_EmailOptIn" "KinicEndpoint" "CyclesDispenser" "PostIndex" "Storage" "User" "PostCore" "PostBucket" "Metrics")
+        wasms="${{ github.event.inputs.canisterName }}"
+        all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "Metrics" "PostBucket" "PostCore" "PostIndex" "Storage" "User")
         
         if [[ $wasms == "all" ]]; then
           wasms="${all_wasms[@]}"
         fi
+        canisterName=${{ github.event.inputs.canisterName }}
+        network=${{ github.event.inputs.network }}
+        title=${{ github.event.inputs.title }}
+        url=${{ github.event.inputs.url }}
+        summary=${{ github.event.inputs.summary }}
         
         for wasm in $wasms; do
+          echo "Processing $wasm..."
           dfx canister create $wasm
           dfx build $wasm
+          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$canisterName --network=$network --title=$title --url=$url --summary=$summary
         done
