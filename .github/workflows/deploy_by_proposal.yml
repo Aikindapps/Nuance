@@ -124,7 +124,7 @@ jobs:
         PUBLICATIONMANAGEMENT: ${{ secrets.SNS_UAT_PUBLICATIONMANAGEMENT }}
         PUBLISHER: ${{ secrets.SNS_UAT_PUBLISHER }}
 
-     - name: Create, Build and Proposal
+    - name: Create, Build and Proposal
       run: |
         echo "$SNS_UAT_PEM_FILE" | base64 --decode > identity.pem
         wasms="${{ github.event.inputs.canisterName }}"
