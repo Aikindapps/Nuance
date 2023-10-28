@@ -1,7 +1,7 @@
 const path = require('path');
 const readline = require('readline');
 const { spawn } = require('child_process');
-const { developerNeuronId: defaultDevNeuronId, pemFilePath: defaultPemFilePath, canisterCommands } = require('./snsConfig');
+const { developerNeuronId: defaultDevNeuronId, pemFilePath: defaultPemFilePath } = require('./snsConfig');
 const canisterIds = require(path.join(process.cwd(), './.dfx/local/canister_ids.json'));
 const canisterIdsProd = require(path.join(process.cwd(), './canister_ids.json'));
 const yargs = require('yargs/yargs');
@@ -57,10 +57,16 @@ function execShellCommand(cmd) {
   const pemFilePath = argv.pemFilePath || defaultPemFilePath;
 
   const snsCanisterIdsFile = "./sns_canister_ids.json";
-  const canisterId = network === 'local' ? canisterIds[canisterName].local : canisterIdsProd[canisterName].ic;
+
+  const isNFTsAndPublicationsRepo = canisterName === 'NftFactory' || canisterName === 'PublicationManagement';
+  const repoPath = isNFTsAndPublicationsRepo ? path.join(process.cwd(), 'Nuance_NFTs_and_Publications') : process.cwd();
+
+  const canisterId = isNFTsAndPublicationsRepo
+    ? require(path.join(repoPath, './canister_ids.json'))[canisterName].ic
+    : (network === 'local' ? canisterIds[canisterName].local : canisterIdsProd[canisterName].ic);
 
   const wasmPath = path.join(
-    process.cwd(),
+    repoPath,
     '.dfx',
     network,
     'canisters',
