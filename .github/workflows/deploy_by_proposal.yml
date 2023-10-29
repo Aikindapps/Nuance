@@ -141,12 +141,16 @@ jobs:
         
         for wasm in $wasms; do
           echo "Processing $wasm..."
+          if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
+            cd Nuance-NFTs-and-Publications
+          fi
           dfx canister create $wasm
           dfx build $wasm --network $network
+          if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
+            cd ..
+          fi
           node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath=./identity.pem
         done
       env:
         SNS_UAT_PEM_FILE: ${{ secrets.SNS_UAT_PEM_FILE }}
         SNS_UAT_DEV_NEURON_ID: ${{ secrets.SNS_UAT_DEV_NEURON_ID }}
-        
-        
