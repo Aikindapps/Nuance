@@ -59,7 +59,7 @@ function execShellCommand(cmd) {
   const snsCanisterIdsFile = "./sns_canister_ids.json";
 
   const isNFTsAndPublicationsRepo = canisterName === 'NftFactory' || canisterName === 'PublicationManagement';
-  const repoPath = isNFTsAndPublicationsRepo ? path.join(process.cwd(), 'Nuance_NFTs_and_Publications') : process.cwd();
+  const repoPath = isNFTsAndPublicationsRepo ? path.join(process.cwd(), 'Nuance-NFTs-and-Publications') : process.cwd();
 
   const canisterId = isNFTsAndPublicationsRepo
     ? require(path.join(repoPath, './canister_ids.json'))[canisterName].ic
