@@ -61,6 +61,8 @@ jobs:
 
     - name: Generate canister_ids.json in main repo
       run: |
+        mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
+
         echo '{
           "FastBlocks_EmailOptIn": { "ic": "'"$FASTBLOCKS_EMAILOPTIN"'" },
           "KinicEndpoint": { "ic": "'"$KINICENDPOINT"'" },
