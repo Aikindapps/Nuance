@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       canisterName:
-        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics, NftFactory, PublicationManagement)'
+        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, Metrics, NftFactory, PublicationManagement)'
         required: true
       network:
         description: 'ic or local'
@@ -131,7 +131,7 @@ jobs:
       run: |
         echo "$SNS_UAT_PEM_FILE" | base64 --decode > identity.pem
         wasms="${{ github.event.inputs.canisterName }}"
-        all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "Metrics" "PostBucket" "PostCore" "PostIndex" "Storage" "User" "NftFactory" "PublicationManagement")
+        all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "Metrics" "PostCore" "PostIndex" "Storage" "User" "NftFactory" "PublicationManagement")
         
         if [[ $wasms == "all" ]]; then
           wasms="${all_wasms[@]}"
