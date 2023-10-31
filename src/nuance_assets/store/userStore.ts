@@ -73,12 +73,16 @@ const findSimilarHandles = (input: string, handles: string[]) => {
   const lowerInput = input.toLowerCase();
 
   for (const handle of handles) {
-    if (levenshteinDistance(lowerInput, handle.toLowerCase()) <= tolerance) {
-      results.push(handle);
+    let distance = levenshteinDistance(lowerInput, handle.toLowerCase())
+    if (distance <= tolerance) {
+      results.push({ handle: handle, distance: distance });
     }
   }
-
-  return results;
+  return results
+    .sort((h1, h2) => {
+      return h2.distance - h1.distance;
+    })
+    .map((handleObj) => handleObj.handle.toLowerCase());
 };
 
 export interface UserStore {

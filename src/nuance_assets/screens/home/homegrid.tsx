@@ -799,7 +799,7 @@ const HomePageGrid = () => {
           <div style={{ marginLeft: '3%' }}>
             {searchUserResults?.map((user) => {
               return (
-                <div className='user-search-item'>
+                <div className='user-search-item' key={user.handle}>
                   <Link to={'/' + user.handle}>
                     <img
                       src={user.avatar || images.DEFAULT_AVATAR}
@@ -848,7 +848,10 @@ const HomePageGrid = () => {
           <div style={{ marginLeft: '3%' }}>
             {searchPublicationResults?.map((publication) => {
               return (
-                <div className='user-search-item'>
+                <div
+                  className='user-search-item'
+                  key={publication.publicationHandle}
+                >
                   <Link to={'/publication/' + publication.publicationHandle}>
                     <img
                       src={publication.headerImage || images.NUANCE_LOGO}
