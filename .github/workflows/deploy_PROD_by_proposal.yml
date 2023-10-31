@@ -1,0 +1,108 @@
+name: Deploy PROD by Proposal
+
+on:
+  workflow_dispatch:
+    inputs:
+      canisterName:
+        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, NftFactory, PublicationManagement)'
+        required: true
+      network:
+        description: 'ic or local'
+        required: true
+      title:
+        description: 'Title of proposal'
+        required: true
+      url:
+        description: 'URL of discussion or additional info'
+        required: true
+        default: 'https://nuance.xyz/'
+      summary:
+        description: 'Summary of proposal'
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: npm install
+      run: npm install
+
+    - name: Install DFX
+      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+    - name: Install Quill
+      run: |
+        mkdir scripts/sns/install/bin
+        bash scripts/sns/install/install.sh
+        bash scripts/sns/install/move.sh
+
+    - name: Start DFX background
+      run: dfx start --background
+
+    - name: Set up dfx identity
+      run: |
+        rm -f ~/.config/dfx/identity/prod/identity.pem
+        mkdir -p ~/.config/dfx/identity/prod/
+        echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+        echo "$PROD_WALLET" > ~/.config/dfx/identity/prod/wallets.json
+        dfx identity use prod
+        dfx identity get-principal
+        dfx identity set-wallet $PROD_WALLET --network ic
+      env:
+        PROD_IDENT: ${{ secrets.PROD_IDENT }}
+        PROD_WALLET: ${{ secrets.PROD_WALLET }}
+
+          
+    - name: Get Principal
+      run:  dfx identity get-principal
+
+    - name: Generate empty canister_ids.json to prevent undefined error
+      run: |
+        mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
+        echo '{}' > ./.dfx/local/canister_ids.json
+
+    
+    - name: Install vessel for NFTs and Publications
+      run: |
+        cd ./Nuance-NFTs-and-Publications
+          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+          mv vessel-linux64 vessel
+          chmod +x vessel
+          mv vessel /usr/local/bin/.
+          vessel --version
+          
+
+    - name: Create, Build and Proposal
+      run: |
+        echo "$PROD_IDENT" | base64 --decode > identity.pem
+        wasms="${{ github.event.inputs.canisterName }}"
+        all_wasms=("CyclesDispenser" "FastBlocks_EmailOptIn" "KinicEndpoint" "PostCore" "PostIndex" "Storage" "User" "NftFactory" "PublicationManagement")
+        
+        if [[ $wasms == "all" ]]; then
+          wasms="${all_wasms[@]}"
+        fi
+        canisterName=${{ github.event.inputs.canisterName }}
+        network=${{ github.event.inputs.network }}
+        title=${{ github.event.inputs.title }}
+        url=${{ github.event.inputs.url }}
+        summary=${{ github.event.inputs.summary }}
+        
+        for wasm in $wasms; do
+          echo "Processing $wasm..."
+          if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
+            cd Nuance-NFTs-and-Publications
+          fi
+          dfx canister create $wasm
+          dfx build $wasm --network $network
+          if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
+            cd ..
+          fi
+          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$PROD_NEURON_ID --pemFilePath=./identity.pem
+          sleep 30
+        done
+      env:
+        PROD_IDENT: ${{ secrets.PROD_IDENT }}
+        PROD_NEURON_ID: ${{ secrets.PROD_NEURON_ID }}
