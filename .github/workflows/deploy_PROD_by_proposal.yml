@@ -50,7 +50,7 @@ jobs:
         echo "$PROD_WALLET" > ~/.config/dfx/identity/prod/wallets.json
         dfx identity use prod
         dfx identity get-principal
-        dfx identity set-wallet $PROD_WALLET --network ic
+        dfx identity set-wallet "$PROD_WALLET" --network ic
       env:
         PROD_IDENT: ${{ secrets.PROD_IDENT }}
         PROD_WALLET: ${{ secrets.PROD_WALLET }}
