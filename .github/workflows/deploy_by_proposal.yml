@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       canisterName:
-        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics)'
+        description: 'Canister Name, or simply type all... (all, FastBlocks_EmailOptIn, KinicEndpoint, CyclesDispenser, PostIndex, Storage, User, PostCore, PostBucket, Metrics, NftFactory, PublicationManagement)'
         required: true
       network:
         description: 'ic or local'
