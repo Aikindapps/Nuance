@@ -153,6 +153,7 @@ jobs:
             cd ..
           fi
           node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath=./identity.pem
+          sleep 30
         done
       env:
         SNS_UAT_PEM_FILE: ${{ secrets.SNS_UAT_PEM_FILE }}
