@@ -38,8 +38,10 @@ jobs:
     - name: Get Principal
       run:  dfx identity get-principal
 
-    - name: Generate canister_ids.json in main repo
+    - name: Generate canister_ids.json and canisterIds.mo
       run: |
+        mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
+        echo '{}' > ./.dfx/local/canister_ids.json
         echo '{
           "FastBlocks_EmailOptIn": { "ic": "'"$FASTBLOCKS_EMAILOPTIN"'" },
           "KinicEndpoint": { "ic": "'"$KINICENDPOINT"'" },
@@ -52,6 +54,40 @@ jobs:
           "PostBucket": { "ic": "'"$POSTBUCKET"'" },
           "Metrics": { "ic": "'"$METRICS"'" }
         }' > canister_ids.json
+        echo '{
+          "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
+          "index_canister_id": "'"$INDEX_CANISTER_ID"'",
+          "ledger_canister_id": "'"$LEDGER_CANISTER_ID"'",
+          "root_canister_id": "'"$ROOT_CANISTER_ID"'",
+          "swap_canister_id": "'"$SWAP_CANISTER_ID"'"
+        }' > sns_canister_ids.json
+        
+        echo '{
+          "NftFactory": {
+            "ic": "'"$NFTFACTORY"'"
+          },
+          "PublicationManagement": {
+            "ic": "'"$PUBLICATIONMANAGEMENT"'"
+          },
+          "Publisher": {
+            "ic": "'"$PUBLISHER"'"
+          }
+        }' > ./Nuance-NFTs-and-Publications/canister_ids.json
+        echo 'module {
+          public let USER_CANISTER_ID = "'"$USER"'";
+          public let POST_CORE_CANISTER_ID = "'"$POSTCORE"'";
+          public let KINIC_ENDPOINT_CANISTER_ID = "'"$KINICENDPOINT"'";
+          public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID = "'"$FASTBLOCKS_EMAILOPTIN"'";
+          public let POST_INDEX_CANISTER_ID = "'"$POSTINDEX"'";
+          public let STORAGE_CANISTER_ID = "'"$STORAGE"'";
+          public let CYCLES_DISPENSER_CANISTER_ID = "'"$CYCLESDISPENSER"'";
+          public let NUANCE_ASSETS_CANISTER_ID = "'"$NUANCE_ASSETS"'";
+          public let METRICS_CANISTER_ID = "'"$METRICS"'";
+          public let NFT_FACTORY_CANISTER_ID = "'"$NFTFACTORY"'";
+          public let PUBLICATION_MANAGEMENT_CANISTER_ID = "'"$PUBLICATIONMANAGEMENT"'";
+          public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
+        };' > src/shared/canisterIds.mo
+        
       env:
         FASTBLOCKS_EMAILOPTIN: ${{ secrets.UAT_FASTBLOCKS_EMAILOPTIN }}
         KINICENDPOINT: ${{ secrets.UAT_KINICENDPOINT }}
@@ -63,6 +99,9 @@ jobs:
         POSTCORE: ${{ secrets.UAT_POST_CORE }}
         POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
         METRICS: ${{ secrets.UAT_METRICS }}
+        NFTFACTORY: ${{ secrets.UAT_NFTFACTORY }}
+        PUBLICATIONMANAGEMENT: ${{ secrets.UAT_PUBLICATIONMANAGEMENT }}
+        PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
     
     - name: Generate canister_ids.json in for NFTs and Publications
       run: |
@@ -73,21 +112,6 @@ jobs:
           mv vessel /usr/local/bin/.
           vessel --version
           
-        echo '{
-          "NftFactory": {
-            "ic": "'"$NFTFACTORY"'"
-          },
-          "PublicationManagement": {
-            "ic": "'"$PUBLICATIONMANAGEMENT"'"
-          },
-          "Publisher": {
-            "ic": "'"$PUBLISHER"'"
-          }
-        }' > canister_ids.json
-      env:
-        NFTFACTORY: ${{ secrets.UAT_NFTFACTORY }}
-        PUBLICATIONMANAGEMENT: ${{ secrets.UAT_PUBLICATIONMANAGEMENT }}
-        PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
         
 
 
