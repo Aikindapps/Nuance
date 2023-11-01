@@ -1,5 +1,5 @@
 import Principal "mo:base/Principal";
-import CanisterIds "canisterIds";
+import CanisterIds "../../../src/shared/canisterIds";
 module {
   public let USER_CANISTER_ID = CanisterIds.USER_CANISTER_ID;
   public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
