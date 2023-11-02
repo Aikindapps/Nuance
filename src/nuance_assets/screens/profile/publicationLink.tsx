@@ -33,8 +33,8 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
       })
     );
   }, [props.publicationsArray]);
-
-  const featureIsLive = useContext(Context).publicationFeature;
+  const context = useContext(Context)
+  const featureIsLive = context.publicationFeature;
 
   if (publicationHandles.length === 0 || featureIsLive == false) {
     return null;
@@ -62,11 +62,13 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
           color: location.pathname.includes('/my-profile/publications')
             ? colors.accentColor
             : darkOptionsAndColors.color,
+          cursor: context.profileSidebarDisallowed ? 'not-allowed' : '',
+          textDecoration: context.profileSidebarDisallowed ? 'none' : '',
         }}
         className={`route ${
           location.pathname.includes('/my-profile/publications') && 'active'
         }`}
-        to={routes[0].goto}
+        to={context.profileSidebarDisallowed ? location.pathname : routes[0].goto}
       >
         {`Publications (${props.publicationsArray.length})`}
       </Link>
@@ -82,7 +84,7 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
                 location.pathname === route?.goto && 'sub-route-active'
               }`}
               key={route?.goto}
-              to={route?.goto}
+              to={context.profileSidebarDisallowed ? location.pathname : route?.goto}
               style={{
                 marginLeft: '-15px',
                 background: darkOptionsAndColors.background,
@@ -90,6 +92,8 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
                   location.pathname === route?.goto
                     ? colors.accentColor
                     : darkOptionsAndColors.color,
+                cursor: context.profileSidebarDisallowed ? 'not-allowed' : '',
+                textDecoration: context.profileSidebarDisallowed ? 'none' : '',
               }}
             >
               {location.pathname === route?.goto ? (
