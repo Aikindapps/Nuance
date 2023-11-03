@@ -11,6 +11,8 @@ const Context = createContext({
   height: window.innerHeight,
   setWidth: (arg) => {},
   setHeight: (arg) => {},
+  profileSidebarDisallowed: false,
+  setProfileSidebarDisallowed: (arg) => {},
 });
 
 const ContextProvider = ({ children }) => {
@@ -24,6 +26,8 @@ const ContextProvider = ({ children }) => {
   };
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
+
+  const [profileSidebarDisallowed, setProfileSidebarDisallowed] = useState(false)
   return (
     <Context.Provider
       value={{
@@ -36,7 +40,9 @@ const ContextProvider = ({ children }) => {
         width,
         height,
         setHeight,
-        setWidth
+        setWidth,
+        profileSidebarDisallowed,
+        setProfileSidebarDisallowed,
       }}
     >
       {children}

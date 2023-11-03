@@ -27,7 +27,8 @@ const MyProfileSidebar: React.FC<MyProfileSidebarProps> = (
   const location = useLocation();
 
   //NFT feature toggle
-  const nftFeatureIsLive = useContext(Context).nftFeature;
+  const context = useContext(Context);
+  const nftFeatureIsLive = context.nftFeature;
 
   const { user, getCounts, counts } = useUserStore((state) => ({
     user: state.user,
