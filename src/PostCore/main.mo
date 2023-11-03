@@ -3238,7 +3238,7 @@ actor PostCore {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -3252,7 +3252,7 @@ actor PostCore {
       return #err("Cannot use this method anonymously.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     #ok(wasmChunks);
@@ -3265,7 +3265,7 @@ actor PostCore {
     };
 
     let wasm = wasmChunks;
-    if (not isAdmin(caller) and not isNuanceCanister(caller)) {
+    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     switch (await IC.IC.install_code { arg = arg; wasm_module = wasm; mode = #upgrade; canister_id = Principal.fromText(canisterId) }) {
@@ -3280,7 +3280,7 @@ actor PostCore {
       return;
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return;
     };
     wasmChunks := Blob.fromArray([]);
@@ -3320,7 +3320,7 @@ actor PostCore {
       return #err("Cannot use this method anonymously.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
