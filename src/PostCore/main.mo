@@ -25,6 +25,7 @@ import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Order "mo:base/Order";
 import ICexperimental "mo:base/ExperimentalInternetComputer";
+import Float "mo:base/Float";
 import IC "IC";
 import DateTime "../shared/DateTime";
 
@@ -2085,45 +2086,180 @@ actor PostCore {
     totalViewsToday += 1;
   };
 
-  public shared ({ caller }) func clapPost(postId : Text) : () {
-    if (isAnonymous(caller)) {
-      return;
+  //user transfers the tokens to the subaccount of the postId and calls this method to complete the tipping
+  public shared func checkTipping(postId: Text) : async (){
+    //check if the post exists
+    switch (principalIdHashMap.get(postId)) {
+      case (?val) {
+        //article exists, continue
+      };
+      case (null) {
+        //article doesn't exist - do nothing and return
+        return;
+      };
     };
-    //validate input
-    if (not U.isTextLengthValid(postId, 20)) {
-      return;
+    for(symbol in ENV.TIPPING_TOKENS.vals()){
+      ignore checkTippingByTokenSymbol(postId, symbol)
+    }
+  };
+
+  public shared func checkTippingByTokenSymbol(postId: Text, symbol: Text) : async Nat {
+    switch (principalIdHashMap.get(postId)) {
+      case (?val) {
+        //article exists, continue
+      };
+      case (null) {
+        //article doesn't exist - do nothing and return 0
+        return 0;
+      };
     };
 
-    if (not isThereEnoughMemoryPrivate()) {
-      return;
+    if(not U.arrayContains(ENV.TIPPING_TOKENS, symbol)){
+      //given token symbol is not whitelisted
+      //do nothing and return
+      return 0;
     };
 
-    //look up handle for post
-    let principalId = U.safeGet(principalIdHashMap, postId, "");
-    let handle = U.safeGet(handleHashMap, principalId, "");
+    let tippingToken = ENV.getTippingTokenBySymbol(symbol);
+    let tokenCanister = CanisterDeclarations.getIcrc1Canister(tippingToken.canisterId);
+    let balance = await tokenCanister.icrc1_balance_of({
+      owner = Principal.fromActor(PostCore);
+      subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)))
+    });
 
-    //to prevent gaming your own article for claps/tokens
-    if (Principal.toText(caller) != principalId) {
+    //if the amount of tokens locked in the subaccount is less then 2 fees, don't do anything
+    if(not (balance > tippingToken.fee * 2 + 10)){
+      return 0;
+    };
 
-      // check if user has enough tokens to clap
-      let UserCanister = CanisterDeclarations.getUserCanister();
-      var tokenAmounts = await UserCanister.getNuaBalance(Principal.toText(caller));
-      switch (tokenAmounts) {
-        case (#ok(balance)) Debug.print("balance: " # balance);
-        case (#err(msg)) {
-          Debug.print("error: " # msg);
-          return;
+    //if here, the amount of tokens locked in the subaccount is enough
+    //determine the principal id that will receive the tokens
+    var receiverPrincipalId = U.safeGet(principalIdHashMap, postId, "");
+
+    //if it's a publication post, set the receiver as the writer
+    let postKeyProperties = buildPostKeyProperties(postId);
+    switch(await CanisterDeclarations.getPostBucketCanister(postKeyProperties.bucketCanisterId).get(postId)){
+      case(#ok(bucketCanisterResult)){
+        //if the post is a publication post, set the receiverPrincipalId as the writer of the post not the publication canister
+        if(bucketCanisterResult.isPublication){
+          let writerPrincipalId = U.safeGet(handleReverseHashMap, bucketCanisterResult.creator, "");
+          if(writerPrincipalId == ""){
+            //check if the principal id of the writer exists in the User canister
+            let userCanister = CanisterDeclarations.getUserCanister();
+            let userCanisterReturn = await userCanister.getUsersByHandles([U.lowerCase(bucketCanisterResult.creator)]);
+            if(userCanisterReturn.size() == 0){
+              //the writer doesn't exist in the user canister either
+              //do nothing -> return 0
+              return 0;
+            };
+            receiverPrincipalId := userCanisterReturn[0].principal;
+          }
+          else{
+            receiverPrincipalId := writerPrincipalId;
+          }
         };
       };
-
-      //clap post
-      clapsHashMap.put(postId, U.safeGet(clapsHashMap, postId, 0) + 1);
-      Debug.print("PostCore->clap");
-
-      //Nua tokens added to author and subtracted from user
-      UserCanister.handleClap(Principal.toText(caller), handle);
+      case(#err(err)){
+        //should never happen
+        Debug.print("Tipping post wasn't found in the bucket canister!");
+        return 0;
+      };
     };
+
+    //calculate the NUA equivalent of the tipped tokens
+    let nuaEquivalent = if(symbol != "NUA"){await ENV.getNuaEquivalentOfTippingToken(symbol, balance)}else{balance};
+    
+    //all the needed data fetched so far
+    //transfer the tokens and complete the tipping
+    let tippingFeeFloat = (ENV.TIP_FEE_AMOUNT / 100.0) * Float.fromInt(balance);
+    let tippingFee = Nat.sub(Int.abs(Float.toInt(tippingFeeFloat)), tippingToken.fee);
+    let writerShare = Nat.sub(Nat.sub(balance, tippingFee), tippingToken.fee);
+
+    //transfer the tippingFee to the Nuance DAO first
+    try{
+      switch(await tokenCanister.icrc1_transfer({
+        amount = tippingFee;
+        created_at_time = null;
+        fee = ?tippingToken.fee;
+        from_subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)));
+        memo = null;
+        to = {
+          owner = Principal.fromText(ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID);
+          subaccount = null;
+        }
+      })) {
+        case(#Ok(value)) {
+          //transfer worked fine - continue
+        };
+        case(#Err(error)) {
+          //transfer returned an error -> this should never happen
+          Debug.print("Transferring tokens to the Nuance DAO returned an error.");
+          return 0;
+        };
+      };
+    }
+    catch(e){
+      //the inter-canister call failed
+      Debug.print("Transferrig tokens to the Nuance DAO failed.");
+      return 0;
+    };
+
+    //if here, the tipping fee transferred succesfully
+    //transfer the remaining tokens to the writer
+    try{
+      switch(await tokenCanister.icrc1_transfer({
+        amount = writerShare;
+        created_at_time = null;
+        fee = ?tippingToken.fee;
+        from_subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)));
+        memo = null;
+        to = {
+          owner = Principal.fromText(receiverPrincipalId);
+          subaccount = null;
+        }
+      })) {
+        case(#Ok(value)) {
+          //transfer worked fine - continue
+        };
+        case(#Err(error)) {
+          //transfer returned an error -> this should never happen
+          Debug.print("Transferring tokens to the writer returned an error.");
+          return 0;
+        };
+      };
+    }
+    catch(e){
+      //the inter-canister call failed
+      Debug.print("Transferrig tokens to the writer failed.");
+      return 0;
+    };
+
+    //if here, everything worked fine
+    //just update the clapsHashmap and return the number of tokens tipped
+    //increase the number of claps by the nuaEquivalent of the tipped tokens
+    clapsHashMap.put(postId, U.safeGet(clapsHashMap, postId, 0) + nuaEquivalent);
+
+    return nuaEquivalent;
   };
+
+  //A migration function to multiply the existing claps with 10^8
+  stable var isMigratedFromClap = false;
+  public shared ({caller}) func migrateFromClapToTipping() : async Result.Result<Text, Text>{
+    if(isMigratedFromClap){
+      return #err("Already migrated!")
+    };
+    for((postId, claps) in clapsHashMap.entries()){
+      clapsHashMap.put(postId, claps * ENV.NUA_TOKEN_DECIMALS);
+    };
+    isMigratedFromClap := true;
+    return #ok(Nat.toText(clapsHashMap.size()))
+  };
+
+  public shared ({ caller }) func clapPost(postId : Text) : () {
+    //deprecated function
+    return;
+  };
+
   private func indexPopularPosts() : () {
     Debug.print("PostCore -> indexPopularPosts is called");
     let now = U.epochTime() / 1000;
