@@ -108,8 +108,8 @@ const PublicationArticles = () => {
     userPostIds: state.userPostIds,
     getUserPostIds: state.getUserPostIds,
   }));
-
-  const featureIsLive = useContext(Context).publicationFeature;
+  const context = useContext(Context);
+  const featureIsLive = context.publicationFeature;
 
   useEffect(() => {
     setArticlesCount(writerPostCounts?.totalPostCount);
@@ -264,13 +264,12 @@ const PublicationArticles = () => {
 
   const loadInitial = async (handle: string) => {
     setDisplayingPostsLoading(true);
-    setTimeout(() => {
-      setDisplayingPostsLoading(false);
-    }, 5000);
+    context.setProfileSidebarDisallowed(true)
     let posts = await getPublicationPosts(0, 19, handle);
     if (posts?.length) {
       setDisplayingPosts(posts);
     }
+    context.setProfileSidebarDisallowed(false)
     setDisplayingPostsLoading(false);
   };
 

@@ -3269,7 +3269,7 @@ actor PostCore {
     };
 
     let wasm = wasmChunks;
-    if (not isAdmin(caller) and not isNuanceCanister(caller)) {
+    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     switch (await IC.IC.install_code { arg = arg; wasm_module = wasm; mode = #upgrade; canister_id = Principal.fromText(canisterId) }) {
@@ -3312,7 +3312,7 @@ actor PostCore {
       return #err("Cannot use this method anonymously.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -3328,7 +3328,7 @@ actor PostCore {
       return #err("Cannot use this method anonymously.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 

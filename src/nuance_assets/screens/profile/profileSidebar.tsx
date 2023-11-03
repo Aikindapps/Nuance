@@ -25,7 +25,8 @@ const ProfileSidebar = () => {
   );
 
   //NFT feature toggle
-  const nftFeatureIsLive = useContext(Context).nftFeature;
+  const context = useContext(Context)
+  const nftFeatureIsLive = context.nftFeature;
   const location = useLocation();
   const darkTheme = useTheme();
 
@@ -155,6 +156,7 @@ const ProfileSidebar = () => {
       : colors.primaryTextColor,
   };
 
+
   return (
     <div
       className='profile-wrapper'
@@ -175,7 +177,7 @@ const ProfileSidebar = () => {
       />
       <div className='container'>
         {mobile ? (
-          <MyProfileSidebar />
+          <MyProfileSidebar/>
         ) : (
           <div className='sidebar'>
             {sidebarRoutes.map((route) => {
@@ -187,12 +189,14 @@ const ProfileSidebar = () => {
                       location.pathname === route?.goto
                         ? colors.accentColor
                         : darkOptionsAndColors.color,
+                    cursor: context.profileSidebarDisallowed ? 'not-allowed' : '',
+                    textDecoration: context.profileSidebarDisallowed ? 'none' : '',
                   }}
                   className={`route ${
                     location.pathname === route?.goto && 'active'
                   }`}
                   key={route?.goto}
-                  to={route?.goto}
+                  to={context.profileSidebarDisallowed ? location.pathname : route?.goto}
                 >
                   {route?.title}
                 </Link>
