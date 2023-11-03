@@ -26,14 +26,14 @@ jobs:
         IDENTITY_DIR="$HOME/.config/dfx/identity/uat"
         rm -rf "${IDENTITY_DIR}" 
         mkdir -p "${IDENTITY_DIR}"
-        echo "${SNS_UAT_IDENT}" | base64 --decode > "${IDENTITY_DIR}/identity.pem"
-        echo "${SNS_UAT_WALLET}" > "${IDENTITY_DIR}/wallets.json"
+        echo "${UAT_IDENT}" | base64 --decode > "${IDENTITY_DIR}/identity.pem"
+        # echo "${UAT_WALLET}" > "${IDENTITY_DIR}/wallets.json"
         dfx identity use uat
         dfx identity get-principal
         dfx identity set-wallet pmba3-piaaa-aaaal-adawa-cai --network ic
       env:
-        SNS_UAT_IDENT: ${{ secrets.UAT_IDENT }}
-        SNS_UAT_WALLET: ${{ secrets.UAT_WALLET }}
+        UAT_IDENT: ${{ secrets.UAT_IDENT }}
+        UAT_WALLET: ${{ secrets.UAT_WALLET }}
 
           
     - name: Get Principal
