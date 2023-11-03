@@ -3242,7 +3242,7 @@ actor PostCore {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
 
@@ -3256,7 +3256,7 @@ actor PostCore {
       return #err("Cannot use this method anonymously.");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     #ok(wasmChunks);
@@ -3284,7 +3284,7 @@ actor PostCore {
       return;
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return;
     };
     wasmChunks := Blob.fromArray([]);
