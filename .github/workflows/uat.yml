@@ -30,7 +30,7 @@ jobs:
         echo "${SNS_UAT_WALLET}" > "${IDENTITY_DIR}/wallets.json"
         dfx identity use uat
         dfx identity get-principal
-        dfx identity set-wallet "$UAT_WALLET" --network ic
+        dfx identity set-wallet "${UAT_WALLET}" --network ic
       env:
         SNS_UAT_IDENT: ${{ secrets.UAT_IDENT }}
         SNS_UAT_WALLET: ${{ secrets.UAT_WALLET }}
