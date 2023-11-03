@@ -23,10 +23,11 @@ jobs:
 
     - name: Set up dfx identity
       run: |
-        rm -f ~/.config/dfx/identity/uat/identity.pem
-        mkdir -p ~/.config/dfx/identity/uat/
-        echo "$UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/uat/identity.pem
-        echo "$UAT_WALLET" > ~/.config/dfx/identity/uat/wallets.json
+        IDENTITY_DIR="$HOME/.config/dfx/identity/uat"
+        rm -rf "${IDENTITY_DIR}" 
+        mkdir -p "${IDENTITY_DIR}"
+        echo "${SNS_UAT_IDENT}" | base64 --decode > "${IDENTITY_DIR}/identity.pem"
+        echo "${SNS_UAT_WALLET}" > "${IDENTITY_DIR}/wallets.json"
         dfx identity use uat
         dfx identity get-principal
         dfx identity set-wallet "$UAT_WALLET" --network ic
