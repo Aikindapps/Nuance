@@ -47,13 +47,13 @@ jobs:
         rm -f ~/.config/dfx/identity/prod/identity.pem
         mkdir -p ~/.config/dfx/identity/prod/
         echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
-        echo {
-              "identities": {
-              "prod": {
+        echo '{
+          "identities": {
+            "prod": {
               "ic": "'"$PROD_WALLET"'"
-              }
-              }
-              } > ~/.config/dfx/identity/prod/wallets.json
+            }
+          }
+        }' > ~/.config/dfx/identity/prod/wallets.json
         dfx identity use prod
         dfx identity get-principal
         dfx identity set-wallet "$PROD_WALLET" --network ic
