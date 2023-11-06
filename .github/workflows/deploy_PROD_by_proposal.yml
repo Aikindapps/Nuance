@@ -60,6 +60,19 @@ jobs:
     - name: Get Principal
       run:  dfx identity get-principal
 
+    - name: Create .env file
+      run: |
+        cat << EOF > .env
+        II_PROVIDER_URL="https://identity.ic0.app/#authorize"
+        II_PROVIDER_USE_FAKE="false"
+        II_SESSION_TIMEOUT="480"
+        II_INACTIVITY_TIMEOUT="480"
+        UAT_FRONTEND_CANISTER_ID="3e6ni-fyaaa-aaaaf-qagiq-cai"
+        USERGEEK_API_KEY="${{ secrets.USERGEEK_API_KEY }}"
+        USERGEEK_API_KEY_SECONDARY="${{ secrets.USERGEEK_API_KEY_SECONDARY }}"
+        FASTBLOCKS_MAILERLITE_API_KEY="${{ secrets.FASTBLOCKS_MAILERLITE_API_KEY }}"
+        EOF
+
     - name: Generate empty canister_ids.json to prevent undefined error
       run: |
         mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
