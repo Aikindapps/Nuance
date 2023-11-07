@@ -100,12 +100,10 @@ module {
   public let TIP_FEE_RECEIVER_PRINCIPAL_ID = SNS_GOVERNANCE_CANISTER;
 
   public let NUA_TOKEN_CANISTER_ID = "rxdbk-dyaaa-aaaaq-aabtq-cai";
-  public let NUA_ICP_POOL_CANISTER_ID = "";
   public let NUA_TOKEN_DECIMALS = 8;
   public let NUA_TOKEN_FEE = 100_000;
 
   public let CKBTC_TOKEN_CANISTER_ID = "mxzaz-hqaaa-aaaar-qaada-cai";
-  public let CKBTC_ICP_POOL_CANISTER_ID = "";
   public let CKBTC_TOKEN_DECIMALS = 8;
   public let CKBTC_TOKEN_FEE = 10;
 
@@ -116,7 +114,6 @@ module {
 
   public type TippingToken = {
     canisterId: Text;
-    poolCanisterId: Text;
     fee: Nat;
     decimals: Nat;
   };
@@ -126,7 +123,6 @@ module {
       case("NUA") {
         return {
           canisterId = NUA_TOKEN_CANISTER_ID;
-          poolCanisterId = NUA_ICP_POOL_CANISTER_ID;
           fee = NUA_TOKEN_FEE;
           decimals = NUA_TOKEN_DECIMALS;
         }
@@ -134,7 +130,6 @@ module {
       case("ICP") {
         return {
           canisterId = ICP_TOKEN_CANISTER_ID;
-          poolCanisterId = NUA_ICP_POOL_CANISTER_ID;
           fee = ICP_TOKEN_FEE;
           decimals = ICP_TOKEN_DECIMALS;
         }
@@ -142,7 +137,6 @@ module {
       case("CKBTC"){
         return {
           canisterId = CKBTC_TOKEN_CANISTER_ID;
-          poolCanisterId = CKBTC_ICP_POOL_CANISTER_ID;
           fee = CKBTC_TOKEN_FEE;
           decimals = CKBTC_TOKEN_DECIMALS;
         }
@@ -158,26 +152,6 @@ module {
       };
 
     };
-  };
-
-  //this function will be implemented once we determine which dex will be used
-  public func getNuaEquivalentOfTippingToken(symbol: Text, amount: Nat) : async Nat{
-    switch(symbol) {
-      //The logic for getting the NUA equivalent will be here
-      //it's returning 10 for every call for now
-      case("ICP") {
-        return 10
-      };
-      case("CKBTC") {
-        return 10
-      };
-      case(_){
-        //not possible to reach here -> just return 0
-        return 0
-      };
-    };
-
-    
   };
   
 

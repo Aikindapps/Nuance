@@ -34,6 +34,8 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import OperationLog "../shared/Types";
 import ENV "../shared/env";
+import Sonic "../shared/sonic";
+
 
 actor PostCore {
 
@@ -2110,6 +2112,7 @@ actor PostCore {
       };
       case (null) {
         //article doesn't exist - do nothing and return 0
+        Debug.print("checkTippingByTokenSymbol -> Error: " # "Article doesn't exist.");
         return 0;
       };
     };
@@ -2117,6 +2120,7 @@ actor PostCore {
     if(not U.arrayContains(ENV.TIPPING_TOKENS, symbol)){
       //given token symbol is not whitelisted
       //do nothing and return
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Given symbol doesn't exist.");
       return 0;
     };
 
@@ -2129,6 +2133,7 @@ actor PostCore {
 
     //if the amount of tokens locked in the subaccount is less then 2 fees, don't do anything
     if(not (balance > tippingToken.fee * 2 + 10)){
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Too less tokens to proceed.");
       return 0;
     };
 
@@ -2150,6 +2155,7 @@ actor PostCore {
             if(userCanisterReturn.size() == 0){
               //the writer doesn't exist in the user canister either
               //do nothing -> return 0
+              Debug.print("checkTippingByTokenSymbol -> Error: " # "Writer doesn't exist");
               return 0;
             };
             receiverPrincipalId := userCanisterReturn[0].principal;
@@ -2161,13 +2167,30 @@ actor PostCore {
       };
       case(#err(err)){
         //should never happen
-        Debug.print("Tipping post wasn't found in the bucket canister!");
+        Debug.print("checkTippingByTokenSymbol -> Error: " # "Tipping post wasn't found in the bucket canister!");
         return 0;
       };
     };
 
     //calculate the NUA equivalent of the tipped tokens
-    let nuaEquivalent = if(symbol != "NUA"){await ENV.getNuaEquivalentOfTippingToken(symbol, balance)}else{balance};
+    var nuaEquivalent = 0;
+    if(symbol != "NUA"){
+      switch(await Sonic.getNuaEquivalentOfTippingToken(symbol, balance)) {
+        case(#ok(value)) {
+          nuaEquivalent := value;
+        };
+        case(#err(error)) {
+          //an error occured while fetching the data from sonic
+          //print the error
+          //return 0
+          Debug.print("checkTippingByTokenSymbol -> Error: " # error);
+          return 0
+        };
+      };
+    }
+    else{
+      nuaEquivalent := balance;
+    };
     
     //all the needed data fetched so far
     //transfer the tokens and complete the tipping
@@ -2193,14 +2216,14 @@ actor PostCore {
         };
         case(#Err(error)) {
           //transfer returned an error -> this should never happen
-          Debug.print("Transferring tokens to the Nuance DAO returned an error.");
+          Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the Nuance DAO returned an error.");
           return 0;
         };
       };
     }
     catch(e){
       //the inter-canister call failed
-      Debug.print("Transferrig tokens to the Nuance DAO failed.");
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the Nuance DAO failed.");
       return 0;
     };
 
@@ -2223,14 +2246,14 @@ actor PostCore {
         };
         case(#Err(error)) {
           //transfer returned an error -> this should never happen
-          Debug.print("Transferring tokens to the writer returned an error.");
+          Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the writer returned an error.");
           return 0;
         };
       };
     }
     catch(e){
       //the inter-canister call failed
-      Debug.print("Transferrig tokens to the writer failed.");
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the writer failed.");
       return 0;
     };
 
