@@ -2196,7 +2196,7 @@ actor PostCore {
     //transfer the tokens and complete the tipping
     let tippingFeeFloat = (ENV.TIP_FEE_AMOUNT / 100.0) * Float.fromInt(balance);
     let tippingFee = Nat.sub(Int.abs(Float.toInt(tippingFeeFloat)), tippingToken.fee);
-    let writerShare = Nat.sub(Nat.sub(balance, tippingFee), tippingToken.fee);
+    let writerShare = Nat.sub(Nat.sub(balance, tippingFee), 2*tippingToken.fee);
 
     //transfer the tippingFee to the Nuance DAO first
     try{
