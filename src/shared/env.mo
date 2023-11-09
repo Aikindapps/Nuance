@@ -17,12 +17,22 @@ module {
   public let MITCH_PRINCIPAL_ID = "3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe";
   public let BARAN_PRINCIPAL_ID = "wvhee-rnvlo-p6u4o-6fm55-jmxlu-yy2yt-dx47v-rxswo-u7kuk-dofj5-aae";
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
+  public let RHIANNON_PRINCIPAL_ID = "cqt7v-ben4o-y335u-srt3v-nzd6e-wknuf-2t2mb-mji7i-ar3bf-7ysop-2qe";
+  public let KYLE_PRINCIPAL_ID = "ftiej-pml6t-p3n5s-afoi2-ksnxp-3yyis-lzg6v-mwdwn-evzhq-6j56q-xqe";
+  public let VM_1_PRINCIPAL_ID = "btrx2-makdj-pw2cp-u264a-cntkp-2mzjv-56oqc-6r7uu-ocexg-mf3sn-qqe";
+  public let VM_2_PRINCIPAL_ID = "gs5lq-gst3q-56phb-4sxwu-eo4nu-fqe3z-k2euk-5okx7-tguxu-x7nkr-nae";
+  public let VM_3_PRINCIPAL_ID = "lwff2-ldzrq-mjfix-dde3y-tnczf-ju3zj-riwla-y6cvv-pxxmn-hokps-oqe";
 
   public let PLATFORM_OPERATORS = [
     PAUL_PRINCIPAL_ID,
     MITCH_PRINCIPAL_ID,
     BARAN_PRINCIPAL_ID,
     NICK_PRINCIPAL_ID,
+    RHIANNON_PRINCIPAL_ID,
+    KYLE_PRINCIPAL_ID,
+    VM_1_PRINCIPAL_ID,
+    VM_2_PRINCIPAL_ID,
+    VM_3_PRINCIPAL_ID
   ];
 
   public func isPlatformOperator(caller : Principal) : Bool {
