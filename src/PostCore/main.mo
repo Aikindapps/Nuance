@@ -615,7 +615,7 @@ actor PostCore {
       publishedDate = Int.toText(U.safeGet(publishedDateHashMap, postId, 0));
       views = Nat.toText(U.safeGet(viewsHashMap, postId, 0));
       tags = getTagModelsByPost(postId);
-      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0));
+      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0) / ENV.NUA_TOKEN_DECIMALS);
       category = U.safeGet(categoryHashMap, postId, "");
       isDraft = U.safeGet(isDraftHashMap, postId, false);
     };
