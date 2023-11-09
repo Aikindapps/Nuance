@@ -30,16 +30,24 @@ jobs:
 
     - name: Start DFX background
       run: dfx start --background
+      
+    - name: Create .env file
+      run: |
+        cat << EOF > .env
+        II_PROVIDER_URL="https://identity.ic0.app/#authorize"
+        II_PROVIDER_USE_FAKE="false"
+        II_SESSION_TIMEOUT="480"
+        II_INACTIVITY_TIMEOUT="480"
+        UAT_FRONTEND_CANISTER_ID="${{ secrets.UAT_NUANCE_ASSETS }}"
+        USERGEEK_API_KEY="${{ secrets.USERGEEK_API_KEY }}"
+        USERGEEK_API_KEY_SECONDARY="${{ secrets.USERGEEK_API_KEY_SECONDARY }}"
+        FASTBLOCKS_MAILERLITE_API_KEY="${{ secrets.FASTBLOCKS_MAILERLITE_API_KEY }}"
+        EOF
 
           
-    - name: Build all canisters
+    - name: Compute evidence for frontend canister
       run: | 
-        dfx canister create nuance_assets
-        dfx build nuance_assets
+        dfx canister create --all
+        dfx deploy nuance_assets --network ic --compute-evidence
         
-        
-
-    - name: Get wasm hash for all
-      run: |
-        sha256sum .dfx/local/canisters/nuance_assets/nuance_assets.wasm
         

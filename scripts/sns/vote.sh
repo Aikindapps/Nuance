@@ -21,7 +21,7 @@ quill_send="quill send --yes $NETWORK --pem-file ~/.config/dfx/identity/$IDENTIT
 # vote_ids="980efa662f01d15cbb45c6cf750f7bd233fc792a0191a447897c0f38cd70ed41,996419d5efdeb7cad9e33cec35068fee16c708757a95763007b670007fa34ae2,c018aac0fb03efd03d818f316213ed6a4f3832ee685c24e17d96dec55222e0a6,2acab68a760aa12a72b4fac152d8c565631f7d83a425c20ab561fc981bb1961a"
 
 # In case you want to do a single vote from the script, you can just add the main dev neuron here
-vote_ids="ad65d0f563d55797a79dfcef8a5a4ab5d1512f870862f0d7af4c4183a8f231b3"
+vote_ids="a0e3889b406b7686640619648d848d5a0d800f2b5a7a2a44ff7cda7b2d264131"
 
 # Convert the comma-separated string into an array
 IFS=',' read -r -a vote_ids_array <<< "$vote_ids"

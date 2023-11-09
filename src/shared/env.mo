@@ -1,19 +1,20 @@
 import Principal "mo:base/Principal";
+import CanisterIds "canisterIds";
 module {
-  public let USER_CANISTER_ID = "rtqeo-eyaaa-aaaaf-qaana-cai";
-  public let POST_CORE_CANISTER_ID = "322sd-3iaaa-aaaaf-qakgq-cai";
-  public let KINIC_ENDPOINT_CANISTER_ID = "4m3sz-lqaaa-aaaaf-qagza-cai";
-  public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID = "dgwwd-jaaaa-aaaaf-qai7a-cai";
-  public let POST_INDEX_CANISTER_ID = "r5sjg-7iaaa-aaaaf-qaama-cai";
-  public let STORAGE_CANISTER_ID = "y2pkg-ciaaa-aaaaf-qagbq-cai";
-  public let CYCLES_DISPENSER_CANISTER_ID = "353ux-wqaaa-aaaaf-qakga-cai";
-  public let NUANCE_ASSETS_CANISTER_ID = "exwqn-uaaaa-aaaaf-qaeaa-cai";
-  public let METRICS_CANISTER_ID = "xjlvo-hyaaa-aaaam-qbcga-cai";
-  public let PUBLICATION_MANAGEMENT_CANISTER_ID = "kq23y-aiaaa-aaaaf-qajmq-cai";
-  public let NFT_FACTORY_CANISTER_ID = "kc4mb-myaaa-aaaaf-qajpq-cai";
+  public let USER_CANISTER_ID = CanisterIds.USER_CANISTER_ID;
+  public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
+  public let KINIC_ENDPOINT_CANISTER_ID = CanisterIds.KINIC_ENDPOINT_CANISTER_ID;
+  public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID = CanisterIds.FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID;
+  public let POST_INDEX_CANISTER_ID = CanisterIds.POST_INDEX_CANISTER_ID;
+  public let STORAGE_CANISTER_ID = CanisterIds.STORAGE_CANISTER_ID;
+  public let CYCLES_DISPENSER_CANISTER_ID = CanisterIds.CYCLES_DISPENSER_CANISTER_ID;
+  public let NUANCE_ASSETS_CANISTER_ID = CanisterIds.NUANCE_ASSETS_CANISTER_ID;
+  public let METRICS_CANISTER_ID = CanisterIds.METRICS_CANISTER_ID;
+  public let PUBLICATION_MANAGEMENT_CANISTER_ID = CanisterIds.PUBLICATION_MANAGEMENT_CANISTER_ID;
+  public let NFT_FACTORY_CANISTER_ID = CanisterIds.NFT_FACTORY_CANISTER_ID;
   public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";
-  public let MITCH_PRINCIPAL_ID = "nfcvh-tajgf-yg2zg-hd62j-7lrtq-vltzp-kvnyb-knvah-tkwbl-jybux-7ae";
+  public let MITCH_PRINCIPAL_ID = "3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe";
   public let BARAN_PRINCIPAL_ID = "wvhee-rnvlo-p6u4o-6fm55-jmxlu-yy2yt-dx47v-rxswo-u7kuk-dofj5-aae";
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
 

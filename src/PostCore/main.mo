@@ -320,7 +320,7 @@ actor PostCore {
   };
 
   private func isPlatformOperator(caller : Principal) : Bool {
-    ENV.isPlatformOperator(caller)
+    ENV.isPlatformOperator(caller);
   };
 
   public shared query func getPlatformOperators() : async List.List<Text> {
@@ -329,20 +329,20 @@ actor PostCore {
 
   //These methods are deprecated. Admins are handled by env.mo file
   public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function")
+    #err("Deprecated function");
   };
 
   public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function")
+    #err("Deprecated function");
   };
 
   //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
   public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   private func isAuthor(caller : Principal, postId : Text) : Bool {
@@ -354,7 +354,6 @@ actor PostCore {
     var exists = List.find<Text>(nuanceCanisters, func(val : Text) : Bool { val == c });
     exists != null;
   };
-  
 
   public shared query ({ caller }) func getTrustedCanisters() : async Result.Result<[Text], Text> {
     /*if (not isAdmin(caller)) {
@@ -456,7 +455,6 @@ actor PostCore {
   public query func idQuick() : async Principal {
     return Principal.fromActor(PostCore);
   };
-
 
   //#region Post Management
   //getNextPostId method can be called by bucket canisters only
@@ -1154,25 +1152,23 @@ actor PostCore {
     Buffer.toArray(postsBuffer);
   };
 
-
   //returns the list of bucket canister ids that stores the posts of given handles
-  public shared query func getBucketCanisterIdsOfGivenHandles(handles: [Text]) : async [Text]{
+  public shared query func getBucketCanisterIdsOfGivenHandles(handles : [Text]) : async [Text] {
     var usingBucketCanisterIds = Buffer.Buffer<Text>(0);
-    for(handle in handles.vals()){
+    for (handle in handles.vals()) {
       let principalId = U.safeGet(handleReverseHashMap, handle, "");
-      if(principalId != ""){
+      if (principalId != "") {
         let postIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
-        for(postId in Iter.fromList(postIds)){
+        for (postId in Iter.fromList(postIds)) {
           let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
-          if(bucketCanisterId != "" and not U.arrayContains(Buffer.toArray(usingBucketCanisterIds), bucketCanisterId)){
-            usingBucketCanisterIds.add(bucketCanisterId)
+          if (bucketCanisterId != "" and not U.arrayContains(Buffer.toArray(usingBucketCanisterIds), bucketCanisterId)) {
+            usingBucketCanisterIds.add(bucketCanisterId);
           };
         };
       };
     };
-    return Buffer.toArray(usingBucketCanisterIds)
+    return Buffer.toArray(usingBucketCanisterIds);
   };
-
 
   //returns the posts of given postIds excluding the drafts
   public shared query func getPostsByPostIds(postIds : [Text]) : async [PostKeyProperties] {
@@ -3310,10 +3306,6 @@ actor PostCore {
   public shared ({ caller }) func getAllBuckets() : async Result.Result<[Text], Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
-      return #err(Unauthorized);
     };
 
     var canisterBuffer = Buffer.Buffer<Text>(1);

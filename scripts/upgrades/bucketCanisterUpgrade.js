@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
-const zlib = require('zlib'); // Require the zlib module for gzip compression
+const zlib = require('zlib');
+const argv = require('yargs').argv;
 
 async function readWasmFile(filePath) {
   return new Promise((resolve, reject) => {
@@ -11,9 +11,9 @@ async function readWasmFile(filePath) {
       if (err) {
         return reject(err);
       }
-      
+
       zlib.gzip(data, (gzipError, compressedData) => {
-        if(gzipError) {
+        if (gzipError) {
           return reject(gzipError);
         }
 
@@ -41,25 +41,17 @@ async function prompt(question) {
 }
 
 (async () => {
-  console.log('\x1b[36m%s\x1b[0m', '🚀 PostCore Upgrade Script...');
+  const deployType = argv.single ? 'single' : argv.multi ? 'multi' : null;
+  const network = argv.local ? 'local' : argv.ic ? 'ic' : null;
+  const canisterId = argv.canisterId || '';
+  const canisterName = "PostBucket"; // No change here; this is a constant in your code
 
-  const canisterName = "PostBucket";
-
-  if (canisterName !== 'PostBucket') {
-    console.warn('⚠️  WARNING: Canister name does not equal "PostBucket". This option should be removed before deploying to production. ⚠️');
-    await prompt('Press enter to continue or ctrl+c to exit: ');
+  if (!deployType || !network) {
+    console.error('Specify deploy type and network.');
+    return;
   }
 
-  const deployType = await prompt('📦 Do you want a single or multi canister deploy? (Enter "single" or "multi"): ');
-  const network = await prompt('🌐 Do you want to deploy to the local or ic? (Enter "local" or "ic"): ');
-  if (network === 'ic') {
-    await prompt('⚠️ Are you sure you want to deploy to the IC? Double check canister_ids.json for PROD or UAT canisters... Press enter to continue or ctrl+c to exit: ');
-  }
 
-  let canisterId = '';
-  if (deployType === 'single') {
-    canisterId = await prompt('🆔 Enter the canister ID: ');
-  }
 
   var wasmPath = path.join(
     __dirname,
@@ -72,7 +64,7 @@ async function prompt(question) {
     `${canisterName}.wasm`
   );
 
-  if(network==='ic'){
+  if (network === 'ic') {
     wasmPath = path.join(
       __dirname,
       '..',
@@ -95,24 +87,37 @@ async function prompt(question) {
       }
       return canisterIds;
     }
-    
+
     const { stdout: trustedCanisterStdout } = await exec(`dfx canister --network=${network} call PostCore idQuick`);
     const trustedCanister = trustedCanisterStdout.trim().match(/"(.*?)"/)[1];
     console.log(`✅ Got PostCore canister id: ${trustedCanister}`);
-    
+
     const { stdout: trustedCanistersStdout } = await exec(`dfx canister --network=${network} call PostCore getTrustedCanisters`);
     const trustedCanisters = parseCanisterIds(trustedCanistersStdout);
     console.log(`✅ Got trusted canisters: ${trustedCanisters}`);
-    
+
 
     if (trustedCanisters.includes(trustedCanister)) {
       console.log("✅ PostCore is already a trusted canister");
     } else {
-      await exec(`dfx canister --network=${network} call PostCore registerCanister '("${trustedCanister }" : text)'`);
+      await exec(`dfx canister --network=${network} call PostCore registerCanister '("${trustedCanister}" : text)'`);
       console.log("✅ Added PostCore as a trusted canister");
     }
 
-    await exec(`dfx canister call PostCore resetWasmChunks --network=${network}`);
+    try {
+      console.log(`🪚 Building ${canisterName} canister WASM`);
+      const { stdout: canisterBuildStdout, stderr: canisterBuildStderr } = await exec(`dfx build --network=${network} ${canisterName} -qq`);
+      if (canisterBuildStderr) {
+        console.error(`❌ Build failed: ${canisterBuildStderr}`);
+        return;
+      }
+      console.log(`${canisterBuildStdout}`);
+    } catch (err) {
+      console.error(`❌ Build command execution failed: ${err}`);
+      return;
+    }
+
+    await exec(`dfx canister call PostCore resetWasmChunks --network=${network}`); //TODO this should probably happen at the end of upgradeALL and the beginning of upgradeALL in the backend
     console.log("✅ Prepared WASM for upgrade in PostCore canister");
 
     const wasmBytes = await readWasmFile(wasmPath);
@@ -121,9 +126,10 @@ async function prompt(question) {
     const payload = [68, 73, 68, 76, 0, 0];
 
     // Split the WASM data into chunks
-    const chunkSize = 1000000;
+    const chunkSize = 10000;
     const chunks = [];
     for (let i = 0; i < nat8List.length; i += chunkSize) {
+
       chunks.push(nat8List.slice(i, i + chunkSize));
     }
 
@@ -135,7 +141,7 @@ async function prompt(question) {
       await exec(chunkCommand);
     }
 
-    console.log("✅ Added new WASM to the PostCore canister");
+    console.log("✅ Prepared new PostBucket WASM in the PostCore canister");
 
     // Call the upgradeBucket function
     const upgradeFunction = deployType === 'single' ? 'upgradeBucket' : 'upgradeAllBuckets';

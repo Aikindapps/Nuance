@@ -94,4 +94,3 @@ jobs:
       
     - name: Deploy SNS UAT --network ic
       run: bash ./scripts/deployment/SNS_UAT_Deploy.sh
-
