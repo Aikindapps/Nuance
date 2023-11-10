@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { usePostStore } from '../../store/postStore';
 import Button from '../../UI/Button/Button';
 import { toastError } from '../../services/toastService';
-import { SaveCommentModel } from '../../../declarations/PostBucket/PostBucket.did';
+import { Comment, SaveCommentModel } from '../../../declarations/PostBucket/PostBucket.did';
 import { colors } from '../../shared/constants';
 import { Context } from '../../Context';
 import { useAuthStore } from '../../store';
@@ -34,7 +34,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
   content,
   closeModal = () => {},
 }) => {
-  const { saveComment } = usePostStore(state => state);
+  const { saveComment, comments } = usePostStore(state => state);
   const [commentText, setCommentText] = useState(content || '');
   const [edited, setEdited] = useState(false); 
   const [isSaving, setIsSaving] = useState(false);
@@ -56,9 +56,31 @@ const WriteComment: React.FC<WriteCommentProps> = ({
     replyToCommentId: replyToCommentId ? [replyToCommentId] : [],
     postId,
   };
+  function countComments(comments : Comment[]) {
+    return comments.reduce((acc, comment) => {
+      
+      let count = 1;
+   // Recursively count the replies of the comment
+      if (comment.replies && comment.replies.length > 0) {
+        count += countComments(comment.replies);
+      }
+      return acc + count;
+    }, 0);
+  }
 
   const handleSave = async (edited : Boolean) => {
-        
+    
+    
+
+    const commentCount = countComments(comments);
+    console.log(commentCount);
+    if (commentCount >= 100) {
+      toastError('Sorry, you cannot post more than 100 comments.');
+      return;
+    }
+    
+
+
     setIsSaving(true);
     
     if (handle === "" || handle === undefined || handle === null) {

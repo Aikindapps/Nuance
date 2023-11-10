@@ -26,11 +26,18 @@ const Comments: React.FC<CommentProps> = ({
   bucketCanisterId,
   avatar
 }) => {
+  let identity = useAuthStore(state => state.userWallet?.principal.toString()) || '';
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyToCommentId, setReplyToCommentId] = useState<string | undefined>();
   const [repliesVisible, setRepliesVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [upVotesCount, setUpVotesCount] = useState(comment.upVotes.length);
+  const [downVotesCount, setDownVotesCount] = useState(comment.downVotes.length);
+  const [voting, setVoting] = useState({
+    upVoted: comment.upVotes.includes(identity),
+    downVoted: comment.downVotes.includes(identity),
+  });
+
   const context = useContext(Context)
   
   const { upVoteComment, downVoteComment, getPostComments,removeCommentVote } = usePostStore(state => state);
@@ -38,48 +45,66 @@ const Comments: React.FC<CommentProps> = ({
     setRepliesVisible(!repliesVisible);
   };
 
-  let identity = useAuthStore(state => state.userWallet?.principal.toString());
+ 
 
-  const handleVote = async (voteType: 'up' | 'down') => {
+   const handleVote = async (voteType : string) => {
     
-    if (!identity) {
+    if (loggedInUser === "" || loggedInUser === undefined || loggedInUser === null) {
         function handleRegister() {
             context.setModal();
           }
           handleRegister();
-      return;
+        return;
     }
-    const alreadyVoted = voteType === 'up' ? comment.upVotes.includes(identity) : comment.downVotes.includes(identity);
-    const oppositeVote = voteType === 'up' ? comment.downVotes.includes(identity) : comment.upVotes.includes(identity);
 
-    try {
-      if (alreadyVoted) {
-        await removeCommentVote(comment.commentId, bucketCanisterId); // Remove the vote
-        // Optimistic UI update for vote removal
-        if (voteType === 'up') {
-          setUpVotesCount(currentCount => currentCount - 1);
-        } else {
-          // Handle downvote count if needed
-        }
-      } else {
-        if (voteType === 'up') {
-          await upVoteComment(comment.commentId, bucketCanisterId);
-          setUpVotesCount(currentCount => currentCount + (oppositeVote ? 2 : 1)); // Adjust the count based on if the opposite vote existed
-        } else {
-          // Handle downvote logic if needed
-        }
-      }
-      // Refresh the comments to reflect the new vote state
-      getPostComments(postId, bucketCanisterId);
-    } catch (error) {
-      // Handle errors and revert optimistic updates if needed
-      toast.error(`Failed to ${alreadyVoted ? 'remove' : 'cast'} vote. Please try again later.`);
-      if (alreadyVoted) {
-        // Revert vote count changes
-      }
+    // Determine if the user has already voted in the same way.
+  const hasVoted = voteType === 'up' ? voting.upVoted : voting.downVoted;
+  const oppositeVoteType = voteType === 'up' ? 'down' : 'up';
+  const hasVotedOpposite = voteType === 'up' ? voting.downVoted : voting.upVoted;
+
+  // Update the UI optimistically
+  if (hasVoted) {
+    voteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
+  } else {
+   
+    voteType === 'up' ? setUpVotesCount(upVotesCount + 1) : setDownVotesCount(downVotesCount + 1);
+    if (hasVotedOpposite) {
+      oppositeVoteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
     }
-  };
+  }
 
+  // Update local voting state
+  setVoting({
+    upVoted: voteType === 'up' ? !voting.upVoted : false,
+    downVoted: voteType === 'down' ? !voting.downVoted : false, 
+  });
+
+  
+  try {
+    if (hasVoted) {
+      await removeCommentVote(comment.commentId, bucketCanisterId);
+    } else {
+      const action = voteType === 'up' ? upVoteComment : downVoteComment;
+      await action(comment.commentId, bucketCanisterId);
+    }
+
+    if (hasVotedOpposite) {
+      await removeCommentVote(comment.commentId, bucketCanisterId);
+    }
+    getPostComments(postId, bucketCanisterId);
+  } catch (error) {
+    console.error(error); 
+    toast.error(`Failed to ${hasVoted ? 'remove' : 'cast'} vote. Please try again later.`);
+   
+    setVoting({
+      upVoted: voting.upVoted, 
+      downVoted: voting.downVoted, 
+    });
+    setUpVotesCount(upVotesCount); 
+    setDownVotesCount(downVotesCount); 
+  }
+};
+  
 
     const handleReply = (commentId: string) => {
         setReplyToCommentId(commentId);
@@ -177,15 +202,16 @@ const Comments: React.FC<CommentProps> = ({
     </button>
   )}
   <button className="thumbs-up" onClick={() => handleVote('up')} aria-label="Thumbs up">
-    <img className='icon' alt="Thumbs up" src={icons.THUMBS_UP}/>
-    <span className="text">Thumbs up </span>
-    {upVotesCount > 0 && `(${upVotesCount})`}
-  </button>
-  <button className="thumbs-down" onClick={() => handleVote('down')} aria-label="Thumbs down">
-    <img className='icon' alt="Thumbs down" src={icons.THUMBS_DOWN}/>
-    <span className="text">Thumbs down </span>
-    {comment.downVotes.length > 0 && `(${comment.downVotes.length})`}
-  </button>
+  <img className='icon' alt="Thumbs up" src={icons.THUMBS_UP}/>
+  <span className="text">Thumbs up</span>
+  {upVotesCount > 0 && `(${upVotesCount})`}
+</button>
+<button className="thumbs-down" onClick={() => handleVote('down')} aria-label="Thumbs down">
+  <img className='icon' alt="Thumbs down" src={icons.THUMBS_DOWN}/>
+  <span className="text">Thumbs down</span>
+  {downVotesCount > 0 && `(${downVotesCount})`}
+</button>
+
             
           <button className="reply-btn" onClick={handleReplyClick}>
             <img className='icon' alt='reply' src={icons.REPLY}/>
