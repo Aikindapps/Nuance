@@ -108,6 +108,19 @@ module {
     repliedCommentId : ?Text; //if this comment is a reply, holds the commentId. if not it's null
   };
 
+  public type Applaud = {
+    applaudId: Text; //unique id of the applaud
+    postId: Text; //postId of the applaud sent to
+    bucketCanisterId: Text; //bucket canister id of the post
+    currency: Text; //NUA, ICP or ckBTC
+    tokenAmount: Nat; // Number of tokens sent by the sender (e8s)
+    receivedTokenAmount: Nat; //The token amount received by the writer after the tipping fee (e8s)
+    numberOfApplauds: Nat; //number of applauds (The applauds are calculated at the time of the applause)
+    date: Text; //Date of the applaud. Stored as Int, returned as Text
+    sender: Text; //Principal id of the sender
+    receiver: Text; //Principal id of the receiver
+  };
+
   public type Post = {
     postId : Text;
     handle : Text;

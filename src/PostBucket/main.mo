@@ -22,9 +22,12 @@ import Nat64 "mo:base/Nat64";
 import Prelude "mo:base/Prelude";
 import Cycles "mo:base/ExperimentalCycles";
 import Option "mo:base/Option";
+import Float "mo:base/Float";
+import Blob "mo:base/Blob";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import Sonic "../shared/sonic";
 
 actor class PostBucket() = this {
   let canistergeekMonitor = Canistergeek.Monitor();
@@ -87,6 +90,9 @@ actor class PostBucket() = this {
   type Comment = Types.Comment;
   type SaveCommentModel = Types.SaveCommentModel;
 
+  //applaud types
+  type Applaud = Types.Applaud;
+
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
   stable var platformOperators : List.List<Text> = List.nil<Text>();
@@ -97,6 +103,7 @@ actor class PostBucket() = this {
   stable var isStoreSEOcalled = false;
   stable var isActive = true;
   stable var commentId = 0;
+  stable var applaudId = 0;
 
   // in-memory state swap (holds hashmap entries between preupgrade and postupgrade) then is cleared
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
@@ -137,6 +144,18 @@ actor class PostBucket() = this {
   stable var commentIdToDownvotedPrincipalIdsEntries : [(Text, [Text])] = [];
   stable var commentIdToReplyCommentIdsEntries : [(Text, [Text])] = [];
   stable var replyCommentIdToCommentIdEntries : [(Text, Text)] = [];
+
+  //applaud data
+  stable var postIdToApplaudIdsEntries : [(Text, [Text])] = [];
+  stable var principalIdToApplaudIdsEntries : [(Text, [Text])] = [];
+  stable var applaudIdToSenderEntries : [(Text, Text)] = [];
+  stable var applaudIdToReceiverEntries : [(Text, Text)] = [];
+  stable var applaudIdToPostIdEntries : [(Text, Text)] = [];
+  stable var applaudIdToCurrencyEntries : [(Text, Text)] = [];
+  stable var applaudIdToTokenAmountEntries : [(Text, Nat)] = [];
+  stable var applaudIdToReceivedTokenAmountEntries : [(Text, Nat)] = [];
+  stable var applaudIdToNumberOfApplaudsEntries : [(Text, Nat)] = [];
+  stable var applaudIdToDateEntries : [(Text, Int)] = [];
 
   // in-memory state (holds object field data) - hashmaps must match entires in above stable vars and in preupgrade and postupgrade
   // HashMaps with one entry per user
@@ -195,6 +214,28 @@ actor class PostBucket() = this {
   var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   //key: replyCommentId, value: commentId
   var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+
+  //applaud hashmaps
+  //key: postId, value: [applaudId]
+  var postIdToApplaudIdsHashMap = HashMap.fromIter<Text, [Text]>(postIdToApplaudIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: principalId, value: [applaudId]
+  var principalIdToApplaudIdsHashMap = HashMap.fromIter<Text, [Text]>(principalIdToApplaudIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: principalId
+  var applaudIdToSenderHashMap = HashMap.fromIter<Text, Text>(applaudIdToSenderEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: principalId
+  var applaudIdToReceiverHashMap = HashMap.fromIter<Text, Text>(applaudIdToReceiverEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: postId
+  var applaudIdToPostIdHashMap = HashMap.fromIter<Text, Text>(applaudIdToPostIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: currency (NUA, ICP, ckBTC)
+  var applaudIdToCurrencyHashMap = HashMap.fromIter<Text, Text>(applaudIdToCurrencyEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: tokenAmount (e8s)
+  var applaudIdToTokenAmountHashMap = HashMap.fromIter<Text, Nat>(applaudIdToTokenAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: receivedTokenAmount (e8s)
+  var applaudIdToReceivedTokenAmountHashMap = HashMap.fromIter<Text, Nat>(applaudIdToReceivedTokenAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: number of applauds
+  var applaudIdToNumberOfApplaudsHashMap = HashMap.fromIter<Text, Nat>(applaudIdToNumberOfApplaudsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: applaudId, value: date
+  var applaudIdToDateHashMap = HashMap.fromIter<Text, Int>(applaudIdToDateEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //key: pub-handle, value: nft canister id
   var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -2670,6 +2711,320 @@ actor class PostBucket() = this {
     };
   };
 
+
+  //#region tipping
+
+  private func getNextApplaudId() : Text {
+    applaudId += 1;
+    Nat.toText(applaudId);
+  };
+
+  private func buildApplaud(applaudId: Text) : Applaud {
+    return {
+      applaudId = applaudId;
+      bucketCanisterId = Principal.toText(Principal.fromActor(this));
+      currency = U.safeGet(applaudIdToCurrencyHashMap, applaudId, "NUA");
+      date = Int.toText(U.safeGet(applaudIdToDateHashMap, applaudId, 0));
+      numberOfApplauds = U.safeGet(applaudIdToNumberOfApplaudsHashMap, applaudId, 0);
+      postId = U.safeGet(applaudIdToPostIdHashMap, applaudId, "");
+      receiver = U.safeGet(applaudIdToReceiverHashMap, applaudId, "");
+      sender = U.safeGet(applaudIdToSenderHashMap, applaudId, "");
+      tokenAmount = U.safeGet(applaudIdToTokenAmountHashMap, applaudId, 0);
+      receivedTokenAmount = U.safeGet(applaudIdToReceivedTokenAmountHashMap, applaudId, 0);
+    }
+  };
+
+  private func putApplaud(currency: Text, tokenAmount: Nat, receivedTokenAmount: Nat, numberOfApplauds: Nat, postId: Text, receiver: Text, sender: Text) : () {
+    let applaudId = getNextApplaudId();
+    applaudIdToCurrencyHashMap.put(applaudId, currency);
+    applaudIdToDateHashMap.put(applaudId, U.epochTime());
+    applaudIdToNumberOfApplaudsHashMap.put(applaudId, numberOfApplauds);
+    applaudIdToTokenAmountHashMap.put(applaudId, tokenAmount);
+    applaudIdToReceivedTokenAmountHashMap.put(applaudId, receivedTokenAmount);
+  
+    //map the applaudId to postId
+    applaudIdToPostIdHashMap.put(applaudId, postId);
+    let existingApplaudIdsBuffer = Buffer.fromArray<Text>(U.safeGet(postIdToApplaudIdsHashMap, postId, []));
+    existingApplaudIdsBuffer.add(applaudId);
+    postIdToApplaudIdsHashMap.put(postId, Buffer.toArray(existingApplaudIdsBuffer));
+
+    //map the applaudId to receiver principal Id
+    applaudIdToReceiverHashMap.put(applaudId, receiver);
+    let existingApplaudIdsBufferReceiver = Buffer.fromArray<Text>(U.safeGet(principalIdToApplaudIdsHashMap, receiver, []));
+    existingApplaudIdsBufferReceiver.add(applaudId);
+    principalIdToApplaudIdsHashMap.put(receiver, Buffer.toArray(existingApplaudIdsBufferReceiver));
+
+    //map the applaudId to sender principal id
+    applaudIdToSenderHashMap.put(applaudId, sender);
+    //if sender == receiver, it means that writer's itself called the checkTipping function
+    //don't update the principalIdToApplaudIdsHashMap for sender in that case
+    if(sender != receiver){
+      let existingApplaudIdsBufferSender = Buffer.fromArray<Text>(U.safeGet(principalIdToApplaudIdsHashMap, sender, []));
+      existingApplaudIdsBufferSender.add(applaudId);
+      principalIdToApplaudIdsHashMap.put(sender, Buffer.toArray(existingApplaudIdsBufferSender));
+    };
+    
+  };
+
+  //query function to get the details of an applaud by the id
+  public shared query func getApplaudById(applaudId: Text) : async Result.Result<Applaud, Text>{
+    switch(applaudIdToPostIdHashMap.get(applaudId)) {
+      case(?postId) {
+        //applaud exists
+        //return the applaud
+        return #ok(buildApplaud(applaudId));
+      };
+      case(null) {
+        //doesn't exist
+        //return an error
+        return #err("Applaud not found!");
+      };
+    };
+  };
+
+  //query function to get all the applauds of a post by postId
+  public shared query func getPostApplauds(postId: Text) : async [Applaud]{
+    switch(postIdToApplaudIdsHashMap.get(postId)) {
+      case(?applaudIds) {
+        //there're some applauds with the given postId
+        //build the applauds and return it
+        var applauds = Buffer.Buffer<Applaud>(0);
+        for(applaudId in applaudIds.vals()){
+          applauds.add(buildApplaud(applaudId))
+        };
+        Buffer.toArray(applauds)
+      };
+      case(null) {
+        //given postId doesn't exist or there's no applauds yet
+        //return an empty array
+        []
+      };
+    };
+  };
+
+  //query function to get all the applauds of a user by principalId
+  public shared query func getUserApplaudsByPrincipal(principalId: Text) : async [Applaud]{
+    switch(principalIdToApplaudIdsHashMap.get(principalId)) {
+      case(?applaudIds) {
+        //there're some applauds with the given principalId
+        //build the applauds and return it
+        var applauds = Buffer.Buffer<Applaud>(0);
+        for(applaudId in applaudIds.vals()){
+          applauds.add(buildApplaud(applaudId))
+        };
+        Buffer.toArray(applauds)
+      };
+      case(null) {
+        //given principalId doesn't exist or there's no applauds yet
+        //return an empty array
+        []
+      };
+    };
+  };
+
+  //query function to get all the applauds of the caller
+  public shared query ({caller}) func getMyApplauds() : async [Applaud]{
+    let principalId = Principal.toText(caller);
+    switch(principalIdToApplaudIdsHashMap.get(principalId)) {
+      case(?applaudIds) {
+        //there're some applauds with the caller's principalId
+        //build the applauds and return it
+        var applauds = Buffer.Buffer<Applaud>(0);
+        for(applaudId in applaudIds.vals()){
+          applauds.add(buildApplaud(applaudId))
+        };
+        Buffer.toArray(applauds)
+      };
+      case(null) {
+        //principalId doesn't exist or there's no applauds yet
+        //return an empty array
+        []
+      };
+    };
+  };
+
+
+  //user transfers the tokens to the subaccount of the postId and calls this method to complete the tipping
+  public shared ({caller}) func checkTipping(postId: Text) : async (){
+    //check if the post exists
+    switch (principalIdHashMap.get(postId)) {
+      case (?val) {
+        //article exists, continue
+      };
+      case (null) {
+        //article doesn't exist - do nothing and return
+        return;
+      };
+    };
+    for(symbol in ENV.TIPPING_TOKENS.vals()){
+      ignore checkTippingByTokenSymbol(postId, symbol, Principal.toText(caller))
+    }
+  };
+
+  public shared ({caller}) func checkTippingByTokenSymbol(postId: Text, symbol: Text, senderPrincipal: Text) : async Nat {
+    //if the caller is the canister's itself, trust the argument senderPrincipal
+    //if not, use the caller instead of the argument
+    let sender = if(caller == Principal.fromActor(this)){senderPrincipal}else{Principal.toText(caller)};
+
+    switch (principalIdHashMap.get(postId)) {
+      case (?val) {
+        //article exists, continue
+      };
+      case (null) {
+        //article doesn't exist - do nothing and return 0
+        Debug.print("checkTippingByTokenSymbol -> Error: " # "Article doesn't exist.");
+        return 0;
+      };
+    };
+
+    if(not U.arrayContains(ENV.TIPPING_TOKENS, symbol)){
+      //given token symbol is not whitelisted
+      //do nothing and return
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Given symbol doesn't exist.");
+      return 0;
+    };
+
+    let tippingToken = ENV.getTippingTokenBySymbol(symbol);
+    let tokenCanister = CanisterDeclarations.getIcrc1Canister(tippingToken.canisterId);
+    let balance = await tokenCanister.icrc1_balance_of({
+      owner = Principal.fromActor(this);
+      subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)))
+    });
+
+    //if the amount of tokens locked in the subaccount is less then 2 fees, don't do anything
+    if(not (balance > tippingToken.fee * 2 + 10)){
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Too less tokens to proceed.");
+      return 0;
+    };
+
+    //if here, the amount of tokens locked in the subaccount is enough
+    //determine the principal id that will receive the tokens
+    var receiverPrincipalId = U.safeGet(principalIdHashMap, postId, "");
+
+    //if it's a publication post, set the receiver as the writer
+    let post = buildPost(postId);
+    if(post.isPublication){
+      let writerPrincipalId = U.safeGet(handleReverseHashMap, post.creator, "");
+      if(writerPrincipalId == ""){
+        //check if the principal id of the writer exists in the User canister
+        let userCanister = CanisterDeclarations.getUserCanister();
+        let userCanisterReturn = await userCanister.getUsersByHandles([U.lowerCase(post.creator)]);
+        if(userCanisterReturn.size() == 0){
+          //the writer doesn't exist in the user canister either
+          //do nothing -> return 0
+          Debug.print("checkTippingByTokenSymbol -> Error: " # "Writer doesn't exist");
+          return 0;
+        };
+        receiverPrincipalId := userCanisterReturn[0].principal;
+      }
+      else{
+        receiverPrincipalId := writerPrincipalId;
+      }
+    };
+
+    //calculate the NUA equivalent of the tipped tokens
+    var nuaEquivalent = 0;
+    if(symbol != "NUA"){
+      switch(await Sonic.getNuaEquivalentOfTippingToken(symbol, balance)) {
+        case(#ok(value)) {
+          nuaEquivalent := value;
+        };
+        case(#err(error)) {
+          //an error occured while fetching the data from sonic
+          //print the error
+          //return 0
+          Debug.print("checkTippingByTokenSymbol -> Error: " # error);
+          return 0
+        };
+      };
+    }
+    else{
+      nuaEquivalent := balance;
+    };
+    
+    //all the needed data fetched so far
+    //transfer the tokens and complete the tipping
+    let tippingFeeFloat = (ENV.TIP_FEE_AMOUNT / 100.0) * Float.fromInt(balance);
+    let tippingFee = Nat.sub(Int.abs(Float.toInt(tippingFeeFloat)), tippingToken.fee);
+    let writerShare = Nat.sub(Nat.sub(balance, tippingFee), 2*tippingToken.fee);
+
+    //transfer the tippingFee to the Nuance DAO first
+    try{
+      switch(await tokenCanister.icrc1_transfer({
+        amount = tippingFee;
+        created_at_time = null;
+        fee = ?tippingToken.fee;
+        from_subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)));
+        memo = null;
+        to = {
+          owner = Principal.fromText(ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID);
+          subaccount = null;
+        }
+      })) {
+        case(#Ok(value)) {
+          //transfer worked fine - continue
+        };
+        case(#Err(error)) {
+          //transfer returned an error -> this should never happen
+          Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the Nuance DAO returned an error.");
+          return 0;
+        };
+      };
+    }
+    catch(e){
+      //the inter-canister call failed
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the Nuance DAO failed.");
+      return 0;
+    };
+
+    //if here, the tipping fee transferred succesfully
+    //transfer the remaining tokens to the writer
+    try{
+      switch(await tokenCanister.icrc1_transfer({
+        amount = writerShare;
+        created_at_time = null;
+        fee = ?tippingToken.fee;
+        from_subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)));
+        memo = null;
+        to = {
+          owner = Principal.fromText(receiverPrincipalId);
+          subaccount = null;
+        }
+      })) {
+        case(#Ok(value)) {
+          //transfer worked fine - continue
+        };
+        case(#Err(error)) {
+          //transfer returned an error -> this should never happen
+          Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the writer returned an error.");
+          return 0;
+        };
+      };
+    }
+    catch(e){
+      //the inter-canister call failed
+      Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the writer failed.");
+      return 0;
+    };
+
+    //if here, everything worked fine
+    //update the local hashmaps first
+    putApplaud(symbol, balance, writerShare, nuaEquivalent, postId, receiverPrincipalId, sender);
+    
+    //increment the number of applauds in the PostCore canister to effect the popularity
+    try{
+      let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+      await postCoreCanister.incrementApplauds(postId, nuaEquivalent);
+    }
+    catch(e){
+      //inter-canister call failed
+      //if needed, we can create a function to get the info from the bucket canisters and refill the hashmap in the PostCore canister
+    };
+
+    return nuaEquivalent;
+  };
+
+
   //#region System Hooks
 
   system func preupgrade() {
@@ -2712,6 +3067,19 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := Iter.toArray(commentIdToDownvotedPrincipalIdsHashMap.entries());
     commentIdToReplyCommentIdsEntries := Iter.toArray(commentIdToReplyCommentIdsHashMap.entries());
     replyCommentIdToCommentIdEntries := Iter.toArray(replyCommentIdToCommentIdHashMap.entries());
+
+    //applaud
+    postIdToApplaudIdsEntries := Iter.toArray(postIdToApplaudIdsHashMap.entries());
+    principalIdToApplaudIdsEntries := Iter.toArray(principalIdToApplaudIdsHashMap.entries());
+    applaudIdToSenderEntries := Iter.toArray(applaudIdToSenderHashMap.entries());
+    applaudIdToReceiverEntries := Iter.toArray(applaudIdToReceiverHashMap.entries());
+    applaudIdToPostIdEntries := Iter.toArray(applaudIdToPostIdHashMap.entries());
+    applaudIdToCurrencyEntries := Iter.toArray(applaudIdToCurrencyHashMap.entries());
+    applaudIdToTokenAmountEntries := Iter.toArray(applaudIdToTokenAmountHashMap.entries());
+    applaudIdToReceivedTokenAmountEntries := Iter.toArray(applaudIdToReceivedTokenAmountHashMap.entries());
+    applaudIdToNumberOfApplaudsEntries := Iter.toArray(applaudIdToNumberOfApplaudsHashMap.entries());
+    applaudIdToDateEntries := Iter.toArray(applaudIdToDateHashMap.entries());
+    
   };
 
   system func postupgrade() {
@@ -2758,6 +3126,17 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := [];
     commentIdToReplyCommentIdsEntries := [];
     replyCommentIdToCommentIdEntries := [];
+
+    postIdToApplaudIdsEntries := [];
+    principalIdToApplaudIdsEntries := [];
+    applaudIdToSenderEntries := [];
+    applaudIdToReceiverEntries := [];
+    applaudIdToPostIdEntries := [];
+    applaudIdToCurrencyEntries := [];
+    applaudIdToTokenAmountEntries := [];
+    applaudIdToReceivedTokenAmountEntries := [];
+    applaudIdToNumberOfApplaudsEntries := [];
+    applaudIdToDateEntries := [];
 
   };
 };
