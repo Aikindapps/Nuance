@@ -234,7 +234,7 @@ actor class Management() = this {
             return #err("Canister reached the maximum memory threshold. Please try again later.");
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
 
@@ -248,7 +248,7 @@ actor class Management() = this {
             return #err("Cannot use this method anonymously.");
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
         #ok(wasmChunks);
@@ -261,7 +261,7 @@ actor class Management() = this {
         };
 
         let wasm = wasmChunks;
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             //TODO and not SNS governance canister, do any other canisters need this method???
 
             return #err("Unauthorized");
@@ -278,7 +278,7 @@ actor class Management() = this {
             return;
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return;
         };
         wasmChunks := Blob.fromArray([]);
@@ -288,7 +288,7 @@ actor class Management() = this {
             return #err("Cannot use this method anonymously.");
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
 
