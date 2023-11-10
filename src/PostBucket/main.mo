@@ -21,6 +21,7 @@ import IC "../PostCore/IC";
 import Nat64 "mo:base/Nat64";
 import Prelude "mo:base/Prelude";
 import Cycles "mo:base/ExperimentalCycles";
+import Option "mo:base/Option";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../shared/env";
@@ -136,6 +137,7 @@ actor class PostBucket() = this {
   stable var commentIdToDownvotedPrincipalIdsEntries : [(Text, [Text])] = [];
   stable var commentIdToReplyCommentIdsEntries : [(Text, [Text])] = [];
   stable var replyCommentIdToCommentIdEntries : [(Text, Text)] = [];
+  stable var commentIdToHandleEntries : [(Text, Text)] = [];
 
   // in-memory state (holds object field data) - hashmaps must match entires in above stable vars and in preupgrade and postupgrade
   // HashMaps with one entry per user
@@ -194,6 +196,8 @@ actor class PostBucket() = this {
   var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   //key: replyCommentId, value: commentId
   var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: handle
+  var commentIdToHandleHashMap = HashMap.fromIter<Text, Text>(commentIdToHandleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //key: pub-handle, value: nft canister id
   var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -254,7 +258,7 @@ actor class PostBucket() = this {
   };
   //deprecated function
   public shared ({ caller }) func initializeCanister(postIndexCai : Text, userCai : Text) : async Result.Result<Text, Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   public shared query func getFrontendCanisterId() : async Text {
@@ -381,7 +385,7 @@ actor class PostBucket() = this {
   };
 
   private func isPlatformOperator(caller : Principal) : Bool {
-    ENV.isPlatformOperator(caller)
+    ENV.isPlatformOperator(caller);
   };
 
   public shared query func getPlatformOperators() : async List.List<Text> {
@@ -390,20 +394,20 @@ actor class PostBucket() = this {
 
   //These methods are deprecated. Admins are handled by env.mo file
   public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function")
+    #err("Deprecated function");
   };
 
   public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function")
+    #err("Deprecated function");
   };
 
   //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
   public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   func isNuanceCanister(caller : Principal) : Bool {
@@ -411,7 +415,6 @@ actor class PostBucket() = this {
     var exists = List.find<Text>(nuanceCanisters, func(val : Text) : Bool { val == c });
     exists != null;
   };
-
 
   public shared query ({ caller }) func getTrustedCanisters() : async Result.Result<[Text], Text> {
     /*if (not isAdmin(caller)) {
@@ -1443,31 +1446,30 @@ actor class PostBucket() = this {
     Buffer.toArray(postsBuffer);
   };
 
-
   //returns the submitted for review posts of the caller
-  public shared query ({caller}) func getSubmittedForReview(publicationHandles: [Text]) : async [PostBucketType] {
+  public shared query ({ caller }) func getSubmittedForReview(publicationHandles : [Text]) : async [PostBucketType] {
     let callerPrincipalId = Principal.toText(caller);
     let callerHandle = U.safeGet(handleHashMap, callerPrincipalId, "");
-    if(callerHandle == ""){
+    if (callerHandle == "") {
       //if the principal id of the caller is not stored in the hashmap, caller has no post submitted for review
       return [];
     };
 
     var result = Buffer.Buffer<PostBucketType>(0);
 
-    for(publicationHandle in publicationHandles.vals()){
+    for (publicationHandle in publicationHandles.vals()) {
       let publicationCanisterId = U.safeGet(handleReverseHashMap, publicationHandle, "");
-      if(publicationCanisterId != ""){
+      if (publicationCanisterId != "") {
         let postIdsOfPublication = U.safeGet(userPostsHashMap, publicationCanisterId, List.nil<Text>());
-        for(postId in Iter.fromList(postIdsOfPublication)){
+        for (postId in Iter.fromList(postIdsOfPublication)) {
           let creator = U.safeGet(creatorHashMap, postId, "");
           let isDraft = U.safeGet(isDraftHashMap, postId, false);
-          if(creator == callerHandle and isDraft){
+          if (creator == callerHandle and isDraft) {
             result.add(buildPost(postId));
           };
         };
       };
-      
+
     };
 
     Buffer.toArray(result);
@@ -2227,6 +2229,8 @@ actor class PostBucket() = this {
 
     return {
       commentId = commentId;
+      handle = U.safeGet(commentIdToHandleHashMap, commentId, "");
+      avatar = ""; //doesn't need to be set or stored, but its useful to have so the frontend can populate the avatar
       content = U.safeGet(commentIdToContentHashMap, commentId, "");
       postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
@@ -2281,6 +2285,19 @@ actor class PostBucket() = this {
   public shared ({ caller }) func saveComment(input : SaveCommentModel) : async Result.Result<[Comment], Text> {
     let { postId; commentId; content; replyToCommentId } = input;
 
+    var userObject : User = {
+      accountCreated = "";
+      avatar = "";
+      bio = "";
+      displayName = "";
+      followers = null;
+      followersArray = [];
+      followersCount = 0;
+      handle = "";
+      nuaTokens = 0.0;
+      publicationsArray = [];
+    };
+
     switch (principalIdHashMap.get(postId)) {
       case (?val) {
         //post exists
@@ -2292,7 +2309,7 @@ actor class PostBucket() = this {
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {
-            //user exists -> keep going
+            userObject := val;
           };
           case (null) {
             //user doesn't exist, return an error
@@ -2448,6 +2465,8 @@ actor class PostBucket() = this {
         commentIdToPostIdHashMap.put(validCommentId, postId);
         //map the comment with the caller
         commentIdToUserPrincipalIdHashMap.put(validCommentId, userPrincipalId);
+        //comment to handle
+        commentIdToHandleHashMap.put(validCommentId, userObject.handle);
         //map the comment with the content
         commentIdToContentHashMap.put(validCommentId, content);
 
@@ -2698,6 +2717,7 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := Iter.toArray(commentIdToDownvotedPrincipalIdsHashMap.entries());
     commentIdToReplyCommentIdsEntries := Iter.toArray(commentIdToReplyCommentIdsHashMap.entries());
     replyCommentIdToCommentIdEntries := Iter.toArray(replyCommentIdToCommentIdHashMap.entries());
+    commentIdToHandleEntries := Iter.toArray(commentIdToHandleHashMap.entries());
 
   };
 
@@ -2745,6 +2765,7 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := [];
     commentIdToReplyCommentIdsEntries := [];
     replyCommentIdToCommentIdEntries := [];
+    commentIdToHandleEntries := [];
 
   };
 };
