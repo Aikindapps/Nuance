@@ -1,0 +1,226 @@
+import React, { useState, useContext } from 'react';
+import './_comments.scss';
+import { icons } from '../../shared/constants';
+import { Comment } from 'src/declarations/PostBucket/PostBucket.did';
+import { User } from 'src/declarations/User/User.did';
+import WriteComment from '../comments/write-comments';
+import { usePostStore } from '../../store/postStore';
+import { useAuthStore, useUserStore } from '../../../nuance_assets/store';
+import { Context } from '../../Context';
+import toast from 'react-hot-toast';
+
+interface CommentProps {
+  loggedInUser: string;
+  avatar: string;
+  comment: Comment;
+  isReply?: boolean;
+  postId: string; 
+  bucketCanisterId: string; 
+}
+
+const Comments: React.FC<CommentProps> = ({
+  loggedInUser,  
+  comment,
+  isReply = false,
+  postId,
+  bucketCanisterId,
+  avatar
+}) => {
+  const [showReplyBox, setShowReplyBox] = useState(false);
+  const [replyToCommentId, setReplyToCommentId] = useState<string | undefined>();
+  const [repliesVisible, setRepliesVisible] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [upVotesCount, setUpVotesCount] = useState(comment.upVotes.length);
+  const context = useContext(Context)
+  
+  const { upVoteComment, downVoteComment, getPostComments,removeCommentVote } = usePostStore(state => state);
+  const toggleReplies = () => {
+    setRepliesVisible(!repliesVisible);
+  };
+
+  let identity = useAuthStore(state => state.userWallet?.principal.toString());
+
+  const handleVote = async (voteType: 'up' | 'down') => {
+    
+    if (!identity) {
+        function handleRegister() {
+            context.setModal();
+          }
+          handleRegister();
+      return;
+    }
+    const alreadyVoted = voteType === 'up' ? comment.upVotes.includes(identity) : comment.downVotes.includes(identity);
+    const oppositeVote = voteType === 'up' ? comment.downVotes.includes(identity) : comment.upVotes.includes(identity);
+
+    try {
+      if (alreadyVoted) {
+        await removeCommentVote(comment.commentId, bucketCanisterId); // Remove the vote
+        // Optimistic UI update for vote removal
+        if (voteType === 'up') {
+          setUpVotesCount(currentCount => currentCount - 1);
+        } else {
+          // Handle downvote count if needed
+        }
+      } else {
+        if (voteType === 'up') {
+          await upVoteComment(comment.commentId, bucketCanisterId);
+          setUpVotesCount(currentCount => currentCount + (oppositeVote ? 2 : 1)); // Adjust the count based on if the opposite vote existed
+        } else {
+          // Handle downvote logic if needed
+        }
+      }
+      // Refresh the comments to reflect the new vote state
+      getPostComments(postId, bucketCanisterId);
+    } catch (error) {
+      // Handle errors and revert optimistic updates if needed
+      toast.error(`Failed to ${alreadyVoted ? 'remove' : 'cast'} vote. Please try again later.`);
+      if (alreadyVoted) {
+        // Revert vote count changes
+      }
+    }
+  };
+
+
+    const handleReply = (commentId: string) => {
+        setReplyToCommentId(commentId);
+        //setCommentText(''); // Optionally clear the comment input
+      };
+      const handleReplyClick = () => {
+        setReplyToCommentId(comment.commentId);
+        setShowReplyBox(!showReplyBox); 
+      };
+    
+    const handleShare = () => {
+        // Logic to handle share
+        }
+
+    const handleEdit = () => {
+        setEditMode(!editMode);
+        }
+
+    const handleSaveEdit = async () => {
+       
+        setEditMode(false);
+        };
+    
+    const handleSaveReply = async () => {
+
+        setShowReplyBox(false);
+        }
+    
+        function timeAgo(dateParam: number | null): string {
+            if (typeof dateParam !== 'number' || dateParam === 0) {
+              return 'just now';
+            }
+          
+            const date = new Date(dateParam);
+            const today = new Date();
+            const seconds = Math.round((today.getTime() - date.getTime()) / 1000);
+            const minutes = Math.round(seconds / 60);
+            const hours = Math.round(minutes / 60);
+            const days = Math.round(hours / 24);
+            const months = Math.round(days / 30.44);
+            const years = Math.round(months / 12);
+          
+            const pluralize = (count: number, noun: string) => count === 1 ? noun : `${noun}s`;
+          
+            if (seconds < 60) {
+              return `${seconds} ${pluralize(seconds, 'second')} ago`;
+            } else if (minutes < 60) {
+              return `${minutes} ${pluralize(minutes, 'minute')} ago`;
+            } else if (hours < 24) {
+              return `${hours} ${pluralize(hours, 'hour')} ago`;
+            } else if (days < 30.44) {
+              return `${days} ${pluralize(days, 'day')} ago`;
+            } else if (months < 12) {
+              return `${months} ${pluralize(months, 'month')} ago`;
+            } else {
+              return `${years} ${pluralize(years, 'year')} ago`;
+            }
+          }
+          
+         
+          
+  
+    return (
+      <div className={`comment ${isReply ? 'reply' : ''}`}>
+        <div className='comment-header-container'>
+          <div className='comment-avatar-and-name'>
+            <div className="user-icon">
+                <img className='user-icon' alt="user icon" src={comment.avatar}/>
+            </div>
+            <strong className="username">{comment.handle}</strong>
+          </div>  
+          <span className="time">{timeAgo(parseInt(comment.createdAt))}</span>
+        </div>
+        {editMode ? (
+        <WriteComment
+          label="EDIT YOUR COMMENT"
+          postId={postId}
+          commentId={comment.commentId}
+          bucketCanisterId={bucketCanisterId}
+          handle={loggedInUser}
+          avatar={avatar}
+          closeModal={handleSaveEdit}
+          content={comment.content}
+
+        /> 
+        ) : (
+      
+        <p className="content">{comment.content}</p>
+        )}
+       <div className="actions">
+  {loggedInUser === comment.handle && (
+    <button className="edit" onClick={handleEdit} aria-label="Edit comment">
+      <img className="icon" alt="Edit" src={icons.EDIT_COMMENT} />
+      <span className="text">Edit</span>
+    </button>
+  )}
+  <button className="thumbs-up" onClick={() => handleVote('up')} aria-label="Thumbs up">
+    <img className='icon' alt="Thumbs up" src={icons.THUMBS_UP}/>
+    <span className="text">Thumbs up </span>
+    {upVotesCount > 0 && `(${upVotesCount})`}
+  </button>
+  <button className="thumbs-down" onClick={() => handleVote('down')} aria-label="Thumbs down">
+    <img className='icon' alt="Thumbs down" src={icons.THUMBS_DOWN}/>
+    <span className="text">Thumbs down </span>
+    {comment.downVotes.length > 0 && `(${comment.downVotes.length})`}
+  </button>
+            
+          <button className="reply-btn" onClick={handleReplyClick}>
+            <img className='icon' alt='reply' src={icons.REPLY}/>
+           <span className="text">Reply</span>
+          </button>
+{/*     
+          <button className="share">
+            <img className='icon' alt='share' src={icons.SHARE}/>
+            Share
+          </button> */}
+        </div>
+
+        {showReplyBox && (
+        <WriteComment
+          label={"WRITE A REPLY TO " + comment.handle.toLocaleUpperCase() + ".."}
+          postId={postId}
+          replyToCommentId={replyToCommentId}
+          bucketCanisterId={bucketCanisterId}
+          handle={loggedInUser}
+          avatar={avatar}
+          closeModal={handleSaveReply}
+        />
+      )}
+     {comment.replies && comment.replies.map(reply => (
+          <Comments key={reply.commentId} isReply={true} comment={reply}  bucketCanisterId={bucketCanisterId} postId={postId} loggedInUser={loggedInUser} avatar={avatar} />
+        ))}
+    </div>
+  );
+};
+
+export default Comments;
+
+
+
+
+
+
+  

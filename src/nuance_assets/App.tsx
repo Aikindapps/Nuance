@@ -201,7 +201,12 @@ function App() {
             <Routes />
           </Suspense>
         </Router>
-        <Toaster />
+        <Toaster  position="bottom-center" toastOptions={{
+    style: {
+      backgroundColor: '#000000',
+      color: '#ffffff',
+    },
+  }}/>
         <LoginModal />
         <WithdrawIcpModal />
       </div>

@@ -34,6 +34,10 @@ import EmailOptIn from '../../components/email-opt-in/email-opt-in';
 import { useTheme } from '../../ThemeContext';
 
 import { PremiumArticleInfo } from '../../components/premium-article-info/premium-article-info';
+import Comments from '../../components/comments/comments';
+import WriteComment from '../../components/comments/write-comments';
+import { PostBucket } from 'src/declarations/PostBucket';
+import { get } from 'lodash';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -80,6 +84,12 @@ const ReadArticle = () => {
     getOwnedNfts,
     getPremiumPostError,
     ownedPremiumPosts,
+    getPostComments,
+    saveComment,
+    upVoteComment,
+    downVoteComment,
+    deleteComment,
+    comments,
   } = usePostStore((state) => ({
     getPost: state.getPostWithPublicationControl,
     clearPost: state.clearPost,
@@ -95,6 +105,12 @@ const ReadArticle = () => {
     getPremiumPostError: state.getPremiumPostError,
     ownedPremiumPosts: state.ownedPremiumPosts,
     getOwnedNfts: state.getOwnedNfts,
+    getPostComments: state.getPostComments,
+    comments: state.comments,
+    saveComment: state.saveComment,
+    upVoteComment: state.upVoteComment,
+    downVoteComment: state.downVoteComment,
+    deleteComment: state.deleteComment,
   }));
 
   const { user, getUsersByHandles, usersByHandles } = useUserStore((state) => ({
@@ -204,6 +220,13 @@ const ReadArticle = () => {
       redirect(post?.url);
     }
   }, [post]);
+
+  useEffect(() => {
+    if (post) {
+   getPostComments(postId, post?.bucketCanisterId);
+    }
+    
+  }, [post?.postId]);
 
   useEffect(() => {
     if (post) {
@@ -704,6 +727,20 @@ const ReadArticle = () => {
                     />
                   ) : null}
                 </div>
+                <div className='comment-section'>
+                  <WriteComment postId={post.postId} bucketCanisterId={post.bucketCanisterId} label='WRITE A COMMENT..' handle={user?.handle || ""} avatar={user?.avatar || ""}  />
+                  
+                {
+                  (comments != undefined && comments.length > 0) &&
+                  
+                      comments.map(comment => (
+                        <Comments key={comment.commentId} isReply={false} comment={comment}  bucketCanisterId={post.bucketCanisterId} postId={post.postId} loggedInUser={user?.handle || ""} avatar={user?.avatar || ""} />
+                        )) 
+                }
+
+              </div>
+              
+                
               </div>
             </div>
           )}

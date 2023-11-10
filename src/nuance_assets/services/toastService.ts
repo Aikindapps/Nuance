@@ -1,4 +1,5 @@
 import _toast from 'react-hot-toast';
+import { colors } from '../shared/constants';
 
 export enum ToastType {
   Plain,
@@ -17,13 +18,32 @@ export const toastError = (err: any, preText: string = ''): void => {
 export const toast = (message: string, toastType: ToastType): void => {
   switch (toastType) {
     case ToastType.Success:
-      _toast.success(message, { duration: 6000 });
+      _toast.success(message, {
+        duration: 6000,
+        iconTheme: {
+          primary: colors.accentColor, // check mark color
+          secondary: colors.primaryTextColor, //background color
+        },
+      });
       break;
     case ToastType.Error:
-      _toast.error(message);
+      _toast.error(message,
+        {
+          duration: 6000,
+          iconTheme: {
+            primary: colors.errorColor, // check mark color
+            secondary: colors.primaryTextColor, //background color
+          },
+        });
       break;
     default:
       _toast(message);
       break;
   }
 };
+
+
+
+
+
+

@@ -10,8 +10,10 @@ export interface Comment {
   'downVotes' : Array<string>,
   'upVotes' : Array<string>,
   'replies' : Array<Comment__1>,
+  'handle' : string,
   'repliedCommentId' : [] | [string],
   'editedAt' : [] | [string],
+  'avatar' : string,
   'postId' : string,
 }
 export interface Comment__1 {
@@ -23,8 +25,10 @@ export interface Comment__1 {
   'downVotes' : Array<string>,
   'upVotes' : Array<string>,
   'replies' : Array<Comment__1>,
+  'handle' : string,
   'repliedCommentId' : [] | [string],
   'editedAt' : [] | [string],
+  'avatar' : string,
   'postId' : string,
 }
 export type List = [] | [[string, List]];

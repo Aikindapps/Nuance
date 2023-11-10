@@ -103,12 +103,14 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
+  getTrustedCanisters: () -> (Result_2) query;
   indexPost: (text, text, text, vec text, vec text) -> (IndexPostResult);
   indexPosts: (vec IndexPostModel) -> (vec IndexPostResult);
   indexSize: () -> (nat) query;
   isThereEnoughMemory: () -> (bool) query;
   populateTags: (vec text, nat32, nat32) -> (SearchResultData) query;
   registerAdmin: (text) -> (Result);
+  registerCanister: (text) -> (Result);
   registerCgUser: (text) -> (Result);
   registerPlatformOperator: (text) -> (Result);
   search: (text, bool, nat32, nat32) -> (SearchResultData) query;
@@ -116,6 +118,7 @@ service : {
    (SearchResultData) query;
   setMaxMemorySize: (nat) -> (Result_1);
   unregisterAdmin: (text) -> (Result);
+  unregisterCanister: (text) -> (Result);
   unregisterCgUser: (text) -> (Result);
   unregisterPlatformOperator: (text) -> (Result);
   validate: (reserved) -> (Validate);

@@ -91,6 +91,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Opt(IDL.Text),
     'err' : IDL.Text,
   });
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const UserListItem = IDL.Record({
     'bio' : IDL.Text,
     'principal' : IDL.Text,
@@ -164,6 +165,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
+    'getMultipleUsersByPrincipalId' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [Result_6],
+        ['query'],
+      ),
     'getMyFollowers' : IDL.Func([IDL.Nat32, IDL.Nat32], [Result_5], ['query']),
     'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
     'getNuaBalance' : IDL.Func([IDL.Text], [NuaBalanceResult], ['query']),

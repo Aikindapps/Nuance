@@ -32,8 +32,10 @@ export const idlFactory = ({ IDL }) => {
       'downVotes' : IDL.Vec(IDL.Text),
       'upVotes' : IDL.Vec(IDL.Text),
       'replies' : IDL.Vec(Comment__1),
+      'handle' : IDL.Text,
       'repliedCommentId' : IDL.Opt(IDL.Text),
       'editedAt' : IDL.Opt(IDL.Text),
+      'avatar' : IDL.Text,
       'postId' : IDL.Text,
     })
   );
@@ -46,8 +48,10 @@ export const idlFactory = ({ IDL }) => {
     'downVotes' : IDL.Vec(IDL.Text),
     'upVotes' : IDL.Vec(IDL.Text),
     'replies' : IDL.Vec(Comment__1),
+    'handle' : IDL.Text,
     'repliedCommentId' : IDL.Opt(IDL.Text),
     'editedAt' : IDL.Opt(IDL.Text),
+    'avatar' : IDL.Text,
     'postId' : IDL.Text,
   });
   const Result_9 = IDL.Variant({ 'ok' : Comment, 'err' : IDL.Text });

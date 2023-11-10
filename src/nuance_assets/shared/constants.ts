@@ -30,6 +30,11 @@ export const icons = {
   SEARCH_BLACK: iconsPath + 'search-black.svg',
   CLOSE_SEARCH: iconsPath + 'close-search.svg',
   NOTIFICATION: iconsPath + 'notification.svg',
+  THUMBS_UP: iconsPath + 'thumbs-up.svg',
+  THUMBS_DOWN: iconsPath + 'thumbs-down.svg',
+  REPLY: iconsPath + 'reply.svg',
+  SHARE: iconsPath + 'share.svg',
+  EDIT_COMMENT: iconsPath + 'edit-comment.svg',
   TAG: iconsPath + 'tag.svg',
   UPLOAD_PICTURE: iconsPath + 'upload-picture.svg',
   CHANGE_PHOTO: iconsPath + 'change-photo.svg',
@@ -79,6 +84,7 @@ export const colors = {
   editProfileInputTextColor: '#19192E',
   darkerBorderColor: '#999999',
   primaryButtonColor: '#151451',
+  errorColor: '#cc4747',
 
   //dark mode
   darkModePrimaryTextColor: '#ffffff',

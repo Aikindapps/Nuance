@@ -297,6 +297,7 @@ type List =
      };
 type Comment__1 = 
  record {
+   avatar: text;
    bucketCanisterId: text;
    commentId: text;
    content: text;
@@ -304,6 +305,7 @@ type Comment__1 =
    creator: text;
    downVotes: vec text;
    editedAt: opt text;
+   handle: text;
    postId: text;
    repliedCommentId: opt text;
    replies: vec Comment__1;
@@ -311,6 +313,7 @@ type Comment__1 =
  };
 type Comment = 
  record {
+   avatar: text;
    bucketCanisterId: text;
    commentId: text;
    content: text;
@@ -318,6 +321,7 @@ type Comment =
    creator: text;
    downVotes: vec text;
    editedAt: opt text;
+   handle: text;
    postId: text;
    repliedCommentId: opt text;
    replies: vec Comment__1;

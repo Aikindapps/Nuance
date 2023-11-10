@@ -1,0 +1,154 @@
+@import '../../shared/styles/Colors';
+
+.comment {
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    margin: 32px 0px 32px 0px;
+
+    .comment.reply::before {
+        content: '';
+        position: absolute;
+        left: -32px;
+        top: -70px;
+        bottom: 0;
+        width: 1px;
+        background: #ccc;
+    }
+
+
+
+    .user-icon {
+        width: 28px;
+        height: 28px;
+        background-color: currentColor;
+        border-radius: 50%;
+        margin-right: 16px;
+    }
+
+    .username {
+        font-weight: bold;
+    }
+
+    .content {
+        margin: 10px 0px 0px 44px;
+        color: currentColor;
+    }
+
+    .time {
+        font-size: 0.8rem;
+        color: #888;
+        margin-right: 10px;
+    }
+
+    .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+        color: $border-tags2;
+        margin-left: 44px;
+
+        button {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: $border-tags2;
+            transition: color 0.3s;
+            font-size: 12px;
+
+
+            &.edit {
+                color: $edit-comment-highlight;
+            }
+
+            &:hover {
+                color: darken($border-tags2, 10%);
+                background: rgba(0, 0, 0, 0.08);
+                border-radius: 100px;
+
+                &.edit {
+                    color: $edit-comment-highlight;
+                }
+            }
+
+            .icon {
+                width: 16px;
+                height: 16px;
+
+            }
+
+            .text {
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 18px;
+            }
+
+            @media (max-width: 1089px) {
+                padding: 0px;
+
+                .text {
+                    display: none; // Hide the text span
+                }
+
+
+            }
+        }
+    }
+
+    &.reply {
+        margin-left: 44px;
+        margin-top: 32px;
+    }
+
+    &.reply::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background-color: #ccc;
+    }
+
+    .comment-avatar-and-name {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-direction: row;
+
+        @media (min-width: 768px) {
+
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+    }
+
+    .comment-header-container {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-direction: row;
+
+        @media (min-width: 768px) {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-direction: row;
+
+        }
+    }
+
+    .icon {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        fill: currentColor;
+    }
+}

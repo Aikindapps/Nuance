@@ -76,6 +76,8 @@ export type Result_4 = { 'ok' : Array<string> } |
   { 'err' : string };
 export type Result_5 = { 'ok' : Array<UserListItem> } |
   { 'err' : string };
+export type Result_6 = { 'ok' : Array<User> } |
+  { 'err' : string };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
   'bio' : string,
@@ -145,6 +147,7 @@ export interface _SERVICE {
   >,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
+  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_6>,
   'getMyFollowers' : ActorMethod<[number, number], Result_5>,
   'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
   'getNuaBalance' : ActorMethod<[string], NuaBalanceResult>,

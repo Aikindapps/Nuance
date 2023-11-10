@@ -73,6 +73,7 @@ export const idlFactory = ({ IDL }) => {
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
+    'getTrustedCanisters' : IDL.Func([], [Result_2], ['query']),
     'indexPost' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)],
         [IndexPostResult],
@@ -91,6 +92,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),
+    'registerCanister' : IDL.Func([IDL.Text], [Result], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result], []),
     'registerPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
     'search' : IDL.Func(
@@ -105,6 +107,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result], []),
+    'unregisterCanister' : IDL.Func([IDL.Text], [Result], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result], []),
     'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
     'validate' : IDL.Func([IDL.Reserved], [Validate], []),

@@ -39,6 +39,11 @@ type User =
    publicationsArray: vec PublicationObject;
  };
 type UpdateCallsAggregatedData = vec nat64;
+type Result_6 = 
+ variant {
+   err: text;
+   ok: vec User;
+ };
 type Result_5 = 
  variant {
    err: text;
@@ -200,6 +205,7 @@ service : {
   getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
+  getMultipleUsersByPrincipalId: (vec text) -> (Result_6) query;
   getMyFollowers: (nat32, nat32) -> (Result_5) query;
   getNftCanisters: () -> (vec NftCanisterEntry) query;
   getNuaBalance: (text) -> (NuaBalanceResult) query;
