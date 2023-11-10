@@ -137,7 +137,6 @@ actor class PostBucket() = this {
   stable var commentIdToDownvotedPrincipalIdsEntries : [(Text, [Text])] = [];
   stable var commentIdToReplyCommentIdsEntries : [(Text, [Text])] = [];
   stable var replyCommentIdToCommentIdEntries : [(Text, Text)] = [];
-  stable var commentIdToHandleEntries : [(Text, Text)] = [];
 
   // in-memory state (holds object field data) - hashmaps must match entires in above stable vars and in preupgrade and postupgrade
   // HashMaps with one entry per user
@@ -196,8 +195,6 @@ actor class PostBucket() = this {
   var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   //key: replyCommentId, value: commentId
   var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  //key: commentId, value: handle
-  var commentIdToHandleHashMap = HashMap.fromIter<Text, Text>(commentIdToHandleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //key: pub-handle, value: nft canister id
   var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -2229,7 +2226,7 @@ actor class PostBucket() = this {
 
     return {
       commentId = commentId;
-      handle = U.safeGet(commentIdToHandleHashMap, commentId, "");
+      handle = "";
       avatar = ""; //doesn't need to be set or stored, but its useful to have so the frontend can populate the avatar
       content = U.safeGet(commentIdToContentHashMap, commentId, "");
       postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
@@ -2465,8 +2462,6 @@ actor class PostBucket() = this {
         commentIdToPostIdHashMap.put(validCommentId, postId);
         //map the comment with the caller
         commentIdToUserPrincipalIdHashMap.put(validCommentId, userPrincipalId);
-        //comment to handle
-        commentIdToHandleHashMap.put(validCommentId, userObject.handle);
         //map the comment with the content
         commentIdToContentHashMap.put(validCommentId, content);
 
@@ -2717,8 +2712,6 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := Iter.toArray(commentIdToDownvotedPrincipalIdsHashMap.entries());
     commentIdToReplyCommentIdsEntries := Iter.toArray(commentIdToReplyCommentIdsHashMap.entries());
     replyCommentIdToCommentIdEntries := Iter.toArray(replyCommentIdToCommentIdHashMap.entries());
-    commentIdToHandleEntries := Iter.toArray(commentIdToHandleHashMap.entries());
-
   };
 
   system func postupgrade() {
@@ -2765,7 +2758,6 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := [];
     commentIdToReplyCommentIdsEntries := [];
     replyCommentIdToCommentIdEntries := [];
-    commentIdToHandleEntries := [];
 
   };
 };
