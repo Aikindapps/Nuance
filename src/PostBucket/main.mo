@@ -2734,7 +2734,7 @@ actor class PostBucket() = this {
     }
   };
 
-  private func putApplaud(currency: Text, tokenAmount: Nat, receivedTokenAmount: Nat, numberOfApplauds: Nat, postId: Text, receiver: Text, sender: Text) : () {
+  private func putApplaud(currency: Text, tokenAmount: Nat, receivedTokenAmount: Nat, numberOfApplauds: Nat, postId: Text, receiver: Text, sender: Text) : Text {
     let applaudId = getNextApplaudId();
     applaudIdToCurrencyHashMap.put(applaudId, currency);
     applaudIdToDateHashMap.put(applaudId, U.epochTime());
@@ -2763,6 +2763,8 @@ actor class PostBucket() = this {
       existingApplaudIdsBufferSender.add(applaudId);
       principalIdToApplaudIdsHashMap.put(sender, Buffer.toArray(existingApplaudIdsBufferSender));
     };
+
+    return applaudId;
     
   };
 
@@ -2861,7 +2863,7 @@ actor class PostBucket() = this {
     }
   };
 
-  public shared ({caller}) func checkTippingByTokenSymbol(postId: Text, symbol: Text, senderPrincipal: Text) : async Nat {
+  public shared ({caller}) func checkTippingByTokenSymbol(postId: Text, symbol: Text, senderPrincipal: Text) : async Result.Result<Applaud, Text> {
     //if the caller is the canister's itself, trust the argument senderPrincipal
     //if not, use the caller instead of the argument
     let sender = if(caller == Principal.fromActor(this)){senderPrincipal}else{Principal.toText(caller)};
@@ -2873,7 +2875,7 @@ actor class PostBucket() = this {
       case (null) {
         //article doesn't exist - do nothing and return 0
         Debug.print("checkTippingByTokenSymbol -> Error: " # "Article doesn't exist.");
-        return 0;
+        return #err(ArticleNotFound);
       };
     };
 
@@ -2881,7 +2883,7 @@ actor class PostBucket() = this {
       //given token symbol is not whitelisted
       //do nothing and return
       Debug.print("checkTippingByTokenSymbol -> Error: " # "Given symbol doesn't exist.");
-      return 0;
+      return #err("Given token symbol doesn't exist.");
     };
 
     let tippingToken = ENV.getTippingTokenBySymbol(symbol);
@@ -2894,7 +2896,7 @@ actor class PostBucket() = this {
     //if the amount of tokens locked in the subaccount is less then 2 fees, don't do anything
     if(not (balance > tippingToken.fee * 2 + 10)){
       Debug.print("checkTippingByTokenSymbol -> Error: " # "Too less tokens to proceed.");
-      return 0;
+      return #err("Too less tokens to proceed.");
     };
 
     //if here, the amount of tokens locked in the subaccount is enough
@@ -2913,7 +2915,7 @@ actor class PostBucket() = this {
           //the writer doesn't exist in the user canister either
           //do nothing -> return 0
           Debug.print("checkTippingByTokenSymbol -> Error: " # "Writer doesn't exist");
-          return 0;
+          return #err("Writer doesn't exist");
         };
         receiverPrincipalId := userCanisterReturn[0].principal;
       }
@@ -2934,7 +2936,7 @@ actor class PostBucket() = this {
           //print the error
           //return 0
           Debug.print("checkTippingByTokenSymbol -> Error: " # error);
-          return 0
+          return #err("Failed to fetch the data from sonic.")
         };
       };
     }
@@ -2967,14 +2969,14 @@ actor class PostBucket() = this {
         case(#Err(error)) {
           //transfer returned an error -> this should never happen
           Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the Nuance DAO returned an error.");
-          return 0;
+          return #err("Transferring tokens to the Nuance DAO returned an error.");
         };
       };
     }
     catch(e){
       //the inter-canister call failed
       Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the Nuance DAO failed.");
-      return 0;
+      return #err("Transferring tokens to the Nuance DAO failed.");
     };
 
     //if here, the tipping fee transferred succesfully
@@ -2997,19 +2999,19 @@ actor class PostBucket() = this {
         case(#Err(error)) {
           //transfer returned an error -> this should never happen
           Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the writer returned an error.");
-          return 0;
+          return #err("Transferring tokens to the writer returned an error.");
         };
       };
     }
     catch(e){
       //the inter-canister call failed
       Debug.print("checkTippingByTokenSymbol -> Error: " # "Transferring tokens to the writer failed.");
-      return 0;
+      return #err("Transferring tokens to the writer failed.");
     };
 
     //if here, everything worked fine
     //update the local hashmaps first
-    putApplaud(symbol, balance, writerShare, nuaEquivalent, postId, receiverPrincipalId, sender);
+    let applaudId = putApplaud(symbol, balance, writerShare, nuaEquivalent, postId, receiverPrincipalId, sender);
     
     //increment the number of applauds in the PostCore canister to effect the popularity
     try{
@@ -3021,7 +3023,7 @@ actor class PostBucket() = this {
       //if needed, we can create a function to get the info from the bucket canisters and refill the hashmap in the PostCore canister
     };
 
-    return nuaEquivalent;
+    return #ok(buildApplaud(applaudId));
   };
 
 
