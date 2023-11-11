@@ -2323,19 +2323,6 @@ actor class PostBucket() = this {
   public shared ({ caller }) func saveComment(input : SaveCommentModel) : async Result.Result<[Comment], Text> {
     let { postId; commentId; content; replyToCommentId } = input;
 
-    var userObject : User = {
-      accountCreated = "";
-      avatar = "";
-      bio = "";
-      displayName = "";
-      followers = null;
-      followersArray = [];
-      followersCount = 0;
-      handle = "";
-      nuaTokens = 0.0;
-      publicationsArray = [];
-    };
-
     switch (principalIdHashMap.get(postId)) {
       case (?val) {
         //post exists
@@ -2347,7 +2334,7 @@ actor class PostBucket() = this {
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {
-            userObject := val;
+            //user exists, continue
           };
           case (null) {
             //user doesn't exist, return an error
