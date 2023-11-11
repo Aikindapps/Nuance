@@ -40,13 +40,6 @@
       "type": "motoko"
     },
     "nuance_assets": {
-      "dependencies": [
-        "PostIndex",
-        "User",
-        "PostCore",
-        "Storage",
-        "FastBlocks_EmailOptIn"
-      ],
       "frontend": {
         "entrypoint": "dist/index.html"
       },
