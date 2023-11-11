@@ -62,7 +62,7 @@ export const idlFactory = ({ IDL }) => {
     'addWasmChunk' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'collectCanisterMetrics' : IDL.Func([], [], []),
-    'getAdmins' : IDL.Func([], [Result_3], []),
+    'getAdmins' : IDL.Func([], [Result_3], ['query']),
     'getAllDataCanisterIds' : IDL.Func([], [Result_4], []),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],

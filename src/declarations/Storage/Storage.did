@@ -10,7 +10,7 @@ type Storage =
    addWasmChunk: (blob) -> (Result_1);
    availableCycles: () -> (nat) query;
    collectCanisterMetrics: () -> ();
-   getAdmins: () -> (Result_3);
+   getAdmins: () -> (Result_3) query;
    getAllDataCanisterIds: () -> (Result_4);
    getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
    getCanisterVersion: () -> (text) query;

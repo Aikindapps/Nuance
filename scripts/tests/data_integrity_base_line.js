@@ -11,7 +11,7 @@ const fs = require('fs');
 const baseCommands = [
     'dfx canister call PostCore --network ic getPostKeyProperties \'("1")\' -qq',
     'dfx canister call User --network ic dumpUsers -qq',
-    'dfx canister call PostCore --network ic getLatestPosts \'(0,1)\' -qq',
+    'dfx canister call PostCore --network ic getLatestPosts \'(0 : nat32,1 : nat32)\' -qq',
     // ... other commands
 ];
 

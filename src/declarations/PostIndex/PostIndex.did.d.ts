@@ -75,6 +75,7 @@ export interface _SERVICE {
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
+  'getTrustedCanisters' : ActorMethod<[], Result_2>,
   'indexPost' : ActorMethod<
     [string, string, string, Array<string>, Array<string>],
     IndexPostResult
@@ -87,6 +88,7 @@ export interface _SERVICE {
     SearchResultData
   >,
   'registerAdmin' : ActorMethod<[string], Result>,
+  'registerCanister' : ActorMethod<[string], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
   'registerPlatformOperator' : ActorMethod<[string], Result>,
   'search' : ActorMethod<[string, boolean, number, number], SearchResultData>,
@@ -96,6 +98,7 @@ export interface _SERVICE {
   >,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result>,
+  'unregisterCanister' : ActorMethod<[string], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
   'unregisterPlatformOperator' : ActorMethod<[string], Result>,
   'validate' : ActorMethod<[any], Validate>,
