@@ -125,6 +125,7 @@ jobs:
           chmod +x vessel
           mv vessel /usr/local/bin/.
           vessel --version
+        cd ..
           
         
 
