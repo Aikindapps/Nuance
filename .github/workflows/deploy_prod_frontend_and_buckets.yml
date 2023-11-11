@@ -1,0 +1,60 @@
+name: Deploy PROD Frontend and Buckets
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: npm install
+      run: npm install
+
+    - name: Install DFX
+      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+
+    - name: Start DFX background
+      run: dfx start --background
+
+    - name: Set up dfx identity
+      run: |
+        sudo apt-get install -y jq
+        rm -f ~/.config/dfx/identity/prod/identity.pem
+        mkdir -p ~/.config/dfx/identity/prod/
+        echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+        echo '{}' | jq --arg wallet "$PROD_WALLET" '.identities.prod.ic = $wallet' > ~/.config/dfx/identity/prod/wallets.json
+        dfx identity use prod
+        dfx identity get-principal
+        dfx identity set-wallet "$PROD_WALLET" --network ic
+      env:
+        PROD_IDENT: ${{ secrets.PROD_IDENT }}
+        PROD_WALLET: ${{ secrets.PROD_WALLET }}
+
+          
+    - name: Get Principal
+      run:  dfx identity get-principal
+
+    - name: Generate empty canister_ids.json to prevent undefined error
+      run: |
+        mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
+        echo '{}' > ./.dfx/local/canister_ids.json
+
+    
+    - name: Install vessel for NFTs and Publications
+      run: |
+        cd ./Nuance-NFTs-and-Publications
+          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+          mv vessel-linux64 vessel
+          chmod +x vessel
+          mv vessel /usr/local/bin/.
+          vessel --version
+
+
+      
+    - name: Deploy PROD front end and bucket canisters --network ic
+      run: bash ./scripts/deployment/PROD_deploy_buckets_and_frontend.sh
