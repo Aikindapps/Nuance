@@ -8,12 +8,6 @@ import {
   idlFactory as userFactory,
 } from '../../declarations/User';
 
-import { _SERVICE as PostService } from '../../declarations/Post/Post.did';
-import {
-  canisterId as postCanisterId,
-  createActor as createPostActor,
-  idlFactory as postFactory,
-} from '../../declarations/Post';
 
 import { _SERVICE as PostCoreService } from '../../declarations/PostCore/PostCore.did';
 import {
@@ -312,7 +306,6 @@ export async function getMetricsActor(): Promise<
 
 export async function getAllCanisterIds(): Promise<string[]> {
   var canisterIds = [
-    postCanisterId,
     postCoreCanisterId,
     userCanisterId,
     postIndexCanisterId,
