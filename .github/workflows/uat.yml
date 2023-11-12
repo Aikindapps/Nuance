@@ -110,7 +110,7 @@ jobs:
         STORAGE: ${{ secrets.UAT_STORAGE }}
         USER: ${{ secrets.UAT_USER }}
         NUANCE_ASSETS: ${{ secrets.UAT_NUANCE_ASSETS }}
-        POSTCORE: ${{ secrets.UAT_POST_CORE }}
+        POSTCORE: ${{ secrets.UAT_POSTCORE }}
         POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
         METRICS: ${{ secrets.UAT_METRICS }}
         NFTFACTORY: ${{ secrets.UAT_NFTFACTORY }}
