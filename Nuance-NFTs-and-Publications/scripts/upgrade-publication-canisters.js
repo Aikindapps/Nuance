@@ -88,7 +88,7 @@ async function prompt(question) {
     console.log(`✅ Got PublicationManagement canister id: ${trustedCanister}`);
 
     // Check if the canister is an admin
-    const { stdout: adminCanistersStdout } = await exec(`dfx canister --network=${network} call PublicationManagement getAdmins`);
+    const { stdout: adminCanistersStdout } = await exec(`dfx canister --network=${network} call PublicationManagement getAdmins -qq`);
     const adminCanisters = parseCanisterIds(adminCanistersStdout);
     console.log(`✅ Got admin canisters: ${adminCanisters}`);
 
