@@ -87,17 +87,17 @@ async function prompt(question) {
     const trustedCanister = trustedCanisterStdout.trim().match(/"(.*?)"/)[1];
     console.log(`✅ Got PublicationManagement canister id: ${trustedCanister}`);
 
-    // Check if the canister is an admin
-    const { stdout: adminCanistersStdout } = await exec(`dfx canister --network=${network} call PublicationManagement getAdmins`);
-    const adminCanisters = parseCanisterIds(adminCanistersStdout);
-    console.log(`✅ Got admin canisters: ${adminCanisters}`);
+    // // Check if the canister is an admin
+    // const { stdout: adminCanistersStdout } = await exec(`dfx canister --network=${network} call PublicationManagement getAdmins -qq`);
+    // const adminCanisters = parseCanisterIds(adminCanistersStdout);
+    // console.log(`✅ Got admin canisters: ${adminCanisters}`);
 
-    if (adminCanisters.includes(trustedCanister)) {
-      console.log("✅ PublicationManagement is already an admin canister");
-    } else {
-      await exec(`dfx canister --network=${network} call PublicationManagement registerAdmin '("${trustedCanister}")'`);
-      console.log("✅ Added PublicationManagement as an admin canister");
-    }
+    // if (adminCanisters.includes(trustedCanister)) {
+    //   console.log("✅ PublicationManagement is already an admin canister");
+    // } else {
+    //   await exec(`dfx canister --network=${network} call PublicationManagement registerAdmin '("${trustedCanister}")'`);
+    //   console.log("✅ Added PublicationManagement as an admin canister");
+    // }
 
 
     try {

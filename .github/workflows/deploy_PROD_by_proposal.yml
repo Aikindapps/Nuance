@@ -110,6 +110,7 @@ jobs:
             cd Nuance-NFTs-and-Publications
           fi
           dfx canister create $wasm
+          dfx generate $wasm
           dfx build $wasm --network $network
           if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
             cd ..

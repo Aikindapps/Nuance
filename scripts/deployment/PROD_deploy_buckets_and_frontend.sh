@@ -7,18 +7,20 @@ echo $PUBLICATIONS_REPO_PATH
 echo $NUANCE_MAIN_REPO_PATH
 
 echo ""
-echo "Deploying nuance main repo to UAT network $NETWORK..."
+echo "Deploying frontend to PROD network $NETWORK..."
 echo ""
 
 dfx generate
-dfx deploy --network $NETWORK
+dfx build --all --network $NETWORK
+dfx deploy nuance_assets --network $NETWORK
 node scripts/upgrades/bucketCanisterUpgrade.js --multi --$NETWORK
 
 echo ""
-echo "Deploying nuance publications repo to UAT network $NETWORK..."
+echo "Deploying nuance publication buckets to PROD network $NETWORK..."
 echo ""
 
 cd $PUBLICATIONS_REPO_PATH
 dfx generate
-dfx deploy --network $NETWORK
+dfx build --all --network $NETWORK
+
 node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
