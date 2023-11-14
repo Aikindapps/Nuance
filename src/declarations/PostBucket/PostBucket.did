@@ -18,7 +18,7 @@ type SaveCommentModel =
 type Result_9 = 
  variant {
    err: text;
-   ok: Comment;
+   ok: Comment__1;
  };
 type Result_8 = 
  variant {
@@ -55,6 +55,11 @@ type Result_2 =
    err: text;
    ok: text;
  };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: Applaud;
+ };
 type Result_1 = 
  variant {
    err: text;
@@ -63,7 +68,7 @@ type Result_1 =
 type Result = 
  variant {
    err: text;
-   ok: vec Comment;
+   ok: CommentsReturnType;
  };
 type PostTagModel = 
  record {
@@ -150,6 +155,8 @@ type PostBucket =
    acceptCycles: () -> ();
    addPostCategory: (text, text) -> (Result_5);
    availableCycles: () -> (nat) query;
+   checkTipping: (text) -> ();
+   checkTippingByTokenSymbol: (text, text, text) -> (Result_10);
    delete: (text) -> (Result_4);
    deleteComment: (text) -> (Result_9);
    deleteUserPosts: (text) -> (Result_4);
@@ -165,6 +172,7 @@ type PostBucket =
                                 text;
                                 text;
                               }) query;
+   getApplaudById: (text) -> (Result_10) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
    getCgUsers: () -> (Result_7) query;
@@ -175,8 +183,10 @@ type PostBucket =
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
    getMetadata: (text, nat) -> (Result_8) query;
+   getMyApplauds: () -> (vec Applaud) query;
    getNftCanisters: () -> (vec NftCanisterEntry) query;
    getPlatformOperators: () -> (List) query;
+   getPostApplauds: (text) -> (vec Applaud) query;
    getPostComments: (text) -> (Result) query;
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
@@ -186,6 +196,7 @@ type PostBucket =
    getSubmittedForReview: (vec text) -> (vec PostBucketType__1) query;
    getTotalPostCount: () -> (nat) query;
    getTrustedCanisters: () -> (Result_7) query;
+   getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
    getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
    initializeBucketCanister: (vec text, vec text, vec text,
     vec record {
@@ -295,6 +306,11 @@ type List =
        text;
        List;
      };
+type CommentsReturnType = 
+ record {
+   comments: vec Comment;
+   totalNumberOfComments: text;
+ };
 type Comment__1 = 
  record {
    avatar: text;
@@ -308,7 +324,7 @@ type Comment__1 =
    handle: text;
    postId: text;
    repliedCommentId: opt text;
-   replies: vec Comment__1;
+   replies: vec Comment;
    upVotes: vec text;
  };
 type Comment = 
@@ -324,7 +340,20 @@ type Comment =
    handle: text;
    postId: text;
    repliedCommentId: opt text;
-   replies: vec Comment__1;
+   replies: vec Comment;
    upVotes: vec text;
+ };
+type Applaud = 
+ record {
+   applaudId: text;
+   bucketCanisterId: text;
+   currency: text;
+   date: text;
+   numberOfApplauds: nat;
+   postId: text;
+   receivedTokenAmount: nat;
+   receiver: text;
+   sender: text;
+   tokenAmount: nat;
  };
 service : () -> PostBucket

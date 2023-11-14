@@ -232,6 +232,7 @@ export interface _SERVICE {
   'getWasmChunks' : ActorMethod<[], Result_6>,
   'handleModclubMigration' : ActorMethod<[string], Result_1>,
   'idQuick' : ActorMethod<[], Principal>,
+  'incrementApplauds' : ActorMethod<[string, bigint], undefined>,
   'indexPopular' : ActorMethod<[], undefined>,
   'initializeCanister' : ActorMethod<[string, string, string], Result_1>,
   'initializePostCoreCanister' : ActorMethod<[], Result_1>,

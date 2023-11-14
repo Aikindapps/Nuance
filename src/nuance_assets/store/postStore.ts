@@ -272,6 +272,7 @@ export interface PostStore {
   myTags: PostTagModel[] | undefined;
   tagsByUser: PostTag[] | undefined;
   comments: Comment[] | [];
+  totalNumberOfComments: number;
 
   savePost: (post: PostSaveModel) => Promise<PostType | undefined>;
   makePostPremium: (postId: string) => Promise<void>;
@@ -479,6 +480,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ownedPremiumPosts: [],
   premiumPostsActivities: [],
   comments: [],
+  totalNumberOfComments: 0,
 
   getPostComments: async (postId: string, bucketCanisterId: string): Promise<void> => {
     try {
@@ -487,10 +489,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         toastError(result.err);
       } else {
 
-        mergeCommentsWithUsers(result.ok)
+        mergeCommentsWithUsers(result.ok.comments)
           .then(enrichedComments => {
-
-            set({ comments: enrichedComments });
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
             console.log(enrichedComments);
           })
           .catch(error => {

@@ -303,6 +303,7 @@ service : {
   getWasmChunks: () -> (Result_6);
   handleModclubMigration: (text) -> (Result_1);
   idQuick: () -> (principal) query;
+  incrementApplauds: (text, nat) -> ();
   indexPopular: () -> ();
   initializeCanister: (text, text, text) -> (Result_1);
   initializePostCoreCanister: () -> (Result_1);

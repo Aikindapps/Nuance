@@ -292,6 +292,7 @@ export const idlFactory = ({ IDL }) => {
     'getWasmChunks' : IDL.Func([], [Result_6], []),
     'handleModclubMigration' : IDL.Func([IDL.Text], [Result_1], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
+    'incrementApplauds' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'indexPopular' : IDL.Func([], [], []),
     'initializeCanister' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],

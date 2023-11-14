@@ -108,6 +108,11 @@ module {
     repliedCommentId : ?Text; //if this comment is a reply, holds the commentId. if not it's null
   };
 
+  public type CommentsReturnType = {
+    totalNumberOfComments: Text;
+    comments: [Comment];
+  };
+
   public type Applaud = {
     applaudId: Text; //unique id of the applaud
     postId: Text; //postId of the applaud sent to
