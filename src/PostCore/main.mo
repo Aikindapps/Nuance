@@ -110,6 +110,7 @@ actor PostCore {
   stable var relationshipEntries : [(Text, [PostTag])] = [];
   stable var userTagRelationshipEntries : [(Text, [PostTag])] = [];
   stable var clapsEntries : [(Text, Nat)] = [];
+  stable var applaudsEntries : [(Text, Nat)] = [];
   stable var popularity : [(Text, Nat)] = [];
   stable var popularityToday : [(Text, Nat)] = [];
   stable var popularityThisWeek : [(Text, Nat)] = [];
@@ -156,6 +157,7 @@ actor PostCore {
   var relationships = HashMap.fromIter<Text, [PostTag]>(relationshipEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var userTagRelationships = HashMap.fromIter<Text, [PostTag]>(userTagRelationshipEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var clapsHashMap = HashMap.fromIter<Text, Nat>(clapsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudsHashMap = HashMap.fromIter<Text, Nat>(applaudsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var popularityHashMap = HashMap.fromIter<Text, Nat>(popularity.vals(), maxHashmapSize, Text.equal, Text.hash);
   var popularityTodayHashMap = HashMap.fromIter<Text, Nat>(popularityToday.vals(), maxHashmapSize, Text.equal, Text.hash);
   var popularityThisWeekHashMap = HashMap.fromIter<Text, Nat>(popularityThisWeek.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -612,7 +614,7 @@ actor PostCore {
       publishedDate = Int.toText(U.safeGet(publishedDateHashMap, postId, 0));
       views = Nat.toText(U.safeGet(viewsHashMap, postId, 0));
       tags = getTagModelsByPost(postId);
-      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0));
+      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0) + (U.safeGet(applaudsHashMap, postId, 0) / Nat.pow(10, ENV.NUA_TOKEN_DECIMALS)));
       category = U.safeGet(categoryHashMap, postId, "");
       isDraft = U.safeGet(isDraftHashMap, postId, false);
     };
@@ -790,6 +792,7 @@ actor PostCore {
     viewsHashMap.delete(postId);
     postIdsToBucketCanisterIdsHashMap.delete(postId);
     clapsHashMap.delete(postId);
+    applaudsHashMap.delete(postId);
     categoryHashMap.delete(postId);
   };
 
@@ -1279,6 +1282,8 @@ actor PostCore {
           totalViewCount += postViewCount;
           let clapCount = U.safeGet(clapsHashMap, postId, 0);
           totalClapCount += clapCount;
+          let applaudCount = U.safeGet(applaudsHashMap, postId, 0);
+          totalClapCount += applaudCount / Nat.pow(10, ENV.NUA_TOKEN_DECIMALS);
         },
       );
     };
@@ -2085,45 +2090,27 @@ actor PostCore {
     totalViewsToday += 1;
   };
 
-  public shared ({ caller }) func clapPost(postId : Text) : () {
-    if (isAnonymous(caller)) {
-      return;
-    };
-    //validate input
-    if (not U.isTextLengthValid(postId, 20)) {
-      return;
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return;
-    };
-
-    //look up handle for post
-    let principalId = U.safeGet(principalIdHashMap, postId, "");
-    let handle = U.safeGet(handleHashMap, principalId, "");
-
-    //to prevent gaming your own article for claps/tokens
-    if (Principal.toText(caller) != principalId) {
-
-      // check if user has enough tokens to clap
-      let UserCanister = CanisterDeclarations.getUserCanister();
-      var tokenAmounts = await UserCanister.getNuaBalance(Principal.toText(caller));
-      switch (tokenAmounts) {
-        case (#ok(balance)) Debug.print("balance: " # balance);
-        case (#err(msg)) {
-          Debug.print("error: " # msg);
-          return;
-        };
+  //only callable by 
+  public shared ({caller}) func incrementApplauds(postId: Text, applauds: Nat) : async () {
+    let callerPrincipal = Principal.toText(caller);
+    switch(bucketCanisterIdsHashMap.get(callerPrincipal)) {
+      case(?value) {
+        //caller is a bucket canister
+        //increment the claps
+        applaudsHashMap.put(postId, U.safeGet(applaudsHashMap, postId, 0) + applauds);
       };
-
-      //clap post
-      clapsHashMap.put(postId, U.safeGet(clapsHashMap, postId, 0) + 1);
-      Debug.print("PostCore->clap");
-
-      //Nua tokens added to author and subtracted from user
-      UserCanister.handleClap(Principal.toText(caller), handle);
+      case(null) {
+        //caller is not authorized
+        return;
+      };
     };
   };
+
+  public shared ({ caller }) func clapPost(postId : Text) : () {
+    //deprecated func
+    return;
+  };
+
   private func indexPopularPosts() : () {
     Debug.print("PostCore -> indexPopularPosts is called");
     let now = U.epochTime() / 1000;
@@ -2143,7 +2130,9 @@ actor PostCore {
       let isDraft = U.safeGet(isDraftHashMap, postId, false);
       let isRejected = rejectedByModClub(postId);
       if (not isDraft and not isRejected) {
-        let clapCount = (U.safeGet(clapsHashMap, postId, 0) + 1);
+        //the old clapsHashMap is frozen
+        //we use the new applaudsHashMap to store the applauds sent by tokens
+        let clapCount = U.safeGet(clapsHashMap, postId, 0) * Nat.pow(10, ENV.NUA_TOKEN_DECIMALS) + U.safeGet(applaudsHashMap, postId, 0) + 1;
         let viewCount = (U.safeGet(viewsHashMap, postId, 0) + 1);
 
         let popularity = clapCount * viewCount;
@@ -3683,6 +3672,7 @@ actor PostCore {
     relationshipEntries := Iter.toArray(relationships.entries());
     userTagRelationshipEntries := Iter.toArray(userTagRelationships.entries());
     clapsEntries := Iter.toArray(clapsHashMap.entries());
+    applaudsEntries := Iter.toArray(applaudsHashMap.entries());
     popularity := Iter.toArray(popularityHashMap.entries());
     popularityToday := Iter.toArray(popularityTodayHashMap.entries());
     popularityThisWeek := Iter.toArray(popularityThisWeekHashMap.entries());
@@ -3723,6 +3713,7 @@ actor PostCore {
     relationshipEntries := [];
     userTagRelationshipEntries := [];
     clapsEntries := [];
+    applaudsEntries := [];
     popularity := [];
     popularityToday := [];
     popularityThisWeek := [];

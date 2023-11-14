@@ -467,4 +467,13 @@ module {
     await MetricsActor.logCommand(commandName, operator);
   };
 
+  public func natToSubAccount(n : Nat) : [Nat8] {
+    let n_byte = func(i : Nat) : Nat8 {
+      assert (i < 32);
+      let shift : Nat = 8 * (32 - 1 - i);
+      Nat8.fromIntWrap(n / 2 ** shift);
+    };
+    Array.tabulate<Nat8>(32, n_byte);
+  };
+
 };

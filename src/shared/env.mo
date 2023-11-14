@@ -100,4 +100,66 @@ module {
     PUBLICATION_MANAGEMENT_CANISTER_ID,
   ];
 
+  //tipping feature variables
+
+  public let TIPPING_TOKENS = ["NUA", "ICP", "CKBTC"];
+  //means 10%
+  public let TIP_FEE_AMOUNT = 10.0;
+  public let TIP_FEE_RECEIVER_PRINCIPAL_ID = SNS_GOVERNANCE_CANISTER;
+
+  public let NUA_TOKEN_CANISTER_ID = "rxdbk-dyaaa-aaaaq-aabtq-cai";
+  public let NUA_TOKEN_DECIMALS = 8;
+  public let NUA_TOKEN_FEE = 100_000;
+
+  public let CKBTC_TOKEN_CANISTER_ID = "mxzaz-hqaaa-aaaar-qaada-cai";
+  public let CKBTC_TOKEN_DECIMALS = 8;
+  public let CKBTC_TOKEN_FEE = 10;
+
+  public let ICP_TOKEN_CANISTER_ID = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+  public let ICP_TOKEN_DECIMALS = 8;
+  public let ICP_TOKEN_FEE = 10_000;
+
+
+  public type TippingToken = {
+    canisterId: Text;
+    fee: Nat;
+    decimals: Nat;
+  };
+
+  public func getTippingTokenBySymbol(symbol: Text) : TippingToken {
+    switch(symbol) {
+      case("NUA") {
+        return {
+          canisterId = NUA_TOKEN_CANISTER_ID;
+          fee = NUA_TOKEN_FEE;
+          decimals = NUA_TOKEN_DECIMALS;
+        }
+      };
+      case("ICP") {
+        return {
+          canisterId = ICP_TOKEN_CANISTER_ID;
+          fee = ICP_TOKEN_FEE;
+          decimals = ICP_TOKEN_DECIMALS;
+        }
+      };
+      case("CKBTC"){
+        return {
+          canisterId = CKBTC_TOKEN_CANISTER_ID;
+          fee = CKBTC_TOKEN_FEE;
+          decimals = CKBTC_TOKEN_DECIMALS;
+        }
+      };
+      case(_){
+        //not possible -> return an empty object
+        return {
+          canisterId = "";
+          poolCanisterId = "";
+          fee = 0;
+          decimals = 0;
+        }
+      };
+
+    };
+  };
+
 };
