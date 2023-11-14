@@ -38,7 +38,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
   edit = false,
   closeModal = () => { },
 }) => {
-  const { saveComment, comments } = usePostStore(state => state);
+  const { saveComment, comments, totalNumberOfComments } = usePostStore(state => state);
   const [commentText, setCommentText] = useState(content || '');
   const [edited, setEdited] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,33 +61,10 @@ const WriteComment: React.FC<WriteCommentProps> = ({
     replyToCommentId: replyToCommentId ? [replyToCommentId] : [],
     postId,
   };
-  function countComments(comments: Comment[]) {
-    return comments.reduce((acc, comment) => {
 
-      let count = 1;
-      // Recursively count the replies of the comment
-      if (comment.replies && comment.replies.length > 0) {
-        count += countComments(comment.replies);
-      }
-      return acc + count;
-    }, 0);
-  }
-
-  const commentCount = countComments(comments);
-  const commentCountExceeded = commentCount >= 100;
-
-  useEffect(() => {
-    console.log(commentCount)
-    if (commentCountExceeded) {
-      toastError('Sorry, you cannot post more than 100 comments.');
-    }
-  }, [comments]);
-
+  
+  const commentCountExceeded = totalNumberOfComments >= 100;
   const handleSave = async (edited: Boolean) => {
-
-
-
-
     if (commentCountExceeded && !edited) {
       toastError('Sorry, you cannot post more than 100 comments.');
       return;

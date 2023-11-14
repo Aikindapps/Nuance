@@ -1,6 +1,18 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
+export interface Applaud {
+  'bucketCanisterId' : string,
+  'receivedTokenAmount' : bigint,
+  'date' : string,
+  'tokenAmount' : bigint,
+  'sender' : string,
+  'applaudId' : string,
+  'currency' : string,
+  'receiver' : string,
+  'numberOfApplauds' : bigint,
+  'postId' : string,
+}
 export interface Comment {
   'bucketCanisterId' : string,
   'creator' : string,
@@ -9,7 +21,7 @@ export interface Comment {
   'createdAt' : string,
   'downVotes' : Array<string>,
   'upVotes' : Array<string>,
-  'replies' : Array<Comment__1>,
+  'replies' : Array<Comment>,
   'handle' : string,
   'repliedCommentId' : [] | [string],
   'editedAt' : [] | [string],
@@ -24,12 +36,16 @@ export interface Comment__1 {
   'createdAt' : string,
   'downVotes' : Array<string>,
   'upVotes' : Array<string>,
-  'replies' : Array<Comment__1>,
+  'replies' : Array<Comment>,
   'handle' : string,
   'repliedCommentId' : [] | [string],
   'editedAt' : [] | [string],
   'avatar' : string,
   'postId' : string,
+}
+export interface CommentsReturnType {
+  'totalNumberOfComments' : string,
+  'comments' : Array<Comment>,
 }
 export type List = [] | [[string, List]];
 export type Metadata = {
@@ -85,6 +101,11 @@ export interface PostBucket {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addPostCategory' : ActorMethod<[string, string], Result_5>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'checkTipping' : ActorMethod<[string], undefined>,
+  'checkTippingByTokenSymbol' : ActorMethod<
+    [string, string, string],
+    Result_10
+  >,
   'delete' : ActorMethod<[string], Result_4>,
   'deleteComment' : ActorMethod<[string], Result_9>,
   'deleteUserPosts' : ActorMethod<[string], Result_4>,
@@ -97,6 +118,7 @@ export interface PostBucket {
   'get' : ActorMethod<[string], Result_5>,
   'getAdmins' : ActorMethod<[], Result_7>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
+  'getApplaudById' : ActorMethod<[string], Result_10>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_7>,
@@ -107,8 +129,10 @@ export interface PostBucket {
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMetadata' : ActorMethod<[string, bigint], Result_8>,
+  'getMyApplauds' : ActorMethod<[], Array<Applaud>>,
   'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
   'getPlatformOperators' : ActorMethod<[], List>,
+  'getPostApplauds' : ActorMethod<[string], Array<Applaud>>,
   'getPostComments' : ActorMethod<[string], Result>,
   'getPostCoreCanisterId' : ActorMethod<[], string>,
   'getPostUrls' : ActorMethod<[], Result_2>,
@@ -124,6 +148,7 @@ export interface PostBucket {
   >,
   'getTotalPostCount' : ActorMethod<[], bigint>,
   'getTrustedCanisters' : ActorMethod<[], Result_7>,
+  'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
   'initializeBucketCanister' : ActorMethod<
     [
@@ -253,9 +278,11 @@ export interface PostSaveModelBucketMigration {
   'postId' : string,
 }
 export interface PostTagModel { 'tagId' : string, 'tagName' : string }
-export type Result = { 'ok' : Array<Comment> } |
+export type Result = { 'ok' : CommentsReturnType } |
   { 'err' : string };
 export type Result_1 = { 'ok' : Post } |
+  { 'err' : string };
+export type Result_10 = { 'ok' : Applaud } |
   { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };
@@ -271,7 +298,7 @@ export type Result_7 = { 'ok' : Array<string> } |
   { 'err' : string };
 export type Result_8 = { 'ok' : Metadata } |
   { 'err' : string };
-export type Result_9 = { 'ok' : Comment } |
+export type Result_9 = { 'ok' : Comment__1 } |
   { 'err' : string };
 export interface SaveCommentModel {
   'content' : string,

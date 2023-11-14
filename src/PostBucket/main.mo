@@ -89,6 +89,7 @@ actor class PostBucket() = this {
   //comment types
   type Comment = Types.Comment;
   type SaveCommentModel = Types.SaveCommentModel;
+  type CommentsReturnType = Types.CommentsReturnType;
 
   //applaud types
   type Applaud = Types.Applaud;
@@ -2283,13 +2284,16 @@ actor class PostBucket() = this {
   };
 
   //returns the array of coments of the post
-  private func buildPostComments(postId : Text) : [Comment] {
+  private func buildPostComments(postId : Text) : CommentsReturnType {
     let commentIds = U.safeGet(postIdToCommentIdsHashMap, postId, []);
     var comments = Buffer.Buffer<Comment>(0);
     for (commentId in commentIds.vals()) {
       comments.add(buildComment(commentId));
     };
-    return Buffer.toArray(comments);
+    return {
+      comments = Buffer.toArray(comments);
+      totalNumberOfComments = Nat.toText(U.safeGet(postIdToNumberOfCommentsHashMap, postId, 0));
+    };
   };
   //returns the comment by a commentId
   public shared query func getComment(commentId : Text) : async Result.Result<Comment, Text> {
@@ -2303,7 +2307,7 @@ actor class PostBucket() = this {
     };
   };
   //returns all the comments of the given postId (replies included, no pagination)
-  public shared query func getPostComments(postId : Text) : async Result.Result<[Comment], Text> {
+  public shared query func getPostComments(postId : Text) : async Result.Result<CommentsReturnType, Text> {
     switch (principalIdHashMap.get(postId)) {
       case (?val) {
         //post exists
@@ -2320,7 +2324,7 @@ actor class PostBucket() = this {
   //commentId -> if you want to edit an existing comment, use this argument to specify the comment you're editing. if not an edit, pass null
   //content -> content of the comment
   //replytoCommentId -> if this is a reply to another comment, use this arg to specify the comment you're replying. if not a reply, pass null
-  public shared ({ caller }) func saveComment(input : SaveCommentModel) : async Result.Result<[Comment], Text> {
+  public shared ({ caller }) func saveComment(input : SaveCommentModel) : async Result.Result<CommentsReturnType, Text> {
     let { postId; commentId; content; replyToCommentId } = input;
     switch (principalIdHashMap.get(postId)) {
       case (?val) {
@@ -2583,7 +2587,7 @@ actor class PostBucket() = this {
   };
 
   //upvote a comment by a commentId
-  public shared ({ caller }) func upvoteComment(commentId : Text) : async Result.Result<[Comment], Text> {
+  public shared ({ caller }) func upvoteComment(commentId : Text) : async Result.Result<CommentsReturnType, Text> {
     switch (commentIdToPostIdHashMap.get(commentId)) {
       case (?postId) {
         //check if caller has a nuance account
@@ -2615,7 +2619,7 @@ actor class PostBucket() = this {
   };
 
   //downvote a comment by a commentId
-  public shared ({ caller }) func downvoteComment(commentId : Text) : async Result.Result<[Comment], Text> {
+  public shared ({ caller }) func downvoteComment(commentId : Text) : async Result.Result<CommentsReturnType, Text> {
     switch (commentIdToPostIdHashMap.get(commentId)) {
       case (?postId) {
         //check if caller has a nuance account
@@ -2647,7 +2651,7 @@ actor class PostBucket() = this {
   };
 
   //remove both the upvote and downvote of the comment
-  public shared ({ caller }) func removeCommentVote(commentId : Text) : async Result.Result<[Comment], Text> {
+  public shared ({ caller }) func removeCommentVote(commentId : Text) : async Result.Result<CommentsReturnType, Text> {
     switch (commentIdToPostIdHashMap.get(commentId)) {
       case (?postId) {
         //check if caller has a nuance account
