@@ -21,6 +21,7 @@ interface WriteCommentProps {
   avatar: string;
   content?: string;
   closeModal?: () => void;
+  comment?: Comment; //pass the entire comment for editing
 }
 
 const WriteComment: React.FC<WriteCommentProps> = ({
@@ -32,6 +33,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
   handle,
   avatar,
   content,
+  comment,
   closeModal = () => {},
 }) => {
   const { saveComment, comments } = usePostStore(state => state);
@@ -68,13 +70,15 @@ const WriteComment: React.FC<WriteCommentProps> = ({
     }, 0);
   }
 
+  const commentCount = countComments(comments);
+  const commentCountExceeded = commentCount >= 100;
+
   const handleSave = async (edited : Boolean) => {
     
     
 
-    const commentCount = countComments(comments);
-    console.log(commentCount);
-    if (commentCount >= 100) {
+    
+    if (commentCountExceeded && !edited) {
       toastError('Sorry, you cannot post more than 100 comments.');
       return;
     }
@@ -103,9 +107,9 @@ const WriteComment: React.FC<WriteCommentProps> = ({
 
 
     try {
-      const isEdit = commentId !== undefined;
-      await saveComment(commentModel, bucketCanisterId, isEdit, handle, avatar );
       closeModal();
+      const isEdit = commentId !== undefined;
+      await saveComment(commentModel, bucketCanisterId, isEdit, handle, avatar, edited ? comment : undefined);
       setCommentText(''); // Clear the comment input after saving
       setIsSaving(false);
     } catch (error) {
@@ -115,7 +119,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
   };
 
   return (
-    <div className="write-comment">
+    <div className="write-comment" style={replyToCommentId ? {marginLeft: '38px'} : {}}>
       <div className="comment-input-container">
         <div className="comment-title">{label}</div>
         <textarea
@@ -133,14 +137,14 @@ const WriteComment: React.FC<WriteCommentProps> = ({
         type='button'
         styleType={darkTheme ? 'comment-button-dark' : 'comment-button' }
         style={{ width: '143px' }}
-        onClick={handleSave}
+        onClick={() => handleSave(true)}
       >
        Change comment
       </Button>
 
         ) : (
         <Button
-            disabled={!commentText.trim() || isSaving || hasError}
+            disabled={!commentText.trim() || isSaving || hasError || commentCountExceeded}
             type='button'
             styleType={darkTheme ? 'comment-button-dark' : 'comment-button' }
             style={{ width: '124px' }}

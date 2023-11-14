@@ -413,7 +413,7 @@ export interface PostStore {
 
   getUserDailyPostStatus: () => Promise<boolean>;
   getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
-  saveComment: (commentModel: SaveCommentModel, bucketCanisterId: string, edited: Boolean, handle: string, avatar: string) => Promise<void>;
+  saveComment: (commentModel: SaveCommentModel, bucketCanisterId: string, edited: Boolean, handle: string, avatar: string, comment?: Comment) => Promise<void>;
   upVoteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
   downVoteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
   deleteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
@@ -505,7 +505,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
-  saveComment: async (commentModel: SaveCommentModel, bucketCanisterId: string, edited: Boolean, handle: string, avatar: string): Promise<void> => {
+  saveComment: async (commentModel: SaveCommentModel, bucketCanisterId: string, edited: Boolean, handle: string, avatar: string, comment?: Comment): Promise<void> => {
     // Generate a temporary ID for the new comment
     const tempId = Date.now().toString();
 
@@ -516,16 +516,17 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       avatar: avatar,
       postId: commentModel.postId,
       content: commentModel.content,
-      commentId: tempId,
-      createdAt: "0",
-      downVotes: [] as string[],
-      upVotes: [] as string[],
-      replies: [] as Comment[],
+      commentId: comment ? comment.commentId : tempId,
+      createdAt: comment ? comment.createdAt : "0",
+      downVotes: comment ? comment.downVotes : [] as string[],
+      upVotes: comment ? comment.upVotes : [] as string[],
+      replies: comment ? comment.replies as Comment[] : [] as Comment[],
       repliedCommentId: [],
-      editedAt: []
+      editedAt: comment ? comment.editedAt : []
     } as Comment;
 
-
+    console.log(newComment);
+    console.log(comment);
 
     // Optimistically update the state with the new comment before backend updates
 
@@ -559,7 +560,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       if (actualCommentId) {
 
         set(state => ({
-          comments: findAndUpdateComment(state.comments, actualCommentId, oldComment => ({ ...oldComment, ...newComment, commentId: tempId }))
+          comments: findAndUpdateComment(state.comments, actualCommentId, oldComment => ({ ...oldComment, ...newComment, commentId: comment?.commentId || tempId }))
         }));
       } else {
 
@@ -569,7 +570,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       set(state => ({
         comments: findAndUpdateComment(state.comments, replyToCommentId, comment => ({
           ...comment,
-          replies: [...comment.replies, newComment]
+          replies: [newComment, ...comment.replies]
         }))
       }));
     }
@@ -588,6 +589,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           set(state => ({
             comments: state.comments.map(comment => comment.commentId === tempId ? { ...comment } : comment)
           }));
+          usePostStore.getState().getPostComments(commentModel.postId, bucketCanisterId);
         } else {
           usePostStore.getState().getPostComments(commentModel.postId, bucketCanisterId);
           toast('You posted a comment!', ToastType.Success);

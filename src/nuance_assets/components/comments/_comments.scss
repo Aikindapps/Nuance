@@ -6,7 +6,7 @@
     display: flex;
     flex-direction: column;
 
-    margin: 32px 0px 32px 0px;
+    margin: 32px 0px 0px 0px;
 
     .comment.reply::before {
         content: '';
@@ -30,6 +30,12 @@
 
     .username {
         font-weight: bold;
+        color: $primary-text-color;
+    }
+
+    .username-dark {
+        font-weight: bold;
+        color: $dark-primary-text-color;
     }
 
     .content {

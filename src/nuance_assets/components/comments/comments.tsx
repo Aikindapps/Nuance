@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import './_comments.scss';
-import { icons } from '../../shared/constants';
+import { icons, images } from '../../shared/constants';
 import { Comment } from 'src/declarations/PostBucket/PostBucket.did';
 import { User } from 'src/declarations/User/User.did';
 import WriteComment from '../comments/write-comments';
@@ -8,6 +8,7 @@ import { usePostStore } from '../../store/postStore';
 import { useAuthStore, useUserStore } from '../../../nuance_assets/store';
 import { Context } from '../../Context';
 import toast from 'react-hot-toast';
+import { useTheme } from '../../ThemeContext';
 
 interface CommentProps {
   loggedInUser: string;
@@ -39,21 +40,23 @@ const Comments: React.FC<CommentProps> = ({
   });
 
   const context = useContext(Context)
+  const darkTheme = useTheme();
   
   const { upVoteComment, downVoteComment, getPostComments,removeCommentVote } = usePostStore(state => state);
   const toggleReplies = () => {
     setRepliesVisible(!repliesVisible);
   };
 
- 
+ let loggedOut = loggedInUser === "" || loggedInUser === undefined || loggedInUser === null
+ function handleRegister() {
+  context.setModal();
+}
+
 
    const handleVote = async (voteType : string) => {
     
-    if (loggedInUser === "" || loggedInUser === undefined || loggedInUser === null) {
-        function handleRegister() {
-            context.setModal();
-          }
-          handleRegister();
+    if (loggedOut) {
+      handleRegister();
         return;
     }
 
@@ -111,6 +114,10 @@ const Comments: React.FC<CommentProps> = ({
         //setCommentText(''); // Optionally clear the comment input
       };
       const handleReplyClick = () => {
+        if (loggedOut) {
+          handleRegister();
+            return;
+        }
         setReplyToCommentId(comment.commentId);
         setShowReplyBox(!showReplyBox); 
       };
@@ -120,6 +127,7 @@ const Comments: React.FC<CommentProps> = ({
         }
 
     const handleEdit = () => {
+       
         setEditMode(!editMode);
         }
 
@@ -172,9 +180,14 @@ const Comments: React.FC<CommentProps> = ({
         <div className='comment-header-container'>
           <div className='comment-avatar-and-name'>
             <div className="user-icon">
-                <img className='user-icon' alt="user icon" src={comment.avatar}/>
+            <a href={`${window.location.origin}/${comment.handle}`} rel="noopener noreferrer">
+                <img className='user-icon' alt="user icon" src={comment.avatar || images.DEFAULT_AVATAR}/>
+              </a>
             </div>
-            <strong className="username">{comment.handle}</strong>
+            <a href={`${window.location.origin}/${comment.handle}`} rel="noopener noreferrer">
+  <strong className={darkTheme ? "username-dark" : "username"}>{comment.handle}</strong>
+</a>
+
           </div>  
           <span className="time">{timeAgo(parseInt(comment.createdAt))}</span>
         </div>
@@ -188,12 +201,15 @@ const Comments: React.FC<CommentProps> = ({
           avatar={avatar}
           closeModal={handleSaveEdit}
           content={comment.content}
+          comment={comment}
 
         /> 
         ) : (
-      
+      <>
+     
+        <>
         <p className="content">{comment.content}</p>
-        )}
+        {comment.creator !== "TEMP"  && (
        <div className="actions">
   {loggedInUser === comment.handle && (
     <button className="edit" onClick={handleEdit} aria-label="Edit comment">
@@ -223,6 +239,10 @@ const Comments: React.FC<CommentProps> = ({
             Share
           </button> */}
         </div>
+        )} 
+        </>
+        </>
+         )}
 
         {showReplyBox && (
         <WriteComment
@@ -233,6 +253,7 @@ const Comments: React.FC<CommentProps> = ({
           handle={loggedInUser}
           avatar={avatar}
           closeModal={handleSaveReply}
+         
         />
       )}
      {comment.replies && comment.replies.map(reply => (
