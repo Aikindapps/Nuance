@@ -2322,7 +2322,6 @@ actor class PostBucket() = this {
   //replytoCommentId -> if this is a reply to another comment, use this arg to specify the comment you're replying. if not a reply, pass null
   public shared ({ caller }) func saveComment(input : SaveCommentModel) : async Result.Result<[Comment], Text> {
     let { postId; commentId; content; replyToCommentId } = input;
-
     switch (principalIdHashMap.get(postId)) {
       case (?val) {
         //post exists
@@ -2334,7 +2333,7 @@ actor class PostBucket() = this {
         var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
         switch (user) {
           case (?val) {
-            //user exists, continue
+            //user exists- nothing to check
           };
           case (null) {
             //user doesn't exist, return an error
@@ -2342,11 +2341,8 @@ actor class PostBucket() = this {
           };
         };
 
-        //check the number of comments in the post
+        //this number will be used later
         let numberOfComments = U.safeGet(postIdToNumberOfCommentsHashMap, postId, 0);
-        if (numberOfComments > 99) {
-          return #err("An article can have maximum of 100 comments!");
-        };
 
         //check the canister memory threshold
         if (not isThereEnoughMemoryPrivate()) {
@@ -2384,7 +2380,11 @@ actor class PostBucket() = this {
             };
           };
           case (null) {
-            //not an edit, nothing to check
+            //not an edit, check the number of comments
+            //check the number of comments in the post
+            if (numberOfComments > 99) {
+              return #err("An article can have maximum of 100 comments!");
+            };
           };
         };
 
