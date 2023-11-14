@@ -9,6 +9,7 @@ import { useAuthStore, useUserStore } from '../../../nuance_assets/store';
 import { Context } from '../../Context';
 import toast from 'react-hot-toast';
 import { useTheme } from '../../ThemeContext';
+import { Link } from 'react-router-dom';
 
 interface CommentProps {
   loggedInUser: string;
@@ -179,88 +180,124 @@ const Comments: React.FC<CommentProps> = ({
       <div className={`comment ${isReply ? 'reply' : ''}`}>
         <div className='comment-header-container'>
           <div className='comment-avatar-and-name'>
-            <div className="user-icon">
-            <a href={`${window.location.origin}/${comment.handle}`} rel="noopener noreferrer">
-                <img className='user-icon' alt="user icon" src={comment.avatar || images.DEFAULT_AVATAR}/>
-              </a>
+            <div className='user-icon'>
+              <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
+                <img
+                  className='user-icon'
+                  alt='user icon'
+                  src={comment.avatar || images.DEFAULT_AVATAR}
+                />
+              </Link>
             </div>
-            <a href={`${window.location.origin}/${comment.handle}`} rel="noopener noreferrer">
-  <strong className={darkTheme ? "username-dark" : "username"}>{comment.handle}</strong>
-</a>
-
-          </div>  
-          <span className="time">{timeAgo(parseInt(comment.createdAt))}</span>
+            <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
+              <strong className={darkTheme ? 'username-dark' : 'username'}>
+                {comment.handle}
+              </strong>
+            </Link>
+          </div>
+          <span className='time'>{timeAgo(parseInt(comment.createdAt))}</span>
         </div>
         {editMode ? (
-        <WriteComment
-          label="EDIT YOUR COMMENT"
-          postId={postId}
-          commentId={comment.commentId}
-          bucketCanisterId={bucketCanisterId}
-          handle={loggedInUser}
-          avatar={avatar}
-          closeModal={handleSaveEdit}
-          content={comment.content}
-          comment={comment}
-
-        /> 
+          <WriteComment
+            label='EDIT YOUR COMMENT'
+            postId={postId}
+            commentId={comment.commentId}
+            bucketCanisterId={bucketCanisterId}
+            handle={loggedInUser}
+            avatar={avatar}
+            closeModal={handleSaveEdit}
+            content={comment.content}
+            comment={comment}
+          />
         ) : (
-      <>
-     
-        <>
-        <p className="content">{comment.content}</p>
-        {comment.creator !== "TEMP"  && (
-       <div className="actions">
-  {loggedInUser === comment.handle && (
-    <button className="edit" onClick={handleEdit} aria-label="Edit comment">
-      <img className="icon" alt="Edit" src={icons.EDIT_COMMENT} />
-      <span className="text">Edit</span>
-    </button>
-  )}
-  <button className="thumbs-up" onClick={() => handleVote('up')} aria-label="Thumbs up">
-  <img className='icon' alt="Thumbs up" src={icons.THUMBS_UP}/>
-  <span className="text">Thumbs up</span>
-  {upVotesCount > 0 && `(${upVotesCount})`}
-</button>
-<button className="thumbs-down" onClick={() => handleVote('down')} aria-label="Thumbs down">
-  <img className='icon' alt="Thumbs down" src={icons.THUMBS_DOWN}/>
-  <span className="text">Thumbs down</span>
-  {downVotesCount > 0 && `(${downVotesCount})`}
-</button>
+          <>
+            <>
+              <p className='content'>{comment.content}</p>
+              {comment.creator !== 'TEMP' && (
+                <div className='actions'>
+                  {loggedInUser === comment.handle && (
+                    <button
+                      className='edit'
+                      onClick={handleEdit}
+                      aria-label='Edit comment'
+                    >
+                      <img
+                        className='icon'
+                        alt='Edit'
+                        src={icons.EDIT_COMMENT}
+                      />
+                      <span className='text'>Edit</span>
+                    </button>
+                  )}
+                  <button
+                    className='thumbs-up'
+                    onClick={() => handleVote('up')}
+                    aria-label='Thumbs up'
+                  >
+                    <img
+                      className='icon'
+                      alt='Thumbs up'
+                      src={icons.THUMBS_UP}
+                    />
+                    <span className='text'>Thumbs up</span>
+                    {upVotesCount > 0 && `(${upVotesCount})`}
+                  </button>
+                  <button
+                    className='thumbs-down'
+                    onClick={() => handleVote('down')}
+                    aria-label='Thumbs down'
+                  >
+                    <img
+                      className='icon'
+                      alt='Thumbs down'
+                      src={icons.THUMBS_DOWN}
+                    />
+                    <span className='text'>Thumbs down</span>
+                    {downVotesCount > 0 && `(${downVotesCount})`}
+                  </button>
 
-            
-          <button className="reply-btn" onClick={handleReplyClick}>
-            <img className='icon' alt='reply' src={icons.REPLY}/>
-           <span className="text">Reply</span>
-          </button>
-{/*     
+                  <button className='reply-btn' onClick={handleReplyClick}>
+                    <img className='icon' alt='reply' src={icons.REPLY} />
+                    <span className='text'>Reply</span>
+                  </button>
+                  {/*     
           <button className="share">
             <img className='icon' alt='share' src={icons.SHARE}/>
             Share
           </button> */}
-        </div>
-        )} 
-        </>
-        </>
-         )}
+                </div>
+              )}
+            </>
+          </>
+        )}
 
         {showReplyBox && (
-        <WriteComment
-          label={"WRITE A REPLY TO " + comment.handle.toLocaleUpperCase() + ".."}
-          postId={postId}
-          replyToCommentId={replyToCommentId}
-          bucketCanisterId={bucketCanisterId}
-          handle={loggedInUser}
-          avatar={avatar}
-          closeModal={handleSaveReply}
-         
-        />
-      )}
-     {comment.replies && comment.replies.map(reply => (
-          <Comments key={reply.commentId} isReply={true} comment={reply}  bucketCanisterId={bucketCanisterId} postId={postId} loggedInUser={loggedInUser} avatar={avatar} />
-        ))}
-    </div>
-  );
+          <WriteComment
+            label={
+              'WRITE A REPLY TO ' + comment.handle.toLocaleUpperCase() + '..'
+            }
+            postId={postId}
+            replyToCommentId={replyToCommentId}
+            bucketCanisterId={bucketCanisterId}
+            handle={loggedInUser}
+            avatar={avatar}
+            closeModal={handleSaveReply}
+          />
+        )}
+        {comment.replies &&
+          comment.replies.map((reply) => (
+            <Comments
+              key={reply.commentId}
+              isReply={true}
+              comment={reply}
+              bucketCanisterId={bucketCanisterId}
+              postId={postId}
+              loggedInUser={loggedInUser}
+              avatar={avatar}
+            />
+          ))}
+      </div>
+    );
 };
 
 export default Comments;
