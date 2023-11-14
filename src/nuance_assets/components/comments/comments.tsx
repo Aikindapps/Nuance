@@ -64,6 +64,7 @@ const Comments: React.FC<CommentProps> = ({
     // Determine if the user has already voted in the same way.
     const hasVoted = voteType === 'up' ? voting.upVoted : voting.downVoted;
     const oppositeVoteType = voteType === 'up' ? 'down' : 'up';
+    const oppositeVoteFunction = voteType === 'up' ? upVoteComment : downVoteComment;
     const hasVotedOpposite = voteType === 'up' ? voting.downVoted : voting.upVoted;
 
     // Update the UI optimistically
@@ -74,6 +75,7 @@ const Comments: React.FC<CommentProps> = ({
       voteType === 'up' ? setUpVotesCount(upVotesCount + 1) : setDownVotesCount(downVotesCount + 1);
       if (hasVotedOpposite) {
         oppositeVoteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
+
       }
     }
 
@@ -85,16 +87,21 @@ const Comments: React.FC<CommentProps> = ({
 
 
     try {
-      if (hasVoted) {
+      if (hasVoted && !hasVotedOpposite) {
         await removeCommentVote(comment.commentId, bucketCanisterId);
+        console.log('removeCommentVote');
+      } else if (hasVotedOpposite) {
+        await oppositeVoteFunction(comment.commentId, bucketCanisterId);
+        console.log('oppositeVoteFunction' + oppositeVoteFunction);
       } else {
         const action = voteType === 'up' ? upVoteComment : downVoteComment;
         await action(comment.commentId, bucketCanisterId);
+        console.log('action' + action);
       }
 
-      if (hasVotedOpposite) {
-        await removeCommentVote(comment.commentId, bucketCanisterId);
-      }
+      // if (hasVotedOpposite) {
+      //   await oppositeVoteFunction(comment.commentId, bucketCanisterId);
+      // }
       getPostComments(postId, bucketCanisterId);
     } catch (error) {
       console.error(error);
