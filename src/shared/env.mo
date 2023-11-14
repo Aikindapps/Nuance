@@ -102,7 +102,7 @@ module {
 
   //tipping feature variables
 
-  public let TIPPING_TOKENS = ["NUA", "ICP", "CKBTC"];
+  public let TIPPING_TOKENS = ["NUA", "ICP", "ckBTC", "GHOST"];
   //means 10%
   public let TIP_FEE_AMOUNT = 10.0;
   public let TIP_FEE_RECEIVER_PRINCIPAL_ID = SNS_GOVERNANCE_CANISTER;
@@ -119,6 +119,9 @@ module {
   public let ICP_TOKEN_DECIMALS = 8;
   public let ICP_TOKEN_FEE = 10_000;
 
+  public let GHOST_TOKEN_CANISTER_ID = "4c4fd-caaaa-aaaaq-aaa3a-cai";
+  public let GHOST_TOKEN_DECIMALS = 8;
+  public let GHOST_TOKEN_FEE = 100_000_000;
 
   public type TippingToken = {
     canisterId: Text;
@@ -142,11 +145,18 @@ module {
           decimals = ICP_TOKEN_DECIMALS;
         }
       };
-      case("CKBTC"){
+      case("ckBTC"){
         return {
           canisterId = CKBTC_TOKEN_CANISTER_ID;
           fee = CKBTC_TOKEN_FEE;
           decimals = CKBTC_TOKEN_DECIMALS;
+        }
+      };
+      case("GHOST"){
+        return {
+          canisterId = GHOST_TOKEN_CANISTER_ID;
+          fee = GHOST_TOKEN_FEE;
+          decimals = GHOST_TOKEN_DECIMALS;
         }
       };
       case(_){

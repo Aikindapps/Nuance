@@ -47,12 +47,28 @@ module{
       case("ICP") {
         return await getPriceBetweenTokens(ENV.ICP_TOKEN_CANISTER_ID, ENV.NUA_TOKEN_CANISTER_ID, amount);
       };
-      case("CKBTC") {
+      case("ckBTC") {
         //get the ICP equivalent of the ckBTC first
         let icpEquivalent = await getPriceBetweenTokens(ENV.CKBTC_TOKEN_CANISTER_ID, ENV.ICP_TOKEN_CANISTER_ID, amount);
         switch(icpEquivalent) {
           case(#ok(value)) {
             //ckBTC converted to ICP
+            //now use ICP/NUA pool to get the equivalance
+            return await getNuaEquivalentOfTippingToken("ICP", value);
+          };
+          case(#err(error)) {
+            //should never happen
+            //if occurs, return an error
+            return #err(error)
+          };
+        };
+      };
+      case("GHOST") {
+        //get the ICP equivalent of the ckBTC first
+        let icpEquivalent = await getPriceBetweenTokens(ENV.GHOST_TOKEN_CANISTER_ID, ENV.ICP_TOKEN_CANISTER_ID, amount);
+        switch(icpEquivalent) {
+          case(#ok(value)) {
+            //GHOST converted to ICP
             //now use ICP/NUA pool to get the equivalance
             return await getNuaEquivalentOfTippingToken("ICP", value);
           };
