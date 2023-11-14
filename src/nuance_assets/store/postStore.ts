@@ -110,7 +110,6 @@ async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
   }
 
 
-
   async function addUserDetails(comment: Comment): Promise<Comment> {
     const user = await fetchUser(comment.creator);
     comment.avatar = user.avatar;
@@ -593,9 +592,29 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           set(state => ({
             comments: state.comments.map(comment => comment.commentId === tempId ? { ...comment } : comment)
           }));
-          usePostStore.getState().getPostComments(commentModel.postId, bucketCanisterId);
+          mergeCommentsWithUsers(result.ok.comments)
+            .then(enrichedComments => {
+              set({
+                comments: enrichedComments,
+                totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+              });
+              console.log(enrichedComments);
+            })
+            .catch(error => {
+              console.error(error);
+            });
         } else {
-          usePostStore.getState().getPostComments(commentModel.postId, bucketCanisterId);
+          mergeCommentsWithUsers(result.ok.comments)
+            .then(enrichedComments => {
+              set({
+                comments: enrichedComments,
+                totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+              });
+              console.log(enrichedComments);
+            })
+            .catch(error => {
+              console.error(error);
+            });
           toast('You posted a comment!', ToastType.Success);
         }
       }
@@ -613,6 +632,17 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       if (Err in result) {
         toastError(result.err);
       } else {
+        mergeCommentsWithUsers(result.ok.comments)
+          .then(enrichedComments => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+            console.log(enrichedComments);
+          })
+          .catch(error => {
+            console.error(error);
+          });
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -625,6 +655,17 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       if (Err in result) {
         toastError(result.err);
       } else {
+        mergeCommentsWithUsers(result.ok.comments)
+          .then(enrichedComments => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+            console.log(enrichedComments);
+          })
+          .catch(error => {
+            console.error(error);
+          });
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -650,7 +691,17 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       if (Err in result) {
         toastError(result.err);
       } else {
-        //set({ comments: result.ok });
+        mergeCommentsWithUsers(result.ok.comments)
+          .then(enrichedComments => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+            console.log(enrichedComments);
+          })
+          .catch(error => {
+            console.error(error);
+          });
       }
     } catch (err) {
       handleError(err, Unexpected);

@@ -99,10 +99,6 @@ const Comments: React.FC<CommentProps> = ({
         console.log('action' + action);
       }
 
-      // if (hasVotedOpposite) {
-      //   await oppositeVoteFunction(comment.commentId, bucketCanisterId);
-      // }
-      getPostComments(postId, bucketCanisterId);
     } catch (error) {
       console.error(error);
       toast.error(`Failed to ${hasVoted ? 'remove' : 'cast'} vote. Please try again later.`);
