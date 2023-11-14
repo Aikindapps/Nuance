@@ -16,12 +16,12 @@ interface CommentProps {
   avatar: string;
   comment: Comment;
   isReply?: boolean;
-  postId: string; 
-  bucketCanisterId: string; 
+  postId: string;
+  bucketCanisterId: string;
 }
 
 const Comments: React.FC<CommentProps> = ({
-  loggedInUser,  
+  loggedInUser,
   comment,
   isReply = false,
   postId,
@@ -42,262 +42,263 @@ const Comments: React.FC<CommentProps> = ({
 
   const context = useContext(Context)
   const darkTheme = useTheme();
-  
-  const { upVoteComment, downVoteComment, getPostComments,removeCommentVote } = usePostStore(state => state);
+
+  const { upVoteComment, downVoteComment, getPostComments, removeCommentVote } = usePostStore(state => state);
   const toggleReplies = () => {
     setRepliesVisible(!repliesVisible);
   };
 
- let loggedOut = loggedInUser === "" || loggedInUser === undefined || loggedInUser === null
- function handleRegister() {
-  context.setModal();
-}
+  let loggedOut = loggedInUser === "" || loggedInUser === undefined || loggedInUser === null
+  function handleRegister() {
+    context.setModal();
+  }
 
 
-   const handleVote = async (voteType : string) => {
-    
+  const handleVote = async (voteType: string) => {
+
     if (loggedOut) {
       handleRegister();
-        return;
+      return;
     }
 
     // Determine if the user has already voted in the same way.
-  const hasVoted = voteType === 'up' ? voting.upVoted : voting.downVoted;
-  const oppositeVoteType = voteType === 'up' ? 'down' : 'up';
-  const hasVotedOpposite = voteType === 'up' ? voting.downVoted : voting.upVoted;
+    const hasVoted = voteType === 'up' ? voting.upVoted : voting.downVoted;
+    const oppositeVoteType = voteType === 'up' ? 'down' : 'up';
+    const hasVotedOpposite = voteType === 'up' ? voting.downVoted : voting.upVoted;
 
-  // Update the UI optimistically
-  if (hasVoted) {
-    voteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
-  } else {
-   
-    voteType === 'up' ? setUpVotesCount(upVotesCount + 1) : setDownVotesCount(downVotesCount + 1);
-    if (hasVotedOpposite) {
-      oppositeVoteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
-    }
-  }
-
-  // Update local voting state
-  setVoting({
-    upVoted: voteType === 'up' ? !voting.upVoted : false,
-    downVoted: voteType === 'down' ? !voting.downVoted : false, 
-  });
-
-  
-  try {
+    // Update the UI optimistically
     if (hasVoted) {
-      await removeCommentVote(comment.commentId, bucketCanisterId);
+      voteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
     } else {
-      const action = voteType === 'up' ? upVoteComment : downVoteComment;
-      await action(comment.commentId, bucketCanisterId);
+
+      voteType === 'up' ? setUpVotesCount(upVotesCount + 1) : setDownVotesCount(downVotesCount + 1);
+      if (hasVotedOpposite) {
+        oppositeVoteType === 'up' ? setUpVotesCount(upVotesCount - 1) : setDownVotesCount(downVotesCount - 1);
+      }
     }
 
-    if (hasVotedOpposite) {
-      await removeCommentVote(comment.commentId, bucketCanisterId);
-    }
-    getPostComments(postId, bucketCanisterId);
-  } catch (error) {
-    console.error(error); 
-    toast.error(`Failed to ${hasVoted ? 'remove' : 'cast'} vote. Please try again later.`);
-   
+    // Update local voting state
     setVoting({
-      upVoted: voting.upVoted, 
-      downVoted: voting.downVoted, 
+      upVoted: voteType === 'up' ? !voting.upVoted : false,
+      downVoted: voteType === 'down' ? !voting.downVoted : false,
     });
-    setUpVotesCount(upVotesCount); 
-    setDownVotesCount(downVotesCount); 
+
+
+    try {
+      if (hasVoted) {
+        await removeCommentVote(comment.commentId, bucketCanisterId);
+      } else {
+        const action = voteType === 'up' ? upVoteComment : downVoteComment;
+        await action(comment.commentId, bucketCanisterId);
+      }
+
+      if (hasVotedOpposite) {
+        await removeCommentVote(comment.commentId, bucketCanisterId);
+      }
+      getPostComments(postId, bucketCanisterId);
+    } catch (error) {
+      console.error(error);
+      toast.error(`Failed to ${hasVoted ? 'remove' : 'cast'} vote. Please try again later.`);
+
+      setVoting({
+        upVoted: voting.upVoted,
+        downVoted: voting.downVoted,
+      });
+      setUpVotesCount(upVotesCount);
+      setDownVotesCount(downVotesCount);
+    }
+  };
+
+
+  const handleReply = (commentId: string) => {
+    setReplyToCommentId(commentId);
+    //setCommentText(''); // Optionally clear the comment input
+  };
+  const handleReplyClick = () => {
+    if (loggedOut) {
+      handleRegister();
+      return;
+    }
+    setReplyToCommentId(comment.commentId);
+    setShowReplyBox(!showReplyBox);
+  };
+
+  const handleShare = () => {
+    // Logic to handle share
   }
-};
-  
 
-    const handleReply = (commentId: string) => {
-        setReplyToCommentId(commentId);
-        //setCommentText(''); // Optionally clear the comment input
-      };
-      const handleReplyClick = () => {
-        if (loggedOut) {
-          handleRegister();
-            return;
-        }
-        setReplyToCommentId(comment.commentId);
-        setShowReplyBox(!showReplyBox); 
-      };
-    
-    const handleShare = () => {
-        // Logic to handle share
-        }
+  const handleEdit = () => {
 
-    const handleEdit = () => {
-       
-        setEditMode(!editMode);
-        }
+    setEditMode(!editMode);
+  }
 
-    const handleSaveEdit = async () => {
-       
-        setEditMode(false);
-        };
-    
-    const handleSaveReply = async () => {
+  const handleSaveEdit = async () => {
 
-        setShowReplyBox(false);
-        }
-    
-        function timeAgo(dateParam: number | null): string {
-            if (typeof dateParam !== 'number' || dateParam === 0) {
-              return 'just now';
-            }
-          
-            const date = new Date(dateParam);
-            const today = new Date();
-            const seconds = Math.round((today.getTime() - date.getTime()) / 1000);
-            const minutes = Math.round(seconds / 60);
-            const hours = Math.round(minutes / 60);
-            const days = Math.round(hours / 24);
-            const months = Math.round(days / 30.44);
-            const years = Math.round(months / 12);
-          
-            const pluralize = (count: number, noun: string) => count === 1 ? noun : `${noun}s`;
-          
-            if (seconds < 60) {
-              return `${seconds} ${pluralize(seconds, 'second')} ago`;
-            } else if (minutes < 60) {
-              return `${minutes} ${pluralize(minutes, 'minute')} ago`;
-            } else if (hours < 24) {
-              return `${hours} ${pluralize(hours, 'hour')} ago`;
-            } else if (days < 30.44) {
-              return `${days} ${pluralize(days, 'day')} ago`;
-            } else if (months < 12) {
-              return `${months} ${pluralize(months, 'month')} ago`;
-            } else {
-              return `${years} ${pluralize(years, 'year')} ago`;
-            }
-          }
-          
-         
-          
-  
-    return (
-      <div className={`comment ${isReply ? 'reply' : ''}`}>
-        <div className='comment-header-container'>
-          <div className='comment-avatar-and-name'>
-            <div className='user-icon'>
-              <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
-                <img
-                  className='user-icon'
-                  alt='user icon'
-                  src={comment.avatar || images.DEFAULT_AVATAR}
-                />
-              </Link>
-            </div>
+    setEditMode(false);
+  };
+
+  const handleSaveReply = async () => {
+
+    setShowReplyBox(false);
+  }
+
+  function timeAgo(dateParam: number | null): string {
+    if (typeof dateParam !== 'number' || dateParam === 0) {
+      return 'just now';
+    }
+
+    const date = new Date(dateParam);
+    const today = new Date();
+    const seconds = Math.round((today.getTime() - date.getTime()) / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
+    const months = Math.round(days / 30.44);
+    const years = Math.round(months / 12);
+
+    const pluralize = (count: number, noun: string) => count === 1 ? noun : `${noun}s`;
+
+    if (seconds < 60) {
+      return `${seconds} ${pluralize(seconds, 'second')} ago`;
+    } else if (minutes < 60) {
+      return `${minutes} ${pluralize(minutes, 'minute')} ago`;
+    } else if (hours < 24) {
+      return `${hours} ${pluralize(hours, 'hour')} ago`;
+    } else if (days < 30.44) {
+      return `${days} ${pluralize(days, 'day')} ago`;
+    } else if (months < 12) {
+      return `${months} ${pluralize(months, 'month')} ago`;
+    } else {
+      return `${years} ${pluralize(years, 'year')} ago`;
+    }
+  }
+
+
+
+
+  return (
+    <div className={`comment ${isReply ? 'reply' : ''}`}>
+      <div className='comment-header-container'>
+        <div className='comment-avatar-and-name'>
+          <div className='user-icon'>
             <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
-              <strong className={darkTheme ? 'username-dark' : 'username'}>
-                {comment.handle}
-              </strong>
+              <img
+                className='user-icon'
+                alt='user icon'
+                src={comment.avatar || images.DEFAULT_AVATAR}
+              />
             </Link>
           </div>
-          <span className='time'>{timeAgo(parseInt(comment.createdAt))}</span>
+          <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
+            <strong className={darkTheme ? 'username-dark' : 'username'}>
+              {comment.handle}
+            </strong>
+          </Link>
         </div>
-        {editMode ? (
-          <WriteComment
-            label='EDIT YOUR COMMENT'
-            postId={postId}
-            commentId={comment.commentId}
-            bucketCanisterId={bucketCanisterId}
-            handle={loggedInUser}
-            avatar={avatar}
-            closeModal={handleSaveEdit}
-            content={comment.content}
-            comment={comment}
-          />
-        ) : (
+        <span className='time'>{timeAgo(parseInt(comment.createdAt))}</span>
+      </div>
+      {editMode ? (
+        <WriteComment
+          label='EDIT YOUR COMMENT'
+          postId={postId}
+          commentId={comment.commentId}
+          bucketCanisterId={bucketCanisterId}
+          handle={loggedInUser}
+          avatar={avatar}
+          closeModal={handleSaveEdit}
+          content={comment.content}
+          comment={comment}
+          edit={true}
+        />
+      ) : (
+        <>
           <>
-            <>
-              <p className='content'>{comment.content}</p>
-              {comment.creator !== 'TEMP' && (
-                <div className='actions'>
-                  {loggedInUser === comment.handle && (
-                    <button
-                      className='edit'
-                      onClick={handleEdit}
-                      aria-label='Edit comment'
-                    >
-                      <img
-                        className='icon'
-                        alt='Edit'
-                        src={icons.EDIT_COMMENT}
-                      />
-                      <span className='text'>Edit</span>
-                    </button>
-                  )}
+            <p className='content'>{comment.content}</p>
+            {comment.creator !== 'TEMP' && (
+              <div className='actions'>
+                {loggedInUser === comment.handle && (
                   <button
-                    className='thumbs-up'
-                    onClick={() => handleVote('up')}
-                    aria-label='Thumbs up'
+                    className='edit'
+                    onClick={handleEdit}
+                    aria-label='Edit comment'
                   >
                     <img
                       className='icon'
-                      alt='Thumbs up'
-                      src={icons.THUMBS_UP}
+                      alt='Edit'
+                      src={icons.EDIT_COMMENT}
                     />
-                    <span className='text'>Thumbs up</span>
-                    {upVotesCount > 0 && `(${upVotesCount})`}
+                    <span className='text'>Edit</span>
                   </button>
-                  <button
-                    className='thumbs-down'
-                    onClick={() => handleVote('down')}
-                    aria-label='Thumbs down'
-                  >
-                    <img
-                      className='icon'
-                      alt='Thumbs down'
-                      src={icons.THUMBS_DOWN}
-                    />
-                    <span className='text'>Thumbs down</span>
-                    {downVotesCount > 0 && `(${downVotesCount})`}
-                  </button>
+                )}
+                <button
+                  className='thumbs-up'
+                  onClick={() => handleVote('up')}
+                  aria-label='Thumbs up'
+                >
+                  <img
+                    className='icon'
+                    alt='Thumbs up'
+                    src={icons.THUMBS_UP}
+                  />
+                  <span className='text'>Thumbs up</span>
+                  {upVotesCount > 0 && `(${upVotesCount})`}
+                </button>
+                <button
+                  className='thumbs-down'
+                  onClick={() => handleVote('down')}
+                  aria-label='Thumbs down'
+                >
+                  <img
+                    className='icon'
+                    alt='Thumbs down'
+                    src={icons.THUMBS_DOWN}
+                  />
+                  <span className='text'>Thumbs down</span>
+                  {downVotesCount > 0 && `(${downVotesCount})`}
+                </button>
 
-                  <button className='reply-btn' onClick={handleReplyClick}>
-                    <img className='icon' alt='reply' src={icons.REPLY} />
-                    <span className='text'>Reply</span>
-                  </button>
-                  {/*     
+                <button className='reply-btn' onClick={handleReplyClick}>
+                  <img className='icon' alt='reply' src={icons.REPLY} />
+                  <span className='text'>Reply</span>
+                </button>
+                {/*     
           <button className="share">
             <img className='icon' alt='share' src={icons.SHARE}/>
             Share
           </button> */}
-                </div>
-              )}
-            </>
+              </div>
+            )}
           </>
-        )}
+        </>
+      )}
 
-        {showReplyBox && (
-          <WriteComment
-            label={
-              'WRITE A REPLY TO ' + comment.handle.toLocaleUpperCase() + '..'
-            }
-            postId={postId}
-            replyToCommentId={replyToCommentId}
+      {showReplyBox && (
+        <WriteComment
+          label={
+            'WRITE A REPLY TO ' + comment.handle.toLocaleUpperCase() + '..'
+          }
+          postId={postId}
+          replyToCommentId={replyToCommentId}
+          bucketCanisterId={bucketCanisterId}
+          handle={loggedInUser}
+          avatar={avatar}
+          closeModal={handleSaveReply}
+        />
+      )}
+      {comment.replies &&
+        comment.replies.map((reply) => (
+          <Comments
+            key={reply.commentId}
+            isReply={true}
+            comment={reply}
             bucketCanisterId={bucketCanisterId}
-            handle={loggedInUser}
+            postId={postId}
+            loggedInUser={loggedInUser}
             avatar={avatar}
-            closeModal={handleSaveReply}
           />
-        )}
-        {comment.replies &&
-          comment.replies.map((reply) => (
-            <Comments
-              key={reply.commentId}
-              isReply={true}
-              comment={reply}
-              bucketCanisterId={bucketCanisterId}
-              postId={postId}
-              loggedInUser={loggedInUser}
-              avatar={avatar}
-            />
-          ))}
-      </div>
-    );
+        ))}
+    </div>
+  );
 };
 
 export default Comments;
@@ -307,4 +308,4 @@ export default Comments;
 
 
 
-  
+
