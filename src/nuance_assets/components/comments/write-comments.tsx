@@ -65,7 +65,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
   const commentCountExceeded = totalNumberOfComments >= 100;
   const handleSave = async (edited: Boolean) => {
     if (commentCountExceeded && !edited) {
-      toastError('Sorry, you cannot post more than 100 comments.');
+      toastError('A post can have maximum of 100 comments. Sorry!');
       return;
     }
 
