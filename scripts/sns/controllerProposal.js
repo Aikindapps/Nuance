@@ -63,7 +63,7 @@ async function updateCanisterControllers() {
   for (const [canisterName, canisterId] of Object.entries(canisterIds)) {
     console.log(`Updating controller for canister ${canisterName} with ID ${canisterId}`);
     try {
-      await executeCommand(`dfx canister --network=${network} update-settings ${canisterId} --add-controller ${controllerPrincipalId}`);
+      await executeCommand(`dfx canister --network=${network} update-settings ${canisterId} --add-controller ${controllerPrincipalId} -qq`);
       console.log(`Updated controller for canister ${canisterName}`);
     } catch (error) {
       console.error(`Failed to update controller for canister ${canisterName}: ${error.message}`);
