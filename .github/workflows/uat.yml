@@ -50,6 +50,7 @@ jobs:
         USERGEEK_API_KEY="${{ secrets.USERGEEK_API_KEY }}"
         USERGEEK_API_KEY_SECONDARY="${{ secrets.USERGEEK_API_KEY_SECONDARY }}"
         FASTBLOCKS_MAILERLITE_API_KEY="${{ secrets.FASTBLOCKS_MAILERLITE_API_KEY }}"
+        DFX_NETWORK="ic"
         PUBLICATIONS_REPO_PATH=./Nuance-NFTs-and-Publications
         NUANCE_MAIN_REPO_PATH=./
         EOF
