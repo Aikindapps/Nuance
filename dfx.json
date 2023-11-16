@@ -38,6 +38,17 @@
     "Metrics": {
       "main": "src/Metrics/main.mo",
       "type": "motoko"
+    },
+    "nuance_assets": {
+      "frontend": {
+        "entrypoint": "dist/index.html"
+      },
+      "source": [
+        "dist/",
+        "src/well-known/",
+        "src/SEO/"
+      ],
+      "type": "assets"
     }
   },
   "defaults": {
