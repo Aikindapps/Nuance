@@ -402,7 +402,7 @@ actor CyclesDispenser {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller) and Principal.notEqual(caller, Principal.fromActor(CyclesDispenser))) {
+    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller) and not isCanisterItself(caller)) {
       return #err(Unauthorized);
     };
 
@@ -546,7 +546,11 @@ actor CyclesDispenser {
   };
 
   //private function that controls if there's any new storage bucket canister. If there is, adds it to the registered canisters
-  private func checkStorageBucketCanisters() : async () {
+  public shared ({caller}) func checkStorageBucketCanisters() : async () {
+    if(not isAdmin(caller) and not isPlatformOperator(caller) and not isCanisterItself(caller)){
+      //do nothing
+      return;
+    };
     let storageCanister = CanisterDeclarations.getStorageCanister();
     switch(await storageCanister.getAllDataCanisterIds()) {
       case(#ok((dataCanisterIds, retiredDataCanisterIds))) {
