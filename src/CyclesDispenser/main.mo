@@ -16,6 +16,7 @@ import Float "mo:base/Float";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import CanisterDeclarations "../shared/CanisterDeclarations";
 
 actor CyclesDispenser {
   let maxHashmapSize = 1000000;
@@ -401,7 +402,7 @@ actor CyclesDispenser {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller)) {
+    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller) and Principal.notEqual(caller, Principal.fromActor(CyclesDispenser))) {
       return #err(Unauthorized);
     };
 
@@ -540,6 +541,55 @@ actor CyclesDispenser {
       };
       case (null) {
         return #err("Given canister id is not registered yet.");
+      };
+    };
+  };
+
+  //private function that controls if there's any new storage bucket canister. If there is, adds it to the registered canisters
+  private func checkStorageBucketCanisters() : async () {
+    let storageCanister = CanisterDeclarations.getStorageCanister();
+    switch(await storageCanister.getAllDataCanisterIds()) {
+      case(#ok((dataCanisterIds, retiredDataCanisterIds))) {
+        //check the active canister ids
+        for(dataCanisterId in dataCanisterIds.vals()){
+          //check if the canister id already exists
+          let canisterIdText = Principal.toText(dataCanisterId);
+          switch(canisterIdToMinimumAmountOfCyclesHashmap.get(canisterIdText)) {
+            case(?value) {
+              //already exists, do nothing
+            };
+            case(null) {
+              //doesn't exist -> add it
+              ignore addCanister({
+                canisterId = canisterIdText;
+                minimumThreshold = 10_000_000_000_000; 
+                topUpAmount = 5_000_000_000_000
+              })
+            };
+          };
+        };
+
+        //check the retired canister ids
+        for(retiredDataCanisterId in retiredDataCanisterIds.vals()){
+          //check if the canister id already exists
+          switch(canisterIdToMinimumAmountOfCyclesHashmap.get(retiredDataCanisterId)) {
+            case(?value) {
+              //already exists, do nothing
+            };
+            case(null) {
+              //doesn't exist -> add it
+              ignore addCanister({
+                canisterId = retiredDataCanisterId;
+                minimumThreshold = 10_000_000_000_000; 
+                topUpAmount = 5_000_000_000_000
+              })
+            };
+          };
+        };
+      };
+      case(#err(error)) {
+        //storage canister returned an error
+        //do nothing
       };
     };
   };
@@ -748,7 +798,13 @@ actor CyclesDispenser {
     try {
       ignore checkAllRegisteredCanisters();
     } catch (e) {
-      Debug.print("CyclesDispenser -> checkAllRegisteredCanisters method was trapped.");
+      Debug.print("CyclesDispenser -> checkAllRegisteredCanisters method failed.");
+    };
+
+    try {
+      ignore checkStorageBucketCanisters();
+    } catch (e) {
+      Debug.print("CyclesDispenser -> checkStorageBucketCanisters method failed.");
     };
 
     let now = Time.now();

@@ -255,7 +255,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
             return #err("Cannot use this method anonymously.");
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
 
@@ -269,7 +269,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
             return #err("Cannot use this method anonymously.");
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
         #ok(wasmChunks);
@@ -282,7 +282,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         };
 
         let wasm = wasmChunks;
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
 
             return #err("Unauthorized");
         };
@@ -298,7 +298,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
             return;
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return;
         };
         wasmChunks := Blob.fromArray([]);
@@ -308,7 +308,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
             return #err("Cannot use this method anonymously.");
         };
 
-        if (not isAdmin(caller)) {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
 

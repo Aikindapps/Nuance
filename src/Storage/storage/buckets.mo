@@ -157,6 +157,16 @@ actor class Bucket (adminsArr: [Text]) = this {
     return Cycles.balance();
   };
 
+  public func acceptCycles() : async () {
+    let available = Cycles.available();
+    let accepted = Cycles.accept(available);
+    assert (accepted == available);
+  };
+
+  public shared query func availableCycles() : async Nat {
+    Cycles.balance()
+  };
+
   
    type StreamingCallbackToken = {
     key : Text;
