@@ -229,9 +229,10 @@ module{
     };
 
     public type AddCanisterModel = {
-        canisterId: Text;
-        minimumThreshold: Nat;
-        topUpAmount: Nat;
+        canisterId : Text;
+        minimumThreshold : Nat;
+        topUpAmount : Nat;
+        isStorageBucket: Bool;
     };
 
     public type CyclesDispenserCanisterInterface = actor{

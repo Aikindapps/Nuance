@@ -209,7 +209,7 @@ actor PostCore {
       };
 
       let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister();
-      switch (await CyclesDispenserCanister.addCanister({ canisterId = canisterId; minimumThreshold = 10_000_000_000_000; topUpAmount = 5_000_000_000_000 })) {
+      switch (await CyclesDispenserCanister.addCanister({ canisterId = canisterId; minimumThreshold = 10_000_000_000_000; topUpAmount = 5_000_000_000_000; isStorageBucket = false; })) {
         case (#err(err)) {
           return #err("An error occured while adding the bucket canister in CyclesDispenser.");
         };
@@ -3753,6 +3753,7 @@ actor PostCore {
       canisterId = canisterId;
       minimumThreshold = minimumThreshold;
       topUpAmount = topUpAmount;
+      isStorageBucket = false;
     });
 
     //add the canister to Metrics canister

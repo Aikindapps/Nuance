@@ -184,9 +184,6 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         };
 
         canistergeekMonitor.collectMetrics();
-        if (not isAdmin(caller)) {
-            return #err(Unauthorized);
-        };
         let allDataCanisterId = storageSolution.getAllDataCanisterIds();
         let retired = storageSolution.getRetiredDataCanisterIdsStable();
         #ok((allDataCanisterId, retired));
