@@ -194,9 +194,14 @@ const ReadArticle = () => {
     const scrollToComment = () => {
       const commentElement = document.getElementById(`comment-${commentId}`);
       if (commentElement) {
-        commentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const commentPosition = commentElement.getBoundingClientRect().top + window.pageYOffset;
 
-        // Replace the current entry in the history stack
+        const margin = 30;
+        window.scrollTo({
+          top: commentPosition - margin,
+          behavior: "smooth"
+        });
+
         navigate(`${location.pathname}`, { replace: true });
       }
     };
