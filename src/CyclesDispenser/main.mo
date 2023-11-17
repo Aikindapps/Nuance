@@ -16,6 +16,7 @@ import Float "mo:base/Float";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import CanisterDeclarations "../shared/CanisterDeclarations";
 
 actor CyclesDispenser {
   let maxHashmapSize = 1000000;
@@ -35,6 +36,7 @@ actor CyclesDispenser {
     minimumThreshold : Nat;
     topUpAmount : Nat;
     balance : Nat;
+    isStorageBucket: Bool;
     topUps : [TopUp];
   };
 
@@ -42,6 +44,7 @@ actor CyclesDispenser {
     canisterId : Text;
     minimumThreshold : Nat;
     topUpAmount : Nat;
+    isStorageBucket: Bool;
   };
 
   public type CheckCanisterBalanceResponse = {
@@ -58,6 +61,9 @@ actor CyclesDispenser {
   public type GeneralActorType = actor {
     availableCycles : () -> async Nat;
     acceptCycles : () -> async ();
+    wallet_receive : () -> async { accepted: Nat64 };
+    wallet_balance : () -> async Nat;
+
   };
 
   public type AdminActorType = actor {
@@ -80,6 +86,7 @@ actor CyclesDispenser {
   stable var canisterIdToTopUpAmountEntries : [(Text, Nat)] = [];
   stable var canisterIdToBalanceEntries : [(Text, Nat)] = [];
   stable var canisterIdToTopUpIdsEntries : [(Text, [Text])] = [];
+  stable var canisterIdToIsStorageBucketEntries : [(Text, Bool)] = [];
 
   stable var topUpIdToCanisterIdEntries : [(Text, Text)] = [];
   stable var topUpIdToTimeEntries : [(Text, Int)] = [];
@@ -92,6 +99,7 @@ actor CyclesDispenser {
   var canisterIdToTopUpAmountHashmap = HashMap.fromIter<Text, Nat>(canisterIdToTopUpAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var canisterIdToBalanceHashmap = HashMap.fromIter<Text, Nat>(canisterIdToBalanceEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var canisterIdToTopUpIdsHashmap = HashMap.fromIter<Text, [Text]>(canisterIdToTopUpIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var canisterIdToIsStorageBucketHashmap = HashMap.fromIter<Text, Bool>(canisterIdToIsStorageBucketEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //logged top-ups hashmaps
   var topUpIdToCanisterIdHashmap = HashMap.fromIter<Text, Text>(topUpIdToCanisterIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -389,6 +397,7 @@ actor CyclesDispenser {
       topUpAmount = U.safeGet(canisterIdToTopUpAmountHashmap, canisterId, 0);
       balance = U.safeGet(canisterIdToBalanceHashmap, canisterId, 0);
       topUps = Buffer.toArray(topUpsBuffer);
+      isStorageBucket = U.safeGet(canisterIdToIsStorageBucketHashmap, canisterId, false);
     };
   };
   //allows admins to add/update canisters. The given canister should contain the availableCycles method.
@@ -401,17 +410,18 @@ actor CyclesDispenser {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller)) {
+    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller) and not isCanisterItself(caller)) {
       return #err(Unauthorized);
     };
 
     //check if the given canister contains the availableCycles method and the canister id is valid
     try {
       let addingCanister : GeneralActorType = actor (canister.canisterId);
-      let balance = await addingCanister.availableCycles();
+      let balance = if(canister.isStorageBucket) {await addingCanister.wallet_balance()} else {await addingCanister.availableCycles()};
       canisterIdToMinimumAmountOfCyclesHashmap.put(canister.canisterId, canister.minimumThreshold);
       canisterIdToTopUpAmountHashmap.put(canister.canisterId, canister.topUpAmount);
       canisterIdToBalanceHashmap.put(canister.canisterId, balance);
+      canisterIdToIsStorageBucketHashmap.put(canister.canisterId, canister.isStorageBucket);
       #ok(buildRegisteredCanister(canister.canisterId));
     } catch (e) {
       //if here, canister id is not valid or it doesn't contain the availableCycles method
@@ -445,7 +455,7 @@ actor CyclesDispenser {
     let registeredCanister = buildRegisteredCanister(canisterId);
     let registeredCanisterActor : GeneralActorType = actor (canisterId);
 
-    let balance = await registeredCanisterActor.availableCycles();
+    let balance = if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()};
     canisterIdToBalanceHashmap.put(canisterId, balance);
     let cyclesDispenserBalance = Cycles.balance();
 
@@ -460,10 +470,16 @@ actor CyclesDispenser {
       //try to add cycles
       try {
         Cycles.add(registeredCanister.topUpAmount);
-        await registeredCanisterActor.acceptCycles();
+        if(registeredCanister.isStorageBucket){
+          let uselessVar = await registeredCanisterActor.wallet_receive();
+        }
+        else{
+          await registeredCanisterActor.acceptCycles();
+        };
+        
         //if here, it went well, store the data in hashmaps
         let topUpId = getNextTopUpId();
-        let newBalance = await registeredCanisterActor.availableCycles();
+        let newBalance = if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()};
 
         //put the new balance
         canisterIdToBalanceHashmap.put(canisterId, newBalance);
@@ -540,6 +556,61 @@ actor CyclesDispenser {
       };
       case (null) {
         return #err("Given canister id is not registered yet.");
+      };
+    };
+  };
+
+  //private function that controls if there's any new storage bucket canister. If there is, adds it to the registered canisters
+  public shared ({caller}) func checkStorageBucketCanisters() : async () {
+    if(not isAdmin(caller) and not isPlatformOperator(caller) and not isCanisterItself(caller)){
+      //do nothing
+      return;
+    };
+    let storageCanister = CanisterDeclarations.getStorageCanister();
+    switch(await storageCanister.getAllDataCanisterIds()) {
+      case(#ok((dataCanisterIds, retiredDataCanisterIds))) {
+        //check the active canister ids
+        for(dataCanisterId in dataCanisterIds.vals()){
+          //check if the canister id already exists in the hashmap
+          let canisterIdText = Principal.toText(dataCanisterId);
+          switch(canisterIdToIsStorageBucketHashmap.get(canisterIdText)) {
+            case(?value) {
+              //already exists, do nothing
+            };
+            case(null) {
+              //doesn't exist -> add it
+              ignore addCanister({
+                canisterId = canisterIdText;
+                minimumThreshold = 10_000_000_000_000; 
+                topUpAmount = 5_000_000_000_000;
+                isStorageBucket = true;
+              })
+            };
+          };
+        };
+
+        //check the retired canister ids
+        for(retiredDataCanisterId in retiredDataCanisterIds.vals()){
+          //check if the canister id already exists
+          switch(canisterIdToMinimumAmountOfCyclesHashmap.get(retiredDataCanisterId)) {
+            case(?value) {
+              //already exists, do nothing
+            };
+            case(null) {
+              //doesn't exist -> add it
+              ignore addCanister({
+                canisterId = retiredDataCanisterId;
+                minimumThreshold = 10_000_000_000_000; 
+                topUpAmount = 5_000_000_000_000;
+                isStorageBucket = true;
+              })
+            };
+          };
+        };
+      };
+      case(#err(error)) {
+        //storage canister returned an error
+        //do nothing
       };
     };
   };
@@ -702,6 +773,7 @@ actor CyclesDispenser {
     canisterIdToTopUpAmountEntries := Iter.toArray(canisterIdToTopUpAmountHashmap.entries());
     canisterIdToBalanceEntries := Iter.toArray(canisterIdToBalanceHashmap.entries());
     canisterIdToTopUpIdsEntries := Iter.toArray(canisterIdToTopUpIdsHashmap.entries());
+    canisterIdToIsStorageBucketEntries := Iter.toArray(canisterIdToIsStorageBucketHashmap.entries());
     topUpIdToCanisterIdEntries := Iter.toArray(topUpIdToCanisterIdHashmap.entries());
     topUpIdToTimeEntries := Iter.toArray(topUpIdToTimeHashmap.entries());
     topUpIdToAmountEntries := Iter.toArray(topUpIdToAmountHashmap.entries());
@@ -717,6 +789,7 @@ actor CyclesDispenser {
     canisterIdToTopUpAmountEntries := [];
     canisterIdToBalanceEntries := [];
     canisterIdToTopUpIdsEntries := [];
+    canisterIdToIsStorageBucketEntries := [];
     topUpIdToCanisterIdEntries := [];
     topUpIdToTimeEntries := [];
     topUpIdToAmountEntries := [];
@@ -748,7 +821,13 @@ actor CyclesDispenser {
     try {
       ignore checkAllRegisteredCanisters();
     } catch (e) {
-      Debug.print("CyclesDispenser -> checkAllRegisteredCanisters method was trapped.");
+      Debug.print("CyclesDispenser -> checkAllRegisteredCanisters method failed.");
+    };
+
+    try {
+      ignore checkStorageBucketCanisters();
+    } catch (e) {
+      Debug.print("CyclesDispenser -> checkStorageBucketCanisters method failed.");
     };
 
     let now = Time.now();

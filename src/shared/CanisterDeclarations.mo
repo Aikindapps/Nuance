@@ -192,6 +192,16 @@ module{
         return canister;
     };
 
+    //****************STORAGE CANISTER*****************
+    public type StorageCanisterInterface = actor{
+        getAllDataCanisterIds : () -> async Result.Result<([Principal], [Text]), Text>;
+    };
+
+    public func getStorageCanister() : StorageCanisterInterface {
+        let canister : StorageCanisterInterface = actor(ENV.STORAGE_CANISTER_ID);
+        return canister;
+    };
+
 
     //****************FASTBLOCKSEMAILOPTIN CANISTER*****************
     public type FastBlocksEmailOptInCanisterInterface = actor{};
@@ -219,9 +229,10 @@ module{
     };
 
     public type AddCanisterModel = {
-        canisterId: Text;
-        minimumThreshold: Nat;
-        topUpAmount: Nat;
+        canisterId : Text;
+        minimumThreshold : Nat;
+        topUpAmount : Nat;
+        isStorageBucket: Bool;
     };
 
     public type CyclesDispenserCanisterInterface = actor{
