@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import parse from 'html-react-parser';
 import Header from '../../components/header/header';
@@ -183,6 +183,35 @@ const ReadArticle = () => {
     navigate('/', { replace: true });
   };
 
+
+  //comment scrolling
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const commentId = queryParams.get('comment');
+
+
+  useEffect(() => {
+    const scrollToComment = () => {
+      const commentElement = document.getElementById(`comment-${commentId}`);
+      if (commentElement) {
+        commentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Replace the current entry in the history stack
+        navigate(`${location.pathname}`, { replace: true });
+      }
+    };
+
+    if (commentId) {
+      if (comments && comments.length > 0) {
+        scrollToComment();
+      } else {
+        const retryTimeout = setTimeout(scrollToComment, 500);
+        return () => clearTimeout(retryTimeout);
+      }
+    }
+  }, [commentId, comments, navigate, location.pathname]);
+
+
   useEffect(() => {
     clearPost();
     clearWordCount();
@@ -223,9 +252,9 @@ const ReadArticle = () => {
 
   useEffect(() => {
     if (post) {
-   getPostComments(postId, post?.bucketCanisterId);
+      getPostComments(postId, post?.bucketCanisterId);
     }
-    
+
   }, [post?.postId]);
 
   useEffect(() => {
@@ -468,8 +497,8 @@ const ReadArticle = () => {
             screenWidth <= 768 && isToggled
               ? { width: 'max-content' }
               : screenWidth <= 768 && !isToggled
-              ? { width: '30px', paddingRight: '25px' }
-              : { width: '25%' }
+                ? { width: '30px', paddingRight: '25px' }
+                : { width: '25%' }
           }
         >
           <p className='date'>
@@ -588,9 +617,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                          fontFamily: publication?.styling.fontType,
-                          color: darkOptionsAndColors.color,
-                        }
+                        fontFamily: publication?.styling.fontType,
+                        color: darkOptionsAndColors.color,
+                      }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -728,19 +757,19 @@ const ReadArticle = () => {
                   ) : null}
                 </div>
                 <div className='comment-section'>
-                  <WriteComment postId={post.postId} bucketCanisterId={post.bucketCanisterId} label='WRITE A COMMENT..' handle={user?.handle || ""} avatar={user?.avatar || ""}  />
-                  
-                {
-                  (comments != undefined && comments.length > 0) &&
-                  
-                      comments.map(comment => (
-                        <Comments key={comment.commentId} isReply={false} comment={comment}  bucketCanisterId={post.bucketCanisterId} postId={post.postId} loggedInUser={user?.handle || ""} avatar={user?.avatar || ""} />
-                        )) 
-                }
+                  <WriteComment postId={post.postId} bucketCanisterId={post.bucketCanisterId} label='WRITE A COMMENT..' handle={user?.handle || ""} avatar={user?.avatar || ""} />
 
-              </div>
-              
-                
+                  {
+                    (comments != undefined && comments.length > 0) &&
+
+                    comments.map(comment => (
+                      <Comments key={comment.commentId} isReply={false} comment={comment} bucketCanisterId={post.bucketCanisterId} postId={post.postId} loggedInUser={user?.handle || ""} avatar={user?.avatar || ""} />
+                    ))
+                  }
+
+                </div>
+
+
               </div>
             </div>
           )}

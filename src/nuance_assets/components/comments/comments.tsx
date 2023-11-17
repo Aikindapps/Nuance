@@ -126,10 +126,6 @@ const Comments: React.FC<CommentProps> = ({
     setShowReplyBox(!showReplyBox);
   };
 
-  const handleShare = () => {
-    // Logic to handle share
-  }
-
   const handleEdit = () => {
 
     setEditMode(!editMode);
@@ -143,7 +139,19 @@ const Comments: React.FC<CommentProps> = ({
   const handleSaveReply = async () => {
 
     setShowReplyBox(false);
-  }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?comment=${comment.commentId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast.error('Failed to copy the link.');
+    }
+  };
+
 
   function timeAgo(dateParam: number | null): string {
     if (typeof dateParam !== 'number' || dateParam === 0) {
@@ -180,7 +188,7 @@ const Comments: React.FC<CommentProps> = ({
 
 
   return (
-    <div className={`comment ${isReply ? 'reply' : ''}`}>
+    <div id={`comment-${comment.commentId}`} className={`comment ${isReply ? 'reply' : ''}`}>
       <div className='comment-header-container'>
         <div className='comment-avatar-and-name'>
           <div className='user-icon'>
@@ -264,11 +272,11 @@ const Comments: React.FC<CommentProps> = ({
                   <img className='icon' alt='reply' src={icons.REPLY} />
                   <span className='text'>Reply</span>
                 </button>
-                {/*     
-          <button className="share">
-            <img className='icon' alt='share' src={icons.SHARE}/>
-            Share
-          </button> */}
+                <button className="share" onClick={handleShare}>
+                  <img className='icon' alt='share' src={icons.SHARE} />
+                  <span className='text'>Share</span>
+                </button>
+
               </div>
             )}
           </>
