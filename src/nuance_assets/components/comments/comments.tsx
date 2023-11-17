@@ -7,9 +7,9 @@ import WriteComment from '../comments/write-comments';
 import { usePostStore } from '../../store/postStore';
 import { useAuthStore, useUserStore } from '../../../nuance_assets/store';
 import { Context } from '../../Context';
-import toast from 'react-hot-toast';
 import { useTheme } from '../../ThemeContext';
 import { Link } from 'react-router-dom';
+import { ToastType, toastError, toast } from '../..//services/toastService';
 
 interface CommentProps {
   loggedInUser: string;
@@ -101,7 +101,7 @@ const Comments: React.FC<CommentProps> = ({
 
     } catch (error) {
       console.error(error);
-      toast.error(`Failed to ${hasVoted ? 'remove' : 'cast'} vote. Please try again later.`);
+      toastError(`Failed to ${hasVoted ? 'remove' : 'cast'} vote. Please try again later.`);
 
       setVoting({
         upVoted: voting.upVoted,
@@ -145,10 +145,10 @@ const Comments: React.FC<CommentProps> = ({
     const url = `${window.location.origin}${window.location.pathname}?comment=${comment.commentId}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success('Link copied to clipboard!');
+      toast('Link copied to clipboard!', ToastType.Success);
     } catch (err) {
       console.error('Failed to copy:', err);
-      toast.error('Failed to copy the link.');
+      toastError('Failed to copy the link.');
     }
   };
 
