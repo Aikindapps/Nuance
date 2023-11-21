@@ -1,1 +1,52 @@
+name: Hourly Script Execution
 
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: npm install
+        run: npm install
+
+      - name: Install DFX
+        run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+
+      - name: Start DFX background
+        run: dfx start --background
+
+      - name: Set up dfx identity
+        run: |
+          sudo apt-get install -y jq
+          rm -f ~/.config/dfx/identity/prod/identity.pem
+          mkdir -p ~/.config/dfx/identity/prod/
+          echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+          echo '{}' | jq --arg wallet "$PROD_WALLET" '.identities.prod.ic = $wallet' > ~/.config/dfx/identity/prod/wallets.json
+          dfx identity use prod
+          dfx identity get-principal
+          dfx identity set-wallet "$PROD_WALLET" --network ic
+        env:
+          PROD_IDENT: ${{ secrets.PROD_IDENT }}
+          PROD_WALLET: ${{ secrets.PROD_WALLET }}
+
+      - name: Get Principal
+        run: dfx identity get-principal
+
+      - name: Check Cycles Dispenser
+        id: check_cycles
+        run: |
+          BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus)
+          echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
+
+      # Step 2: Notify Slack
+      - name: Notify Slack
+        run: |
+          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
+          MESSAGE=$(echo "Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}")
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE}\"}" $SLACK_WEBHOOK_URL
