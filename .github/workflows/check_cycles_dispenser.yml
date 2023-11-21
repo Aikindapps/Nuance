@@ -43,7 +43,7 @@ jobs:
       - name: Check Cycles Dispenser
         id: check_cycles
         run: |
-          BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus)
+          BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq)
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
       # Step 2: Notify Slack
