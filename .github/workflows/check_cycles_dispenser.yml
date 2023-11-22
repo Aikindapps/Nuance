@@ -41,6 +41,7 @@ jobs:
         run: dfx identity get-principal
 
       
+      
       - name: Check Cycles Dispenser
         id: check_cycles
         run: |
@@ -51,5 +52,8 @@ jobs:
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
           MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE}\"}" $SLACK_WEBHOOK_URL
-
+         
+          MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
+      
+      
