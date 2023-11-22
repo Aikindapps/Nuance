@@ -1,4 +1,4 @@
-name: Hourly Script Execution
+name: CyclesDispenser Notification
 
 on:
   schedule:
@@ -40,16 +40,16 @@ jobs:
       - name: Get Principal
         run: dfx identity get-principal
 
+      
       - name: Check Cycles Dispenser
         id: check_cycles
         run: |
-          BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"' )
+          BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
-
-
-      # Step 2: Notify Slack
+      
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
-          MESSAGE=$(echo "Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}")
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE}\"}" $SLACK_WEBHOOK_URL
+
