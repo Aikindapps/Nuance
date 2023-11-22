@@ -3,7 +3,7 @@
 #NETWORK="--insecure-local-dev-mode"
 
 # If you wish to use the IC network, uncomment the following line:
- NETWORK="--network ic"
+ NETWORK=""
 
 if [[ $NETWORK == "--insecure-local-dev-mode" ]]; then
     export IC_URL="http://localhost:8080/"
