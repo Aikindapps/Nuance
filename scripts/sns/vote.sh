@@ -19,7 +19,7 @@ quill_register_vote_base="quill sns register-vote --vote y --canister-ids-file .
 quill_send="quill send --yes $NETWORK --pem-file ~/.config/dfx/identity/$IDENTITY/identity.pem"
 
 # Array of proposal IDs
-proposal_ids=("4" "5" "6" "7" "8" "9" "10" "11" "12") # Add your proposal IDs here
+proposal_ids=("1") # Remember to check the previous upgrade prior to voting on the next upgrade
 
 # Array of vote IDs
 vote_ids=("a0e3889b406b7686640619648d848d5a0d800f2b5a7a2a44ff7cda7b2d264131") # Add your vote IDs here
