@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { colors, icons, images } from '../../shared/constants';
 import { formatDate } from '../../shared/utils';
 import { PostType, PublicationType } from '../../types/types';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 
 
 

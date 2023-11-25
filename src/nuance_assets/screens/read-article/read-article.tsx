@@ -27,11 +27,11 @@ import { icons } from '../../shared/constants';
 import ClapButton from '../../UI/clap-button/clap-button';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import Linkify from 'react-linkify';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { PublicationStylingObject } from '../../types/types';
 import PostInformation from '../../components/post-information/post-information';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 import { PremiumArticleInfo } from '../../components/premium-article-info/premium-article-info';
 import Comments from '../../components/comments/comments';
@@ -183,23 +183,22 @@ const ReadArticle = () => {
     navigate('/', { replace: true });
   };
 
-
   //comment scrolling
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const commentId = queryParams.get('comment');
 
-
   useEffect(() => {
     const scrollToComment = () => {
       const commentElement = document.getElementById(`comment-${commentId}`);
       if (commentElement) {
-        const commentPosition = commentElement.getBoundingClientRect().top + window.pageYOffset;
+        const commentPosition =
+          commentElement.getBoundingClientRect().top + window.pageYOffset;
 
         const margin = 30;
         window.scrollTo({
           top: commentPosition - margin,
-          behavior: "smooth"
+          behavior: 'smooth',
         });
 
         navigate(`${location.pathname}`, { replace: true });
@@ -215,7 +214,6 @@ const ReadArticle = () => {
       }
     }
   }, [commentId, comments, navigate, location.pathname]);
-
 
   useEffect(() => {
     clearPost();
@@ -259,7 +257,6 @@ const ReadArticle = () => {
     if (post) {
       getPostComments(postId, post?.bucketCanisterId);
     }
-
   }, [post?.postId]);
 
   useEffect(() => {
@@ -438,7 +435,6 @@ const ReadArticle = () => {
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
-  console.log(url);
   return (
     <div style={darkOptionsAndColors} className='read-article-wrapper'>
       <Helmet>
@@ -502,8 +498,8 @@ const ReadArticle = () => {
             screenWidth <= 768 && isToggled
               ? { width: 'max-content' }
               : screenWidth <= 768 && !isToggled
-                ? { width: '30px', paddingRight: '25px' }
-                : { width: '25%' }
+              ? { width: '30px', paddingRight: '25px' }
+              : { width: '25%' }
           }
         >
           <p className='date'>
@@ -598,7 +594,11 @@ const ReadArticle = () => {
               </div>
             </>
           }
-          {!user ? <LoggedOutSidebar responsiveElement={false} /> : ''}
+          {!user && context.width > 768 ? (
+            <LoggedOutSidebar style={{ alignItems: 'end' }} />
+          ) : (
+            ''
+          )}
         </div>
 
         <div className='right'>
@@ -622,9 +622,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                        fontFamily: publication?.styling.fontType,
-                        color: darkOptionsAndColors.color,
-                      }
+                          fontFamily: publication?.styling.fontType,
+                          color: darkOptionsAndColors.color,
+                        }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -762,19 +762,28 @@ const ReadArticle = () => {
                   ) : null}
                 </div>
                 <div className='comment-section'>
-                  <WriteComment postId={post.postId} bucketCanisterId={post.bucketCanisterId} label='WRITE A COMMENT..' handle={user?.handle || ""} avatar={user?.avatar || ""} />
+                  <WriteComment
+                    postId={post.postId}
+                    bucketCanisterId={post.bucketCanisterId}
+                    label='WRITE A COMMENT..'
+                    handle={user?.handle || ''}
+                    avatar={user?.avatar || ''}
+                  />
 
-                  {
-                    (comments != undefined && comments.length > 0) &&
-
-                    comments.map(comment => (
-                      <Comments key={comment.commentId} isReply={false} comment={comment} bucketCanisterId={post.bucketCanisterId} postId={post.postId} loggedInUser={user?.handle || ""} avatar={user?.avatar || ""} />
-                    ))
-                  }
-
+                  {comments != undefined &&
+                    comments.length > 0 &&
+                    comments.map((comment) => (
+                      <Comments
+                        key={comment.commentId}
+                        isReply={false}
+                        comment={comment}
+                        bucketCanisterId={post.bucketCanisterId}
+                        postId={post.postId}
+                        loggedInUser={user?.handle || ''}
+                        avatar={user?.avatar || ''}
+                      />
+                    ))}
                 </div>
-
-
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 import React, { KeyboardEventHandler } from 'react';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors, icons } from '../../shared/constants';
 
 type SearchProps = {

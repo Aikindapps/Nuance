@@ -9,11 +9,10 @@ import { usePostStore } from '../../store/postStore';
 import { useNavigate } from 'react-router-dom';
 import { usePublisherStore } from '../../store/publisherStore';
 import { useAuthStore } from '../../store/authStore';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { fas } from '@fortawesome/free-solid-svg-icons';
+import {Context as ModalContext} from '../../contextes/ModalContext'
 import { toast, toastError, ToastType } from '../../services/toastService';
-import { useTheme } from '../../ThemeContext';
-import { Context } from '../../Context';
+import { useTheme } from '../../contextes/ThemeContext';
+import { Context } from '../../contextes/Context';
 import { useUserStore } from '../../store';
 
 type PremiumArticleInfoProps = {
@@ -37,6 +36,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
   const darkTheme = useTheme();
 
   const context = useContext(Context);
+  const modalContext = useContext(ModalContext)
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -326,7 +326,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                   setModalPage('buy');
                   setUserAccepted(false);
                 } else {
-                  context.setModal();
+                  modalContext?.openModal('Login')
                 }
               }}
             >

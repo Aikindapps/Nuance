@@ -3,10 +3,6 @@ import React, { useState, createContext } from 'react';
 const Context = createContext({
   publicationFeature: true,
   nftFeature: true,
-  showModal: false,
-  setModal: () => {},
-  withdrawIcpModal: false,
-  setWithdrawIcpModal: () => {},
   width: window.innerWidth,
   height: window.innerHeight,
   setWidth: (arg) => {},
@@ -16,10 +12,6 @@ const Context = createContext({
 });
 
 const ContextProvider = ({ children }) => {
-  const [showModal, setShowModal] = useState(false);
-  const setModal = () => {
-    setShowModal(!showModal);
-  };
   const [showWithdrawIcpModal, setShowWithdrawIcpModal] = useState(false);
   const setWithdrawIcpModal = () => {
     setShowWithdrawIcpModal(!showWithdrawIcpModal);
@@ -33,10 +25,6 @@ const ContextProvider = ({ children }) => {
       value={{
         publicationFeature: true,
         nftFeature: true,
-        showModal: showModal,
-        setModal: setModal,
-        withdrawIcpModal: showWithdrawIcpModal,
-        setWithdrawIcpModal: setWithdrawIcpModal,
         width,
         height,
         setHeight,

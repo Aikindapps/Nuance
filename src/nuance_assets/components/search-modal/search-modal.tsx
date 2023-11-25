@@ -6,7 +6,7 @@ import SearchBar from '../search-bar/search-bar';
 import { icons, colors } from '../../shared/constants';
 import { usePostStore } from '../../store';
 import { useNavigate, Link } from 'react-router-dom';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 function SearchModal({ setOpenModal, screenWidth }: any) {
   const navigate = useNavigate();

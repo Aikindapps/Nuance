@@ -12,7 +12,7 @@ import { PostType } from '../../../nuance_assets/types/types';
 import { usePostStore, usePublisherStore } from '../../../nuance_assets/store';
 import { icon } from '@fortawesome/fontawesome-svg-core';
 import { toastError } from '../../services/toastService';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   post,

@@ -19,12 +19,12 @@ import PublicationCategoriesMenu from '../../components/publication-categories-m
 import ArticleList from '../../components/article-list/article-list';
 import PublicationProfile from '../../components/publication-profile/publication-profile';
 import PublicationSidebarMobile from '../../UI/publication-sidebar-mobile/publication-sidebar-mobile';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { PostType } from '../../types/types';
 import { TagModel } from '../../services/actorService';
 import SearchList from '../../components/search-list/search-list';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { Helmet } from 'react-helmet';
 
 function PublicationLanding() {

@@ -1,7 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useUserStore } from '../../store/userStore';
 import { icons, colors } from '../../shared/constants';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
+import {Context as ModalContext} from '../../contextes/ModalContext'
+
 
 type ButtonProps = {
   type?: String;
@@ -22,7 +24,7 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
   const [clapIcons, setClapIcons] = useState([clapIcon]);
   const [clicks, setClicks] = useState(0);
 
-  const context = useContext(Context)
+  const modalContext = useContext(ModalContext)
 
   function clapAnimation() {
     setClicks(clicks + 1);
@@ -72,7 +74,7 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
           clapAnimation()
         }
         else{
-          context.setModal();
+          modalContext?.openModal('Login');
         }
       }}
       disabled={disabled && user ? true : false}

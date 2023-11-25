@@ -1,13 +1,13 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useTheme } from '../../ThemeContext'
+import { useTheme } from '../../contextes/ThemeContext'
 import { toast } from 'react-hot-toast';
 import { usePostStore } from '../../store/postStore';
 import Button from '../../UI/Button/Button';
 import { toastError } from '../../services/toastService';
 import { Comment, SaveCommentModel } from '../../../declarations/PostBucket/PostBucket.did';
 import { colors } from '../../shared/constants';
-import { Context } from '../../Context';
-import { useAuthStore } from '../../store';
+import { Context } from '../../contextes/Context';
+import {Context as ModalContext} from '../../contextes/ModalContext'
 import RequiredFieldMessage from '../required-field-message/required-field-message';
 
 
@@ -51,6 +51,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
   };
 
   const context = useContext(Context)
+  const modalContext = useContext(ModalContext)
 
 
 
@@ -75,7 +76,7 @@ const WriteComment: React.FC<WriteCommentProps> = ({
 
     if (handle === "" || handle === undefined || handle === null) {
       function handleRegister() {
-        context.setModal();
+        modalContext?.openModal('Login');
       }
       handleRegister();
       setIsSaving(false)

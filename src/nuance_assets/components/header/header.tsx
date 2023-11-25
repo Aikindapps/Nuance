@@ -7,10 +7,10 @@ import { colors, icons, images } from '../../shared/constants';
 import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { PublicationStylingObject, PublicationType } from '../../types/types';
 import { trim_category_name } from '../../shared/utils';
-import { useTheme, useThemeUpdate } from '../../ThemeContext';
+import { useTheme, useThemeUpdate } from '../../contextes/ThemeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsis, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 
 type HeaderProps = {
   loggedIn: Boolean;

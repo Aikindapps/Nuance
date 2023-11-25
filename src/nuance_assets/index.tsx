@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import reportWebVitals from './reportWebVitals';
 import { Usergeek } from 'usergeek-ic-js';
-import { ContextProvider } from './Context';
+import { ContextProvider } from './contextes/Context';
 
 import './index.scss';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';

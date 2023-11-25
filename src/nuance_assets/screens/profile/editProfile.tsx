@@ -15,7 +15,7 @@ import ProfilePictureButton from '../../UI/profile-picture-button/profile-pictur
 import { downscaleImage } from '../../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { toast, toastError, ToastType } from '../../services/toastService';
 import Loader from '../../UI/loader/Loader';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images } from '../../shared/constants';
 
 const EditProfile = () => {

@@ -1,7 +1,7 @@
 import React, { MouseEventHandler, useRef, useLayoutEffect } from 'react';
 import './_nav-tabs.scss';
 import { Nav } from 'react-bootstrap';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 type NavTabProps = {
   firstTab: string;

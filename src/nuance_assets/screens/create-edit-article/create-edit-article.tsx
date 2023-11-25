@@ -28,7 +28,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 import { colors, icons, images } from '../../shared/constants';
 import { useLocation } from 'react-router-dom';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import './create-edit-article-screen.scss';
 import PremiumArticleOwners from '../../components/premium-article-owners/premium-article-owners';
 import { NftArticleView } from '../../components/nft-article-view/NftArticleView';

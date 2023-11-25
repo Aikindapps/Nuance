@@ -494,7 +494,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
-            console.log(enrichedComments);
           })
           .catch(error => {
             console.error(error);
@@ -528,8 +527,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       editedAt: comment ? comment.editedAt : []
     } as Comment;
 
-    console.log(newComment);
-    console.log(comment);
 
     // Optimistically update the state with the new comment before backend updates
 
@@ -598,7 +595,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
                 comments: enrichedComments,
                 totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
               });
-              console.log(enrichedComments);
             })
             .catch(error => {
               console.error(error);
@@ -610,7 +606,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
                 comments: enrichedComments,
                 totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
               });
-              console.log(enrichedComments);
             })
             .catch(error => {
               console.error(error);
@@ -638,7 +633,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
-            console.log(enrichedComments);
           })
           .catch(error => {
             console.error(error);
@@ -661,7 +655,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
-            console.log(enrichedComments);
           })
           .catch(error => {
             console.error(error);
@@ -697,7 +690,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
-            console.log(enrichedComments);
           })
           .catch(error => {
             console.error(error);
@@ -718,7 +710,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   savePost: async (post: PostSaveModel): Promise<PostType | undefined> => {
     try {
       const result = await (await getPostCoreActor()).save(post);
-      console.log(result)
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -769,7 +760,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         let bucketCanisterId = coreReturn.ok.bucketCanisterId;
         let bucketActor = await getPostBucketActor(bucketCanisterId);
         const bucketReturn = await bucketActor.get(postId);
-        console.log('bucketReturn-> ', bucketReturn)
         if (Err in bucketReturn) {
           //bucket canister returned an error -> it may be a publication post or unauthorized call
           //check if it's a publication post
@@ -1291,7 +1281,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             } else {
               const post = { ...bucketReturn.ok, ...coreReturn.ok } as PostType;
               const author = authorResult.ok as User;
-              console.log(author, post);
               if (author.handle !== post.handle) {
                 set({ getPostError: `Article not found for @${handle}` });
               } else {

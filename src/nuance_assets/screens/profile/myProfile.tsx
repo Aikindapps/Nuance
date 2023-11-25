@@ -10,9 +10,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleXmark } from '@fortawesome/free-regular-svg-icons';
 import { Row, Col } from 'react-bootstrap';
 import { PublicationObject } from 'src/nuance_assets/types/types';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { toast, toastError, ToastType } from '../../services/toastService';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const MyProfile = () => {
   const navigate = useNavigate();

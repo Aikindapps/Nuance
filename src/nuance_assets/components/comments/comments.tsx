@@ -6,8 +6,9 @@ import { User } from 'src/declarations/User/User.did';
 import WriteComment from '../comments/write-comments';
 import { usePostStore } from '../../store/postStore';
 import { useAuthStore, useUserStore } from '../../../nuance_assets/store';
-import { Context } from '../../Context';
-import { useTheme } from '../../ThemeContext';
+import { Context } from '../../contextes/Context';
+import { useTheme } from '../../contextes/ThemeContext';
+import {Context as ModalContext} from '../../contextes/ModalContext'
 import { Link } from 'react-router-dom';
 import { ToastType, toastError, toast } from '../..//services/toastService';
 
@@ -41,6 +42,7 @@ const Comments: React.FC<CommentProps> = ({
   });
 
   const context = useContext(Context)
+  const modalContext = useContext(ModalContext);
   const darkTheme = useTheme();
 
   const { upVoteComment, downVoteComment, getPostComments, removeCommentVote } = usePostStore(state => state);
@@ -50,7 +52,7 @@ const Comments: React.FC<CommentProps> = ({
 
   let loggedOut = loggedInUser === "" || loggedInUser === undefined || loggedInUser === null
   function handleRegister() {
-    context.setModal();
+    modalContext?.openModal('Login')
   }
 
 

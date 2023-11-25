@@ -4,7 +4,7 @@ import CardDraftArticles from '../../components/card-draft-articles/card-draft-a
 import { PostType } from '../../types/types';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 

@@ -11,9 +11,9 @@ import Button from '../../UI/Button/Button';
 import MyProfileSidebar from '../../UI/my-profile-sidebar/my-profile-sidebar';
 import { PublicationObject } from 'src/nuance_assets/services/actorService';
 import PublicationLink from './publicationLink';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images } from '../../shared/constants';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 
 const ProfileSidebar = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);

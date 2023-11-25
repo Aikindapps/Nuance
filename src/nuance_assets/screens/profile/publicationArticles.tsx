@@ -9,10 +9,10 @@ import Button from '../../UI/Button/Button';
 import Footer from '../../components/footer/footer';
 import SearchBar from '../../components/search-bar/search-bar';
 import { TagModel } from '../../services/actorService';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import EditorArticleList from '../../components/editor-article-list/editor-article-list';
 import EditorSearchList from '../../components/editor-search-list/editor-search-list';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const PublicationArticles = () => {
   const navigate = useNavigate();

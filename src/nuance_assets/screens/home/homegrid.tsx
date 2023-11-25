@@ -5,8 +5,10 @@ import { PostType } from '../../types/types';
 import { colors, images } from '../../shared/constants';
 import { TagModel } from 'src/nuance_assets/services/actorService';
 import { slice } from 'lodash';
-import { useTheme } from '../../ThemeContext';
-import { Context } from '../../Context';
+import { useTheme } from '../../contextes/ThemeContext';
+import { Context } from '../../contextes/Context';
+import {Context as ModalContext} from '../../contextes/ModalContext'
+
 
 const Header = lazy(() => import('../../components/header/header'));
 const Footer = lazy(() => import('../../components/footer/footer'));
@@ -32,6 +34,7 @@ const HomePageGrid = () => {
   const darkTheme = useTheme() as boolean;
   const searchPageSize = 20;
   const context = useContext(Context);
+  const modalContext = useContext(ModalContext)
 
   const { isLoggedIn, redirect, redirectScreen } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
@@ -383,7 +386,7 @@ const HomePageGrid = () => {
       return;
     }
     if (!user) {
-      context.setModal();
+      modalContext?.openModal('Login')
       return;
     }
 
@@ -926,7 +929,7 @@ const HomePageGrid = () => {
           loading={false}
           isPublicationPage={false}
         />
-        {user ? '' : <LoggedOutSidebar responsiveElement={true} />}
+        {user ? '' : context.width < 768 ? <LoggedOutSidebar /> : null}
         <div onFocus={() => setIsBlur(true)} onBlur={() => setIsBlur(false)}>
           <SearchBar
             value={searchText}
@@ -1006,7 +1009,7 @@ const HomePageGrid = () => {
               </div>
             ) : (
               <div className='logged-out'>
-                <LoggedOutSidebar responsiveElement={false} />
+                <LoggedOutSidebar />
               </div>
             )}
           </div>
@@ -1124,7 +1127,7 @@ const HomePageGrid = () => {
                       <div className='article-grid'>
                         {tab === 'popular' &&
                         dropdownMenuOpen &&
-                        !context.showModal ? (
+                        !modalContext?.isModalOpen ? (
                           <div
                             className='dropdown-wrapper active'
                             style={darkOptionsAndColors}
@@ -1163,7 +1166,7 @@ const HomePageGrid = () => {
                               })}
                             </div>
                           </div>
-                        ) : !context.showModal ? (
+                        ) : !modalContext?.isModalOpen ? (
                           tab === 'popular' ? (
                             <div
                               className='dropdown-wrapper'

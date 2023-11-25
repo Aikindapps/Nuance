@@ -10,8 +10,9 @@ import InputField2 from '../../UI/InputField2/InputField2';
 import Button from '../../UI/Button/Button';
 import { TransferNftModal } from '../../components/transfer-nft-modal/transfer-nft-modal';
 import { PremiumPostActivityListItem } from '../../types/types';
-import { useTheme } from '../../ThemeContext';
-import { Context } from '../../Context';
+import { useTheme } from '../../contextes/ThemeContext';
+import { Context } from '../../contextes/Context';
+import { Context as ModalContext } from '../../contextes/ModalContext';
 
 const Wallet = () => {
   const [balance, setBalance] = useState<string>('0');
@@ -26,12 +27,10 @@ const Wallet = () => {
 
   //NFT feature toggle
   const context = useContext(Context);
-  const nftFeatureIsLive = context.nftFeature;
+  const modalContext = useContext(ModalContext);
 
   const navigate = useNavigate();
   const darkTheme = useTheme();
-
-  
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -66,11 +65,11 @@ const Wallet = () => {
     handleSellingNfts();
   }, []);
 
-  useEffect(()=>{
-    if(!context.withdrawIcpModal){
+  useEffect(() => {
+    if (!(modalContext?.modalType === 'WithdrawToken')) {
       handleUserBalance();
     }
-  }, [context.withdrawIcpModal])
+  }, [modalContext?.modalType]);
 
   useEffect(() => {
     populateFields();
@@ -107,11 +106,6 @@ const Wallet = () => {
     );
   };
 
-  if (!nftFeatureIsLive) {
-    navigate('/');
-    return <div></div>;
-  }
-
   return (
     <div className='wrapper'>
       <p className='title'>MY WALLET</p>
@@ -134,7 +128,7 @@ const Wallet = () => {
             <img
               className='transfer-icon'
               onClick={() => {
-                context.setWithdrawIcpModal();
+                modalContext?.openModal('WithdrawToken');
               }}
               src={icons.TRANSFER_ICON}
               style={{ filter: darkTheme ? 'contrast(0)' : 'none' }}
@@ -281,8 +275,9 @@ const Wallet = () => {
                     >
                       <img
                         onClick={() => {
-                          setTransferringToken(activity);
-                          setTransferModalOpen(true);
+                          modalContext?.openModal('WithdrawNft', {
+                            transferNftData: activity,
+                          });
                         }}
                         src={icons.TRANSFER_ICON}
                       ></img>
@@ -294,14 +289,6 @@ const Wallet = () => {
             })
           : null}
       </div>
-      {transferModalOpen && transferringToken ? (
-        <TransferNftModal
-          post={transferringToken}
-          cancelFunction={() => {
-            setTransferModalOpen(false);
-          }}
-        />
-      ) : null}
     </div>
   );
 };

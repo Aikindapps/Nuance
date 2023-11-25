@@ -6,7 +6,11 @@ import { Toaster } from 'react-hot-toast';
 import Loader from './UI/loader/Loader';
 import { useAuthStore } from './store';
 import { useIdleTimer } from 'react-idle-timer';
-import { ThemeProvider, useTheme } from './ThemeContext';
+import { ThemeProvider, useTheme } from './contextes/ThemeContext';
+import {
+  Context as ModalContext,
+  ContextProvider as ModalContextProvider,
+} from './contextes/ModalContext';
 import { images, colors } from './shared/constants';
 
 const HomePageGrid = lazy(() => import('./screens/home/homegrid'));
@@ -46,21 +50,22 @@ const Wallet = lazy(() => import('./screens/profile/wallet'));
 
 import { LoginModal } from './components/login-modal/login-modal';
 import { WithdrawIcpModal } from './components/withdraw-icp-modal/withdraw-icp-modal';
-import { Context } from './Context';
+import { Context } from './contextes/Context';
 import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';
+import { ModalsWrapper } from './components/modals-wrapper/modals-wrapper';
 
 const Routes = () => {
   return useRoutes([
     { path: '/', element: <HomePageGrid /> },
-    { path: '/metrics', element: <Metrics/> },
+    { path: '/metrics', element: <Metrics /> },
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
     { path: '/:handle', element: <Profile /> },
     { path: '/:handle/:id/:title', element: <ReadArticle /> },
     { path: '/article/new', element: <CreateEditArticle /> },
     { path: '/article/edit/:id', element: <CreateEditArticle /> },
-    { path: '/publication/:handle', element: <PublicationLanding />, },
+    { path: '/publication/:handle', element: <PublicationLanding /> },
     {
       path: '/publication/:handle/subscription',
       element: <PublicationLanding />,
@@ -73,7 +78,7 @@ const Routes = () => {
       children: [
         { path: '', element: <MyProfile /> },
         { path: 'edit', element: <EditProfile /> },
-        { path: 'submitted-for-review', element: <SubmittedArticles />},
+        { path: 'submitted-for-review', element: <SubmittedArticles /> },
         { path: 'draft', element: <DraftArticles /> },
         { path: 'published', element: <PublishedArticles /> },
         { path: 'topics', element: <FollowedTags /> },
@@ -141,76 +146,80 @@ function App() {
   const darkTheme = useTheme();
 
   return (
-    <ThemeProvider>
-      <div className='App'>
-        <Helmet>
-          <meta charSet='utf-8' />
-          <link
-            rel='canonical'
-            href={'https://nuance.xyz' + window.location.pathname}
+    <ModalContextProvider>
+      <ThemeProvider>
+        <div className='App'>
+          <Helmet>
+            <meta charSet='utf-8' />
+            <link
+              rel='canonical'
+              href={'https://nuance.xyz' + window.location.pathname}
+            />
+            <link rel='icon' href='/favicon.ico' type='image/x-icon' />
+            <meta
+              name='viewport'
+              content='width=device-width, initial-scale=1.0'
+            />
+
+            {/* HTML Meta Tags */}
+            <title>{siteTitle}</title>
+            <meta name='description' content={siteDesc} />
+
+            {/* Google / Search Engine Tags */}
+            <meta itemProp='name' content={siteTitle} />
+            <meta itemProp='description' content={siteDesc} />
+            <meta itemProp='image' content={logo} />
+
+            {/* Facebook Meta Tags */}
+            <meta property='og:title' content={siteTitle} />
+            <meta property='og:description' content={siteDesc} />
+            <meta property='og:url' content='https://nuance.xyz/' />
+            <meta property='og:type' content='website' />
+            <meta property='og:image' content={logo} />
+
+            {/* Twitter Meta Tags */}
+            <meta name='twitter:card' content={logo} />
+            <meta name='twitter:card' content={'summary_large_image'} />
+            <meta name='twitter:title' content={siteTitle} />
+            <meta name='twitter:description' content={siteDesc} />
+            <meta name='twitter:image' content={logo} />
+            <meta name='twitter:creator' content='@nuancedapp' />
+          </Helmet>
+          <Router>
+            <Suspense
+              fallback={
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100vh',
+                    width: '100vw',
+                    background: darkTheme
+                      ? colors.darkModePrimaryBackgroundColor
+                      : colors.primaryBackgroundColor,
+                  }}
+                >
+                  <Loader />
+                </div>
+              }
+            >
+              <Routes />
+            </Suspense>
+          </Router>
+          <Toaster
+            position='bottom-center'
+            toastOptions={{
+              style: {
+                backgroundColor: '#000000',
+                color: '#ffffff',
+              },
+            }}
           />
-          <link rel='icon' href='/favicon.ico' type='image/x-icon' />
-          <meta
-            name='viewport'
-            content='width=device-width, initial-scale=1.0'
-          />
-
-          {/* HTML Meta Tags */}
-          <title>{siteTitle}</title>
-          <meta name='description' content={siteDesc} />
-
-          {/* Google / Search Engine Tags */}
-          <meta itemProp='name' content={siteTitle} />
-          <meta itemProp='description' content={siteDesc} />
-          <meta itemProp='image' content={logo} />
-
-          {/* Facebook Meta Tags */}
-          <meta property='og:title' content={siteTitle} />
-          <meta property='og:description' content={siteDesc} />
-          <meta property='og:url' content='https://nuance.xyz/' />
-          <meta property='og:type' content='website' />
-          <meta property='og:image' content={logo} />
-
-          {/* Twitter Meta Tags */}
-          <meta name='twitter:card' content={logo} />
-          <meta name='twitter:card' content={'summary_large_image'} />
-          <meta name='twitter:title' content={siteTitle} />
-          <meta name='twitter:description' content={siteDesc} />
-          <meta name='twitter:image' content={logo} />
-          <meta name='twitter:creator' content='@nuancedapp' />
-        </Helmet>
-        <Router>
-          <Suspense
-            fallback={
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100vh',
-                  width: '100vw',
-                  background: darkTheme
-                    ? colors.darkModePrimaryBackgroundColor
-                    : colors.primaryBackgroundColor,
-                }}
-              >
-                <Loader />
-              </div>
-            }
-          >
-            <Routes />
-          </Suspense>
-        </Router>
-        <Toaster  position="bottom-center" toastOptions={{
-    style: {
-      backgroundColor: '#000000',
-      color: '#ffffff',
-    },
-  }}/>
-        <LoginModal />
-        <WithdrawIcpModal />
-      </div>
-    </ThemeProvider>
+          <ModalsWrapper/>
+        </div>
+      </ThemeProvider>
+    </ModalContextProvider>
   );
 }
 

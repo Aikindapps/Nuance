@@ -16,9 +16,10 @@ import Linkify from 'react-linkify';
 import { Link } from 'react-router-dom';
 import { Row, Col } from 'react-bootstrap';
 import { PostType, PublicationObject } from '../../types/types';
-import { Context } from '../../Context';
-import { useTheme } from '../../ThemeContext';
+import { Context } from '../../contextes/Context';
+import { useTheme } from '../../contextes/ThemeContext';
 import { get } from 'lodash';
+import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -159,8 +160,8 @@ const Profile = () => {
       )
     );
   }, [handle]);
-
-  const featureIsLive = useContext(Context).publicationFeature;
+  const context = useContext(Context);
+  const featureIsLive = context.publicationFeature;
 
   //for customizing linkify npm package
   const componentDecorator = (href: any, text: any, key: any) => (
@@ -239,79 +240,34 @@ const Profile = () => {
               <div className='left-profile-menu'>
                 <AuthorProfileSidebar />
               </div>
-            ) : null}
-            <div className='logged-out' style={{ alignItems: 'flex-end' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                }}
-              >
-                <CopyProfile
-                  shown={copyProfile}
-                  setShown={setCopyProfile}
-                  handle={author?.handle}
-                  dark={darkTheme}
-                />
-                <ReportAuthorMenu
-                  shown={shownMeatball}
-                  setShown={setShownMeatball}
-                  isPublication={false}
-                  dark={darkTheme}
-                />
-              </div>
-              <div
-                className='horizontal-divider'
-                style={isLoggedIn ? { width: '17vw' } : {}}
-              ></div>
-              <div
-                className='buttons'
-                style={isLoggedIn ? { display: 'none' } : {}}
-              >
-                <div className='button'>
-                  <Button
-                    styleType='primary-1'
-                    type='button'
-                    style={{
-                      width: '265px',
-                      background: darkTheme
-                        ? colors.accentColor
-                        : colors.primaryButtonColor,
-                    }}
-                    // icon={NONAME}
-                    onClick={() => login('ii')}
-                  >
-                    Log in with Internet Identity
-                  </Button>
+            ) : (
+              <div className='logged-out' style={{ alignItems: 'flex-end' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                  }}
+                >
+                  <CopyProfile
+                    shown={copyProfile}
+                    setShown={setCopyProfile}
+                    handle={author?.handle}
+                    dark={darkTheme}
+                  />
+                  <ReportAuthorMenu
+                    shown={shownMeatball}
+                    setShown={setShownMeatball}
+                    isPublication={false}
+                    dark={darkTheme}
+                  />
                 </div>
-                <div className='button'>
-                  <Button
-                    styleType='primary-3'
-                    type='button'
-                    style={{
-                      width: '265px',
-                      background: darkOptionsAndColors.secondaryButtonColor,
-                    }}
-                    // icon={NONAME}
-                    onClick={() => login('ii')}
-                  >
-                    Register with Internet Identity
-                  </Button>
-                </div>
-
-                <a>
-                  <p className='identity'>
-                    <a
-                      href='https://smartcontracts.org/docs/ic-identity-guide/what-is-ic-identity.html'
-                      target='_blank'
-                      style={{ color: darkOptionsAndColors.color }}
-                    >
-                      What is internet identity?
-                    </a>
-                  </p>
-                </a>
+                <div
+                  className='horizontal-divider'
+                  style={isLoggedIn ? { width: '17vw' } : {}}
+                ></div>
+                <LoggedOutSidebar style={{width:'265px'}} />
               </div>
-            </div>
+            )}
           </div>
         </div>
 
