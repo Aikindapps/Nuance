@@ -50,6 +50,13 @@ import {
   idlFactory as extFactory,
 } from './ext-service';
 
+
+import { _SERVICE as ICRC1Service } from './icrc1/icrc1.did';
+import {
+  createActor as createIcrc1Actor,
+  idlFactory as icrc1Factory,
+} from './icrc1';
+
 import { _SERVICE as StorageService } from '../../declarations/Storage/Storage.did';
 import {
   canisterId as storageCanisterId,
@@ -296,6 +303,40 @@ export async function getMetricsActor(): Promise<
   var identity =
     (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
   return createMetricsActor(metricsCanisterId as string, {
+    agentOptions: {
+      identity,
+      host: isLocal ? undefined : 'https://icp-api.io ',
+    },
+  });
+}
+
+export async function getIcrc1Actor(canisterId: string): Promise<
+  ActorSubclass<ICRC1Service>
+> {
+  let loginMethod = useAuthStore.getState().loginMethod;
+  if (loginMethod === 'bitfinity') {
+    let window_any = window as any;
+    return await window_any.ic.bitfinityWallet.createActor({
+      canisterId,
+      interfaceFactory: icrc1Factory,
+      host: isLocal ? 'http://localhost:8081' : undefined,
+    });
+  }
+  var identity =
+    (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
+  return createIcrc1Actor(canisterId as string, {
+    agentOptions: {
+      identity,
+      host: isLocal ? undefined : 'https://icp-api.io ',
+    },
+  });
+}
+
+export async function getIcrc1TokenActorAnonymous(
+  canisterId: string
+): Promise<ActorSubclass<ICRC1Service>> {
+  var identity = new AnonymousIdentity();
+  return createIcrc1Actor(canisterId as string, {
     agentOptions: {
       identity,
       host: isLocal ? undefined : 'https://icp-api.io ',

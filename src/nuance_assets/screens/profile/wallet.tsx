@@ -41,9 +41,12 @@ const Wallet = () => {
       : colors.primaryTextColor,
   };
 
-  const { getUserWallet, userWallet } = useAuthStore((state) => ({
+  const { getUserWallet, userWallet, tokenBalances,fetchTokenBalances} = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
+    tokenBalances: state.tokenBalances,
+    fetchTokenBalances: state.fetchTokenBalances
+    
   }));
 
   const { getMyBalance, getOwnedNfts, premiumPostsActivities, getSellingNfts } =
@@ -59,7 +62,7 @@ const Wallet = () => {
   }));
 
   useEffect(() => {
-    handleUserBalance();
+    fetchTokenBalances();
     populateFields();
     getOwnedNfts();
     handleSellingNfts();
@@ -67,7 +70,7 @@ const Wallet = () => {
 
   useEffect(() => {
     if (!(modalContext?.modalType === 'WithdrawToken')) {
-      handleUserBalance();
+      fetchTokenBalances();
     }
   }, [modalContext?.modalType]);
 
@@ -90,13 +93,6 @@ const Wallet = () => {
     setSoldKeys(soldKeys);
   };
 
-  const handleUserBalance = async () => {
-    let balance = await getMyBalance();
-    if (balance) {
-      setBalance(icpPriceToString(balance));
-    }
-  };
-
   const handleSellingNfts = async () => {
     var sellingActivites = await getSellingNfts();
     setDisplayingActivities(
@@ -116,71 +112,60 @@ const Wallet = () => {
       <p className='wallet-text' style={{ color: darkOptionsAndColors.color }}>
         Copy the principal id or address to send ICP to your wallet.
       </p>
+      <p className='statistic-text'>CURRENTLY IN YOUR WALLET</p>
       <div
         className='statistic'
-        style={{ marginBottom: '40px', marginTop: '30px' }}
+        style={{ marginBottom: '40px', marginTop: '5px' }}
       >
         <div className='statistic'>
+          {tokenBalances.map((tokenBalance) => {
+            return (
+              <div
+                className='stat'
+                style={{ borderRight: '1px dashed #B2B2B2' }}
+              >
+                <p className='count'>
+                  {(
+                    tokenBalance.balance /
+                    Math.pow(10, tokenBalance.token.decimals)
+                  ).toFixed(2)}
+                </p>
+                <p className='title'>{tokenBalance.token.symbol}</p>
+                {tokenBalance.token.symbol === 'NUA' ? (
+                  <p className='title'>(Nuance Token)</p>
+                ) : (
+                  <div className='nua-equivalance'>
+                    <div className='eq'>=</div>
+                    <div className='value'>4 NUA</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <div className='stat'>
-            <p className='stat-header'>Tokens</p>
-            <p className='count'>{balance}</p>
-            <p className='title'>ICP</p>
-            <img
-              className='transfer-icon'
-              onClick={() => {
-                modalContext?.openModal('WithdrawToken');
-              }}
-              src={icons.TRANSFER_ICON}
-              style={{ filter: darkTheme ? 'contrast(0)' : 'none' }}
-            ></img>
-          </div>
-          <div className='stat'>
-            <p className='stat-header'>Owned</p>
             <p className='count'>{ownedKeys}</p>
-            <p className='title'>NFT KEYS</p>
-          </div>
-          <div className='stat'>
-            <p className='stat-header'>Sold</p>
-            <p className='count'>{soldKeys}</p>
-            <p className='title'>NFT KEYS</p>
+            <p className='title'>Article Keys</p>
           </div>
         </div>
       </div>
-      <div className='address-flex'>
-        <div className='address'>
-          <div className='address-header'>PRINCIPAL</div>
-          <div className='address-container'>
-            <img
-              className='copy-icon'
-              src={icons.COPY_ICON}
-              style={{ filter: darkTheme ? 'contrast(.6)' : '' }}
-              onClick={() => {
-                if (userWallet) {
-                  navigator.clipboard.writeText(userWallet?.principal);
-                  toast('Copied to clipboard.', ToastType.Success);
-                }
-              }}
-            />
-            <div>{userWallet?.principal}</div>
-          </div>
-        </div>
-        <div className='address'>
-          <div className='address-header'>ADDRESS</div>
-          <div className='address-container'>
-            <img
-              className='copy-icon'
-              src={icons.COPY_ICON}
-              style={{ filter: darkTheme ? 'contrast(.6)' : '' }}
-              onClick={() => {
-                if (userWallet) {
-                  navigator.clipboard.writeText(userWallet?.accountId);
-                  toast('Copied to clipboard.', ToastType.Success);
-                }
-              }}
-            />
-            <div>{userWallet?.accountId}</div>
-          </div>
-        </div>
+
+      <div className='deposit-withdraw-buttons-wrapper'>
+        <Button
+          styleType='deposit'
+          type='button'
+          onClick={() => {
+            modalContext?.openModal('Deposit');
+          }}
+        >
+          Deposit to your wallet
+        </Button>
+        <Button
+          styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
+          type='button'
+          onClick={() => {}}
+        >
+          Withdraw from your wallet
+        </Button>
       </div>
       <div className='token-activities'>
         <div className='token-activities-header'>

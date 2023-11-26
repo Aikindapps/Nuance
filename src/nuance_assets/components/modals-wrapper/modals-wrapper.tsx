@@ -1,9 +1,10 @@
-import React, { useContext } from "react";
-import "./modals-wrapper.scss";
-import { Context as ModalContext } from "../../contextes/ModalContext";
-import { LoginModal } from "../login-modal/login-modal";
-import { WithdrawIcpModal } from "../withdraw-icp-modal/withdraw-icp-modal";
-import { TransferNftModal } from "../transfer-nft-modal/transfer-nft-modal";
+import React, { useContext } from 'react';
+import './modals-wrapper.scss';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import { LoginModal } from '../login-modal/login-modal';
+import { WithdrawIcpModal } from '../withdraw-icp-modal/withdraw-icp-modal';
+import { TransferNftModal } from '../transfer-nft-modal/transfer-nft-modal';
+import { DepositModal } from '../deposit-modal/deposit-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   return (
@@ -16,7 +17,7 @@ export const ModalsWrapper = () => {
               height: '100vh',
               position: 'fixed',
               background: 'rgba(0, 0, 0, 0.21)',
-              backdropFilter:'blur(4px)',
+              backdropFilter: 'blur(4px)',
               top: '0',
               left: '0',
               opacity: '1',
@@ -31,6 +32,8 @@ export const ModalsWrapper = () => {
       ) : modalContext?.modalType === 'WithdrawNft' &&
         modalContext.modalData?.transferNftData ? (
         <TransferNftModal post={modalContext.modalData.transferNftData} />
+      ) : modalContext?.modalType === 'Deposit' ? (
+        <DepositModal />
       ) : null}
     </div>
   );

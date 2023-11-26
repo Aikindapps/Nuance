@@ -1,6 +1,6 @@
 import React, { useState, createContext, ReactNode, useEffect } from 'react';
 import { PremiumPostActivityListItem } from '../types/types';
-type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Tipping';
+type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Tipping' | 'Deposit';
 type ModalData = {
     transferNftData?: PremiumPostActivityListItem
 };

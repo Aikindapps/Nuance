@@ -12,6 +12,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $button-border-hover;
@@ -46,6 +47,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $primary-background-color;
@@ -89,6 +91,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $dark-primary-background-color;
@@ -132,6 +135,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $button-border-hover;
@@ -192,7 +196,7 @@
   border-radius: 5px;
   font-size: 14px;
   margin: 0 20px;
-
+  transition: 0.1s ease-in-out all;
   &:hover {
     border: 1px solid $button-border-hover;
   }
@@ -214,6 +218,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $button-hover-background;
@@ -261,6 +266,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     border: 1px solid;
@@ -286,4 +292,119 @@ button[disabled]:hover {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
+}
+
+.button-attributes-withdraw {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  color: $primary-background-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-color;
+  border: 1px solid $primary-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 240px;
+  transition: 0.1s ease-in-out all;
+
+
+  &:hover {
+    background-color: $button-border-hover;
+  }
+
+  &:active {
+    background-color: $active-background-color;
+  }
+
+  &:disabled {
+    background-color: $primary-background-color;
+    color: $primary-background-color;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
+}
+
+.button-attributes-withdraw-dark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  color: $primary-color;
+  border: 1px solid $dark-button-color;
+  font-weight: 500;
+  background-color: $dark-button-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 240px;
+  transition: 0.1s ease-in-out all;
+
+
+  &:hover {
+    background-color: $dark-button-hover-color;
+  }
+
+  &:active {
+    background-color: $dark-button-active-color;
+  }
+
+  &:disabled {
+    background-color: $primary-background-color;
+    color: $primary-background-color;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
+}
+
+
+
+.button-attributes-deposit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  color: $primary-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-background-color;
+  border: 1px solid #b2b2b2;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 240px;
+  transition: 0.1s ease-in-out all;
+
+
+  &:hover {
+    border: 1px solid $primary-color;
+  }
+
+  &:active {
+    border: 1px solid $accent-color;
+  }
+
+  &:disabled {
+    background-color: $primary-background-color;
+    color: $primary-background-color;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
 }
