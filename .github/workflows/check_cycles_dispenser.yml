@@ -55,9 +55,10 @@ jobs:
           MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
          
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
-
-          # Send a message only if it's the first hour of the day or if the message doesn't contain 'Everything is fine'
-          if [[ "$CURRENT_HOUR" == "00" ]] || [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]]; then
+      
+          # Check if the message contains 'Everything is fine' and it's not the first hour of the day
+          if [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]] || [[ "$CURRENT_HOUR" == "00" ]]; then
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
           fi
+
       
