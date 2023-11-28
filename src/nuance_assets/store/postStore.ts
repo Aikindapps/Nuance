@@ -25,9 +25,10 @@ import {
   getPublisherActor,
   getExtActor,
   getLedgerActor,
+  getIcrc1Actor,
 } from '../services/actorService';
 import { AccountIdentifier, LedgerCanister } from '@dfinity/nns';
-import { toHex } from '@dfinity/agent';
+import { TransferResult as Icrc1TransferResult } from '../services/icrc1/icrc1.did';
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
@@ -94,21 +95,21 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   });
 };
 
-
 async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
   const usersCache: Map<string, User> = new Map();
 
   async function fetchUser(principalId: string): Promise<User> {
     let user = usersCache.get(principalId);
     if (!user) {
-      const userResult = await (await getUserActor()).getUserByPrincipalId(principalId);
+      const userResult = await (
+        await getUserActor()
+      ).getUserByPrincipalId(principalId);
       if ('err' in userResult) throw new Error(userResult.err);
       user = userResult.ok;
       usersCache.set(principalId, user);
     }
     return user;
   }
-
 
   async function addUserDetails(comment: Comment): Promise<Comment> {
     const user = await fetchUser(comment.creator);
@@ -118,22 +119,22 @@ async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
   }
 
   // Enrich comments with user details and handle replies.
-  const enrichComments = async (commentsToEnrich: Comment[]): Promise<Comment[]> => {
-    return Promise.all(commentsToEnrich.map(async (comment) => {
-      comment = await addUserDetails(comment);
-      if (comment.replies && comment.replies.length > 0) {
-        comment.replies = await enrichComments(comment.replies);
-      }
-      return comment;
-    }));
+  const enrichComments = async (
+    commentsToEnrich: Comment[]
+  ): Promise<Comment[]> => {
+    return Promise.all(
+      commentsToEnrich.map(async (comment) => {
+        comment = await addUserDetails(comment);
+        if (comment.replies && comment.replies.length > 0) {
+          comment.replies = await enrichComments(comment.replies);
+        }
+        return comment;
+      })
+    );
   };
 
   return enrichComments(comments);
 }
-
-
-
-
 
 function separateIds(input: string) {
   // Split the input string by the '-' character
@@ -154,9 +155,9 @@ const isUserEditor = (publicationHandle: string, user?: UserType) => {
     if (pubObj.publicationName === publicationHandle && pubObj.isEditor) {
       result = true;
     }
-  })
-  return result
-}
+  });
+  return result;
+};
 
 const fetchPostsByBuckets = async (
   coreReturns: PostKeyProperties[],
@@ -391,6 +392,12 @@ export interface PostStore {
   ) => Promise<LockTokenReturn>;
   getMyBalance: () => Promise<bigint | undefined>;
   transferIcp: (amount: bigint, receiver: string) => Promise<TransferResult>;
+  transferICRC1Token: (
+    amount: number,
+    receiver: string,
+    canisterId: string,
+    fee: number
+  ) => Promise<Icrc1TransferResult>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -413,11 +420,24 @@ export interface PostStore {
 
   getUserDailyPostStatus: () => Promise<boolean>;
   getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
-  saveComment: (commentModel: SaveCommentModel, bucketCanisterId: string, edited: Boolean, handle: string, avatar: string, comment?: Comment) => Promise<void>;
+  saveComment: (
+    commentModel: SaveCommentModel,
+    bucketCanisterId: string,
+    edited: Boolean,
+    handle: string,
+    avatar: string,
+    comment?: Comment
+  ) => Promise<void>;
   upVoteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
-  downVoteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
+  downVoteComment: (
+    commentId: string,
+    bucketCanisterId: string
+  ) => Promise<void>;
   deleteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
-  removeCommentVote: (commentId: string, bucketCanisterId: string) => Promise<void>;
+  removeCommentVote: (
+    commentId: string,
+    bucketCanisterId: string
+  ) => Promise<void>;
 
   clearAll: () => void;
 }
@@ -481,52 +501,59 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   comments: [],
   totalNumberOfComments: 0,
 
-  getPostComments: async (postId: string, bucketCanisterId: string): Promise<void> => {
+  getPostComments: async (
+    postId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
     try {
-      const result = await (await getPostBucketActor(bucketCanisterId)).getPostComments(postId);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).getPostComments(postId);
       if (Err in result) {
         toastError(result.err);
       } else {
-
         mergeCommentsWithUsers(result.ok.comments)
-          .then(enrichedComments => {
+          .then((enrichedComments) => {
             set({
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
           });
-
-
-
       }
     } catch (err) {
       handleError(err, Unexpected);
     }
   },
 
-  saveComment: async (commentModel: SaveCommentModel, bucketCanisterId: string, edited: Boolean, handle: string, avatar: string, comment?: Comment): Promise<void> => {
+  saveComment: async (
+    commentModel: SaveCommentModel,
+    bucketCanisterId: string,
+    edited: Boolean,
+    handle: string,
+    avatar: string,
+    comment?: Comment
+  ): Promise<void> => {
     // Generate a temporary ID for the new comment
     const tempId = Date.now().toString();
 
     // Create a new comment object with the temporary ID and other properties
     let newComment = {
-      creator: "TEMP",
+      creator: 'TEMP',
       handle: handle,
       avatar: avatar,
       postId: commentModel.postId,
       content: commentModel.content,
       commentId: comment ? comment.commentId : tempId,
-      createdAt: comment ? comment.createdAt : "0",
-      downVotes: comment ? comment.downVotes : [] as string[],
-      upVotes: comment ? comment.upVotes : [] as string[],
-      replies: comment ? comment.replies as Comment[] : [] as Comment[],
+      createdAt: comment ? comment.createdAt : '0',
+      downVotes: comment ? comment.downVotes : ([] as string[]),
+      upVotes: comment ? comment.upVotes : ([] as string[]),
+      replies: comment ? (comment.replies as Comment[]) : ([] as Comment[]),
       repliedCommentId: [],
-      editedAt: comment ? comment.editedAt : []
+      editedAt: comment ? comment.editedAt : [],
     } as Comment;
-
 
     // Optimistically update the state with the new comment before backend updates
 
@@ -535,7 +562,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       commentId: string,
       updateFn: (comment: Comment) => Comment
     ): Comment[] {
-      return comments.map(comment => {
+      return comments.map((comment) => {
         if (comment.commentId === commentId) {
           return updateFn(comment);
         } else if (comment.replies) {
@@ -548,66 +575,93 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       });
     }
 
-
-
-
-    const replyToCommentId = commentModel.replyToCommentId && commentModel.replyToCommentId.length > 0 ? commentModel.replyToCommentId[0] : undefined;
-    const actualCommentId = commentModel.commentId && commentModel.commentId.length > 0 ? commentModel.commentId[0] : undefined;
-
+    const replyToCommentId =
+      commentModel.replyToCommentId && commentModel.replyToCommentId.length > 0
+        ? commentModel.replyToCommentId[0]
+        : undefined;
+    const actualCommentId =
+      commentModel.commentId && commentModel.commentId.length > 0
+        ? commentModel.commentId[0]
+        : undefined;
 
     if (replyToCommentId === undefined) {
-
       if (actualCommentId) {
-
-        set(state => ({
-          comments: findAndUpdateComment(state.comments, actualCommentId, oldComment => ({ ...oldComment, ...newComment, commentId: comment?.commentId || tempId }))
+        set((state) => ({
+          comments: findAndUpdateComment(
+            state.comments,
+            actualCommentId,
+            (oldComment) => ({
+              ...oldComment,
+              ...newComment,
+              commentId: comment?.commentId || tempId,
+            })
+          ),
         }));
       } else {
-
-        set(state => ({ comments: [newComment, ...state.comments] }));
+        set((state) => ({ comments: [newComment, ...state.comments] }));
       }
     } else {
-      set(state => ({
-        comments: findAndUpdateComment(state.comments, replyToCommentId, comment => ({
-          ...comment,
-          replies: [newComment, ...comment.replies]
-        }))
+      set((state) => ({
+        comments: findAndUpdateComment(
+          state.comments,
+          replyToCommentId,
+          (comment) => ({
+            ...comment,
+            replies: [newComment, ...comment.replies],
+          })
+        ),
       }));
     }
 
-
-
     try {
-      const result = await (await getPostBucketActor(bucketCanisterId)).saveComment(commentModel);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).saveComment(commentModel);
       if (Err in result) {
         // If there is an error, revert the optimistic update
-        set(state => ({ comments: state.comments.filter(comment => comment.commentId !== tempId) }));
+        set((state) => ({
+          comments: state.comments.filter(
+            (comment) => comment.commentId !== tempId
+          ),
+        }));
         toastError(result.err);
       } else {
-        if (edited || commentModel.commentId && commentModel.commentId.length > 0) {
-          toast('The changes on your comment have been saved.', ToastType.Success);
-          set(state => ({
-            comments: state.comments.map(comment => comment.commentId === tempId ? { ...comment } : comment)
+        if (
+          edited ||
+          (commentModel.commentId && commentModel.commentId.length > 0)
+        ) {
+          toast(
+            'The changes on your comment have been saved.',
+            ToastType.Success
+          );
+          set((state) => ({
+            comments: state.comments.map((comment) =>
+              comment.commentId === tempId ? { ...comment } : comment
+            ),
           }));
           mergeCommentsWithUsers(result.ok.comments)
-            .then(enrichedComments => {
+            .then((enrichedComments) => {
               set({
                 comments: enrichedComments,
-                totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+                totalNumberOfComments: parseInt(
+                  result.ok.totalNumberOfComments
+                ),
               });
             })
-            .catch(error => {
+            .catch((error) => {
               console.error(error);
             });
         } else {
           mergeCommentsWithUsers(result.ok.comments)
-            .then(enrichedComments => {
+            .then((enrichedComments) => {
               set({
                 comments: enrichedComments,
-                totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+                totalNumberOfComments: parseInt(
+                  result.ok.totalNumberOfComments
+                ),
               });
             })
-            .catch(error => {
+            .catch((error) => {
               console.error(error);
             });
           toast('You posted a comment!', ToastType.Success);
@@ -615,26 +669,34 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       }
     } catch (err) {
       // If there is an exception, revert the optimistic update and handle the error
-      set(state => ({ comments: state.comments.filter(comment => comment.commentId !== tempId) }));
+      set((state) => ({
+        comments: state.comments.filter(
+          (comment) => comment.commentId !== tempId
+        ),
+      }));
       handleError(err, Unexpected);
     }
   },
 
-
-  upVoteComment: async (commentId: string, bucketCanisterId: string): Promise<void> => {
+  upVoteComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
     try {
-      const result = await (await getPostBucketActor(bucketCanisterId)).upvoteComment(commentId);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).upvoteComment(commentId);
       if (Err in result) {
         toastError(result.err);
       } else {
         mergeCommentsWithUsers(result.ok.comments)
-          .then(enrichedComments => {
+          .then((enrichedComments) => {
             set({
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
           });
       }
@@ -643,20 +705,25 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
-  downVoteComment: async (commentId: string, bucketCanisterId: string): Promise<void> => {
+  downVoteComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
     try {
-      const result = await (await getPostBucketActor(bucketCanisterId)).downvoteComment(commentId);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).downvoteComment(commentId);
       if (Err in result) {
         toastError(result.err);
       } else {
         mergeCommentsWithUsers(result.ok.comments)
-          .then(enrichedComments => {
+          .then((enrichedComments) => {
             set({
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
           });
       }
@@ -665,9 +732,14 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
-  deleteComment: async (commentId: string, bucketCanisterId: string): Promise<void> => {
+  deleteComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
     try {
-      const result = await (await getPostBucketActor(bucketCanisterId)).deleteComment(commentId);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).deleteComment(commentId);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -678,20 +750,25 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
-  removeCommentVote: async (commentId: string, bucketCanisterId: string): Promise<void> => {
+  removeCommentVote: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
     try {
-      const result = await (await getPostBucketActor(bucketCanisterId)).removeCommentVote(commentId);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).removeCommentVote(commentId);
       if (Err in result) {
         toastError(result.err);
       } else {
         mergeCommentsWithUsers(result.ok.comments)
-          .then(enrichedComments => {
+          .then((enrichedComments) => {
             set({
               comments: enrichedComments,
               totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
             });
           })
-          .catch(error => {
+          .catch((error) => {
             console.error(error);
           });
       }
@@ -699,7 +776,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       handleError(err, Unexpected);
     }
   },
-
 
   clearSearchBar(isTagScreen) {
     set((state) => {
@@ -1470,13 +1546,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getSubmittedForReviewPosts: async (handles: string[]): Promise<void> => {
     try {
       let postCoreCanister = await getPostCoreActor();
-      let bucketCanisterIds = await postCoreCanister.getBucketCanisterIdsOfGivenHandles(
-        handles
-      );
-      let promises: Promise<PostBucketType[]>[] = []
+      let bucketCanisterIds =
+        await postCoreCanister.getBucketCanisterIdsOfGivenHandles(handles);
+      let promises: Promise<PostBucketType[]>[] = [];
       for (const bucketCanisterId of bucketCanisterIds) {
         let bucketActor = await getPostBucketActor(bucketCanisterId);
-        promises.push(bucketActor.getSubmittedForReview(handles))
+        promises.push(bucketActor.getSubmittedForReview(handles));
       }
       let results = (await Promise.all(promises)).flat(1);
       set({
@@ -1484,12 +1559,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           return { ...postBucketReturn, views: '0', claps: '0', tags: [] };
         }),
       });
-
     } catch (err) {
       handleError(err, Unexpected);
     }
-
-
   },
 
   getPostsByCategory: async (
@@ -2041,7 +2113,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       handleError(err, Unexpected);
     }
   },
-  getOwnersOfPremiumArticleReturnOnly: async (postId: string): Promise<PremiumArticleOwners | undefined> => {
+  getOwnersOfPremiumArticleReturnOnly: async (
+    postId: string
+  ): Promise<PremiumArticleOwners | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
       const result = await coreActor.getPostKeyProperties(postId);
@@ -2111,7 +2185,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               ownersList: owners_list,
             };
 
-            return premiumArticleOwners
+            return premiumArticleOwners;
           } catch (err) {
             handleError(err, Unexpected);
           }
@@ -2594,6 +2668,22 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
+  transferICRC1Token: async (
+    amount: number,
+    receiver: string,
+    canisterId: string,
+    fee: number
+  ): Promise<Icrc1TransferResult> => {
+    let tokenActor = await getIcrc1Actor(canisterId);
+    return await tokenActor.icrc1_transfer({
+      to: { owner: Principal.fromText(receiver), subaccount: [] },
+      fee: [BigInt(fee)],
+      memo: [],
+      from_subaccount: [],
+      created_at_time: [],
+      amount: BigInt(amount),
+    });
+  },
   transferIcp: async (
     amount: bigint,
     receiver: string

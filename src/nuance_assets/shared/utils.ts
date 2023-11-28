@@ -1,8 +1,14 @@
-
 import { format, sub } from 'date-fns';
 import { Metadata } from '../services/ext-service/ext_v2.did';
 import { ToastType, toast } from '../services/toastService';
 import { getNewContentId, uploadBlob } from '../services/storageService';
+import {
+  ICP_CANISTER_ID,
+  NUA_CANISTER_ID,
+  SupportedTokenSymbol,
+  ckBTC_CANISTER_ID,
+} from './constants';
+import { PairInfo } from '../types/types';
 
 export enum DateFormat {
   // Sep 16
@@ -192,11 +198,9 @@ export const parseEmbeddedImage = (
   }
 };
 
-
-
 export const icpPriceToString = (price: bigint) => {
   return (parseFloat(price.toString()) / 100000000).toFixed(2);
-}
+};
 
 export const getFieldsFromMetadata = (metadata: Metadata) => {
   var postId = '';
@@ -254,9 +258,7 @@ export const getFieldsFromMetadata = (metadata: Metadata) => {
   }
 
   return [postId, accessKeyIndex, date, writer, title, totalSupply, url];
-}
-
-
+};
 
 export const convertImagesToUrls = async (
   content: string,
@@ -358,4 +360,103 @@ export const convertImagesToUrls = async (
   }
 
   return { headerUrl, contentWithUrls: c };
+};
+
+export const getNuaEquivalance = (
+  tokenPairs: PairInfo[],
+  symbol: SupportedTokenSymbol,
+  amount: number
+) => {
+  switch (symbol) {
+    case 'NUA':
+      return amount;
+
+    case 'ICP':
+      return getPriceBetweenTokens(tokenPairs, 'ICP', 'NUA', amount);
+    case 'ckBTC':
+      let ckbtcToIcp = getPriceBetweenTokens(
+        tokenPairs,
+        'ckBTC',
+        'ICP',
+        amount
+      );
+      return getPriceBetweenTokens(tokenPairs, 'ICP', 'NUA', ckbtcToIcp);
+  }
+};
+
+export const getPriceBetweenTokens = (
+  tokenPairs: PairInfo[],
+  token0Symbol: SupportedTokenSymbol,
+  token1Symbol: SupportedTokenSymbol,
+  amount: number
+) => {
+  if(token0Symbol === token1Symbol){
+    return amount
+  }
+  let token0 = '';
+  let token1 = '';
+  switch (token0Symbol) {
+    case 'NUA':
+      token0 = NUA_CANISTER_ID;
+      break;
+    case 'ICP':
+      token0 = ICP_CANISTER_ID;
+      break;
+    case 'ckBTC':
+      token0 = ckBTC_CANISTER_ID;
+      break;
+  }
+  switch (token1Symbol) {
+    case 'NUA':
+      token1 = NUA_CANISTER_ID;
+      break;
+    case 'ICP':
+      token1 = ICP_CANISTER_ID;
+      break;
+    case 'ckBTC':
+      token1 = ckBTC_CANISTER_ID;
+      break;
+  }
+  let poolIncludingUndefined = tokenPairs.map((poolValue) => {
+    if (
+      (poolValue.token0 === token0 && poolValue.token1 === token1) ||
+      (poolValue.token1 === token0 && poolValue.token0 === token1)
+    ) {
+      return poolValue;
+    }
+  });
+
+  let poolFiltered = poolIncludingUndefined.filter((val) => {
+    return val !== undefined;
+  });
+
+  if (poolFiltered.length > 0) {
+    let pool = poolFiltered[0];
+    if (pool) {
+      let reserveIn = 0;
+      let reserveOut = 0;
+      if (pool.token0 === token0) {
+        reserveIn = Number(pool.reserve0);
+      } else {
+        reserveIn = Number(pool.reserve1);
+      }
+      if (pool.token1 === token1) {
+        reserveOut = Number(pool.reserve1);
+      } else {
+        reserveOut = Number(pool.reserve0);
+      }
+      var actualAmount = (amount * 997) / 1000;
+      var amountInWithFee = amount * 997;
+      var numerator = amountInWithFee * reserveOut;
+      var denominator = reserveIn * 1000 + amountInWithFee;
+      var amountOut = numerator / denominator;
+      return amountOut;
+    } else {
+      //the pool not found -> not fetched yet return 0
+      return 0;
+    }
+  } else {
+    //the pool not found -> not fetched yet return 0
+    return 0;
+  }
 };

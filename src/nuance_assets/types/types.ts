@@ -173,3 +173,11 @@ export type PremiumArticleSaleInformation = {
   postId : string,
   soldOut: boolean
 }
+
+export type PairInfo = {
+  'id' : string,
+  'reserve0' : number,
+  'reserve1' : number,
+  'token0' : string,
+  'token1' : string
+}

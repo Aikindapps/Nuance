@@ -8,10 +8,12 @@ import { colors } from "../../shared/constants";
 interface DropdownProps {
   items: string[];
   onSelect: (item: string) => void;
-  icons?: string[]
+  icons?: string[];
+  style?: any;
+  nonActive?: boolean
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons }) => {
+const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons, style, nonActive }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const darkTheme = useTheme();
@@ -38,12 +40,17 @@ const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons }) => {
         isOpen ? 'dropdown-menu-wrapper-active' : 'dropdown-menu-wrapper'
       }
       ref={menuRef}
+      style={{ ...style, cursor: nonActive ? 'not-allowed' : '' }}
     >
       <div
         className='dropdown-title-wrapper'
         onClick={() => {
+          if (nonActive) {
+            return;
+          }
           setIsOpen(!isOpen);
         }}
+        style={{ cursor: nonActive ? 'not-allowed' : '' }}
       >
         <div className='dropdown-icon-title-wrapper'>
           {icons && (
@@ -78,7 +85,7 @@ const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons }) => {
       <div
         className='dropdown-menu-items'
         style={
-          isOpen
+          isOpen && !nonActive
             ? {
                 background: darkTheme
                   ? colors.darkModePrimaryBackgroundColor
@@ -98,6 +105,9 @@ const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons }) => {
               key={index_}
               className='dropdown-menu-item'
               onClick={() => {
+                if (nonActive) {
+                  return;
+                }
                 setIndex(index_);
                 onSelect(items[index_]);
                 setIsOpen(false);

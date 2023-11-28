@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store';
 import Dropdown from '../../UI/dropdown/dropdown';
 import QRCode from 'react-qr-code';
 import { toast, ToastType } from '../../services/toastService';
-import { colors } from '../../shared/constants';
+import { SupportedTokenSymbol, colors } from '../../shared/constants';
 
 export const DepositModal = () => {
   const modalContext = useContext(ModalContext);
@@ -58,8 +58,8 @@ export const DepositModal = () => {
         }
         className='information-text'
       >
-        Please select the right currency and amount that you want to withdraw
-        from your wallet.
+        Please select the right currency to get the address for depositing
+        tokens to your wallet.
       </p>
       <div className='owned-tokens-wrapper'>
         <p className='deposit-modal-field-text'>CURRENTLY IN YOUR WALLET</p>
@@ -79,7 +79,7 @@ export const DepositModal = () => {
                   {(
                     tokenBalance.balance /
                     Math.pow(10, tokenBalance.token.decimals)
-                  ).toFixed(2)}
+                  ).toFixed(4)}
                 </p>
                 <p className='title'>{tokenBalance.token.symbol}</p>
               </div>
@@ -94,7 +94,7 @@ export const DepositModal = () => {
             return tokenBalance.token.symbol;
           })}
           onSelect={(selected: string) => {
-            setSelectedCurrency(selected);
+            setSelectedCurrency(selected as SupportedTokenSymbol);
           }}
           icons={tokenBalances.map((tokenBalance) => {
             return tokenBalance.token.logo;

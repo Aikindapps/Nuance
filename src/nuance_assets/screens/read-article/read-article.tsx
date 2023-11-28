@@ -570,7 +570,7 @@ const ReadArticle = () => {
                 </div>
                 <ClapButton
                   styleType={darkTheme ? 'clap-button-dark' : 'clap-button'}
-                  disabled={clapDisabled}
+                  disabled={loading}
                   dark={darkTheme}
                   type='button'
                   style={{ width: '96px' }}
@@ -580,6 +580,7 @@ const ReadArticle = () => {
                   onMouseUp={() => {
                     setMouseDown(false);
                   }}
+                  applaudingPost={post}
                 >
                   {parseInt(postclaps) + buttoncount}
                 </ClapButton>
@@ -703,13 +704,14 @@ const ReadArticle = () => {
                         type='button'
                         style={{ width: '96px' }}
                         dark={darkTheme}
-                        disabled={clapDisabled}
+                        disabled={loading}
                         onMouseDown={() => {
                           setMouseDown(true);
                         }}
                         onMouseUp={() => {
                           setMouseDown(false);
                         }}
+                        applaudingPost={post}
                       >
                         {parseInt(postclaps) + buttoncount}
                       </ClapButton>

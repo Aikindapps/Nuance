@@ -2,8 +2,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useUserStore } from '../../store/userStore';
 import { icons, colors } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
-import {Context as ModalContext} from '../../contextes/ModalContext'
-
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import { PostType } from '../../types/types';
 
 type ButtonProps = {
   type?: String;
@@ -11,20 +11,30 @@ type ButtonProps = {
   icon?: String;
   style?: Object;
   onClick?: (event: any) => void;
-  disabled?: boolean;
+  disabled: boolean;
   onMouseDown: (event: any) => void;
   onMouseUp: (event: any) => void;
   dark?: boolean;
+  applaudingPost?: PostType;
 };
 
 const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
-  const { styleType, icon, children, type, disabled, style, onClick } = props;
+  const {
+    styleType,
+    icon,
+    children,
+    type,
+    disabled,
+    style,
+    onClick,
+    applaudingPost,
+  } = props;
 
   let clapIcon = props.dark ? icons.CLAP_WHITE : icons.CLAP_BLUE;
   const [clapIcons, setClapIcons] = useState([clapIcon]);
   const [clicks, setClicks] = useState(0);
 
-  const modalContext = useContext(ModalContext)
+  const modalContext = useContext(ModalContext);
 
   function clapAnimation() {
     setClicks(clicks + 1);
@@ -38,7 +48,7 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
     }, 250);
   }
 
-  const { user} = useUserStore((state) => ({
+  const { user } = useUserStore((state) => ({
     user: state.user,
   }));
 
@@ -69,15 +79,15 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
     <button
       className={'button-attributes-' + styleType}
       style={style}
-      onClick={()=>{
-        if(user){
-          clapAnimation()
-        }
-        else{
+      onClick={() => {
+        if (user) {
+          //clapAnimation()
+          modalContext?.openModal('Clap', { clappingPostData: applaudingPost });
+        } else {
           modalContext?.openModal('Login');
         }
       }}
-      disabled={disabled && user ? true : false}
+      disabled={false}
       onMouseDown={props.onMouseDown}
       onMouseUp={props.onMouseUp}
     >

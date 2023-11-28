@@ -1,8 +1,9 @@
 import React, { useState, createContext, ReactNode, useEffect } from 'react';
-import { PremiumPostActivityListItem } from '../types/types';
-type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Tipping' | 'Deposit';
+import { PostType, PremiumPostActivityListItem } from '../types/types';
+type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Tipping' | 'Deposit' | 'Clap';
 type ModalData = {
-    transferNftData?: PremiumPostActivityListItem
+    transferNftData?: PremiumPostActivityListItem,
+    clappingPostData?: PostType
 };
 interface ContextType {
   isModalOpen: boolean;

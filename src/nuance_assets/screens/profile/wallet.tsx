@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { toast, ToastType } from '../../services/toastService';
 import { colors, icons, images } from '../../shared/constants';
-import { formatDate, icpPriceToString } from '../../shared/utils';
+import { formatDate, getNuaEquivalance, icpPriceToString } from '../../shared/utils';
 import { AccountIdentifier } from '@dfinity/nns';
 import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
@@ -41,11 +41,12 @@ const Wallet = () => {
       : colors.primaryTextColor,
   };
 
-  const { getUserWallet, userWallet, tokenBalances,fetchTokenBalances} = useAuthStore((state) => ({
+  const { getUserWallet, userWallet, tokenBalances,fetchTokenBalances, sonicTokenPairs} = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
     tokenBalances: state.tokenBalances,
-    fetchTokenBalances: state.fetchTokenBalances
+    fetchTokenBalances: state.fetchTokenBalances,
+    sonicTokenPairs: state.sonicTokenPairs
     
   }));
 
@@ -102,6 +103,8 @@ const Wallet = () => {
     );
   };
 
+  console.log(sonicTokenPairs)
+
   return (
     <div className='wrapper'>
       <p className='title'>MY WALLET</p>
@@ -123,12 +126,13 @@ const Wallet = () => {
               <div
                 className='stat'
                 style={{ borderRight: '1px dashed #B2B2B2' }}
+                key={tokenBalance.token.symbol}
               >
                 <p className='count'>
                   {(
                     tokenBalance.balance /
                     Math.pow(10, tokenBalance.token.decimals)
-                  ).toFixed(2)}
+                  ).toFixed(4)}
                 </p>
                 <p className='title'>{tokenBalance.token.symbol}</p>
                 {tokenBalance.token.symbol === 'NUA' ? (
@@ -136,7 +140,15 @@ const Wallet = () => {
                 ) : (
                   <div className='nua-equivalance'>
                     <div className='eq'>=</div>
-                    <div className='value'>4 NUA</div>
+                    <div className='value'>
+                      {(
+                        getNuaEquivalance(
+                          sonicTokenPairs,
+                          tokenBalance.token.symbol,
+                          tokenBalance.balance
+                        ) / Math.pow(10, 8)
+                      ).toFixed(0) + ' NUA'}
+                    </div>
                   </div>
                 )}
               </div>
@@ -162,7 +174,9 @@ const Wallet = () => {
         <Button
           styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
           type='button'
-          onClick={() => {}}
+          onClick={() => {
+            modalContext?.openModal('WithdrawToken');
+          }}
         >
           Withdraw from your wallet
         </Button>

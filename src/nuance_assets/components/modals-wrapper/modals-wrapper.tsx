@@ -2,9 +2,10 @@ import React, { useContext } from 'react';
 import './modals-wrapper.scss';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { LoginModal } from '../login-modal/login-modal';
-import { WithdrawIcpModal } from '../withdraw-icp-modal/withdraw-icp-modal';
+import { WithdrawModal } from '../withdraw-modal/withdraw-modal';
 import { TransferNftModal } from '../transfer-nft-modal/transfer-nft-modal';
 import { DepositModal } from '../deposit-modal/deposit-modal';
+import { ClapModal } from '../clap-modal/clap-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   return (
@@ -28,12 +29,15 @@ export const ModalsWrapper = () => {
       {modalContext?.modalType === 'Login' ? (
         <LoginModal />
       ) : modalContext?.modalType === 'WithdrawToken' ? (
-        <WithdrawIcpModal />
+        <WithdrawModal />
       ) : modalContext?.modalType === 'WithdrawNft' &&
         modalContext.modalData?.transferNftData ? (
         <TransferNftModal post={modalContext.modalData.transferNftData} />
       ) : modalContext?.modalType === 'Deposit' ? (
         <DepositModal />
+      ) : modalContext?.modalType === 'Clap' &&
+        modalContext.modalData?.clappingPostData ? (
+        <ClapModal post={modalContext.modalData?.clappingPostData} />
       ) : null}
     </div>
   );

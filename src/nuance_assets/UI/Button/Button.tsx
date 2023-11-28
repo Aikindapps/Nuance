@@ -40,7 +40,7 @@ const Button: React.FC<ButtonProps> = (props): JSX.Element => {
             : style
         }
         onClick={onClick}
-        disabled={disabled ? true : false}
+        disabled={disabled}
         onMouseOver={() => {
           setDisplayingBorderColor(hexTinted);
         }}
@@ -58,7 +58,7 @@ const Button: React.FC<ButtonProps> = (props): JSX.Element => {
         className={'button-attributes-' + styleType}
         style={style}
         onClick={onClick}
-        disabled={disabled ? true : false}
+        disabled={disabled}
       >
         {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
         {children}

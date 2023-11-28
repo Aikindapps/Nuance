@@ -8,14 +8,16 @@ import { AnonymousIdentity, Identity } from '@dfinity/agent';
 import { toastError } from '../services/toastService';
 import { useUserStore, usePostStore } from './';
 import { StoicIdentity } from 'ic-stoic-identity';
-import { UserWallet } from '../types/types';
+import { PairInfo, UserWallet } from '../types/types';
 import { AccountIdentifier } from '@dfinity/nns';
 import {
   getAllCanisterIds,
   getIcrc1Actor,
   getIcrc1TokenActorAnonymous,
+  getSonicActor,
 } from '../services/actorService';
-import { SUPPORTED_TOKENS, TokenBalance } from '../shared/constants';
+import { SUPPORTED_CANISTER_IDS, SUPPORTED_TOKENS, TokenBalance } from '../shared/constants';
+import { PairInfoExt } from '../services/sonic/Sonic.did';
 
 // II
 const identityProvider: string =
@@ -69,6 +71,7 @@ export interface AuthStore {
   readonly redirectScreen: string;
   readonly userWallet: UserWallet | undefined;
   readonly tokenBalances: TokenBalance[];
+  readonly sonicTokenPairs: PairInfo[];
   login: (loginMethod: string) => Promise<void>;
   logout: () => Promise<void>;
   getIdentity: () => Promise<Identity | undefined>;
@@ -94,6 +97,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   redirectScreen: '/',
   userWallet: undefined,
   tokenBalances: [],
+  sonicTokenPairs: [],
 
   redirect: (_screen: string) => {
     set((state) => ({ redirectScreen: _screen }));
@@ -103,9 +107,11 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     let wallet = await get().getUserWallet();
 
     let pid = wallet.principal;
-    let promises = [];
+    let tokenBalancesPromises = [];
+   
     for (const supportedToken of SUPPORTED_TOKENS) {
-      promises.push(
+      //add the promise for token balance
+      tokenBalancesPromises.push(
         (
           await getIcrc1TokenActorAnonymous(supportedToken.canisterId)
         ).icrc1_balance_of({
@@ -114,14 +120,43 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         })
       );
     }
-    let balances = await Promise.all(promises);
-    let tokenBalances: TokenBalance[] = balances.map((balance, index) => {
+    let sonicTokenPairsPromises = [];
+    for(const supportedTokenCanisterId of SUPPORTED_CANISTER_IDS){
+      sonicTokenPairsPromises.push(
+        (await getSonicActor()).getPair(
+          Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
+          Principal.fromText(supportedTokenCanisterId)
+        )
+      );
+    };
+    
+    let [tokenBalancesResponses, sonicTokenPairsResponses] = await Promise.all([
+      Promise.all(tokenBalancesPromises),
+      Promise.all(sonicTokenPairsPromises),
+    ]);
+    let tokenBalances: TokenBalance[] = tokenBalancesResponses.map((balance, index) => {
       return {
         balance: Number(balance),
         token: SUPPORTED_TOKENS[index],
       };
     });
-    set({ tokenBalances });
+    let sonicTokenPairsIncludingUndefined = sonicTokenPairsResponses.map((val)=>{
+      return val[0]
+    })
+    let sonicTokenPairs : PairInfo[] = [];
+    sonicTokenPairsIncludingUndefined.forEach((val)=>{
+      if(val){
+        sonicTokenPairs.push({
+          token0: val.token0,
+          token1: val.token1,
+          reserve0: Number(val.reserve0),
+          reserve1: Number(val.reserve1),
+          id: val.id,
+        });
+      }
+    })
+
+    set({ tokenBalances, sonicTokenPairs });
   },
 
   verifyBitfinityWallet: async (): Promise<void> => {

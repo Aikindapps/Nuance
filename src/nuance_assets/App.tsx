@@ -47,9 +47,6 @@ const CategoryLanding = lazy(
   () => import('./screens/category-landing/category-landing')
 );
 const Wallet = lazy(() => import('./screens/profile/wallet'));
-
-import { LoginModal } from './components/login-modal/login-modal';
-import { WithdrawIcpModal } from './components/withdraw-icp-modal/withdraw-icp-modal';
 import { Context } from './contextes/Context';
 import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';

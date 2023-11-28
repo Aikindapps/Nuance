@@ -57,6 +57,14 @@ import {
   idlFactory as icrc1Factory,
 } from './icrc1';
 
+
+import { _SERVICE as SonicService } from './sonic/Sonic.did';
+import {
+  createActor as createSonicActor,
+  idlFactory as sonicFactory,
+  canisterId as sonicCanisterId
+} from './sonic';
+
 import { _SERVICE as StorageService } from '../../declarations/Storage/Storage.did';
 import {
   canisterId as storageCanisterId,
@@ -343,6 +351,18 @@ export async function getIcrc1TokenActorAnonymous(
     },
   });
 }
+
+//always uses anonymous identity
+//works only on mainnet
+export async function getSonicActor() : Promise<ActorSubclass<SonicService>>{
+  var identity = new AnonymousIdentity();
+  return createSonicActor(sonicCanisterId as string, {
+    agentOptions: {
+      identity,
+      host: 'https://icp-api.io',
+    },
+  });
+};
 
 
 export async function getAllCanisterIds(): Promise<string[]> {
