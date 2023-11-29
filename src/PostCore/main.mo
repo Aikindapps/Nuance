@@ -206,7 +206,6 @@ actor PostCore {
 
       for (controller in controllers.vals()) {
         if (Principal.toText(controller).size() < 28) {
-        Debug.print("controller: " # Principal.toText(controller) # "length: " # Nat.toText(Principal.toText(controller).size()));
         controllersBuffer.add(controller);
         }
       };
@@ -283,14 +282,14 @@ actor PostCore {
         case (_) {};
       };
 
-      Debug.print("Newly created bucket canister canister id is " # canisterId);
+      
 
       try {
         //authorize bucket canister in frontend canister
         let frontendActor = CanisterDeclarations.getFrontendCanister();
-        Debug.print("frontend actor defined successfully");
+       
         await frontendActor.authorize(Principal.fromActor(bucketCanister));
-        Debug.print("frontend actor authorize went succesful");
+        
       } catch (e) {
         Debug.print("authorize error");
       };

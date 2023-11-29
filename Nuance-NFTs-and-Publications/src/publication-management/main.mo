@@ -114,7 +114,7 @@ actor class Management() = this {
 
     for (bucketCanisterId in publicationCanisterIdsHashmap.vals()) {
     
-    Debug.print("Updating settings for canister: " # bucketCanisterId);
+   
       
       let status = await ic.canister_status({ canister_id = Principal.fromText(bucketCanisterId); });
       let controllers = status.settings.controllers;
@@ -124,15 +124,13 @@ actor class Management() = this {
       for (controller in controllers.vals()) {
         if (Principal.toText(controller).size() < 28) {
         controllersBuffer.add(controller);
-        Debug.print("Adding controller: " # Principal.toText(controller));
+        
         }
       };
 
       controllersBuffer.add(Principal.fromActor(this));
       controllersBuffer.add(Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER));
-
-
-    Debug.print("Updating settings for canister: " # bucketCanisterId # " with controllers: " # debug_show( Buffer.toArray(controllersBuffer)));
+      
       switch (await ic.update_settings(({ canister_id = Principal.fromText(bucketCanisterId); settings = { 
         controllers = ?Buffer.toArray(controllersBuffer);
         freezing_threshold = null;
