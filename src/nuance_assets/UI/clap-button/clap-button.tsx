@@ -4,6 +4,7 @@ import { icons, colors } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { PostType } from '../../types/types';
+import { useAuthStore } from '../../store';
 
 type ButtonProps = {
   type?: String;
@@ -19,6 +20,7 @@ type ButtonProps = {
 };
 
 const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
+  
   const {
     styleType,
     icon,
@@ -35,6 +37,11 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
   const [clicks, setClicks] = useState(0);
 
   const modalContext = useContext(ModalContext);
+
+  const { fetchTokenBalances, tokenBalances } = useAuthStore((state) => ({
+    tokenBalances: state.tokenBalances,
+    fetchTokenBalances: state.fetchTokenBalances
+  }));
 
   function clapAnimation() {
     setClicks(clicks + 1);
@@ -82,7 +89,10 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
       onClick={() => {
         if (user) {
           //clapAnimation()
-          modalContext?.openModal('Clap', { clappingPostData: applaudingPost });
+          if(applaudingPost){
+            modalContext?.openModal('Clap', { clappingPostData: applaudingPost });
+          }
+          
         } else {
           modalContext?.openModal('Login');
         }

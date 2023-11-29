@@ -103,6 +103,7 @@ function App() {
   };
   useEffect(() => {
     window.addEventListener('resize', handleResize);
+    fetchTokenBalances()
   }, []);
 
   const inactivityTimeout: number = //process.env.II_INACTIVITY_TIMEOUT
@@ -111,9 +112,10 @@ function App() {
     //   : // default = 1 hour
     480 * 60 * 1_000;
 
-  const { isLoggedIn, logout } = useAuthStore((state) => ({
+  const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
     logout: state.logout,
+    fetchTokenBalances: state.fetchTokenBalances
   }));
 
   const onIdle = () => {

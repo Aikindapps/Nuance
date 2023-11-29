@@ -1,4 +1,4 @@
-import React, { useState, createContext } from 'react';
+import React, { useState, createContext, useEffect } from 'react';
 
 const Context = createContext({
   publicationFeature: true,
@@ -20,6 +20,7 @@ const ContextProvider = ({ children }) => {
   const [height, setHeight] = useState(window.innerHeight);
 
   const [profileSidebarDisallowed, setProfileSidebarDisallowed] = useState(false)
+  
   return (
     <Context.Provider
       value={{
