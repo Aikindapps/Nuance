@@ -32,7 +32,7 @@ import { TransferResult as Icrc1TransferResult } from '../services/icrc1/icrc1.d
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
-import { getFieldsFromMetadata, icpPriceToString } from '../shared/utils';
+import { getFieldsFromMetadata, icpPriceToString, toBase256 } from '../shared/utils';
 import { Principal } from '@dfinity/principal';
 import { PostKeyProperties } from '../../declarations/PostCore/PostCore.did';
 import {
@@ -396,8 +396,10 @@ export interface PostStore {
     amount: number,
     receiver: string,
     canisterId: string,
-    fee: number
+    fee: number,
+    subaccountIndex?: number
   ) => Promise<Icrc1TransferResult>;
+  checkTipping: (postId: string, bucketCanisterId: string) => Promise<void>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -2667,16 +2669,27 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       };
     }
   },
+  checkTipping : async (postId: string, bucketCanisterId: string): Promise<void> => {
+    try {
+      await (await getPostBucketActor(bucketCanisterId)).checkTipping(postId);
+    } catch (error) {
+      console.log(error)
+    }
+  },
 
   transferICRC1Token: async (
     amount: number,
     receiver: string,
     canisterId: string,
-    fee: number
+    fee: number,
+    subaccountIndex?: number
   ): Promise<Icrc1TransferResult> => {
     let tokenActor = await getIcrc1Actor(canisterId);
     return await tokenActor.icrc1_transfer({
-      to: { owner: Principal.fromText(receiver), subaccount: [] },
+      to: {
+        owner: Principal.fromText(receiver),
+        subaccount: subaccountIndex ? [toBase256(subaccountIndex, 32)] : [],
+      },
       fee: [BigInt(fee)],
       memo: [],
       from_subaccount: [],

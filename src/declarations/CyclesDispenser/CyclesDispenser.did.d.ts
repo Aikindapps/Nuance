@@ -4,6 +4,7 @@ import type { ActorMethod } from '@dfinity/agent';
 export interface AddCanisterModel {
   'topUpAmount' : bigint,
   'minimumThreshold' : bigint,
+  'isStorageBucket' : boolean,
   'canisterId' : string,
 }
 export type List = [] | [[string, List]];
@@ -12,6 +13,7 @@ export interface RegisteredCanister {
   'topUpAmount' : bigint,
   'topUps' : Array<TopUp>,
   'minimumThreshold' : bigint,
+  'isStorageBucket' : boolean,
   'canisterId' : string,
 }
 export type Result = { 'ok' : null } |
@@ -45,6 +47,7 @@ export interface _SERVICE {
   'batchUnregisterPlatformOperator' : ActorMethod<[Principal], Result_2>,
   'checkAllRegisteredCanisters' : ActorMethod<[], Result>,
   'checkRegisteredCanister' : ActorMethod<[string], Result_3>,
+  'checkStorageBucketCanisters' : ActorMethod<[], undefined>,
   'getAdmins' : ActorMethod<[], Result_2>,
   'getAllRegisteredCanisters' : ActorMethod<[], Array<RegisteredCanister>>,
   'getAllTopUps' : ActorMethod<[], Array<TopUp>>,

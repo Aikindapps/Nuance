@@ -13,32 +13,38 @@ import {
   SupportedTokenSymbol,
   TokenBalance,
   colors,
+  icons,
   images,
 } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import { Principal } from '@dfinity/principal';
 import { LuLoader2 } from 'react-icons/lu';
 import { PostType } from '../../types/types';
+import { getNuaEquivalance, getPriceBetweenTokens, toBase256 } from '../../shared/utils';
+import { max } from 'lodash';
+import RequiredFieldMessage from '../required-field-message/required-field-message';
+import { SubAccount } from '@dfinity/nns';
+import { getIcrc1Actor } from 'src/nuance_assets/services/actorService';
 
-export const ClapModal = (props:{post: PostType}) => {
+export const ClapModal = (props: { post: PostType }) => {
   const modalContext = useContext(ModalContext);
   const darkTheme = useTheme();
-
-  console.log(props)
-
-  const { userWallet, tokenBalances, fetchTokenBalances } = useAuthStore(
-    (state) => ({
+  const { userWallet, tokenBalances, fetchTokenBalances, sonicTokenPairs } =
+    useAuthStore((state) => ({
       userWallet: state.userWallet,
       tokenBalances: state.tokenBalances,
       fetchTokenBalances: state.fetchTokenBalances,
-    })
-  );
+      sonicTokenPairs: state.sonicTokenPairs,
+    }));
 
   const [selectedCurrency, setSelectedCurrency] =
     useState<SupportedTokenSymbol>(tokenBalances[0].token.symbol);
 
-  const [inputAmount, setInputAmount] = useState('');
+  const [inputAmount, setInputAmount] = useState(0);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  //page 0 -> input page
+  //page 1 -> congratulations page
+  const [page, setPage] = useState(0)
 
   const getSelectedCurrencyBalance = () => {
     var selectedCurrencyAndBalance: TokenBalance = {
@@ -53,270 +59,400 @@ export const ClapModal = (props:{post: PostType}) => {
     return selectedCurrencyAndBalance;
   };
 
-  const validateBalance = () => {
-    let activeCurrency = getSelectedCurrencyBalance();
+  const getMaxAmountToApplaud = () => {
+    let activeBalance = getSelectedCurrencyBalance();
+    let availableBalance = activeBalance.balance - activeBalance.token.fee;
+    let nuaEquivalance = getNuaEquivalance(
+      sonicTokenPairs,
+      activeBalance.token.symbol,
+      availableBalance
+    );
+    let maxAmountOfApplauds = Math.floor(nuaEquivalance / Math.pow(10, 8));
+    return maxAmountOfApplauds >= 10000 ? 10000 : maxAmountOfApplauds;
+  };
+
+  const validateApplaud = () => {
     return (
-      parseFloat(inputAmount) * Math.pow(10, activeCurrency.token.decimals) +
-        activeCurrency.token.fee <=
-        activeCurrency.balance && parseFloat(inputAmount) > 0
+      inputAmount > 0 &&
+      inputAmount <= 10000 &&
+      inputAmount <= getMaxAmountToApplaud() &&
+      termsAccepted
     );
   };
 
-  const getMaxAmountToTransfer = () => {
-    let activeBalance = getSelectedCurrencyBalance();
-    return activeBalance.balance - activeBalance.token.fee;
-  };
-
-  const validateTransfer = () => {
-    let balanceValidation = validateBalance();
-    return termsAccepted && balanceValidation;
-  };
-
-  const {transferICRC1Token } = usePostStore((state) => ({
+  const { transferICRC1Token, checkTipping } = usePostStore((state) => ({
     transferIcp: state.transferIcp,
     transferICRC1Token: state.transferICRC1Token,
+    checkTipping: state.checkTipping
   }));
   const [loading, setLoading] = useState(false);
+
   const executeTransaction = async () => {
-    setLoading(true);
+    setLoading(true)
+    let activeCurrencyAndBalance = getSelectedCurrencyBalance();
+    let tokensToSend = Math.floor(
+      getPriceBetweenTokens(
+        sonicTokenPairs,
+        'NUA',
+        activeCurrencyAndBalance.token.symbol,
+        inputAmount * Math.pow(10, 8)
+      )
+    );
+    console.log(tokensToSend)
     try {
-      let activeToken = getSelectedCurrencyBalance();
-      let e8s =
-        Math.pow(10, activeToken.token.decimals) * parseFloat(inputAmount);
-      let response = await transferICRC1Token(
-        e8s,
-        'inputAddressValue',
-        activeToken.token.canisterId,
-        activeToken.token.fee
+      let transfer_response = await transferICRC1Token(
+        tokensToSend,
+        props.post.bucketCanisterId,
+        activeCurrencyAndBalance.token.canisterId,
+        activeCurrencyAndBalance.token.fee,
+        parseInt(props.post.postId)
       );
-      if ('Ok' in response) {
-        toast('Tokens transferred successfully', ToastType.Success);
-        modalContext?.closeModal();
-      } else {
-        toastError(response.Err);
+      if ('Ok' in transfer_response) {
+        //just close the modal for now
+       
+        setPage(1);
       }
+      else{
+        console.log(transfer_response.Err);
+      }
+      //fire and forget
+      checkTipping(props.post.postId, props.post.bucketCanisterId);
     } catch (error) {
-      //if the call fails, toast the error
-      toastError(error);
+      console.log(error)
     }
-    //no matter what happens, refresh the balances and set the loading false
-    setLoading(false);
+    //refresh the balances for any case
     fetchTokenBalances();
+    setLoading(false);
   };
-
-  console.log('balances: ', tokenBalances);
-  console.log(
-    'input: ',
-    Math.pow(10, getSelectedCurrencyBalance().token.decimals) *
-      parseFloat(inputAmount)
-  );
-  console.log('inputAmount: ', inputAmount);
-
-  return (
-    <div
-      className='clap-modal'
-      style={
-        darkTheme ? { background: colors.darkModePrimaryBackgroundColor } : {}
-      }
-    >
-      <IoCloseOutline
-        onClick={() => {
-          if (loading) {
-            return;
-          }
-          modalContext?.closeModal();
-        }}
+  if(page === 0){
+    return (
+      <div
+        className='clap-modal'
         style={
-          loading
-            ? {
-                cursor: 'not-allowed',
-              }
-            : {}
+          darkTheme ? { background: colors.darkModePrimaryBackgroundColor } : {}
         }
-        className='close-modal-icon'
-      />
-      <p
-        style={
-          darkTheme
-            ? {
-                color: colors.darkModePrimaryTextColor,
-              }
-            : {}
-        }
-        className='modal-title'
       >
-        Start applauding!
-      </p>
-      <p
-        style={
-          darkTheme
-            ? {
-                color: colors.darkSecondaryTextColor,
-              }
-            : {}
-        }
-        className='information-text'
-      >
-        By applauding this article, you are tipping the writer with a fragment
-        of your wallet. One clap is the equivalent of one Nuance Tokens (NUA).
-        <br />
-        <span className='read-more'>Read More</span>
-      </p>
-      <div className='owned-tokens-wrapper'>
-        <p className='clap-modal-field-text'>CURRENTLY IN YOUR WALLET</p>
-        <div className='statistic'>
-          {tokenBalances.map((tokenBalance, index) => {
-            return (
-              <div
-                className='stat'
-                key={index}
-                style={
-                  index < tokenBalances.length - 1
-                    ? { borderRight: '1px dashed #B2B2B2' }
-                    : {}
-                }
-              >
-                <p className='count'>
-                  {(
-                    tokenBalance.balance /
-                    Math.pow(10, tokenBalance.token.decimals)
-                  ).toFixed(4)}
-                </p>
-                <p className='title'>{tokenBalance.token.symbol}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className='selection-input-wrapper'>
-        <div className='input-amount-wrapper'>
-          <p className='clap-modal-field-text'>YOUR APPLAUD AMOUNT</p>
-          <div className='amount-input-wrapper'>
-            <input
-              className='amount-input'
-              type='number'
-              style={
-                darkTheme
-                  ? {
-                      color: colors.darkModePrimaryTextColor,
-                      cursor: loading ? 'not-allowed' : '',
-                    }
-                  : { cursor: loading ? 'not-allowed' : '' }
-              }
-              placeholder='Amount'
-              min={0}
-              max={getMaxAmountToTransfer()}
-              step='0.0001'
-              onChange={(e) => {
-                if (loading) {
-                  return;
-                }
-                const newValue = e.target.value;
-                if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
-
-                if (
-                  newValue === '' ||
-                  (parseFloat(newValue) *
-                    Math.pow(10, getSelectedCurrencyBalance().token.decimals) <=
-                    getMaxAmountToTransfer() &&
-                    newValue.match(/^\d*\.?\d{0,4}$/))
-                ) {
-                  setInputAmount(newValue);
-                }
-              }}
-              value={inputAmount}
-            />
-            <div className='amount-input-conversion-wrapper'>
-              <div>=</div>
-              <div>12 NUA</div>
-              <div>|</div>
-              <div>0.5 ICP</div>
-              <div>|</div>
-              <div>0.0024 ckBTC</div>
-            </div>
-          </div>
-        </div>
-        <div className='select-currency-wrapper'>
-          <p className='clap-modal-field-text'>SELECT THE CURRENCY</p>
-          <Dropdown
-            items={tokenBalances.map((tokenBalance) => {
-              return tokenBalance.token.symbol;
-            })}
-            onSelect={(selected: string) => {
-              setSelectedCurrency(selected as SupportedTokenSymbol);
-              setInputAmount('');
-            }}
-            icons={tokenBalances.map((tokenBalance) => {
-              return tokenBalance.token.logo;
-            })}
-            nonActive={loading}
-          />
-        </div>
-
-        <div
-          className='terms-wrapper'
+        <IoCloseOutline
           onClick={() => {
             if (loading) {
               return;
             }
-            setTermsAccepted(!termsAccepted);
+            modalContext?.closeModal();
           }}
+          style={
+            loading
+              ? {
+                  cursor: 'not-allowed',
+                }
+              : {}
+          }
+          className='close-modal-icon'
+        />
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: colors.darkModePrimaryTextColor,
+                }
+              : {}
+          }
+          className='modal-title'
         >
-          <input type='checkbox' checked={termsAccepted} onChange={() => {}} />
-          <p
-            className='terms-text'
-            style={darkTheme ? { color: colors.darkModePrimaryTextColor } : {}}
-          >
-            I am aware of the general policy and agree to transfer amount of
-            tokens.
-          </p>
+          Start applauding!
+        </p>
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: colors.darkSecondaryTextColor,
+                }
+              : {}
+          }
+          className='information-text'
+        >
+          By applauding this article, you are tipping the writer with a fragment
+          of your wallet. One clap is the equivalent of one Nuance Tokens (NUA).
+          <br />
+          <span className='read-more'>Read More</span>
+        </p>
+        <div className='owned-tokens-wrapper'>
+          <p className='clap-modal-field-text'>CURRENTLY IN YOUR WALLET</p>
+          <div className='statistic'>
+            {tokenBalances.map((tokenBalance, index) => {
+              return (
+                <div
+                  className='stat'
+                  key={index}
+                  style={
+                    index < tokenBalances.length - 1
+                      ? { borderRight: '1px dashed #B2B2B2' }
+                      : {}
+                  }
+                >
+                  <p className='count'>
+                    {(
+                      tokenBalance.balance /
+                      Math.pow(10, tokenBalance.token.decimals)
+                    ).toFixed(4)}
+                  </p>
+                  <p className='title'>{tokenBalance.token.symbol}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
+        <div className='selection-input-wrapper'>
+          <div className='input-amount-wrapper'>
+            <p className='clap-modal-field-text'>YOUR APPLAUD AMOUNT</p>
+            <div style={inputAmount > getMaxAmountToApplaud()?{
+              marginBottom:'-12px'
+            }:{}} className='amount-input-wrapper'>
+              <div className='input-max-wrapper'>
+                <input
+                  className='amount-input'
+                  type='number'
+                  style={
+                    darkTheme
+                      ? {
+                          color: colors.darkModePrimaryTextColor,
+                          cursor: loading ? 'not-allowed' : '',
+                        }
+                      : { cursor: loading ? 'not-allowed' : '' }
+                  }
+                  placeholder='Amount'
+                  min={0}
+                  max={10000}
+                  step='1'
+                  onChange={(e) => {
+                    if (loading) {
+                      return;
+                    }
+  
+                    const value = e.target.value;
+                    if (value === '') {
+                      setInputAmount(0);
+                    }
+                    if (/^\d*$/.test(value)) {
+                      if ((parseInt(value, 10) || 0) <= 10000) {
+                        setInputAmount(parseInt(value, 10) || 0);
+                      }
+                    }
+                  }}
+                  value={inputAmount !== 0 ? inputAmount : ''}
+                />
+                <div
+                  className='withdraw-modal-max-button'
+                  style={
+                    darkTheme
+                      ? {
+                          color: colors.darkModePrimaryTextColor,
+                        }
+                      : {}
+                  }
+                  onClick={() => {
+                    setInputAmount(getMaxAmountToApplaud());
+                  }}
+                >
+                  MAX
+                </div>
+              </div>
+              <div className='amount-input-conversion-wrapper'>
+                <div>=</div>
+                <div>
+                  {(
+                    getPriceBetweenTokens(
+                      sonicTokenPairs,
+                      'NUA',
+                      'NUA',
+                      inputAmount * Math.pow(10, 8)
+                    ) / Math.pow(10, 8)
+                  ).toFixed(2) + ' NUA'}
+                </div>
+                <div>|</div>
+                <div>
+                  {(
+                    getPriceBetweenTokens(
+                      sonicTokenPairs,
+                      'NUA',
+                      'ICP',
+                      inputAmount * Math.pow(10, 8)
+                    ) / Math.pow(10, 8)
+                  ).toFixed(2) + ' ICP'}
+                </div>
+                <div>|</div>
+                <div>
+                  {(
+                    getPriceBetweenTokens(
+                      sonicTokenPairs,
+                      'NUA',
+                      'ckBTC',
+                      inputAmount * Math.pow(10, 8)
+                    ) / Math.pow(10, 8)
+                  ).toFixed(4) + ' ckBTC'}
+                </div>
+              </div>
+            </div>
+            {inputAmount > getMaxAmountToApplaud() && (
+              <RequiredFieldMessage
+                hasError={true}
+                errorMessage='Not enough currency in your wallet'
+              />
+            )}
+          </div>
+          <div className='select-currency-wrapper'>
+            <p className='clap-modal-field-text'>SELECT THE CURRENCY</p>
+            <Dropdown
+              items={tokenBalances.map((tokenBalance) => {
+                return tokenBalance.token.symbol;
+              })}
+              onSelect={(selected: string) => {
+                setSelectedCurrency(selected as SupportedTokenSymbol);
+              }}
+              icons={tokenBalances.map((tokenBalance) => {
+                return tokenBalance.token.logo;
+              })}
+              nonActive={loading}
+            />
+          </div>
+  
+          <div
+            className='terms-wrapper'
+            onClick={() => {
+              if (loading) {
+                return;
+              }
+              setTermsAccepted(!termsAccepted);
+            }}
+          >
+            <input type='checkbox' checked={termsAccepted} onChange={() => {}} />
+            <p
+              className='terms-text'
+              style={darkTheme ? { color: colors.darkModePrimaryTextColor } : {}}
+            >
+              I am aware of the general policy and agree to transfer amount of
+              tokens.
+            </p>
+          </div>
+          <div className='buttons-wrapper'>
+            <Button
+              styleType='deposit'
+              type='button'
+              onClick={() => {
+                if (loading) {
+                  return;
+                }
+                modalContext?.closeModal();
+              }}
+              style={
+                loading
+                  ? {
+                      cursor: 'not-allowed',
+                    }
+                  : {}
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
+              style={
+                !validateApplaud()
+                  ? {
+                      cursor: 'not-allowed',
+                      background: 'gray',
+                      borderColor: 'gray',
+                    }
+                  : {}
+              }
+              type='button'
+              onClick={() => {
+                if (loading) {
+                  return;
+                }
+                if (validateApplaud()) {
+                  executeTransaction();
+                }
+              }}
+            >
+              {loading && <LuLoader2 className='button-loader-icon' />}
+              Applaud
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  else{
+    return (
+      <div
+        className='clap-modal'
+        style={
+          darkTheme ? { background: colors.darkModePrimaryBackgroundColor } : {}
+        }
+      >
+        <IoCloseOutline
+          onClick={() => {
+            if (loading) {
+              return;
+            }
+            modalContext?.closeModal();
+          }}
+          style={
+            loading
+              ? {
+                  cursor: 'not-allowed',
+                }
+              : {}
+          }
+          className='close-modal-icon'
+        />
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: colors.darkModePrimaryTextColor,
+                }
+              : {}
+          }
+          className='modal-title'
+        >
+          Thank you!
+        </p>
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: colors.darkSecondaryTextColor,
+                }
+              : {}
+          }
+          className='information-text'
+        >
+          {`We have transferred the equivalent of ${inputAmount} applaud from your wallet.`}
+        </p>
+        <img className='congratulations-image' src={icons.CLAP_ICON} />
         <div className='buttons-wrapper'>
           <Button
             styleType='deposit'
             type='button'
             onClick={() => {
-              if (loading) {
-                return;
-              }
               modalContext?.closeModal();
             }}
-            style={
-              loading
-                ? {
-                    cursor: 'not-allowed',
-                  }
-                : {}
-            }
           >
-            Cancel
+            Close
           </Button>
           <Button
             styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
-            style={
-              !validateTransfer()
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                  }
-                : {}
-            }
             type='button'
             onClick={() => {
-              if (loading) {
-                return;
-              }
-              if (validateTransfer()) {
-                executeTransaction();
-              }
+              window.location.href = '/my-profile/wallet'
             }}
           >
-            {loading && <LuLoader2 className='button-loader-icon' />}
-            Applaud
+            Go to wallet
           </Button>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+  
 };

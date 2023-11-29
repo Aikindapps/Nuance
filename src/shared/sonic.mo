@@ -1,5 +1,8 @@
 import Result "mo:base/Result";
 import Principal "mo:base/Principal";
+import Nat "mo:base/Nat";
+import Float "mo:base/Float";
+import Int "mo:base/Int";
 import ENV "env";
 module{
     public type PairInfoExt = {
@@ -19,24 +22,28 @@ module{
   let Sonic = actor("3xwpq-ziaaa-aaaah-qcn4a-cai") : actor{
     getPair : shared query (Principal, Principal) -> async ?PairInfoExt;
   };
-  public func getPriceBetweenTokens(token0: Text, token1: Text, amountIn: Nat) : async Result.Result<Nat, Text>{
+  private func getPriceBetweenTokens(token0: Text, token1: Text, amount: Nat) : async Result.Result<Nat, Text>{
     let pool = await Sonic.getPair(Principal.fromText(token0), Principal.fromText(token1));
     switch(pool) {
       case(?poolValue) {
-        let reserveIn = if(poolValue.token0 == token0){poolValue.reserve0}else{poolValue.reserve1};
-        let reserveOut = if(poolValue.token1 == token1){poolValue.reserve1}else{poolValue.reserve0};
-        var actualAmount=(amountIn * 997)/1000;
-        var amountInWithFee = amountIn * 997;
+        let reserveIn = if(poolValue.token0 == ENV.ICP_TOKEN_CANISTER_ID){poolValue.reserve0}else{poolValue.reserve1};
+        let reserveOut = if(poolValue.token1 != ENV.ICP_TOKEN_CANISTER_ID){poolValue.reserve1}else{poolValue.reserve0};
+        var amountInWithFee = Nat.pow(10, 8) * 997;
         var numerator = amountInWithFee * reserveOut;
         var denominator = reserveIn * 1000 + amountInWithFee;
         var amountOut = (numerator / denominator);
-        return #ok(amountOut)
+        //amountOut means the ICP equivalance of the other token
+        if(token0 != ENV.ICP_TOKEN_CANISTER_ID){
+          return #ok(Int.abs(Float.toInt((Float.fromInt(amount) / Float.pow(10, 8)) * Float.fromInt(amountOut))));
+        }
+        else{
+          return #ok(Int.abs(Float.toInt(Float.fromInt(amount) / Float.fromInt(amountOut) * Float.pow(10, 8))))
+        }
       };
       case(null) {
         return #err("Pool not found")
       };
     };
-
   };
 
   //this function will be implemented once we determine which dex will be used

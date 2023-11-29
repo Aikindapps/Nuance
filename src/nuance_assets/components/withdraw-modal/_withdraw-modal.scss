@@ -158,32 +158,46 @@
                 width: 100%;
                 column-gap: 10px;
                 height: 32px;
-                .amount-input {
-                    border: none;
+                .input-max-wrapper{
+                    display: flex;
+                    width: 60%;
                     border-bottom: 1px solid $title-divider-color;
-                    outline: none;
-                    width: 40%;
-                    height: 31px;
-                    background: transparent;
-                    font-size: 14px;
-                    font-family: Georgia;
-                    font-weight: 400;
+                    .amount-input {
+                        border: none;
+                        outline: none;
+                        width: 100%;
+                        height: 31px;
+                        background: transparent;
+                        font-size: 14px;
+                        font-family: Georgia;
+                        font-weight: 400;
+                    }
+    
+                    
+                    .amount-input::placeholder{
+                        font-style: italic;
+                        color: $tag-placeholder-color;
+                    }
+                    .withdraw-modal-max-button{
+                        font-size: 14px;
+                        font-weight: bold;
+                        color: #6b6565;
+                        align-self: end;
+                        margin-bottom: 4px;
+                        margin-left: 2px;
+                        cursor: pointer;
+                    }
                 }
-
-                .amount-input:focus {
+                .input-max-wrapper:focus-within {
                     border: none;
                     border-bottom: 1px solid $highlight-two;
                     outline: none;
                 }
 
-                .amount-input:hover {
+                .input-max-wrapper:hover {
                     border: none;
                     border-bottom: 1px solid $highlight-two;
                     outline: none;
-                }
-                .amount-input::placeholder{
-                    font-style: italic;
-                    color: $tag-placeholder-color;
                 }
                 .amount-input-conversion-wrapper{
                     height: 32px;

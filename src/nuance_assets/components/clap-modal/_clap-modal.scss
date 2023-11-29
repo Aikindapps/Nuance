@@ -1,7 +1,7 @@
 @import '../../shared/styles/Colors';
 
 .clap-modal {
-    width: 95vw;
+    width: 100vw;
     max-width: 728px;
     font-family: Georgia, "Times New Roman", Times, serif;
     font-weight: 400;
@@ -45,6 +45,18 @@
         font-style: normal;
         font-weight: 400;
         line-height: 24px;
+    }
+    .buttons-wrapper{
+        width: 50%;
+        display: flex;
+        column-gap: 10px;
+        margin-top: 10px;
+        justify-content: space-between;
+        align-items: center;
+        align-self: center;
+    }
+    .congratulations-image{
+        width: 200px;
     }
 
     .read-more{
@@ -128,7 +140,7 @@
         width: 100%;
         row-gap: 12px;
         margin-top: -20px;
-
+        
         .select-currency-wrapper {
             display: flex;
             flex-direction: column;
@@ -166,36 +178,50 @@
                 width: 100%;
                 column-gap: 10px;
                 height: 32px;
-                .amount-input {
-                    border: none;
+                .input-max-wrapper{
+                    display: flex;
+                    width: 60%;
                     border-bottom: 1px solid $title-divider-color;
-                    outline: none;
-                    width: 50%;
-                    height: 31px;
-                    background: transparent;
-                    font-size: 14px;
-                    font-family: Georgia;
-                    font-weight: 400;
+                    .amount-input {
+                        border: none;
+                        outline: none;
+                        width: 100%;
+                        height: 31px;
+                        background: transparent;
+                        font-size: 14px;
+                        font-family: Georgia;
+                        font-weight: 400;
+                    }
+    
+                    
+                    .amount-input::placeholder{
+                        font-style: italic;
+                        color: $tag-placeholder-color;
+                    }
+                    .withdraw-modal-max-button{
+                        font-size: 14px;
+                        font-weight: bold;
+                        color: #6b6565;
+                        align-self: end;
+                        margin-bottom: 4px;
+                        margin-left: 2px;
+                        cursor: pointer;
+                    }
                 }
-
-                .amount-input:focus {
+                .input-max-wrapper:focus-within {
                     border: none;
                     border-bottom: 1px solid $highlight-two;
                     outline: none;
                 }
 
-                .amount-input:hover {
+                .input-max-wrapper:hover {
                     border: none;
                     border-bottom: 1px solid $highlight-two;
                     outline: none;
-                }
-                .amount-input::placeholder{
-                    font-style: italic;
-                    color: $tag-placeholder-color;
                 }
                 .amount-input-conversion-wrapper{
                     height: 32px;
-                    width: 50%;
+                    width: 60%;
                     display: flex;
                     align-items: center;
                     justify-content: space-around;

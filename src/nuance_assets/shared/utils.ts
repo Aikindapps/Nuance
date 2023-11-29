@@ -370,7 +370,6 @@ export const getNuaEquivalance = (
   switch (symbol) {
     case 'NUA':
       return amount;
-
     case 'ICP':
       return getPriceBetweenTokens(tokenPairs, 'ICP', 'NUA', amount);
     case 'ckBTC':
@@ -389,10 +388,14 @@ export const getPriceBetweenTokens = (
   token0Symbol: SupportedTokenSymbol,
   token1Symbol: SupportedTokenSymbol,
   amount: number
-) => {
+) : number => {
   if(token0Symbol === token1Symbol){
     return amount
   }
+  if(token0Symbol !== 'ICP' && token1Symbol !== 'ICP'){
+    return getPriceBetweenTokens(tokenPairs, 'ICP', token1Symbol, getPriceBetweenTokens(tokenPairs, token0Symbol, 'ICP', amount))
+  }  
+
   let token0 = '';
   let token1 = '';
   switch (token0Symbol) {
@@ -435,22 +438,29 @@ export const getPriceBetweenTokens = (
     if (pool) {
       let reserveIn = 0;
       let reserveOut = 0;
-      if (pool.token0 === token0) {
+      if (pool.token0 === ICP_CANISTER_ID) {
         reserveIn = Number(pool.reserve0);
       } else {
         reserveIn = Number(pool.reserve1);
       }
-      if (pool.token1 === token1) {
+      if (pool.token1 !== ICP_CANISTER_ID) {
         reserveOut = Number(pool.reserve1);
       } else {
         reserveOut = Number(pool.reserve0);
       }
-      var actualAmount = (amount * 997) / 1000;
-      var amountInWithFee = amount * 997;
+      
+      var amountInWithFee = Math.pow(10, 8) * 997;
       var numerator = amountInWithFee * reserveOut;
       var denominator = reserveIn * 1000 + amountInWithFee;
       var amountOut = numerator / denominator;
-      return amountOut;
+
+      //amountOut means the ICP equivalance of the other token
+      if(token0Symbol === 'ICP'){
+        return (amount / Math.pow(10, 8)) * amountOut;
+      }
+      else{
+        return amount / amountOut * Math.pow(10, 8)
+      }
     } else {
       //the pool not found -> not fetched yet return 0
       return 0;
@@ -459,4 +469,19 @@ export const getPriceBetweenTokens = (
     //the pool not found -> not fetched yet return 0
     return 0;
   }
+};
+
+
+export const toBase256 = (num: number, digitCount: number) => {
+  var base256Array : number[] = [];
+  while (num > 0) {
+    base256Array.unshift(num % 256);
+    num = Math.floor(num / 256);
+  }
+
+  while (base256Array.length < digitCount) {
+    base256Array.unshift(0);
+  }
+
+  return base256Array;
 };

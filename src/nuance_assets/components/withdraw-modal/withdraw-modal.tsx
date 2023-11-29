@@ -330,40 +330,66 @@ export const WithdrawModal = () => {
         <div className='input-amount-wrapper'>
           <p className='withdraw-modal-field-text'>SELECT YOUR AMOUNT OF</p>
           <div className='amount-input-wrapper'>
-            <input
-              className='amount-input'
-              type='number'
-              style={
-                darkTheme
-                  ? {
-                      color: colors.darkModePrimaryTextColor,
-                      cursor: loading ? 'not-allowed' : '',
-                    }
-                  : { cursor: loading ? 'not-allowed' : '' }
-              }
-              placeholder='Amount'
-              min={0}
-              max={getMaxAmountToTransfer()}
-              step='0.0001'
-              onChange={(e) => {
-                if (loading) {
-                  return;
+            <div className='input-max-wrapper'>
+              <input
+                className='amount-input'
+                type='number'
+                style={
+                  darkTheme
+                    ? {
+                        color: colors.darkModePrimaryTextColor,
+                        cursor: loading ? 'not-allowed' : '',
+                      }
+                    : { cursor: loading ? 'not-allowed' : '' }
                 }
-                const newValue = e.target.value;
-                if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
+                placeholder='Amount'
+                min={0}
+                max={getMaxAmountToTransfer()}
+                step='0.0001'
+                onChange={(e) => {
+                  if (loading) {
+                    return;
+                  }
+                  const newValue = e.target.value;
+                  if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
 
-                if (
-                  newValue === '' ||
-                  (parseFloat(newValue) *
-                    Math.pow(10, getSelectedCurrencyBalance().token.decimals) <=
-                    getMaxAmountToTransfer() &&
-                    newValue.match(/^\d*\.?\d{0,4}$/))
-                ) {
-                  setInputAmount(newValue);
+                  if (
+                    newValue === '' ||
+                    (parseFloat(newValue) *
+                      Math.pow(
+                        10,
+                        getSelectedCurrencyBalance().token.decimals
+                      ) <=
+                      getMaxAmountToTransfer() &&
+                      newValue.match(/^\d*\.?\d{0,4}$/))
+                  ) {
+                    setInputAmount(newValue);
+                  }
+                }}
+                value={inputAmount}
+              />
+              <div
+                className='withdraw-modal-max-button'
+                style={
+                  darkTheme
+                    ? {
+                        color: colors.darkModePrimaryTextColor,
+                      }
+                    : {}
                 }
-              }}
-              value={inputAmount}
-            />
+                onClick={() => {
+                  setInputAmount(
+                    (
+                      getMaxAmountToTransfer() /
+                      Math.pow(10, getSelectedCurrencyBalance().token.decimals)
+                    ).toFixed(4)
+                  );
+                }}
+              >
+                MAX
+              </div>
+            </div>
+
             <div className='amount-input-conversion-wrapper'>
               <div>=</div>
               <div>

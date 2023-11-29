@@ -3,6 +3,7 @@ export const idlFactory = ({ IDL }) => {
   const AddCanisterModel = IDL.Record({
     'topUpAmount' : IDL.Nat,
     'minimumThreshold' : IDL.Nat,
+    'isStorageBucket' : IDL.Bool,
     'canisterId' : IDL.Text,
   });
   const TopUp = IDL.Record({
@@ -17,6 +18,7 @@ export const idlFactory = ({ IDL }) => {
     'topUpAmount' : IDL.Nat,
     'topUps' : IDL.Vec(TopUp),
     'minimumThreshold' : IDL.Nat,
+    'isStorageBucket' : IDL.Bool,
     'canisterId' : IDL.Text,
   });
   const Result_4 = IDL.Variant({ 'ok' : RegisteredCanister, 'err' : IDL.Text });
@@ -41,6 +43,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'checkAllRegisteredCanisters' : IDL.Func([], [Result], []),
     'checkRegisteredCanister' : IDL.Func([IDL.Text], [Result_3], []),
+    'checkStorageBucketCanisters' : IDL.Func([], [], []),
     'getAdmins' : IDL.Func([], [Result_2], ['query']),
     'getAllRegisteredCanisters' : IDL.Func(
         [],
