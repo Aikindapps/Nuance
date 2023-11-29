@@ -33,7 +33,7 @@ actor class Management() = this {
 
     //key: publisher handle, value: canister id
     var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-    private let ic : IC.Self = actor "aaaaa-aa";
+    private let ic = IC.IC;
 
     private func isAnonymous(caller : Principal) : Bool {
         Principal.equal(caller, Principal.fromText("2vxsx-fae"));
@@ -103,6 +103,49 @@ actor class Management() = this {
         true;
     };
 
+  public shared ({ caller }) func updateSettingsForAllBucketCanisters() : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not Principal.equal(caller, Principal.fromActor(this)) and not isPlatformOperator(caller)) {
+      return #err("Unauthorized!");
+    };
+
+    for (bucketCanisterId in publicationCanisterIdsHashmap.vals()) {
+    
+    Debug.print("Updating settings for canister: " # bucketCanisterId);
+      
+      let status = await ic.canister_status({ canister_id = Principal.fromText(bucketCanisterId); });
+      let controllers = status.settings.controllers;
+      
+      let controllersBuffer = Buffer.Buffer<Principal>(0);
+
+      for (controller in controllers.vals()) {
+        if (Principal.toText(controller).size() < 28) {
+        controllersBuffer.add(controller);
+        Debug.print("Adding controller: " # Principal.toText(controller));
+        }
+      };
+
+      controllersBuffer.add(Principal.fromActor(this));
+      controllersBuffer.add(Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER));
+
+
+    Debug.print("Updating settings for canister: " # bucketCanisterId # " with controllers: " # debug_show( Buffer.toArray(controllersBuffer)));
+      switch (await ic.update_settings(({ canister_id = Principal.fromText(bucketCanisterId); settings = { 
+        controllers = ?Buffer.toArray(controllersBuffer);
+        freezing_threshold = null;
+        memory_allocation = null; 
+        compute_allocation = null; } }))
+      ) {
+        case () {};
+      };
+    };
+
+    #ok("Success");
+  };
+
     //should be called after initialising the management canister
     public shared ({ caller }) func createPublication(publicationHandle : Text, displayName : Text, firstEditorHandle : Text) : async Result.Result<(Text, Text), Text> {
 
@@ -164,6 +207,7 @@ actor class Management() = this {
                     adminsBuffer.add(Principal.fromText(admin));
                 };
                 adminsBuffer.add(Principal.fromText(idInternal()));
+                adminsBuffer.add(Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER));
                 let controllers : ?[Principal] = ?Buffer.toArray(adminsBuffer);
                 await ic.update_settings(({
                     canister_id = canisterId;

@@ -170,7 +170,66 @@ actor PostCore {
   var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //#bucket canister management
-  //ToDo: authorize bucket canister to the Frontend canister for storeSEO method
+  func updateSettings(canisterId: Principal, manager: [Principal]): async () {
+
+    let controllers = Buffer.Buffer<Principal>(0);
+    controllers.add(Principal.fromActor(PostCore));
+
+    for (managerId in manager.vals()) {
+      controllers.add(managerId);
+    };
+
+    await IC.IC.update_settings(({canister_id = canisterId; settings = {
+        controllers = ?Buffer.toArray(controllers);
+        freezing_threshold = null;
+        memory_allocation = null;
+        compute_allocation = null;
+    }}));
+};
+
+  public shared ({ caller }) func updateSettingsForAllBucketCanisters() : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not Principal.equal(caller, Principal.fromActor(PostCore)) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
+
+      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let status = await IC.IC.canister_status({ canister_id = Principal.fromText(bucketCanisterId); });
+      let controllers = status.settings.controllers;
+      
+      let controllersBuffer = Buffer.Buffer<Principal>(0);
+
+      for (controller in controllers.vals()) {
+        if (Principal.toText(controller).size() < 28) {
+        Debug.print("controller: " # Principal.toText(controller) # "length: " # Nat.toText(Principal.toText(controller).size()));
+        controllersBuffer.add(controller);
+        }
+      };
+
+      controllersBuffer.add(Principal.fromActor(PostCore));
+      controllersBuffer.add(Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER));
+
+
+
+      switch (await IC.IC.update_settings(({ canister_id = Principal.fromActor(bucketActor); settings = { 
+        controllers = ?Buffer.toArray(controllersBuffer);
+        freezing_threshold = null;
+        memory_allocation = null; 
+        compute_allocation = null; } }))
+      ) {
+        case () {};
+      };
+    };
+
+    #ok("Success");
+  };
+
+
   public shared ({ caller }) func createNewBucketCanister() : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
@@ -234,6 +293,12 @@ actor PostCore {
         Debug.print("frontend actor authorize went succesful");
       } catch (e) {
         Debug.print("authorize error");
+      };
+
+      try {
+        await updateSettings(Principal.fromActor(bucketCanister), [Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER)]);
+      } catch (e) {
+        Debug.print("update settings error");
       };
 
       switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), Iter.toArray(nftCanisterIdsHashmap.entries()), Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
