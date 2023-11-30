@@ -33,6 +33,7 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import OperationLog "../shared/Types";
 import ENV "../shared/env";
+import Sonic "../shared/sonic";
 
 actor PostCore {
 
@@ -2089,8 +2090,12 @@ actor PostCore {
     viewsHashMap.put(postId, U.safeGet(viewsHashMap, postId, 0) + 1);
     totalViewsToday += 1;
   };
-
+  
   public shared query func debugGetApplaudsHashMap() : async [(Text, Nat)] {
+    Iter.toArray(applaudsHashMap.entries())
+  };
+
+  public shared query func debugApplaudsHashMap() : async [(Text, Nat)] {
     Iter.toArray(applaudsHashMap.entries())
   };
 

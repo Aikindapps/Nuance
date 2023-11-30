@@ -33,12 +33,13 @@ module{
         var denominator = reserveIn * 1000 + amountInWithFee;
         var amountOut = (numerator / denominator);
         //amountOut means the ICP equivalance of the other token
-        if(token0 != ENV.ICP_TOKEN_CANISTER_ID){
+        if(token0 == ENV.ICP_TOKEN_CANISTER_ID){
           return #ok(Int.abs(Float.toInt((Float.fromInt(amount) / Float.pow(10, 8)) * Float.fromInt(amountOut))));
         }
         else{
           return #ok(Int.abs(Float.toInt(Float.fromInt(amount) / Float.fromInt(amountOut) * Float.pow(10, 8))))
         }
+        
       };
       case(null) {
         return #err("Pool not found")
