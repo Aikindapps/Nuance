@@ -15,7 +15,7 @@ on:
       url:
         description: 'URL of discussion or additional info'
         required: true
-        default: 'https://nuance.xyz/'
+        default: 'https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178'
       summary:
         description: 'Summary of proposal'
         required: true
@@ -154,9 +154,9 @@ jobs:
         fi
         canisterName=${{ github.event.inputs.canisterName }}
         network=${{ github.event.inputs.network }}
-        title=${{ github.event.inputs.title }}
-        url=${{ github.event.inputs.url }}
-        summary=${{ github.event.inputs.summary }}
+        title="${{ github.event.inputs.title }}"
+        url="${{ github.event.inputs.url }}"
+        summary="${{ github.event.inputs.summary }}"
         
         for wasm in $wasms; do
           echo "Processing $wasm..."
@@ -168,7 +168,7 @@ jobs:
           if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
             cd ..
           fi
-          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath=./identity.pem
+          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title="$title" --url="$url" --summary="$summary" --devNeuronId=$SNS_UAT_DEV_NEURON_ID --pemFilePath=./identity.pem
           sleep 30
         done
       env:
