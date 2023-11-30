@@ -68,6 +68,9 @@ export const ClapModal = (props: { post: PostType }) => {
       availableBalance
     );
     let maxAmountOfApplauds = Math.floor(nuaEquivalance / Math.pow(10, 8));
+    if(maxAmountOfApplauds === -1){
+      return 0;
+    }
     return maxAmountOfApplauds >= 10000 ? 10000 : maxAmountOfApplauds;
   };
 
@@ -206,9 +209,16 @@ export const ClapModal = (props: { post: PostType }) => {
         <div className='selection-input-wrapper'>
           <div className='input-amount-wrapper'>
             <p className='clap-modal-field-text'>YOUR APPLAUD AMOUNT</p>
-            <div style={inputAmount > getMaxAmountToApplaud()?{
-              marginBottom:'-12px'
-            }:{}} className='amount-input-wrapper'>
+            <div
+              style={
+                inputAmount > getMaxAmountToApplaud() && inputAmount !== 0
+                  ? {
+                      marginBottom: '-12px',
+                    }
+                  : {}
+              }
+              className='amount-input-wrapper'
+            >
               <div className='input-max-wrapper'>
                 <input
                   className='amount-input'
@@ -229,7 +239,7 @@ export const ClapModal = (props: { post: PostType }) => {
                     if (loading) {
                       return;
                     }
-  
+
                     const value = e.target.value;
                     if (value === '') {
                       setInputAmount(0);
@@ -294,7 +304,7 @@ export const ClapModal = (props: { post: PostType }) => {
                 </div>
               </div>
             </div>
-            {inputAmount > getMaxAmountToApplaud() && (
+            {inputAmount > getMaxAmountToApplaud() && inputAmount !== 0 && (
               <RequiredFieldMessage
                 hasError={true}
                 errorMessage='Not enough currency in your wallet'
@@ -316,7 +326,7 @@ export const ClapModal = (props: { post: PostType }) => {
               nonActive={loading}
             />
           </div>
-  
+
           <div
             className='terms-wrapper'
             onClick={() => {
@@ -326,10 +336,16 @@ export const ClapModal = (props: { post: PostType }) => {
               setTermsAccepted(!termsAccepted);
             }}
           >
-            <input type='checkbox' checked={termsAccepted} onChange={() => {}} />
+            <input
+              type='checkbox'
+              checked={termsAccepted}
+              onChange={() => {}}
+            />
             <p
               className='terms-text'
-              style={darkTheme ? { color: colors.darkModePrimaryTextColor } : {}}
+              style={
+                darkTheme ? { color: colors.darkModePrimaryTextColor } : {}
+              }
             >
               I am aware of the general policy and agree to transfer amount of
               tokens.

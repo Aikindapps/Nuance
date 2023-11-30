@@ -1,6 +1,7 @@
 const imagesPath = '/assets/images/';
 const iconsPath = imagesPath + 'icons/';
 const loadersPath = imagesPath + 'loaders/';
+const isLocal = window.location.origin.includes('local')
 
 export const images = {
   IC_BADGE: imagesPath + 'ic-badge.png',
@@ -144,12 +145,12 @@ export const SUPPORTED_CANISTER_IDS = [
 
 export const SUPPORTED_TOKENS: SupportedToken[] = [
   {
-    canisterId: ICP_CANISTER_ID,
+    canisterId: isLocal ? ICP_CANISTER_ID : NUA_CANISTER_ID,
     logo: images.NUANCE_LOGO,
     decimals: 8,
     name: 'Nuance',
     symbol: 'NUA',
-    fee: 10000,
+    fee: isLocal ? 10000 : 100000,
   },
   {
     canisterId: ICP_CANISTER_ID,
@@ -160,11 +161,11 @@ export const SUPPORTED_TOKENS: SupportedToken[] = [
     fee: 10000,
   },
   {
-    canisterId: ICP_CANISTER_ID,
+    canisterId: isLocal ? ICP_CANISTER_ID : ckBTC_CANISTER_ID,
     logo: icons.ckBTC_LOGO,
     decimals: 8,
     name: 'Bitcoin',
     symbol: 'ckBTC',
-    fee: 10000,
+    fee: isLocal ? 10000 : 10,
   },
 ];

@@ -56,7 +56,10 @@
         align-self: center;
     }
     .congratulations-image{
-        width: 200px;
+        min-width: 200px;
+        max-width: 200px;
+        min-height: 200px;
+        max-height: 200px;
     }
 
     .read-more{
@@ -292,9 +295,28 @@
         padding: 15px;
         padding-bottom: 40px;
         padding-top: 40px;
+        .selection-input-wrapper .input-amount-wrapper .amount-input-wrapper{
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            justify-content: space-between;
+            width: 100%;
+            column-gap: 10px;
+            row-gap: 7px;
+            height: auto;
+            .input-max-wrapper{
+                width: 100%;
+            }
+            .amount-input-conversion-wrapper{
+                width: 100%;
+                justify-content: start;
+                column-gap: 10px;
+                padding-left: 5px;
+            }
+        }
     }
-}
 
+}
 .button-loader-icon{
     margin-right: 4px;
     width: 24px;

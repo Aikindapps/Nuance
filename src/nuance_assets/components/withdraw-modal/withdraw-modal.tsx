@@ -134,6 +134,9 @@ export const WithdrawModal = () => {
 
   const getMaxAmountToTransfer = () => {
     let activeBalance = getSelectedCurrencyBalance();
+    if(activeBalance.balance === 0){
+      return 0;
+    }
     return activeBalance.balance - activeBalance.token.fee;
   };
 

@@ -25,6 +25,7 @@ import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Order "mo:base/Order";
 import ICexperimental "mo:base/ExperimentalInternetComputer";
+import Float "mo:base/Float";
 import IC "IC";
 import DateTime "../shared/DateTime";
 
@@ -615,7 +616,7 @@ actor PostCore {
       publishedDate = Int.toText(U.safeGet(publishedDateHashMap, postId, 0));
       views = Nat.toText(U.safeGet(viewsHashMap, postId, 0));
       tags = getTagModelsByPost(postId);
-      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0) + (U.safeGet(applaudsHashMap, postId, 0) / Nat.pow(10, ENV.NUA_TOKEN_DECIMALS)));
+      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0) + Int.abs(Float.toInt(Float.fromInt((U.safeGet(applaudsHashMap, postId, 0))) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS)))));
       category = U.safeGet(categoryHashMap, postId, "");
       isDraft = U.safeGet(isDraftHashMap, postId, false);
     };
