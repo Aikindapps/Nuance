@@ -38,7 +38,7 @@ jobs:
     - name: Get Principal
       run:  dfx identity get-principal
 
-        - name: Generate canister_ids.json and canisterIds.mo
+    - name: Generate canister_ids.json and canisterIds.mo
       run: |
         mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
         echo '{}' > ./.dfx/local/canister_ids.json
