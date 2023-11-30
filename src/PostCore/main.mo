@@ -2090,6 +2090,10 @@ actor PostCore {
     totalViewsToday += 1;
   };
 
+  public shared query func debugGetApplaudsHashMap() : async [(Text, Nat)] {
+    Iter.toArray(applaudsHashMap.entries())
+  };
+
   //only callable by 
   public shared ({caller}) func incrementApplauds(postId: Text, applauds: Nat) : async () {
     let callerPrincipal = Principal.toText(caller);
