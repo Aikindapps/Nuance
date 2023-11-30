@@ -77,7 +77,7 @@ module {
     updateSettings : (ProviderSettings) -> async ();
     submitText : (Text, Text, ?Text) -> async Text;
     submitImage : (Text, [Nat8], Text, ?Text) -> async Text;
-    submitHtmlContent : (Text, Text, ?Text, ?Level) -> async Text;
+     submitHtmlContent : (Text, Text, ?Text, ?Level, ?Text) -> async Text;
     subscribe : (SubscribeMessage) -> async ();
     // Proof of Humanity APIs
     pohVerificationRequest : (Principal) -> async PohVerificationResponse;
@@ -94,7 +94,7 @@ module {
     updateSettings : (ProviderSettings) -> async ();
     submitText : (Text, Text, ?Text) -> async Text;
     submitImage : (Text, [Nat8], Text, ?Text) -> async Text;
-    submitHtmlContent : (Text, Text, ?Text, ?Level) -> async Text;
+     submitHtmlContent : (Text, Text, ?Text, ?Level, ?Text) -> async Text;
     subscribe : (SubscribeMessage) -> async ();
     // Proof of Humanity APIs
     pohVerificationRequest : (Principal) -> async PohVerificationResponse;
@@ -111,7 +111,7 @@ module {
     updateSettings : (ProviderSettings) -> async ();
     submitText : (Text, Text, ?Text) -> async Text;
     submitImage : (Text, [Nat8], Text, ?Text) -> async Text;
-    submitHtmlContent : (Text, Text, ?Text, ?Level) -> async Text;
+     submitHtmlContent : (Text, Text, ?Text, ?Level, ?Text) -> async Text;
     subscribe : (SubscribeMessage) -> async ();
     // Proof of Humanity APIs
     pohVerificationRequest : (Principal) -> async PohVerificationResponse;
