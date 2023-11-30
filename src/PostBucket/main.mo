@@ -982,7 +982,7 @@ actor class PostBucket() = this {
 
         switch (publicationReturn) {
           case (#ok(pub)) {
-            if (not U.arrayContains(pub.editors, callerHandle)) {
+            if (not U.arrayContains(pub.editors, U.lowerCase(callerHandle))) {
               return #err(Unauthorized);
             } else if (rejectedByModClub(postId)) {
               return #err(RejectedByModerators);

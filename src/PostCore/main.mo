@@ -1810,10 +1810,6 @@ actor PostCore {
 
   };
 
-  //debugging method that returns all the moderation related data
-  public shared query func debugGetModeration() : async ([(Text, Nat)], [(Text, PostModerationStatus)]) {
-    (Iter.toArray(postVersionMap.entries()), Iter.toArray(postModerationStatusMap.entries()));
-  };
 
   public shared ({ caller }) func handleModclubMigration(postCanisterId : Text) : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
