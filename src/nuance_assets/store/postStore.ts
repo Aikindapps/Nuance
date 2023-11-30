@@ -42,6 +42,7 @@ import {
   SaveCommentModel,
 } from '../../../src/declarations/PostBucket/PostBucket.did';
 import Comments from '../components/comments/comments';
+import { SupportedTokenSymbol } from '../shared/constants';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -400,6 +401,11 @@ export interface PostStore {
     subaccountIndex?: number
   ) => Promise<Icrc1TransferResult>;
   checkTipping: (postId: string, bucketCanisterId: string) => Promise<void>;
+  checkTippingByTokenSymbol: (
+    postId: string,
+    tokenSymbol: SupportedTokenSymbol,
+    bucketCanisterId: string
+  ) => Promise<void>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -2672,6 +2678,17 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   checkTipping : async (postId: string, bucketCanisterId: string): Promise<void> => {
     try {
       await (await getPostBucketActor(bucketCanisterId)).checkTipping(postId);
+    } catch (error) {
+      console.log(error)
+    }
+  },
+
+  checkTippingByTokenSymbol : async (postId: string, tokenSymbol: SupportedTokenSymbol, bucketCanisterId: string): Promise<void> => {
+    try {
+      let response = await(
+        await getPostBucketActor(bucketCanisterId)
+      ).checkTippingByTokenSymbol(postId, tokenSymbol, '');
+      console.log(response);
     } catch (error) {
       console.log(error)
     }

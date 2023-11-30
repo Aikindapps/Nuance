@@ -80,10 +80,10 @@ export const ClapModal = (props: { post: PostType }) => {
     );
   };
 
-  const { transferICRC1Token, checkTipping } = usePostStore((state) => ({
+  const { transferICRC1Token, checkTippingByTokenSymbol } = usePostStore((state) => ({
     transferIcp: state.transferIcp,
     transferICRC1Token: state.transferICRC1Token,
-    checkTipping: state.checkTipping
+    checkTippingByTokenSymbol: state.checkTippingByTokenSymbol
   }));
   const [loading, setLoading] = useState(false);
 
@@ -98,7 +98,6 @@ export const ClapModal = (props: { post: PostType }) => {
         inputAmount * Math.pow(10, 8)
       )
     );
-    console.log(tokensToSend)
     try {
       let transfer_response = await transferICRC1Token(
         tokensToSend,
@@ -109,14 +108,17 @@ export const ClapModal = (props: { post: PostType }) => {
       );
       if ('Ok' in transfer_response) {
         //just close the modal for now
-       
         setPage(1);
       }
       else{
         console.log(transfer_response.Err);
       }
       //fire and forget
-      checkTipping(props.post.postId, props.post.bucketCanisterId);
+      checkTippingByTokenSymbol(
+        props.post.postId,
+        selectedCurrency,
+        props.post.bucketCanisterId
+      );
     } catch (error) {
       console.log(error)
     }
