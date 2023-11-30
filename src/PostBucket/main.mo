@@ -3012,6 +3012,7 @@ actor class PostBucket() = this {
     catch(e){
       //inter-canister call failed
       //if needed, we can create a function to get the info from the bucket canisters and refill the hashmap in the PostCore canister
+      return #err("Incrementing the number of applauds failed.");
     };
 
     return #ok(buildApplaud(applaudId));
