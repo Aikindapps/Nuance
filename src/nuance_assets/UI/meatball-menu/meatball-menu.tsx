@@ -95,13 +95,13 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
         style={
           props.shown
             ? {
-                height: isLoggedIn ? '250px' : '290px',
-                boxShadow: '0px 2px 10px 5px rgba(117, 117, 117, 0.08)',
-                color: darkTheme
-                  ? colors.primaryBackgroundColor
-                  : colors.primaryTextColor,
-                backgroundColor: darkTheme ? colors.primaryTextColor : '',
-              }
+              height: isLoggedIn ? '250px' : '290px',
+              boxShadow: '0px 2px 10px 5px rgba(117, 117, 117, 0.08)',
+              color: darkTheme
+                ? colors.primaryBackgroundColor
+                : colors.primaryTextColor,
+              backgroundColor: darkTheme ? colors.primaryTextColor : '',
+            }
             : { display: 'none' }
         }
       >
@@ -114,13 +114,6 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
               <li style={darkOptionsAndColors}>Login/register</li>
             </a>
           )}
-          <a
-            href='https://home.nuance.xyz'
-            target='_blank'
-            style={darkOptionsAndColors}
-          >
-            <li style={darkOptionsAndColors}>About</li>
-          </a>
           <a
             href='https://aikin.gitbook.io/nuance/'
             target='_blank'
