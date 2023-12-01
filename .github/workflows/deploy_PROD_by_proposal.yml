@@ -100,9 +100,9 @@ jobs:
         fi
         canisterName=${{ github.event.inputs.canisterName }}
         network=${{ github.event.inputs.network }}
-        title=${{ github.event.inputs.title }}
-        url=${{ github.event.inputs.url }}
-        summary=${{ github.event.inputs.summary }}
+        title="${{ github.event.inputs.title }}"
+        url="${{ github.event.inputs.url }}"
+        summary="${{ github.event.inputs.summary }}"
         
         for wasm in $wasms; do
           echo "Processing $wasm..."
@@ -115,7 +115,7 @@ jobs:
           if [[ $wasm == "NftFactory" || $wasm == "PublicationManagement" ]]; then
             cd ..
           fi
-          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title=$title --url=$url --summary=$summary --devNeuronId=$PROD_NEURON_ID --pemFilePath=./identity.pem
+          node scripts/sns/CanisterUpgradeProposal.js --canisterName=$wasm --network=$network --title="$title" --url="$url" --summary="$summary" --devNeuronId=$PROD_NEURON_ID --pemFilePath=./identity.pem
           sleep 30
         done
       env:
