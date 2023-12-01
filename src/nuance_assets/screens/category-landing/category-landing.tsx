@@ -369,7 +369,6 @@ function CategoryLanding() {
               style={{ width: '100%', height: '200px', objectFit: 'cover' }}
               src={`${publication?.headerImage}`}
             />
-            <div className='nuance-publication'>A NUANCE PUBLICATION</div>
             <div className='publication-name-category'>
               {publication?.publicationTitle}
             </div>
