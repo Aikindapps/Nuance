@@ -57,7 +57,7 @@ const SubmittedArticles = () => {
         SUBMITTED FOR REVIEW ({submittedForReviewPosts?.length || 0})
       </p>
       <div
-        className='article-grid-horizontal'
+        className='list-card-draft-articles'
         style={{
           filter: loading ? 'none' : 'grayscale(100%)', // Makes it grey
           pointerEvents: 'none', // Disables all pointer events like clicking
@@ -67,10 +67,8 @@ const SubmittedArticles = () => {
           submittedForReviewPosts?.length ? (
             submittedForReviewPosts.map((post: PostType) => (
               <CardDraftArticles
-                dark={darkTheme}
                 post={post}
                 key={post.postId}
-                isPublicationPost={true}
               />
             ))
           ) : (

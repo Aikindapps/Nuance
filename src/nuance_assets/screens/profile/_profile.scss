@@ -53,12 +53,14 @@
 
   .container {
     display: grid;
-    align-items: flex-start;
+    align-items: baseline;
+    justify-content: center;
     grid-template-columns: 18% 82%;
-    margin-top: 20vh;
+    margin-top: 114px;
     min-height: calc(80vh - 64px);
     box-sizing: border-box;
-    min-width: 100%;
+    width: 100%;
+    max-width: 1126px;
 
     .sidebar {
       box-sizing: border-box;
@@ -66,7 +68,6 @@
       display: flex;
       height: 100%;
       flex-direction: column;
-      padding-left: 25%;
       margin-left: -8%;
       height: 100vh;
 
@@ -127,7 +128,6 @@
       padding: 0 5% 0 5%;
       display: flex;
       flex-direction: column;
-      width: 80vw;
 
       .title {
         font-family: 'Roboto';

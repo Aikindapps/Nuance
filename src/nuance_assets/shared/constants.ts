@@ -76,6 +76,7 @@ export const icons = {
   ICP_LOGO: iconsPath + 'icp_logo.svg',
   ckBTC_LOGO: iconsPath + 'ckbtc_logo.svg',
   CLAP_ICON: iconsPath + 'clap-icon.svg',
+  CLAP_BLACK: iconsPath + 'clap-black.svg'
 };
 
 export const colors = {

@@ -74,12 +74,11 @@ const DraftArticles = () => {
   return (
     <div className='wrapper'>
       <p className='title'>DRAFT ARTICLES ({counts?.draftCount || 0})</p>
-      <div className='article-grid-horizontal'>
+      <div className='list-card-draft-articles'>
         {!loading ? (
           displayingPosts?.length ? (
             displayingPosts.map((post: PostType) => (
               <CardDraftArticles
-                dark={darkTheme}
                 post={post}
                 key={post.postId}
               />

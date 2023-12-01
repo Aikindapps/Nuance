@@ -87,7 +87,7 @@ const PublishedArticles = () => {
       <p className='title'>
         PUBLISHED ARTICLES ({counts?.publishedCount || 0})
       </p>
-      <div className='article-grid-horizontal'>
+      <div className='list-card-draft-articles'>
         {!loading ? (
           displayingPosts?.length ? (
             displayingPosts.map((post: PostType) => {
@@ -112,9 +112,6 @@ const PublishedArticles = () => {
                 <CardDraftArticles
                   post={post}
                   key={post.postId}
-                  isPremium={post.isPremium}
-                  isPublicationPost={post.isPublication}
-                  dark={darkTheme}
                 />
               );
             })

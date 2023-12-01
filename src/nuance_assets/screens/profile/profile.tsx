@@ -265,7 +265,7 @@ const Profile = () => {
                   className='horizontal-divider'
                   style={isLoggedIn ? { width: '17vw' } : {}}
                 ></div>
-                <LoggedOutSidebar style={{width:'265px'}} />
+                {!isLoggedIn && <LoggedOutSidebar style={{width:'265px'}} />}
               </div>
             )}
           </div>
