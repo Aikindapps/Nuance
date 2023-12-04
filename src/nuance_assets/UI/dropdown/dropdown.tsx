@@ -1,19 +1,29 @@
-import React, { useEffect, useRef, useState } from "react";
-import "./dropdown.scss";
-import { SlArrowDown } from "react-icons/sl";
-import { BsCheck } from "react-icons/bs";
-import { MdFilterList } from "react-icons/md";
-import { useTheme } from "../../contextes/ThemeContext";
-import { colors } from "../../shared/constants";
+import React, { useEffect, useRef, useState } from 'react';
+import './dropdown.scss';
+import { SlArrowDown } from 'react-icons/sl';
+import { BsCheck } from 'react-icons/bs';
+import { MdFilterList } from 'react-icons/md';
+import { useTheme } from '../../contextes/ThemeContext';
+import { colors } from '../../shared/constants';
 interface DropdownProps {
   items: string[];
   onSelect: (item: string) => void;
   icons?: string[];
   style?: any;
-  nonActive?: boolean
+  nonActive?: boolean;
+  selectedTextStyle?: any;
+  drodownItemsWrapperStyle?: any;
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons, style, nonActive }) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  items,
+  onSelect,
+  icons,
+  style,
+  nonActive,
+  selectedTextStyle,
+  drodownItemsWrapperStyle,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const darkTheme = useTheme();
@@ -67,8 +77,9 @@ const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons, style, nonA
               darkTheme
                 ? {
                     color: colors.darkModePrimaryTextColor,
+                    ...selectedTextStyle,
                   }
-                : {}
+                : { ...selectedTextStyle }
             }
           >
             {items[index]}
@@ -92,10 +103,12 @@ const Dropdown: React.FC<DropdownProps> = ({ items, onSelect, icons, style, nonA
                   : colors.primaryBackgroundColor,
                 color: darkTheme ? colors.darkModePrimaryTextColor : '',
                 borderColor: darkTheme ? colors.darkerBorderColor : '',
+                ...drodownItemsWrapperStyle,
               }
             : {
                 height: '0',
                 opacity: '0',
+                ...drodownItemsWrapperStyle,
               }
         }
       >

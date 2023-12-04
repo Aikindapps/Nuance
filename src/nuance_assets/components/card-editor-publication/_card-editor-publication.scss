@@ -1,198 +1,182 @@
 @import '../../shared/styles//Colors';
 
-// .article-grid-horizontal {
-//   margin-right: 50px;
-//   margin-top: -60px;
+.main-pic-editor {
+  width: 100%;
+  height: 100%;
+  // object-fit: cover;
+  transition: ease-in 100ms;
+  cursor: pointer;
 
-//   .card-wrapper-editor {
-//     display: flex;
-//     flex-direction: row;
-//     margin: 80px 0 40px 0;
+  &:hover {
+    transform: scale(1.01);
+    transition: ease-in 100ms;
+    box-shadow: 0px 5px 10px 5px $box-shadow;
+  }
+}
 
-    // .toggle-switch{
-    //     align-self: center;
-    //     width: 85px;
-    // }
 
-    .main-pic-editor {
-      width: 100%;
-      height: 100%;
-      // object-fit: cover;
-      transition: ease-in 100ms;
-      cursor: pointer;
+.card-editor-publication-wrapper {
+  display: flex;
+  align-items: center;
+  min-width: 813px;
+  max-width: 813px;
+
+  .field-general {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+  }
+
+  .field-published {
+    width: 9.7%;
+
+    .nft-icon {
+      min-width: 22px;
+      max-width: 22px;
+      min-height: 22px;
+      max-height: 22px;
+    }
+  }
+
+  .field-article {
+    width: 30%;
+    display: flex;
+    align-items: center;
+    column-gap: 6px;
+
+
+
+    &:hover .article-title {
+      text-decoration: underline;
+    }
+
+    .article-image {
+      min-width: 90px;
+      max-width: 90px;
+      min-height: 60px;
+      max-height: 60px;
+      object-fit: cover;
+      border-radius: 5px;
+
       &:hover {
         transform: scale(1.01);
         transition: ease-in 100ms;
         box-shadow: 0px 5px 10px 5px $box-shadow;
       }
     }
-    // .horizontal {
-    //   display: flex;
-    //   margin-left: 45px;
-    //   width: 72%;
-    //   .publisher {
-    //     width: 100%;
-    //     display: flex;
-    //     flex-direction: row;
-    //     justify-content: space-between;
-    //     align-items: center;
-    //     .card-creator-horizontal {
-    //       display: flex;
-    //       flex-direction: row;
-    //       align-items: center;
-    //       justify-content: space-between;
-    //       font-weight: 700;
-    //       font-size: 12px;
-    //       width: 100%;
-    //       margin-bottom: 8px;
-    //       .left-card-icons {
-    //         display: flex;
-    //         align-items: center;
-    //         .profile-pic {
-    //           width: 24px;
-    //           height: 24px;
-    //           margin: 0 10px 0 0;
-    //           border-radius: 100%;
-    //         }
-    //       }
-    //       .published-date-horizontal {
-    //         display: flex;
-    //         flex-direction: row;
-    //         justify-content: space-between;
-    //         align-items: center;
-    //         color: $medium-border-color;
-    //         font-weight: 700;
-    //         font-size: 12px;
-    //         .divider {
-    //           height: 12px;
-    //           border-left: 2px solid $medium-border-color;
-    //           margin-right: 0.4rem;
-    //           margin-left: 0.4rem;
-    //           margin-bottom: 0.4rem;
-    //         }
-            
-    //         p {
-    //           color: $medium-border-color;
-    //           font-size: 12px;
-    //           margin-bottom: 0.4rem;
-    //         }
-    //       }
-    //       p {
-    //         font-size: 12px;
-    //       }
-    //     }
-    //   }
-    //   .article-text {
-    //     display: flex;
-    //     flex-direction: column;
-    //     flex-wrap: wrap;
-    //     width: 26%;
-    //     h2 {
-    //       font-size: 26px;
-    //     }
-    //     p {
-    //       font-size: 18px;
-    //     }
-    //   }
-    // }
-//   }
-// }
+
+    .article-title {
+      color: #151451;
+      font-family: Roboto;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 20px;
+      cursor: pointer;
 
 
-// .card-wrapper {
-//   display: flex;
-//   flex-direction: column;
-//   width: 350px;
-// }
+    }
+  }
 
-// .divider {
-//   height: 12px;
-//   border-left: 2px solid $darker-border-color;
-//   margin-right: 10px;
-//   padding-left: 10px;
-// }
+  .field-writer {
+    width: 10%;
+    color: #151451;
+    font-family: Roboto;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 24px;
 
-// @media only screen and (max-width: 768px) {
-//   .article-grid-horizontal {
-//     object-fit: contain;
-//     justify-content: center;
-//     width: 105%;
-//     margin: -20px -42px 50px -42px;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 
-//     .card-wrapper-horizontal {
-//       align-items: flex-start;
-//       font-size: 0.75em;
-//       margin: 22px 0 0 0;
-//       .main-pic-horizontal {
-//         width: 31%;
-//         height: 100%;
-//         min-width: 105px;
-//         &:hover {
-//           transform: none;
-//           box-shadow: none;
-//         }
-//       }
+  .field-category {
+    width: 12.8%;
+  }
 
-//       .horizontal {
-//         display: flex;
-//         flex-direction: column;
-//         justify-content: space-between;
-//         width: 100%;
-//         margin: 0 0 0 10px;
-//         .publisher {
-//           .card-creator-horizontal {
-//             align-items: start;
-//             .left-card-icons {
-//               .profile-pic {
-//                 display: none;
-//               }
-//               .pencil-icon {
-//                 display: block;
-//               }
-//               a {
-//                 font-size: 10px;
-//               }
-//             }
-//             .published-date-horizontal{
-//               align-items: start;
-//               .divider {
-//                 height: 10px;
-//                 margin-right: 0.2rem;
-//                 margin-left: 0.2rem;
-//                 margin-bottom: 0.2rem;
-//               }
-//               p {
-//                 color: $medium-border-color;
-//                 font-size: 12px;
-//                 margin-top: -0.3rem;
-//               }
-//               .publication-name-horizontal{
-//                 width: 0;
-//                 visibility: hidden;
-//               }
+  .field-applause {
+    width: 9.7%;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding-left: 8px;
+    cursor: pointer;
 
-//             }
-//             p {
-//               font-size: 12px;
-//               margin: 5px;
-//             }
-//           }
-//         }
-//         .article-text {
-//           margin-top: 6%;
-//           position: absolute;
-//           h2 {
-//             font-size: 18px;
-//           }
-//           p {
-//             display: none;
-//           }
-//         }
-//       }
-//     }
-//   }
+    .clap-icon-card-editor {
+      min-width: 22px;
+      max-width: 22px;
+      min-height: 22px;
+      max-height: 22px;
+    }
 
-//   .background-image {
-//     display: none;
-//   }
-// }
+    .clap-count {
+      color: #4C4C52;
+      text-align: center;
+      /* NUA/Roboto/12/Regular */
+      font-family: Roboto;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 18px;
+    }
+  }
+
+  .field-published-date {
+    width: 13.8%;
+    color: #666;
+    font-family: Roboto;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+  }
+
+  .field-modified {
+    width: 13.8%;
+    width: 13.8%;
+    color: #666;
+    font-family: Roboto;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+  }
+
+  .tooltip-wrapper {
+    border-radius: 2px;
+    background: #000;
+    box-shadow: 0px 1px 8px 0px rgba(0, 0, 0, 0.16);
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 250px;
+    column-gap: 5px;
+
+    .tooltip-inside-handle {
+      color: #FFF;
+      /* NUA/Roboto/11/Regular */
+      font-family: Roboto;
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 16px;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .tooltip-inside-text {
+      color: #FFF;
+      /* NUA/Roboto/11/Regular */
+      font-family: Roboto;
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 16px;
+    }
+  }
+
+}

@@ -1,84 +1,40 @@
-@import "../../shared/styles/Colors";
-
 .toggle-switch {
-    position: relative;
-    width: 75px;
-    display: inline-block;
-    vertical-align: middle;
-    transform: scale(0.5);
-    text-align: left;
-    &-checkbox {
-      display: none;
-    }
-    &-label {
-      display: block;
-      overflow: hidden;
-      cursor: pointer;
-      border: 0 solid #bbb;
-      border-radius: 20px;
-      margin: 0;
-    }
-    &-inner {
-      display: block;
-      width: 200%;
-      margin-left: -100%;
-      transition: margin 0.05s ease-in 0s;
-      &:before,
-      &:after {
-        display: block;
-        float: left;
-        width: 50%;
-        height: 34px;
-        padding: 0;
-        line-height: 34px;
-        font-size: 14px;
-        color: white;
-        font-weight: bold;
-        box-sizing: border-box;
-      }
-      &:before {
-        content: "";
-        text-transform: uppercase;
-        padding-left: 10px;
-        background-color: $accent-color;
-        color: #fff;
-      }
-    }
-    &-disabled {
-      background-color: #ddd;
-      cursor: not-allowed;
-      &:before {
-        background-color: #ddd;
-        cursor: not-allowed;
-      }
-    }
-    &-inner:after {
-      content: "";
-      text-transform: uppercase;
-      padding-right: 10px;
-      background-color: #bbb;
-      color: #fff;
-      text-align: right;
-    }
-    &-switch {
-      display: block;
-      width: 24px;
-      margin: 5px;
-      background: #fff;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 40px;
-      border: 0 solid #bbb;
-      border-radius: 20px;
-      transition: all 0.05s ease-in 0s;
-    }
-    &-checkbox:checked + &-label {
-      .toggle-switch-inner {
-        margin-left: 0;
-      }
-      .toggle-switch-switch {
-        right: 0px;
-      }
+  position: relative;
+  display: inline-block;
+  width: 36px; 
+  height: 24px; 
+  background-color: #fff;
+  border: 1px solid #999;
+  border-radius: 24px; 
+  cursor: pointer;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 18px; 
+    background-color: #999;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: left 0.2s, transform 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  &:not(.toggled)::after {
+    left: 3px; 
+    transform: translate(0, -50%);
+  }
+
+  &.toggled {
+    background-color: #43DFBA;
+    border: 1px solid #43DFBA;
+
+    &::after {
+      left: calc(100% - 18px - 3px);
+      transform: translate(0, -50%);
+      background-color: #fff;
     }
   }
+}

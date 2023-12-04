@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { usePostStore, useUserStore, usePublisherStore } from '../../store';
+import { images } from '../../shared/constants';
 import { useNavigate } from 'react-router-dom';
 import { PostType } from '../../../nuance_assets/types/types';
-import { colors, images } from '../../shared/constants';
+import { Row, Col } from 'react-bootstrap';
+import { colors } from '../../shared/constants';
+import Button from '../../UI/Button/Button';
 import Footer from '../../components/footer/footer';
 import SearchBar from '../../components/search-bar/search-bar';
 import { TagModel } from '../../services/actorService';
@@ -10,15 +13,12 @@ import { Context } from '../../contextes/Context';
 import EditorArticleList from '../../components/editor-article-list/editor-article-list';
 import EditorSearchList from '../../components/editor-search-list/editor-search-list';
 import { useTheme } from '../../contextes/ThemeContext';
-import './_publication-articles.scss';
-import Button from '../../UI/Button/Button';
 
 const PublicationArticles = () => {
   const navigate = useNavigate();
   const pageSize = 20;
   const [publicationHandle, setPublicationHandle] = useState<any>('');
   const [publicationDisplayName, setPublicationDisplayName] = useState<any>('');
-  const [publicationHeaderImage, setPublicationHeaderImage] = useState<any>('');
   const [writersCount, setWritersCount] = useState<any>(0);
   const [articlesCount, setArticlesCount] = useState<any>(0);
   const [categoriesCount, setCategoriesCount] = useState<any>(0);
@@ -125,7 +125,6 @@ const PublicationArticles = () => {
       setWritersCount(publication?.writers.length);
       setCategoriesCount(publication?.categories.length);
       setPublicationDisplayName(publication?.publicationTitle);
-      setPublicationHeaderImage(publication.headerImage);
       setPublicationAvatar(publication?.avatar);
     }
 
@@ -265,12 +264,12 @@ const PublicationArticles = () => {
 
   const loadInitial = async (handle: string) => {
     setDisplayingPostsLoading(true);
-    context.setProfileSidebarDisallowed(true);
+    context.setProfileSidebarDisallowed(true)
     let posts = await getPublicationPosts(0, 19, handle);
     if (posts?.length) {
       setDisplayingPosts(posts);
     }
-    context.setProfileSidebarDisallowed(false);
+    context.setProfileSidebarDisallowed(false)
     setDisplayingPostsLoading(false);
   };
 
@@ -431,7 +430,6 @@ const PublicationArticles = () => {
   return (
     <div className='wrapper'>
       <div
-        className='publication-article-list-searchbar'
         style={{ marginTop: '-50px' }}
         onFocus={() => setIsBlur(true)}
         onBlur={() => setIsBlur(false)}
@@ -442,73 +440,80 @@ const PublicationArticles = () => {
           onChange={(value) => setSearchText(value)}
         />
       </div>
-      <div
-        className='publication-article-list-publication-and-posts-wrapper'
-        style={isBlur ? { filter: 'blur(5px)' } : {}}
-      >
-        <div className='publication-info-wrapper'>
-          <p className='display-name'>{publicationHandle}</p>
-          <div className='publication-info-horizontal-flex'>
-            <img
-              className='header-image'
-              src={publicationHeaderImage || images.NUANCE_LOGO}
-            />
-            <div className='publication-info-vertical-flex'>
-              <div className='name-edit-button'>
-                <div style={darkOptionsAndColors} className='name'>
+      <div style={isBlur ? { filter: 'blur(5px)' } : {}}>
+        <Row style={{ marginBottom: '50px', alignItems: 'center' }}>
+          <Col sm={9}>
+            <div style={{ marginLeft: '20px' }}>
+              <div style={{ marginLeft: '10px' }}>
+                <p
+                  style={{
+                    color: colors.darkerBorderColor,
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase',
+                  }}
+                >
                   {publicationDisplayName}
-                </div>
-                <Button
-                  styleType='secondary'
-                  type='button'
-                  style={
-                    context.width < 1089
-                      ? {
-                          width: '100px',
-                          height: '25px',
-                          fontSize: '12px',
-                          margin: '0',
-                        }
-                      : { width: '115px', margin: '0' }
-                  }
-                  onClick={() =>
-                    navigate(`/publication/edit/${publicationHandle}`)
-                  }
-                >
-                  Edit Publication
-                </Button>
+                </p>
               </div>
-              <p className='subtitle'>
-                {publication?.subtitle || 'The description of the publication.'}
-              </p>
-              <div className='avatar-stats-wrapper'>
-                <div className='avatar-handle'>
-                  <img className='avatar' src={publicationAvatar} />
-                  <p className='handle' style={darkOptionsAndColors}>
-                    @{publicationHandle}
-                  </p>
-                </div>
-                <div
-                  className='stats'
-                  style={
-                    darkTheme
-                      ? {
-                          color: colors.darkSecondaryTextColor,
-                        }
-                      : {}
-                  }
-                >
-                  <p className='stat'>{articlesCount} articles</p>
-                  <p className='stat'>{writersCount} writers</p>
-                  <p className='stat'>{categoriesCount} categories</p>
-                  <p className='stat-without-border'>
-                    {followersCount} followers
-                  </p>
-                </div>
+              <div
+                style={{
+                  color: darkOptionsAndColors.color,
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                }}
+              >
+                <span style={{ color: darkOptionsAndColors.color }}>
+                  <img
+                    style={{
+                      width: '35px',
+                      padding: '5px',
+                      borderRadius: '50%',
+                    }}
+                    src={`${publicationAvatar}` || images.DEFAULT_AVATAR}
+                  />
+                </span>
+                <span style={{ color: darkOptionsAndColors.color }}>@</span>
+                {publicationHandle}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  fontSize: '12px',
+                  color: colors.primaryTextColor,
+                  margin: '10px 10px ',
+                }}
+              >
+                <small style={{ color: darkOptionsAndColors.color }}>
+                  {articlesCount} articles
+                </small>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <small style={{ color: darkOptionsAndColors.color }}>
+                  {writersCount} writers
+                </small>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <small style={{ color: darkOptionsAndColors.color }}>
+                  {categoriesCount} categories
+                </small>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <small style={{ color: darkOptionsAndColors.color }}>
+                  {followersCount} followers
+                </small>
               </div>
             </div>
-          </div>
-        </div>
+          </Col>
+          <Col style={{ marginLeft: 'calc(100% - 160px)' }}>
+            <Button
+              styleType='secondary'
+              type='button'
+              style={{ width: '115px' }}
+              onClick={() => navigate(`/publication/edit/${publicationHandle}`)}
+            >
+              Edit Publication
+            </Button>
+          </Col>
+        </Row>
+
         {showSearchResults ? (
           <EditorSearchList
             posts={searchedPosts}

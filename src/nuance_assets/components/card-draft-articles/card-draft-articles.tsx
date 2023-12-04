@@ -6,15 +6,13 @@ import { PostType } from '../../types/types';
 import { useTheme } from '../../contextes/ThemeContext';
 import './_card-draft-articles.scss';
 import { DateFormat, formatDate } from '../../shared/utils';
-import { Tooltip } from 'react-tooltip'
+import { Tooltip } from 'react-tooltip';
 
 interface CardVerticalProps {
   post: PostType;
 }
 
-const CardDraftArticles: React.FC<CardVerticalProps> = ({
-  post
-}) => {
+const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
   const user = useUserStore((state) => state.user);
   const navigate = useNavigate();
   const [screenWidth, setScreenWidth] = useState(0);
@@ -42,43 +40,37 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
   const isUserEditor = () => {
     let postHandle = post.handle;
     let result = false;
-    user?.publicationsArray.forEach((val)=>{
-      if(val.publicationName === postHandle){
-        result = true
+    user?.publicationsArray.forEach((val) => {
+      if (val.publicationName === postHandle) {
+        result = true;
       }
-    })
-    return result
-  }
+    });
+    return result;
+  };
 
   const getEditStatus = () => {
-    if(post.isPremium){
-      return 'Premium'
-    }
-    else{
-      if(post.isPublication){
-        if(post.isDraft){
-          return 'Submitted for review'
-        }
-        else{
-          if(isUserEditor()){
+    if (post.isPremium) {
+      return 'Premium';
+    } else {
+      if (post.isPublication) {
+        if (post.isDraft) {
+          return 'Submitted for review';
+        } else {
+          if (isUserEditor()) {
             return 'Published';
+          } else {
+            return 'Published but writer';
           }
-          else{
-            return "Published but writer"
-          }
-          
         }
-      }
-      else{
-        if(post.isDraft){
-          return "Draft"
-        }
-        else{
-          return "Published"
+      } else {
+        if (post.isDraft) {
+          return 'Draft';
+        } else {
+          return 'Published';
         }
       }
     }
-  }
+  };
 
   const { getApplaudedHandles } = usePostStore((state) => ({
     getApplaudedHandles: state.getApplaudedHandles,
@@ -87,16 +79,15 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
   const [applaudedHandles, setApplaudedHandles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const fetchApplaudedHandles = async () => {
-    setLoading(true)
+    setLoading(true);
     let handles = await getApplaudedHandles(post.postId, post.bucketCanisterId);
     setApplaudedHandles(handles);
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchApplaudedHandles();
-  }, [])
-
+  }, []);
 
   return (
     <div className='card-draft-articles-wrapper'>
@@ -139,7 +130,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
               <img
                 className='card-draft-articles-action-icon-pointer'
                 src={icons.CLAP_BLACK}
-                id={'card-draft-article-tooltip'}
+                id={'card-draft-article-tooltip-' + post.postId}
               />
               <div className='card-draft-articles-right-action-text'>
                 {post.claps}
@@ -159,7 +150,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
       <Tooltip
         clickable={true}
         className='tooltip-wrapper'
-        anchorSelect={'#card-draft-article-tooltip'}
+        anchorSelect={'#card-draft-article-tooltip-' + post.postId}
         place='top'
         noArrow={true}
       >
@@ -172,7 +163,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
               return (
                 <Link to={'/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
-                    {handle + ' applauded this article.'}
+                    {'@' + handle + ' applauded this article.'}
                   </p>
                 </Link>
               );
@@ -181,7 +172,8 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
               return (
                 <Link to={'/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
-                    {handle +
+                    {'@' +
+                      handle +
                       ' +' +
                       (applaudedHandles.length - index - 1) +
                       ' applauded this article.'}
@@ -192,7 +184,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({
               return (
                 <Link to={'/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
-                    {handle + ', '}
+                    {'@' + handle + ', '}
                   </p>
                 </Link>
               );
