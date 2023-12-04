@@ -203,6 +203,7 @@ service : {
   getFollowersCount: (text) -> (text) query;
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
   getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
+  getHandlesByPrincipals: (vec text) -> (vec text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getMultipleUsersByPrincipalId: (vec text) -> (Result_6) query;

@@ -163,6 +163,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Text)],
         ['query'],
       ),
+    'getHandlesByPrincipals' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMultipleUsersByPrincipalId' : IDL.Func(

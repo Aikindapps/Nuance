@@ -145,6 +145,7 @@ export interface _SERVICE {
     [Array<string>],
     Array<string>
   >,
+  'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_6>,

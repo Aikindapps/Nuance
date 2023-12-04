@@ -107,7 +107,7 @@
             }
 
             .card-draft-articles-title-wrapper {
-                height: calc(50% - 24px);
+                height: calc(50% - 12px);
 
                 .card-draft-articles-title {
                     color: #151451;
@@ -128,7 +128,7 @@
 
 
             .card-draft-articles-subtitle {
-                height: calc(50% - 24px);
+                height: calc(50% - 12px);
                 display: flex;
                 align-items: end;
                 color: #666;
@@ -137,6 +137,141 @@
                 font-style: normal;
                 font-weight: 400;
                 line-height: 26px;
+            }
+        }
+
+        .tooltip-wrapper {
+            border-radius: 2px;
+            background: #000;
+            box-shadow: 0px 1px 8px 0px rgba(0, 0, 0, 0.16);
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 250px;
+            column-gap: 5px;
+
+            .tooltip-inside-handle {
+                color: #FFF;
+                /* NUA/Roboto/11/Regular */
+                font-family: Roboto;
+                font-size: 11px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+                cursor: pointer;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+            .tooltip-inside-text {
+                color: #FFF;
+                /* NUA/Roboto/11/Regular */
+                font-family: Roboto;
+                font-size: 11px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+            }
+        }
+    }
+}
+
+
+@media only screen and (max-width: 943px) {
+
+    .list-card-draft-articles {
+        .card-draft-articles-wrapper {
+            width: 90%;
+            column-gap: 4.4%;
+
+            .card-draft-articles-image-wrapper {
+                aspect-ratio: 1.36;
+            }
+
+            .card-draft-articles-right-wrapper {
+
+                aspect-ratio: 3.72;
+
+
+                .card-draft-articles-actions-wrapper {
+                    height: 16px;
+                }
+
+                .card-draft-articles-actions-right {
+                    height: 16px;
+                }
+
+                .card-draft-articles-action-icon {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                .card-draft-articles-action-icon-pointer {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                .card-draft-articles-title-wrapper {
+                    height: calc(100% - 16px);
+
+                    .card-draft-articles-title {
+                        font-size: 18px;
+                        font-style: normal;
+                        font-weight: 400;
+                        line-height: 24px;
+                    }
+                }
+            }
+
+
+
+            .card-draft-articles-subtitle {
+                height: 0;
+                opacity: 0;
+                width: 0;
+                overflow: hidden;
+                display: none;
+            }
+        }
+    }
+}
+
+
+@media only screen and (max-width: 459px) {
+
+    .list-card-draft-articles {
+        .card-draft-articles-wrapper {
+
+            .card-draft-articles-right-wrapper {
+                .card-draft-articles-actions-wrapper {
+                    .card-draft-articles-actions-right {
+                        height: 16px;
+
+                        .card-draft-articles-right-action-wrapper {
+                            width: 40px;
+                            height: 16px;
+                            column-gap: 3px;
+
+                            .card-draft-articles-right-action-text {
+                                font-size: 10px;
+                                line-height: 16px;
+                            }
+                        }
+
+                        .card-draft-articles-date {
+                            font-size: 10px;
+                            line-height: 16px;
+                            margin-left: 6px;
+                        }
+                    }
+                }
+
+                .card-draft-articles-title-wrapper {
+
+                    .card-draft-articles-title {
+                        font-size: 14px;
+                    }
+                }
             }
         }
     }

@@ -150,6 +150,8 @@ export interface _SERVICE {
   'createNewBucketCanister' : ActorMethod<[], Result_1>,
   'createTag' : ActorMethod<[string], Result_8>,
   'currentId' : ActorMethod<[], bigint>,
+  'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
+  'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetModeration' : ActorMethod<
     [],
     [Array<[string, bigint]>, Array<[string, PostModerationStatus]>]

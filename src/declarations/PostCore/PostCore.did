@@ -224,6 +224,14 @@ service : {
   createNewBucketCanister: () -> (Result_1);
   createTag: (text) -> (Result_8);
   currentId: () -> (nat) query;
+  debugApplaudsHashMap: () -> (vec record {
+                                     text;
+                                     nat;
+                                   }) query;
+  debugGetApplaudsHashMap: () -> (vec record {
+                                        text;
+                                        nat;
+                                      }) query;
   debugGetModeration: () -> (vec record {
                                    text;
                                    nat;

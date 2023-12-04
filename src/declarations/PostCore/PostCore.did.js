@@ -159,6 +159,16 @@ export const idlFactory = ({ IDL }) => {
     'createNewBucketCanister' : IDL.Func([], [Result_1], []),
     'createTag' : IDL.Func([IDL.Text], [Result_8], []),
     'currentId' : IDL.Func([], [IDL.Nat], ['query']),
+    'debugApplaudsHashMap' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
+        ['query'],
+      ),
+    'debugGetApplaudsHashMap' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
+        ['query'],
+      ),
     'debugGetModeration' : IDL.Func(
         [],
         [

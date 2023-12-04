@@ -1461,6 +1461,19 @@ actor User {
     Buffer.toArray(handlesBuffer);
   };
 
+  public shared query func getHandlesByPrincipals(principals : [Text]) : async [Text] {
+    var handlesBuffer = Buffer.Buffer<Text>(0);
+    for (principalId in principals.vals()) {
+      switch(handleHashMap.get(principalId)) {
+        case(?value) {
+          handlesBuffer.add(value)
+        };
+        case(null) {};
+      };
+    };
+    Buffer.toArray(handlesBuffer);
+  };
+
   public shared query ({ caller }) func getUserInternal(userPrincipalId : Text) : async ?User {
 
     //validate input

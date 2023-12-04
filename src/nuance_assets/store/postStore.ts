@@ -406,6 +406,10 @@ export interface PostStore {
     tokenSymbol: SupportedTokenSymbol,
     bucketCanisterId: string
   ) => Promise<void>;
+  getApplaudedHandles: (
+    postId: string,
+    bucketCanisterId: string
+  ) => Promise<string[]>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -2674,6 +2678,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         err: 'login',
       };
     }
+  },
+  getApplaudedHandles : async (postId: string, bucketCanisterId: string): Promise<string[]> => {
+    try {
+      let applauds = await (await getPostBucketActor(bucketCanisterId)).getPostApplauds(postId)
+      let senderPrincipalIds = applauds.map(val=>val.sender)
+      let handles = await (await getUserActor()).getHandlesByPrincipals(senderPrincipalIds)
+      return handles
+    } catch (error) {
+      return []
+    }
+    
+    
   },
   checkTipping : async (postId: string, bucketCanisterId: string): Promise<void> => {
     try {
