@@ -39,8 +39,7 @@
   }
 
   .publication-landing-cta{
-
-
+    max-width: 825px;
 
   }
 
@@ -121,13 +120,19 @@
     margin-right: 5%;
     margin-top: 15px;
     margin-left: 5%;
+    @media only screen and (max-width: 768px) {
+      margin-left: 0;
+      margin-right: 0;
+    }
   }
   .article-grid-horizontal {
     margin-left: 5%;
     margin-bottom: 10%;
+    max-width: 825px;
   }
   .article-grid {
     margin-left: 5%;
+    max-width: 825px;
   }
 }
 
@@ -208,8 +213,18 @@
       width: 100%;
 
       .article-list{
+        .article-grid-large{
+          .card-wrapper-large{
+            .publisher{
+              padding: 0px 20px 10px 20px;
+            }
+            .article-text{
+              padding: 0px 20px 10px 20px;
+            }
+          }
+        }
         .article-grid{
-          margin-left: 10%;
+       padding: 0px 10px;
         }
         .mainTitle{
           padding-top: 20px;
@@ -335,10 +350,24 @@
     .right {
       .latestArticles {
         width: 100%;
-        .article-grid-large {
-          width: 100%;
-          margin-left: 0;
-        }
+       
+         
+         
+
+        
+          .article-grid-large{
+            margin-left: 0;
+            margin-right: 0;
+          }
+            .card-wrapper-large{
+              .publisher{
+                padding: 0px 20px 10px 20px;
+              }
+              .article-text{
+                padding: 0px 20px 10px 20px;
+              }
+            }
+          
         .article-grid {
           margin-left: 3rem;
           margin-top: 1rem;

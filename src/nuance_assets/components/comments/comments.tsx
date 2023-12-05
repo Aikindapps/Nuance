@@ -8,7 +8,7 @@ import { usePostStore } from '../../store/postStore';
 import { useAuthStore, useUserStore } from '../../../nuance_assets/store';
 import { Context } from '../../contextes/Context';
 import { useTheme } from '../../contextes/ThemeContext';
-import {Context as ModalContext} from '../../contextes/ModalContext'
+import { Context as ModalContext } from '../../contextes/ModalContext'
 import { Link } from 'react-router-dom';
 import { ToastType, toastError, toast } from '../..//services/toastService';
 
@@ -240,7 +240,7 @@ const Comments: React.FC<CommentProps> = ({
                       alt='Edit'
                       src={icons.EDIT_COMMENT}
                     />
-                    <span className='text'>Edit</span>
+                    <span className='comment-text'>Edit</span>
                   </button>
                 )}
                 <button
@@ -253,7 +253,7 @@ const Comments: React.FC<CommentProps> = ({
                     alt='Thumbs up'
                     src={icons.THUMBS_UP}
                   />
-                  <span className='text'>Thumbs up</span>
+                  <span className='comment-text'>Thumbs up</span>
                   {upVotesCount > 0 && `(${upVotesCount})`}
                 </button>
                 <button
@@ -266,17 +266,17 @@ const Comments: React.FC<CommentProps> = ({
                     alt='Thumbs down'
                     src={icons.THUMBS_DOWN}
                   />
-                  <span className='text'>Thumbs down</span>
+                  <span className='comment-text'>Thumbs down</span>
                   {downVotesCount > 0 && `(${downVotesCount})`}
                 </button>
 
                 <button className='reply-btn' onClick={handleReplyClick}>
                   <img className='icon' alt='reply' src={icons.REPLY} />
-                  <span className='text'>Reply</span>
+                  <span className='comment-text'>Reply</span>
                 </button>
                 <button className="share" onClick={handleShare}>
                   <img className='icon' alt='share' src={icons.SHARE} />
-                  <span className='text'>Share</span>
+                  <span className='comment-text'>Share</span>
                 </button>
 
               </div>

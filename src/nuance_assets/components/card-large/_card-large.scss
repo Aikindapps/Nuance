@@ -3,7 +3,7 @@
 
 .article-grid-large {
   .card-wrapper-large {
-    width: 95%;
+    max-width: 825px; 
     object-fit: cover;
     overflow: hidden;
     .main-pic-large {
@@ -87,8 +87,11 @@
 
 @media only screen and (max-width: 768px) {
   .article-grid-large {
+    margin-left: 0px;
+      margin-right: 0px;
     .card-wrapper-large {
-      width: 100%;
+      margin-left: 0px;
+      margin-right: 0px;
       .main-pic-large {
         &:hover {
           transform: none;
