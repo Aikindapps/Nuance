@@ -172,7 +172,65 @@ actor PostCore {
   var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //#bucket canister management
-  //ToDo: authorize bucket canister to the Frontend canister for storeSEO method
+  func updateSettings(canisterId: Principal, manager: [Principal]): async () {
+
+    let controllers = Buffer.Buffer<Principal>(0);
+    controllers.add(Principal.fromActor(PostCore));
+
+    for (managerId in manager.vals()) {
+      controllers.add(managerId);
+    };
+
+    await IC.IC.update_settings(({canister_id = canisterId; settings = {
+        controllers = ?Buffer.toArray(controllers);
+        freezing_threshold = null;
+        memory_allocation = null;
+        compute_allocation = null;
+    }}));
+};
+
+  public shared ({ caller }) func updateSettingsForAllBucketCanisters() : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not Principal.equal(caller, Principal.fromActor(PostCore)) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
+
+      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let status = await IC.IC.canister_status({ canister_id = Principal.fromText(bucketCanisterId); });
+      let controllers = status.settings.controllers;
+      
+      let controllersBuffer = Buffer.Buffer<Principal>(0);
+
+      for (controller in controllers.vals()) {
+        if (Principal.toText(controller).size() < 28) {
+        controllersBuffer.add(controller);
+        }
+      };
+
+      controllersBuffer.add(Principal.fromActor(PostCore));
+      controllersBuffer.add(Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER));
+
+
+
+      switch (await IC.IC.update_settings(({ canister_id = Principal.fromActor(bucketActor); settings = { 
+        controllers = ?Buffer.toArray(controllersBuffer);
+        freezing_threshold = null;
+        memory_allocation = null; 
+        compute_allocation = null; } }))
+      ) {
+        case () {};
+      };
+    };
+
+    #ok("Success");
+  };
+
+
   public shared ({ caller }) func createNewBucketCanister() : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
@@ -226,16 +284,22 @@ actor PostCore {
         case (_) {};
       };
 
-      Debug.print("Newly created bucket canister canister id is " # canisterId);
+      
 
       try {
         //authorize bucket canister in frontend canister
         let frontendActor = CanisterDeclarations.getFrontendCanister();
-        Debug.print("frontend actor defined successfully");
+       
         await frontendActor.authorize(Principal.fromActor(bucketCanister));
-        Debug.print("frontend actor authorize went succesful");
+        
       } catch (e) {
         Debug.print("authorize error");
+      };
+
+      try {
+        await updateSettings(Principal.fromActor(bucketCanister), [Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER)]);
+      } catch (e) {
+        Debug.print("update settings error");
       };
 
       switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), Iter.toArray(nftCanisterIdsHashmap.entries()), Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
@@ -1748,10 +1812,6 @@ actor PostCore {
 
   };
 
-  //debugging method that returns all the moderation related data
-  public shared query func debugGetModeration() : async ([(Text, Nat)], [(Text, PostModerationStatus)]) {
-    (Iter.toArray(postVersionMap.entries()), Iter.toArray(postModerationStatusMap.entries()));
-  };
 
   public shared ({ caller }) func handleModclubMigration(postCanisterId : Text) : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
@@ -2498,7 +2558,7 @@ actor PostCore {
     let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
     // On local, don't send posts to Modclub
     if (environment != "local") {
-      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null);
+      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null, null);
     };
     postModerationStatusMap.put(postIdWithVersion, #reviewRequired);
   };
