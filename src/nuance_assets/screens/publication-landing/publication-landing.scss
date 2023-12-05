@@ -115,10 +115,10 @@
       font-size: clamp(50px, 7vw, 70px);
       font-style: normal;
       font-weight: 300;
-      line-height: 5vh; 
+      line-height: 6vh; 
       font-family: Roboto;
       margin: 0px -5px;
-     
+      text-align: left;
      
     }
   
@@ -126,6 +126,7 @@
       position: absolute;
       bottom: 94px;
       left: 7vw;
+      text-align: left;
   
       color: #d9d9d9;
       font-size: clamp(12px, 1.8vw, 18px);
