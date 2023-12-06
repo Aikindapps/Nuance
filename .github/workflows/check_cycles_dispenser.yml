@@ -3,8 +3,6 @@ name: CyclesDispenser Notification
 on:
   schedule:
     - cron: '0 * * * *'
-# on:
-#   workflow_dispatch:
 
 jobs:
   build:
@@ -40,25 +38,21 @@ jobs:
       - name: Get Principal
         run: dfx identity get-principal
 
-      
-      
       - name: Check Cycles Dispenser
         id: check_cycles
         run: |
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
-      
+
       - name: Notify Slack
         run: |
           CURRENT_HOUR=$(date +"%H")
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
           MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
-         
+
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
-      
+
           # Check if the message contains 'Everything is fine' and it's not the first hour of the day
           if [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]] || [[ "$CURRENT_HOUR" == "00" ]]; then
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
           fi
-
-      
