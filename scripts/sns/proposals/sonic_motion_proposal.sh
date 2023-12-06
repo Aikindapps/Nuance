@@ -1,7 +1,7 @@
 export PEM_FILE="$HOME/.config/dfx/identity/default/identity.pem"
 export DEVELOPER_NEURON_ID="a0e3889b406b7686640619648d848d5a0d800f2b5a7a2a44ff7cda7b2d264131"
 
-quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-proposal --insecure-local-dev-mode  --proposal "(record {
+quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-proposal  --proposal "(record {
         title = \"Motion Proposal to add liquidity to the ICP/NUA pool on Sonic Dex \";
         url = \"https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178/\";
         summary = \"After discussions with the SONIC team, We propose to add liquidity to the ICP/NUA pool on Sonic Dex (https://data.sonic.ooo/pools/rxdbk-dyaaa-aaaaq-aabtq-cai:ryjl3-tyaaa-aaaaa-aaaba-cai)
@@ -26,4 +26,4 @@ If these proposals are approved, Sonic Dex will add the funds to the liquidity p
         };
     }
 )" $DEVELOPER_NEURON_ID > motion_sonic.json
-quill send --insecure-local-dev-mode motion_sonic.json 
+quill send motion_sonic.json 
