@@ -255,8 +255,6 @@ function CategoryLanding() {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={true}
         />
 
@@ -288,8 +286,6 @@ function CategoryLanding() {
         loggedIn={!!user}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={true}
         category={categoryNameNotTrimmed}
         publication={publication}

@@ -9,6 +9,7 @@ import Dropdown from '../../UI/dropdown/dropdown';
 import QRCode from 'react-qr-code';
 import { toast, ToastType } from '../../services/toastService';
 import { SupportedTokenSymbol, colors } from '../../shared/constants';
+import { truncateToDecimalPlace } from '../../shared/utils';
 
 export const DepositModal = () => {
   const modalContext = useContext(ModalContext);
@@ -76,10 +77,11 @@ export const DepositModal = () => {
                 }
               >
                 <p className='count'>
-                  {(
+                  {truncateToDecimalPlace(
                     tokenBalance.balance /
-                    Math.pow(10, tokenBalance.token.decimals)
-                  ).toFixed(4)}
+                      Math.pow(10, tokenBalance.token.decimals),
+                    4
+                  )}
                 </p>
                 <p className='title'>{tokenBalance.token.symbol}</p>
               </div>

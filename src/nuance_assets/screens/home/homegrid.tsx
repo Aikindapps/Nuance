@@ -925,8 +925,6 @@ const HomePageGrid = () => {
           loggedIn={!!user}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={false}
         />
         {user ? '' : context.width < 768 ? <LoggedOutSidebar /> : null}

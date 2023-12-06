@@ -364,8 +364,6 @@ function PublicationLanding() {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={true}
         />
 
@@ -403,8 +401,6 @@ function PublicationLanding() {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={true}
         />
         <div className='publication-loader'>
@@ -425,8 +421,6 @@ function PublicationLanding() {
         loggedIn={!!user}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={true}
         publication={publication}
       />

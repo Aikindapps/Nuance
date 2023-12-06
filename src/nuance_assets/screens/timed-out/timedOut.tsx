@@ -53,8 +53,6 @@ const TimedOut = () => {
         loggedIn={false}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={false}
       />
 

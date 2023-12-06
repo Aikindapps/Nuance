@@ -105,7 +105,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               <Link to={'/article/edit/' + post.postId}>
                 <img
                   className='card-draft-articles-action-icon-pointer'
-                  src={icons.EDIT}
+                  src={dark ? icons.EDIT_WHITE : icons.EDIT}
                 />
               </Link>
             ) : getEditStatus() === 'Premium' ? (
@@ -129,23 +129,67 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
             <div className={'card-draft-articles-right-action-wrapper'}>
               <img
                 className='card-draft-articles-action-icon-pointer'
-                src={icons.CLAP_BLACK}
+                src={dark ? icons.CLAP_WHITE_2 : icons.CLAP_BLACK}
                 id={'card-draft-article-tooltip-' + post.postId}
               />
-              <div className='card-draft-articles-right-action-text'>
+              <div
+                style={
+                  dark
+                    ? {
+                        color: darkOptionsAndColors.secondaryColor,
+                      }
+                    : {}
+                }
+                className='card-draft-articles-right-action-text'
+              >
                 {post.claps}
               </div>
             </div>
-            <div className='card-draft-articles-date'>
+            <div
+              style={
+                dark
+                  ? {
+                      color: darkOptionsAndColors.secondaryColor,
+                    }
+                  : {}
+              }
+              className='card-draft-articles-date'
+            >
               {formatDate(post.publishedDate, DateFormat.NoYear) ||
                 formatDate(post.created, DateFormat.NoYear)}
             </div>
           </div>
         </div>
         <Link className='card-draft-articles-title-wrapper' to={post.url}>
-          <div className='card-draft-articles-title'>{post.title}</div>
+          <div
+            style={
+              dark
+                ? {
+                    color: darkOptionsAndColors.color,
+                  }
+                : {}
+            }
+            className='card-draft-articles-title'
+          >
+            {post.title.length > 55
+              ? post.title.slice(0, 52) + '...'
+              : post.title}
+          </div>
         </Link>
-        <div className='card-draft-articles-subtitle'>{post.subtitle}</div>
+        <div
+          style={
+            dark
+              ? {
+                  color: darkOptionsAndColors.secondaryColor,
+                }
+              : {}
+          }
+          className='card-draft-articles-subtitle'
+        >
+          {post.subtitle.length > 100
+            ? post.subtitle.slice(0, 97) + '...'
+            : post.subtitle}
+        </div>
       </div>
       <Tooltip
         clickable={true}

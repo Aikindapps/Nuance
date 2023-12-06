@@ -1183,8 +1183,6 @@ const CreateEditPublication = () => {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={false}
           isUserAdminScreen={true}
         />
@@ -1232,8 +1230,6 @@ const CreateEditPublication = () => {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={false}
           isUserAdminScreen={true}
         />

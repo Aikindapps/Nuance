@@ -38,10 +38,10 @@
         .card-draft-articles-right-wrapper {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             aspect-ratio: 3.34;
             min-width: 67%;
             max-width: 67%;
+            row-gap: 10px;
 
             .card-draft-articles-actions-wrapper {
                 width: 100%;
@@ -107,7 +107,6 @@
             }
 
             .card-draft-articles-title-wrapper {
-                height: calc(50% - 12px);
 
                 .card-draft-articles-title {
                     color: #151451;
@@ -128,7 +127,6 @@
 
 
             .card-draft-articles-subtitle {
-                height: calc(50% - 12px);
                 display: flex;
                 align-items: end;
                 color: #666;

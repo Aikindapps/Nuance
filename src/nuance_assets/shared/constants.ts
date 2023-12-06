@@ -27,6 +27,7 @@ export const images = {
 
 export const icons = {
   EDIT: iconsPath + 'edit.svg',
+  EDIT_WHITE: iconsPath + 'edit-white.svg',
   SEARCH_WHITE: iconsPath + 'search-white.svg',
   SEARCH_BLACK: iconsPath + 'search-black.svg',
   CLOSE_SEARCH: iconsPath + 'close-search.svg',
@@ -78,6 +79,7 @@ export const icons = {
   CLAP_ICON: iconsPath + 'clap-icon.svg',
   CLAP_BLACK: iconsPath + 'clap-black.svg',
   NFT_ICON: iconsPath + 'nft-icon.svg',
+  CLAP_WHITE_2: iconsPath + 'clap-white-2.svg',
 };
 
 export const colors = {

@@ -1,0 +1,65 @@
+.article-list{
+    .rowContainer{
+        margin-left: 0;
+        .link1{
+            color: #43DFBA;
+        }
+    }
+    .search-summary{
+        margin-left: 0;
+        
+    }
+}
+.editor-search-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    row-gap: 12px;
+    overflow-x: scroll;
+    padding-bottom: 200px;
+
+    .titles {
+        display: flex;
+        align-items: center;
+        overflow-x: scroll;
+        min-width: 813px;
+        max-width: 813px;
+
+        .title-general {
+            color: #999;
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: normal;
+            text-transform: uppercase;
+        }
+
+        .title-published {
+            width: 9.7%;
+        }
+
+        .title-article {
+            width: 30%;
+        }
+
+        .title-writer {
+            width: 10%;
+        }
+
+        .title-category {
+            width: 12.8%;
+        }
+
+        .title-applause {
+            width: 9.7%;
+        }
+
+        .title-published-date {
+            width: 13.8%;
+        }
+
+        .title-modified {
+            width: 13.8%;
+        }
+    }
+}

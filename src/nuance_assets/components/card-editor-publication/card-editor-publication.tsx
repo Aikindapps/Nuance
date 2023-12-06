@@ -49,9 +49,6 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   };
 
   const darkOptionsAndColors = {
-    background: darkTheme
-      ? colors.darkModePrimaryBackgroundColor
-      : colors.primaryBackgroundColor,
     color: darkTheme
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
@@ -78,14 +75,19 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
     fetchApplaudedHandles();
   }, []);
 
+
   return (
     <div
-      className={
-        isLoading
-          ? 'blurred card-editor-publication-wrapper'
-          : 'card-editor-publication-wrapper'
+      className='card-editor-publication-wrapper'
+      style={
+        isToggled
+          ? isLoading
+            ? { filter: 'blur(3px)' }
+            : {}
+          : isLoading
+          ? { filter: 'blur(3px) grayscale(1)' }
+          : { filter: 'grayscale(1)' }
       }
-      style={!isToggled ? { opacity: '0.5' } : {}}
     >
       <div className='field-published field-general'>
         {post.isPremium ? (
@@ -116,11 +118,14 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           className='article-image'
           src={post.headerImage || images.NUANCE_LOGO}
         />
-        <p className='article-title'>{post.title}</p>
+        <p style={darkOptionsAndColors} className='article-title'>
+          {post.title}
+        </p>
       </Link>
       <Link
         to={'/' + post.creator || post.handle}
         className='field-writer field-general'
+        style={darkOptionsAndColors}
       >
         @{post.creator || post.handle}
       </Link>
@@ -147,14 +152,37 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         className='field-applause field-general'
         id={'card-editor-article-tooltip-' + post.postId}
       >
-        <img className='clap-icon-card-editor' src={icons.CLAP_BLACK} />
-        <p className='clap-count'>{post.claps}</p>
+        <img
+          className='clap-icon-card-editor'
+          src={darkTheme ? icons.CLAP_WHITE_2 : icons.CLAP_BLACK}
+        />
+        <p style={darkOptionsAndColors} className='clap-count'>
+          {post.claps}
+        </p>
       </div>
-      <div className='field-published-date field-general'>
+      <div
+        style={
+          darkTheme
+            ? {
+                color: darkOptionsAndColors.secondaryColor,
+              }
+            : {}
+        }
+        className='field-published-date field-general'
+      >
         {formatDate(post.publishedDate, DateFormat.WithYear) ||
           formatDate(post.created, DateFormat.WithYear)}
       </div>
-      <div className='field-modified field-general'>
+      <div
+        style={
+          darkTheme
+            ? {
+                color: darkOptionsAndColors.secondaryColor,
+              }
+            : {}
+        }
+        className='field-modified field-general'
+      >
         {formatDate(post.modified, DateFormat.WithYear) ||
           formatDate(post.created, DateFormat.WithYear)}
       </div>

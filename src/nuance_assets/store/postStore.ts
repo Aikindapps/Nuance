@@ -11,6 +11,7 @@ import {
   PremiumPostActivityListItem,
   PremiumArticleOwners,
   PremiumArticleOwner,
+  ApplaudListItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -32,10 +33,15 @@ import { TransferResult as Icrc1TransferResult } from '../services/icrc1/icrc1.d
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
-import { getFieldsFromMetadata, icpPriceToString, toBase256 } from '../shared/utils';
+import {
+  getFieldsFromMetadata,
+  icpPriceToString,
+  toBase256,
+} from '../shared/utils';
 import { Principal } from '@dfinity/principal';
 import { PostKeyProperties } from '../../declarations/PostCore/PostCore.did';
 import {
+  Applaud,
   Comment,
   PostBucketType,
   PostBucketType__1,
@@ -410,6 +416,7 @@ export interface PostStore {
     postId: string,
     bucketCanisterId: string
   ) => Promise<string[]>;
+  getUserApplauds: () => Promise<ApplaudListItem[]>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -421,7 +428,7 @@ export interface PostStore {
     isDraft: boolean
   ) => Promise<PostType | undefined>;
 
-  getOwnedNfts: () => Promise<void>;
+  getOwnedNfts: () => Promise<PremiumPostActivityListItem[] | undefined>;
   getSellingNfts: () => Promise<PremiumPostActivityListItem[]>;
   transferNft: (
     tokenIdentifier: string,
@@ -2411,7 +2418,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
     return postActivityListItems;
   },
-  getOwnedNfts: async (): Promise<void> => {
+  getOwnedNfts: async (): Promise<
+    PremiumPostActivityListItem[] | undefined
+  > => {
     try {
       const nftCanistersEntries = await (
         await getPostCoreActor()
@@ -2573,6 +2582,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       });
 
       set({ premiumPostsActivities: postActivityListItems });
+      return postActivityListItems;
     } catch (error) {
       console.log(error);
     }
@@ -2679,34 +2689,117 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       };
     }
   },
-  getApplaudedHandles : async (postId: string, bucketCanisterId: string): Promise<string[]> => {
+  getApplaudedHandles: async (
+    postId: string,
+    bucketCanisterId: string
+  ): Promise<string[]> => {
     try {
-      let applauds = await (await getPostBucketActor(bucketCanisterId)).getPostApplauds(postId)
-      let senderPrincipalIds = applauds.map(val=>val.sender)
-      let handles = await (await getUserActor()).getHandlesByPrincipals(senderPrincipalIds)
-      return handles
+      let applauds = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).getPostApplauds(postId);
+      let senderPrincipalIds = applauds.map((val) => val.sender);
+      let handles = await (
+        await getUserActor()
+      ).getHandlesByPrincipals(senderPrincipalIds);
+      return handles;
     } catch (error) {
-      return []
+      return [];
     }
-    
-    
   },
-  checkTipping : async (postId: string, bucketCanisterId: string): Promise<void> => {
+  checkTipping: async (
+    postId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
     try {
       await (await getPostBucketActor(bucketCanisterId)).checkTipping(postId);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   },
-
-  checkTippingByTokenSymbol : async (postId: string, tokenSymbol: SupportedTokenSymbol, bucketCanisterId: string): Promise<void> => {
+  getUserApplauds: async (): Promise<ApplaudListItem[]> => {
     try {
-      let response = await(
+      let allBucketCanisterIds = (
+        await (await getPostCoreActor()).getBucketCanisters()
+      ).map((bucketCanisterEntry) => {
+        return bucketCanisterEntry[0];
+      });
+      let promises = allBucketCanisterIds.map(async (bucketCanisterId) => {
+        return (await getPostBucketActor(bucketCanisterId)).getMyApplauds();
+      });
+      //contains the applauds data
+      let applauds = (await Promise.all(promises)).flat(1);
+      //fetch the post details from bucket canisters, merge with applaud data and return
+      let posts = await fetchPostsByBuckets(
+        applauds.map((applaud) => {
+          //build a CoreReturn object from an applaud -> only the bucketCanisterId matters
+          return {
+            bucketCanisterId: applaud.bucketCanisterId,
+            postId: applaud.postId,
+            created: '',
+            principal: '',
+            modified: '',
+            views: '',
+            publishedDate: '',
+            claps: '',
+            tags: [],
+            isDraft: false,
+            category: '',
+            handle: '',
+          };
+        }),
+        true
+      );
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      let mergedApplaudsIncludingNull = applauds.map((applaud) => {
+        let post: PostType | undefined = undefined;
+        for (const p of posts) {
+          if (p.postId === applaud.postId) {
+            //found the corresponding post
+            post = p;
+          }
+        }
+        if (post) {
+          return {
+            applauds: Number(applaud.numberOfApplauds),
+            currency: applaud.currency,
+            date: applaud.date,
+            postId: applaud.postId,
+            url: post.url,
+            handle: post.isPublication
+              ? post.creator || post.handle
+              : post.handle,
+            tokenAmount: Number(applaud.tokenAmount),
+            applaudId: applaud.applaudId,
+            isSender: userWallet.principal === applaud.sender,
+            title: post.title
+          };
+        }
+      });
+      let result: ApplaudListItem[] = [];
+      mergedApplaudsIncludingNull.forEach((val) => {
+        if (val) {
+          result.push(val);
+        }
+      });
+
+      return result;
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  },
+  checkTippingByTokenSymbol: async (
+    postId: string,
+    tokenSymbol: SupportedTokenSymbol,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      let response = await (
         await getPostBucketActor(bucketCanisterId)
       ).checkTippingByTokenSymbol(postId, tokenSymbol, '');
       console.log(response);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   },
 

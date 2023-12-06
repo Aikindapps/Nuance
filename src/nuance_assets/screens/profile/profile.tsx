@@ -226,8 +226,6 @@ const Profile = () => {
         loggedIn={isLoggedIn}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={false}
       />
       <div

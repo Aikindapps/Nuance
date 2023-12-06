@@ -485,3 +485,17 @@ export const toBase256 = (num: number, digitCount: number) => {
 
   return base256Array;
 };
+
+export function truncateToDecimalPlace(num: number, decimalPlaces: number): string {
+  const numStr = num.toString();
+
+  const dotIndex = numStr.indexOf('.');
+
+  if (dotIndex === -1 || decimalPlaces < 0) {
+    return numStr;
+  }
+
+  const cutIndex = dotIndex + decimalPlaces + 1;
+
+  return numStr.substring(0, cutIndex);
+}

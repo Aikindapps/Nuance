@@ -20,7 +20,7 @@ import Button from '../../UI/Button/Button';
 import { Principal } from '@dfinity/principal';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
 import { LuLoader2 } from 'react-icons/lu';
-import { getNuaEquivalance, getPriceBetweenTokens } from '../../shared/utils';
+import { getNuaEquivalance, getPriceBetweenTokens, truncateToDecimalPlace } from '../../shared/utils';
 
 export const WithdrawModal = () => {
   const modalContext = useContext(ModalContext);
@@ -134,7 +134,7 @@ export const WithdrawModal = () => {
 
   const getMaxAmountToTransfer = () => {
     let activeBalance = getSelectedCurrencyBalance();
-    if(activeBalance.balance === 0){
+    if (activeBalance.balance === 0) {
       return 0;
     }
     return activeBalance.balance - activeBalance.token.fee;
@@ -148,6 +148,7 @@ export const WithdrawModal = () => {
     let balanceValidation = validateBalance();
     return termsAccepted && addressValidation && balanceValidation;
   };
+
 
   const { transferIcp, transferICRC1Token } = usePostStore((state) => ({
     transferIcp: state.transferIcp,
@@ -265,10 +266,11 @@ export const WithdrawModal = () => {
                 }
               >
                 <p className='count'>
-                  {(
+                  {truncateToDecimalPlace(
                     tokenBalance.balance /
-                    Math.pow(10, tokenBalance.token.decimals)
-                  ).toFixed(4)}
+                      Math.pow(10, tokenBalance.token.decimals),
+                    4
+                  )}
                 </p>
                 <p className='title'>{tokenBalance.token.symbol}</p>
               </div>
@@ -355,7 +357,11 @@ export const WithdrawModal = () => {
                   }
                   const newValue = e.target.value;
                   if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
-
+                  console.log(
+                    'newValue: ',
+                    parseFloat(newValue) *
+                      Math.pow(10, getSelectedCurrencyBalance().token.decimals)
+                  );
                   if (
                     newValue === '' ||
                     (parseFloat(newValue) *
@@ -382,10 +388,14 @@ export const WithdrawModal = () => {
                 }
                 onClick={() => {
                   setInputAmount(
-                    (
+                    truncateToDecimalPlace(
                       getMaxAmountToTransfer() /
-                      Math.pow(10, getSelectedCurrencyBalance().token.decimals)
-                    ).toFixed(4)
+                        Math.pow(
+                          10,
+                          getSelectedCurrencyBalance().token.decimals
+                        ),
+                      4
+                    )
                   );
                 }}
               >
@@ -396,35 +406,38 @@ export const WithdrawModal = () => {
             <div className='amount-input-conversion-wrapper'>
               <div>=</div>
               <div>
-                {(
+                {truncateToDecimalPlace(
                   getNuaEquivalance(
                     sonicTokenPairs,
                     selectedCurrency,
                     parseFloat(getInputAmount()) * Math.pow(10, 8)
-                  ) / Math.pow(10, 8)
-                ).toFixed(2) + ' NUA'}
+                  ) / Math.pow(10, 8),
+                  2
+                ) + ' NUA'}
               </div>
               <div>|</div>
               <div>
-                {(
+                {truncateToDecimalPlace(
                   getPriceBetweenTokens(
                     sonicTokenPairs,
                     selectedCurrency,
                     'ICP',
                     parseFloat(getInputAmount()) * Math.pow(10, 8)
-                  ) / Math.pow(10, 8)
-                ).toFixed(2) + ' ICP'}
+                  ) / Math.pow(10, 8),
+                  2
+                ) + ' ICP'}
               </div>
               <div>|</div>
               <div>
-                {(
+                {truncateToDecimalPlace(
                   getPriceBetweenTokens(
                     sonicTokenPairs,
                     selectedCurrency,
                     'ckBTC',
                     parseFloat(getInputAmount()) * Math.pow(10, 8)
-                  ) / Math.pow(10, 8)
-                ).toFixed(4) + ' ckBTC'}
+                  ) / Math.pow(10, 8),
+                  2
+                ) + ' ckBTC'}
               </div>
             </div>
           </div>

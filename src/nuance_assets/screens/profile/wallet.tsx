@@ -2,27 +2,32 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { toast, ToastType } from '../../services/toastService';
 import { colors, icons, images } from '../../shared/constants';
-import { formatDate, getNuaEquivalance, icpPriceToString } from '../../shared/utils';
+import {
+  formatDate,
+  getNuaEquivalance,
+  icpPriceToString,
+  truncateToDecimalPlace,
+} from '../../shared/utils';
 import { AccountIdentifier } from '@dfinity/nns';
 import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
 import InputField2 from '../../UI/InputField2/InputField2';
 import Button from '../../UI/Button/Button';
 import { TransferNftModal } from '../../components/transfer-nft-modal/transfer-nft-modal';
-import { PremiumPostActivityListItem } from '../../types/types';
+import {
+  ApplaudListItem,
+  PremiumPostActivityListItem,
+} from '../../types/types';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import { Applaud } from '../../../../src/declarations/PostBucket/PostBucket.did';
 
 const Wallet = () => {
-  const [balance, setBalance] = useState<string>('0');
   const [ownedKeys, setOwnedKeys] = useState(0);
   const [soldKeys, setSoldKeys] = useState(0);
-  const [transferModalOpen, setTransferModalOpen] = useState(false);
-  const [transferringToken, setTransferringToken] =
-    useState<PremiumPostActivityListItem>();
   const [displayingActivities, setDisplayingActivities] = useState<
-    PremiumPostActivityListItem[]
+    (PremiumPostActivityListItem | ApplaudListItem)[]
   >([]);
 
   //NFT feature toggle
@@ -41,22 +46,27 @@ const Wallet = () => {
       : colors.primaryTextColor,
   };
 
-  const { getUserWallet, userWallet, tokenBalances,fetchTokenBalances, sonicTokenPairs} = useAuthStore((state) => ({
+  const {
+    getUserWallet,
+    userWallet,
+    tokenBalances,
+    fetchTokenBalances,
+    sonicTokenPairs,
+  } = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
     tokenBalances: state.tokenBalances,
     fetchTokenBalances: state.fetchTokenBalances,
-    sonicTokenPairs: state.sonicTokenPairs
-    
+    sonicTokenPairs: state.sonicTokenPairs,
   }));
 
-  const { getMyBalance, getOwnedNfts, premiumPostsActivities, getSellingNfts } =
-    usePostStore((state) => ({
-      getMyBalance: state.getMyBalance,
+  const { getOwnedNfts, getSellingNfts, getUserApplauds } = usePostStore(
+    (state) => ({
       getOwnedNfts: state.getOwnedNfts,
-      premiumPostsActivities: state.premiumPostsActivities,
       getSellingNfts: state.getSellingNfts,
-    }));
+      getUserApplauds: state.getUserApplauds,
+    })
+  );
 
   const { user } = useUserStore((state) => ({
     user: state.user,
@@ -65,8 +75,7 @@ const Wallet = () => {
   useEffect(() => {
     fetchTokenBalances();
     populateFields();
-    getOwnedNfts();
-    handleSellingNfts();
+    fetchAllActivities();
   }, []);
 
   useEffect(() => {
@@ -83,83 +92,200 @@ const Wallet = () => {
     var soldKeys = 0;
     var ownedKeys = 0;
     displayingActivities.forEach((activity) => {
-      if (activity.ownedByUser) {
-        ownedKeys += 1;
-      }
-      if (!activity.ownedByUser && activity.writer === user?.handle) {
-        soldKeys += 1;
+      if ('tokenIndex' in activity) {
+        //this activity is an NFT activity
+        if (activity.ownedByUser) {
+          ownedKeys += 1;
+        }
+        if (!activity.ownedByUser && activity.writer === user?.handle) {
+          soldKeys += 1;
+        }
       }
     });
     setOwnedKeys(ownedKeys);
     setSoldKeys(soldKeys);
   };
 
-  const handleSellingNfts = async () => {
-    var sellingActivites = await getSellingNfts();
-    setDisplayingActivities(
-      [...sellingActivites, ...premiumPostsActivities].sort((act_1, act_2) => {
-        return parseInt(act_2.date) - parseInt(act_1.date);
-      })
-    );
+  const fetchAllActivities = async () => {
+    var [sellingActivites, premiumPostsActivities, applauds] =
+      await Promise.all([getSellingNfts(), getOwnedNfts(), getUserApplauds()]);
+    if (premiumPostsActivities) {
+      setDisplayingActivities(
+        [...sellingActivites, ...premiumPostsActivities, ...applauds].sort(
+          (act_1, act_2) => {
+            return parseInt(act_2.date) - parseInt(act_1.date);
+          }
+        )
+      );
+    } else {
+      setDisplayingActivities(
+        [...sellingActivites, ...applauds].sort((act_1, act_2) => {
+          return parseInt(act_2.date) - parseInt(act_1.date);
+        })
+      );
+    }
   };
-
-  console.log(sonicTokenPairs)
+  const getStatsElement = () => {
+    if (context.width > 768) {
+      //desktop
+      return (
+        <div
+          className='statistic'
+          style={{ marginBottom: '40px', marginTop: '5px' }}
+        >
+          <div className='statistic'>
+            {tokenBalances.map((tokenBalance) => {
+              return (
+                <div
+                  className='stat'
+                  style={{ borderRight: '1px dashed #B2B2B2' }}
+                  key={tokenBalance.token.symbol}
+                >
+                  <p className='count'>
+                    {truncateToDecimalPlace(
+                      tokenBalance.balance /
+                        Math.pow(10, tokenBalance.token.decimals),
+                      4
+                    )}
+                  </p>
+                  <p className='title'>{tokenBalance.token.symbol}</p>
+                  {tokenBalance.token.symbol === 'NUA' ? (
+                    <p className='title'>(Nuance Token)</p>
+                  ) : (
+                    <div className='nua-equivalance'>
+                      <div className='eq'>=</div>
+                      <div className='value'>
+                        {(
+                          getNuaEquivalance(
+                            sonicTokenPairs,
+                            tokenBalance.token.symbol,
+                            tokenBalance.balance
+                          ) / Math.pow(10, 8)
+                        ).toFixed(0) + ' NUA'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <div className='stat'>
+              <p className='count'>{ownedKeys}</p>
+              <p className='title'>Article Keys</p>
+            </div>
+          </div>
+        </div>
+      );
+    } else {
+      //mobile
+      return (
+        <div
+          className='statictis-mobile-wrapper'
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <div className='statistic'>
+            {tokenBalances.slice(0, 2).map((tokenBalance, index) => {
+              return (
+                <div
+                  className='stat'
+                  style={{
+                    width: '50%',
+                    borderRight: index === 0 ? '1px dashed #B2B2B2' : 'none',
+                  }}
+                  key={tokenBalance.token.symbol}
+                >
+                  <p className='count'>
+                    {truncateToDecimalPlace(
+                      tokenBalance.balance /
+                        Math.pow(10, tokenBalance.token.decimals),
+                      4
+                    )}
+                  </p>
+                  <p className='title'>{tokenBalance.token.symbol}</p>
+                  {tokenBalance.token.symbol === 'NUA' ? (
+                    <p className='title'>(Nuance Token)</p>
+                  ) : (
+                    <div className='nua-equivalance'>
+                      <div className='eq'>=</div>
+                      <div className='value'>
+                        {(
+                          getNuaEquivalance(
+                            sonicTokenPairs,
+                            tokenBalance.token.symbol,
+                            tokenBalance.balance
+                          ) / Math.pow(10, 8)
+                        ).toFixed(0) + ' NUA'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className='horizontal-dashed-divider' />
+          <div className='statistic'>
+            {tokenBalances.slice(2).map((tokenBalance) => {
+              return (
+                <div
+                  className='stat'
+                  style={{
+                    borderRight: '1px dashed #B2B2B2',
+                    width: '50%',
+                  }}
+                  key={tokenBalance.token.symbol}
+                >
+                  <p className='count'>
+                    {truncateToDecimalPlace(
+                      tokenBalance.balance /
+                        Math.pow(10, tokenBalance.token.decimals),
+                      4
+                    )}
+                  </p>
+                  <p className='title'>{tokenBalance.token.symbol}</p>
+                  {tokenBalance.token.symbol === 'NUA' ? (
+                    <p className='title'>(Nuance Token)</p>
+                  ) : (
+                    <div className='nua-equivalance'>
+                      <div className='eq'>=</div>
+                      <div className='value'>
+                        {(
+                          getNuaEquivalance(
+                            sonicTokenPairs,
+                            tokenBalance.token.symbol,
+                            tokenBalance.balance
+                          ) / Math.pow(10, 8)
+                        ).toFixed(0) + ' NUA'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <div style={{ width: '50%' }} className='stat'>
+              <p className='count'>{ownedKeys}</p>
+              <p className='title'>Article Keys</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  };
 
   return (
     <div className='wrapper'>
       <p className='title'>MY WALLET</p>
       <p className='wallet-text' style={{ color: darkOptionsAndColors.color }}>
         Here you can manage your Nuance wallet. With the amount of tokens you
-        can buy NFT keys that give you access to certain Nuance articles.
+        can buy NFT keys that give you access to certain Nuance articles or
+        applaud authors on their work.
       </p>
-      <p className='wallet-text' style={{ color: darkOptionsAndColors.color }}>
-        Copy the principal id or address to send ICP to your wallet.
-      </p>
+
       <p className='statistic-text'>CURRENTLY IN YOUR WALLET</p>
-      <div
-        className='statistic'
-        style={{ marginBottom: '40px', marginTop: '5px' }}
-      >
-        <div className='statistic'>
-          {tokenBalances.map((tokenBalance) => {
-            return (
-              <div
-                className='stat'
-                style={{ borderRight: '1px dashed #B2B2B2' }}
-                key={tokenBalance.token.symbol}
-              >
-                <p className='count'>
-                  {(
-                    tokenBalance.balance /
-                    Math.pow(10, tokenBalance.token.decimals)
-                  ).toFixed(4)}
-                </p>
-                <p className='title'>{tokenBalance.token.symbol}</p>
-                {tokenBalance.token.symbol === 'NUA' ? (
-                  <p className='title'>(Nuance Token)</p>
-                ) : (
-                  <div className='nua-equivalance'>
-                    <div className='eq'>=</div>
-                    <div className='value'>
-                      {(
-                        getNuaEquivalance(
-                          sonicTokenPairs,
-                          tokenBalance.token.symbol,
-                          tokenBalance.balance
-                        ) / Math.pow(10, 8)
-                      ).toFixed(0) + ' NUA'}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div className='stat'>
-            <p className='count'>{ownedKeys}</p>
-            <p className='title'>Article Keys</p>
-          </div>
-        </div>
-      </div>
+      {getStatsElement()}
 
       <div className='deposit-withdraw-buttons-wrapper'>
         <Button
@@ -185,106 +311,153 @@ const Wallet = () => {
         <div className='token-activities-header'>
           <div className='amount'>AMOUNT</div>
           <div className='date'>DATE</div>
-          <div className='from'>FOR/FROM</div>
-          <div className='article'>ARTICLE</div>
-          <div className='key'>KEY</div>
+          <div className='from'>
+            <div className='writer'>FOR/FROM</div>
+            <div className='post-title'>ARTICLE</div>
+          </div>
+          <div className='key'>DESCRIPTION</div>
           <div className='transfer'>TRANSFER</div>
         </div>
         {user && userWallet
           ? displayingActivities?.map((activity, index) => {
-              let saleActivity = activity.activity;
-              let available =
-                ((parseFloat(activity.totalSupply) -
-                  parseFloat(activity.accessKeyIndex)) /
-                  parseFloat(activity.totalSupply)) *
-                70;
-              let sold = 70 - available;
-              return (
-                <div className='token-activity-wrapper' key={index}>
-                  <div
-                    className='token-activity-flex'
-                    key={activity.tokenIdentifier}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      color: darkOptionsAndColors.color,
-                    }}
-                  >
+              if ('tokenIndex' in activity) {
+                //NFT activity
+                let saleActivity = activity.activity;
+                let available =
+                  ((parseFloat(activity.totalSupply) -
+                    parseFloat(activity.accessKeyIndex)) /
+                    parseFloat(activity.totalSupply)) *
+                  70;
+                let sold = 70 - available;
+                return (
+                  <div className='token-activity-wrapper' key={index}>
                     <div
-                      className={`amount ${
-                        saleActivity.includes('-') || saleActivity === 'Sent'
-                          ? 'withdraw-icp'
-                          : !saleActivity.includes('+')
-                          ? 'mint-transfer'
-                          : ''
-                      }`}
-                    >
-                      {saleActivity}
-                    </div>
-                    <div
-                      className='date'
-                      style={{ color: darkOptionsAndColors.color }}
-                    >
-                      {formatDate(activity.date) || ' -- '}
-                    </div>
-                    <div
-                      onClick={() => {
-                        navigate(`/${activity.writer}`);
+                      className='token-activity-flex'
+                      key={activity.tokenIdentifier}
+                      style={{
+                        display: 'flex',
+                        color: darkOptionsAndColors.color,
                       }}
-                      className='writer'
-                      style={{ color: darkOptionsAndColors.color }}
-                    >{`@${activity.writer}`}</div>
-                    <div
-                      onClick={() => {
-                        navigate(activity.url);
-                      }}
-                      className='activity-title'
-                      style={{ color: darkOptionsAndColors.color }}
                     >
-                      {activity.title}
-                    </div>
-                    <div
-                      className='key-flex'
-                      style={{ color: darkOptionsAndColors.color }}
-                    >
-                      <div className='key-counts'>{`#${activity.accessKeyIndex} ( of ${activity.totalSupply})`}</div>
-                      <div className='sold-bar'>
-                        <div
-                          className='sold-percentage-sold'
-                          style={{
-                            width: `${sold}px`,
-                            background: darkTheme
-                              ? colors.darkModeSecondaryButtonColor
-                              : colors.primaryTextColor,
+                      <div
+                        className={`amount ${
+                          saleActivity.includes('-') || saleActivity === 'Sent'
+                            ? 'withdraw-icp'
+                            : !saleActivity.includes('+')
+                            ? 'mint-transfer'
+                            : ''
+                        }`}
+                      >
+                        {saleActivity}
+                      </div>
+                      <div
+                        className='date'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        {formatDate(activity.date) || ' -- '}
+                      </div>
+                      <div
+                        onClick={() => {
+                          navigate(activity.url);
+                        }}
+                        className='from'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >{`/@${activity.writer}/${activity.title}`}</div>
+
+                      <div
+                        className='key key-flex'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        <div className='key-counts'>{`#${activity.accessKeyIndex} ( of ${activity.totalSupply})`}</div>
+                        <div className='sold-bar'>
+                          <div
+                            className='sold-percentage-sold'
+                            style={{
+                              width: `${sold}px`,
+                              background: darkTheme
+                                ? colors.darkModeSecondaryButtonColor
+                                : colors.primaryTextColor,
+                            }}
+                          />
+                          <div
+                            className='sold-percentage-remaining'
+                            style={{ width: `${available}px` }}
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className='transfer-icon transfer'
+                        style={
+                          activity.ownedByUser && saleActivity !== 'Minted'
+                            ? { filter: darkTheme ? 'contrast(0)' : 'none' }
+                            : { visibility: 'hidden' }
+                        }
+                      >
+                        <img
+                          onClick={() => {
+                            modalContext?.openModal('WithdrawNft', {
+                              transferNftData: activity,
+                            });
                           }}
-                        />
-                        <div
-                          className='sold-percentage-remaining'
-                          style={{ width: `${available}px` }}
-                        />
+                          src={icons.TRANSFER_ICON}
+                        ></img>
                       </div>
                     </div>
-                    <div
-                      className='transfer-icon'
-                      style={
-                        activity.ownedByUser && saleActivity !== 'Minted'
-                          ? { filter: darkTheme ? 'contrast(0)' : 'none' }
-                          : { visibility: 'hidden' }
-                      }
-                    >
-                      <img
-                        onClick={() => {
-                          modalContext?.openModal('WithdrawNft', {
-                            transferNftData: activity,
-                          });
-                        }}
-                        src={icons.TRANSFER_ICON}
-                      ></img>
-                    </div>
+                    <div className='horizontal-divider' />
                   </div>
-                  <div className='horizontal-divider' />
-                </div>
-              );
+                );
+              } else {
+                //tipping activity
+                return (
+                  <div className='token-activity-wrapper' key={index}>
+                    <div
+                      className='token-activity-flex'
+                      style={{
+                        display: 'flex',
+                        color: darkOptionsAndColors.color,
+                      }}
+                    >
+                      <div className='amount'>
+                        {activity.isSender
+                          ? `- ${truncateToDecimalPlace(
+                              activity.tokenAmount / Math.pow(10, 8),
+                              activity.currency === 'ckBTC' ? 4 : 2
+                            )} ${activity.currency}`
+                          : `+ ${truncateToDecimalPlace(
+                              activity.tokenAmount / Math.pow(10, 8),
+                              activity.currency === 'ckBTC' ? 4 : 2
+                            )} ${activity.currency}`}
+                      </div>
+                      <div
+                        className='date'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        {formatDate(activity.date) || ' -- '}
+                      </div>
+                      <div
+                        onClick={() => {
+                          navigate(activity.url);
+                        }}
+                        className='from'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >{`/@${activity.handle}/${activity.title}`}</div>
+
+                      <div className='key key-flex'>
+                        {`${(activity.applauds / Math.pow(10, 8)).toFixed(
+                          0
+                        )} Applaud`}
+                      </div>
+                      <div
+                        className='transfer-icon transfer'
+                        style={{ visibility: 'hidden' }}
+                      >
+                        <img />
+                      </div>
+                    </div>
+                    <div className='horizontal-divider' />
+                  </div>
+                );
+              }
             })
           : null}
       </div>

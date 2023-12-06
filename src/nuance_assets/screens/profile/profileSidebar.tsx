@@ -170,8 +170,6 @@ const ProfileSidebar = () => {
         isArticlePage={true}
         ScreenWidth={screenWidth}
         isMyProfilePage={true}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={false}
         isUserAdminScreen={true}
       />

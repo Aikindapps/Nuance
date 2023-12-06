@@ -640,8 +640,6 @@ const CreateEditArticle = () => {
         loggedIn={isLoggedIn}
         isArticlePage={true}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={false}
         isUserAdminScreen={true}
       />

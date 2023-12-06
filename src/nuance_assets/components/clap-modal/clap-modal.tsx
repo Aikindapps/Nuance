@@ -20,7 +20,7 @@ import Button from '../../UI/Button/Button';
 import { Principal } from '@dfinity/principal';
 import { LuLoader2 } from 'react-icons/lu';
 import { PostType } from '../../types/types';
-import { getNuaEquivalance, getPriceBetweenTokens, toBase256 } from '../../shared/utils';
+import { getNuaEquivalance, getPriceBetweenTokens, toBase256, truncateToDecimalPlace } from '../../shared/utils';
 import { max } from 'lodash';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
 import { SubAccount } from '@dfinity/nns';
@@ -195,10 +195,11 @@ export const ClapModal = (props: { post: PostType }) => {
                   }
                 >
                   <p className='count'>
-                    {(
+                    {truncateToDecimalPlace(
                       tokenBalance.balance /
-                      Math.pow(10, tokenBalance.token.decimals)
-                    ).toFixed(4)}
+                        Math.pow(10, tokenBalance.token.decimals),
+                      4
+                    )}
                   </p>
                   <p className='title'>{tokenBalance.token.symbol}</p>
                 </div>

@@ -483,7 +483,10 @@ const PublicationArticles = () => {
               </p>
               <div className='avatar-stats-wrapper'>
                 <div className='avatar-handle'>
-                  <img className='avatar' src={publicationAvatar} />
+                  <img
+                    className='avatar'
+                    src={publicationAvatar || images.DEFAULT_AVATAR}
+                  />
                   <p className='handle' style={darkOptionsAndColors}>
                     @{publicationHandle}
                   </p>

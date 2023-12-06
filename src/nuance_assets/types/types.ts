@@ -9,7 +9,7 @@ export type SocialLinksObject = {
 
 export type PublicationCta = {
   icon: string;
-link: string;
+  link: string;
   ctaCopy: string;
   buttonCopy: string;
 };
@@ -27,17 +27,15 @@ export type PublicationType = {
   avatar: string;
   created: string;
   modified: string;
-  styling: PublicationStylingObject
+  styling: PublicationStylingObject;
   cta: PublicationCta;
-
 };
-
 
 export type PublicationStylingObject = {
   fontType: string;
   primaryColor: string;
   logo: string;
-}
+};
 
 export type PublicationObject = {
   publicationName: string;
@@ -89,7 +87,6 @@ export type PostType = {
   bucketCanisterId: string;
   wordCount: string;
 
-
   // populated for post lists after calling
   // getUsersByHandles in User canister
   avatar?: string;
@@ -97,8 +94,6 @@ export type PostType = {
   isPublication?: boolean;
   displayName?: string;
   fontType?: string;
-
-  
 };
 
 export type PostSaveModel = {
@@ -120,7 +115,6 @@ export type NftCanisterEntry = {
   handle: string;
 };
 
-
 export type LockTokenReturn = {
   balance?: bigint;
   sellerAccountId?: string;
@@ -130,20 +124,20 @@ export type LockTokenReturn = {
 export type UserWallet = {
   accountId: string;
   principal: string;
-}
+};
 
 export type PremiumArticleOwners = {
   postId: string;
   totalSupply: string;
   available: string;
   ownersList: PremiumArticleOwner[];
-}
+};
 
 export type PremiumArticleOwner = {
   handle: string;
   accountId: string;
   accessKeyIndex: string;
-}
+};
 
 export type PremiumPostActivityListItem = {
   postId: string;
@@ -159,25 +153,37 @@ export type PremiumPostActivityListItem = {
   tokenIdentifier?: string;
   activity: string;
   userAccountId: string;
-}
-
+};
 
 export type PremiumArticleSaleInformation = {
-  cheapestTokenIndex : string,
-  cheapesTokenAccesKeyIndex : string,
-  totalSupply : string,
-  available : string,
-  nftCanisterId : string,
-  cheapestPrice : string,
-  cheapestTokenIdentifier : string,
-  postId : string,
-  soldOut: boolean
-}
+  cheapestTokenIndex: string;
+  cheapesTokenAccesKeyIndex: string;
+  totalSupply: string;
+  available: string;
+  nftCanisterId: string;
+  cheapestPrice: string;
+  cheapestTokenIdentifier: string;
+  postId: string;
+  soldOut: boolean;
+};
 
 export type PairInfo = {
-  'id' : string,
-  'reserve0' : number,
-  'reserve1' : number,
-  'token0' : string,
-  'token1' : string
-}
+  id: string;
+  reserve0: number;
+  reserve1: number;
+  token0: string;
+  token1: string;
+};
+
+export type ApplaudListItem = {
+  applauds: number;
+  date: string;
+  tokenAmount: number;
+  isSender: boolean;
+  applaudId: string;
+  currency: string;
+  postId: string;
+  url: string;
+  handle: string;
+  title: string;
+};

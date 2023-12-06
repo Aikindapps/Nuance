@@ -138,12 +138,12 @@
       }
 
       .wallet-text {
-        font-family: 'Roboto';
+        font-family: Roboto;
+        font-size: 16px;
         font-style: normal;
         font-weight: 400;
-        font-size: 16px;
         line-height: 24px;
-        width: 50%;
+        width: 65%;
         color: #19192E;
       }
 
@@ -200,6 +200,11 @@
           text-align: center;
           margin-bottom: 20px;
         }
+      }
+
+      .horizontal-dashed-divider {
+        width: 100%;
+        border-bottom: 1px dashed #B2B2B2;
       }
 
       .statistic {
@@ -284,7 +289,8 @@
           }
         }
       }
-      .deposit-withdraw-buttons-wrapper{
+
+      .deposit-withdraw-buttons-wrapper {
         width: 100%;
         background: transparent;
         border-bottom: 1px dashed #B2B2B2;
@@ -409,14 +415,14 @@
       .token-activities {
 
         overflow-x: auto;
+        margin-bottom: 50px;
 
         .token-activities-header {
           display: flex;
-          justify-content: space-between;
           font-family: 'Roboto';
           font-style: normal;
           font-weight: 700;
-          font-size: 14px;
+          font-size: 12px;
           line-height: 42px;
           color: #999999;
           min-width: 800px;
@@ -424,27 +430,34 @@
 
 
           .amount {
-            width: 6%;
+            width: 10.9%;
+
           }
 
           .date {
-            width: 10%;
+            width: 16.8%;
           }
 
           .from {
-            width: 5%;
-          }
+            width: 32.9%;
+            display: flex;
+            align-items: center;
 
-          .article {
-            width: 10%;
+            .writer {
+              width: 29.1%;
+            }
+
+            .post-title {
+              width: 70.9%;
+            }
           }
 
           .key {
-            width: 18%;
+            width: 28.1%;
           }
 
           .transfer {
-            width: 10%;
+            width: 11%;
           }
         }
 
@@ -460,19 +473,12 @@
 
           .token-activity-flex {
             display: flex;
-            justify-content: space-between;
-            font-size: 16px;
+            font-size: 12px;
             height: 24px;
             margin-top: 10px;
             margin-bottom: 10px;
             color: #151451;
 
-
-            .amount {
-              width: 6%;
-              font-weight: 700;
-              white-space: nowrap;
-            }
 
             .withdraw-icp {
               color: #CC4747;
@@ -482,36 +488,10 @@
               color: #5ad6b9;
             }
 
-            .date {
-              width: 10%;
-              white-space: nowrap;
-            }
-
-            .writer {
-              width: 5%;
-            }
-
-            .writer:hover {
-              cursor: pointer;
-              text-decoration: underline;
-            }
-
-            .activity-title {
-              width: 10%;
-              white-space: nowrap;
-              overflow: hidden;
-            }
-
-            .activity-title:hover {
-              cursor: pointer;
-              text-decoration: underline;
-            }
-
             .key-flex {
-              width: 18%;
               display: flex;
-              justify-content: space-between;
               align-items: center;
+              column-gap: 8px;
 
               .key-counts {
                 white-space: nowrap;
@@ -533,12 +513,42 @@
             }
 
             .transfer-icon {
-              width: 10%;
-
+              cursor: pointer;
+              padding-left: calc(5.5% - 24px);
             }
 
-            .transfer-icon:hover {
+            .amount {
+              width: 10.9%;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
+
+            .date {
+              width: 16.8%;
+              font-style: normal;
+              font-weight: 400;
+              line-height: normal;
+            }
+
+            .from {
+              width: 32.9%;
+              font-weight: 400;
+              line-height: normal;
               cursor: pointer;
+              &:hover{
+                text-decoration: underline;
+              }
+            }
+
+            .key {
+              width: 28.1%;
+              font-weight: 400;
+              line-height: normal;
+            }
+
+            .transfer {
+              width: 11%;
             }
 
           }
@@ -761,7 +771,7 @@
   .profile-wrapper {
     .container {
       .wrapper {
-        padding: 2px;
+        padding: 20px;
 
         .statistic {
           .stat {
@@ -934,6 +944,31 @@
       .not-toggled {
         padding-left: 25px;
       }
+    }
+  }
+}
+
+@media only screen and (max-width: 546px) {
+  .profile-wrapper .container .wrapper .deposit-withdraw-buttons-wrapper {
+    width: 100%;
+    height: 120px;
+    row-gap: 8px;
+    flex-direction: column;
+
+    .button-attributes-deposit {
+      width: 100%;
+    }
+
+    .button-attributes-deposit-dark {
+      width: 100%;
+    }
+
+    .button-attributes-withdraw {
+      width: 100%;
+    }
+
+    .button-attributes-withdraw-dark {
+      width: 100%;
     }
   }
 }
