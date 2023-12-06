@@ -5,12 +5,11 @@
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  column-gap: 12px;
-  row-gap: 50px;
-  margin-right: 50px;
+  column-gap: 76px; 
+  row-gap: 50px; 
   margin-top: 65px;
   .card-wrapper {
-    width: 88%;
+    width: 100%;
     object-fit: cover;
     overflow: hidden;
     .main-pic {
@@ -95,11 +94,9 @@
 
 @media only screen and (max-width: 768px) {
   .article-grid {
-    display: grid;
     grid-template-columns: 1fr;
-    row-gap: 0px;
-    column-gap: 50px;
-    //margin: 65px -40px 0 -20px;
+    row-gap: 76px;
+    column-gap: 0;
     .card-wrapper {
       .main-pic {
         &:hover {

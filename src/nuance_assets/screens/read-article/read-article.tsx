@@ -169,6 +169,22 @@ const ReadArticle = () => {
     return { postId, bucketCanisterId };
   };
 
+  const getLeftStyle = () => {
+    if (context.width <= 768) {
+      if (isToggled) {
+        return { width: 'max-content' };
+      } else {
+        return { width: '30px', paddingRight: '25px', maxWidth: '30px' };
+      }
+    } else {
+      if (context.width > 768) {
+        return { width: '25%' };
+      } else {
+        return { width: '30px', paddingRight: '25px', maxWidth: '30px' };
+      }
+    }
+  };
+
   const postId = separateIds(id as string).postId;
 
   const getTitleFromUrl = (url: string) => {
@@ -204,7 +220,6 @@ const ReadArticle = () => {
         navigate(`${location.pathname}`, { replace: true });
       }
     };
-
     if (commentId) {
       if (comments && comments.length > 0) {
         scrollToComment();
@@ -316,7 +331,7 @@ const ReadArticle = () => {
       () => {
         setScreenWidth(window.innerWidth);
       }),
-    [screenWidth]
+    [context.width]
   );
 
   const isSidebarToggled = (data: any) => {
@@ -360,7 +375,7 @@ const ReadArticle = () => {
         setButtonCount((prevCounter) => prevCounter + 1);
         clapPost(post?.postId || '');
         //ovation effect, user must hold button for 2 seconds for 10 claps total
-        if (screenWidth > 768 && user?.nuaTokens - buttoncount > 9) {
+        if (context.width > 768 && user?.nuaTokens - buttoncount > 9) {
           const interval = setInterval(() => {
             nineClaps();
             setButtonCount((prevCounter) => prevCounter + 9);
@@ -478,7 +493,9 @@ const ReadArticle = () => {
         loggedIn={isLoggedIn}
         isArticlePage={false}
         isReadArticlePage={true}
-        ScreenWidth={screenWidth}
+        ScreenWidth={context.width}
+        tokens={user && user?.nuaTokens - buttoncount}
+        loading={tokenAnimate}
         isPublicationPage={post?.isPublication}
         category={post?.category}
         publication={
@@ -492,13 +509,7 @@ const ReadArticle = () => {
       <div className='page'>
         <div
           className='left'
-          style={
-            screenWidth <= 768 && isToggled
-              ? { width: 'max-content' }
-              : screenWidth <= 768 && !isToggled
-              ? { width: '30px', paddingRight: '25px' }
-              : { width: '25%' }
-          }
+          style={getLeftStyle()}
         >
           <p className='date'>
             {formatDate(post?.publishedDate) || formatDate(post?.created)}{' '}
@@ -584,9 +595,9 @@ const ReadArticle = () => {
                 </ClapButton>
               </div>
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
-                {screenWidth > 1089 && publicationHandle == 'FastBlocks' ? (
+                {context.width > 1089 && publicationHandle == 'FastBlocks' ? (
                   <EmailOptIn
-                    mobile={screenWidth < 1089}
+                    mobile={context.width < 1089}
                     publictionHandle={publicationHandle}
                   />
                 ) : null}
@@ -621,9 +632,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                          fontFamily: publication?.styling.fontType,
-                          color: darkOptionsAndColors.color,
-                        }
+                        fontFamily: publication?.styling.fontType,
+                        color: darkOptionsAndColors.color,
+                      }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -634,7 +645,7 @@ const ReadArticle = () => {
                   post={post}
                   readTime={getReadTime()}
                   publication={publication}
-                  isMobile={screenWidth <= 768}
+                  isMobile={context.width <= 768}
                   handle={handle}
                 />
                 <h2 className='subtitle'>{post.subtitle}</h2>
@@ -754,9 +765,9 @@ const ReadArticle = () => {
                   isPublication={false}
                 />
                 <div className='publication-email-opt-in' ref={refEmailOptIn}>
-                  {screenWidth < 1089 && publicationHandle == 'FastBlocks' ? (
+                  {context.width < 1089 && publicationHandle == 'FastBlocks' ? (
                     <EmailOptIn
-                      mobile={screenWidth < 1089}
+                      mobile={context.width < 1089}
                       publictionHandle={publicationHandle}
                     />
                   ) : null}

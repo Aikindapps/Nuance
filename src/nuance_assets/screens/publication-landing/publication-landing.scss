@@ -40,8 +40,7 @@
   }
 
   .publication-landing-cta{
-
-
+    max-width: 825px;
 
   }
 
@@ -115,10 +114,10 @@
       font-size: clamp(50px, 7vw, 70px);
       font-style: normal;
       font-weight: 300;
-      line-height: 5vh; 
+      line-height: 6vh; 
       font-family: Roboto;
       margin: 0px -5px;
-     
+      text-align: left;
      
     }
   
@@ -126,6 +125,7 @@
       position: absolute;
       bottom: 94px;
       left: 7vw;
+      text-align: left;
   
       color: #d9d9d9;
       font-size: clamp(12px, 1.8vw, 18px);
@@ -171,13 +171,19 @@
     margin-right: 5%;
     margin-top: 15px;
     margin-left: 5%;
+    @media only screen and (max-width: 768px) {
+      margin-left: 0;
+      margin-right: 0;
+    }
   }
   .article-grid-horizontal {
     margin-left: 5%;
     margin-bottom: 10%;
+    max-width: 825px;
   }
   .article-grid {
     margin-left: 5%;
+    max-width: 825px;
   }
 }
 
@@ -258,8 +264,18 @@
       width: 100%;
 
       .article-list{
+        .article-grid-large{
+          .card-wrapper-large{
+            .publisher{
+              padding: 0px 20px 10px 20px;
+            }
+            .article-text{
+              padding: 0px 20px 10px 20px;
+            }
+          }
+        }
         .article-grid{
-          margin-left: 10%;
+       padding: 0px 10px;
         }
         .mainTitle{
           padding-top: 20px;
@@ -360,10 +376,24 @@
     .right {
       .latestArticles {
         width: 100%;
-        .article-grid-large {
-          width: 100%;
-          margin-left: 0;
-        }
+       
+         
+         
+
+        
+          .article-grid-large{
+            margin-left: 0;
+            margin-right: 0;
+          }
+            .card-wrapper-large{
+              .publisher{
+                padding: 0px 20px 10px 20px;
+              }
+              .article-text{
+                padding: 0px 20px 10px 20px;
+              }
+            }
+          
         .article-grid {
           margin-left: 3rem;
           margin-top: 1rem;

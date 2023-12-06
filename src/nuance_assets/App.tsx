@@ -95,6 +95,8 @@ const logo = `https://nuance.xyz/logo.png`;
 function App() {
   //handle resize on app wide
   const context = useContext(Context);
+  const darkTheme = useTheme();
+
   const handleResize = () => {
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -105,6 +107,13 @@ function App() {
     window.addEventListener('resize', handleResize);
     fetchTokenBalances()
   }, []);
+
+  useEffect(() => {
+    document.body.style.backgroundColor = darkTheme
+      ? 'var(--dark-primary-background-color)'
+      : colors.primaryBackgroundColor;
+  }, [darkTheme]);
+
 
   const inactivityTimeout: number = //process.env.II_INACTIVITY_TIMEOUT
     //   ? // configuration is in minutes, but API expects milliseconds
@@ -142,82 +151,82 @@ function App() {
   //   }
   // }, [isLoggedIn]);
 
-  const darkTheme = useTheme();
+
 
   return (
     <ModalContextProvider>
-      <ThemeProvider>
-        <div className='App'>
-          <Helmet>
-            <meta charSet='utf-8' />
-            <link
-              rel='canonical'
-              href={'https://nuance.xyz' + window.location.pathname}
-            />
-            <link rel='icon' href='/favicon.ico' type='image/x-icon' />
-            <meta
-              name='viewport'
-              content='width=device-width, initial-scale=1.0'
-            />
 
-            {/* HTML Meta Tags */}
-            <title>{siteTitle}</title>
-            <meta name='description' content={siteDesc} />
-
-            {/* Google / Search Engine Tags */}
-            <meta itemProp='name' content={siteTitle} />
-            <meta itemProp='description' content={siteDesc} />
-            <meta itemProp='image' content={logo} />
-
-            {/* Facebook Meta Tags */}
-            <meta property='og:title' content={siteTitle} />
-            <meta property='og:description' content={siteDesc} />
-            <meta property='og:url' content='https://nuance.xyz/' />
-            <meta property='og:type' content='website' />
-            <meta property='og:image' content={logo} />
-
-            {/* Twitter Meta Tags */}
-            <meta name='twitter:card' content={logo} />
-            <meta name='twitter:card' content={'summary_large_image'} />
-            <meta name='twitter:title' content={siteTitle} />
-            <meta name='twitter:description' content={siteDesc} />
-            <meta name='twitter:image' content={logo} />
-            <meta name='twitter:creator' content='@nuancedapp' />
-          </Helmet>
-          <Router>
-            <Suspense
-              fallback={
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100vh',
-                    width: '100vw',
-                    background: darkTheme
-                      ? colors.darkModePrimaryBackgroundColor
-                      : colors.primaryBackgroundColor,
-                  }}
-                >
-                  <Loader />
-                </div>
-              }
-            >
-              <Routes />
-            </Suspense>
-          </Router>
-          <Toaster
-            position='bottom-center'
-            toastOptions={{
-              style: {
-                backgroundColor: '#000000',
-                color: '#ffffff',
-              },
-            }}
+      <div className='App'>
+        <Helmet>
+          <meta charSet='utf-8' />
+          <link
+            rel='canonical'
+            href={'https://nuance.xyz' + window.location.pathname}
           />
-          <ModalsWrapper/>
-        </div>
-      </ThemeProvider>
+          <link rel='icon' href='/favicon.ico' type='image/x-icon' />
+          <meta
+            name='viewport'
+            content='width=device-width, initial-scale=1.0'
+          />
+
+          {/* HTML Meta Tags */}
+          <title>{siteTitle}</title>
+          <meta name='description' content={siteDesc} />
+
+          {/* Google / Search Engine Tags */}
+          <meta itemProp='name' content={siteTitle} />
+          <meta itemProp='description' content={siteDesc} />
+          <meta itemProp='image' content={logo} />
+
+          {/* Facebook Meta Tags */}
+          <meta property='og:title' content={siteTitle} />
+          <meta property='og:description' content={siteDesc} />
+          <meta property='og:url' content='https://nuance.xyz/' />
+          <meta property='og:type' content='website' />
+          <meta property='og:image' content={logo} />
+
+          {/* Twitter Meta Tags */}
+          <meta name='twitter:card' content={logo} />
+          <meta name='twitter:card' content={'summary_large_image'} />
+          <meta name='twitter:title' content={siteTitle} />
+          <meta name='twitter:description' content={siteDesc} />
+          <meta name='twitter:image' content={logo} />
+          <meta name='twitter:creator' content='@nuancedapp' />
+        </Helmet>
+        <Router>
+          <Suspense
+            fallback={
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100vh',
+                  width: '100vw',
+                  background: darkTheme
+                    ? colors.darkModePrimaryBackgroundColor
+                    : colors.primaryBackgroundColor,
+                }}
+              >
+                <Loader />
+              </div>
+            }
+          >
+            <Routes />
+          </Suspense>
+        </Router>
+        <Toaster
+          position='bottom-center'
+          toastOptions={{
+            style: {
+              backgroundColor: '#000000',
+              color: '#ffffff',
+            },
+          }}
+        />
+        <ModalsWrapper />
+      </div>
+
     </ModalContextProvider>
   );
 }

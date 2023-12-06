@@ -2,22 +2,29 @@
 
 
 .read-article-wrapper {
+  width: 100vw;
+  margin: 0px;
   .page {
     display: flex;
-    justify-content: center;
+  
     margin: 50px 0 0 0;
-    width: 90%;
+    min-width: 90%;
     min-height: 100vh;
+    @media only screen and (min-width: 2000px) {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+    }
 
     .left {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       justify-items: flex-end;
-      width: 25%;
       border-right: 1px solid $light-border-color;
       padding-right: 20px;
       row-gap: 7px;
+      max-width: 340px;
 
       .date {
         display: flex;
@@ -30,7 +37,8 @@
       }
 
       .left-content {
-        width: 70%;
+        width: 100%;
+        max-width: 208px;
 
         .menus {
           display: flex;
@@ -76,11 +84,9 @@
     }
 
     .right {
-      width: 70%;
       margin-top: -20px;
 
       .content {
-        width: 85%;
 
         a:link {
           color: $link-color;
@@ -93,7 +99,8 @@
         }
 
         .title-post-info-wrapper {
-          padding: 0 0 0 91px;
+          padding: 0px 92px 0px 92px;
+          max-width: 915px;
 
           .nft-lock-icon {
             width: 30px;
@@ -113,10 +120,12 @@
 
         .header-content-wrapper {
           padding: 0 0 0 91px;
-          width: 120%;
+          width: 100%;
 
           .header-image {
-            height: 600px;
+            height: 578px;
+            max-width: 915px;
+            
             object-fit: cover;
             margin-left: -91px;
             width: -webkit-fill-available;
@@ -143,12 +152,14 @@
           }
 
           .text {
+            max-width: 715px;
+            padding-right: 35px;
+           
             a:visited {
               color: purple;
               font-size: 18px;
             }
 
-            width: 100%;
 
             a {
               color: $link-color ;
@@ -157,7 +168,7 @@
               font-size: 18px;
             }
 
-            ul li {
+            ul li ol {
               font-family: 'PT Serif';
               color: $primary-text-color ;
               font-size: 18px;
@@ -190,10 +201,6 @@
               padding-top: 50px;
             }
 
-            img {
-              max-width: 100%;
-              object-fit: contain;
-            }
 
             .text-image {
               img {
@@ -225,7 +232,7 @@
         }
 
         .profile-footer-wrapper {
-          padding: 0 0 0 91px;
+          padding: 0px 91px 0px 91px;
         }
 
       }
@@ -236,6 +243,7 @@
         justify-content: center;
         align-items: center;
         padding: 50px 0 10px 0;
+        max-width: 715px;
 
         .profile-picture {
           width: 96px;
@@ -289,10 +297,15 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: baseline;
+  max-width: 715px;
 }
 
 
 .dark-text {
+
+  max-width: 715px;
+  padding-right: 91px;
+
   a:visited {
     color: purple;
     font-size: 18px;
@@ -359,7 +372,7 @@
 
 .comment-section {
   overflow-x: scroll;
-  max-width: 100%;
+  max-width: 715px;
 
   ::-webkit-scrollbar {
     display: none;
@@ -563,13 +576,14 @@
   }
 
   .read-article-wrapper {
-    width: 100%;
+    margin: 0px;
 
     .page {
       width: 100%;
       justify-content: flex-start;
 
       .left {
+       
         .date {
           margin: 0 -10px 0 0;
           width: max-content;
@@ -581,6 +595,7 @@
         }
 
         .left-menu {
+          max-width: 100%;
           display: flex;
           width: 100%;
         }
@@ -591,7 +606,7 @@
         margin-top: 20px;
 
         .content {
-          width: 85%;
+          
 
           h1 {
             font-size: 32px;
@@ -602,7 +617,7 @@
           }
 
           .title-post-info-wrapper {
-            padding: 0 0 0 35px;
+            padding: 0 35px 0 35px;
 
             .last-modified {
               font-size: 12px;
@@ -636,8 +651,15 @@
               object-fit: cover;
               height: 200px;
               margin-left: -35px;
-              width: -webkit-fill-available;
+             
+              
               background: white;
+            }
+
+            .dark-text {
+
+              max-width: 715px;
+              padding-right: 35px;
             }
 
             .text {
@@ -672,7 +694,8 @@
           }
 
           .profile-footer-wrapper {
-            padding: 0 0 0 35px;
+            padding: 0px 35px 0px 35px;
+            max-width: 715px;
           }
         }
 
