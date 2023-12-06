@@ -1,4 +1,4 @@
-export PEM_FILE="~/.config/dfx/identity/$(dfx identity whoami)/identity.pem"
+export PEM_FILE="~/.config/dfx/identity/default/identity.pem"
 export DEVELOPER_NEURON_ID="a0e3889b406b7686640619648d848d5a0d800f2b5a7a2a44ff7cda7b2d264131"
 
 quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-proposal $DEVELOPER_NEURON_ID --proposal "(
