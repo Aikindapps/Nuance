@@ -1,5 +1,8 @@
 .homepage-wrapper {
   font-family: 'Roboto';
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   .main {
     display: grid;
@@ -8,6 +11,7 @@
     column-gap: 50px;
     width: 100vw;
     min-height: 100vh;
+    max-width: 1324px;
 
     &.blurred {
       -webkit-filter: blur(5px);
@@ -90,14 +94,6 @@
         padding: 0 auto;
       }
     }
-
-    // .right {
-    //   display: flex;
-    //   flex-direction: row;
-    //   text-align: left;
-    //   transition: ease-in 100ms;
-    //   margin: 0 auto;
-    // }
     .posts {
       margin-right: 100px;
 

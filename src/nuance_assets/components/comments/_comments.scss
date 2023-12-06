@@ -89,7 +89,7 @@
 
             }
 
-            .text {
+            .comment-text {
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 18px;
@@ -98,7 +98,7 @@
             @media (max-width: 1089px) {
                 padding: 0px;
 
-                .text {
+                .comment-text {
                     display: none; // Hide the text span
                 }
 
