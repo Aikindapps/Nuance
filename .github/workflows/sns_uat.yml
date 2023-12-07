@@ -21,6 +21,15 @@ jobs:
     - name: Start DFX background
       run: dfx start --background
 
+    - name: Vessel install
+      run: |
+        cd ./Nuance-NFTs-and-Publications
+        wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+        mv vessel-linux64 vessel
+        chmod +x vessel
+        mv vessel /usr/local/bin/.
+        vessel --version
+
     - name: Set up dfx identity
       run: |
         rm -f ~/.config/dfx/identity/sns_uat/identity.pem
