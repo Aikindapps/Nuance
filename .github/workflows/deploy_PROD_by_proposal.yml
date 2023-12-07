@@ -9,13 +9,14 @@ on:
       network:
         description: 'ic or local'
         required: true
+        default: 'ic'
       title:
         description: 'Title of proposal'
         required: true
       url:
         description: 'URL of discussion or additional info'
         required: true
-        default: 'https://nuance.xyz/'
+        default: 'https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178'
       summary:
         description: 'Summary of proposal'
         required: true
