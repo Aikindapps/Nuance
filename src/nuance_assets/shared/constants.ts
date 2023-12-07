@@ -173,3 +173,14 @@ export const SUPPORTED_TOKENS: SupportedToken[] = [
     fee: isLocal ? 10000 : 10,
   },
 ];
+
+
+export const getDecimalsByTokenSymbol = (symbol: SupportedTokenSymbol) => {
+  for (const supported of SUPPORTED_TOKENS) {
+    if (supported.symbol === symbol) {
+      return supported.decimals;
+    }
+  }
+  //if not found (not possible), return 8 as default
+  return 8;
+};

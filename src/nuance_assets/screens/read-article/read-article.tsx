@@ -494,8 +494,6 @@ const ReadArticle = () => {
         isArticlePage={false}
         isReadArticlePage={true}
         ScreenWidth={context.width}
-        tokens={user && user?.nuaTokens - buttoncount}
-        loading={tokenAnimate}
         isPublicationPage={post?.isPublication}
         category={post?.category}
         publication={

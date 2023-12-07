@@ -7,6 +7,7 @@ import {
   NUA_CANISTER_ID,
   SupportedTokenSymbol,
   ckBTC_CANISTER_ID,
+  getDecimalsByTokenSymbol,
 } from './constants';
 import { PairInfo } from '../types/types';
 
@@ -449,17 +450,23 @@ export const getPriceBetweenTokens = (
         reserveOut = Number(pool.reserve0);
       }
       
-      var amountInWithFee = Math.pow(10, 8) * 997;
+      var amountInWithFee = Math.pow(10, getDecimalsByTokenSymbol('ICP')) * 997;
       var numerator = amountInWithFee * reserveOut;
       var denominator = reserveIn * 1000 + amountInWithFee;
       var amountOut = numerator / denominator;
 
       //amountOut means the ICP equivalance of the other token
       if(token0Symbol === 'ICP'){
-        return (amount / Math.pow(10, 8)) * amountOut;
+        return (
+          (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) *
+          amountOut
+        );
       }
       else{
-        return amount / amountOut * Math.pow(10, 8)
+        return (
+          (amount / amountOut) *
+          Math.pow(10, getDecimalsByTokenSymbol(token0Symbol))
+        );
       }
     } else {
       //the pool not found -> not fetched yet return 0

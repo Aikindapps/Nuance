@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { toast, ToastType } from '../../services/toastService';
-import { colors, icons, images } from '../../shared/constants';
+import { SupportedToken, SupportedTokenSymbol, colors, getDecimalsByTokenSymbol, icons, images } from '../../shared/constants';
 import {
   formatDate,
   getNuaEquivalance,
@@ -160,7 +160,7 @@ const Wallet = () => {
                             sonicTokenPairs,
                             tokenBalance.token.symbol,
                             tokenBalance.balance
-                          ) / Math.pow(10, 8)
+                          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
                         ).toFixed(0) + ' NUA'}
                       </div>
                     </div>
@@ -217,7 +217,7 @@ const Wallet = () => {
                             sonicTokenPairs,
                             tokenBalance.token.symbol,
                             tokenBalance.balance
-                          ) / Math.pow(10, 8)
+                          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
                         ).toFixed(0) + ' NUA'}
                       </div>
                     </div>
@@ -257,7 +257,7 @@ const Wallet = () => {
                             sonicTokenPairs,
                             tokenBalance.token.symbol,
                             tokenBalance.balance
-                          ) / Math.pow(10, 8)
+                          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
                         ).toFixed(0) + ' NUA'}
                       </div>
                     </div>
@@ -420,11 +420,23 @@ const Wallet = () => {
                       <div className='amount'>
                         {activity.isSender
                           ? `- ${truncateToDecimalPlace(
-                              activity.tokenAmount / Math.pow(10, 8),
+                              activity.tokenAmount /
+                                Math.pow(
+                                  10,
+                                  getDecimalsByTokenSymbol(
+                                    activity.currency as SupportedTokenSymbol
+                                  )
+                                ),
                               activity.currency === 'ckBTC' ? 4 : 2
                             )} ${activity.currency}`
                           : `+ ${truncateToDecimalPlace(
-                              activity.tokenAmount / Math.pow(10, 8),
+                              activity.tokenAmount /
+                                Math.pow(
+                                  10,
+                                  getDecimalsByTokenSymbol(
+                                    activity.currency as SupportedTokenSymbol
+                                  )
+                                ),
                               activity.currency === 'ckBTC' ? 4 : 2
                             )} ${activity.currency}`}
                       </div>

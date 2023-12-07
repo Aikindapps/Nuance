@@ -13,6 +13,7 @@ import {
   SupportedTokenSymbol,
   TokenBalance,
   colors,
+  getDecimalsByTokenSymbol,
   images,
 } from '../../shared/constants';
 import InputField2 from '../../UI/InputField2/InputField2';
@@ -410,8 +411,9 @@ export const WithdrawModal = () => {
                   getNuaEquivalance(
                     sonicTokenPairs,
                     selectedCurrency,
-                    parseFloat(getInputAmount()) * Math.pow(10, 8)
-                  ) / Math.pow(10, 8),
+                    parseFloat(getInputAmount()) *
+                      Math.pow(10, getDecimalsByTokenSymbol(selectedCurrency))
+                  ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
                   2
                 ) + ' NUA'}
               </div>
@@ -422,8 +424,9 @@ export const WithdrawModal = () => {
                     sonicTokenPairs,
                     selectedCurrency,
                     'ICP',
-                    parseFloat(getInputAmount()) * Math.pow(10, 8)
-                  ) / Math.pow(10, 8),
+                    parseFloat(getInputAmount()) *
+                      Math.pow(10, getDecimalsByTokenSymbol(selectedCurrency))
+                  ) / Math.pow(10, getDecimalsByTokenSymbol('ICP')),
                   2
                 ) + ' ICP'}
               </div>
@@ -434,8 +437,9 @@ export const WithdrawModal = () => {
                     sonicTokenPairs,
                     selectedCurrency,
                     'ckBTC',
-                    parseFloat(getInputAmount()) * Math.pow(10, 8)
-                  ) / Math.pow(10, 8),
+                    parseFloat(getInputAmount()) *
+                      Math.pow(10, getDecimalsByTokenSymbol(selectedCurrency))
+                  ) / Math.pow(10, getDecimalsByTokenSymbol('ckBTC')),
                   2
                 ) + ' ckBTC'}
               </div>

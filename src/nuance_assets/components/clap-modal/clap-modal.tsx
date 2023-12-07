@@ -13,6 +13,7 @@ import {
   SupportedTokenSymbol,
   TokenBalance,
   colors,
+  getDecimalsByTokenSymbol,
   icons,
   images,
 } from '../../shared/constants';
@@ -67,7 +68,9 @@ export const ClapModal = (props: { post: PostType }) => {
       activeBalance.token.symbol,
       availableBalance
     );
-    let maxAmountOfApplauds = Math.floor(nuaEquivalance / Math.pow(10, 8));
+    let maxAmountOfApplauds = Math.floor(
+      nuaEquivalance / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+    );
     if(maxAmountOfApplauds === -1){
       return 0;
     }
@@ -98,7 +101,7 @@ export const ClapModal = (props: { post: PostType }) => {
         sonicTokenPairs,
         'NUA',
         activeCurrencyAndBalance.token.symbol,
-        inputAmount * Math.pow(10, 8)
+        inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
       )
     );
     try {
@@ -272,36 +275,42 @@ export const ClapModal = (props: { post: PostType }) => {
               <div className='amount-input-conversion-wrapper'>
                 <div>=</div>
                 <div>
-                  {(
+                  {truncateToDecimalPlace(
                     getPriceBetweenTokens(
                       sonicTokenPairs,
                       'NUA',
                       'NUA',
-                      inputAmount * Math.pow(10, 8)
-                    ) / Math.pow(10, 8)
-                  ).toFixed(2) + ' NUA'}
+                      inputAmount *
+                        Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                    ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
+                    4
+                  ) + ' NUA'}
                 </div>
                 <div>|</div>
                 <div>
-                  {(
+                  {truncateToDecimalPlace(
                     getPriceBetweenTokens(
                       sonicTokenPairs,
                       'NUA',
                       'ICP',
-                      inputAmount * Math.pow(10, 8)
-                    ) / Math.pow(10, 8)
-                  ).toFixed(2) + ' ICP'}
+                      inputAmount *
+                        Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                    ) / Math.pow(10, getDecimalsByTokenSymbol('ICP')),
+                    4
+                  ) + ' ICP'}
                 </div>
                 <div>|</div>
                 <div>
-                  {(
+                  {truncateToDecimalPlace(
                     getPriceBetweenTokens(
                       sonicTokenPairs,
                       'NUA',
                       'ckBTC',
-                      inputAmount * Math.pow(10, 8)
-                    ) / Math.pow(10, 8)
-                  ).toFixed(4) + ' ckBTC'}
+                      inputAmount *
+                        Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                    ) / Math.pow(10, getDecimalsByTokenSymbol('ckBTC')),
+                    4
+                  ) + ' ckBTC'}
                 </div>
               </div>
             </div>
