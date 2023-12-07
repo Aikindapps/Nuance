@@ -424,6 +424,11 @@ export const ClapModal = (props: { post: PostType }) => {
               return;
             }
             modalContext?.closeModal();
+            modalContext?.createFakeApplaud(
+              props.post.postId,
+              parseInt(props.post.claps),
+              inputAmount
+            );
           }}
           style={
             loading
@@ -465,6 +470,11 @@ export const ClapModal = (props: { post: PostType }) => {
             type='button'
             onClick={() => {
               modalContext?.closeModal();
+              modalContext?.createFakeApplaud(
+                props.post.postId,
+                parseInt(props.post.claps),
+                inputAmount
+              );
             }}
           >
             Close

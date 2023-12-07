@@ -505,10 +505,7 @@ const ReadArticle = () => {
       />
 
       <div className='page'>
-        <div
-          className='left'
-          style={getLeftStyle()}
-        >
+        <div className='left' style={getLeftStyle()}>
           <p className='date'>
             {formatDate(post?.publishedDate) || formatDate(post?.created)}{' '}
           </p>
@@ -588,9 +585,7 @@ const ReadArticle = () => {
                     setMouseDown(false);
                   }}
                   applaudingPost={post}
-                >
-                  {parseInt(postclaps) + buttoncount}
-                </ClapButton>
+                />
               </div>
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
                 {context.width > 1089 && publicationHandle == 'FastBlocks' ? (
@@ -630,9 +625,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                        fontFamily: publication?.styling.fontType,
-                        color: darkOptionsAndColors.color,
-                      }
+                          fontFamily: publication?.styling.fontType,
+                          color: darkOptionsAndColors.color,
+                        }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'

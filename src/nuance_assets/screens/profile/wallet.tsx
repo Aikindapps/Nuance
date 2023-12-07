@@ -454,7 +454,10 @@ const Wallet = () => {
                         style={{ color: darkOptionsAndColors.color }}
                       >{`/@${activity.handle}/${activity.title}`}</div>
 
-                      <div className='key key-flex'>
+                      <div
+                        className='key key-flex'
+                        style={{ alignItems: 'start' }}
+                      >
                         {`${(activity.applauds / Math.pow(10, 8)).toFixed(
                           0
                         )} Applaud`}

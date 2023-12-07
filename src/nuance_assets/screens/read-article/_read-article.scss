@@ -6,7 +6,7 @@
   margin: 0px;
   .page {
     display: flex;
-  
+    justify-content: center;
     margin: 50px 0 0 0;
     min-width: 90%;
     min-height: 100vh;
@@ -85,6 +85,8 @@
 
     .right {
       margin-top: -20px;
+      width: 75%;
+      max-width: 875px;
 
       .content {
 
