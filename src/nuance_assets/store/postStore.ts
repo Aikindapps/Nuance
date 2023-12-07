@@ -172,7 +172,10 @@ const fetchPostsByBuckets = async (
 ) => {
   let bucketsMap = new Map<string, PostKeyProperties[]>();
   let postIdToKeyPropertiesMap = new Map<string, PostKeyProperties>();
-  coreReturns.forEach((keyProperties) => {
+  let filteredCoreReturns = coreReturns.filter(
+    (c) => c.bucketCanisterId !== ''
+  );
+  filteredCoreReturns.forEach((keyProperties) => {
     let existing = bucketsMap.get(keyProperties.bucketCanisterId);
     if (existing) {
       bucketsMap.set(keyProperties.bucketCanisterId, [
