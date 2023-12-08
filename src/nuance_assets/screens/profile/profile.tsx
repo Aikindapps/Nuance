@@ -263,7 +263,7 @@ const Profile = () => {
                   className='horizontal-divider'
                   style={isLoggedIn ? { width: '17vw' } : {}}
                 ></div>
-                {!isLoggedIn && <LoggedOutSidebar style={{width:'265px'}} />}
+                {!isLoggedIn && <LoggedOutSidebar style={{ width: '265px' }} />}
               </div>
             )}
           </div>
@@ -296,14 +296,16 @@ const Profile = () => {
                   {author?.bio}
                 </p>
               </Linkify>
+
+              <FollowAuthor
+                AuthorHandle={author?.handle || ''}
+                Followers={user?.followersArray || undefined}
+                user={user?.handle || ''}
+                isPublication={false}
+              />
             </div>
 
-            <FollowAuthor
-              AuthorHandle={author?.handle || ''}
-              Followers={user?.followersArray || undefined}
-              user={user?.handle || ''}
-              isPublication={false}
-            />
+
             <div className='statistic'>
               <div className='stat'>
                 <p className='count'>{counts?.totalPostCount || 0}</p>
@@ -323,7 +325,7 @@ const Profile = () => {
               </div>
             </div>
             {(user?.publicationsArray.length || [].length) > 0 &&
-            featureIsLive ? (
+              featureIsLive ? (
               <div
                 style={{
                   textAlign: 'center',
@@ -401,7 +403,7 @@ const Profile = () => {
                   {counts &&
                     !loading &&
                     parseInt(counts?.publishedCount) >
-                      displayingPosts.length && (
+                    displayingPosts.length && (
                       <div className='load-more-container'>
                         <Button
                           styleType='secondary'
@@ -425,7 +427,7 @@ const Profile = () => {
                   {counts &&
                     !loading &&
                     parseInt(counts?.publishedCount) >
-                      displayingPosts.length && (
+                    displayingPosts.length && (
                       <div className='load-more-container'>
                         <Button
                           styleType='secondary'

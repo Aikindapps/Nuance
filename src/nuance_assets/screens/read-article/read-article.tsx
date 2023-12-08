@@ -625,9 +625,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                          fontFamily: publication?.styling.fontType,
-                          color: darkOptionsAndColors.color,
-                        }
+                        fontFamily: publication?.styling.fontType,
+                        color: darkOptionsAndColors.color,
+                      }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -750,13 +750,13 @@ const ReadArticle = () => {
                   <Linkify componentDecorator={componentDecorator}>
                     <p className='biography'>{getBio()}</p>
                   </Linkify>
+                  <FollowAuthor
+                    AuthorHandle={author?.handle || ''}
+                    Followers={user?.followersArray || undefined}
+                    user={user?.handle || ''}
+                    isPublication={false}
+                  />
                 </div>
-                <FollowAuthor
-                  AuthorHandle={author?.handle || ''}
-                  Followers={user?.followersArray || undefined}
-                  user={user?.handle || ''}
-                  isPublication={false}
-                />
                 <div className='publication-email-opt-in' ref={refEmailOptIn}>
                   {context.width < 1089 && publicationHandle == 'FastBlocks' ? (
                     <EmailOptIn
