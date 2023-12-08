@@ -268,10 +268,7 @@ actor class Bucket (adminsArr: [Text]) = this {
       _body := state.chunks.get(chunkId(contentId!, chunkNum))!;
       let info: ?Types.ContentInfo = state.contentInfo.get(contentId!);
       _headers := [
-        ("Content-Type", info!.contentType),
-        ("Transfer-Encoding", "chunked"),
-        ("Content-Disposition", "inline"),
-        ("Access-Control-Allow-Origin", "*")
+        ("Content-Type", info!.contentType)
       ];
       _status_code:=200;
       _streaming_strategy := ?#Callback({
