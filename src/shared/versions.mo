@@ -5,7 +5,7 @@ module {
   public let KINICENDPOINT_VERSION = "Macchiato";
   public let FASTBLOCKSEMAILOPTIN_VERSION = "Macchiato";
   public let POSTINDEX_VERSION = "Macchiato";
-  public let STORAGE_VERSION = "Cappuccino";
+  public let STORAGE_VERSION = "Cappuccino-v2";
   public let CYCLESDISPENSER_VERSION = "Macchiato";
   public let METRICS_VERSION = "Macchiato";
 };
