@@ -49,7 +49,7 @@ export async function uploadBlob(
     dataCanisterId: res[0],
     dataUrl: isDevelopment
       ? `http://localhost:8080/storage?canisterId=${res[0]}&contentId=${contentId}`
-      : `https://${res[0]}.raw.ic0.app/storage?contentId=${contentId}`,
+      : `https://${res[0]}.raw.icp0.io/storage?contentId=${contentId}`,
     mappingId,
   };
 }

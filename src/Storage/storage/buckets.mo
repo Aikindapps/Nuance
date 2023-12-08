@@ -17,18 +17,20 @@ import Prelude "mo:base/Prelude";
 import Result "mo:base/Result";
 
 import Canistergeek "../../canistergeek/canistergeek";
+import ENV "../../shared/env";
 
 
+import Types "./types";
+import Versions "../../shared/versions";
 
-import Types "./types"
 
-
-actor class Bucket (adminsArr: [Text]) = this {
+actor class Bucket () = this {
 
   let Unauthorized = "Unauthorized";
 
   stable var _canistergeekMonitorUD: ? Canistergeek.UpgradeData = null;
   private let canistergeekMonitor = Canistergeek.Monitor();
+  let adminsArr = ENV.PLATFORM_OPERATORS;
 
 
    type DataCanisterState = {
@@ -80,6 +82,10 @@ actor class Bucket (adminsArr: [Text]) = this {
       };
       #ok(List.toArray(admins));
   };
+
+  public shared query func getCanisterVersion() : async Text{
+        Versions.STORAGE_VERSION;
+    };
 
   //This function should be invoked immediately after the canister is deployed via script.
   public shared({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
@@ -268,10 +274,7 @@ actor class Bucket (adminsArr: [Text]) = this {
       _body := state.chunks.get(chunkId(contentId!, chunkNum))!;
       let info: ?Types.ContentInfo = state.contentInfo.get(contentId!);
       _headers := [
-        ("Content-Type", info!.contentType),
-        ("Transfer-Encoding", "chunked"),
-        ("Content-Disposition", "inline"),
-        ("Access-Control-Allow-Origin", "*")
+        ("Content-Type", info!.contentType)
       ];
       _status_code:=200;
       _streaming_strategy := ?#Callback({
