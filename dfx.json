@@ -31,6 +31,10 @@
       "main": "src/Storage/main.mo",
       "type": "motoko"
     },
+    "StorageBucket": {
+      "main": "src/Storage/storage/buckets.mo",
+      "type": "motoko"
+    },
     "User": {
       "main": "src/User/main.mo",
       "type": "motoko"
