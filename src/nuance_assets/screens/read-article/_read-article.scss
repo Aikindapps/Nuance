@@ -128,6 +128,14 @@
             width: -webkit-fill-available;
             margin-bottom: 20px;
             background: white;
+
+            @media only screen and (max-width: 768px) {
+              height: 500px;
+            }
+            @media screen and (max-width: 425px) {
+              height: 280px;
+              
+            }
           }
 
           .nft-modal {
@@ -647,7 +655,7 @@
             .header-image {
               object-fit: cover;
               margin-left: -35px;
-              height: 280px;
+             
              
               
               background: white;
