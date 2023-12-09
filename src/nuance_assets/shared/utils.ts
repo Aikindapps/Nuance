@@ -494,15 +494,14 @@ export const toBase256 = (num: number, digitCount: number) => {
 };
 
 export function truncateToDecimalPlace(num: number, decimalPlaces: number): string {
-  const numStr = num.toString();
+  const numStr = parseFloat(num.toString()).toFixed(decimalPlaces + 20);
 
   const dotIndex = numStr.indexOf('.');
 
   if (dotIndex === -1 || decimalPlaces < 0) {
-    return numStr;
+      return numStr;
   }
 
   const cutIndex = dotIndex + decimalPlaces + 1;
-
   return numStr.substring(0, cutIndex);
 }
