@@ -420,7 +420,8 @@ export const ClapModal = (props: { post: PostType }) => {
             modalContext?.createFakeApplaud(
               props.post.postId,
               parseInt(props.post.claps),
-              inputAmount
+              inputAmount,
+              props.post.bucketCanisterId
             );
           }}
           style={
@@ -466,7 +467,8 @@ export const ClapModal = (props: { post: PostType }) => {
               modalContext?.createFakeApplaud(
                 props.post.postId,
                 parseInt(props.post.claps),
-                inputAmount
+                inputAmount,
+                props.post.bucketCanisterId
               );
             }}
           >

@@ -2818,8 +2818,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             date:
               t.transaction.created_at_time.length === 0
                 ? ''
-                : Number(
-                    t.transaction.created_at_time[0].timestamp_nanos
+                : (
+                    Number(t.transaction.created_at_time[0].timestamp_nanos) /
+                    1000000
                   ).toString(),
             currency: 'ICP' as SupportedTokenSymbol,
             receiver: operation.Transfer.to,

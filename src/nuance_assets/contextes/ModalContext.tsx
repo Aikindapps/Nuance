@@ -10,14 +10,16 @@ type FakeApplaud = {
   before: number;
   after: number;
   date: Date;
+  bucketCanisterId: string;
 }
 interface ContextType {
   isModalOpen: boolean;
   modalType: ModalType | undefined;
   openModal: (modalType: ModalType, data?: ModalData) => void;
   closeModal: () => void;
-  createFakeApplaud: (postId: string, before: number, after: number) => void;
+  createFakeApplaud: (postId: string, before: number, after: number, bucketCanisterId: string) => void;
   getFakeApplaud: (postId: string, real: number) => FakeApplaud | undefined;
+  getAllFakeApplauds: () => FakeApplaud[];
   modalData: ModalData | undefined
 }
 
@@ -62,7 +64,8 @@ const ContextProvider = ({
   const createFakeApplaud = (
     postId: string,
     before: number,
-    applauds: number
+    applauds: number,
+    bucketCanisterId: string
   ) => {
     let allPostIds = fakeApplauds.map((val) => val.postId);
     if (allPostIds.includes(postId)) {
@@ -75,6 +78,7 @@ const ContextProvider = ({
               before,
               after: fakeApplaud.after + applauds,
               date: new Date(),
+              bucketCanisterId
             };
           } else {
             return fakeApplaud;
@@ -90,6 +94,7 @@ const ContextProvider = ({
           before,
           after: before + applauds,
           date: new Date(),
+          bucketCanisterId,
         },
       ]);
     }
@@ -116,9 +121,10 @@ const ContextProvider = ({
       //there is no fake applaud. return undefined
       return undefined
     }
-    
-    
   };
+  const getAllFakeApplauds = () => {
+    return fakeApplauds
+  }
 
   return (
     <Context.Provider
@@ -130,6 +136,7 @@ const ContextProvider = ({
         modalData,
         createFakeApplaud,
         getFakeApplaud,
+        getAllFakeApplauds
       }}
     >
       {children}

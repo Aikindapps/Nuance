@@ -374,7 +374,7 @@ const Wallet = () => {
                         className='date'
                         style={{ color: darkOptionsAndColors.color }}
                       >
-                        { formatDate(activity.date) || ' -- '}
+                        {formatDate(activity.date) || ' -- '}
                       </div>
                       <div
                         onClick={() => {
@@ -429,16 +429,33 @@ const Wallet = () => {
               } else if ('isDeposit' in activity) {
                 //check if the deposit/withdrawal is related to any applauding activity
                 //if it is, don't display it
-                let applauds : ApplaudListItem[] = [];
-                for(const a of displayingActivities){
-                  if('isSender' in a){
+                let applauds: ApplaudListItem[] = [];
+                for (const a of displayingActivities) {
+                  if ('isSender' in a) {
                     applauds.push(a);
                   }
                 }
-                let notIncludingSenders : string[] = []
-                let notIncludingReceivers : string[] = []
-                for(const applaud of applauds){
-                  if(applaud.isSender){
+                if (modalContext) {
+                  for (const fakeApplaud of modalContext.getAllFakeApplauds()) {
+                    applauds.push({
+                      applauds: 0,
+                      date: '',
+                      tokenAmount: 0,
+                      isSender: true,
+                      applaudId: '',
+                      currency: '',
+                      postId: fakeApplaud.postId,
+                      url: '',
+                      handle: '',
+                      title: '',
+                      bucketCanisterId: fakeApplaud.bucketCanisterId,
+                    });
+                  }
+                }
+                let notIncludingSenders: string[] = [];
+                let notIncludingReceivers: string[] = [];
+                for (const applaud of applauds) {
+                  if (applaud.isSender) {
                     notIncludingReceivers.push(
                       AccountIdentifier.fromPrincipal({
                         principal: Principal.fromText(applaud.bucketCanisterId),
@@ -449,8 +466,7 @@ const Wallet = () => {
                         ) as SubAccount,
                       }).toHex()
                     );
-                  }
-                  else{
+                  } else {
                     notIncludingSenders.push(
                       AccountIdentifier.fromPrincipal({
                         principal: Principal.fromText(applaud.bucketCanisterId),
@@ -463,7 +479,10 @@ const Wallet = () => {
                     );
                   }
                 }
-                if(notIncludingReceivers.includes(activity.receiver) || notIncludingSenders.includes(activity.sender)){
+                if (
+                  notIncludingReceivers.includes(activity.receiver) ||
+                  notIncludingSenders.includes(activity.sender)
+                ) {
                   return;
                 }
                 return (
@@ -503,9 +522,7 @@ const Wallet = () => {
                         style={{ color: darkOptionsAndColors.color }}
                       >
                         {activity.date !== ''
-                          ? formatDate(
-                              (parseInt(activity.date) / 1000000).toString()
-                            )
+                          ? formatDate(parseInt(activity.date).toString())
                           : ' --- '}
                       </div>
                       <div
