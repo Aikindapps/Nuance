@@ -478,6 +478,7 @@
             margin-top: 10px;
             margin-bottom: 10px;
             color: #151451;
+            border-bottom: 1px dashed #B2B2B2;
 
 
             .withdraw-icp {
@@ -535,6 +536,7 @@
               width: 32.9%;
               font-weight: 400;
               line-height: normal;
+              overflow: hidden;
               cursor: pointer;
               &:hover{
                 text-decoration: underline;

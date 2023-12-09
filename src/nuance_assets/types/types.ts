@@ -1,4 +1,5 @@
 import internal from 'stream';
+import { SupportedTokenSymbol } from '../shared/constants';
 
 export type SocialLinksObject = {
   website: string;
@@ -186,4 +187,14 @@ export type ApplaudListItem = {
   url: string;
   handle: string;
   title: string;
+  bucketCanisterId: string;
 };
+
+export type IcpTransactionListItem = {
+  date: string;
+  currency: SupportedTokenSymbol;
+  receiver: string;
+  sender: string;
+  isDeposit: boolean;
+  amount: number;
+}

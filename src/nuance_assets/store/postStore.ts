@@ -12,6 +12,7 @@ import {
   PremiumArticleOwners,
   PremiumArticleOwner,
   ApplaudListItem,
+  IcpTransactionListItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -27,8 +28,9 @@ import {
   getExtActor,
   getLedgerActor,
   getIcrc1Actor,
+  getIcpIndexCanister,
 } from '../services/actorService';
-import { AccountIdentifier, LedgerCanister } from '@dfinity/nns';
+import { AccountIdentifier, LedgerCanister } from '@dfinity/ledger-icp';
 import { TransferResult as Icrc1TransferResult } from '../services/icrc1/icrc1.did';
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
@@ -420,6 +422,7 @@ export interface PostStore {
     bucketCanisterId: string
   ) => Promise<string[]>;
   getUserApplauds: () => Promise<ApplaudListItem[]>;
+  getUserIcpTransactions: () => Promise<IcpTransactionListItem[]>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -2774,7 +2777,8 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             tokenAmount: Number(applaud.tokenAmount),
             applaudId: applaud.applaudId,
             isSender: userWallet.principal === applaud.sender,
-            title: post.title
+            title: post.title,
+            bucketCanisterId: applaud.bucketCanisterId,
           };
         }
       });
@@ -2788,6 +2792,53 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       return result;
     } catch (error) {
       handleError(error);
+      return [];
+    }
+  },
+  getUserIcpTransactions: async (): Promise<IcpTransactionListItem[]> => {
+    
+    try {
+      let icpIndexCanister = await getIcpIndexCanister();
+    let userWallet = await useAuthStore.getState().getUserWallet();
+    let response = await icpIndexCanister.get_account_identifier_transactions({
+      max_results: BigInt(100),
+      start: [],
+      account_identifier: userWallet.accountId,
+    });
+    if('Err' in response){
+      //should never happen
+      //just return an empty array
+      return [];
+    }
+    else{
+      let transactionItems = response.Ok.transactions.map((t) => {
+        let operation = t.transaction.operation;
+        if ('Transfer' in operation) {
+          return {
+            date:
+              t.transaction.created_at_time.length === 0
+                ? ''
+                : Number(
+                    t.transaction.created_at_time[0].timestamp_nanos
+                  ).toString(),
+            currency: 'ICP' as SupportedTokenSymbol,
+            receiver: operation.Transfer.to,
+            sender: operation.Transfer.from,
+            isDeposit: operation.Transfer.to === userWallet.accountId,
+            amount: Number(operation.Transfer.amount.e8s),
+          };
+        }
+      });
+      let result : IcpTransactionListItem[] = [];
+      for(const transactionItem of transactionItems){
+        if(transactionItem){
+          result.push(transactionItem);
+        }
+      }
+      return result;
+    }
+    } catch (error) {
+      handleError(error)
       return [];
     }
   },

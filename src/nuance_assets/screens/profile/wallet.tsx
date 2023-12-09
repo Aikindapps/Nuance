@@ -1,33 +1,39 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { toast, ToastType } from '../../services/toastService';
-import { SupportedToken, SupportedTokenSymbol, colors, getDecimalsByTokenSymbol, icons, images } from '../../shared/constants';
+import {
+  SupportedToken,
+  SupportedTokenSymbol,
+  colors,
+  getDecimalsByTokenSymbol,
+  icons,
+  images,
+} from '../../shared/constants';
 import {
   formatDate,
   getNuaEquivalance,
   icpPriceToString,
+  toBase256,
   truncateToDecimalPlace,
 } from '../../shared/utils';
-import { AccountIdentifier } from '@dfinity/nns';
-import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
-import InputField2 from '../../UI/InputField2/InputField2';
 import Button from '../../UI/Button/Button';
-import { TransferNftModal } from '../../components/transfer-nft-modal/transfer-nft-modal';
 import {
   ApplaudListItem,
+  IcpTransactionListItem,
   PremiumPostActivityListItem,
 } from '../../types/types';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
-import { Applaud } from '../../../../src/declarations/PostBucket/PostBucket.did';
+import { AccountIdentifier, SubAccount } from '@dfinity/ledger-icp';
+import { Principal } from '@dfinity/principal';
 
 const Wallet = () => {
   const [ownedKeys, setOwnedKeys] = useState(0);
   const [soldKeys, setSoldKeys] = useState(0);
   const [displayingActivities, setDisplayingActivities] = useState<
-    (PremiumPostActivityListItem | ApplaudListItem)[]
+    (PremiumPostActivityListItem | ApplaudListItem | IcpTransactionListItem)[]
   >([]);
 
   //NFT feature toggle
@@ -60,13 +66,17 @@ const Wallet = () => {
     sonicTokenPairs: state.sonicTokenPairs,
   }));
 
-  const { getOwnedNfts, getSellingNfts, getUserApplauds } = usePostStore(
-    (state) => ({
-      getOwnedNfts: state.getOwnedNfts,
-      getSellingNfts: state.getSellingNfts,
-      getUserApplauds: state.getUserApplauds,
-    })
-  );
+  const {
+    getOwnedNfts,
+    getSellingNfts,
+    getUserApplauds,
+    getUserIcpTransactions,
+  } = usePostStore((state) => ({
+    getOwnedNfts: state.getOwnedNfts,
+    getSellingNfts: state.getSellingNfts,
+    getUserApplauds: state.getUserApplauds,
+    getUserIcpTransactions: state.getUserIcpTransactions,
+  }));
 
   const { user } = useUserStore((state) => ({
     user: state.user,
@@ -107,21 +117,31 @@ const Wallet = () => {
   };
 
   const fetchAllActivities = async () => {
-    var [sellingActivites, premiumPostsActivities, applauds] =
-      await Promise.all([getSellingNfts(), getOwnedNfts(), getUserApplauds()]);
+    var [sellingActivites, premiumPostsActivities, applauds, transactions] =
+      await Promise.all([
+        getSellingNfts(),
+        getOwnedNfts(),
+        getUserApplauds(),
+        getUserIcpTransactions(),
+      ]);
     if (premiumPostsActivities) {
       setDisplayingActivities(
-        [...sellingActivites, ...premiumPostsActivities, ...applauds].sort(
+        [
+          ...sellingActivites,
+          ...premiumPostsActivities,
+          ...applauds,
+          ...transactions,
+        ].sort((act_1, act_2) => {
+          return parseInt(act_2.date) - parseInt(act_1.date);
+        })
+      );
+    } else {
+      setDisplayingActivities(
+        [...sellingActivites, ...applauds, ...transactions].sort(
           (act_1, act_2) => {
             return parseInt(act_2.date) - parseInt(act_1.date);
           }
         )
-      );
-    } else {
-      setDisplayingActivities(
-        [...sellingActivites, ...applauds].sort((act_1, act_2) => {
-          return parseInt(act_2.date) - parseInt(act_1.date);
-        })
       );
     }
   };
@@ -354,7 +374,7 @@ const Wallet = () => {
                         className='date'
                         style={{ color: darkOptionsAndColors.color }}
                       >
-                        {formatDate(activity.date) || ' -- '}
+                        { formatDate(activity.date) || ' -- '}
                       </div>
                       <div
                         onClick={() => {
@@ -401,6 +421,126 @@ const Wallet = () => {
                           }}
                           src={icons.TRANSFER_ICON}
                         ></img>
+                      </div>
+                    </div>
+                    <div className='horizontal-divider' />
+                  </div>
+                );
+              } else if ('isDeposit' in activity) {
+                //check if the deposit/withdrawal is related to any applauding activity
+                //if it is, don't display it
+                let applauds : ApplaudListItem[] = [];
+                for(const a of displayingActivities){
+                  if('isSender' in a){
+                    applauds.push(a);
+                  }
+                }
+                let notIncludingSenders : string[] = []
+                let notIncludingReceivers : string[] = []
+                for(const applaud of applauds){
+                  if(applaud.isSender){
+                    notIncludingReceivers.push(
+                      AccountIdentifier.fromPrincipal({
+                        principal: Principal.fromText(applaud.bucketCanisterId),
+                        subAccount: SubAccount.fromBytes(
+                          new Uint8Array(
+                            toBase256(parseInt(applaud.postId), 32)
+                          )
+                        ) as SubAccount,
+                      }).toHex()
+                    );
+                  }
+                  else{
+                    notIncludingSenders.push(
+                      AccountIdentifier.fromPrincipal({
+                        principal: Principal.fromText(applaud.bucketCanisterId),
+                        subAccount: SubAccount.fromBytes(
+                          new Uint8Array(
+                            toBase256(parseInt(applaud.postId), 32)
+                          )
+                        ) as SubAccount,
+                      }).toHex()
+                    );
+                  }
+                }
+                if(notIncludingReceivers.includes(activity.receiver) || notIncludingSenders.includes(activity.sender)){
+                  return;
+                }
+                return (
+                  <div className='token-activity-wrapper' key={index}>
+                    <div
+                      className='token-activity-flex'
+                      style={{
+                        display: 'flex',
+                        color: darkOptionsAndColors.color,
+                      }}
+                    >
+                      <div className='amount'>
+                        {activity.isDeposit
+                          ? `+ ${truncateToDecimalPlace(
+                              activity.amount /
+                                Math.pow(
+                                  10,
+                                  getDecimalsByTokenSymbol(
+                                    activity.currency as SupportedTokenSymbol
+                                  )
+                                ),
+                              activity.currency === 'ckBTC' ? 4 : 2
+                            )} ${activity.currency}`
+                          : `- ${truncateToDecimalPlace(
+                              activity.amount /
+                                Math.pow(
+                                  10,
+                                  getDecimalsByTokenSymbol(
+                                    activity.currency as SupportedTokenSymbol
+                                  )
+                                ),
+                              activity.currency === 'ckBTC' ? 4 : 2
+                            )} ${activity.currency}`}
+                      </div>
+                      <div
+                        className='date'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        {activity.date !== ''
+                          ? formatDate(
+                              (parseInt(activity.date) / 1000000).toString()
+                            )
+                          : ' --- '}
+                      </div>
+                      <div
+                        onClick={() => {
+                          window.open(
+                            'https://dashboard.internetcomputer.org/account/' +
+                              activity.isDeposit
+                              ? activity.sender
+                              : activity.receiver,
+                            '_blank'
+                          );
+                        }}
+                        className='from'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        {activity.isDeposit
+                          ? activity.sender.slice(0, 12) +
+                            '...' +
+                            activity.sender.slice(52)
+                          : activity.receiver.slice(0, 12) +
+                            '...' +
+                            activity.receiver.slice(52)}
+                      </div>
+
+                      <div
+                        className='key key-flex'
+                        style={{ alignItems: 'start' }}
+                      >
+                        {activity.isDeposit ? 'Deposit' : 'Withdrawal'}
+                      </div>
+                      <div
+                        className='transfer-icon transfer'
+                        style={{ visibility: 'hidden' }}
+                      >
+                        <img />
                       </div>
                     </div>
                     <div className='horizontal-divider' />

@@ -9,7 +9,7 @@ import { toastError } from '../services/toastService';
 import { useUserStore, usePostStore } from './';
 import { StoicIdentity } from 'ic-stoic-identity';
 import { PairInfo, UserWallet } from '../types/types';
-import { AccountIdentifier } from '@dfinity/nns';
+import { AccountIdentifier } from '@dfinity/ledger-icp';
 import {
   getAllCanisterIds,
   getIcrc1Actor,

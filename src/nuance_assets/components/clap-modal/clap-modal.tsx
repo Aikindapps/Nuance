@@ -1,13 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
 import './_clap-modal.scss';
 import { Context as ModalContext } from '../../contextes/ModalContext';
-import { FaRegCopy } from 'react-icons/fa';
 import { useTheme } from '../../contextes/ThemeContext';
 import { IoCloseOutline } from 'react-icons/io5';
 import { useAuthStore, usePostStore } from '../../store';
 import Dropdown from '../../UI/dropdown/dropdown';
-import QRCode from 'react-qr-code';
-import { toast, toastError, ToastType } from '../../services/toastService';
 import {
   SUPPORTED_TOKENS,
   SupportedTokenSymbol,
@@ -18,14 +15,10 @@ import {
   images,
 } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
-import { Principal } from '@dfinity/principal';
 import { LuLoader2 } from 'react-icons/lu';
 import { PostType } from '../../types/types';
 import { getNuaEquivalance, getPriceBetweenTokens, toBase256, truncateToDecimalPlace } from '../../shared/utils';
-import { max } from 'lodash';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
-import { SubAccount } from '@dfinity/nns';
-import { getIcrc1Actor } from 'src/nuance_assets/services/actorService';
 
 export const ClapModal = (props: { post: PostType }) => {
   const modalContext = useContext(ModalContext);

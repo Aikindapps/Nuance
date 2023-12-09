@@ -358,11 +358,6 @@ export const WithdrawModal = () => {
                   }
                   const newValue = e.target.value;
                   if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
-                  console.log(
-                    'newValue: ',
-                    parseFloat(newValue) *
-                      Math.pow(10, getSelectedCurrencyBalance().token.decimals)
-                  );
                   if (
                     newValue === '' ||
                     (parseFloat(newValue) *
