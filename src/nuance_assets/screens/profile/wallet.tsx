@@ -528,10 +528,11 @@ const Wallet = () => {
                       <div
                         onClick={() => {
                           window.open(
-                            'https://dashboard.internetcomputer.org/account/' +
-                              activity.isDeposit
-                              ? activity.sender
-                              : activity.receiver,
+                            activity.isDeposit
+                              ? 'https://dashboard.internetcomputer.org/account/' +
+                                  activity.sender
+                              : 'https://dashboard.internetcomputer.org/account/' +
+                                  activity.receiver,
                             '_blank'
                           );
                         }}
