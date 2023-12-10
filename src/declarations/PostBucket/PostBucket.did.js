@@ -1,5 +1,5 @@
 export const idlFactory = ({ IDL }) => {
-  const Comment__1 = IDL.Rec();
+  const Comment = IDL.Rec();
   const List = IDL.Rec();
   const PostBucketType__1 = IDL.Record({
     'url' : IDL.Text,
@@ -21,8 +21,21 @@ export const idlFactory = ({ IDL }) => {
     'postId' : IDL.Text,
   });
   const Result_5 = IDL.Variant({ 'ok' : PostBucketType__1, 'err' : IDL.Text });
+  const Applaud = IDL.Record({
+    'bucketCanisterId' : IDL.Text,
+    'receivedTokenAmount' : IDL.Nat,
+    'date' : IDL.Text,
+    'tokenAmount' : IDL.Nat,
+    'sender' : IDL.Text,
+    'applaudId' : IDL.Text,
+    'currency' : IDL.Text,
+    'receiver' : IDL.Text,
+    'numberOfApplauds' : IDL.Nat,
+    'postId' : IDL.Text,
+  });
+  const Result_10 = IDL.Variant({ 'ok' : Applaud, 'err' : IDL.Text });
   const Result_4 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
-  Comment__1.fill(
+  Comment.fill(
     IDL.Record({
       'bucketCanisterId' : IDL.Text,
       'creator' : IDL.Text,
@@ -31,13 +44,15 @@ export const idlFactory = ({ IDL }) => {
       'createdAt' : IDL.Text,
       'downVotes' : IDL.Vec(IDL.Text),
       'upVotes' : IDL.Vec(IDL.Text),
-      'replies' : IDL.Vec(Comment__1),
+      'replies' : IDL.Vec(Comment),
+      'handle' : IDL.Text,
       'repliedCommentId' : IDL.Opt(IDL.Text),
       'editedAt' : IDL.Opt(IDL.Text),
+      'avatar' : IDL.Text,
       'postId' : IDL.Text,
     })
   );
-  const Comment = IDL.Record({
+  const Comment__1 = IDL.Record({
     'bucketCanisterId' : IDL.Text,
     'creator' : IDL.Text,
     'content' : IDL.Text,
@@ -45,13 +60,19 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Text,
     'downVotes' : IDL.Vec(IDL.Text),
     'upVotes' : IDL.Vec(IDL.Text),
-    'replies' : IDL.Vec(Comment__1),
+    'replies' : IDL.Vec(Comment),
+    'handle' : IDL.Text,
     'repliedCommentId' : IDL.Opt(IDL.Text),
     'editedAt' : IDL.Opt(IDL.Text),
+    'avatar' : IDL.Text,
     'postId' : IDL.Text,
   });
-  const Result_9 = IDL.Variant({ 'ok' : Comment, 'err' : IDL.Text });
-  const Result = IDL.Variant({ 'ok' : IDL.Vec(Comment), 'err' : IDL.Text });
+  const Result_9 = IDL.Variant({ 'ok' : Comment__1, 'err' : IDL.Text });
+  const CommentsReturnType = IDL.Record({
+    'totalNumberOfComments' : IDL.Text,
+    'comments' : IDL.Vec(Comment),
+  });
+  const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const MetadataValue = IDL.Tuple(
@@ -178,6 +199,12 @@ export const idlFactory = ({ IDL }) => {
     'acceptCycles' : IDL.Func([], [], []),
     'addPostCategory' : IDL.Func([IDL.Text, IDL.Text], [Result_5], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
+    'checkTipping' : IDL.Func([IDL.Text], [], []),
+    'checkTippingByTokenSymbol' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [Result_10],
+        [],
+      ),
     'delete' : IDL.Func([IDL.Text], [Result_4], []),
     'deleteComment' : IDL.Func([IDL.Text], [Result_9], []),
     'deleteUserPosts' : IDL.Func([IDL.Text], [Result_4], []),
@@ -194,6 +221,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
+    'getApplaudById' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'getBucketCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_7], ['query']),
@@ -208,8 +236,10 @@ export const idlFactory = ({ IDL }) => {
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMetadata' : IDL.Func([IDL.Text, IDL.Nat], [Result_8], ['query']),
+    'getMyApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
     'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
+    'getPostApplauds' : IDL.Func([IDL.Text], [IDL.Vec(Applaud)], ['query']),
     'getPostComments' : IDL.Func([IDL.Text], [Result], ['query']),
     'getPostCoreCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getPostUrls' : IDL.Func([], [Result_2], ['query']),
@@ -227,6 +257,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getTotalPostCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getTrustedCanisters' : IDL.Func([], [Result_7], ['query']),
+    'getUserApplaudsByPrincipal' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Applaud)],
+        ['query'],
+      ),
     'getUserPosts' : IDL.Func(
         [IDL.Text, IDL.Bool],
         [IDL.Vec(PostBucketType__1)],

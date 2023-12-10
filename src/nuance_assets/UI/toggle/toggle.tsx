@@ -1,23 +1,23 @@
-import React from "react";
-import { useState } from "react"
+import React, { useState } from 'react';
 import './_toggle.scss';
+
 type ToggleProps = {
-    toggled: boolean;
-    callBack: Function;
-}
-export const Toggle: React.FC<ToggleProps> = ({ toggled, callBack }) =>{
-    return (
-        <div onClick={async ()=>await callBack()} className="toggle-switch">
-          <input 
-            onChange={()=>{}}
-            checked={toggled}
-            type="checkbox"
-            className="toggle-switch-checkbox"
-          />
-          <label className="toggle-switch-label" htmlFor={'this.props.Name'}>
-            <span className="toggle-switch-inner" />
-            <span className="toggle-switch-switch" />
-          </label>
-        </div>
-      );
-}
+  toggled: boolean;
+  callBack: Function;
+  width?: number;
+};
+
+export const Toggle: React.FC<ToggleProps> = ({ toggled, callBack, width }) => {
+  return (
+    <div
+      className={`toggle-switch ${toggled ? 'toggled' : ''}`}
+      onClick={async () => {
+        await callBack();
+      }}
+    >
+      <div className='toggle-knob'></div>
+    </div>
+  );
+};
+
+export default Toggle;

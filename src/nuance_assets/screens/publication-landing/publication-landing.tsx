@@ -10,7 +10,7 @@ import Header from '../../components/header/header';
 import Footer from '../../components/footer/footer';
 import SearchBar from '../../components/search-bar/search-bar';
 import Loader from '../../UI/loader/Loader';
-import { images, colors } from '../../shared/constants';
+import { images, colors, icons } from '../../shared/constants';
 import './publication-landing.scss';
 import CopyPublication from '../../UI/copy-publication/copy-publication';
 import ReportAuthorMenu from '../../UI/report-author/report-author';
@@ -19,12 +19,12 @@ import PublicationCategoriesMenu from '../../components/publication-categories-m
 import ArticleList from '../../components/article-list/article-list';
 import PublicationProfile from '../../components/publication-profile/publication-profile';
 import PublicationSidebarMobile from '../../UI/publication-sidebar-mobile/publication-sidebar-mobile';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { PostType } from '../../types/types';
 import { TagModel } from '../../services/actorService';
 import SearchList from '../../components/search-list/search-list';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { Helmet } from 'react-helmet';
 
 function PublicationLanding() {
@@ -239,7 +239,7 @@ function PublicationLanding() {
 
   const loadInitial = async (handle: string) => {
     setInitialPostsLoading(true);
-    setTimeout(()=>{
+    setTimeout(() => {
       setInitialPostsLoading(false);
     }, 5000)
     let posts = await getPostsByFollowers([handle], 0, 7);
@@ -364,8 +364,6 @@ function PublicationLanding() {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={true}
         />
 
@@ -395,7 +393,7 @@ function PublicationLanding() {
   if (
     !publication?.publicationHandle ||
     publication.publicationHandle.toLowerCase() !==
-      getPublicationHandleFromUrl().toLowerCase()
+    getPublicationHandleFromUrl().toLowerCase()
   ) {
     return (
       <div style={{ background: darkOptionsAndColors.background }}>
@@ -403,8 +401,6 @@ function PublicationLanding() {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={true}
         />
         <div className='publication-loader'>
@@ -425,8 +421,6 @@ function PublicationLanding() {
         loggedIn={!!user}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={true}
         publication={publication}
       />
@@ -452,15 +446,15 @@ function PublicationLanding() {
                 style={
                   !isSidebarToggled && screenWidth <= 1089
                     ? {
-                        marginRight: '180px',
-                        width: '150px',
-                        height: '47.5px',
-                      }
+                      marginRight: '180px',
+                      width: '150px',
+                      height: '47.5px',
+                    }
                     : {
-                        marginRight: '15px',
-                        width: '150px',
-                        height: '47.5px',
-                      }
+                      marginRight: '15px',
+                      width: '150px',
+                      height: '47.5px',
+                    }
                 }
                 className='brand-logo-left'
                 src={publication?.styling.logo}
@@ -543,7 +537,7 @@ function PublicationLanding() {
           <div className='header-image-container'>
             <img src={`${publication?.headerImage}`} className='header-img' />
 
-            <div className='nuance-publication'>A Nuance Publication</div>
+            <div className='nuance-publication'>A NUANCE PUBLICATION</div>
             <div className='publication-name'>
               {publication?.publicationTitle}
             </div>
@@ -554,8 +548,14 @@ function PublicationLanding() {
                   style={{ width: '35px', padding: '5px', borderRadius: '50%' }}
                   src={`${publication?.avatar}` || images.DEFAULT_AVATAR}
                 />
+                <img
+                  src={icons.PUBLICATION_ICON}
+                  alt='publication-icon'
+                  className='publication-header-icon'
+                />
+
               </span>
-              <span>@</span>
+              <span className='at-handle'>@</span>
               {publication?.publicationHandle}
             </div>
           </div>
@@ -597,8 +597,8 @@ function PublicationLanding() {
             <Footer />
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 

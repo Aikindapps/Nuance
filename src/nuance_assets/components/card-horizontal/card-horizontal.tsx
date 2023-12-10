@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { CardVerticalProps } from '../card-vertical/types';
 import { DateFormat, formatDate } from '../../shared/utils';
 import { images, icons, colors } from '../../shared/constants';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { useIntersectionObserver } from '../../shared/useIntersectionObserver';
 
 const CardHorizontal: React.FC<CardVerticalProps> = ({ post }) => {

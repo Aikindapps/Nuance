@@ -8,9 +8,16 @@ import { AnonymousIdentity, Identity } from '@dfinity/agent';
 import { toastError } from '../services/toastService';
 import { useUserStore, usePostStore } from './';
 import { StoicIdentity } from 'ic-stoic-identity';
-import { UserWallet } from '../types/types';
-import { AccountIdentifier } from '@dfinity/nns';
-import { getAllCanisterIds } from '../services/actorService';
+import { PairInfo, UserWallet } from '../types/types';
+import { AccountIdentifier } from '@dfinity/ledger-icp';
+import {
+  getAllCanisterIds,
+  getIcrc1Actor,
+  getIcrc1TokenActorAnonymous,
+  getSonicActor,
+} from '../services/actorService';
+import { SUPPORTED_CANISTER_IDS, SUPPORTED_TOKENS, TokenBalance } from '../shared/constants';
+import { PairInfoExt } from '../services/sonic/Sonic.did';
 
 // II
 const identityProvider: string =
@@ -55,6 +62,7 @@ const derivationOrigin: string = window.location.origin.includes(
 
 console.log('derivationOrigin', derivationOrigin);
 console.log(window.location.origin);
+
 export interface AuthStore {
   readonly isInitialized: boolean;
   readonly isLoggedIn: boolean;
@@ -62,13 +70,15 @@ export interface AuthStore {
   readonly loginMethod: string | undefined;
   readonly redirectScreen: string;
   readonly userWallet: UserWallet | undefined;
+  readonly tokenBalances: TokenBalance[];
+  readonly sonicTokenPairs: PairInfo[];
   login: (loginMethod: string) => Promise<void>;
   logout: () => Promise<void>;
   getIdentity: () => Promise<Identity | undefined>;
   getUserWallet: () => Promise<UserWallet>;
   redirect: (url: string) => void;
   verifyBitfinityWallet: () => Promise<void>;
-
+  fetchTokenBalances: () => Promise<void>;
   clearAll: () => void;
   clearLoginMethod: () => void;
 }
@@ -86,9 +96,67 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   loginMethod: undefined,
   redirectScreen: '/',
   userWallet: undefined,
+  tokenBalances: [],
+  sonicTokenPairs: [],
 
   redirect: (_screen: string) => {
     set((state) => ({ redirectScreen: _screen }));
+  },
+
+  fetchTokenBalances: async (): Promise<void> => {
+    let wallet = await get().getUserWallet();
+
+    let pid = wallet.principal;
+    let tokenBalancesPromises = [];
+   
+    for (const supportedToken of SUPPORTED_TOKENS) {
+      //add the promise for token balance
+      tokenBalancesPromises.push(
+        (
+          await getIcrc1TokenActorAnonymous(supportedToken.canisterId)
+        ).icrc1_balance_of({
+          owner: Principal.fromText(pid),
+          subaccount: [],
+        })
+      );
+    }
+    let sonicTokenPairsPromises = [];
+    for(const supportedTokenCanisterId of SUPPORTED_CANISTER_IDS){
+      sonicTokenPairsPromises.push(
+        (await getSonicActor()).getPair(
+          Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
+          Principal.fromText(supportedTokenCanisterId)
+        )
+      );
+    };
+    
+    let [tokenBalancesResponses, sonicTokenPairsResponses] = await Promise.all([
+      Promise.all(tokenBalancesPromises),
+      Promise.all(sonicTokenPairsPromises),
+    ]);
+    let tokenBalances: TokenBalance[] = tokenBalancesResponses.map((balance, index) => {
+      return {
+        balance: Number(balance),
+        token: SUPPORTED_TOKENS[index],
+      };
+    });
+    let sonicTokenPairsIncludingUndefined = sonicTokenPairsResponses.map((val)=>{
+      return val[0]
+    })
+    let sonicTokenPairs : PairInfo[] = [];
+    sonicTokenPairsIncludingUndefined.forEach((val)=>{
+      if(val){
+        sonicTokenPairs.push({
+          token0: val.token0,
+          token1: val.token1,
+          reserve0: Number(val.reserve0),
+          reserve1: Number(val.reserve1),
+          id: val.id,
+        });
+      }
+    })
+
+    set({ tokenBalances, sonicTokenPairs });
   },
 
   verifyBitfinityWallet: async (): Promise<void> => {
@@ -103,8 +171,11 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          await get().fetchTokenBalances();
         }
-      } else if(get().loginMethod==='bitfinity'){
+      } else if (get().loginMethod === 'bitfinity') {
         await get().logout();
         window.location.pathname = window.location.pathname;
       }
@@ -130,6 +201,9 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
             )
           : console.log('Not a brave browser');
         window.location.href = '/register';
+      } else {
+        //user fetched successfully, get the token balances
+        await get().fetchTokenBalances();
       }
     } else if (_loginMethod === 'ii') {
       StoicIdentity.disconnect();
@@ -164,6 +238,9 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               await useUserStore.getState().getUser();
               if (useUserStore.getState().user === undefined) {
                 window.location.href = '/register';
+              } else {
+                //user fetched successfully, get the token balances
+                await get().fetchTokenBalances();
               }
               /*
               else {
@@ -188,6 +265,9 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          await get().fetchTokenBalances();
         }
       }
     } else if (_loginMethod === 'NFID') {
@@ -223,6 +303,9 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               await useUserStore.getState().getUser();
               if (useUserStore.getState().user === undefined) {
                 window.location.href = '/register';
+              } else {
+                //user fetched successfully, get the token balances
+                await get().fetchTokenBalances();
               }
               /*
               else {
@@ -251,16 +334,15 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       try {
         let bitfinity = window_any.ic.bitfinityWallet.getPrincipal as Function;
       } catch (error) {
-        toastError('Bitfinity wallet not detected in browser.')
+        toastError('Bitfinity wallet not detected in browser.');
         set({ isLoggedIn: false, loginMethod: undefined });
-        setTimeout(()=>{
+        setTimeout(() => {
           window.open(
             'https://chrome.google.com/webstore/detail/bitfinity-wallet/jnldfbidonfeldmalbflbmlebbipcnle',
             '_blank'
           );
-        },500)
+        }, 500);
         return;
-        
       }
       try {
         await window_any?.ic?.bitfinityWallet?.requestConnect({
@@ -274,6 +356,9 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          await get().fetchTokenBalances();
         }
       } catch (error) {
         set({ isLoggedIn: false, loginMethod: undefined });

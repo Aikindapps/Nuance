@@ -335,10 +335,7 @@ const LoginRegistration = () => {
         </div>
       ) : (
         <div>
-          <LoggedOutSidebar responsiveElement={true} />
-          <div className='logged-out'>
-            <LoggedOutSidebar responsiveElement={false} />
-          </div>
+          <LoggedOutSidebar/>
         </div>
       )}
       <div className='dividerr'></div>

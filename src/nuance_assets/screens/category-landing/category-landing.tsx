@@ -9,7 +9,7 @@ import {
 import Header from '../../components/header/header';
 import Footer from '../../components/footer/footer';
 import Loader from '../../UI/loader/Loader';
-import { images, colors } from '../../shared/constants';
+import { images, colors, icons } from '../../shared/constants';
 import CopyPublication from '../../UI/copy-publication/copy-publication';
 import ReportAuthorMenu from '../../UI/report-author/report-author';
 import FollowAuthor from '../../components/follow-author/follow-author';
@@ -17,12 +17,12 @@ import PublicationCategoriesMenu from '../../components/publication-categories-m
 import ArticleList from '../../components/article-list/article-list';
 import PublicationProfile from '../../components/publication-profile/publication-profile';
 import PublicationSidebarMobile from '../../UI/publication-sidebar-mobile/publication-sidebar-mobile';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { PostType } from '../../types/types';
 import { TagModel } from '../../services/actorService';
 import ArticleListCategoryLanding from '../../components/article-list-category-landing/article-list-category-landing';
 import './_category-landing.scss';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 function CategoryLanding() {
   const ref = useRef<any>(null);
@@ -106,9 +106,9 @@ function CategoryLanding() {
     if (
       publication !== undefined &&
       publication?.publicationHandle.toLowerCase() !==
-        current_location
-          .substring(13, current_location.lastIndexOf('/'))
-          .toLowerCase()
+      current_location
+        .substring(13, current_location.lastIndexOf('/'))
+        .toLowerCase()
     ) {
       setPublicationDoesNotExist(true);
     }
@@ -199,7 +199,7 @@ function CategoryLanding() {
     setLoadingMore(false);
   };
 
-  const loadInitial = async (handle: string, category:string) => {
+  const loadInitial = async (handle: string, category: string) => {
     setPostsLoading(true);
     setTimeout(() => {
       setPostsLoading(false);
@@ -255,8 +255,6 @@ function CategoryLanding() {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={true}
         />
 
@@ -288,8 +286,6 @@ function CategoryLanding() {
         loggedIn={!!user}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={true}
         category={categoryNameNotTrimmed}
         publication={publication}
@@ -369,7 +365,6 @@ function CategoryLanding() {
               style={{ width: '100%', height: '200px', objectFit: 'cover' }}
               src={`${publication?.headerImage}`}
             />
-            <div className='nuance-publication'>A Nuance Publication</div>
             <div className='publication-name-category'>
               {publication?.publicationTitle}
             </div>
@@ -379,8 +374,14 @@ function CategoryLanding() {
                   style={{ width: '35px', padding: '5px', borderRadius: '50%' }}
                   src={`${publication?.avatar}` || images.DEFAULT_AVATAR}
                 />
+                <img
+                  src={icons.PUBLICATION_ICON}
+                  alt='publication-icon'
+                  className='publication-header-icon'
+                />
+
               </span>
-              <span>@</span>
+              <span className='at-handle'>@</span>
               {publication?.publicationHandle}
             </div>
           </div>

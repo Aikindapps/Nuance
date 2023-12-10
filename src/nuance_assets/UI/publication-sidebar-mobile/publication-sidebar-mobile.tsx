@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../../store';
 import { images, icons } from '../../shared/constants';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 type PublicationSidebarMobileProps = {
   isSidebarToggle?: (e: any) => void;

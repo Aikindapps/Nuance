@@ -25,6 +25,7 @@ import Time "mo:base/Time";
 import Nat64 "mo:base/Nat64";
 import Order "mo:base/Order";
 import ICexperimental "mo:base/ExperimentalInternetComputer";
+import Float "mo:base/Float";
 import IC "IC";
 import DateTime "../shared/DateTime";
 
@@ -33,6 +34,7 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import OperationLog "../shared/Types";
 import ENV "../shared/env";
+import Sonic "../shared/sonic";
 
 actor PostCore {
 
@@ -110,6 +112,7 @@ actor PostCore {
   stable var relationshipEntries : [(Text, [PostTag])] = [];
   stable var userTagRelationshipEntries : [(Text, [PostTag])] = [];
   stable var clapsEntries : [(Text, Nat)] = [];
+  stable var applaudsEntries : [(Text, Nat)] = [];
   stable var popularity : [(Text, Nat)] = [];
   stable var popularityToday : [(Text, Nat)] = [];
   stable var popularityThisWeek : [(Text, Nat)] = [];
@@ -156,6 +159,7 @@ actor PostCore {
   var relationships = HashMap.fromIter<Text, [PostTag]>(relationshipEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var userTagRelationships = HashMap.fromIter<Text, [PostTag]>(userTagRelationshipEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var clapsHashMap = HashMap.fromIter<Text, Nat>(clapsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudsHashMap = HashMap.fromIter<Text, Nat>(applaudsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var popularityHashMap = HashMap.fromIter<Text, Nat>(popularity.vals(), maxHashmapSize, Text.equal, Text.hash);
   var popularityTodayHashMap = HashMap.fromIter<Text, Nat>(popularityToday.vals(), maxHashmapSize, Text.equal, Text.hash);
   var popularityThisWeekHashMap = HashMap.fromIter<Text, Nat>(popularityThisWeek.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -168,7 +172,65 @@ actor PostCore {
   var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //#bucket canister management
-  //ToDo: authorize bucket canister to the Frontend canister for storeSEO method
+  func updateSettings(canisterId: Principal, manager: [Principal]): async () {
+
+    let controllers = Buffer.Buffer<Principal>(0);
+    controllers.add(Principal.fromActor(PostCore));
+
+    for (managerId in manager.vals()) {
+      controllers.add(managerId);
+    };
+
+    await IC.IC.update_settings(({canister_id = canisterId; settings = {
+        controllers = ?Buffer.toArray(controllers);
+        freezing_threshold = null;
+        memory_allocation = null;
+        compute_allocation = null;
+    }}));
+};
+
+  public shared ({ caller }) func updateSettingsForAllBucketCanisters() : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not Principal.equal(caller, Principal.fromActor(PostCore)) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
+
+      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let status = await IC.IC.canister_status({ canister_id = Principal.fromText(bucketCanisterId); });
+      let controllers = status.settings.controllers;
+      
+      let controllersBuffer = Buffer.Buffer<Principal>(0);
+
+      for (controller in controllers.vals()) {
+        if (Principal.toText(controller).size() < 28) {
+        controllersBuffer.add(controller);
+        }
+      };
+
+      controllersBuffer.add(Principal.fromActor(PostCore));
+      controllersBuffer.add(Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER));
+
+
+
+      switch (await IC.IC.update_settings(({ canister_id = Principal.fromActor(bucketActor); settings = { 
+        controllers = ?Buffer.toArray(controllersBuffer);
+        freezing_threshold = null;
+        memory_allocation = null; 
+        compute_allocation = null; } }))
+      ) {
+        case () {};
+      };
+    };
+
+    #ok("Success");
+  };
+
+
   public shared ({ caller }) func createNewBucketCanister() : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
       return #err("Cannot use this method anonymously.");
@@ -207,7 +269,7 @@ actor PostCore {
       };
 
       let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister();
-      switch (await CyclesDispenserCanister.addCanister({ canisterId = canisterId; minimumThreshold = 10_000_000_000_000; topUpAmount = 5_000_000_000_000 })) {
+      switch (await CyclesDispenserCanister.addCanister({ canisterId = canisterId; minimumThreshold = 10_000_000_000_000; topUpAmount = 5_000_000_000_000; isStorageBucket = false; })) {
         case (#err(err)) {
           return #err("An error occured while adding the bucket canister in CyclesDispenser.");
         };
@@ -222,16 +284,22 @@ actor PostCore {
         case (_) {};
       };
 
-      Debug.print("Newly created bucket canister canister id is " # canisterId);
+      
 
       try {
         //authorize bucket canister in frontend canister
         let frontendActor = CanisterDeclarations.getFrontendCanister();
-        Debug.print("frontend actor defined successfully");
+       
         await frontendActor.authorize(Principal.fromActor(bucketCanister));
-        Debug.print("frontend actor authorize went succesful");
+        
       } catch (e) {
         Debug.print("authorize error");
+      };
+
+      try {
+        await updateSettings(Principal.fromActor(bucketCanister), [Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER)]);
+      } catch (e) {
+        Debug.print("update settings error");
       };
 
       switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), Iter.toArray(nftCanisterIdsHashmap.entries()), Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
@@ -612,7 +680,7 @@ actor PostCore {
       publishedDate = Int.toText(U.safeGet(publishedDateHashMap, postId, 0));
       views = Nat.toText(U.safeGet(viewsHashMap, postId, 0));
       tags = getTagModelsByPost(postId);
-      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0));
+      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0) + Int.abs(Float.toInt(Float.fromInt((U.safeGet(applaudsHashMap, postId, 0))) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS)))));
       category = U.safeGet(categoryHashMap, postId, "");
       isDraft = U.safeGet(isDraftHashMap, postId, false);
     };
@@ -790,6 +858,7 @@ actor PostCore {
     viewsHashMap.delete(postId);
     postIdsToBucketCanisterIdsHashMap.delete(postId);
     clapsHashMap.delete(postId);
+    applaudsHashMap.delete(postId);
     categoryHashMap.delete(postId);
   };
 
@@ -1279,6 +1348,8 @@ actor PostCore {
           totalViewCount += postViewCount;
           let clapCount = U.safeGet(clapsHashMap, postId, 0);
           totalClapCount += clapCount;
+          let applaudCount = U.safeGet(applaudsHashMap, postId, 0);
+          totalClapCount += applaudCount / Nat.pow(10, ENV.NUA_TOKEN_DECIMALS);
         },
       );
     };
@@ -1741,10 +1812,6 @@ actor PostCore {
 
   };
 
-  //debugging method that returns all the moderation related data
-  public shared query func debugGetModeration() : async ([(Text, Nat)], [(Text, PostModerationStatus)]) {
-    (Iter.toArray(postVersionMap.entries()), Iter.toArray(postModerationStatusMap.entries()));
-  };
 
   public shared ({ caller }) func handleModclubMigration(postCanisterId : Text) : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
@@ -2084,46 +2151,36 @@ actor PostCore {
     viewsHashMap.put(postId, U.safeGet(viewsHashMap, postId, 0) + 1);
     totalViewsToday += 1;
   };
+  
+  public shared query func debugGetApplaudsHashMap() : async [(Text, Nat)] {
+    Iter.toArray(applaudsHashMap.entries())
+  };
 
-  public shared ({ caller }) func clapPost(postId : Text) : () {
-    if (isAnonymous(caller)) {
-      return;
-    };
-    //validate input
-    if (not U.isTextLengthValid(postId, 20)) {
-      return;
-    };
+  public shared query func debugApplaudsHashMap() : async [(Text, Nat)] {
+    Iter.toArray(applaudsHashMap.entries())
+  };
 
-    if (not isThereEnoughMemoryPrivate()) {
-      return;
-    };
-
-    //look up handle for post
-    let principalId = U.safeGet(principalIdHashMap, postId, "");
-    let handle = U.safeGet(handleHashMap, principalId, "");
-
-    //to prevent gaming your own article for claps/tokens
-    if (Principal.toText(caller) != principalId) {
-
-      // check if user has enough tokens to clap
-      let UserCanister = CanisterDeclarations.getUserCanister();
-      var tokenAmounts = await UserCanister.getNuaBalance(Principal.toText(caller));
-      switch (tokenAmounts) {
-        case (#ok(balance)) Debug.print("balance: " # balance);
-        case (#err(msg)) {
-          Debug.print("error: " # msg);
-          return;
-        };
+  //only callable by 
+  public shared ({caller}) func incrementApplauds(postId: Text, applauds: Nat) : async () {
+    let callerPrincipal = Principal.toText(caller);
+    switch(bucketCanisterIdsHashMap.get(callerPrincipal)) {
+      case(?value) {
+        //caller is a bucket canister
+        //increment the claps
+        applaudsHashMap.put(postId, U.safeGet(applaudsHashMap, postId, 0) + applauds);
       };
-
-      //clap post
-      clapsHashMap.put(postId, U.safeGet(clapsHashMap, postId, 0) + 1);
-      Debug.print("PostCore->clap");
-
-      //Nua tokens added to author and subtracted from user
-      UserCanister.handleClap(Principal.toText(caller), handle);
+      case(null) {
+        //caller is not authorized
+        return;
+      };
     };
   };
+
+  public shared ({ caller }) func clapPost(postId : Text) : () {
+    //deprecated func
+    return;
+  };
+
   private func indexPopularPosts() : () {
     Debug.print("PostCore -> indexPopularPosts is called");
     let now = U.epochTime() / 1000;
@@ -2143,7 +2200,9 @@ actor PostCore {
       let isDraft = U.safeGet(isDraftHashMap, postId, false);
       let isRejected = rejectedByModClub(postId);
       if (not isDraft and not isRejected) {
-        let clapCount = (U.safeGet(clapsHashMap, postId, 0) + 1);
+        //the old clapsHashMap is frozen
+        //we use the new applaudsHashMap to store the applauds sent by tokens
+        let clapCount = U.safeGet(clapsHashMap, postId, 0) * Nat.pow(10, ENV.NUA_TOKEN_DECIMALS) + U.safeGet(applaudsHashMap, postId, 0) + 1;
         let viewCount = (U.safeGet(viewsHashMap, postId, 0) + 1);
 
         let popularity = clapCount * viewCount;
@@ -2499,7 +2558,7 @@ actor PostCore {
     let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
     // On local, don't send posts to Modclub
     if (environment != "local") {
-      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null);
+      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null, null);
     };
     postModerationStatusMap.put(postIdWithVersion, #reviewRequired);
   };
@@ -3683,6 +3742,7 @@ actor PostCore {
     relationshipEntries := Iter.toArray(relationships.entries());
     userTagRelationshipEntries := Iter.toArray(userTagRelationships.entries());
     clapsEntries := Iter.toArray(clapsHashMap.entries());
+    applaudsEntries := Iter.toArray(applaudsHashMap.entries());
     popularity := Iter.toArray(popularityHashMap.entries());
     popularityToday := Iter.toArray(popularityTodayHashMap.entries());
     popularityThisWeek := Iter.toArray(popularityThisWeekHashMap.entries());
@@ -3723,6 +3783,7 @@ actor PostCore {
     relationshipEntries := [];
     userTagRelationshipEntries := [];
     clapsEntries := [];
+    applaudsEntries := [];
     popularity := [];
     popularityToday := [];
     popularityThisWeek := [];
@@ -3762,6 +3823,7 @@ actor PostCore {
       canisterId = canisterId;
       minimumThreshold = minimumThreshold;
       topUpAmount = topUpAmount;
+      isStorageBucket = false;
     });
 
     //add the canister to Metrics canister

@@ -6,7 +6,7 @@ import Loader from '../../UI/loader/Loader';
 import { images, colors } from '../../shared/constants';
 import { TagModel } from '../../services/actorService';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 type SearchListProps = {
   posts: Array<PostType>;

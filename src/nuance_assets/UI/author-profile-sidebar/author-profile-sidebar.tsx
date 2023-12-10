@@ -4,7 +4,8 @@ import Button from '../Button/Button';
 import CopyProfile from '../copy-profile/copy-profile';
 import ReportAuthorMenu from '../report-author/report-author';
 import { icons, colors } from '../../shared/constants';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
+import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 
 const AuthorProfileSidebar = () => {
   const { isLoggedIn, login, logout } = useAuthStore((state) => ({
@@ -72,45 +73,7 @@ const AuthorProfileSidebar = () => {
               style={isLoggedIn ? {} : { display: 'none' }}
             ></div>
 
-            <div
-              className='button'
-              style={isLoggedIn ? { display: 'none' } : {}}
-            >
-              <Button
-                styleType='primary-1'
-                type='button'
-                style={{ width: '190px' }}
-                // icon={NONAME}
-                onClick={() => login('ii')}
-              >
-                Log in with Internet Identity
-              </Button>
-            </div>
-            <div
-              className='button'
-              style={isLoggedIn ? { display: 'none' } : {}}
-            >
-              <Button
-                styleType='primary-3'
-                type='button'
-                style={{ width: '190px' }}
-                // icon={NONAME}
-                onClick={() => login('ii')}
-              >
-                Register with Internet Identity
-              </Button>
-            </div>
-
-            <a>
-              <p className='identity'>
-                <a
-                  href='https://smartcontracts.org/docs/ic-identity-guide/what-is-ic-identity.html'
-                  target='_blank'
-                >
-                  What is internet identity?
-                </a>
-              </p>
-            </a>
+            <LoggedOutSidebar/>
           </div>
         </div>
       }

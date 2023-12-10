@@ -28,7 +28,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 import { colors, icons, images } from '../../shared/constants';
 import { useLocation } from 'react-router-dom';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import './create-edit-article-screen.scss';
 import PremiumArticleOwners from '../../components/premium-article-owners/premium-article-owners';
 import { NftArticleView } from '../../components/nft-article-view/NftArticleView';
@@ -410,7 +410,7 @@ const CreateEditArticle = () => {
 
   const toastErrors = () => {
     if (savingPost.title === '') {
-      toastError('Title field can not be empty!');
+      toastError('Title field cannot be empty!');
       setTimeout(() => {
         window.scrollTo(0, titleRef.current.offsetTop);
       }, 200);
@@ -418,21 +418,21 @@ const CreateEditArticle = () => {
       return;
     }
     if (savingPost.subtitle === '') {
-      toastError('Introduction field can not be empty!');
+      toastError('Introduction field cannot be empty!');
       setTimeout(() => {
         window.scrollTo(0, introRef.current.offsetTop);
       }, 200);
       return;
     }
     if (postHtml === '') {
-      toastError('Body field can not be empty!');
+      toastError('Body field cannot be empty!');
       setTimeout(() => {
         window.scrollTo(0, bodyRef.current.offsetTop);
       }, 200);
       return;
     }
     if (savingPost.tags.length === 0) {
-      toastError('Tags field can not be empty!');
+      toastError('Tags field cannot be empty!');
       setTimeout(() => {
         window.scrollTo(0, tagsRef.current.offsetTop);
       }, 200);
@@ -640,8 +640,6 @@ const CreateEditArticle = () => {
         loggedIn={isLoggedIn}
         isArticlePage={true}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={false}
         isUserAdminScreen={true}
       />

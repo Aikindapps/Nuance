@@ -147,7 +147,7 @@ actor User {
   };
 
   private func isPlatformOperator(caller : Principal) : Bool {
-    ENV.isPlatformOperator(caller)
+    ENV.isPlatformOperator(caller);
   };
 
   public shared query func getPlatformOperators() : async List.List<Text> {
@@ -156,20 +156,20 @@ actor User {
 
   //These methods are deprecated. Admins are handled by env.mo file
   public shared ({ caller }) func registerAdmin(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function")
+    #err("Deprecated function");
   };
 
   public shared ({ caller }) func unregisterAdmin(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function")
+    #err("Deprecated function");
   };
 
   //platform operators, similar to admins but restricted to a few functions -> deprecated. Use env.mo file
   public shared ({ caller }) func registerPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   public shared ({ caller }) func unregisterPlatformOperator(id : Text) : async Result.Result<(), Text> {
-    #err("Deprecated function.")
+    #err("Deprecated function.");
   };
 
   func isNuanceCanister(caller : Principal) : Bool {
@@ -237,7 +237,6 @@ actor User {
     cgusers := List.filter<Text>(cgusers, func(val : Text) : Bool { val != id });
     #ok();
   };
-
 
   public shared ({ caller }) func registerCanister(id : Text) : async Result.Result<(), Text> {
 
@@ -555,53 +554,48 @@ actor User {
 
         //update the following handles list of the followers
         let followersHandlesArray = U.safeGet(myFollowersHashMap, principalId, []);
-        for(followerHandle in followersHandlesArray.vals()){
+        for (followerHandle in followersHandlesArray.vals()) {
           let followerPrincipalId = U.safeGet(handleReverseHashMap, followerHandle, "");
-          if(followerPrincipalId != ""){
+          if (followerPrincipalId != "") {
             //this array includes the old handle of the user -> update it
             let oldFollowingArray = U.safeGet(followersArrayHashMap, followerPrincipalId, []);
             var newFollowingBuffer = Buffer.Buffer<Text>(0);
-            for(handle in oldFollowingArray.vals()){
-              if(handle == existingHandle){
+            for (handle in oldFollowingArray.vals()) {
+              if (handle == existingHandle) {
                 newFollowingBuffer.add(handleTrimmed);
-              }
-              else{
+              } else {
                 newFollowingBuffer.add(handle);
-              }
+              };
             };
             followersArrayHashMap.put(followerPrincipalId, Buffer.toArray(newFollowingBuffer));
 
-
             let oldFollowingList = U.safeGet(followersHashMap, followerPrincipalId, List.nil<Text>());
             var newFollowingList = List.nil<Text>();
-            for(handle in List.toIter(oldFollowingList)){
-              if(handle == existingHandle){
+            for (handle in List.toIter(oldFollowingList)) {
+              if (handle == existingHandle) {
                 newFollowingList := List.push(handleTrimmed, newFollowingList);
-              }
-              else{
+              } else {
                 newFollowingList := List.push(handle, newFollowingList);
-              }
+              };
             };
             followersHashMap.put(followerPrincipalId, newFollowingList);
 
-            
-          }
+          };
         };
 
         //update the followers handles list of the following users
         let followingHandlesArray = U.safeGet(followersArrayHashMap, principalId, []);
-        for(followingHandle in followingHandlesArray.vals()){
+        for (followingHandle in followingHandlesArray.vals()) {
           let followingUserPrincipalId = U.safeGet(handleReverseHashMap, followingHandle, "");
           //contains the old handle of the user
           let oldFollowersArray = U.safeGet(myFollowersHashMap, followingUserPrincipalId, []);
           let newFollowersBuffer = Buffer.Buffer<Text>(0);
-          for(handle in oldFollowersArray.vals()){
-            if(handle == existingHandle){
+          for (handle in oldFollowersArray.vals()) {
+            if (handle == existingHandle) {
               newFollowersBuffer.add(handleTrimmed);
-            }
-            else{
+            } else {
               newFollowersBuffer.add(handle);
-            }
+            };
           };
           myFollowersHashMap.put(followingUserPrincipalId, Buffer.toArray(newFollowersBuffer));
         };
@@ -661,12 +655,12 @@ actor User {
 
         //if the user is an editor or writer in a publication, inform that publication canister about the handle change
         let userPublicationsArray = U.safeGet(publicationsArrayHashMap, principalId, []);
-        for(publicationObject in userPublicationsArray.vals()){
+        for (publicationObject in userPublicationsArray.vals()) {
           let publicationHandle = publicationObject.publicationName;
           let publicationCanisterId = U.safeGet(handleReverseHashMap, publicationHandle, "");
-          if(publicationCanisterId != ""){
-            let publicationActor = actor(publicationCanisterId) : actor{
-              updateEditorOrWriterHandle : (existingHandle: Text, newHandle: Text) -> async ()
+          if (publicationCanisterId != "") {
+            let publicationActor = actor (publicationCanisterId) : actor {
+              updateEditorOrWriterHandle : (existingHandle : Text, newHandle : Text) -> async ();
             };
             ignore publicationActor.updateEditorOrWriterHandle(existingHandle, newHandle);
           };
@@ -1376,15 +1370,30 @@ actor User {
     //validate input
     let principalFromText = Principal.fromText(userPrincipalId);
 
-    if (isAnonymous(caller)) {
-      return #err(Unauthorized);
-    };
-
     if (principalIdHashMap.get(userPrincipalId) == null) {
       return #err(UserNotFound # " for PrincipalId " # userPrincipalId);
     };
 
     #ok(buildUser(userPrincipalId));
+  };
+
+  public shared query ({ caller }) func getMultipleUsersByPrincipalId(userPrincipalIds : [Text]) : async Result.Result<[User], Text> {
+
+    //validate input
+    for (userPrincipalId in userPrincipalIds.vals()) {
+      let principalFromText = Principal.fromText(userPrincipalId);
+    };
+
+    var users = Buffer.Buffer<User>(0);
+
+    for (userPrincipalId in userPrincipalIds.vals()) {
+      if (principalIdHashMap.get(userPrincipalId) == null) {
+        return #err(UserNotFound # " for PrincipalId " # userPrincipalId);
+      };
+      users.add(buildUser(userPrincipalId));
+    };
+
+    #ok(Buffer.toArray(users));
   };
 
   public shared query ({ caller }) func dumpUsers() : async Text {
@@ -1448,6 +1457,19 @@ actor User {
     var handlesBuffer = Buffer.Buffer<Text>(0);
     for (aid in accountIds.vals()) {
       handlesBuffer.add(U.safeGet(accountIdsToHandleHashMap, aid, ""));
+    };
+    Buffer.toArray(handlesBuffer);
+  };
+
+  public shared query func getHandlesByPrincipals(principals : [Text]) : async [Text] {
+    var handlesBuffer = Buffer.Buffer<Text>(0);
+    for (principalId in principals.vals()) {
+      switch(handleHashMap.get(principalId)) {
+        case(?value) {
+          handlesBuffer.add(value)
+        };
+        case(null) {};
+      };
     };
     Buffer.toArray(handlesBuffer);
   };

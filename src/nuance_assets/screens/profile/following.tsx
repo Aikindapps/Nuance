@@ -5,7 +5,7 @@ import FollowAuthor from '../../components/follow-author/follow-author';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const Following = () => {
   // This component is a child of profileSidebar

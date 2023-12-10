@@ -21,10 +21,12 @@ $selected-background-color: #d4d4d4;
 $link-background: #f2f2f2;
 
 //dark-mode
-$dark-primary-background-color: #00113E;
+$dark-primary-background-color: rgb(21, 20, 81);
 $dark-primary-text-color: #FFFF;
 $dark-secondary-text-color: #B2B2B2;
 $dark-button-color: #43dfba;
+$dark-button-hover-color: rgb(43, 152, 127);
+$dark-button-active-color:rgb(31, 99, 83);
 
 
 
@@ -37,6 +39,7 @@ $error-color: #cc4747;
 // Highlights
 $highlight-one: #25f68d;
 $highlight-two: #1bc0f2;
+$edit-comment-highlight: #3684D9;
 $link-color: #0000ee;
 $box-shadow: rgba(0, 0, 0, 0.2);
 

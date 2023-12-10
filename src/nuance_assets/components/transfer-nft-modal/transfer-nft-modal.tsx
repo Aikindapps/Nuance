@@ -1,19 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Button from '../../UI/Button/Button';
 import { colors, icons, images } from '../../shared/constants';
 import { PostType, PremiumPostActivityListItem } from '../../types/types';
 import './_transfer-nft-modal.scss';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
-import { GetPremiumArticleInfoReturn } from '../../services/publisher-service/Publisher0/Publisher0.did';
 
 import { toast, toastError, ToastType } from '../../services/toastService';
 import InputField2 from '../../UI/InputField2/InputField2';
 import { usePostStore } from '../../store/postStore';
-import { useTheme } from '../../ThemeContext';
-
+import { useTheme } from '../../contextes/ThemeContext';
+import {Context as ModalContext} from '../../contextes/ModalContext';
 type TransferNftModalProps = {
   post: PremiumPostActivityListItem;
-  cancelFunction: Function;
 };
 export const TransferNftModal: React.FC<TransferNftModalProps> = (
   props
@@ -22,6 +20,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
   const [loading, setLoading] = useState(false);
   const [requiredError, setRequiredError] = useState(false);
   const darkTheme = useTheme();
+  const modalContext = useContext(ModalContext);
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -47,7 +46,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
       switch (transferReturn) {
         case 'Success':
           toast('Success', ToastType.Success);
-          props.cancelFunction();
+          modalContext?.closeModal();
           break;
 
         default:
@@ -67,9 +66,8 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
 
   if (modalPage === 'user-input') {
     return (
-      <div className='transfer-modal'>
         <div
-          className='transfer-modal-content'
+          className='transfer-modal'
           style={{
             background: darkOptionsAndColors.background,
             color: darkOptionsAndColors.color,
@@ -115,7 +113,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
               styleType='secondary-NFT'
               style={{ width: '140px', marginLeft: '5px', marginRight: '5px' }}
               onClick={() => {
-                props.cancelFunction();
+                modalContext?.closeModal();
               }}
             >
               Cancel
@@ -138,13 +136,11 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             </Button>{' '}
           </div>
         </div>
-      </div>
     );
   } else if (modalPage === 'review-transaction') {
     return (
-      <div className='transfer-modal'>
         <div
-          className='transfer-modal-content'
+          className='transfer-modal'
           style={{
             background: darkOptionsAndColors.background,
             color: darkOptionsAndColors.color,
@@ -239,7 +235,6 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             </Button>{' '}
           </div>
         </div>
-      </div>
     );
   }
   return <div />;

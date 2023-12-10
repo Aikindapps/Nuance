@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { CardLargeProps } from './types';
 import { DateFormat, formatDate } from '../../shared/utils';
 import { images, icons, colors } from '../../shared/constants';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
   const navigate = useNavigate();

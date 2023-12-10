@@ -6,7 +6,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { UserType } from 'src/nuance_assets/types/types';
 import { PublicationObject } from '../../services/actorService';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 
 type PublicationLinkProps = {
   publicationsArray: Array<PublicationObject>;

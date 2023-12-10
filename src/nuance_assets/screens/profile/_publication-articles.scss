@@ -1,0 +1,213 @@
+.wrapper {
+    .publication-article-list-searchbar {
+        width: 80%;
+        display: flex;
+        justify-content: center;
+        margin-bottom: -40px;
+    }
+
+    .publication-article-list-publication-and-posts-wrapper {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        row-gap: 45px;
+
+        .publication-info-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            align-items: start;
+            row-gap: 4px;
+
+            .display-name {
+                color: #999;
+                font-family: Roboto;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: 24px;
+            }
+
+            .publication-info-horizontal-flex {
+                display: flex;
+                width: 100%;
+                align-items: end;
+                justify-content: start;
+                column-gap: 24px;
+
+                .header-image {
+                    min-width: 30%;
+                    max-width: 30%;
+                    max-height: 100%;
+                    aspect-ratio: 1.8;
+                    object-fit: cover;
+                    border-radius: 5px;
+                }
+
+                .publication-info-vertical-flex {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    width: 70%;
+                    border-bottom: 1px dashed #B2B2B2;
+                    row-gap: 10px;
+                    aspect-ratio: 4.2;
+
+                    .name-edit-button {
+                        width: 100%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+
+                        .name {
+                            color: #151451;
+                            font-family: Roboto;
+                            font-size: 32px;
+                            font-style: normal;
+                            font-weight: 300;
+                            line-height: 32px;
+                        }
+                    }
+
+                    .subtitle {
+                        color: #B2B2B2;
+                        font-family: Roboto;
+                        font-size: 18px;
+                        font-style: normal;
+                        font-weight: 400;
+                        line-height: normal;
+                    }
+
+                    .avatar-stats-wrapper {
+                        display: flex;
+                        width: 100%;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 8px;
+
+                        .avatar-handle {
+                            display: flex;
+                            align-items: center;
+                            column-gap: 4px;
+
+                            .avatar {
+                                min-width: 24px;
+                                max-width: 24px;
+                                min-height: 24px;
+                                max-height: 24px;
+                                background-color: #B2B2B2;
+                                border-radius: 50%;
+                            }
+
+                            .handle {
+                                color: #151451;
+                                font-family: Roboto;
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 700;
+                                line-height: 20px;
+                            }
+                        }
+
+                        .stats {
+                            display: flex;
+                            align-items: center;
+                            justify-content: end;
+                            column-gap: 10px;
+                            color: #666;
+
+
+                            .stat {
+                                text-align: right;
+                                font-family: Roboto;
+                                font-size: 12px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 12px;
+                                border-right: 1px solid #666;
+                                padding-right: 5px;
+                                color: inherit;
+                            }
+                            .stat-without-border{
+                                text-align: right;
+                                font-family: Roboto;
+                                font-size: 12px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 12px;
+                                color: inherit;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media only screen and (max-width: 1089px) {
+    .wrapper {
+        .publication-article-list-searchbar {
+            width: 100%;
+        }
+    
+        .publication-article-list-publication-and-posts-wrapper {
+
+    
+            .publication-info-wrapper {
+
+                .display-name {
+
+                }
+    
+                .publication-info-horizontal-flex {
+                    flex-direction: column;
+                    width: 100%;
+                    align-items: center;
+                    row-gap: 12px;
+    
+                    .header-image {
+                        min-width: 100%;
+                        max-width: 100%;
+                        aspect-ratio: 2.2;
+                    }
+    
+                    .publication-info-vertical-flex {
+                        aspect-ratio: unset;
+                        width: 100%;
+
+                        .name-edit-button {
+    
+                            .name {
+                                font-size: 20px;
+                                line-height: 24px;
+                            }
+                        }
+    
+                        .subtitle {
+                            font-size: 14px;
+                        }
+    
+                        .avatar-stats-wrapper {
+    
+                            .avatar-handle {
+                                .avatar {
+                                    min-width: 18px;
+                                    max-width: 18px;
+                                    min-height: 18px;
+                                    max-height: 18px;
+                                }
+    
+                                .handle {
+                                    font-size: 12px;
+                                    line-height: 15px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+  }

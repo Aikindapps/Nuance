@@ -2,11 +2,13 @@
 
 
 .read-article-wrapper {
+  width: 100vw;
+  margin: 0px;
   .page {
     display: flex;
     justify-content: center;
     margin: 50px 0 0 0;
-    width: 90%;
+    min-width: 90%;
     min-height: 100vh;
 
     .left {
@@ -14,9 +16,10 @@
       flex-direction: column;
       align-items: flex-end;
       justify-items: flex-end;
-      width: 25%;
       border-right: 1px solid $light-border-color;
       padding-right: 20px;
+      row-gap: 7px;
+      max-width: 340px;
 
       .date {
         display: flex;
@@ -29,7 +32,8 @@
       }
 
       .left-content {
-        width: 70%;
+        width: 100%;
+        max-width: 208px;
 
         .menus {
           display: flex;
@@ -75,11 +79,11 @@
     }
 
     .right {
-      width: 70%;
       margin-top: -20px;
+      width: 75%;
+      max-width: 925px;
 
       .content {
-        width: 85%;
 
         a:link {
           color: $link-color;
@@ -92,9 +96,10 @@
         }
 
         .title-post-info-wrapper {
-          padding: 0 0 0 91px;
+          padding: 0px 92px 0px 92px;
+          max-width: 915px;
 
-          .nft-lock-icon{
+          .nft-lock-icon {
             width: 30px;
             margin-bottom: 20px;
           }
@@ -112,21 +117,31 @@
 
         .header-content-wrapper {
           padding: 0 0 0 91px;
-          width: 120%;
+          width: 100%;
 
           .header-image {
-            height: 600px;
+            height: 578px;
+            max-width: 915px;
+            
             object-fit: cover;
             margin-left: -91px;
             width: -webkit-fill-available;
             margin-bottom: 20px;
             background: white;
+
+            @media only screen and (max-width: 768px) {
+              height: 500px;
+            }
+            @media screen and (max-width: 425px) {
+              height: 280px;
+              
+            }
           }
 
           .nft-modal {
             background: white;
             position: absolute;
-            z-index: 100;
+            z-index: 1;
             width: 40vw;
             height: 500px;
             top: 710px;
@@ -134,7 +149,7 @@
             border: #00113E solid;
             border-radius: 15px;
           }
-          
+
 
           .text-not-allowed {
             filter: blur(6px);
@@ -142,12 +157,14 @@
           }
 
           .text {
+            max-width: 715px;
+            padding-right: 35px;
+           
             a:visited {
-              color: purple ;
+              color: purple;
               font-size: 18px;
             }
 
-            width: 100%;
 
             a {
               color: $link-color ;
@@ -156,11 +173,11 @@
               font-size: 18px;
             }
 
-            ul li {
-              font-family: 'PT Serif' ;
+            ul li ol {
+              font-family: 'PT Serif';
               color: $primary-text-color ;
-              font-size: 18px ;
-              line-height: 32px ;
+              font-size: 18px;
+              line-height: 32px;
             }
 
             p {
@@ -186,13 +203,9 @@
               font-size: 24px;
               font-weight: 500;
               color: $primary-color;
-              padding-top: 50px ;
+              padding-top: 50px;
             }
 
-            img {
-              max-width: 100%;
-              object-fit: contain;
-            }
 
             .text-image {
               img {
@@ -224,7 +237,7 @@
         }
 
         .profile-footer-wrapper {
-          padding: 0 0 0 91px;
+          padding: 0px 91px 0px 91px;
         }
 
       }
@@ -235,6 +248,7 @@
         justify-content: center;
         align-items: center;
         padding: 50px 0 10px 0;
+        max-width: 715px;
 
         .profile-picture {
           width: 96px;
@@ -288,12 +302,17 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: baseline;
+  max-width: 715px;
 }
 
 
 .dark-text {
+
+  max-width: 715px;
+  padding-right: 91px;
+
   a:visited {
-    color: purple ;
+    color: purple;
     font-size: 18px;
   }
 
@@ -311,10 +330,10 @@
   }
 
   ul li {
-    font-family: 'PT Serif' ;
+    font-family: 'PT Serif';
     color: $dark-primary-text-color ;
-    font-size: 18px ;
-    line-height: 32px ;
+    font-size: 18px;
+    line-height: 32px;
   }
 
   p {
@@ -340,7 +359,7 @@
     font-size: 24px;
     font-weight: 500;
     color: $primary-color;
-    padding-top: 50px ;
+    padding-top: 50px;
   }
 
   img {
@@ -356,6 +375,15 @@
   }
 }
 
+.comment-section {
+  overflow-x: scroll;
+  max-width: 715px;
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @media only screen and (max-width: 1380px) {
   .read-article-wrapper {
     .page {
@@ -366,7 +394,7 @@
             .nft-modal {
               height: 520px;
             }
-            
+
           }
 
         }
@@ -406,8 +434,9 @@
               width: 55vw;
               height: 570px;
             }
-            .unsufficient{
-             height: 650px; 
+
+            .unsufficient {
+              height: 650px;
             }
           }
 
@@ -430,9 +459,10 @@
               width: 65vw;
               height: 570px;
             }
-            .unsufficient{
-              height: 650px; 
-             }
+
+            .unsufficient {
+              height: 650px;
+            }
           }
 
         }
@@ -453,9 +483,10 @@
               width: 65vw;
               height: 570px;
             }
-            .unsufficient{
-              height: 650px; 
-             }
+
+            .unsufficient {
+              height: 650px;
+            }
           }
 
         }
@@ -476,9 +507,10 @@
               left: 15%;
               height: 620px;
             }
-            .unsufficient{
-              height: 700px; 
-             }
+
+            .unsufficient {
+              height: 700px;
+            }
           }
 
         }
@@ -500,9 +532,10 @@
               width: 65vw;
               height: 670px;
             }
-            .unsufficient{
-              height: 780px; 
-             }
+
+            .unsufficient {
+              height: 780px;
+            }
           }
 
         }
@@ -523,9 +556,10 @@
               width: 70vw;
               height: 720px;
             }
-            .unsufficient{
-              height: 830px; 
-             }
+
+            .unsufficient {
+              height: 830px;
+            }
           }
 
         }
@@ -547,13 +581,14 @@
   }
 
   .read-article-wrapper {
-    width: 100%;
+    margin: 0px;
 
     .page {
       width: 100%;
       justify-content: flex-start;
 
       .left {
+       
         .date {
           margin: 0 -10px 0 0;
           width: max-content;
@@ -565,6 +600,7 @@
         }
 
         .left-menu {
+          max-width: 100%;
           display: flex;
           width: 100%;
         }
@@ -575,7 +611,7 @@
         margin-top: 20px;
 
         .content {
-          width: 85%;
+          
 
           h1 {
             font-size: 32px;
@@ -583,13 +619,15 @@
 
           h2 {
             font-size: 20px;
-          }.title-post-info-wrapper {
-            padding: 0 0 0 35px;
-          
+          }
+
+          .title-post-info-wrapper {
+            padding: 0 35px 0 35px;
+
             .last-modified {
               font-size: 12px;
             }
-          
+
             .title {
               font-family: 'Georgia';
               font-style: normal;
@@ -598,7 +636,7 @@
               line-height: 55px;
               color: #00113E;
             }
-          
+
             .subtitle {
               font-family: 'Roboto';
               font-style: normal;
@@ -616,10 +654,17 @@
 
             .header-image {
               object-fit: cover;
-              height: 200px;
               margin-left: -35px;
-              width: -webkit-fill-available;
+             
+             
+              
               background: white;
+            }
+
+            .dark-text {
+
+              max-width: 715px;
+              padding-right: 35px;
             }
 
             .text {
@@ -654,7 +699,8 @@
           }
 
           .profile-footer-wrapper {
-            padding: 0 0 0 35px;
+            padding: 0px 35px 0px 35px;
+            max-width: 715px;
           }
         }
 
@@ -669,6 +715,6 @@
 
 }
 
-.testing{
+.testing {
   z-index: 6666;
 }

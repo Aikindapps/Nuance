@@ -11,6 +11,8 @@ import {
   PremiumPostActivityListItem,
   PremiumArticleOwners,
   PremiumArticleOwner,
+  ApplaudListItem,
+  IcpTransactionListItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -25,19 +27,30 @@ import {
   getPublisherActor,
   getExtActor,
   getLedgerActor,
+  getIcrc1Actor,
+  getIcpIndexCanister,
 } from '../services/actorService';
-import { AccountIdentifier, LedgerCanister } from '@dfinity/nns';
-import { toHex } from '@dfinity/agent';
+import { AccountIdentifier, LedgerCanister } from '@dfinity/ledger-icp';
+import { TransferResult as Icrc1TransferResult } from '../services/icrc1/icrc1.did';
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
-import { getFieldsFromMetadata, icpPriceToString } from '../shared/utils';
+import {
+  getFieldsFromMetadata,
+  icpPriceToString,
+  toBase256,
+} from '../shared/utils';
 import { Principal } from '@dfinity/principal';
 import { PostKeyProperties } from '../../declarations/PostCore/PostCore.did';
 import {
+  Applaud,
+  Comment,
   PostBucketType,
   PostBucketType__1,
+  SaveCommentModel,
 } from '../../../src/declarations/PostBucket/PostBucket.did';
+import Comments from '../components/comments/comments';
+import { SupportedTokenSymbol } from '../shared/constants';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -91,6 +104,47 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   });
 };
 
+async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
+  const usersCache: Map<string, User> = new Map();
+
+  async function fetchUser(principalId: string): Promise<User> {
+    let user = usersCache.get(principalId);
+    if (!user) {
+      const userResult = await (
+        await getUserActor()
+      ).getUserByPrincipalId(principalId);
+      if ('err' in userResult) throw new Error(userResult.err);
+      user = userResult.ok;
+      usersCache.set(principalId, user);
+    }
+    return user;
+  }
+
+  async function addUserDetails(comment: Comment): Promise<Comment> {
+    const user = await fetchUser(comment.creator);
+    comment.avatar = user.avatar;
+    comment.handle = user.handle;
+    return comment;
+  }
+
+  // Enrich comments with user details and handle replies.
+  const enrichComments = async (
+    commentsToEnrich: Comment[]
+  ): Promise<Comment[]> => {
+    return Promise.all(
+      commentsToEnrich.map(async (comment) => {
+        comment = await addUserDetails(comment);
+        if (comment.replies && comment.replies.length > 0) {
+          comment.replies = await enrichComments(comment.replies);
+        }
+        return comment;
+      })
+    );
+  };
+
+  return enrichComments(comments);
+}
+
 function separateIds(input: string) {
   // Split the input string by the '-' character
   let parts = input.split('-');
@@ -104,15 +158,15 @@ function separateIds(input: string) {
   return { postId, canisterId };
 }
 
-const isUserEditor = (publicationHandle: string,user?:UserType) => {
+const isUserEditor = (publicationHandle: string, user?: UserType) => {
   var result = false;
-  user?.publicationsArray.forEach((pubObj)=>{
-    if(pubObj.publicationName === publicationHandle && pubObj.isEditor){
+  user?.publicationsArray.forEach((pubObj) => {
+    if (pubObj.publicationName === publicationHandle && pubObj.isEditor) {
       result = true;
     }
-  })
-  return result
-}
+  });
+  return result;
+};
 
 const fetchPostsByBuckets = async (
   coreReturns: PostKeyProperties[],
@@ -120,7 +174,10 @@ const fetchPostsByBuckets = async (
 ) => {
   let bucketsMap = new Map<string, PostKeyProperties[]>();
   let postIdToKeyPropertiesMap = new Map<string, PostKeyProperties>();
-  coreReturns.forEach((keyProperties) => {
+  let filteredCoreReturns = coreReturns.filter(
+    (c) => c.bucketCanisterId !== ''
+  );
+  filteredCoreReturns.forEach((keyProperties) => {
     let existing = bucketsMap.get(keyProperties.bucketCanisterId);
     if (existing) {
       bucketsMap.set(keyProperties.bucketCanisterId, [
@@ -226,6 +283,8 @@ export interface PostStore {
   allTags: TagModel[] | undefined;
   myTags: PostTagModel[] | undefined;
   tagsByUser: PostTag[] | undefined;
+  comments: Comment[] | [];
+  totalNumberOfComments: number;
 
   savePost: (post: PostSaveModel) => Promise<PostType | undefined>;
   makePostPremium: (postId: string) => Promise<void>;
@@ -345,6 +404,25 @@ export interface PostStore {
   ) => Promise<LockTokenReturn>;
   getMyBalance: () => Promise<bigint | undefined>;
   transferIcp: (amount: bigint, receiver: string) => Promise<TransferResult>;
+  transferICRC1Token: (
+    amount: number,
+    receiver: string,
+    canisterId: string,
+    fee: number,
+    subaccountIndex?: number
+  ) => Promise<Icrc1TransferResult>;
+  checkTipping: (postId: string, bucketCanisterId: string) => Promise<void>;
+  checkTippingByTokenSymbol: (
+    postId: string,
+    tokenSymbol: SupportedTokenSymbol,
+    bucketCanisterId: string
+  ) => Promise<void>;
+  getApplaudedHandles: (
+    postId: string,
+    bucketCanisterId: string
+  ) => Promise<string[]>;
+  getUserApplauds: () => Promise<ApplaudListItem[]>;
+  getUserIcpTransactions: () => Promise<IcpTransactionListItem[]>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -356,7 +434,7 @@ export interface PostStore {
     isDraft: boolean
   ) => Promise<PostType | undefined>;
 
-  getOwnedNfts: () => Promise<void>;
+  getOwnedNfts: () => Promise<PremiumPostActivityListItem[] | undefined>;
   getSellingNfts: () => Promise<PremiumPostActivityListItem[]>;
   transferNft: (
     tokenIdentifier: string,
@@ -366,6 +444,25 @@ export interface PostStore {
   ) => Promise<string>;
 
   getUserDailyPostStatus: () => Promise<boolean>;
+  getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
+  saveComment: (
+    commentModel: SaveCommentModel,
+    bucketCanisterId: string,
+    edited: Boolean,
+    handle: string,
+    avatar: string,
+    comment?: Comment
+  ) => Promise<void>;
+  upVoteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
+  downVoteComment: (
+    commentId: string,
+    bucketCanisterId: string
+  ) => Promise<void>;
+  deleteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
+  removeCommentVote: (
+    commentId: string,
+    bucketCanisterId: string
+  ) => Promise<void>;
 
   clearAll: () => void;
 }
@@ -426,6 +523,284 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   nftCanistersEntries: [],
   ownedPremiumPosts: [],
   premiumPostsActivities: [],
+  comments: [],
+  totalNumberOfComments: 0,
+
+  getPostComments: async (
+    postId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).getPostComments(postId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        mergeCommentsWithUsers(result.ok.comments)
+          .then((enrichedComments) => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  saveComment: async (
+    commentModel: SaveCommentModel,
+    bucketCanisterId: string,
+    edited: Boolean,
+    handle: string,
+    avatar: string,
+    comment?: Comment
+  ): Promise<void> => {
+    // Generate a temporary ID for the new comment
+    const tempId = Date.now().toString();
+
+    // Create a new comment object with the temporary ID and other properties
+    let newComment = {
+      creator: 'TEMP',
+      handle: handle,
+      avatar: avatar,
+      postId: commentModel.postId,
+      content: commentModel.content,
+      commentId: comment ? comment.commentId : tempId,
+      createdAt: comment ? comment.createdAt : '0',
+      downVotes: comment ? comment.downVotes : ([] as string[]),
+      upVotes: comment ? comment.upVotes : ([] as string[]),
+      replies: comment ? (comment.replies as Comment[]) : ([] as Comment[]),
+      repliedCommentId: [],
+      editedAt: comment ? comment.editedAt : [],
+    } as Comment;
+
+    // Optimistically update the state with the new comment before backend updates
+
+    function findAndUpdateComment(
+      comments: Comment[],
+      commentId: string,
+      updateFn: (comment: Comment) => Comment
+    ): Comment[] {
+      return comments.map((comment) => {
+        if (comment.commentId === commentId) {
+          return updateFn(comment);
+        } else if (comment.replies) {
+          return {
+            ...comment,
+            replies: findAndUpdateComment(comment.replies, commentId, updateFn),
+          };
+        }
+        return comment;
+      });
+    }
+
+    const replyToCommentId =
+      commentModel.replyToCommentId && commentModel.replyToCommentId.length > 0
+        ? commentModel.replyToCommentId[0]
+        : undefined;
+    const actualCommentId =
+      commentModel.commentId && commentModel.commentId.length > 0
+        ? commentModel.commentId[0]
+        : undefined;
+
+    if (replyToCommentId === undefined) {
+      if (actualCommentId) {
+        set((state) => ({
+          comments: findAndUpdateComment(
+            state.comments,
+            actualCommentId,
+            (oldComment) => ({
+              ...oldComment,
+              ...newComment,
+              commentId: comment?.commentId || tempId,
+            })
+          ),
+        }));
+      } else {
+        set((state) => ({ comments: [newComment, ...state.comments] }));
+      }
+    } else {
+      set((state) => ({
+        comments: findAndUpdateComment(
+          state.comments,
+          replyToCommentId,
+          (comment) => ({
+            ...comment,
+            replies: [newComment, ...comment.replies],
+          })
+        ),
+      }));
+    }
+
+    try {
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).saveComment(commentModel);
+      if (Err in result) {
+        // If there is an error, revert the optimistic update
+        set((state) => ({
+          comments: state.comments.filter(
+            (comment) => comment.commentId !== tempId
+          ),
+        }));
+        toastError(result.err);
+      } else {
+        if (
+          edited ||
+          (commentModel.commentId && commentModel.commentId.length > 0)
+        ) {
+          toast(
+            'The changes on your comment have been saved.',
+            ToastType.Success
+          );
+          set((state) => ({
+            comments: state.comments.map((comment) =>
+              comment.commentId === tempId ? { ...comment } : comment
+            ),
+          }));
+          mergeCommentsWithUsers(result.ok.comments)
+            .then((enrichedComments) => {
+              set({
+                comments: enrichedComments,
+                totalNumberOfComments: parseInt(
+                  result.ok.totalNumberOfComments
+                ),
+              });
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        } else {
+          mergeCommentsWithUsers(result.ok.comments)
+            .then((enrichedComments) => {
+              set({
+                comments: enrichedComments,
+                totalNumberOfComments: parseInt(
+                  result.ok.totalNumberOfComments
+                ),
+              });
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+          toast('You posted a comment!', ToastType.Success);
+        }
+      }
+    } catch (err) {
+      // If there is an exception, revert the optimistic update and handle the error
+      set((state) => ({
+        comments: state.comments.filter(
+          (comment) => comment.commentId !== tempId
+        ),
+      }));
+      handleError(err, Unexpected);
+    }
+  },
+
+  upVoteComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).upvoteComment(commentId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        mergeCommentsWithUsers(result.ok.comments)
+          .then((enrichedComments) => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  downVoteComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).downvoteComment(commentId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        mergeCommentsWithUsers(result.ok.comments)
+          .then((enrichedComments) => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  deleteComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).deleteComment(commentId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        //set({ comments: result.ok });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  removeCommentVote: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).removeCommentVote(commentId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        mergeCommentsWithUsers(result.ok.comments)
+          .then((enrichedComments) => {
+            set({
+              comments: enrichedComments,
+              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
+            });
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
 
   clearSearchBar(isTagScreen) {
     set((state) => {
@@ -436,7 +811,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   savePost: async (post: PostSaveModel): Promise<PostType | undefined> => {
     try {
       const result = await (await getPostCoreActor()).save(post);
-      console.log(result)
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -487,7 +861,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         let bucketCanisterId = coreReturn.ok.bucketCanisterId;
         let bucketActor = await getPostBucketActor(bucketCanisterId);
         const bucketReturn = await bucketActor.get(postId);
-        console.log('bucketReturn-> ', bucketReturn)
         if (Err in bucketReturn) {
           //bucket canister returned an error -> it may be a publication post or unauthorized call
           //check if it's a publication post
@@ -526,7 +899,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               } else {
                 //full post is fetched -> get the fontType of the publication and return the post
                 var fontType = '';
-                let publicationAsUser = await(
+                let publicationAsUser = await (
                   await getUserActor()
                 ).getUsersByHandles([bucketPremiumReturn.ok.handle]);
                 if (publicationAsUser.length !== 0) {
@@ -1009,7 +1382,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             } else {
               const post = { ...bucketReturn.ok, ...coreReturn.ok } as PostType;
               const author = authorResult.ok as User;
-              console.log(author, post);
               if (author.handle !== post.handle) {
                 set({ getPostError: `Article not found for @${handle}` });
               } else {
@@ -1199,13 +1571,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getSubmittedForReviewPosts: async (handles: string[]): Promise<void> => {
     try {
       let postCoreCanister = await getPostCoreActor();
-      let bucketCanisterIds = await postCoreCanister.getBucketCanisterIdsOfGivenHandles(
-        handles
-      );
-      let promises: Promise<PostBucketType[]>[] = []
-      for(const bucketCanisterId of bucketCanisterIds){
+      let bucketCanisterIds =
+        await postCoreCanister.getBucketCanisterIdsOfGivenHandles(handles);
+      let promises: Promise<PostBucketType[]>[] = [];
+      for (const bucketCanisterId of bucketCanisterIds) {
         let bucketActor = await getPostBucketActor(bucketCanisterId);
-        promises.push(bucketActor.getSubmittedForReview(handles))
+        promises.push(bucketActor.getSubmittedForReview(handles));
       }
       let results = (await Promise.all(promises)).flat(1);
       set({
@@ -1213,12 +1584,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           return { ...postBucketReturn, views: '0', claps: '0', tags: [] };
         }),
       });
-
     } catch (err) {
       handleError(err, Unexpected);
     }
-    
-
   },
 
   getPostsByCategory: async (
@@ -1770,7 +2138,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       handleError(err, Unexpected);
     }
   },
-  getOwnersOfPremiumArticleReturnOnly: async (postId: string): Promise<PremiumArticleOwners | undefined> => {
+  getOwnersOfPremiumArticleReturnOnly: async (
+    postId: string
+  ): Promise<PremiumArticleOwners | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
       const result = await coreActor.getPostKeyProperties(postId);
@@ -1840,7 +2210,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               ownersList: owners_list,
             };
 
-            return premiumArticleOwners
+            return premiumArticleOwners;
           } catch (err) {
             handleError(err, Unexpected);
           }
@@ -2054,7 +2424,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
     return postActivityListItems;
   },
-  getOwnedNfts: async (): Promise<void> => {
+  getOwnedNfts: async (): Promise<
+    PremiumPostActivityListItem[] | undefined
+  > => {
     try {
       const nftCanistersEntries = await (
         await getPostCoreActor()
@@ -2216,6 +2588,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       });
 
       set({ premiumPostsActivities: postActivityListItems });
+      return postActivityListItems;
     } catch (error) {
       console.log(error);
     }
@@ -2322,7 +2695,189 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       };
     }
   },
+  getApplaudedHandles: async (
+    postId: string,
+    bucketCanisterId: string
+  ): Promise<string[]> => {
+    try {
+      let applauds = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).getPostApplauds(postId);
+      let senderPrincipalIds = applauds.map((val) => val.sender);
+      let handles = await (
+        await getUserActor()
+      ).getHandlesByPrincipals(senderPrincipalIds);
+      return handles;
+    } catch (error) {
+      return [];
+    }
+  },
+  checkTipping: async (
+    postId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      await (await getPostBucketActor(bucketCanisterId)).checkTipping(postId);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  getUserApplauds: async (): Promise<ApplaudListItem[]> => {
+    try {
+      let allBucketCanisterIds = (
+        await (await getPostCoreActor()).getBucketCanisters()
+      ).map((bucketCanisterEntry) => {
+        return bucketCanisterEntry[0];
+      });
+      let promises = allBucketCanisterIds.map(async (bucketCanisterId) => {
+        return (await getPostBucketActor(bucketCanisterId)).getMyApplauds();
+      });
+      //contains the applauds data
+      let applauds = (await Promise.all(promises)).flat(1);
+      //fetch the post details from bucket canisters, merge with applaud data and return
+      let posts = await fetchPostsByBuckets(
+        applauds.map((applaud) => {
+          //build a CoreReturn object from an applaud -> only the bucketCanisterId matters
+          return {
+            bucketCanisterId: applaud.bucketCanisterId,
+            postId: applaud.postId,
+            created: '',
+            principal: '',
+            modified: '',
+            views: '',
+            publishedDate: '',
+            claps: '',
+            tags: [],
+            isDraft: false,
+            category: '',
+            handle: '',
+          };
+        }),
+        true
+      );
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      let mergedApplaudsIncludingNull = applauds.map((applaud) => {
+        let post: PostType | undefined = undefined;
+        for (const p of posts) {
+          if (p.postId === applaud.postId) {
+            //found the corresponding post
+            post = p;
+          }
+        }
+        if (post) {
+          return {
+            applauds: Number(applaud.numberOfApplauds),
+            currency: applaud.currency,
+            date: applaud.date,
+            postId: applaud.postId,
+            url: post.url,
+            handle: post.isPublication
+              ? post.creator || post.handle
+              : post.handle,
+            tokenAmount: Number(applaud.tokenAmount),
+            applaudId: applaud.applaudId,
+            isSender: userWallet.principal === applaud.sender,
+            title: post.title,
+            bucketCanisterId: applaud.bucketCanisterId,
+          };
+        }
+      });
+      let result: ApplaudListItem[] = [];
+      mergedApplaudsIncludingNull.forEach((val) => {
+        if (val) {
+          result.push(val);
+        }
+      });
 
+      return result;
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  },
+  getUserIcpTransactions: async (): Promise<IcpTransactionListItem[]> => {
+    
+    try {
+      let icpIndexCanister = await getIcpIndexCanister();
+    let userWallet = await useAuthStore.getState().getUserWallet();
+    let response = await icpIndexCanister.get_account_identifier_transactions({
+      max_results: BigInt(100),
+      start: [],
+      account_identifier: userWallet.accountId,
+    });
+    if('Err' in response){
+      //should never happen
+      //just return an empty array
+      return [];
+    }
+    else{
+      let transactionItems = response.Ok.transactions.map((t) => {
+        let operation = t.transaction.operation;
+        if ('Transfer' in operation) {
+          return {
+            date:
+              t.transaction.created_at_time.length === 0
+                ? ''
+                : (
+                    Number(t.transaction.created_at_time[0].timestamp_nanos) /
+                    1000000
+                  ).toString(),
+            currency: 'ICP' as SupportedTokenSymbol,
+            receiver: operation.Transfer.to,
+            sender: operation.Transfer.from,
+            isDeposit: operation.Transfer.to === userWallet.accountId,
+            amount: Number(operation.Transfer.amount.e8s),
+          };
+        }
+      });
+      let result : IcpTransactionListItem[] = [];
+      for(const transactionItem of transactionItems){
+        if(transactionItem){
+          result.push(transactionItem);
+        }
+      }
+      return result;
+    }
+    } catch (error) {
+      handleError(error)
+      return [];
+    }
+  },
+  checkTippingByTokenSymbol: async (
+    postId: string,
+    tokenSymbol: SupportedTokenSymbol,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      let response = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).checkTippingByTokenSymbol(postId, tokenSymbol, '');
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  transferICRC1Token: async (
+    amount: number,
+    receiver: string,
+    canisterId: string,
+    fee: number,
+    subaccountIndex?: number
+  ): Promise<Icrc1TransferResult> => {
+    let tokenActor = await getIcrc1Actor(canisterId);
+    return await tokenActor.icrc1_transfer({
+      to: {
+        owner: Principal.fromText(receiver),
+        subaccount: subaccountIndex ? [toBase256(subaccountIndex, 32)] : [],
+      },
+      fee: [BigInt(fee)],
+      memo: [],
+      from_subaccount: [],
+      created_at_time: [],
+      amount: BigInt(amount),
+    });
+  },
   transferIcp: async (
     amount: bigint,
     receiver: string

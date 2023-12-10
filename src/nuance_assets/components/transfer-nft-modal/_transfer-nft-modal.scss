@@ -1,84 +1,72 @@
 .transfer-modal {
-  width: 100%;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background-color: rgba(67, 223, 186, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 100;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 18px;
+  color: #00113e;
+  background-color: white;
+  z-index: 101;
   display: flex;
-  justify-content: center;
+  padding: 20px;
+  flex-direction: column;
   align-items: center;
+  width: 100%;
+  border-radius: 4px;
+  max-width: 550px;
+  max-height: 90%;
 
-  .transfer-modal-content {
-    font-family: Georgia, "Times New Roman", Times, serif;
-    font-weight: 400;
-    font-size: 18px;
-    color: #00113e;
-    background-color: white;
-    z-index: 101;
-    display: flex;
-    padding: 20px;
-    flex-direction: column;
-    align-items: center;
-    max-width: 35%;
-    max-height: 90%;
-
-    .nuance-logo {
-      height: 110px;
-    }
-
-    .warning-text {
-      font-family: 'Georgia';
-      font-style: normal;
-      font-weight: 400;
-      font-size: 14px;
-      line-height: 20px;
-      text-align: center;
-
-      color: #AE0000;
-    }
-
-    .address-header {
-      font-family: 'Roboto';
-      font-style: normal;
-      font-weight: 400;
-      font-size: 16px;
-      line-height: 24px;
-      text-align: center;
-      align-self: flex-start;
-      word-break: break-all;
-      color: #19192E;
-    }
-
-    .review-transaction {
-      font-family: 'Roboto';
-      font-style: normal;
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 24px;
-      text-align: center;
-      align-self: center;
-      word-break: break-all;
-      color: #19192E;
-    }
-
-    .review-address{
-      font-weight: 700;
-    }
-
-    .input-wrapper {
-      width: 100%;
-    }
-
-    .buttons-flex {
-      display: flex;
-      width: 100%;
-      justify-content: center;
-      bottom: 10px;
-    }
-
-
+  .nuance-logo {
+    height: 110px;
   }
+
+  .warning-text {
+    font-family: 'Georgia';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+
+    color: #AE0000;
+  }
+
+  .address-header {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    align-self: flex-start;
+    word-break: break-all;
+    color: #19192E;
+  }
+
+  .review-transaction {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: center;
+    align-self: center;
+    word-break: break-all;
+    color: #19192E;
+  }
+
+  .review-address {
+    font-weight: 700;
+  }
+
+  .input-wrapper {
+    width: 100%;
+  }
+
+  .buttons-flex {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    bottom: 10px;
+  }
+
+
 }

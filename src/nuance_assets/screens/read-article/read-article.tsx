@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import parse from 'html-react-parser';
 import Header from '../../components/header/header';
@@ -27,13 +27,17 @@ import { icons } from '../../shared/constants';
 import ClapButton from '../../UI/clap-button/clap-button';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import Linkify from 'react-linkify';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { PublicationStylingObject } from '../../types/types';
 import PostInformation from '../../components/post-information/post-information';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 import { PremiumArticleInfo } from '../../components/premium-article-info/premium-article-info';
+import Comments from '../../components/comments/comments';
+import WriteComment from '../../components/comments/write-comments';
+import { PostBucket } from 'src/declarations/PostBucket';
+import { get } from 'lodash';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -80,6 +84,12 @@ const ReadArticle = () => {
     getOwnedNfts,
     getPremiumPostError,
     ownedPremiumPosts,
+    getPostComments,
+    saveComment,
+    upVoteComment,
+    downVoteComment,
+    deleteComment,
+    comments,
   } = usePostStore((state) => ({
     getPost: state.getPostWithPublicationControl,
     clearPost: state.clearPost,
@@ -95,6 +105,12 @@ const ReadArticle = () => {
     getPremiumPostError: state.getPremiumPostError,
     ownedPremiumPosts: state.ownedPremiumPosts,
     getOwnedNfts: state.getOwnedNfts,
+    getPostComments: state.getPostComments,
+    comments: state.comments,
+    saveComment: state.saveComment,
+    upVoteComment: state.upVoteComment,
+    downVoteComment: state.downVoteComment,
+    deleteComment: state.deleteComment,
   }));
 
   const { user, getUsersByHandles, usersByHandles } = useUserStore((state) => ({
@@ -153,6 +169,22 @@ const ReadArticle = () => {
     return { postId, bucketCanisterId };
   };
 
+  const getLeftStyle = () => {
+    if (context.width <= 768) {
+      if (isToggled) {
+        return { width: 'max-content' };
+      } else {
+        return { width: '30px', paddingRight: '25px', maxWidth: '30px' };
+      }
+    } else {
+      if (context.width > 768) {
+        return { width: '25%' };
+      } else {
+        return { width: '30px', paddingRight: '25px', maxWidth: '30px' };
+      }
+    }
+  };
+
   const postId = separateIds(id as string).postId;
 
   const getTitleFromUrl = (url: string) => {
@@ -166,6 +198,37 @@ const ReadArticle = () => {
     clearSearchBar(false);
     navigate('/', { replace: true });
   };
+
+  //comment scrolling
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const commentId = queryParams.get('comment');
+
+  useEffect(() => {
+    const scrollToComment = () => {
+      const commentElement = document.getElementById(`comment-${commentId}`);
+      if (commentElement) {
+        const commentPosition =
+          commentElement.getBoundingClientRect().top + window.pageYOffset;
+
+        const margin = 30;
+        window.scrollTo({
+          top: commentPosition - margin,
+          behavior: 'smooth',
+        });
+
+        navigate(`${location.pathname}`, { replace: true });
+      }
+    };
+    if (commentId) {
+      if (comments && comments.length > 0) {
+        scrollToComment();
+      } else {
+        const retryTimeout = setTimeout(scrollToComment, 500);
+        return () => clearTimeout(retryTimeout);
+      }
+    }
+  }, [commentId, comments, navigate, location.pathname]);
 
   useEffect(() => {
     clearPost();
@@ -204,6 +267,12 @@ const ReadArticle = () => {
       redirect(post?.url);
     }
   }, [post]);
+
+  useEffect(() => {
+    if (post) {
+      getPostComments(postId, post?.bucketCanisterId);
+    }
+  }, [post?.postId]);
 
   useEffect(() => {
     if (post) {
@@ -262,7 +331,7 @@ const ReadArticle = () => {
       () => {
         setScreenWidth(window.innerWidth);
       }),
-    [screenWidth]
+    [context.width]
   );
 
   const isSidebarToggled = (data: any) => {
@@ -306,7 +375,7 @@ const ReadArticle = () => {
         setButtonCount((prevCounter) => prevCounter + 1);
         clapPost(post?.postId || '');
         //ovation effect, user must hold button for 2 seconds for 10 claps total
-        if (screenWidth > 768 && user?.nuaTokens - buttoncount > 9) {
+        if (context.width > 768 && user?.nuaTokens - buttoncount > 9) {
           const interval = setInterval(() => {
             nineClaps();
             setButtonCount((prevCounter) => prevCounter + 9);
@@ -381,7 +450,6 @@ const ReadArticle = () => {
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
-  console.log(url);
   return (
     <div style={darkOptionsAndColors} className='read-article-wrapper'>
       <Helmet>
@@ -425,9 +493,7 @@ const ReadArticle = () => {
         loggedIn={isLoggedIn}
         isArticlePage={false}
         isReadArticlePage={true}
-        ScreenWidth={screenWidth}
-        tokens={user && user?.nuaTokens - buttoncount}
-        loading={tokenAnimate}
+        ScreenWidth={context.width}
         isPublicationPage={post?.isPublication}
         category={post?.category}
         publication={
@@ -439,16 +505,7 @@ const ReadArticle = () => {
       />
 
       <div className='page'>
-        <div
-          className='left'
-          style={
-            screenWidth <= 768 && isToggled
-              ? { width: 'max-content' }
-              : screenWidth <= 768 && !isToggled
-              ? { width: '30px', paddingRight: '25px' }
-              : { width: '25%' }
-          }
-        >
+        <div className='left' style={getLeftStyle()}>
           <p className='date'>
             {formatDate(post?.publishedDate) || formatDate(post?.created)}{' '}
           </p>
@@ -517,7 +574,7 @@ const ReadArticle = () => {
                 </div>
                 <ClapButton
                   styleType={darkTheme ? 'clap-button-dark' : 'clap-button'}
-                  disabled={clapDisabled}
+                  disabled={loading}
                   dark={darkTheme}
                   type='button'
                   style={{ width: '96px' }}
@@ -527,21 +584,24 @@ const ReadArticle = () => {
                   onMouseUp={() => {
                     setMouseDown(false);
                   }}
-                >
-                  {parseInt(postclaps) + buttoncount}
-                </ClapButton>
+                  applaudingPost={post}
+                />
               </div>
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
-                {screenWidth > 1089 && publicationHandle == 'FastBlocks' ? (
+                {context.width > 1089 && publicationHandle == 'FastBlocks' ? (
                   <EmailOptIn
-                    mobile={screenWidth < 1089}
+                    mobile={context.width < 1089}
                     publictionHandle={publicationHandle}
                   />
                 ) : null}
               </div>
             </>
           }
-          {!user ? <LoggedOutSidebar responsiveElement={false} /> : ''}
+          {!user && context.width > 768 ? (
+            <LoggedOutSidebar style={{ alignItems: 'end' }} />
+          ) : (
+            ''
+          )}
         </div>
 
         <div className='right'>
@@ -565,9 +625,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                          fontFamily: publication?.styling.fontType,
-                          color: darkOptionsAndColors.color,
-                        }
+                        fontFamily: publication?.styling.fontType,
+                        color: darkOptionsAndColors.color,
+                      }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -578,7 +638,7 @@ const ReadArticle = () => {
                   post={post}
                   readTime={getReadTime()}
                   publication={publication}
-                  isMobile={screenWidth <= 768}
+                  isMobile={context.width <= 768}
                   handle={handle}
                 />
                 <h2 className='subtitle'>{post.subtitle}</h2>
@@ -646,13 +706,14 @@ const ReadArticle = () => {
                         type='button'
                         style={{ width: '96px' }}
                         dark={darkTheme}
-                        disabled={clapDisabled}
+                        disabled={loading}
                         onMouseDown={() => {
                           setMouseDown(true);
                         }}
                         onMouseUp={() => {
                           setMouseDown(false);
                         }}
+                        applaudingPost={post}
                       >
                         {parseInt(postclaps) + buttoncount}
                       </ClapButton>
@@ -689,20 +750,43 @@ const ReadArticle = () => {
                   <Linkify componentDecorator={componentDecorator}>
                     <p className='biography'>{getBio()}</p>
                   </Linkify>
+                  <FollowAuthor
+                    AuthorHandle={author?.handle || ''}
+                    Followers={user?.followersArray || undefined}
+                    user={user?.handle || ''}
+                    isPublication={false}
+                  />
                 </div>
-                <FollowAuthor
-                  AuthorHandle={author?.handle || ''}
-                  Followers={user?.followersArray || undefined}
-                  user={user?.handle || ''}
-                  isPublication={false}
-                />
                 <div className='publication-email-opt-in' ref={refEmailOptIn}>
-                  {screenWidth < 1089 && publicationHandle == 'FastBlocks' ? (
+                  {context.width < 1089 && publicationHandle == 'FastBlocks' ? (
                     <EmailOptIn
-                      mobile={screenWidth < 1089}
+                      mobile={context.width < 1089}
                       publictionHandle={publicationHandle}
                     />
                   ) : null}
+                </div>
+                <div className='comment-section'>
+                  <WriteComment
+                    postId={post.postId}
+                    bucketCanisterId={post.bucketCanisterId}
+                    label='WRITE A COMMENT..'
+                    handle={user?.handle || ''}
+                    avatar={user?.avatar || ''}
+                  />
+
+                  {comments != undefined &&
+                    comments.length > 0 &&
+                    comments.map((comment) => (
+                      <Comments
+                        key={comment.commentId}
+                        isReply={false}
+                        comment={comment}
+                        bucketCanisterId={post.bucketCanisterId}
+                        postId={post.postId}
+                        loggedInUser={user?.handle || ''}
+                        avatar={user?.avatar || ''}
+                      />
+                    ))}
                 </div>
               </div>
             </div>

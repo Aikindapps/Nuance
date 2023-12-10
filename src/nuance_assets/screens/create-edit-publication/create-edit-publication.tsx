@@ -35,10 +35,10 @@ import {
   IconName,
 } from '@fortawesome/free-regular-svg-icons';
 import { faPencil } from '@fortawesome/free-solid-svg-icons';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 import { BlockPicker } from 'react-color';
 import SelectFontType from '../../components/select-font-type/select-font-type';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 import PublicationIconSelector from '../../components/publication-icon-selector/publication-icon-selector';
 import PublicationCallToAction from '../../components/publication-call-to-action/publication-call-to-action';
@@ -1183,8 +1183,6 @@ const CreateEditPublication = () => {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={false}
           isUserAdminScreen={true}
         />
@@ -1232,8 +1230,6 @@ const CreateEditPublication = () => {
           loggedIn={isLoggedIn}
           isArticlePage={false}
           ScreenWidth={screenWidth}
-          tokens={user?.nuaTokens}
-          loading={false}
           isPublicationPage={false}
           isUserAdminScreen={true}
         />

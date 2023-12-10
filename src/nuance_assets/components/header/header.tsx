@@ -7,10 +7,10 @@ import { colors, icons, images } from '../../shared/constants';
 import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { PublicationStylingObject, PublicationType } from '../../types/types';
 import { trim_category_name } from '../../shared/utils';
-import { useTheme, useThemeUpdate } from '../../ThemeContext';
+import { useTheme, useThemeUpdate } from '../../contextes/ThemeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsis, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
 
 type HeaderProps = {
   loggedIn: Boolean;
@@ -18,8 +18,6 @@ type HeaderProps = {
   ScreenWidth: number;
   isReadArticlePage?: Boolean;
   isMyProfilePage?: Boolean;
-  tokens?: Number;
-  loading: Boolean;
   isPublicationPage: Boolean | undefined;
   category?: string;
   postTitle?: String;
@@ -270,38 +268,6 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
         ) : (
           ''
         )}
-
-        <div className={props.loggedIn ? 'token-display' : 'hide-icon'}>
-          <div>
-            <img
-              src={
-                props.loading
-                  ? images.loaders.NUANCE_LOADER
-                  : images.NUANCE_LOGO
-              }
-              style={{
-                width: '20px',
-                height: '20px',
-                marginTop: '0px',
-                color: darkOptionsAndColors.color,
-              }}
-            ></img>
-          </div>
-          <span
-            className={
-              props.isMyProfilePage || props.isArticlePage ? 'header-span' : ''
-            }
-            style={{
-              color: props.isUserAdminScreen
-                ? darkTheme
-                  ? colors.primaryTextColor
-                  : colors.darkModePrimaryTextColor
-                : darkOptionsAndColors.color,
-            }}
-          >
-            {props.tokens}
-          </span>
-        </div>
         <div className='dark-mode-toggle'>
           <img
             className='dark-mode-icon'

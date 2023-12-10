@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { images, icons, colors } from '../../shared/constants';
 import { useUserStore } from '../../store';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const MeatBallSidebar = () => {
   const navigate = useNavigate();

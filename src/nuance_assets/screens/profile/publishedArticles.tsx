@@ -4,7 +4,7 @@ import { usePostStore, useUserStore, useAuthStore } from '../../store';
 import { PostType } from '../../types/types';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 
@@ -87,7 +87,7 @@ const PublishedArticles = () => {
       <p className='title'>
         PUBLISHED ARTICLES ({counts?.publishedCount || 0})
       </p>
-      <div className='article-grid-horizontal'>
+      <div className='list-card-draft-articles'>
         {!loading ? (
           displayingPosts?.length ? (
             displayingPosts.map((post: PostType) => {
@@ -112,9 +112,6 @@ const PublishedArticles = () => {
                 <CardDraftArticles
                   post={post}
                   key={post.postId}
-                  isPremium={post.isPremium}
-                  isPublicationPost={post.isPublication}
-                  dark={darkTheme}
                 />
               );
             })

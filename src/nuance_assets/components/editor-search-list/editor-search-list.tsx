@@ -7,17 +7,15 @@ import { colors, images } from '../../shared/constants';
 import { TagModel } from '../../services/actorService';
 import { Link } from 'react-router-dom';
 import CardEditorPublication from '../card-editor-publication/card-editor-publication';
-import { faArrowDown, faArrowUp } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Row, Col } from 'react-bootstrap';
-import { useTheme } from '../../ThemeContext';
+import './_editor-search-list.scss';
+import { useTheme } from '../../contextes/ThemeContext';
 
 type EditorSearchListProps = {
   posts: Array<PostType>;
   loading: boolean;
   loadingMore: boolean;
   loadMoreHandler: Function;
-  totalCount: Number;
+  totalCount: number;
   searchedTag: TagModel | undefined;
   lastSearchPhrase: string;
   setShowResults: Function;
@@ -105,63 +103,30 @@ const EditorSearchList: React.FC<EditorSearchListProps> = (
       {props.loading ? (
         <Loader />
       ) : (
-        <div>
-          <Row
-            className='headerRow'
-            style={{
-              color: colors.darkerBorderColor,
-              textTransform: 'uppercase',
-              fontSize: '12px',
-              marginBottom: '25px',
-              fontWeight: 'bold',
-              textAlign: 'center',
-            }}
-          >
-            <Col>Live</Col>
-            <Col sm={2}>Article</Col>
-            <Col>&nbsp;</Col>
-            <Col>Author</Col>
-            <Col style={{ textAlign: 'right' }}>Category</Col>
-            <Col
-              sm={2}
+        <div className='editor-search-list-wrapper'>
+          <div className='titles'>
+            <p className='title-general title-published'>PUBLISHED</p>
+            <p className='title-general title-article'>ARTICLE</p>
+            <p className='title-general title-writer'>WRITER</p>
+            <p className='title-general title-category'>CATEGORY</p>
+            <p className='title-general title-applause'>APPLAUSE</p>
+            <p
+              className='title-general title-published-date'
               onClick={() => {
                 props.handleSortByPublishedDate();
               }}
             >
-              <span>
-                <FontAwesomeIcon
-                  style={{
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    color: colors.darkerBorderColor,
-                  }}
-                  icon={props.sortedByPublishedDate ? faArrowUp : faArrowDown}
-                />
-              </span>
-              &nbsp;Published
-            </Col>
-            <Col
+              PUBLISHED DATE
+            </p>
+            <p
+              className='title-general title-modified'
               onClick={() => {
                 props.handleSortByModifiedDate();
               }}
             >
-              <span>
-                <FontAwesomeIcon
-                  style={{
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    color: colors.darkerBorderColor,
-                  }}
-                  icon={
-                    props.sortedByLastModifiedDate ? faArrowUp : faArrowDown
-                  }
-                />
-              </span>
-              &nbsp;Modified
-            </Col>
-          </Row>
+              MODIFIED
+            </p>
+          </div>
           {props.posts.map((post: PostType) => (
             <CardEditorPublication
               categoryChangeHandler={props.categoryChangeHandler}

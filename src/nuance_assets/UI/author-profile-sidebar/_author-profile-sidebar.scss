@@ -15,6 +15,10 @@
 
     .buttons {
       padding-left: 15px;
+      row-gap: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: end;
       .button {
         margin: 30px 4px 0px 0px;
       }

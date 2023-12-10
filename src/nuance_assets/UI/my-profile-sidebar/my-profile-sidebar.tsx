@@ -5,8 +5,8 @@ import Button from '../Button/Button';
 import { icons, colors } from '../../shared/constants';
 import { PublicationObject } from '../../types/types';
 import PublicationLink from '../../screens/profile/publicationLink';
-import { useTheme } from '../../ThemeContext';
-import { Context } from '../../Context';
+import { useTheme } from '../../contextes/ThemeContext';
+import { Context } from '../../contextes/Context';
 
 type MyProfileSidebarProps = {
   isSidebarToggle?: (e: any) => void;

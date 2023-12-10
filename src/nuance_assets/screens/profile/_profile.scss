@@ -53,12 +53,14 @@
 
   .container {
     display: grid;
-    align-items: flex-start;
+    align-items: baseline;
+    justify-content: center;
     grid-template-columns: 18% 82%;
-    margin-top: 20vh;
+    margin-top: 114px;
     min-height: calc(80vh - 64px);
     box-sizing: border-box;
-    min-width: 100%;
+    width: 100%;
+    max-width: 1126px;
 
     .sidebar {
       box-sizing: border-box;
@@ -66,7 +68,6 @@
       display: flex;
       height: 100%;
       flex-direction: column;
-      padding-left: 25%;
       margin-left: -8%;
       height: 100vh;
 
@@ -127,7 +128,6 @@
       padding: 0 5% 0 5%;
       display: flex;
       flex-direction: column;
-      width: 80vw;
 
       .title {
         font-family: 'Roboto';
@@ -138,14 +138,25 @@
       }
 
       .wallet-text {
-        font-family: 'Roboto';
+        font-family: Roboto;
+        font-size: 16px;
         font-style: normal;
         font-weight: 400;
-        font-size: 16px;
         line-height: 24px;
-        width: 50%;
+        width: 65%;
         color: #19192E;
       }
+
+      .statistic-text {
+        margin-top: 25px;
+        font-family: 'Roboto';
+        font-weight: 700;
+        font-size: 12px;
+        line-height: 24px;
+        color: $darker-border-color;
+        margin-bottom: 0;
+      }
+
 
       .content {
         display: flex;
@@ -191,14 +202,19 @@
         }
       }
 
+      .horizontal-dashed-divider {
+        width: 100%;
+        border-bottom: 1px dashed #B2B2B2;
+      }
+
       .statistic {
         display: flex;
         height: 144px;
         width: 100%;
+        align-items: center;
 
         .stat {
-          border-left: 1px dashed $medium-border-color;
-          height: 100%;
+          height: 80%;
           box-sizing: border-box;
           width: 33%;
           display: flex;
@@ -206,10 +222,6 @@
           align-items: center;
           flex-direction: column;
           position: relative;
-
-          &:last-child {
-            border-right: 1px dashed $medium-border-color;
-          }
 
           .count {
             font-family: 'Roboto';
@@ -219,6 +231,32 @@
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+          }
+
+          .nua-equivalance {
+            display: flex;
+            align-items: center;
+            /* width: 60%; */
+            justify-content: space-between;
+            background: #F2F2F2;
+            border-radius: 4px;
+            color: #999;
+            font-size: 14px;
+            margin-top: 5px;
+
+            .eq {
+              padding-top: 4px;
+              padding-bottom: 4px;
+              padding-left: 8px;
+              padding-right: 8px;
+            }
+
+            .value {
+              padding-top: 4px;
+              padding-bottom: 4px;
+              padding-left: 8px;
+              padding-right: 8px;
+            }
           }
 
           .comingSoon {
@@ -243,12 +281,26 @@
             font-size: 17px;
             color: #999999;
           }
-          .transfer-icon{
+
+          .transfer-icon {
             cursor: pointer;
             position: absolute;
             bottom: 6px;
           }
         }
+      }
+
+      .deposit-withdraw-buttons-wrapper {
+        width: 100%;
+        background: transparent;
+        border-bottom: 1px dashed #B2B2B2;
+        border-top: 1px dashed #B2B2B2;
+        height: 86px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        column-gap: 15px;
       }
 
       .address-flex {
@@ -361,68 +413,73 @@
       }
 
       .token-activities {
-        
-        overflow-x: auto; 
+
+        overflow-x: auto;
+        margin-bottom: 50px;
+
         .token-activities-header {
           display: flex;
-          justify-content: space-between;
           font-family: 'Roboto';
           font-style: normal;
           font-weight: 700;
-          font-size: 14px;
+          font-size: 12px;
           line-height: 42px;
           color: #999999;
           min-width: 800px;
-          
-          
+
+
 
           .amount {
-            width: 6%;
+            width: 10.9%;
+
           }
 
           .date {
-            width: 10%;
+            width: 16.8%;
           }
 
           .from {
-            width: 5%;
-          }
+            width: 32.9%;
+            display: flex;
+            align-items: center;
 
-          .article {
-            width: 10%;
+            .writer {
+              width: 29.1%;
+            }
+
+            .post-title {
+              width: 70.9%;
+            }
           }
 
           .key {
-            width: 18%;
+            width: 28.1%;
           }
 
           .transfer {
-            width: 10%;
+            width: 11%;
           }
         }
 
         .token-activity-wrapper {
           height: 36px;
-         min-width: 800px; /* fixed width */
-  overflow-x: auto; /* scrollbar appears only when content overflows */
-  overflow-y: hidden; /* hides vertical scrollbar */
-  white-space: nowrap;
+          min-width: 800px;
+          /* fixed width */
+          overflow-x: auto;
+          /* scrollbar appears only when content overflows */
+          overflow-y: hidden;
+          /* hides vertical scrollbar */
+          white-space: nowrap;
 
           .token-activity-flex {
             display: flex;
-            justify-content: space-between;
-            font-size: 16px;
+            font-size: 12px;
             height: 24px;
             margin-top: 10px;
             margin-bottom: 10px;
             color: #151451;
+            border-bottom: 1px dashed #B2B2B2;
 
-
-            .amount {
-              width: 6%;
-              font-weight: 700;
-              white-space: nowrap;
-            }
 
             .withdraw-icp {
               color: #CC4747;
@@ -432,36 +489,10 @@
               color: #5ad6b9;
             }
 
-            .date {
-              width: 10%;
-              white-space: nowrap;
-            }
-
-            .writer {
-              width: 5%;
-            }
-
-            .writer:hover {
-              cursor: pointer;
-              text-decoration: underline;
-            }
-
-            .activity-title {
-              width: 10%;
-              white-space: nowrap;
-              overflow: hidden;
-            }
-
-            .activity-title:hover {
-              cursor: pointer;
-              text-decoration: underline;
-            }
-
             .key-flex {
-              width: 18%;
               display: flex;
-              justify-content: space-between;
               align-items: center;
+              column-gap: 8px;
 
               .key-counts {
                 white-space: nowrap;
@@ -483,12 +514,43 @@
             }
 
             .transfer-icon {
-              width: 10%;
-
+              cursor: pointer;
+              padding-left: calc(5.5% - 24px);
             }
 
-            .transfer-icon:hover {
+            .amount {
+              width: 10.9%;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
+
+            .date {
+              width: 16.8%;
+              font-style: normal;
+              font-weight: 400;
+              line-height: normal;
+            }
+
+            .from {
+              width: 32.9%;
+              font-weight: 400;
+              line-height: normal;
+              overflow: hidden;
               cursor: pointer;
+              &:hover{
+                text-decoration: underline;
+              }
+            }
+
+            .key {
+              width: 28.1%;
+              font-weight: 400;
+              line-height: normal;
+            }
+
+            .transfer {
+              width: 11%;
             }
 
           }
@@ -642,10 +704,8 @@
 
         .statistic {
           .stat {
-            padding-top: 40px;
-            justify-content: flex-start;
             text-align: center;
-            
+
           }
         }
       }
@@ -712,21 +772,23 @@
 @media only screen and (max-width: 546px) {
   .profile-wrapper {
     .container {
-      .wrapper{
-        padding: 2px;
+      .wrapper {
+        padding: 20px;
+
         .statistic {
           .stat {
             padding: 5px;
             border-left: none;
             border-right: 1px dotted #B2B2B2;
-            
-            
+
+
             &:last-child {
               border-right: none;
             }
           }
         }
       }
+
       .sidebar {
         padding-left: 25%;
 
@@ -884,6 +946,31 @@
       .not-toggled {
         padding-left: 25px;
       }
+    }
+  }
+}
+
+@media only screen and (max-width: 546px) {
+  .profile-wrapper .container .wrapper .deposit-withdraw-buttons-wrapper {
+    width: 100%;
+    height: 120px;
+    row-gap: 8px;
+    flex-direction: column;
+
+    .button-attributes-deposit {
+      width: 100%;
+    }
+
+    .button-attributes-deposit-dark {
+      width: 100%;
+    }
+
+    .button-attributes-withdraw {
+      width: 100%;
+    }
+
+    .button-attributes-withdraw-dark {
+      width: 100%;
     }
   }
 }

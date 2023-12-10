@@ -150,6 +150,8 @@ export interface _SERVICE {
   'createNewBucketCanister' : ActorMethod<[], Result_1>,
   'createTag' : ActorMethod<[string], Result_8>,
   'currentId' : ActorMethod<[], bigint>,
+  'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
+  'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetModeration' : ActorMethod<
     [],
     [Array<[string, bigint]>, Array<[string, PostModerationStatus]>]
@@ -232,6 +234,7 @@ export interface _SERVICE {
   'getWasmChunks' : ActorMethod<[], Result_6>,
   'handleModclubMigration' : ActorMethod<[string], Result_1>,
   'idQuick' : ActorMethod<[], Principal>,
+  'incrementApplauds' : ActorMethod<[string, bigint], undefined>,
   'indexPopular' : ActorMethod<[], undefined>,
   'initializeCanister' : ActorMethod<[string, string, string], Result_1>,
   'initializePostCoreCanister' : ActorMethod<[], Result_1>,

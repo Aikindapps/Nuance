@@ -1,6 +1,6 @@
 import React from 'react';
 import { images } from '../../shared/constants';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 const Loader = () => {
   const darkTheme = useTheme();

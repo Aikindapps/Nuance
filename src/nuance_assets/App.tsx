@@ -6,7 +6,11 @@ import { Toaster } from 'react-hot-toast';
 import Loader from './UI/loader/Loader';
 import { useAuthStore } from './store';
 import { useIdleTimer } from 'react-idle-timer';
-import { ThemeProvider, useTheme } from './ThemeContext';
+import { ThemeProvider, useTheme } from './contextes/ThemeContext';
+import {
+  Context as ModalContext,
+  ContextProvider as ModalContextProvider,
+} from './contextes/ModalContext';
 import { images, colors } from './shared/constants';
 
 const HomePageGrid = lazy(() => import('./screens/home/homegrid'));
@@ -43,24 +47,22 @@ const CategoryLanding = lazy(
   () => import('./screens/category-landing/category-landing')
 );
 const Wallet = lazy(() => import('./screens/profile/wallet'));
-
-import { LoginModal } from './components/login-modal/login-modal';
-import { WithdrawIcpModal } from './components/withdraw-icp-modal/withdraw-icp-modal';
-import { Context } from './Context';
+import { Context } from './contextes/Context';
 import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';
+import { ModalsWrapper } from './components/modals-wrapper/modals-wrapper';
 
 const Routes = () => {
   return useRoutes([
     { path: '/', element: <HomePageGrid /> },
-    { path: '/metrics', element: <Metrics/> },
+    { path: '/metrics', element: <Metrics /> },
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
     { path: '/:handle', element: <Profile /> },
     { path: '/:handle/:id/:title', element: <ReadArticle /> },
     { path: '/article/new', element: <CreateEditArticle /> },
     { path: '/article/edit/:id', element: <CreateEditArticle /> },
-    { path: '/publication/:handle', element: <PublicationLanding />, },
+    { path: '/publication/:handle', element: <PublicationLanding /> },
     {
       path: '/publication/:handle/subscription',
       element: <PublicationLanding />,
@@ -73,7 +75,7 @@ const Routes = () => {
       children: [
         { path: '', element: <MyProfile /> },
         { path: 'edit', element: <EditProfile /> },
-        { path: 'submitted-for-review', element: <SubmittedArticles />},
+        { path: 'submitted-for-review', element: <SubmittedArticles /> },
         { path: 'draft', element: <DraftArticles /> },
         { path: 'published', element: <PublishedArticles /> },
         { path: 'topics', element: <FollowedTags /> },
@@ -93,6 +95,8 @@ const logo = `https://nuance.xyz/logo.png`;
 function App() {
   //handle resize on app wide
   const context = useContext(Context);
+  const darkTheme = useTheme();
+
   const handleResize = () => {
     let width = window.innerWidth;
     let height = window.innerHeight;
@@ -101,7 +105,15 @@ function App() {
   };
   useEffect(() => {
     window.addEventListener('resize', handleResize);
+    fetchTokenBalances()
   }, []);
+
+  useEffect(() => {
+    document.body.style.backgroundColor = darkTheme
+      ? 'var(--dark-primary-background-color)'
+      : colors.primaryBackgroundColor;
+  }, [darkTheme]);
+
 
   const inactivityTimeout: number = //process.env.II_INACTIVITY_TIMEOUT
     //   ? // configuration is in minutes, but API expects milliseconds
@@ -109,9 +121,10 @@ function App() {
     //   : // default = 1 hour
     480 * 60 * 1_000;
 
-  const { isLoggedIn, logout } = useAuthStore((state) => ({
+  const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
     logout: state.logout,
+    fetchTokenBalances: state.fetchTokenBalances
   }));
 
   const onIdle = () => {
@@ -138,10 +151,11 @@ function App() {
   //   }
   // }, [isLoggedIn]);
 
-  const darkTheme = useTheme();
+
 
   return (
-    <ThemeProvider>
+    <ModalContextProvider>
+
       <div className='App'>
         <Helmet>
           <meta charSet='utf-8' />
@@ -201,11 +215,19 @@ function App() {
             <Routes />
           </Suspense>
         </Router>
-        <Toaster />
-        <LoginModal />
-        <WithdrawIcpModal />
+        <Toaster
+          position='bottom-center'
+          toastOptions={{
+            style: {
+              backgroundColor: '#000000',
+              color: '#ffffff',
+            },
+          }}
+        />
+        <ModalsWrapper />
       </div>
-    </ThemeProvider>
+
+    </ModalContextProvider>
   );
 }
 

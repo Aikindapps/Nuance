@@ -1,102 +1,65 @@
 @import '../../shared/styles/Colors';
 
-.logged-out {
+.logged-out-sidebar-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: auto;
-  width: 85%;
-  img {
-    width: fit-content;
-    margin-bottom: 15px;
-  }
-  h1 {
-    font-weight: 200;
-    font-size: 38px;
-    line-height: 45px;
-    color: $darker-border-color;
+  row-gap: 6px;
+  justify-content: center;
+  width: 100%;
+
+  .logged-out-sidebar-nuance-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 15px;
     text-align: center;
-  }
-  p {
-    font-size: 14px;
-    line-height: 26px;
-    text-align: center;
-    color: $primary-color;
-    margin: 15px 0;
-  }
-  .buttons {
-    margin-top: 20px;
-    .button {
-      margin: 25px 0;
+    max-width: 265px;
+    min-width: 265px;
+
+    .blogging-to-the-people-light {
+      font-weight: 200;
+      font-size: 38px;
+      line-height: 45px;
+      color: #999;
+      text-align: center;
     }
-    .identity {
-      text-align: left !important;
+  }
+
+  .logged-out-sidebar-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    row-gap: 24px;
+    align-items: center;
+    max-width: 265px;
+
+    .logged-out-sidebar-button{
+      width: 100%;
     }
-    .info-link{
-      color:$dark-secondary-text-color;
+
+    .logged-out-sidebar-identity {
+      color: #3684D9;
+      font-size: 14px;
+    }
+    .logged-out-sidebar-identity:hover{
+      text-decoration: underline;
     }
   }
 }
 
-.logged-out-responsive {
-  display: none;
+@media only screen and (max-width: 1200px) {
+  .logged-out-sidebar-button{
+    font-size: 12px;
+  }
 }
-
 
 @media only screen and (max-width: 768px) {
-  .logged-out {
-    display: none;
+  .logged-out-sidebar-nuance-info{
+    max-width: 95vw;
+    min-width: 75vw;
   }
-  .wrapper {
-    width: 100%;
-    background-image: url('../../assets/assets/images/backgrounds/mask-group.svg');
-    background-size: auto 260px;
-    background-position: 100% 130px;
-    background-repeat: no-repeat;
-    .logged-out-responsive {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: auto;
-      width: 80%;
-      margin-top: 5px;
-
-      img {
-        width: fit-content;
-      }
-      h1 {
-        font-weight: 200;
-        font-size: 32px;
-        line-height: 45px;
-        color: $primary-color;
-        text-align: center;
-        margin-bottom: 5px;
-      }
-      p {
-        font-size: 14px;
-        line-height: 26px;
-        text-align: center;
-        //color: $primary-color;
-        width: 70%;
-        margin-top: 3px;
-      }
-      .buttons {
-        .button {
-          margin: 15px 0;
-        }
-        .identity {
-          align-self: flex-start;
-          margin-left: 0;
-        }
-        p {
-          width: 100%;
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-
-  .search-container {
-    margin: 20px auto;
+  .logged-out-sidebar-buttons{
+    max-width: 95vw;
   }
 }

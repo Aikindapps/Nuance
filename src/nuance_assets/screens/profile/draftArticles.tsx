@@ -4,7 +4,7 @@ import CardDraftArticles from '../../components/card-draft-articles/card-draft-a
 import { PostType } from '../../types/types';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 
@@ -74,12 +74,11 @@ const DraftArticles = () => {
   return (
     <div className='wrapper'>
       <p className='title'>DRAFT ARTICLES ({counts?.draftCount || 0})</p>
-      <div className='article-grid-horizontal'>
+      <div className='list-card-draft-articles'>
         {!loading ? (
           displayingPosts?.length ? (
             displayingPosts.map((post: PostType) => (
               <CardDraftArticles
-                dark={darkTheme}
                 post={post}
                 key={post.postId}
               />

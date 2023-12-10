@@ -10,7 +10,7 @@ import CardEditorPublication from '../card-editor-publication/card-editor-public
 import { Col, Row } from 'react-bootstrap';
 import { faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import './_editor-article-list.scss';
 type EditorArticleListProps = {
   displayingPosts: Array<PostType>;
   displayingPostsLoading: boolean;
@@ -52,61 +52,30 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
       : colors.primaryTextColor,
   };
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <Row
-        className='headerRow'
-        style={{
-          color: colors.darkerBorderColor,
-          textTransform: 'uppercase',
-          fontSize: '12px',
-          marginBottom: '25px',
-          fontWeight: 'bold',
-          textAlign: 'center',
-        }}
-      >
-        <Col>Live</Col>
-        <Col sm={2}>Article</Col>
-        <Col>&nbsp;</Col>
-        <Col>Author</Col>
-        <Col style={{ textAlign: 'right' }}>Category</Col>
-        <Col
-          sm={2}
+    <div className='editor-article-list-wrapper'>
+      <div className='titles'>
+        <p className='title-general title-published'>PUBLISHED</p>
+        <p className='title-general title-article'>ARTICLE</p>
+        <p className='title-general title-writer'>WRITER</p>
+        <p className='title-general title-category'>CATEGORY</p>
+        <p className='title-general title-applause'>APPLAUSE</p>
+        <p
+          className='title-general title-published-date'
           onClick={() => {
             handleSortByPublishedDate();
           }}
         >
-          <span>
-            <FontAwesomeIcon
-              style={{
-                marginLeft: '10px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                color: colors.darkerBorderColor,
-              }}
-              icon={sortedByPublishedDate ? faArrowUp : faArrowDown}
-            />
-          </span>
-          &nbsp;Published
-        </Col>
-        <Col
+          PUBLISHED DATE
+        </p>
+        <p
+          className='title-general title-modified'
           onClick={() => {
             handleSortByModifiedDate();
           }}
         >
-          <span>
-            <FontAwesomeIcon
-              style={{
-                marginLeft: '10px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                color: colors.darkerBorderColor,
-              }}
-              icon={sortedByLastModifiedDate ? faArrowUp : faArrowDown}
-            />
-          </span>
-          &nbsp;Modified
-        </Col>
-      </Row>
+          MODIFIED
+        </p>
+      </div>
       {!displayingPostsLoading ? (
         displayingPosts.map((post: PostType) => (
           <CardEditorPublication
@@ -131,16 +100,6 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
           <Loader />
         </div>
       )}
-      {articlesCount > displayingPosts.length && !displayingPostsLoading ? (
-        <Button
-          styleType='secondary'
-          style={{ width: '152px' }}
-          onClick={() => handleLoadMore()}
-          icon={loadingMore ? images.loaders.BUTTON_SPINNER : ''}
-        >
-          <span>Load More</span>
-        </Button>
-      ) : null}
     </div>
   );
 };

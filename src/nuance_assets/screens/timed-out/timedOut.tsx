@@ -5,7 +5,7 @@ import Footer from '../../components/footer/footer';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import Header from '../../components/header/header';
 import { useUserStore } from '../../store';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import { colors } from '../../shared/constants';
 
 const TimedOut = () => {
@@ -53,18 +53,16 @@ const TimedOut = () => {
         loggedIn={false}
         isArticlePage={false}
         ScreenWidth={screenWidth}
-        tokens={user?.nuaTokens}
-        loading={false}
         isPublicationPage={false}
       />
 
       <div className='logged-out-mobile'>
-        <LoggedOutSidebar responsiveElement={true} />
+        <LoggedOutSidebar />
       </div>
       <div className='main'>
         <div className='left'>
           <div className='logged-out'>
-            <LoggedOutSidebar responsiveElement={false} />
+            <LoggedOutSidebar />
           </div>
         </div>
         <div className='right'>

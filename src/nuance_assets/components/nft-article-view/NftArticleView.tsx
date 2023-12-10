@@ -1,7 +1,7 @@
 import React from 'react';
 import { PostType, PublicationType } from '../../types/types';
 import { colors, icons, images } from '../../shared/constants';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import parse from 'html-react-parser';
 import './nft-article-view.scss'
 export const NftArticleView = (props: {

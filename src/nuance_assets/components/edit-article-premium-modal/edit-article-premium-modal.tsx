@@ -3,7 +3,7 @@ import Button from '../../UI/Button/Button';
 import { colors, icons, images } from '../../shared/constants';
 import InputField2 from '../../UI/InputField2/InputField2';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
-import { useTheme } from '../../ThemeContext';
+import { useTheme } from '../../contextes/ThemeContext';
 import './edit-article-premium-modal.scss';
 import { PostType } from '../../types/types';
 import { usePostStore, usePublisherStore } from '../../store';

@@ -2,7 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import Button from '../../UI/Button/Button';
 import { useUserStore } from '../../store';
 import { images } from '../../shared/constants';
-import { Context } from '../../Context';
+import { Context } from '../../contextes/Context';
+import {Context as ModalContext} from '../../contextes/ModalContext'
+
 
 type FollowAuthorProps = {
   AuthorHandle: string;
@@ -17,6 +19,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
   const [loading, setLoading] = useState(false);
 
   const context = useContext(Context)
+  const modalContext = useContext(ModalContext)
 
   const { followAuthor, unfollowAuthor } = useUserStore((state) => ({
     followAuthor: state.followAuthor,
@@ -49,7 +52,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
   }
 
   function handleRegister() {
-    context.setModal();
+    modalContext?.openModal('Login')
   }
 
   useEffect(() => {

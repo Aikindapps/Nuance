@@ -1,12 +1,8 @@
-import React, { useState, createContext } from 'react';
+import React, { useState, createContext, useEffect } from 'react';
 
 const Context = createContext({
   publicationFeature: true,
   nftFeature: true,
-  showModal: false,
-  setModal: () => {},
-  withdrawIcpModal: false,
-  setWithdrawIcpModal: () => {},
   width: window.innerWidth,
   height: window.innerHeight,
   setWidth: (arg) => {},
@@ -16,10 +12,6 @@ const Context = createContext({
 });
 
 const ContextProvider = ({ children }) => {
-  const [showModal, setShowModal] = useState(false);
-  const setModal = () => {
-    setShowModal(!showModal);
-  };
   const [showWithdrawIcpModal, setShowWithdrawIcpModal] = useState(false);
   const setWithdrawIcpModal = () => {
     setShowWithdrawIcpModal(!showWithdrawIcpModal);
@@ -27,16 +19,25 @@ const ContextProvider = ({ children }) => {
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+      setHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup the event listener
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [profileSidebarDisallowed, setProfileSidebarDisallowed] = useState(false)
+  
   return (
     <Context.Provider
       value={{
         publicationFeature: true,
         nftFeature: true,
-        showModal: showModal,
-        setModal: setModal,
-        withdrawIcpModal: showWithdrawIcpModal,
-        setWithdrawIcpModal: setWithdrawIcpModal,
         width,
         height,
         setHeight,

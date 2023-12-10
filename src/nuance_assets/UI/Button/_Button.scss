@@ -1,4 +1,4 @@
-@import '../../shared/styles/Colors' ;
+@import '../../shared/styles/Colors';
 
 .button-attributes-primary-1 {
   display: flex;
@@ -12,6 +12,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $button-border-hover;
@@ -20,10 +21,12 @@
   &:active {
     background-color: $active-background-color;
   }
+
   &:disabled {
     background-color: $primary-background-color;
     color: $primary-background-color;
-    cursor: default ;
+    cursor: default;
+
     &:hover {
       color: $primary-background-color;
       background-color: $primary-background-color;
@@ -31,6 +34,94 @@
     }
   }
 }
+
+.button-attributes-comment-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  color: $primary-background-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.1s ease-in-out all;
+
+  &:hover {
+    background-color: $primary-background-color;
+    color: $primary-color;
+    border: 1px solid $primary-color;
+    cursor: pointer;
+  }
+
+  &:active {
+    //make 10% lighter
+    background-color: $primary-color;
+    color: $primary-background-color;
+  }
+
+  &:disabled {
+
+    cursor: default;
+    color: $primary-background-color;
+    background-color: $primary-color;
+    border: 1px solid $primary-color;
+
+    &:hover {
+      background-color: $primary-background-color;
+      color: $primary-color;
+      border: 1px solid $primary-color;
+
+      cursor: not-allowed;
+    }
+  }
+}
+
+.button-attributes-comment-button-dark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  color: $dark-primary-text-color;
+  border: 1px solid $dark-button-color;
+  font-weight: 500;
+  background-color: $dark-button-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.1s ease-in-out all;
+
+  &:hover {
+    background-color: $dark-primary-background-color;
+    color: $dark-primary-text-color;
+    border: 1px solid $dark-button-color;
+  }
+
+  &:active {
+    //make 10% lighter
+    background-color: $dark-primary-background-color;
+    color: $dark-primary-text-color;
+  }
+
+  &:disabled {
+
+    cursor: default;
+    color: $dark-primary-text-color;
+    background-color: $dark-button-color;
+    border: 1px solid $dark-button-color;
+
+    &:hover {
+      background-color: $dark-primary-background-color;
+      color: $dark-primary-text-color;
+      border: 1px solid $dark-button-color;
+
+      cursor: not-allowed;
+    }
+  }
+}
+
 
 .button-attributes-primary-1-dark {
   display: flex;
@@ -44,6 +135,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $button-border-hover;
@@ -52,10 +144,12 @@
   &:active {
     background-color: $active-background-color;
   }
+
   &:disabled {
     background-color: $primary-background-color;
     color: $primary-background-color;
-    cursor: default ;
+    cursor: default;
+
     &:hover {
       color: $primary-background-color;
       background-color: $primary-background-color;
@@ -63,28 +157,29 @@
     }
   }
 }
-  .button-attributes-email-opt-in {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 32px;
-    color: $FB-primary-background-color;
-    border: none;
-    font-weight: 500;
-    background-color: $FB-email-opt-in-button-color;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 14px;
-    line-height: 20px;
-  
-    &:hover {
-      background-color: $FB-button-border-hover;
-    }
-  
-    &:active {
-      background-color: $FB-active-background-color;
-    }
+
+.button-attributes-email-opt-in {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  color: $FB-primary-background-color;
+  border: none;
+  font-weight: 500;
+  background-color: $FB-email-opt-in-button-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 20px;
+
+  &:hover {
+    background-color: $FB-button-border-hover;
   }
+
+  &:active {
+    background-color: $FB-active-background-color;
+  }
+}
 
 
 
@@ -101,7 +196,7 @@
   border-radius: 5px;
   font-size: 14px;
   margin: 0 20px;
-
+  transition: 0.1s ease-in-out all;
   &:hover {
     border: 1px solid $button-border-hover;
   }
@@ -123,6 +218,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
+  transition: 0.1s ease-in-out all;
 
   &:hover {
     background-color: $button-hover-background;
@@ -146,7 +242,7 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
- 
+
   &:hover {
     border: 1px solid;
     border-color: inherit;
@@ -170,7 +266,8 @@
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
- 
+  transition: 0.1s ease-in-out all;
+
   &:hover {
     border: 1px solid;
     border-color: inherit;
@@ -195,4 +292,119 @@ button[disabled]:hover {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
+}
+
+.button-attributes-withdraw {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  color: $primary-background-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-color;
+  border: 1px solid $primary-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 240px;
+  transition: 0.1s ease-in-out all;
+
+
+  &:hover {
+    background-color: $button-border-hover;
+  }
+
+  &:active {
+    background-color: $active-background-color;
+  }
+
+  &:disabled {
+    background-color: $primary-background-color;
+    color: $primary-background-color;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
+}
+
+.button-attributes-withdraw-dark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  color: $primary-color;
+  border: 1px solid $dark-button-color;
+  font-weight: 500;
+  background-color: $dark-button-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 240px;
+  transition: 0.1s ease-in-out all;
+
+
+  &:hover {
+    background-color: $dark-button-hover-color;
+  }
+
+  &:active {
+    background-color: $dark-button-active-color;
+  }
+
+  &:disabled {
+    background-color: $primary-background-color;
+    color: $primary-background-color;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
+}
+
+
+
+.button-attributes-deposit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px;
+  color: $primary-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-background-color;
+  border: 1px solid #b2b2b2;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 240px;
+  transition: 0.1s ease-in-out all;
+
+
+  &:hover {
+    border: 1px solid $primary-color;
+  }
+
+  &:active {
+    border: 1px solid $accent-color;
+  }
+
+  &:disabled {
+    background-color: $primary-background-color;
+    color: $primary-background-color;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
 }
