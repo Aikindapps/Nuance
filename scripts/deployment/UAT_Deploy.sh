@@ -11,7 +11,7 @@ echo "Deploying nuance main repo to UAT network $NETWORK..."
 echo ""
 
 dfx generate
-dfx deploy --network $NETWORK
+dfx deploy --network $NETWORK -y
 node scripts/upgrades/bucketCanisterUpgrade.js --multi --$NETWORK
 
 echo ""
@@ -20,5 +20,5 @@ echo ""
 
 cd $PUBLICATIONS_REPO_PATH
 dfx generate
-dfx deploy --network $NETWORK
+dfx deploy --network $NETWORK -y
 node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
