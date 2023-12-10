@@ -56,8 +56,8 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
     };
     //#region Security Management
     
-    stable var admins : List.List<Text> = List.nil<Text>();
-    stable var platformOperators : List.List<Text> = List.nil<Text>();
+    stable var admins : List.List<Text> = List.fromArray(ENV.PLATFORM_OPERATORS);
+    stable var platformOperators : List.List<Text> = List.fromArray(ENV.PLATFORM_OPERATORS);
     stable var cgusers : List.List<Text> = List.nil<Text>();
 
     public func acceptCycles() : async () {
@@ -76,7 +76,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
 
     private func isAdmin(caller : Principal) : Bool {
         var c = Principal.toText(caller);
-        U.arrayContains(ENV.STORAGE_CANISTER_ADMINS, c);
+        U.arrayContains(ENV.PLATFORM_OPERATORS, c);
     };
 
     public shared query ({ caller }) func getAdmins() : async Result.Result<[Text], Text> {
@@ -279,12 +279,14 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         };
 
         let wasm = wasmChunks;
-        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+        if (not isAdmin(caller) and Principal.fromActor(this) != caller) {
 
             return #err("Unauthorized");
         };
         switch (await ic.install_code { arg = arg; wasm_module = wasm; mode = #upgrade; canister_id = Principal.fromText(canisterId) }) {
+            
             case ((_)) {
+                Debug.print("Storage->upgradeBucket: Upgraded bucket: " # canisterId);
                 #ok();
             };
         };
@@ -308,15 +310,16 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         if (not isAdmin(caller) and not isPlatformOperator(caller)) {
             return #err("Unauthorized");
         };
-
+        
+        let canisterIds = storageSolution.getAllDataCanisterIds();
         //TODO: add indexing for large number of buckets
 
         //need to get all buckets from storage to
-        for (bucketCanisterId in globalIdMap.keys()) {
-            Debug.print("Storage->upgradeAllBuckets: Upgrading bucket: " # bucketCanisterId);
-            switch (await upgradeBucket(bucketCanisterId, arg)) {
+        for (bucketCanisterId in canisterIds.vals()) {
+            Debug.print("Storage->upgradeAllBuckets: Upgrading bucket: " # Principal.toText(bucketCanisterId));
+            switch (await upgradeBucket(Principal.toText(bucketCanisterId), arg)) {
                 case (ok) {
-                    Debug.print("Storage->upgradeAllBuckets: Upgraded bucket: " # bucketCanisterId);
+                    Debug.print("Storage->upgradeAllBuckets: Upgraded bucket: " # Principal.toText(bucketCanisterId));
                     //TODO: add logging
                 };
             };
