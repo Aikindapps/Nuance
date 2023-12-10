@@ -16,13 +16,10 @@ Download from https://nodejs.org/en/download
 ### Vessel
 Follow the instructions here: https://github.com/dfinity/vessel
 
-### Nuance NFTs and Publications
-Make sure you've cloned the Nuance-NFTs-and-Publications somewhere in your local machine. Here's the repo: https://github.com/Aikindapps/Nuance-NFTs-and-Publications
-
 ## Local Setup
 Start the DFX by running `dfx start --clean --background`
 
-Change the variable `PUBLICATIONS_REPO_PATH` in the `.env` file with the path of the `Nuance-NFTs-and-Publications` repo in your machine.
+Change the variable `PUBLICATIONS_REPO_PATH` in the `.env` file with the path of the `Nuance-NFTs-and-Publications` dir in your machine.
 
 Change the variable `NUANCE_MAIN_REPO_PATH` in the `.env` file with the path of the `Nuance` repo in your machine.
 
