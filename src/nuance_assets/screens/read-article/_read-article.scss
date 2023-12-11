@@ -19,7 +19,9 @@
       border-right: 1px solid $light-border-color;
       padding-right: 20px;
       row-gap: 7px;
-      max-width: 340px;
+      max-width: 308px;
+      min-width: 308px;
+      width: 20%;
 
       .date {
         display: flex;
@@ -80,7 +82,7 @@
 
     .right {
       margin-top: -20px;
-      width: 75%;
+      width: 80%;
       max-width: 925px;
 
       .content {
@@ -655,6 +657,7 @@
             .header-image {
               object-fit: cover;
               margin-left: -35px;
+              height: 240px;
              
              
               

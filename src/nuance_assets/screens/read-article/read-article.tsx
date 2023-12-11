@@ -168,20 +168,24 @@ const ReadArticle = () => {
     // Return the IDs in an object
     return { postId, bucketCanisterId };
   };
-
   const getLeftStyle = () => {
     if (context.width <= 768) {
       if (isToggled) {
-        return { width: 'max-content' };
+        return { width: 'max-content', minWidth:'unset' };
       } else {
-        return { width: '30px', paddingRight: '25px', maxWidth: '30px' };
+        return {
+          width: '30px',
+          paddingRight: '25px',
+          maxWidth: '30px',
+          minWidth: 'unset',
+        };
       }
     } else {
-      if (context.width > 768) {
-        return { width: '25%' };
-      } else {
-        return { width: '30px', paddingRight: '25px', maxWidth: '30px' };
-      }
+      return {
+        width: '30px',
+        paddingRight: '25px',
+        maxWidth: '30px',
+      };
     }
   };
 
