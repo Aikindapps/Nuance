@@ -98,8 +98,8 @@ function App() {
   const darkTheme = useTheme();
 
   const handleResize = () => {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    let width = window.outerWidth;
+    let height = window.outerHeight;
     context.setWidth(width);
     context.setHeight(height);
   };
