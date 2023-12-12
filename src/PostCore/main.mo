@@ -2613,6 +2613,40 @@ actor PostCore {
   return #ok("ok");
 };
 
+public shared query ({caller}) func verifyMigration() : async Result.Result<Bool, Text> {
+  if(not isAdmin(caller) and not isPlatformOperator(caller)){
+    return #err(Unauthorized);
+  };
+  for((postId, status) in postModerationStatusMap.entries()){
+    switch(postModerationStatusMapV2.get(postId)) {
+      case(?statusV2) {
+        switch(statusV2) {
+          case(#approved) {
+            if(status != #approved){
+              return #ok(false);
+            };
+          };
+          case(#new) {
+            if(status != #reviewRequired){
+              return #ok(false);
+            };
+          };
+          case(#rejected){
+            if(status != #rejected){
+              return #ok(false);
+            };
+          };
+        };
+      };
+      case(null) {
+        //this key doesn't exist in map v2
+        return #ok(false);
+      };
+    };
+  };
+  return #ok(true)
+};
+
 func toText (postModerationStatus : ?PostModerationStatus) : Text {
   switch (postModerationStatus) {
     case (?#approved) {

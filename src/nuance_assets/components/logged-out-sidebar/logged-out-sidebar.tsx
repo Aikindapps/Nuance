@@ -133,7 +133,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (props): JSX.Element =
 
         <a
           className='logged-out-sidebar-identity'
-          href='https://smartcontracts.org/docs/ic-identity-guide/what-is-ic-identity.html'
+          href='https://internetcomputer.org/internet-identity'
           target='_blank'
           style={darkTheme ? { color: 'white' } : {}}
         >
