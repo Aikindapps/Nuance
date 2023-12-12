@@ -3,8 +3,8 @@ import React, { useState, createContext, useEffect } from 'react';
 const Context = createContext({
   publicationFeature: true,
   nftFeature: true,
-  width: window.innerWidth,
-  height: window.innerHeight,
+  width: window.outerHeight,
+  height: window.outerHeight,
   setWidth: (arg) => {},
   setHeight: (arg) => {},
   profileSidebarDisallowed: false,
