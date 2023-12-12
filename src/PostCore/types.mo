@@ -194,7 +194,11 @@ module {
         isDraft:Bool;
     };
 
-    public type PostModerationStatus = {
+    public type PostModerationStatusV2 = {
+        #approved; #new; #rejected
+    };
+
+     public type PostModerationStatus = {
         #reviewRequired;#rejected;#approved;
     };
 

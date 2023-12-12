@@ -55,6 +55,7 @@ actor PostCore {
   let NotPremium = "Post is not premium.";
 
   type PostModerationStatus = Types.PostModerationStatus;
+  type PostModerationStatusV2 = Types.PostModerationStatusV2;
   type Tag = Types.Tag;
   type TagModel = Types.TagModel;
   type PostTag = Types.PostTag;
@@ -106,6 +107,7 @@ actor PostCore {
   stable var viewsEntries : [(Text, Nat)] = [];
   stable var dailyViewHistory : [(Text, Nat)] = [];
   stable var postModerationStatusEntries : [(Text, PostModerationStatus)] = [];
+  stable var postModerationStatusEntriesV2 : [(Text, PostModerationStatusV2)] = [];
   stable var postVersionEntries : [(Text, Nat)] = [];
   stable var tagEntries : [(Text, Tag)] = [];
   stable var categoryEntries : [(Text, Text)] = [];
@@ -153,6 +155,7 @@ actor PostCore {
   var viewsHashMap = HashMap.fromIter<Text, Nat>(viewsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var dailyViewHistoryHashMap = HashMap.fromIter<Text, Nat>(dailyViewHistory.vals(), maxHashmapSize, Text.equal, Text.hash);
   var postModerationStatusMap = HashMap.fromIter<Text, PostModerationStatus>(postModerationStatusEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var postModerationStatusMapV2 = HashMap.fromIter<Text, PostModerationStatusV2>(postModerationStatusEntriesV2.vals(), maxHashmapSize, Text.equal, Text.hash);
   var postVersionMap = HashMap.fromIter<Text, Nat>(postVersionEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var tagsHashMap = HashMap.fromIter<Text, Tag>(tagEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
@@ -2004,11 +2007,11 @@ actor PostCore {
                   viewsHashMap.put(postBucketReturn.postId, U.textToNat(postModel.views));
                   clapsHashMap.put(postBucketReturn.postId, U.textToNat(postModel.claps));
 
-                  //if the post doesn't have any post moderation status set, make it #reviewRequired
+                  //if the post doesn't have any post moderation status set, make it #new
                   let postIdWithVersion = getPostIdWithVersionId(postBucketReturn.postId, U.safeGet(postVersionMap, postBucketReturn.postId, 1));
-                  switch (postModerationStatusMap.get(postIdWithVersion)) {
+                  switch (postModerationStatusMapV2.get(postIdWithVersion)) {
                     case (null) {
-                      postModerationStatusMap.put(postIdWithVersion, #reviewRequired);
+                      postModerationStatusMapV2.put(postIdWithVersion, #new);
                     };
                     case (_)();
                   };
@@ -2558,9 +2561,9 @@ actor PostCore {
     let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
     // On local, don't send posts to Modclub
     if (environment != "local") {
-      let _ = await MC.getModClubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null, null);
+      let _ = await MC.getModclubActor(environment).submitHtmlContent(postIdWithVersion, "<img style='max-height: 500px; max-width: 500px;' src='" # postModel.headerImage # "' />" # postModel.content, ?postModel.title, null, null);
     };
-    postModerationStatusMap.put(postIdWithVersion, #reviewRequired);
+    postModerationStatusMapV2.put(postIdWithVersion, #new);
   };
 
   private func rejectedByModClub(postId : Text) : Bool {
@@ -2568,7 +2571,7 @@ actor PostCore {
       case (null)();
       case (?versionId) {
         let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
-        switch (postModerationStatusMap.get(postIdWithVersion)) {
+        switch (postModerationStatusMapV2.get(postIdWithVersion)) {
           case (? #rejected) {
             return true;
           };
@@ -2583,12 +2586,142 @@ actor PostCore {
     postId # "_" # Nat.toText(versionId);
   };
 
-  public shared ({ caller }) func simulateModClub(postId : Text, status : PostModerationStatus) : async () {
+  public shared ({caller}) func migrateModclubInterface () : async Result.Result<Text, Text> {
+  
+  if (isAnonymous(caller)) {
+    return #err("Cannot use this method anonymously.");
+  };
+
+  if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+    return #err(Unauthorized);
+  };
+
+  for (postId in postModerationStatusMap.keys()) {
+    let postModerationStatus = postModerationStatusMap.get(postId);
+    
+    if (postModerationStatus == ?#reviewRequired) {
+    postModerationStatusMapV2.put(postId, #new);
+    }
+    else if (postModerationStatus == ?#rejected) {
+      postModerationStatusMapV2.put(postId, #rejected);
+    } else {
+      postModerationStatusMapV2.put(postId, #approved);
+    };
+
+  };
+
+  return #ok("ok");
+};
+
+public shared query ({caller}) func verifyMigration() : async Result.Result<Bool, Text> {
+  if(not isAdmin(caller) and not isPlatformOperator(caller)){
+    return #err(Unauthorized);
+  };
+  for((postId, status) in postModerationStatusMap.entries()){
+    switch(postModerationStatusMapV2.get(postId)) {
+      case(?statusV2) {
+        switch(statusV2) {
+          case(#approved) {
+            if(status != #approved){
+              return #ok(false);
+            };
+          };
+          case(#new) {
+            if(status != #reviewRequired){
+              return #ok(false);
+            };
+          };
+          case(#rejected){
+            if(status != #rejected){
+              return #ok(false);
+            };
+          };
+        };
+      };
+      case(null) {
+        //this key doesn't exist in map v2
+        return #ok(false);
+      };
+    };
+  };
+  return #ok(true)
+};
+
+func toText (postModerationStatus : ?PostModerationStatus) : Text {
+  switch (postModerationStatus) {
+    case (?#approved) {
+      return "approved";
+    };
+    case (?#rejected) {
+      return "rejected";
+    };
+    case (?#reviewRequired) {
+      return "reviewRequired";
+    };
+    case (_) {
+      return "Error";
+    };
+  };
+};
+
+func toTextV2 (postModerationStatus : ?PostModerationStatusV2) : Text {
+  switch (postModerationStatus) {
+    case (?#approved) {
+      return "approved";
+    };
+    case (?#rejected) {
+      return "rejected";
+    };
+    case (?#new) {
+      return "new";
+    };
+    case (_) {
+      return "error";
+    };
+  };
+};
+
+public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, Text> {
+  
+  if (isAnonymous(caller)) {
+    return #err("Cannot use this method anonymously.");
+  };
+
+  if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+    return #err(Unauthorized);
+  };
+
+  var changedCount = 0;
+  var totalCount = 0;
+  
+  for (postId in postModerationStatusMap.keys()) {
+    let postModerationStatus = postModerationStatusMap.get(postId);
+    let postModerationStatusV2 = postModerationStatusMapV2.get(postId);
+    
+    Debug.print(debug_show(postId) # " " # debug_show(postModerationStatus) # " " # debug_show(postModerationStatusV2));
+    if (postModerationStatusV2 == ?#new) {
+      changedCount += 1;
+    };
+    totalCount += 1;
+
+    };
+
+  return #ok( "Total: " # debug_show(totalCount) # " Changed: " # debug_show(changedCount));
+  };
+
+
+
+
+  public shared ({ caller }) func simulateModClub(postId : Text, status : PostModerationStatusV2) : async () {
     if (isAnonymous(caller)) {
       return;
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return;
+    };
+
+    if (environment == "prod") { //No centralized moderation in prod, fine for testing in dev
       return;
     };
 
@@ -2597,7 +2730,7 @@ actor PostCore {
       case (null)();
       case (?versionId) {
         let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
-        postModerationStatusMap.put(postIdWithVersion, status);
+        postModerationStatusMapV2.put(postIdWithVersion, status);
       };
     };
   };
@@ -2610,18 +2743,32 @@ actor PostCore {
     if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       Prelude.unreachable();
     };
-    ignore U.logMetrics("setupModClub", Principal.toText(caller));
+    ignore U.logMetrics("setupModClub ENV: " # env # " ", Principal.toText(caller));
 
-    if (env != "local" and env != "staging" and env != "prod") {
+    if (env != "local" and env != "dev" and env != "prod") {
       throw Error.reject("Please Provide correct environment value");
     };
-    environment := env;
+    switch (env) {
+      case ("local") {
+        environment := "local";
+      };
+      case ("staging") {
+        environment := "dev";
+      };
+      case ("prod") {
+        environment := "prod";
+      };
+      case (_) {
+        throw Error.reject("Please Provide correct environment value");
+    };
+    };
+
     // On local don't set up Modclub
     if (environment == "local") {
       return;
     };
 
-    let _ = await MC.getModClubActor(environment).registerProvider("Nuance", "Nuance", null);
+    let _ = await MC.getModclubActor(environment).registerProvider("Nuance", "Nuance", null);
     if (not modClubRulesAdded) {
       let rules = [
         "This post threatens violence against an individual or a group of people",
@@ -2644,17 +2791,17 @@ actor PostCore {
         "This post contains deceptively share synthetic or manipulated media that are likely to cause harm",
         "This post violates others’ intellectual property rights, including copyright and trademark",
       ];
-      await MC.getModClubActor(environment).addRules(rules, null);
+      await MC.getModclubActor(environment).addRules(rules, null);
       modClubRulesAdded := true;
     };
-    await MC.getModClubActor(environment).subscribe({
+    await MC.getModclubActor(environment).subscribe({
       callback = modClubCallback;
     });
   };
 
   public shared ({ caller }) func modClubCallback(postStatus : MC.ContentResult) {
-    // HardCoded ModClub Canister Prod Id
-    if (not isAdmin(caller) and (Principal.toText(caller) != MC.getModClubId(environment))) {
+
+    if (not isAdmin(caller) and (Principal.toText(caller) != MC.getModclubId(environment))) {
       Prelude.unreachable();
     };
 
@@ -2662,14 +2809,14 @@ actor PostCore {
       assert false;
     };
 
-    switch (postModerationStatusMap.get(postStatus.sourceId)) {
+    switch (postModerationStatusMapV2.get(postStatus.sourceId)) {
       case (null)();
       case (_) {
-        postModerationStatusMap.put(postStatus.sourceId, postStatus.status);
+        postModerationStatusMapV2.put(postStatus.sourceId, postStatus.status);
         let postId = getPostIdFromVersionId(postStatus.sourceId);
         let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
         let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
-        if (postStatus.status != #approved) {
+        if (postStatus.status == #rejected) {
           //inform the bucket canister that post was rejected
           await bucketActor.rejectPostByModclub(postId);
           await removePostFromIndex(postStatus.sourceId);
@@ -2682,37 +2829,6 @@ actor PostCore {
     };
   };
 
-  public shared ({ caller }) func modClubCallbackDebug(postStatus : MC.ContentResult) : async Text {
-    // HardCoded ModClub Canister Prod Id
-    if (not isAdmin(caller) and (Principal.toText(caller) != MC.getModClubId(environment))) {
-      return "Unauthorized";
-    };
-
-    switch (postModerationStatusMap.get(postStatus.sourceId)) {
-      case (null) { "postModerationStatus not found." };
-      case (_) {
-        var result = "";
-        postModerationStatusMap.put(postStatus.sourceId, postStatus.status);
-        let postId = getPostIdFromVersionId(postStatus.sourceId);
-        let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
-        let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
-        result #= "PostId: " # postId # " ";
-        if (postStatus.status != #approved) {
-          //inform the bucket canister that post was rejected
-          await bucketActor.rejectPostByModclub(postId);
-          await removePostFromIndex(postStatus.sourceId);
-          await generateLatestPosts();
-          result #= " called all the bucket canister methods";
-          return result;
-        } else {
-          //inform the bucket canister that post is not rejected
-          await bucketActor.unRejectPostByModclub(postId);
-          result #= " unrejected post. ";
-          return result;
-        };
-      };
-    };
-  };
 
   private func removePostFromIndex(sourceId : Text) : async () {
 
@@ -2749,28 +2865,10 @@ actor PostCore {
       Prelude.unreachable();
     };
     if (rules.size() > 0) {
-      await MC.getModClubActor(environment).addRules(rules, null);
+      await MC.getModclubActor(environment).addRules(rules, null);
     };
   };
 
-  public shared ({ caller }) func removeExistingRules(ruleIds : [Text]) : async () {
-    if (isAnonymous(caller)) {
-      return;
-    };
-    if (not isAdmin(caller)) {
-      Prelude.unreachable();
-    };
-    if (ruleIds.size() > 0) {
-      await MC.getModClubActor(environment).removeRules(ruleIds);
-    };
-  };
-
-  public shared ({ caller }) func getRegisteredRules() : async [MC.Rule] {
-    if (not isAdmin(caller)) {
-      Prelude.unreachable();
-    };
-    await MC.getModClubActor(environment).getProviderRegisteredRules();
-  };
 
   private func getPostIdFromVersionId(postIdWithVersion : Text) : Text {
     // postid & version are concatenated using postId # "_" # Nat.toText(versionId);
@@ -3736,6 +3834,7 @@ actor PostCore {
     viewsEntries := Iter.toArray(viewsHashMap.entries());
     dailyViewHistory := Iter.toArray(dailyViewHistoryHashMap.entries());
     postModerationStatusEntries := Iter.toArray(postModerationStatusMap.entries());
+    postModerationStatusEntriesV2 := Iter.toArray(postModerationStatusMapV2.entries());
     postVersionEntries := Iter.toArray(postVersionMap.entries());
     tagEntries := Iter.toArray(tagsHashMap.entries());
     categoryEntries := Iter.toArray(categoryHashMap.entries());
@@ -3777,6 +3876,7 @@ actor PostCore {
     viewsEntries := [];
     dailyViewHistory := [];
     postModerationStatusEntries := [];
+    postModerationStatusEntriesV2 := [];
     postVersionEntries := [];
     tagEntries := [];
     categoryEntries := [];

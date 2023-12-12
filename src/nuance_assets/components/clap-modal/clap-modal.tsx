@@ -174,7 +174,12 @@ export const ClapModal = (props: { post: PostType }) => {
           By applauding this article, you are tipping the writer with a fragment
           of your wallet. One clap is the equivalent of one Nuance Tokens (NUA).
           <br />
-          <span className='read-more'>Read More</span>
+          <span onClick={()=>{
+            window.open(
+              'https://wiki.nuance.xyz/nuance/how-to-tip-applaud-a-writer',
+              '_blank'
+            );
+          }} className='read-more'>Read More</span>
         </p>
         <div className='owned-tokens-wrapper'>
           <p className='clap-modal-field-text'>CURRENTLY IN YOUR WALLET</p>
@@ -475,7 +480,7 @@ export const ClapModal = (props: { post: PostType }) => {
             Close
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
+            styleType={ darkTheme ? 'withdraw-dark' : 'withdraw'}
             type='button'
             onClick={() => {
               window.location.href = '/my-profile/wallet'
