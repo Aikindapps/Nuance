@@ -16,8 +16,8 @@ const ContextProvider = ({ children }) => {
   const setWithdrawIcpModal = () => {
     setShowWithdrawIcpModal(!showWithdrawIcpModal);
   };
-  const [width, setWidth] = useState(window.innerWidth);
-  const [height, setHeight] = useState(window.innerHeight);
+  const [width, setWidth] = useState(window.outerWidth);
+  const [height, setHeight] = useState(window.outerHeight);
 
   useEffect(() => {
     const handleResize = () => {
