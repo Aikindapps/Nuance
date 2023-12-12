@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Button from '../../UI/Button/Button';
 import { useNavigate } from 'react-router';
 import Footer from '../../components/footer/footer';
@@ -6,12 +6,14 @@ import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sid
 import Header from '../../components/header/header';
 import { useUserStore } from '../../store';
 import { useTheme } from '../../contextes/ThemeContext';
+import { Context } from '../../contextes/Context';
 import { colors } from '../../shared/constants';
 
 const TimedOut = () => {
   const [screenWidth, setScreenWidth] = useState(0);
   const navigate = useNavigate();
   const darkTheme = useTheme();
+  const context = useContext(Context);
 
   const goToHomePage = () => {
     navigate('/', { replace: true });
@@ -56,9 +58,11 @@ const TimedOut = () => {
         isPublicationPage={false}
       />
 
-      <div className='logged-out-mobile'>
-        <LoggedOutSidebar />
-      </div>
+      {context.width <= 768 && (
+        <div style={{ width: '100%' }} className='logged-out-mobile'>
+          <LoggedOutSidebar />
+        </div>
+      )}
       <div className='main'>
         <div className='left'>
           <div className='logged-out'>
