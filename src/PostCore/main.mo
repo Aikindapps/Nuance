@@ -2752,7 +2752,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
       case ("local") {
         environment := "local";
       };
-      case ("staging") {
+      case ("dev") {
         environment := "dev";
       };
       case ("prod") {
