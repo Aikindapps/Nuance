@@ -211,7 +211,7 @@ actor class Bucket () = this {
     Debug.print("Sending chunk " # debug_show(token.key) # debug_show(token.index));
     let body:Blob = switch(state.chunks.get(chunkId(token.key, token.index))) {
       case (?b) b;
-      case (null) "404 Not Found";
+      case (null) Blob.fromArray([]);
     };
     let next_token:? StreamingCallbackToken = switch(state.chunks.get(chunkId(token.key, token.index+1))){
       case (?nextbody) ?{
