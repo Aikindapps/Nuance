@@ -672,7 +672,12 @@ actor PostCore {
     Debug.print("PostCore-buildPostKeyProperties: " # postId);
 
     let principalId = U.safeGet(principalIdHashMap, postId, "");
-
+    //the old claps received without any tipping
+    let oldClaps = U.safeGet(clapsHashMap, postId, 0);
+    //claps received by tipping
+    let applauds_e8s = (U.safeGet(applaudsHashMap, postId, 0));
+    let applauds = Float.fromInt(applauds_e8s) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS));
+    let applaudsNat = Int.abs(Float.toInt(Float.nearest(applauds)));
     {
       postId = postId;
       handle = U.safeGet(handleHashMap, principalId, "");
@@ -683,7 +688,7 @@ actor PostCore {
       publishedDate = Int.toText(U.safeGet(publishedDateHashMap, postId, 0));
       views = Nat.toText(U.safeGet(viewsHashMap, postId, 0));
       tags = getTagModelsByPost(postId);
-      claps = Nat.toText(U.safeGet(clapsHashMap, postId, 0) + Int.abs(Float.toInt(Float.fromInt((U.safeGet(applaudsHashMap, postId, 0))) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS)))));
+      claps = Nat.toText(oldClaps + applaudsNat);
       category = U.safeGet(categoryHashMap, postId, "");
       isDraft = U.safeGet(isDraftHashMap, postId, false);
     };
