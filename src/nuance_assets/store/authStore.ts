@@ -56,7 +56,7 @@ const isLocal: boolean =
   window.location.origin.includes('127.0.0.1');
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
-)
+) || window.location.origin.includes('nuancedevs')
   ? NuanceUAT
   : NuancePROD;
 
