@@ -63,6 +63,18 @@ jobs:
         NUANCE_MAIN_REPO_PATH=./
         EOF
 
+    - name: Update alternative origins
+      run: |
+          cat << EOF > ./src/well-known/.well-known/ii-alternative-origins 
+                    {
+              "alternativeOrigins": [
+                "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app",
+                "https://www.nuancedevs.xyz",
+                "https://nuancedevs.xyz"
+              ]
+            }
+          EOF
+
     - name: Generate canister_ids.json and canisterIds.mo
       run: |
         mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
