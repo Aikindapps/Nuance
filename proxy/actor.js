@@ -3,7 +3,7 @@ import { idlFactory as postCoreFactory } from './declarations/PostCore/index.js'
 import { idlFactory as postBucketFactory } from './declarations/PostBucket/index.js';
 
 // Replace these with actual canister IDs
-const postCoreCanisterId = "nnyve-piaaa-aaaaf-qaj6q-cai";
+const postCoreCanisterId = "322sd-3iaaa-aaaaf-qakgq-cai";
 
 function createActor(canisterId, idlFactory) {
     const agent = new HttpAgent({ host: 'https://icp-api.io' });

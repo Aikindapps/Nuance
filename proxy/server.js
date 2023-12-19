@@ -1,18 +1,26 @@
+import dotenv from 'dotenv';
 import http from 'http';
 import httpProxy from 'http-proxy';
 import { URL } from 'url';
 import { fetchPostData } from './actor.js';
 
+
 // Create a proxy server
 const proxy = httpProxy.createProxyServer({});
 
 // Define a function to check if the user agent is a crawler
-function isCrawler(userAgent) {
-    const crawlers = ['Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot', 'Sogou', 'Slackbot-LinkExpanding', 'Slack-ImgProxy', 'Twitterbot' ];
-    return crawlers.some(crawler => userAgent.includes(crawler));
+function isCrawler(userAgent = '') {
+    const crawlers = [
+        'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider',
+        'YandexBot', 'Sogou', 'Slackbot-LinkExpanding', 'Slack-ImgProxy', 
+        'Twitterbot', 'facebookexternalhit', 'LinkedInBot', 'Facebot',
+        'Pinterestbot', 'Applebot', 'SkypeUriPreview', 'WhatsApp'
+    ];
+        return crawlers.some(crawler => userAgent.includes(crawler));
 }
 
 const server = http.createServer(async (req, res) => {
+    
     const userAgent = req.headers['user-agent'];
     const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
@@ -21,7 +29,7 @@ const server = http.createServer(async (req, res) => {
     console.log('User Agent: ' + userAgent);
 
     if (isCrawler(userAgent)) {
-        if (pathSegments.length >= 3) {
+        if (pathSegments.length >= 3 && pathSegments[0] !== 'publication') {
             const handle = pathSegments[0];
             const combinedPostIdAndBucket = pathSegments[1];
             const splitIndex = combinedPostIdAndBucket.indexOf('-');
@@ -81,16 +89,19 @@ const server = http.createServer(async (req, res) => {
                 res.end('Internal Server Error');
             }
         } else {
-            res.writeHead(400);
-            res.end('Invalid URL format');
+            proxy.web(req, res, {
+                target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                changeOrigin: true
+            });
         }
     } else {
         proxy.web(req, res, {
-            target: 'https://3e6ni-fyaaa-aaaaf-qagiq-cai.ic0.app',
+            target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
             changeOrigin: true
         });
     }
 });
 
-console.log("Proxy server running on http://localhost:8082");
-server.listen(8082);
+console.log("Proxy server running...");
+
+server.listen(8080, '0.0.0.0');

@@ -1,0 +1,35 @@
+{
+  "CyclesDispenser": {
+    "ic": "353ux-wqaaa-aaaaf-qakga-cai"
+  },
+  "FastBlocks_EmailOptIn": {
+    "ic": "dgwwd-jaaaa-aaaaf-qai7a-cai"
+  },
+  "KinicEndpoint": {
+    "ic": "4m3sz-lqaaa-aaaaf-qagza-cai"
+  },
+  "Metrics": {
+    "ic": "xjlvo-hyaaa-aaaam-qbcga-cai"
+  },
+  "Post": {
+    "ic": "qq4ni-qaaaa-aaaaf-qaalq-cai"
+  },
+  "PostBucket": {
+    "ic": "3uy7l-ayaaa-aaaaf-qakhq-cai"
+  },
+  "PostCore": {
+    "ic": "322sd-3iaaa-aaaaf-qakgq-cai"
+  },
+  "PostIndex": {
+    "ic": "r5sjg-7iaaa-aaaaf-qaama-cai"
+  },
+  "Storage": {
+    "ic": "y2pkg-ciaaa-aaaaf-qagbq-cai"
+  },
+  "User": {
+    "ic": "rtqeo-eyaaa-aaaaf-qaana-cai"
+  },
+  "nuance_assets": {
+    "ic": "exwqn-uaaaa-aaaaf-qaeaa-cai"
+  }
+}
