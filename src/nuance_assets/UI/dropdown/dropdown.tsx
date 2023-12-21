@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './dropdown.scss';
 import { SlArrowDown } from 'react-icons/sl';
-import { BsCheck } from 'react-icons/bs';
-import { MdFilterList } from 'react-icons/md';
 import { useTheme } from '../../contextes/ThemeContext';
 import { colors } from '../../shared/constants';
 interface DropdownProps {
@@ -13,6 +11,9 @@ interface DropdownProps {
   nonActive?: boolean;
   selectedTextStyle?: any;
   drodownItemsWrapperStyle?: any;
+  arrowWidth?: number;
+  imageStyle?: any
+  dropdownMenuItemStyle?: any;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -23,6 +24,9 @@ const Dropdown: React.FC<DropdownProps> = ({
   nonActive,
   selectedTextStyle,
   drodownItemsWrapperStyle,
+  arrowWidth,
+  imageStyle,
+  dropdownMenuItemStyle
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -68,6 +72,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               className='filter-icon'
               width='30px'
               height='30px'
+              style={imageStyle}
               src={icons[index]}
             />
           )}
@@ -90,6 +95,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             transition: '0.2s ease-in-out',
             transform: isOpen ? 'rotate(-180deg)' : 'rotate(0deg)',
             color: darkTheme ? colors.darkSecondaryTextColor : '',
+            width: arrowWidth + 'px',
           }}
         />
       </div>
@@ -125,7 +131,11 @@ const Dropdown: React.FC<DropdownProps> = ({
                 onSelect(items[index_]);
                 setIsOpen(false);
               }}
+              style={{ ...dropdownMenuItemStyle }}
             >
+              {icons && (
+                <img className='dropdown-menu-item-icon' src={icons[index_]} />
+              )}
               <div className='dropdown-menu-item-text'>{item}</div>
             </div>
           );

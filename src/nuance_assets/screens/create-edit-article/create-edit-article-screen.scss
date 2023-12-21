@@ -14,49 +14,142 @@
         width: 75vw;
         justify-content: center;
         margin-top: 50px;
-        column-gap: 30px;
 
         .edit-article-left {
             display: flex;
             flex-direction: column;
             align-items: end;
-            row-gap: 20px;
-            width: 20%;
+            row-gap: 100px;
+            width: 23%;
+            padding-right: 10px;
 
-            .edit-article-date {
+            .edit-article-left-date {
                 transform-origin: center;
-                transform: rotate(-90deg);
-                color: #999;
-                margin-top: 28px;
-                margin-right: -22px;
-                margin-bottom: 120px;
+                transform: rotate(-90deg) translateX(-15px) translateY(19px);
+                color: #B2B2B2;
+                font-size: 16px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 24px;
             }
 
-            .edit-article-menus {
-                display: flex;
-                column-gap: 15px;
-                align-items: center;
-
-            }
-
-            .edit-article-horizontal-divider {
-                width: 100%;
-                background-color: #d9d9d9;
-                height: 1px;
-            }
-
-            .edit-article-publication-dropdown {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-bottom: -10px;
-            }
-
-            .edit-article-premium-article-owners {
+            .edit-article-left-manage-wrapper {
                 display: flex;
                 flex-direction: column;
                 align-items: end;
+                width: 100%;
+                row-gap: 24px;
 
+                .edit-article-horizontal-divider {
+                    width: 100%;
+                    background-color: #d9d9d9;
+                    height: 1px;
+                }
+
+                .edit-article-left-info-list-wrapper {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
+                    row-gap: 16px;
+
+                    .edit-article-left-info-list-item {
+                        display: flex;
+                        width: 100%;
+                        align-items: center;
+                        justify-content: space-between;
+                        color: #999;
+                        font-family: Roboto;
+                        font-size: 12px;
+                        font-style: normal;
+                        font-weight: 500;
+                        line-height: 18px;
+                    }
+                }
+
+                .edit-article-left-manage-location-wrapper {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    row-gap: 32px;
+                    padding: 13px;
+                    padding-top: 20px;
+                    padding-bottom: 20px;
+                    border-radius: 4px;
+                    background: rgba(242, 242, 242, 0.60);
+
+                    .edit-article-left-location-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: start;
+                        row-gap: 4px;
+                        width: 100%;
+
+                        .edit-article-left-location-title {
+                            color: #999;
+                            font-size: 12px;
+                            font-style: normal;
+                            font-weight: 700;
+                            line-height: 18px;
+                        }
+
+                        .regular-user-location {
+                            display: flex;
+                            align-items: end;
+                            column-gap: 4px;
+
+                            .regular-user-location-handle {
+                                color: #19192E;
+
+                                font-family: Roboto;
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 20px;
+                            }
+
+                            .regular-user-location-icon {
+                                width: 24px;
+                                height: 24px;
+                                color: #000000;
+                            }
+                        }
+                    }
+
+                    .edit-article-left-manage-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        width: 100%;
+                        align-items: center;
+                        row-gap: 8px;
+
+                        .edit-article-left-manage-title {
+                            color: #999;
+                            font-size: 12px;
+                            font-style: normal;
+                            font-weight: 700;
+                            line-height: 18px;
+                            align-self: start;
+                        }
+
+                        .edit-article-left-manage-content-wrapper {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            width: 100%;
+
+                            .text {
+                                color: #7c7979;
+                                font-family: Roboto;
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 20px;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -71,6 +164,10 @@
             font-weight: 500;
             font-size: 12px;
             color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
         }
 
         .edit-article-right {
@@ -78,7 +175,7 @@
             flex-direction: column;
             align-items: center;
             row-gap: 10px;
-            width: 80%;
+            width: 77%;
 
             .edit-article-right-content {
                 display: flex;
@@ -125,7 +222,8 @@
                     height: 40px;
                     align-items: center;
                     cursor: pointer;
-                    .button-icon{
+
+                    .button-icon {
                         width: 35px;
                         height: 23px;
                     }

@@ -1,8 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   useAuthStore,
   useUserStore,
@@ -19,7 +15,11 @@ import {
   PostType,
   PremiumArticleOwners as PremiumArticleOwnersObject,
 } from '../../types/types';
-import { convertImagesToUrls, formatDate } from '../../shared/utils';
+import {
+  convertImagesToUrls,
+  DateFormat,
+  formatDate,
+} from '../../shared/utils';
 
 import { downscaleImage } from '../../components/quill-text-editor/modules/quill-image-compress/downscaleImage.js';
 import { toast, toastError, ToastType } from '../../services/toastService';
@@ -34,8 +34,11 @@ import PremiumArticleOwners from '../../components/premium-article-owners/premiu
 import { NftArticleView } from '../../components/nft-article-view/NftArticleView';
 import { EditArticleInputFields } from '../../components/edit-article-input-fields/edit-article-input-fields';
 import { EditArticlePremiumModal } from '../../components/edit-article-premium-modal/edit-article-premium-modal';
-import { PublicationDropdownMenu } from '../../components/publication-dropdown-menu/publication-dropdown-menu';
 import { ButtonsTextsMobile } from '../../components/buttons-texts-mobile/buttons-texts-mobile';
+import Badge from '../../UI/badge/badge';
+import Dropdown from '../../UI/dropdown/dropdown';
+import { RxAvatar } from 'react-icons/rx';
+import RadioButtons from '../../UI/radio-buttons/radio-buttons';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
@@ -86,7 +89,7 @@ const CreateEditArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   //returns the current status of the post
-  const getPostCurrentStatus = () => {
+  const getCurrentStatus = () => {
     if (location.pathname === '/article/new') {
       return 'Draft';
     } else {
@@ -94,9 +97,9 @@ const CreateEditArticle = () => {
         return 'Draft';
       } else {
         if (lastSavedPost?.isPremium) {
-          return 'Published as premium';
+          return 'Published';
         } else {
-          ('Published');
+          return 'Published';
         }
       }
     }
@@ -109,24 +112,22 @@ const CreateEditArticle = () => {
         return false;
       } else {
         //post is not premium
-        if(user?.handle === selectedHandle){
+        if (user?.handle === selectedHandle) {
           //regular post -> display the button
-          return true
-        }
-        else{
+          return true;
+        } else {
           //publication post -> display if the user is an editor
-          return userPublicationsEditor.includes(selectedHandle)
+          return userPublicationsEditor.includes(selectedHandle);
         }
       }
     } else {
       //last saved post is undefined -> new article screen
-      if(user?.handle === selectedHandle){
+      if (user?.handle === selectedHandle) {
         //regular post -> display the button
-        return true
-      }
-      else{
+        return true;
+      } else {
         //publication post -> diplay if the user is an editor
-        return userPublicationsEditor.includes(selectedHandle)
+        return userPublicationsEditor.includes(selectedHandle);
       }
     }
   };
@@ -516,21 +517,21 @@ const CreateEditArticle = () => {
             setPostHtml(migratePostResult.content);
 
             //if the user is writer -> toast a success message and navigate to my-profile screen
-            if(!notNavigate && userPublicationsWriter.includes(migratePostResult.handle)){
-              toast(
-                'Post submitted for review!',
-                ToastType.Success
-              );
-              setTimeout(()=>{
-                navigate('/my-profile')
-              }, 500)
+            if (
+              !notNavigate &&
+              userPublicationsWriter.includes(migratePostResult.handle)
+            ) {
+              toast('Post submitted for review!', ToastType.Success);
+              setTimeout(() => {
+                navigate('/my-profile');
+              }, 500);
             }
             return migratePostResult;
           }
         }
       } else {
         if (wasPublication) {
-          //not possible to reach here 
+          //not possible to reach here
         } else {
           //just a regular post edit -> call savePost
           let saveResult = await savePost({
@@ -585,16 +586,15 @@ const CreateEditArticle = () => {
           setPostHtml(savePublicationResult.content);
           //if the user is writer -> toast a success message and navigate to my-profile screen
           //else if the user is editor -> navigate to edit-article screen
-          if(!notNavigate && userPublicationsWriter.includes(savePublicationResult.handle)){
-            toast(
-              'Post submitted for review!',
-              ToastType.Success
-            );
-            setTimeout(()=>{
-              navigate('/my-profile/submitted-for-review')
-            }, 500)
-          }
-          else if (!notNavigate) {
+          if (
+            !notNavigate &&
+            userPublicationsWriter.includes(savePublicationResult.handle)
+          ) {
+            toast('Post submitted for review!', ToastType.Success);
+            setTimeout(() => {
+              navigate('/my-profile/submitted-for-review');
+            }, 500);
+          } else if (!notNavigate) {
             navigate('/article/edit/' + savePublicationResult.postId, {
               replace: true,
             });
@@ -631,6 +631,374 @@ const CreateEditArticle = () => {
           return saveResult;
         }
       }
+    }
+  };
+
+  const [radioButtonIndex, setRadioButtonIndex] = useState(
+    lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
+  );
+
+  const getRadioButtonItems = (): JSX.Element[] => {
+    if (isPublishAsPremiumVisible()) {
+      if (isPublishButtonVisible()) {
+        return [
+          <div className='radio-button-text'>
+            Save as draft under{' '}
+            <span className='darker'>@{selectedHandle}</span>
+          </div>,
+          <div className='radio-button-text'>
+            Publish this article under{' '}
+            <span className='darker'>@{selectedHandle}</span>
+          </div>,
+
+          <div className='radio-button-text'>
+            Publish and mint this article and create NFT keys that people need
+            to buy to read the article.
+            <br /> <br /> You can then no longer edit this article or un-publish
+            it....ever.
+          </div>,
+        ];
+      } else {
+        //not possible
+        return [<div></div>];
+      }
+    } else {
+      if (isPublishButtonVisible()) {
+        return [
+          <div className='radio-button-text'>
+            Save as draft under{' '}
+            <span className='darker'>@{selectedHandle}</span>
+          </div>,
+          <div className='radio-button-text'>
+            Publish this article under{' '}
+            <span className='darker'>@{selectedHandle}</span>
+          </div>,
+        ];
+      } else {
+        //Only for writers in publications
+        //we have different UI for this -> this code will never get executed
+        return [
+          <div className='radio-button-text'>
+            Save as draft under <span className='dark'>@{selectedHandle}</span>
+          </div>,
+        ];
+      }
+    }
+  };
+  const getManageItems = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        if (lastSavedPost.isPublication) {
+          //saved post -> draft publication post
+          //two possibilities to be here
+          if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+            //user(writer) submitted the post for review
+            //no action here. Just display that this post is submitted
+          } else if (userPublicationsEditor.includes(lastSavedPost.handle)) {
+            //user is an editor
+            //radio buttons are rendered. Just display the button according to the radioButtonIndex var
+            switch (radioButtonIndex) {
+              case 0:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Save as Draft
+                  </Button>
+                );
+              case 1:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(false);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Publish
+                  </Button>
+                );
+              case 2:
+                return (
+                  <Button
+                    type='button'
+                    styleType='secondary-NFT'
+                    style={{ width: '190px', marginTop: '20px' }}
+                    onClick={() => {
+                      setPremiumModalOpen(true);
+                    }}
+                  >
+                    <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
+                    Publish as premium
+                  </Button>
+                );
+            }
+          }
+        } else {
+          //saved post -> regular user post (draft)
+
+          if (selectedHandle === user?.handle) {
+            //dropdown uses the regular handle
+
+            switch (radioButtonIndex) {
+              case 0:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Save as Draft
+                  </Button>
+                );
+              case 1:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(false);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Publish
+                  </Button>
+                );
+                break;
+            }
+          } else if (userPublicationsWriter.includes(selectedHandle)) {
+            //post is saved as draft under the writer
+            //writer can only submit this post to the publication
+            return (
+              <div className='edit-article-left-manage-content-wrapper'>
+                <div className='text'>
+                  Submit this article for review in a publication. An editor
+                  will manage the article there
+                </div>
+                <Button
+                  type='button'
+                  styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                  style={{ width: '100%', marginTop: '20px' }}
+                  onClick={async () => {
+                    setLoading(true);
+                    await onSave(true);
+                    setLoading(false);
+                  }}
+                  dark={darkTheme}
+                >
+                  Submit to publication
+                </Button>
+              </div>
+            );
+          } else if (userPublicationsEditor.includes(selectedHandle)) {
+            //user is an editor
+            //radio buttons are rendered. Just display the button according to the radioButtonIndex var
+            switch (radioButtonIndex) {
+              case 0:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Save as Draft
+                  </Button>
+                );
+              case 1:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(false);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Publish
+                  </Button>
+                );
+              case 2:
+                return (
+                  <Button
+                    type='button'
+                    styleType='secondary-NFT'
+                    style={{ width: '190px', marginTop: '20px' }}
+                    onClick={() => {
+                      setPremiumModalOpen(true);
+                    }}
+                  >
+                    <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
+                    Publish as premium
+                  </Button>
+                );
+            }
+          }
+        }
+      } else {
+      }
+    } else {
+      if (userPublicationsWriter.includes(selectedHandle)) {
+        //there is no saved post
+        //user wants to submit it to a publication (user is a writer in the selected publication)
+        return (
+          <div className='edit-article-left-manage-content-wrapper'>
+            <div className='text'>
+              Submit this article for review in a publication. An editor will
+              manage the article there
+            </div>
+            <Button
+              type='button'
+              styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+              style={{ width: '100%', marginTop: '20px' }}
+              onClick={async () => {
+                setLoading(true);
+                await onSave(true);
+                setLoading(false);
+              }}
+              dark={darkTheme}
+            >
+              Submit to publication
+            </Button>
+          </div>
+        );
+      } else if (userPublicationsEditor.includes(selectedHandle)) {
+        //there is no saved post
+        //user is an editor in the selected publication
+        switch (radioButtonIndex) {
+          case 0:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(true);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Save as Draft
+              </Button>
+            );
+          case 1:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(false);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Publish
+              </Button>
+            );
+          case 2:
+            return (
+              <Button
+                type='button'
+                styleType='secondary-NFT'
+                style={{ width: '190px', marginTop: '20px' }}
+                onClick={() => {
+                  setPremiumModalOpen(true);
+                }}
+              >
+                <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
+                Publish as premium
+              </Button>
+            );
+        }
+      } else {
+        //there is no saved post
+        //user selected his/her own handle
+        switch (radioButtonIndex) {
+          case 0:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(true);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Save as Draft
+              </Button>
+            );
+          case 1:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(false);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Publish
+              </Button>
+            );
+        }
+      }
+    }
+  };
+
+  const getDropdownItems = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        if (lastSavedPost.isPublication) {
+          return ['@' + lastSavedPost.handle];
+        } else {
+          return [
+            '@' + user?.handle,
+            ...userAllPublications.map((v) => '@' + v),
+          ];
+        }
+      } else {
+        return ['@' + lastSavedPost.handle];
+      }
+    } else {
+      return ['@' + user?.handle, ...userAllPublications.map((v) => '@' + v)];
     }
   };
 
@@ -673,128 +1041,98 @@ const CreateEditArticle = () => {
       )}
       <div className='edit-article-content-wrapper'>
         <div className='edit-article-left'>
-          <p className='edit-article-date'>
+          <p className='edit-article-left-date'>
             {formatDate(
-              lastSavedPost?.modified || new Date().getTime().toString()
+              lastSavedPost?.modified || new Date().getTime().toString(),
+              DateFormat.NoYear
             )}
           </p>
-          <div className='edit-article-menus'>
-            {lastSavedPost && (
-              <CopyArticle
-                url={lastSavedPost.url}
-                shown={copyArticle}
-                setShown={setCopyArticle}
-                dark={darkTheme}
-                postId={lastSavedPost.postId}
-              />
-            )}
-            {lastSavedPost &&
-              !lastSavedPost.isDraft &&
-              !lastSavedPost.isPremium && (
-                <UnpublishArticle
-                  shown={shownMeatball}
-                  setIsDraft={setIsDraft}
-                  setShown={setShownMeatball}
-                  savePost={async () => {
-                    setLoading(true);
-                    await onSave(true);
-                    setLoading(false);
-                  }}
-                  dark={darkTheme}
-                />
-              )}
-          </div>
-          <div className='edit-article-horizontal-divider' />
-          <p className='edit-article-left-text'>
-            last modified: {formatDate(lastSavedPost?.modified) || ' - '}
-          </p>
-          {(location.pathname === '/article/new' || lastSavedPost?.isDraft) && (
-            <Button
-              disabled={loading}
-              type='button'
-              styleType='primary-1'
-              style={{
-                width: '96px',
-                margin: '10px 0',
-                border: darkTheme ? '1px solid #fff' : 'none',
-              }}
-              onClick={async () => {
-                setLoading(true);
-                await onSave(true);
-                setLoading(false);
-              }}
-            >
-              {userPublicationsWriter.includes(selectedHandle)
-                ? 'Submit'
-                : 'Save'}
-            </Button>
-          )}
-          <div className='edit-article-horizontal-divider' />
-          <p className='edit-article-left-text'>
-            Current status: {getPostCurrentStatus()}
-          </p>
-          {!lastSavedPost?.isPremium && (
-            <PublicationDropdownMenu
-              user={user}
-              lastSavedPost={lastSavedPost}
-              userAllPublications={userAllPublications}
-              loading={loading}
-              selectedHandle={selectedHandle}
-              setSelectedHandle={setSelectedHandle}
-            />
-          )}
-          {isPublishButtonVisible() ? (
-            <Button
-              disabled={loading}
-              type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-              style={{ width: '96px' }}
-              onClick={async () => {
-                setLoading(true);
-                await onSave(false);
-                setLoading(false);
-              }}
-              dark={darkTheme}
-            >
-              Publish
-            </Button>
-          ) : null}
-          <div className='edit-article-horizontal-divider' />
-
-          {/* display the owners of the post if it's a premium post */}
-          {lastSavedPost?.isPremium ? (
-            <PremiumArticleOwners
-              owners={ownersOfPremiumArticle}
-              dark={darkTheme}
-            />
-          ) : null}
-
-          {/* Display the publish as premium button if the selected handle is a publication with an nft canister */}
-          {isPublishAsPremiumVisible() ? (
-            <div className='NFT-field-wrapper'>
-              <div className='NFT-left-text-container'>
-                <p className='NFT-left-text'>
-                  Limit access to this article by selling exclusive NFT keys.
-                </p>
-                <p className='NFT-left-text'>
-                  NOTE: after creating NFT keys you cannot edit the article
-                  anymore.
-                </p>
+          <div className='edit-article-left-manage-wrapper'>
+            <div className='edit-article-horizontal-divider' />
+            <div className='edit-article-left-info-list-wrapper'>
+              <div className='edit-article-left-info-list-item'>
+                <div>Current status</div>
+                <Badge status={getCurrentStatus()} dark={darkTheme} />
               </div>
-              <Button
-                disabled={false}
-                type='button'
-                styleType='secondary-NFT'
-                style={{ width: '190px' }}
-                onClick={() => {
-                  setPremiumModalOpen(true);
-                }}
-              >
-                <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
-                Publish as premium
-              </Button>
+              <div className='edit-article-left-info-list-item'>
+                <div>Last modified</div>
+                {formatDate(
+                  lastSavedPost?.modified || new Date().getTime().toString(),
+                  DateFormat.WithYear
+                )}
+              </div>
+              {lastSavedPost && (
+                <div className='edit-article-left-info-list-item'>
+                  <div>Location</div>
+                  {'@' + lastSavedPost.handle}
+                </div>
+              )}
+              {lastSavedPost?.isPublication && (
+                <div className='edit-article-left-info-list-item'>
+                  <div>Category</div>
+                  {'/' + lastSavedPost.category}
+                </div>
+              )}
             </div>
-          ) : null}
+            <div className='edit-article-left-manage-location-wrapper'>
+              {(lastSavedPost?.isDraft || !lastSavedPost) && (
+                <div className='edit-article-left-location-wrapper'>
+                  <div className='edit-article-left-location-title'>
+                    LOCATION
+                  </div>
+                  {userAllPublications.length === 0 ? (
+                    <div className='regular-user-location'>
+                      <img
+                        src={icons.PROFILE_ICON}
+                        className='regular-user-location-icon'
+                      />
+                      <div className='regular-user-location-handle'>
+                        @{user?.handle}
+                      </div>
+                    </div>
+                  ) : (
+                    user && (
+                      <Dropdown
+                        style={{ height: '30px' }}
+                        selectedTextStyle={{
+                          fontWeight: '400',
+                          color: '#19192E',
+                          fontSize: '14px',
+                        }}
+                        icons={[
+                          icons.PROFILE_ICON,
+                          ...userAllPublications.map(
+                            (v) => icons.PUBLICATION_ICON
+                          ),
+                        ]}
+                        drodownItemsWrapperStyle={{ top: '32px' }}
+                        items={getDropdownItems()}
+                        arrowWidth={12}
+                        imageStyle={{ width: '20px', height: '20px' }}
+                        dropdownMenuItemStyle={{ fontSize: '12px' }}
+                        onSelect={(item) => {
+                          setSelectedHandle(item.slice(1));
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+              )}
+              <div className='edit-article-left-manage-wrapper'>
+                <div className='edit-article-left-manage-title'>MANAGE</div>
+                {(!lastSavedPost || (lastSavedPost && lastSavedPost.isDraft)) &&
+                  !userPublicationsWriter.includes(selectedHandle) && (
+                    <RadioButtons
+                      items={getRadioButtonItems()}
+                      onSelect={(index) => {
+                        setRadioButtonIndex(index);
+                      }}
+                    />
+                  )}
+                {getManageItems()}
+              </div>
+            </div>
+          </div>
         </div>
         <div className='vertical-divider' />
         <div className='edit-article-right'>
@@ -829,26 +1167,7 @@ const CreateEditArticle = () => {
                   allTags={allTags}
                 />
               )}
-              {/*Left sidebar is gone in mobile,  */}
-              {isMobile() ? (
-                <ButtonsTextsMobile
-                  lastSavedPost={lastSavedPost}
-                  user={user}
-                  userAllPublications={userAllPublications}
-                  userPublicationsWriter={userPublicationsWriter}
-                  darkTheme={darkTheme}
-                  loading={loading}
-                  setLoading={setLoading}
-                  selectedHandle={selectedHandle}
-                  setSelectedHandle={setSelectedHandle}
-                  ownersOfPremiumArticle={ownersOfPremiumArticle}
-                  onSave={onSave}
-                  getPostCurrentStatus={getPostCurrentStatus}
-                  isPublishButtonVisible={isPublishButtonVisible}
-                  isPublishAsPremiumVisible={isPublishAsPremiumVisible}
-                  setPremiumModalOpen={setPremiumModalOpen}
-                />
-              ) : null}
+
               <div className='footer-wrapper'>
                 <Footer />
               </div>
