@@ -24,6 +24,7 @@
         }
 
         .radio-button-text {
+            
             color: #7c7979;
             /* NUA 2/Roboto/14/Medium */
             font-family: Roboto;
@@ -34,6 +35,19 @@
             margin-top: -4px;
             .darker{
                 color: #494848;
+            }
+        }
+        .radio-button-text-dark-mode {
+            color: #c1baba;
+            /* NUA 2/Roboto/14/Medium */
+            font-family: Roboto;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 20px;
+            margin-top: -4px;
+            .lighter{
+                color: #ffffff;
             }
         }
     }

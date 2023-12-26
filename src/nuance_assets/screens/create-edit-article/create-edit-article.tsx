@@ -93,7 +93,7 @@ const CreateEditArticle = () => {
     if (location.pathname === '/article/new') {
       return 'Draft';
     } else {
-      if (lastSavedPost?.isDraft) {
+      if (!lastSavedPost || lastSavedPost?.isDraft) {
         return 'Draft';
       } else {
         if (lastSavedPost?.isPremium) {
@@ -642,16 +642,32 @@ const CreateEditArticle = () => {
     if (isPublishAsPremiumVisible()) {
       if (isPublishButtonVisible()) {
         return [
-          <div className='radio-button-text'>
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
             Save as draft under{' '}
-            <span className='darker'>@{selectedHandle}</span>
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
           </div>,
-          <div className='radio-button-text'>
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
             Publish this article under{' '}
-            <span className='darker'>@{selectedHandle}</span>
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
           </div>,
 
-          <div className='radio-button-text'>
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
             Publish and mint this article and create NFT keys that people need
             to buy to read the article.
             <br /> <br /> You can then no longer edit this article or un-publish
@@ -665,26 +681,43 @@ const CreateEditArticle = () => {
     } else {
       if (isPublishButtonVisible()) {
         return [
-          <div className='radio-button-text'>
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
             Save as draft under{' '}
-            <span className='darker'>@{selectedHandle}</span>
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
           </div>,
-          <div className='radio-button-text'>
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
             Publish this article under{' '}
-            <span className='darker'>@{selectedHandle}</span>
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
           </div>,
         ];
       } else {
         //Only for writers in publications
         //we have different UI for this -> this code will never get executed
         return [
-          <div className='radio-button-text'>
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
             Save as draft under <span className='dark'>@{selectedHandle}</span>
           </div>,
         ];
       }
     }
   };
+  console.log(lastSavedPost);
   const getManageItems = () => {
     if (lastSavedPost) {
       if (lastSavedPost.isDraft) {
@@ -694,6 +727,19 @@ const CreateEditArticle = () => {
           if (userPublicationsWriter.includes(lastSavedPost.handle)) {
             //user(writer) submitted the post for review
             //no action here. Just display that this post is submitted
+            return (
+              <div className='edit-article-left-manage-content-wrapper'>
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  This article is submitted to a publication:{' '}
+                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>@{lastSavedPost.handle}</span>
+                </div>
+                <div className='horizontal-divider' />
+                <div className='text'>
+                  An editor manages the article there. You cannot edit this
+                  article anymore.
+                </div>
+              </div>
+            );
           } else if (userPublicationsEditor.includes(lastSavedPost.handle)) {
             //user is an editor
             //radio buttons are rendered. Just display the button according to the radioButtonIndex var
@@ -702,7 +748,7 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -718,7 +764,7 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -734,8 +780,8 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType='secondary-NFT'
-                    style={{ width: '190px', marginTop: '20px' }}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
                     onClick={() => {
                       setPremiumModalOpen(true);
                     }}
@@ -757,7 +803,7 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -773,7 +819,7 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -798,7 +844,7 @@ const CreateEditArticle = () => {
                 </div>
                 <Button
                   type='button'
-                  styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                  styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                   style={{ width: '100%', marginTop: '20px' }}
                   onClick={async () => {
                     setLoading(true);
@@ -819,7 +865,7 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -835,7 +881,7 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -851,8 +897,8 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType='secondary-NFT'
-                    style={{ width: '190px', marginTop: '20px' }}
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
                     onClick={() => {
                       setPremiumModalOpen(true);
                     }}
@@ -865,6 +911,96 @@ const CreateEditArticle = () => {
           }
         }
       } else {
+        //there is a published post
+        if (lastSavedPost.isPublication) {
+          //published publication post
+          if (lastSavedPost.isPremium) {
+            //post is premium
+            //it doesn't matter if the user is editor or writer
+            //display the generic info
+            return (
+              <div className='edit-article-left-manage-content-wrapper'>
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  This article is minted.
+                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>@{lastSavedPost.handle}</span>
+                </div>
+              </div>
+            );
+          } else {
+            //published publication post
+            if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+              //user is a writer
+              //no action permission, just display the info
+              return (
+                <div className='edit-article-left-manage-content-wrapper'>
+                  <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                    This article is submitted to a publication:{' '}
+                    <span className={darkTheme ? 'text-lighter' : 'text-darker'}>@{lastSavedPost.handle}</span>
+                  </div>
+                  <div className='horizontal-divider' />
+                  <div className='text'>
+                    An editor manages the article there. You cannot edit this
+                    article anymore.
+                  </div>
+                </div>
+              );
+            } else if (userPublicationsEditor.includes(lastSavedPost.handle)) {
+              //user is an editor
+              return (
+                <div className='edit-article-left-manage-content-wrapper'>
+                  <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                    Unpublish from{' '}
+                    <span
+                      className={darkTheme ? 'text-lighter' : 'text-darker'}
+                    >
+                      @{lastSavedPost.handle}
+                    </span>
+                  </div>
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Unpublish
+                  </Button>
+                </div>
+              );
+            }
+          }
+        } else {
+          //published, regular post
+          //user is the owner, just display the unpublish button and text
+
+          return (
+            <div className='edit-article-left-manage-content-wrapper'>
+              <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                Unpublish from{' '}
+                <span className={darkTheme ? 'text-lighter' : 'text-darker'}>
+                  @{lastSavedPost.handle}
+                </span>
+              </div>
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(true);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Unpublish
+              </Button>
+            </div>
+          );
+        }
       }
     } else {
       if (userPublicationsWriter.includes(selectedHandle)) {
@@ -878,7 +1014,7 @@ const CreateEditArticle = () => {
             </div>
             <Button
               type='button'
-              styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+              styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
               style={{ width: '100%', marginTop: '20px' }}
               onClick={async () => {
                 setLoading(true);
@@ -899,7 +1035,7 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                 style={{ width: '100%', marginTop: '20px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -915,7 +1051,7 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                 style={{ width: '100%', marginTop: '20px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -931,8 +1067,8 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType='secondary-NFT'
-                style={{ width: '190px', marginTop: '20px' }}
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
                 onClick={() => {
                   setPremiumModalOpen(true);
                 }}
@@ -950,7 +1086,7 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                 style={{ width: '100%', marginTop: '20px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -966,7 +1102,7 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'deposit-dark' : 'deposit'}
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                 style={{ width: '100%', marginTop: '20px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -999,6 +1135,34 @@ const CreateEditArticle = () => {
       }
     } else {
       return ['@' + user?.handle, ...userAllPublications.map((v) => '@' + v)];
+    }
+  };
+
+  const getDropdownIcons = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        if (lastSavedPost.isPublication) {
+          return [icons.PUBLICATION_ICON];
+        } else {
+          return [
+            darkTheme ? icons.PROFILE_ICON_DARK : icons.PROFILE_ICON,
+            ...userAllPublications.map((v) => icons.PUBLICATION_ICON),
+          ];
+        }
+      } else {
+        return [
+          lastSavedPost.isPublication
+            ? icons.PUBLICATION_ICON
+            : darkTheme
+            ? icons.PROFILE_ICON_DARK
+            : icons.PROFILE_ICON,
+        ];
+      }
+    } else {
+      return [
+        darkTheme ? icons.PROFILE_ICON_DARK : icons.PROFILE_ICON,
+        ...userAllPublications.map((v) => icons.PUBLICATION_ICON),
+      ];
     }
   };
 
@@ -1047,92 +1211,86 @@ const CreateEditArticle = () => {
               DateFormat.NoYear
             )}
           </p>
-          <div className='edit-article-left-manage-wrapper'>
-            <div className='edit-article-horizontal-divider' />
-            <div className='edit-article-left-info-list-wrapper'>
-              <div className='edit-article-left-info-list-item'>
-                <div>Current status</div>
-                <Badge status={getCurrentStatus()} dark={darkTheme} />
-              </div>
-              <div className='edit-article-left-info-list-item'>
-                <div>Last modified</div>
-                {formatDate(
-                  lastSavedPost?.modified || new Date().getTime().toString(),
-                  DateFormat.WithYear
+          {!loading && (
+            <div className='edit-article-left-manage-wrapper'>
+              <div className='edit-article-horizontal-divider' />
+              <div className='edit-article-left-info-list-wrapper'>
+                <div className='edit-article-left-info-list-item'>
+                  <div>Current status</div>
+                  <Badge status={getCurrentStatus()} dark={darkTheme} />
+                </div>
+                <div className='edit-article-left-info-list-item'>
+                  <div>Last modified</div>
+                  {formatDate(
+                    lastSavedPost?.modified || new Date().getTime().toString(),
+                    DateFormat.WithYear
+                  )}
+                </div>
+                {lastSavedPost && (
+                  <div className='edit-article-left-info-list-item'>
+                    <div>Location</div>
+                    {'@' + lastSavedPost.handle}
+                  </div>
+                )}
+                {lastSavedPost?.isPublication && (
+                  <div className='edit-article-left-info-list-item'>
+                    <div>Category</div>
+                    {'/' + lastSavedPost.category}
+                  </div>
                 )}
               </div>
-              {lastSavedPost && (
-                <div className='edit-article-left-info-list-item'>
-                  <div>Location</div>
-                  {'@' + lastSavedPost.handle}
-                </div>
-              )}
-              {lastSavedPost?.isPublication && (
-                <div className='edit-article-left-info-list-item'>
-                  <div>Category</div>
-                  {'/' + lastSavedPost.category}
-                </div>
-              )}
-            </div>
-            <div className='edit-article-left-manage-location-wrapper'>
-              {(lastSavedPost?.isDraft || !lastSavedPost) && (
-                <div className='edit-article-left-location-wrapper'>
-                  <div className='edit-article-left-location-title'>
-                    LOCATION
-                  </div>
-                  {userAllPublications.length === 0 ? (
-                    <div className='regular-user-location'>
-                      <img
-                        src={icons.PROFILE_ICON}
-                        className='regular-user-location-icon'
-                      />
-                      <div className='regular-user-location-handle'>
-                        @{user?.handle}
-                      </div>
+              <div
+                className='edit-article-left-manage-location-wrapper'
+                style={
+                  darkTheme
+                    ? {
+                        background: colors.darkModePrimaryBackgroundColor,
+                        border: '1px solid rgb(153, 153, 153)',
+                      }
+                    : {}
+                }
+              >
+                {(lastSavedPost?.isDraft || !lastSavedPost) && (
+                  <div className='edit-article-left-location-wrapper'>
+                    <div className='edit-article-left-location-title'>
+                      LOCATION
                     </div>
-                  ) : (
-                    user && (
-                      <Dropdown
-                        style={{ height: '30px' }}
-                        selectedTextStyle={{
-                          fontWeight: '400',
-                          color: '#19192E',
-                          fontSize: '14px',
-                        }}
-                        icons={[
-                          icons.PROFILE_ICON,
-                          ...userAllPublications.map(
-                            (v) => icons.PUBLICATION_ICON
-                          ),
-                        ]}
-                        drodownItemsWrapperStyle={{ top: '32px' }}
-                        items={getDropdownItems()}
-                        arrowWidth={12}
-                        imageStyle={{ width: '20px', height: '20px' }}
-                        dropdownMenuItemStyle={{ fontSize: '12px' }}
-                        onSelect={(item) => {
-                          setSelectedHandle(item.slice(1));
+                    <Dropdown
+                      style={{ height: '30px' }}
+                      selectedTextStyle={{
+                        fontWeight: '400',
+                        fontSize: '14px',
+                      }}
+                      icons={getDropdownIcons()}
+                      drodownItemsWrapperStyle={{ top: '32px' }}
+                      items={getDropdownItems()}
+                      arrowWidth={12}
+                      imageStyle={{ width: '20px', height: '20px' }}
+                      dropdownMenuItemStyle={{ fontSize: '12px' }}
+                      onSelect={(item) => {
+                        setSelectedHandle(item.slice(1));
+                      }}
+                      notActiveIfOnlyOneItem={true}
+                    />
+                  </div>
+                )}
+                <div className='edit-article-left-manage-wrapper'>
+                  <div className='edit-article-left-manage-title'>MANAGE</div>
+                  {(!lastSavedPost ||
+                    (lastSavedPost && lastSavedPost.isDraft)) &&
+                    !userPublicationsWriter.includes(selectedHandle) && (
+                      <RadioButtons
+                        items={getRadioButtonItems()}
+                        onSelect={(index) => {
+                          setRadioButtonIndex(index);
                         }}
                       />
-                    )
-                  )}
+                    )}
+                  {getManageItems()}
                 </div>
-              )}
-              <div className='edit-article-left-manage-wrapper'>
-                <div className='edit-article-left-manage-title'>MANAGE</div>
-                {(!lastSavedPost || (lastSavedPost && lastSavedPost.isDraft)) &&
-                  !userPublicationsWriter.includes(selectedHandle) && (
-                    <RadioButtons
-                      items={getRadioButtonItems()}
-                      onSelect={(index) => {
-                        setRadioButtonIndex(index);
-                      }}
-                    />
-                  )}
-                {getManageItems()}
               </div>
             </div>
-          </div>
+          )}
         </div>
         <div className='vertical-divider' />
         <div className='edit-article-right'>
@@ -1167,10 +1325,6 @@ const CreateEditArticle = () => {
                   allTags={allTags}
                 />
               )}
-
-              <div className='footer-wrapper'>
-                <Footer />
-              </div>
             </div>
           )}
         </div>

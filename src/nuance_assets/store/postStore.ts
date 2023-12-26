@@ -1073,7 +1073,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         .getCanisterIdByHandle(handle);
 
       //get the image from url in base64 format and resize it to use in nft asset
-      let blob = await fetch(post.headerImage).then((r) => r.blob());
+      let blob = await fetch(
+        window.location.origin.includes('local')
+          ? 'http://localhost:8081/assets/images/nuance-logo.svg'
+          : post.headerImage
+      ).then((r) => r.blob());
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onload = async (event) => {

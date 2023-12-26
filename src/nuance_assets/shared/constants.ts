@@ -80,7 +80,8 @@ export const icons = {
   CLAP_BLACK: iconsPath + 'clap-black.svg',
   NFT_ICON: iconsPath + 'nft-icon.svg',
   CLAP_WHITE_2: iconsPath + 'clap-white-2.svg',
-  PROFILE_ICON: iconsPath + 'profile-icon.svg'
+  PROFILE_ICON: iconsPath + 'profile-icon.svg',
+  PROFILE_ICON_DARK: iconsPath + 'profile-icon-dark.svg'
 };
 
 export const colors = {
