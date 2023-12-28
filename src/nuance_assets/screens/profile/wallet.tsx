@@ -618,7 +618,7 @@ const Wallet = () => {
                       >
                         {`${(activity.applauds / Math.pow(10, 8)).toFixed(
                           0
-                        )} Applaud`}
+                        )} Applause`}
                       </div>
                       <div
                         className='transfer-icon transfer'

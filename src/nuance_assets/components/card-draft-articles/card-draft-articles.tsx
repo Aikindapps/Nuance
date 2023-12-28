@@ -235,7 +235,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
             }
           })
         ) : (
-          <p className='tooltip-inside-text'>No applaud yet.</p>
+          <p className='tooltip-inside-text'>No applause yet.</p>
         )}
       </Tooltip>
     </div>

@@ -25,6 +25,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   const [isToggled, setIsToggled] = useState(!post.isDraft);
   const [isLoading, setIsLoading] = useState(false);
   const [handleSelection, setHandleSelection] = useState(post.category);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const navigate = useNavigate();
   const darkTheme = useTheme();
 
@@ -85,8 +86,11 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             ? { filter: 'blur(3px)' }
             : {}
           : isLoading
-          ? { filter: 'blur(3px) grayscale(1)' }
-          : { filter: 'grayscale(1)' }
+          ? {
+              filter: 'blur(3px) grayscale(1)',
+              zIndex: isDropdownOpen ? '3' : 'unset',
+            }
+          : { filter: 'grayscale(1)', zIndex: isDropdownOpen ? '3' : 'unset' }
       }
     >
       <div className='field-published field-general'>
@@ -133,9 +137,9 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         <Dropdown
           selectedTextStyle={{ fontSize: '14px', fontWeight: '400' }}
           drodownItemsWrapperStyle={{
-            maxHeight: '100px',
             overflowY: 'scroll',
             top: '29px',
+            rowGap: '0',
           }}
           style={{ height: '24px' }}
           items={getCategoriesWithNoCategory().map((val) => '/' + val)}
@@ -145,6 +149,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
               handleCategoryChange(post, item.slice(1));
             }
           }}
+          onIsOpenChanged={setIsDropdownOpen}
         />
       </div>
 
@@ -230,7 +235,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             }
           })
         ) : (
-          <p className='tooltip-inside-text'>No applaud yet.</p>
+          <p className='tooltip-inside-text'>No applause yet.</p>
         )}
       </Tooltip>
     </div>

@@ -401,22 +401,29 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
   searchPublications: async (input: string): Promise<void> => {
     let allPublications = await get().getAllPublicationsHandles();
+    console.log('allPublications: ', allPublications)
     let handleToCanisterIdMap = new Map<string, string>()
     let handles : string[] = [];
     allPublications.forEach((entry)=>{
-      handleToCanisterIdMap.set(entry[0], entry[1])
+      handleToCanisterIdMap.set(entry[0].toLowerCase(), entry[1])
       handles.push(entry[0])
     });
+    console.log('handles: ', handles)
     let resultHandles = findSimilarHandles(input, handles);
+    console.log('resultHandles: ',resultHandles)
     let promises = []
+    console.log('handleToCanisterIdMap: ', handleToCanisterIdMap)
     for(const handle of resultHandles){
       let canisterId = handleToCanisterIdMap.get(handle);
+      console.log('canisterId: ', canisterId)
       if(canisterId){
         let promise = (await getPublisherActor(canisterId)).getPublicationQuery(handle);
         promises.push(promise)
       }
     }
+    console.log('promises: ', promises)
     let results = await Promise.all(promises);
+    console.log('results: ', results)
     let publications : PublicationType[] = [];
     results.forEach((result)=>{
       if(!(Err in result)){
