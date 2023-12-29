@@ -1,0 +1,254 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
+type User__1 = 
+ record {
+   accountCreated: text;
+   avatar: text;
+   bio: text;
+   displayName: text;
+   followers: Followers;
+   followersArray: vec text;
+   followersCount: nat32;
+   handle: text;
+   nuaTokens: float64;
+   publicationsArray: vec PublicationObject;
+ };
+type UserListItem = 
+ record {
+   avatar: text;
+   bio: text;
+   displayName: text;
+   fontType: text;
+   handle: text;
+   "principal": text;
+ };
+type User = 
+ record {
+   accountCreated: text;
+   avatar: text;
+   bio: text;
+   displayName: text;
+   followers: Followers;
+   followersArray: vec text;
+   followersCount: nat32;
+   handle: text;
+   nuaTokens: float64;
+   publicationsArray: vec PublicationObject;
+ };
+type UpdateCallsAggregatedData = vec nat64;
+type Result_6 = 
+ variant {
+   err: text;
+   ok: vec User;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: vec UserListItem;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: User;
+ };
+type RemovePublicationReturn = 
+ variant {
+   err: text;
+   ok: User__1;
+ };
+type RegisterUserReturn = 
+ variant {
+   err: text;
+   ok: User__1;
+ };
+type PublicationObject__1 = 
+ record {
+   isEditor: bool;
+   publicationName: text;
+ };
+type PublicationObject = 
+ record {
+   isEditor: bool;
+   publicationName: text;
+ };
+type NumericEntity = 
+ record {
+   avg: nat64;
+   first: nat64;
+   last: nat64;
+   max: nat64;
+   min: nat64;
+ };
+type NuaBalanceResult = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type NftCanisterEntry = 
+ record {
+   canisterId: text;
+   handle: text;
+ };
+type MetricsGranularity = 
+ variant {
+   daily;
+   hourly;
+ };
+type List = 
+ opt record {
+       text;
+       List;
+     };
+type HourlyMetricsData = 
+ record {
+   canisterCycles: CanisterCyclesAggregatedData;
+   canisterHeapMemorySize: CanisterHeapMemoryAggregatedData;
+   canisterMemorySize: CanisterMemoryAggregatedData;
+   timeMillis: int;
+   updateCalls: UpdateCallsAggregatedData;
+ };
+type GetPrincipalByHandleReturn = 
+ variant {
+   err: text;
+   ok: opt text;
+ };
+type GetMetricsParameters = 
+ record {
+   dateFromMillis: nat;
+   dateToMillis: nat;
+   granularity: MetricsGranularity;
+ };
+type GetHandleByPrincipalReturn = 
+ variant {
+   err: text;
+   ok: opt text;
+ };
+type Followers = 
+ opt record {
+       text;
+       List;
+     };
+type Date = 
+ record {
+   day: nat;
+   hour: nat;
+   month: nat;
+   year: nat;
+ };
+type DailyMetricsData = 
+ record {
+   canisterCycles: NumericEntity;
+   canisterHeapMemorySize: NumericEntity;
+   canisterMemorySize: NumericEntity;
+   timeMillis: int;
+   updateCalls: nat64;
+ };
+type CanisterMetricsData = 
+ variant {
+   daily: vec DailyMetricsData;
+   hourly: vec HourlyMetricsData;
+ };
+type CanisterMetrics = record {data: CanisterMetricsData;};
+type CanisterMemoryAggregatedData = vec nat64;
+type CanisterHeapMemoryAggregatedData = vec nat64;
+type CanisterCyclesAggregatedData = vec nat64;
+type AddPublicationReturn = 
+ variant {
+   err: text;
+   ok: User__1;
+ };
+service : {
+  acceptCycles: () -> ();
+  addNuaBalance: (text) -> () oneway;
+  addPublication: (PublicationObject__1, text) -> (AddPublicationReturn);
+  adminAirDrop: (float64) -> (Result_3);
+  availableCycles: () -> (nat) query;
+  clearAllMyFollowers: () -> (text);
+  collectCanisterMetrics: () -> ();
+  deleteUser: (text) -> (Result_2);
+  dumpUsers: () -> (text) query;
+  followAuthor: (text) -> (Result);
+  generateAccountIds: () -> ();
+  generateLowercaseHandles: () -> (text, vec text);
+  getActiveUsersByRange: (Date) -> (nat) query;
+  getAdmins: () -> (Result_4) query;
+  getAllHandles: () -> (vec text) query;
+  getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getCanisterVersion: () -> (text) query;
+  getCgUsers: () -> (Result_4) query;
+  getDailyMaxRegistration: () -> (nat) query;
+  getFollowersCount: (text) -> (text) query;
+  getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
+  getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
+  getHandlesByPrincipals: (vec text) -> (vec text) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  getMultipleUsersByPrincipalId: (vec text) -> (Result_6) query;
+  getMyFollowers: (nat32, nat32) -> (Result_5) query;
+  getNftCanisters: () -> (vec NftCanisterEntry) query;
+  getNuaBalance: (text) -> (NuaBalanceResult) query;
+  getNumberOfAllRegisteredUsers: () -> (nat) query;
+  getPlatformOperators: () -> (List) query;
+  getPrincipalByHandle: (text) -> (GetPrincipalByHandleReturn) query;
+  getPrincipalsByHandles: (vec text) -> (vec text) query;
+  getRegistrationNumberLastDay: () -> (nat) query;
+  getTrustedCanisters: () -> (Result_4) query;
+  getUser: () -> (Result) query;
+  getUserByHandle: (text) -> (Result) query;
+  getUserByPrincipalId: (text) -> (Result) query;
+  getUserFollowers: (text) -> (vec text);
+  getUserInternal: (text) -> (opt User) query;
+  getUsersByHandles: (vec text) -> (vec UserListItem) query;
+  handleClap: (text, text) -> () oneway;
+  initFollowers: (nat, nat) -> (text);
+  isRegistrationOpen: () -> (bool) query;
+  isThereEnoughMemory: () -> (bool) query;
+  registerAdmin: (text) -> (Result_1);
+  registerCanister: (text) -> (Result_1);
+  registerCgUser: (text) -> (Result_1);
+  registerNftCanisterId: (text) -> (Result_3);
+  registerPlatformOperator: (text) -> (Result_1);
+  registerUser: (text, text, text) -> (RegisterUserReturn);
+  removePublication: (PublicationObject__1, text) ->
+   (RemovePublicationReturn);
+  setDailyMaxRegistration: (nat) -> (Result_2);
+  setFollowersCount: () -> (GetHandleByPrincipalReturn);
+  setMaxMemorySize: (nat) -> (Result_2);
+  spendNuaBalance: (text) -> () oneway;
+  testInstructionSize: () -> (text);
+  unfollowAuthor: (text) -> (Result);
+  unregisterAdmin: (text) -> (Result_1);
+  unregisterCanister: (text) -> (Result_1);
+  unregisterCgUser: (text) -> (Result_1);
+  unregisterPlatformOperator: (text) -> (Result_1);
+  updateAvatar: (text) -> (Result);
+  updateBio: (text) -> (Result);
+  updateDisplayName: (text) -> (Result);
+  updateFontType: (text) -> (Result);
+  updateHandle: (text, text, text, opt vec text) -> (Result);
+  updateLastLogin: () -> () oneway;
+  validate: (reserved) -> (Validate);
+}
