@@ -1485,6 +1485,46 @@ actor class PostBucket() = this {
     Buffer.toArray(postsBuffer);
   };
 
+  public shared ({caller}) func getAllSubmittedForReviews() : async Result.Result<[(Text, [Text])], Text>{
+    if(not isAdmin(caller)){
+      return #err(Unauthorized)
+    };
+    //key: creatorHandle(lowercase), value: postIds
+    var creatorToPostIdsHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, Text.equal, Text.hash);
+    for((postId, isPublication) in isPublicationHashMap.entries()){
+      if(isPublication and U.safeGet(isDraftHashMap, postId, false)){
+        //draft publication post
+        let creatorHandle = U.safeGet(creatorHashMap, postId, "");
+        if(creatorHandle != ""){
+          let existingPostIds = U.safeGet(creatorToPostIdsHashMap, creatorHandle, []);
+          if(not U.arrayContains(existingPostIds, postId)){
+            creatorToPostIdsHashMap.put(U.lowerCase(creatorHandle), Array.append(existingPostIds, [postId]));
+          }
+        };
+      }
+    };
+    let userCanister = CanisterDeclarations.getUserCanister();
+    let creatorUserListItems = await userCanister.getUsersByHandles(Iter.toArray(creatorToPostIdsHashMap.keys()));
+    //key: creator handle (lowercase), value: principal id
+    var creatorHandleToPrincipalIdsHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, Text.equal, Text.hash);
+    for(creatorUserListItem in creatorUserListItems.vals()){
+      creatorHandleToPrincipalIdsHashMap.put(U.lowerCase(creatorUserListItem.handle), creatorUserListItem.principal);
+    };
+
+    var resultBuffer = Buffer.Buffer<(Text, [Text])>(0);
+    for((creatorHandle, postIds) in creatorToPostIdsHashMap.entries()){
+      switch(creatorHandleToPrincipalIdsHashMap.get(creatorHandle)) {
+        case(?principalId) {
+          resultBuffer.add((principalId, postIds));
+        };
+        case(null) {
+          //principal not found
+        };
+      };
+    };
+    #ok(Buffer.toArray(resultBuffer))
+  };
+
   //returns the submitted for review posts of the caller
   public shared query ({ caller }) func getSubmittedForReview(publicationHandles : [Text]) : async [PostBucketType] {
     let callerPrincipalId = Principal.toText(caller);

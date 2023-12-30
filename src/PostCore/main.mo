@@ -130,6 +130,10 @@ actor PostCore {
   //publication canisters entries
   stable var publicationCanisterIdsEntries : [(Text, Text)] = [];
 
+  stable var publicationEditorsEntries : [(Text, [Text])] = [];
+  stable var publicationWritersEntries : [(Text, [Text])] = [];
+
+
   //   key: bucket canister id, value: first post id of the bucket canister
   var bucketCanisterIdsHashMap = HashMap.fromIter<Text, Text>(bucketCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   //   key: principalId, value: handle
@@ -173,6 +177,13 @@ actor PostCore {
 
   //key: pub-handle, value: publication canister id
   var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+
+  //key: publication canister id, value:  editor principal ids
+  var publicationEditorsHashmap = HashMap.fromIter<Text, [Text]>(publicationEditorsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: publication canister id, value: writer principal ids
+  var publicationWritersHashmap = HashMap.fromIter<Text, [Text]>(publicationWritersEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+
+
 
   //#bucket canister management
   func updateSettings(canisterId: Principal, manager: [Principal]): async () {
@@ -894,6 +905,70 @@ actor PostCore {
     };
   };
 
+  //add all the submitted for review to work with new design
+  public shared ({caller}) func migrateAllSubmittedForReview() : async Result.Result<Nat, Text>{
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    var counter = 0;
+    for(bucketCanisterId in bucketCanisterIdsHashMap.vals()){
+      let bucketCanister = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+      let allSubmittedForReviews = await bucketCanister.getAllSubmittedForReviews();
+      switch(allSubmittedForReviews) {
+        case(#ok(submittedForReviews)) {
+          for((principalId, postIds) in submittedForReviews.vals()){
+            //for each principal id, map the post Id with the user 
+            for(postId in postIds.vals()){
+              counter += 1;
+              addPostIdToUser(principalId, postId);
+            };
+          };
+        };
+        case(#err(err)) {
+          return #err(err)
+        };
+      };
+    };
+    #ok(counter)
+  };
+
+  //it will be called just once by platform operators
+  //calling more than one doesn't harm
+  public shared ({caller}) func migrateAllPublicationEditorsAndWriters() : async Result.Result<([(Text, [Text])], [(Text, [Text])]), Text>{
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    for(publicationCanisterId in publicationCanisterIdsHashmap.vals()){
+      let canister = CanisterDeclarations.getPublicationCanister(publicationCanisterId);
+      let editorsAndWriters = await canister.getEditorAndWriterPrincipalIds();
+      let editorPrincipalIds = editorsAndWriters.0;
+      let writerPrincipalIds = editorsAndWriters.1;
+      publicationEditorsHashmap.put(publicationCanisterId, editorPrincipalIds);
+      publicationWritersHashmap.put(publicationCanisterId, writerPrincipalIds);
+    };
+
+    #ok((Iter.toArray(publicationEditorsHashmap.entries())), (Iter.toArray(publicationWritersHashmap.entries())))
+  };
+
+  public shared ({caller}) func updatePublicationEditorsAndWriters(publicationHandle: Text, editorPrincipalIds: [Text], writerPrincipalIds: [Text]) : async Result.Result<(), Text> {
+    switch(publicationCanisterIdsHashmap.get(publicationHandle)) {
+      case(?canisterId) {
+        if(Principal.toText(caller) == canisterId){
+          publicationEditorsHashmap.put(canisterId, editorPrincipalIds);
+          publicationWritersHashmap.put(canisterId, writerPrincipalIds);
+          return #ok()
+        }
+        else{
+          return #err(Unauthorized);
+        }
+      };
+      case(null) {
+        return #err("Publication doesn't exist.")
+      };
+    };
+  };
+
+
   public shared ({ caller }) func save(postModel : PostSaveModel) : async Result.Result<Post, Text> {
     if (isAnonymous(caller)) {
       return #err(Unauthorized);
@@ -1160,6 +1235,16 @@ actor PostCore {
     } else {
 
       return #Err("Cannot use this method anonymously.");
+    };
+  };
+
+  private func addPostIdToUser(principalId: Text, postId: Text) : () {
+    // add this postId to the user's posts if not already added
+    var userPostIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
+    let exists = List.find<Text>(userPostIds, func(val : Text) : Bool { val == postId });
+    if (exists == null) {
+      let updatedUserPostIds = List.append<Text>(List.fromArray([postId]), userPostIds);
+      userPostsHashMap.put(principalId, updatedUserPostIds);
     };
   };
 
@@ -3854,6 +3939,9 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
 
     nftCanisterIdsEntries := Iter.toArray(nftCanisterIdsHashmap.entries());
     publicationCanisterIdsEntries := Iter.toArray(publicationCanisterIdsHashmap.entries());
+
+    publicationEditorsEntries := Iter.toArray(publicationEditorsHashmap.entries());
+    publicationWritersEntries := Iter.toArray(publicationWritersHashmap.entries());
   };
 
   system func postupgrade() {
@@ -3897,6 +3985,9 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
 
     nftCanisterIdsEntries := [];
     publicationCanisterIdsEntries := [];
+
+    publicationEditorsEntries := [];
+    publicationWritersEntries := [];
   };
 
   stable var lastTimerCalled : Int = 0;

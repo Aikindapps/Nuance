@@ -566,6 +566,7 @@ actor class Publisher() = this {
 
         //used ignore. no need to wait, just informs post canister about the handle
         let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        //ToDo: migrate this to PublicationManagement
         ignore PostCoreCanister.registerPublisher();
 
         putPublication(canisterId, principalId, publisher);
@@ -1503,6 +1504,11 @@ actor class Publisher() = this {
         };
 
         #ok(publication);
+    };
+
+    public shared query func getEditorAndWriterPrincipalIds() : async ([Text], [Text]){
+        let canisterId = Principal.toText(idInternal());
+        return (U.safeGet(editorsHashMap, canisterId, []), U.safeGet(writersHashMap, canisterId, []))
     };
 
     public shared ({ caller }) func getPublicationPosts(includeDraft : Bool, includePublished : Bool, indexFrom : Nat32, indexTo : Nat32) : async [Post] {

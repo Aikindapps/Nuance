@@ -318,16 +318,24 @@ module{
         updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<PostBucketType, Text>;
         makePostPremium : (postId : Text) -> async Bool;
         getMetadata : (postId : Text, totalSupply : Nat) -> async Result.Result<Metadata, Text>;
+        getAllSubmittedForReviews : () -> async Result.Result<[(Text, [Text])], Text>
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {
         let canister : PostBucketCanisterInterface = actor(canisterId);
         return canister;
     };
+    //##########################___PUBLICATION_CANISTER___############################
+    public type PublicationCanisterInterface = actor {
+        getEditorAndWriterPrincipalIds : query () -> async ([Text], [Text]);
+    };
 
+    public func getPublicationCanister(canisterId: Text) : PublicationCanisterInterface {
+        let canister : PublicationCanisterInterface = actor(canisterId);
+        return canister;
+    };
 
-
-    //##########################FRONTEND_CANISTER############################
+    //##########################___FRONTEND_CANISTER___############################
 
     public  type BatchId = Nat;
     public type ChunkId = Nat;
