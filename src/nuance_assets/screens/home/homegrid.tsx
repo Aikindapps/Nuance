@@ -344,6 +344,19 @@ const HomePageGrid = () => {
     return true;
   };
 
+  const getUserSearchResultsWithoutPublications = () => {
+    return searchUserResults?.filter((user)=>{
+      if(searchPublicationResults){
+        return !searchPublicationResults
+          .map((v) => v.publicationHandle)
+          .includes(user.handle);
+      }
+      else{
+        return true;
+      }
+    })
+  }
+
   const resetSearchfield = () => {
     setShowSearchResults(false);
     resetPageIndexes();
@@ -712,7 +725,7 @@ const HomePageGrid = () => {
         );
         break;
       case 'People':
-        let totalCount = searchUserResults?.length || 0;
+        let totalCount = getUserSearchResultsWithoutPublications()?.length || 0;
         return (
           <div className='search-summary'>
             <div className='search-count'>
@@ -800,7 +813,7 @@ const HomePageGrid = () => {
       case 'People':
         return (
           <div style={{ marginLeft: '3%' }}>
-            {searchUserResults?.map((user) => {
+            {getUserSearchResultsWithoutPublications()?.map((user) => {
               return (
                 <div className='user-search-item' key={user.handle}>
                   <Link to={'/' + user.handle}>

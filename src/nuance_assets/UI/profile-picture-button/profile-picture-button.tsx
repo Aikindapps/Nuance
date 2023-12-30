@@ -89,7 +89,7 @@ const ProfilePictureButton: React.FC<ProfilePictureProps> = (
             }
             src={props.avatar}
             alt='background'
-            style={!isPublicationPage?{display:'none'}:{}}
+            style={!isPublicationPage ? { display: 'none' } : {}}
             onChange={UploadPicture}
           />
         ) : (
@@ -103,6 +103,16 @@ const ProfilePictureButton: React.FC<ProfilePictureProps> = (
               ? 'publication-pic-camera'
               : 'pic-camera'
           } //if this is a publication pic-camera needs to be publication pic camera
+          style={
+            !isPublicationPage && (props.avatar || user?.avatar)
+              ? {
+                  width: '120px',
+                  borderRadius: '50%',
+                  aspectRatio: '1',
+                  height:'120px'
+                }
+              : {}
+          }
           src={
             isPublicationPage
               ? publication?.avatar || images.PHOTO_CAMERA

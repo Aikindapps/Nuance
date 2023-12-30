@@ -378,6 +378,10 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     } else if (loginMethod === 'bitfinity') {
       get().clearLoginMethod();
     }
+    else if(loginMethod === 'NFID'){
+      Usergeek.setPrincipal(Principal.anonymous());
+      await authClient.logout();
+    }
     set({ isLoggedIn: false });
     // clear all stores, and sessionStorage
     usePostStore.getState().clearAll();

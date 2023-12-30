@@ -15,6 +15,7 @@ interface DropdownProps {
   imageStyle?: any
   dropdownMenuItemStyle?: any;
   notActiveIfOnlyOneItem?: boolean;
+  onIsOpenChanged?: (isOpen: boolean) => void;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -28,7 +29,8 @@ const Dropdown: React.FC<DropdownProps> = ({
   arrowWidth,
   imageStyle,
   dropdownMenuItemStyle,
-  notActiveIfOnlyOneItem
+  notActiveIfOnlyOneItem,
+  onIsOpenChanged
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -71,6 +73,9 @@ const Dropdown: React.FC<DropdownProps> = ({
             return;
           }
           setIsOpen(!isOpen);
+          if(onIsOpenChanged){
+            onIsOpenChanged(!isOpen)
+          }
         }}
         style={{
           cursor: nonActive ? 'not-allowed' : onlyOneItem ? 'default' : '',
@@ -143,6 +148,9 @@ const Dropdown: React.FC<DropdownProps> = ({
                   setIndex(index_);
                   onSelect(items[index_]);
                   setIsOpen(false);
+                  if(onIsOpenChanged){
+                    onIsOpenChanged(false)
+                  }
                 }}
                 style={{ ...dropdownMenuItemStyle }}
               >

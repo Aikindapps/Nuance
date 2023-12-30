@@ -343,7 +343,7 @@ const CreateEditPublication = () => {
       }
       return;
     }
-    window.scrollTo(0,0)
+    window.scrollTo(0, 0);
   };
 
   function validate() {
@@ -1838,13 +1838,13 @@ const CreateEditPublication = () => {
                       }}
                     />
 
-                    {index ? (
+                    {false ? null : (
                       <FontAwesomeIcon
                         style={{ color: colors.accentColor }}
                         icon={faCircleXmark}
                         onClick={() => removeWritersFormFields(index)}
                       />
-                    ) : null}
+                    )}
                   </div>
                 ))}
                 {firstSave && allWriterHandlesExist == false ? (
@@ -2006,7 +2006,6 @@ const CreateEditPublication = () => {
             </div>
           </div>
         </div>
-        )
       </Fragment>
     );
   }
