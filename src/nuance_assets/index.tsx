@@ -37,6 +37,8 @@ if (process.env.NODE_ENV === 'development') {
     apiKey: userGeekApiKey,
     host: 'https://fbbjb-oyaaa-aaaah-qaojq-cai.raw.ic0.app/',
   });
+  console.log('usergeek init in dev mode');
 } else {
   Usergeek.init({ apiKey: userGeekSecondaryApiKey });
+  console.log('usergeek init in prod mode');
 }
