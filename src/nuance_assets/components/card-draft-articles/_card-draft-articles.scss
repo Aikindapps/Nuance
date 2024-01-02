@@ -1,6 +1,6 @@
 @import '../../shared/styles/Colors';
 
-.list-card-draft-articles {
+.article-list-items-wrapper {
     display: flex;
     flex-direction: column;
     align-items: start;
@@ -97,12 +97,16 @@
                 .card-draft-articles-action-icon {
                     width: 18px;
                     height: 18px;
+                    border-radius: 2px;
                 }
 
                 .card-draft-articles-action-icon-pointer {
                     width: 18px;
                     height: 18px;
                     cursor: pointer;
+                    &:hover{
+                        background: aliceblue;   
+                    }
                 }
             }
 
@@ -177,7 +181,7 @@
 
 @media only screen and (max-width: 943px) {
 
-    .list-card-draft-articles {
+    .article-list-items-wrapper {
         .card-draft-articles-wrapper {
             width: 90%;
             column-gap: 4.4%;
@@ -207,8 +211,8 @@
                 .card-draft-articles-action-icon-pointer {
                     width: 16px;
                     height: 16px;
+                    
                 }
-
                 .card-draft-articles-title-wrapper {
                     height: calc(100% - 16px);
 

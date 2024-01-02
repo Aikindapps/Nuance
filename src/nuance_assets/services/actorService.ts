@@ -28,12 +28,12 @@ import {
   idlFactory as postIndexFactory,
 } from '../../declarations/PostIndex';
 
-import { _SERVICE as PublisherService } from './publisher-service/Publisher0/Publisher0.did';
+import { _SERVICE as PublisherService } from '../../../Nuance-NFTs-and-Publications/src/declarations/Publisher/Publisher.did';
 import {
   canisterId as publisher0CanisterId,
   createActor as createPublisherActor,
   idlFactory as publisherFactory,
-} from './publisher-service/Publisher0';
+} from '../../../Nuance-NFTs-and-Publications/src/declarations/Publisher/';
 
 import { _SERVICE as LedgerService } from './ledger-service/Ledger.did';
 import {
@@ -102,7 +102,7 @@ export type {
 export type {
   Publication,
   SocialLinksObject,
-} from './publisher-service/Publisher0/Publisher0.did';
+} from '../../../Nuance-NFTs-and-Publications/src/declarations/Publisher/Publisher.did';
 
 export type {
   UserPostCounts,

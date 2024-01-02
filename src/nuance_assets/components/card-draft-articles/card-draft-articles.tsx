@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { usePostStore, useUserStore } from '../../store';
 import { images, icons, colors } from '../../shared/constants';
@@ -7,6 +7,8 @@ import { useTheme } from '../../contextes/ThemeContext';
 import './_card-draft-articles.scss';
 import { DateFormat, formatDate } from '../../shared/utils';
 import { Tooltip } from 'react-tooltip';
+import Badge from '../../UI/badge/badge';
+import { Context } from '../../contextes/Context';
 
 interface CardVerticalProps {
   post: PostType;
@@ -17,6 +19,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
   const navigate = useNavigate();
   const [screenWidth, setScreenWidth] = useState(0);
   const dark = useTheme();
+  const context = useContext(Context)
 
   const darkOptionsAndColors = {
     background: dark
@@ -54,13 +57,9 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
     } else {
       if (post.isPublication) {
         if (post.isDraft) {
-          return 'Submitted for review';
+          return "Submitted for review"
         } else {
-          if (isUserEditor()) {
-            return 'Published';
-          } else {
-            return 'Published but writer';
-          }
+          return "Published publication"
         }
       } else {
         if (post.isDraft) {
@@ -71,6 +70,20 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
       }
     }
   };
+
+  const getPostStatus = () => {
+    if(post.isDraft){
+      if(post.isPublication){
+        return 'Submitted for review'
+      }
+      else{
+        return 'Draft'
+      }
+    }
+    else{
+      return 'Published'
+    }
+  }
 
   const { getApplaudedHandles } = usePostStore((state) => ({
     getApplaudedHandles: state.getApplaudedHandles,
@@ -101,30 +114,29 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
       <div className='card-draft-articles-right-wrapper'>
         <div className='card-draft-articles-actions-wrapper'>
           <div className='card-draft-articles-actions-left'>
-            {getEditStatus() === 'Draft' || getEditStatus() === 'Published' ? (
-              <Link to={'/article/edit/' + post.postId}>
+            <Link to={'/article/edit/' + post.postId}>
+              {getEditStatus() === 'Premium' ? (
+                <img
+                  className='card-draft-articles-action-icon-pointer'
+                  src={icons.NFT_ICON}
+                />
+              ) : getEditStatus() === 'Draft' ||
+                getEditStatus() === 'Published' ? (
                 <img
                   className='card-draft-articles-action-icon-pointer'
                   src={dark ? icons.EDIT_WHITE : icons.EDIT}
                 />
-              </Link>
-            ) : getEditStatus() === 'Premium' ? (
-              <Link to={'/article/edit/' + post.postId}>
+              ) : (
                 <img
                   className='card-draft-articles-action-icon-pointer'
-                  src={icons.NFT_LOCK_ICON}
-                />
-              </Link>
-            ) : null}
-          </div>
-          <div className='card-draft-articles-actions-right'>
-            {post.isPublication && (
-              <div className='card-draft-articles-right-action-wrapper'>
-                <img
-                  className='card-draft-articles-action-icon'
                   src={icons.PUBLICATION_ICON}
                 />
-              </div>
+              )}
+            </Link>
+          </div>
+          <div className='card-draft-articles-actions-right'>
+            {context.width > 600 && (
+              <Badge status={getPostStatus()} dark={dark} />
             )}
             <div className={'card-draft-articles-right-action-wrapper'}>
               <img

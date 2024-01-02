@@ -72,6 +72,7 @@ module{
     //****************POSTCORE CANISTER*****************
     public type PostSaveModel = {
         postId: Text;
+        handle: Text;
         title: Text;
         subtitle: Text;
         headerImage: Text;
@@ -150,6 +151,7 @@ module{
         registerCanister : (id : Text) -> async Result.Result<(), Text>;
         getTrustedCanisters : () -> async Result.Result<[Text], Text>;
         addCanisterToCyclesDispenser : (canisterId : Text, minimumThreshold : Nat, topUpAmount : Nat) -> async Result.Result<(), Text>;
+        updatePublicationEditorsAndWriters : (publicationHandle: Text, editorPrincipalIds: [Text], writerPrincipalIds: [Text]) -> async Result.Result<(), Text>
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {

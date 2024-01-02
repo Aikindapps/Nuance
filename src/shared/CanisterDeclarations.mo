@@ -70,6 +70,7 @@ module{
     //****************POSTCORE CANISTER*****************
     public type PostSaveModel = {
         postId: Text;
+        handle: Text;
         title: Text;
         subtitle: Text;
         headerImage: Text;
@@ -150,7 +151,9 @@ module{
         makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) -> async ();
         getNextPostId : () -> async Result.Result<Text, Text>;
         addPostCategory : (postId : Text, category : Text, time : Int) -> async ();
-        incrementApplauds : (postId: Text, applauds: Nat) -> async ()
+        incrementApplauds : (postId: Text, applauds: Nat) -> async ();
+        isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
+        isEditorPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {

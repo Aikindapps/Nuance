@@ -240,6 +240,7 @@ export interface PostStore {
   userPosts: PostType[] | undefined;
   myDraftPosts: PostType[] | undefined;
   myPublishedPosts: PostType[] | undefined;
+  myAllPosts: PostType[] | undefined;
   submittedForReviewPosts: PostType[] | undefined;
   claps: string | undefined;
   isTagScreen: boolean;
@@ -312,6 +313,14 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number
   ) => Promise<PostType[] | undefined>;
+  getMyAllPosts: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<PostType[] | undefined>;
+  getMySubmittedForReviewPosts: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<PostType[] | undefined>;
   getLatestPosts: (indexFrom: number, indexTo: number) => Promise<void>;
   getMoreLatestPosts: (indexFrom: number, indexTo: number) => Promise<void>;
   getPostsByFollowers: (
@@ -325,7 +334,6 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number
   ) => Promise<PostType[] | undefined>;
-  getSubmittedForReviewPosts: (handles: string[]) => Promise<void>;
   clearPostsByCategory: () => void;
   clearPostsByFollowers: () => void;
   clapPost: (postId: string) => Promise<void>;
@@ -351,12 +359,6 @@ export interface PostStore {
     handle: string
   ) => Promise<PostType | undefined>;
   clerGetPublicationPostError: () => Promise<void>;
-  getSavedPostWithControlPublication: (postId: string) => Promise<void>;
-  getPostWithPublicationControl: (
-    handle: string,
-    postId: string,
-    bucketCanisterId?: string
-  ) => Promise<void>;
   getPremiumPost: (
     handle: string,
     postId: string,
@@ -481,6 +483,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   userPostIds: undefined,
   myDraftPosts: undefined,
   myPublishedPosts: undefined,
+  myAllPosts: undefined,
   submittedForReviewPosts: undefined,
   claps: undefined,
   ClearSearchBar: false,
@@ -832,7 +835,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       } else {
         let bucketCanisterId = coreReturn.ok.bucketCanisterId;
         let bucketActor = await getPostBucketActor(bucketCanisterId);
-        const bucketReturn = await bucketActor.get(postId);
+        const bucketReturn = await bucketActor.getPostCompositeQuery(postId);
         if (Err in bucketReturn) {
           set({ getSavedPostError: bucketReturn.err });
           toastError(bucketReturn.err);
@@ -860,7 +863,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       } else {
         let bucketCanisterId = coreReturn.ok.bucketCanisterId;
         let bucketActor = await getPostBucketActor(bucketCanisterId);
-        const bucketReturn = await bucketActor.get(postId);
+        const bucketReturn = await bucketActor.getPostCompositeQuery(postId);
         if (Err in bucketReturn) {
           //bucket canister returned an error -> it may be a publication post or unauthorized call
           //check if it's a publication post
@@ -969,51 +972,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         const bucketReturn = await bucketActor.makePostPremium(postId);
         if (!bucketReturn) {
           toastError('Failed to make post premium');
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  getSavedPostWithControlPublication: async (postId: string): Promise<void> => {
-    try {
-      const coreActor = await getPostCoreActor();
-      const coreReturn = await coreActor.getPostKeyProperties(postId);
-
-      if (Err in coreReturn) {
-        set({ getSavedPostError: coreReturn.err });
-        toastError(coreReturn.err);
-      } else {
-        let bucketCanisterId = coreReturn.ok.bucketCanisterId;
-        let bucketActor = await getPostBucketActor(bucketCanisterId);
-        let bucketReturn = await bucketActor.get(postId);
-
-        if (Err in bucketReturn) {
-          const publicationResult =
-            await bucketActor.getPostWithPublicationControl(postId);
-
-          if (Err in publicationResult) {
-            set({ getSavedPostError: publicationResult.err });
-            toastError(publicationResult.err);
-          } else {
-            const publicationPost = {
-              ...publicationResult.ok,
-              ...coreReturn.ok,
-            } as PostType;
-            set({ savedPost: publicationPost, getSavedPostError: undefined });
-          }
-        } else {
-          const savedPost = {
-            ...bucketReturn.ok,
-            ...coreReturn.ok,
-          } as PostType;
-          set({
-            savedPost,
-            getSavedPostError: undefined,
-            getPublicationPostError: undefined,
-            publicationPost: undefined,
-          });
         }
       }
     } catch (err) {
@@ -1185,7 +1143,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         let [authorResult, coreReturn, bucketReturn] = await Promise.all([
           (await getUserActor()).getUserByHandle(handle.toLowerCase()),
           (await getPostCoreActor()).getPostKeyProperties(postId),
-          (await getPostBucketActor(bucketCanisterId)).get(postId),
+          (await getPostBucketActor(bucketCanisterId)).getPostCompositeQuery(postId),
         ]);
 
         if (Err in authorResult) {
@@ -1229,7 +1187,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       } else {
         let bucketCanisterId = coreReturn.ok.bucketCanisterId;
         let bucketActor = await getPostBucketActor(bucketCanisterId);
-        let postResult = await bucketActor.get(postId);
+        let postResult = await bucketActor.getPostCompositeQuery(postId);
         if (Err in postResult) {
           set({ getPostError: postResult.err });
           toastError(postResult.err);
@@ -1324,136 +1282,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           (await getPostCoreActor()).viewPost(postId);
           //fire and forget - updates the last interaction time of the user
           (await getUserActor()).updateLastLogin();
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  getPostWithPublicationControl: async (
-    handle: string,
-    postId: string,
-    bucketCanisterId?: string
-  ): Promise<void> => {
-    try {
-      // parallel requests for author and posts
-      // fetch the post's author for the avatar
-      // also used to verify the author in the url
-
-      if (bucketCanisterId) {
-        let [authorResult, coreReturn, bucketReturn] = await Promise.all([
-          (await getUserActor()).getUserByHandle(handle.toLowerCase()),
-          (await getPostCoreActor()).getPostKeyProperties(postId),
-          (await getPostBucketActor(bucketCanisterId)).get(postId),
-        ]);
-        if (Err in authorResult) {
-          set({ getPostError: `User not found for @${handle}` });
-          toastError(authorResult.err);
-        } else {
-          if (Err in coreReturn) {
-            set({ getPostError: coreReturn.err });
-            toastError(coreReturn.err);
-          } else {
-            if (Err in bucketReturn) {
-              if (bucketReturn.err === 'RejectedByModerators') {
-                set({ getPostError: 'Post is rejected by the moderators.' });
-                toastError(bucketReturn.err);
-                return;
-              }
-              const canisterId = await usePublisherStore
-                .getState()
-                .getCanisterIdByHandle(handle);
-              let publicationPostResult = await (
-                await getPublisherActor(canisterId)
-              ).getPublicationPost(postId);
-              if (Err in publicationPostResult) {
-                set({
-                  getPostError: ArticleNotFound,
-                  getPostWithPublicationControlError: publicationPostResult.err,
-                });
-                toastError(publicationPostResult.err);
-              } else {
-                const post = publicationPostResult.ok;
-                const author = authorResult.ok;
-                set({
-                  post: { ...post },
-                  author: author,
-                  getPostError: undefined,
-                  getPostWithPublicationControlError: undefined,
-                });
-              }
-            } else {
-              const post = { ...bucketReturn.ok, ...coreReturn.ok } as PostType;
-              const author = authorResult.ok as User;
-              if (author.handle !== post.handle) {
-                set({ getPostError: `Article not found for @${handle}` });
-              } else {
-                set({ post, author, getPostError: undefined });
-              }
-              // fire and forget (increments view count for post)
-              (await getPostCoreActor()).viewPost(postId);
-              //fire and forget - updates the last interaction time of the user
-              (await getUserActor()).updateLastLogin();
-            }
-          }
-        }
-
-        return;
-      }
-
-      let [authorResult, coreReturn] = await Promise.all([
-        (await getUserActor()).getUserByHandle(handle.toLowerCase()),
-        (await getPostCoreActor()).getPostKeyProperties(postId),
-      ]);
-
-      if (Err in authorResult) {
-        set({ getPostError: `User not found for @${handle}` });
-        toastError(authorResult.err);
-      } else {
-        if (Err in coreReturn) {
-          set({ getPostError: coreReturn.err });
-          toastError(coreReturn.err);
-        } else {
-          let bucketCanisterId = coreReturn.ok.bucketCanisterId;
-          let bucketActor = await getPostBucketActor(bucketCanisterId);
-          let postResult = await bucketActor.get(postId);
-          if (Err in postResult) {
-            const canisterId = await usePublisherStore
-              .getState()
-              .getCanisterIdByHandle(handle);
-            let publicationPostResult = await (
-              await getPublisherActor(canisterId)
-            ).getPublicationPost(postId);
-            if (Err in publicationPostResult) {
-              set({
-                getPostError: ArticleNotFound,
-                getPostWithPublicationControlError: publicationPostResult.err,
-              });
-              toastError(publicationPostResult.err);
-            } else {
-              const post = publicationPostResult.ok;
-              const author = authorResult.ok;
-              set({
-                post: { ...post },
-                author: author,
-                getPostError: undefined,
-                getPostWithPublicationControlError: undefined,
-              });
-            }
-          } else {
-            const post = { ...postResult.ok, ...coreReturn.ok } as PostType;
-            const author = authorResult.ok as User;
-            if (author.handle !== post.handle) {
-              set({ getPostError: `Article not found for @${handle}` });
-            } else {
-              set({ post, author, getPostError: undefined });
-            }
-            // fire and forget (increments view count for post)
-            (await getPostCoreActor()).viewPost(postId);
-            //fire and forget - updates the last interaction time of the user
-            (await getUserActor()).updateLastLogin();
-          }
         }
       }
     } catch (err) {
@@ -1567,27 +1395,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         });
         return postsWithAvatars;
       }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  getSubmittedForReviewPosts: async (handles: string[]): Promise<void> => {
-    try {
-      let postCoreCanister = await getPostCoreActor();
-      let bucketCanisterIds =
-        await postCoreCanister.getBucketCanisterIdsOfGivenHandles(handles);
-      let promises: Promise<PostBucketType[]>[] = [];
-      for (const bucketCanisterId of bucketCanisterIds) {
-        let bucketActor = await getPostBucketActor(bucketCanisterId);
-        promises.push(bucketActor.getSubmittedForReview(handles));
-      }
-      let results = (await Promise.all(promises)).flat(1);
-      set({
-        submittedForReviewPosts: results.map((postBucketReturn) => {
-          return { ...postBucketReturn, views: '0', claps: '0', tags: [] };
-        }),
-      });
     } catch (err) {
       handleError(err, Unexpected);
     }
@@ -1810,9 +1617,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ): Promise<PostType[] | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
-      const keyProperties = await coreActor.getMyPosts(
-        true, //includeDraft
-        false, //includePublished
+      const keyProperties = await coreActor.getMyDraftPosts(
         indexFrom,
         indexTo
       );
@@ -1834,9 +1639,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ): Promise<PostType[] | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
-      const keyProperties = await coreActor.getMyPosts(
-        false, //includeDraft
-        true, //includePublished
+      const keyProperties = await coreActor.getMyPublishedPosts(
         indexFrom,
         indexTo
       );
@@ -1847,6 +1650,52 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       set({ myPublishedPosts: postsWithAvatars });
 
       return myPublishedPosts;
+    } catch (err: any) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  getMySubmittedForReviewPosts: async (
+    indexFrom: number,
+    indexTo: number
+  ): Promise<PostType[] | undefined> => {
+    try {
+      const coreActor = await getPostCoreActor();
+      const keyProperties = await coreActor.getMySubmittedToReviewPosts(
+        indexFrom,
+        indexTo
+      );
+      const submittedForReviewPosts = await fetchPostsByBuckets(keyProperties, true);
+      set({ submittedForReviewPosts });
+
+      const postsWithAvatars = await mergeAuthorAvatars(submittedForReviewPosts);
+      set({ submittedForReviewPosts: postsWithAvatars });
+
+      return submittedForReviewPosts;
+    } catch (err: any) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  getMyAllPosts: async (
+    indexFrom: number,
+    indexTo: number
+  ): Promise<PostType[] | undefined> => {
+    try {
+      const coreActor = await getPostCoreActor();
+      const keyProperties = await coreActor.getMyAllPosts(
+        indexFrom,
+        indexTo
+      );
+      console.log('keyProperties', keyProperties)
+      const myAllPosts = await fetchPostsByBuckets(keyProperties, true);
+      console.log('myAllPosts', myAllPosts)
+      set({ myAllPosts });
+
+      const postsWithAvatars = await mergeAuthorAvatars(myAllPosts);
+      set({ myAllPosts: postsWithAvatars });
+
+      return myAllPosts;
     } catch (err: any) {
       handleError(err, Unexpected);
     }

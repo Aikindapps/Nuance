@@ -4,7 +4,7 @@ import List "mo:base/List";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import UserTypes "./types_user_canister";
-import PostCoreTypes "./types_post_core";
+import PostCoreTypes "../../../src/PostCore/types";
 import Time "mo:base/Time";
 import ExtCore "../motoko/ext/Core";
 import Result "mo:base/Result";

@@ -40,6 +40,8 @@
                 align-items: end;
                 width: 100%;
                 row-gap: 24px;
+                position: sticky;
+                top: 10px;
 
                 .edit-article-horizontal-divider {
                     width: 100%;
@@ -139,7 +141,7 @@
                             flex-direction: column;
                             align-items: start;
                             width: 100%;
-
+                            row-gap: 20px;
                             .text {
                                 color: #7c7979;
                                 font-family: Roboto;
@@ -156,8 +158,32 @@
                                 font-weight: 400;
                                 line-height: 20px;
                             }
+                            .external-url-text {
+                                color: #303E84;
+                                font-family: Roboto;
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 20px;
+                                cursor: pointer;
+                                &:hover{
+                                    text-decoration: underline;
+                                }
+                            }
+                            .external-url-text-dark-mode{
+                                color: #f2f2f2;
+                                font-family: Roboto;
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: 20px;
+                                cursor: pointer;
+                                &:hover{
+                                    text-decoration: underline;
+                                }
+                            }
                             .text-darker{
-                                color: #5d5a5a;
+                                color: #3b3939;
                             }
                             .text-lighter{
                                 color: #fff;
@@ -175,7 +201,7 @@
 
         .vertical-divider {
             width: 1px;
-            height: 100vh;
+            min-height: 100vh;
             background-color: $vertical-divider;
         }
 
@@ -233,10 +259,12 @@
 
                 .edit-article-upload-picture-button {
                     display: flex;
-                    width: 100%;
+                    width: calc(100% + 80px);
                     justify-content: center;
                     background: #cafff2;
                     height: 40px;
+                    margin-left: -40px;
+
                     align-items: center;
                     cursor: pointer;
 

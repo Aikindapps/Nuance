@@ -13,6 +13,7 @@ module {
 
     public type PostSaveModel = {
         postId: Text;
+        handle: Text; //useless for the regular posts, it's used to determine the publication handle
         title: Text;
         subtitle: Text;
         headerImage: Text;
@@ -29,6 +30,8 @@ module {
 
     public type PostSaveModelBucket = {
         postId: Text;
+        handle: Text; //useless for the regular posts, it's used to determine the publication handle
+        postOwnerPrincipalId: Text;
         title: Text;
         subtitle: Text;
         headerImage: Text;
@@ -183,6 +186,7 @@ module {
         totalPostCount: Text;
         publishedCount: Text;
         draftCount: Text;
+        submittedToReviewCount: Text;
         totalViewCount: Text;
         uniqueClaps: Text;
         uniqueReaderCount: Text;

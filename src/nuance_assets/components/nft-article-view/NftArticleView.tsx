@@ -19,12 +19,18 @@ export const NftArticleView = (props: {
       : colors.primaryTextColor,
   };
   return (
-    <div style={{ paddingRight: '15%', width:'100%' }}>
+    <div style={{ paddingRight: '15%', width: '100%' }}>
       <div className='title-post-info-wrapper'>
         {post.isPremium ? (
           <img
             className='nft-lock-icon'
             src={icons.NFT_LOCK_ICON}
+            style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
+          />
+        ) : post.isPublication ? (
+          <img
+            className='nft-lock-icon'
+            src={icons.PUBLICATION_ICON}
             style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
           />
         ) : null}

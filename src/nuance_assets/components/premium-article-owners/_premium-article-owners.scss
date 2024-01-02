@@ -1,70 +1,33 @@
-.premium-article-owners {
-    align-self: center;
-    margin-top: 20px;
-    width: 100%;
+.sold-bar {
+    display: flex;
+
+    .sold-percentage-remaining {
+        background-color: #43DFBA;
+        height: 8px;
+    }
+
+    .sold-percentage-sold {
+        background-color: #151451;
+        height: 8px;
+    }
+}
+
+.edit-article-premium-article-owners {
     display: flex;
     flex-direction: column;
+    align-items: start;
+    row-gap: 10px;
+}
 
-    .sell-info-flex {
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-        align-items: center;
-
-        .sold-info {
-            font-family: 'Roboto';
-            font-style: normal;
-            font-weight: 700;
-            font-size: 12px;
-            line-height: 24px;
-            color: #999999;
-        }
-
-        .sold-bar {
-            display: flex;
-
-            .sold-percentage-remaining {
-                background-color: #43DFBA;
-                height: 8px;
-            }
-
-            .sold-percentage-sold {
-                background-color: #151451;
-                height: 8px;
-            }
-        }
-
-
-    }
-
-    .owners {
-        display: flex;
-        flex-direction: column;
-
-        .owner-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            .owner {
-                font-family: 'Roboto';
-                font-style: normal;
-                font-weight: 400;
-                font-size: 12px;
-                line-height: 16px;
-                margin-bottom: 5px;
-                margin-top: 5px;
-                color: #151451;
-            }
-
-            .token-index {
-                font-family: 'Roboto';
-                font-style: normal;
-                font-weight: 400;
-                font-size: 12px;
-                line-height: 18px;
-                color: #999999;
-            }
-        }
-
-    }
+.premium-article-owners-sold-text {
+    color: #999;
+    font-family: Roboto;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 18px;
+}
+.premium-article-owners-nft-icon{
+    width: 16px;
+    height: 16px;
 }

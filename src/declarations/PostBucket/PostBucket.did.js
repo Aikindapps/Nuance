@@ -75,6 +75,10 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_11 = IDL.Variant({
+    'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
+    'err' : IDL.Text,
+  });
   const MetadataValue = IDL.Tuple(
     IDL.Text,
     IDL.Variant({
@@ -142,8 +146,10 @@ export const idlFactory = ({ IDL }) => {
     'content' : IDL.Text,
     'isPremium' : IDL.Bool,
     'isDraft' : IDL.Bool,
+    'postOwnerPrincipalId' : IDL.Text,
     'category' : IDL.Text,
     'caller' : IDL.Principal,
+    'handle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -175,25 +181,6 @@ export const idlFactory = ({ IDL }) => {
     'replyToCommentId' : IDL.Opt(IDL.Text),
     'postId' : IDL.Text,
   });
-  const PostSaveModelBucketMigration = IDL.Record({
-    'tagNames' : IDL.Vec(IDL.Text),
-    'title' : IDL.Text,
-    'created' : IDL.Text,
-    'creator' : IDL.Text,
-    'modified' : IDL.Text,
-    'content' : IDL.Text,
-    'isRejected' : IDL.Bool,
-    'isPremium' : IDL.Bool,
-    'publishedDate' : IDL.Text,
-    'isDraft' : IDL.Bool,
-    'category' : IDL.Text,
-    'caller' : IDL.Principal,
-    'creatorHandle' : IDL.Text,
-    'headerImage' : IDL.Text,
-    'subtitle' : IDL.Text,
-    'isPublication' : IDL.Bool,
-    'postId' : IDL.Text,
-  });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   const PostBucket = IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
@@ -214,13 +201,13 @@ export const idlFactory = ({ IDL }) => {
     'dumpUserIds' : IDL.Func([], [Result_3], []),
     'generateContent' : IDL.Func([IDL.Text], [IDL.Text], []),
     'generatePublishedDates' : IDL.Func([], [], []),
-    'get' : IDL.Func([IDL.Text], [Result_5], ['query']),
     'getAdmins' : IDL.Func([], [Result_7], ['query']),
     'getAllRejected' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
+    'getAllSubmittedForReviews' : IDL.Func([], [Result_11], []),
     'getApplaudById' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'getBucketCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
@@ -239,8 +226,14 @@ export const idlFactory = ({ IDL }) => {
     'getMyApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
     'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
+    'getPost' : IDL.Func([IDL.Text], [Result_5], ['query']),
     'getPostApplauds' : IDL.Func([IDL.Text], [IDL.Vec(Applaud)], ['query']),
     'getPostComments' : IDL.Func([IDL.Text], [Result], ['query']),
+    'getPostCompositeQuery' : IDL.Func(
+        [IDL.Text],
+        [Result_5],
+        ['composite_query'],
+      ),
     'getPostCoreCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getPostUrls' : IDL.Func([], [Result_2], ['query']),
     'getPostWithPublicationControl' : IDL.Func([IDL.Text], [Result_5], []),
@@ -250,10 +243,10 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPremiumArticle' : IDL.Func([IDL.Text], [Result_5], []),
-    'getSubmittedForReview' : IDL.Func(
-        [IDL.Vec(IDL.Text)],
+    'getPublicationPosts' : IDL.Func(
+        [IDL.Vec(IDL.Text), IDL.Text],
         [IDL.Vec(PostBucketType__1)],
-        ['query'],
+        ['composite_query'],
       ),
     'getTotalPostCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getTrustedCanisters' : IDL.Func([], [Result_7], ['query']),
@@ -306,11 +299,6 @@ export const idlFactory = ({ IDL }) => {
     'removePostCategory' : IDL.Func([IDL.Text], [Result_5], []),
     'save' : IDL.Func([PostSaveModel], [SaveResult], []),
     'saveComment' : IDL.Func([SaveCommentModel], [Result], []),
-    'saveMultiple' : IDL.Func(
-        [IDL.Vec(PostSaveModelBucketMigration)],
-        [IDL.Vec(SaveResult)],
-        [],
-      ),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_4], []),
     'simulatePremiumArticle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'storeAllSEO' : IDL.Func([], [Result_3], []),
@@ -319,7 +307,6 @@ export const idlFactory = ({ IDL }) => {
         [Result_2],
         [],
       ),
-    'storeSEO' : IDL.Func([IDL.Text, IDL.Bool], [Result_3], []),
     'testInstructionSize' : IDL.Func([], [IDL.Text], []),
     'unRejectPostByModclub' : IDL.Func([IDL.Text], [], ['oneway']),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result_3], []),

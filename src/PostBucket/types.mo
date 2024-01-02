@@ -13,6 +13,8 @@ module {
 
   public type PostSaveModelBucket = {
     postId : Text;
+    handle: Text; //useless for the regular posts, it's used to determine the publication handle
+    postOwnerPrincipalId: Text;
     title : Text;
     subtitle : Text;
     headerImage : Text;

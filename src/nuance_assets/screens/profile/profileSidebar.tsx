@@ -42,22 +42,18 @@ const ProfileSidebar = () => {
 
   const {
     getMyTags,
-    myTags,
-    submittedForReviewPosts,
-    getSubmittedForReviewPosts,
+    myTags
   } = usePostStore((state) => ({
     getMyTags: state.getMyTags,
     myTags: state.myTags,
-    submittedForReviewPosts: state.submittedForReviewPosts,
-    getSubmittedForReviewPosts: state.getSubmittedForReviewPosts,
   }));
 
   useEffect(() => {
     if (user) {
       getCounts(user.handle);
-      getSubmittedForReviewPosts(
-        user.publicationsArray.map((obj) => obj.publicationName)
-      );
+      //getSubmittedForReviewPosts(
+      //  user.publicationsArray.map((obj) => obj.publicationName)
+      //);
       getMyTags();
       setUserPublications(
         user.publicationsArray.filter((publication) => publication.isEditor)
@@ -84,65 +80,32 @@ const ProfileSidebar = () => {
     [screenWidth]
   );
 
-  const sidebarRoutes = nftFeatureIsLive
-    ? [
-        {
-          title: 'My Profile',
-          goto: '/my-profile',
-        },
-        {
-          title: `Draft Articles (${counts?.draftCount || 0})`,
-          goto: '/my-profile/draft',
-        },
-        {
-          title: `Submitted for Review (${
-            submittedForReviewPosts?.length || 0
-          })`,
-          goto: '/my-profile/submitted-for-review',
-        },
-        {
-          title: `Published Articles (${counts?.publishedCount || 0})`,
-          goto: '/my-profile/published',
-        },
-        {
-          title: `Followed Topics (${myTags?.length || 0})`,
-          goto: '/my-profile/topics',
-        },
-        {
-          title: `Following (${user?.followersArray.length || 0})`,
-          goto: '/my-profile/following',
-        },
-        {
-          title: `Followers (${user?.followersCount || 0})`,
-          goto: '/my-profile/followers',
-        },
-        {
-          title: 'My wallet',
-          goto: '/my-profile/wallet',
-        },
-      ]
-    : [
-        {
-          title: 'My Profile',
-          goto: '/my-profile',
-        },
-        {
-          title: `Draft Articles (${counts?.draftCount || 0})`,
-          goto: '/my-profile/draft',
-        },
-        {
-          title: `Published Articles (${counts?.publishedCount || 0})`,
-          goto: '/my-profile/published',
-        },
-        {
-          title: `Followed Topics (${myTags?.length || 0})`,
-          goto: '/my-profile/topics',
-        },
-        {
-          title: `Following (${user?.followersArray.length || 0})`,
-          goto: '/my-profile/following',
-        },
-      ];
+  const sidebarRoutes = [
+    {
+      title: 'My Profile',
+      goto: '/my-profile',
+    },
+    {
+      title: `Personal Articles (${counts?.totalPostCount || 0})`,
+      goto: '/my-profile/articles',
+    },
+    {
+      title: `Followed Topics (${myTags?.length || 0})`,
+      goto: '/my-profile/topics',
+    },
+    {
+      title: `Following (${user?.followersArray.length || 0})`,
+      goto: '/my-profile/following',
+    },
+    {
+      title: `Followers (${user?.followersCount || 0})`,
+      goto: '/my-profile/followers',
+    },
+    {
+      title: 'My wallet',
+      goto: '/my-profile/wallet',
+    },
+  ]
 
   const darkOptionsAndColors = {
     background: darkTheme

@@ -22,7 +22,7 @@ import Text "mo:base/Text";
 import Time "mo:base/Time";
 
 import Canistergeek "../canistergeek/canistergeek";
-import PostCoreTypes "./types_post_core";
+import PostCoreTypes "../../../src/PostCore/types";
 import Types "./types";
 import U "../shared/utils";
 import ExtUtil "../motoko/util/AccountIdentifier";
@@ -658,79 +658,6 @@ actor class Publisher() = this {
         exists != null;
     };
 
-    public shared ({ caller }) func publicationPost(input : PostSaveModel) : async PostCrossCanisterReturn {
-        if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-
-        //validate inputs
-        if (not U.isTextLengthValid(input.category, 50)) {
-            return #err("Invalid category");
-        };
-        if (not U.isTextLengthValid(input.content, 300000)) {
-            return #err("Your content is unusually large, please contact support to post");
-        };
-        if (not U.isTextLengthValid(input.creator, 64)) {
-            return #err("Invalid creator");
-        };
-        if (not U.isTextLengthValid(input.headerImage, 1000)) {
-            return #err("Invalid headerImage size");
-        };
-        if (not U.isTextLengthValid(input.postId, 20)) {
-            return #err("Invalid postId");
-        };
-        if (not U.isTextLengthValid(input.subtitle, 400)) {
-            return #err("Invalid subtitle");
-        };
-        if (not U.isTextLengthValid(input.title, 400)) {
-            return #err("Invalid title");
-        };
-        for (tagId in Iter.fromArray(input.tagIds)) {
-            if (not U.isTextLengthValid(tagId, 50)) {
-                return #err("Invalid tagId");
-            };
-        };
-        canistergeekMonitor.collectMetrics();
-        var publicationCanisterId = idInternal();
-        var canisterId = Principal.toText(publicationCanisterId);
-
-        var isDraft = input.isDraft;
-        var postModel : PostSaveModel = input;
-
-        postModel := {
-            title = input.title;
-            content = input.content;
-            isDraft = isDraft;
-            tagIds = input.tagIds;
-            headerImage = input.headerImage;
-            subtitle = input.subtitle;
-            postId = input.postId;
-            creator = input.creator;
-            isPublication = true;
-            category = input.category;
-            isPremium = input.isPremium;
-        };
-        if (not isEditor(caller, canisterId) and not isWriter(caller, canisterId)) {
-            return #err(Unauthorized);
-        };
-
-        if (isWriter(caller, canisterId) and not isDraft) {
-            return #err(WriterNotEditor);
-        };
-
-        if (not Text.equal(input.postId, "") and isWriter(caller, canisterId)) {
-            return #err(WriterNotEditor);
-        };
-
-        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
-        var postReturn = await PostCoreCanister.save(postModel);
-        Debug.print("publication post called and working");
-        switch (postReturn) {
-            case (#ok(post)) return #ok(post);
-            case (#err(err)) return #err(err);
-        };
-    };
-
     public shared ({ caller }) func addEditor(editorHandle : Text) : async Result.Result<Publication, Text> {
         if (isAnonymous(caller)) {
             return #err("Cannot use this method anonymously.");
@@ -817,6 +744,8 @@ actor class Publisher() = this {
                         return #err(err);
                     };
                 };
+                let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+                ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, publishersArray, publication.writers);
             } catch e {
                 //reverse the state changes if the inter canister call fails
                 editorsHashMap.put(canisterId, List.toArray(existingEditorsList));
@@ -911,6 +840,8 @@ actor class Publisher() = this {
                         return #err(err);
                     };
                 };
+                let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+                ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, publication.editors, publicationWriters);
             } catch e {
                 //reverse the state changes if the inter canister call fails
                 editorsHashMap.put(canisterId, List.toArray(existingWritersList));
@@ -971,6 +902,9 @@ actor class Publisher() = this {
             case (#ok(user))();
             case (#err(err)) return #err(err);
         };
+
+        let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, publication.editors, List.toArray(writersList));
 
         let publicationWriters = List.toArray(writersList);
         writersHashMap.put(canisterId, publicationWriters);
@@ -1041,6 +975,9 @@ actor class Publisher() = this {
             case (#ok(user))();
             case (#err(err)) return #err(err);
         };
+
+        let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, List.toArray(editorsList), publication.writers);
 
         //ToDo: check if editor is in the list
 

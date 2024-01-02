@@ -98,63 +98,32 @@ const MyProfileSidebar: React.FC<MyProfileSidebarProps> = (
     }
   };
 
-  const sidebarRoutes = nftFeatureIsLive
-    ? [
-        {
-          title: 'My Profile',
-          goto: '/my-profile',
-        },
-        {
-        title: `Submitted for Review (${allDrafts?.length || 0})`,
-        goto: '/my-profile/submitted-for-review',
-        },
-        {
-          title: `Draft Articles (${counts?.draftCount || 0})`,
-          goto: '/my-profile/draft',
-        },
-        {
-          title: `Published Articles (${counts?.publishedCount || 0})`,
-          goto: '/my-profile/published',
-        },
-        {
-          title: `Followed Topics (${myTags?.length || 0})`,
-          goto: '/my-profile/topics',
-        },
-        {
-          title: `Following (${user?.followersArray.length || 0})`,
-          goto: '/my-profile/following',
-        },
-        {
-          title: `Followers (${user?.followersCount || 0})`,
-          goto: '/my-profile/followers',
-        },
-        {
-          title: 'My wallet',
-          goto: '/my-profile/wallet',
-        },
-      ]
-    : [
-        {
-          title: 'My Profile',
-          goto: '/my-profile',
-        },
-        {
-          title: `Draft Articles (${counts?.draftCount || 0})`,
-          goto: '/my-profile/draft',
-        },
-        {
-          title: `Published Articles (${counts?.publishedCount || 0})`,
-          goto: '/my-profile/published',
-        },
-        {
-          title: `Followed Topics (${myTags?.length || 0})`,
-          goto: '/my-profile/topics',
-        },
-        {
-          title: `Following (${user?.followersArray.length || 0})`,
-          goto: '/my-profile/following',
-        },
-      ];
+  const sidebarRoutes = [
+    {
+      title: 'My Profile',
+      goto: '/my-profile',
+    },
+    {
+      title: `Personal Articles (${counts?.totalPostCount || 0})`,
+      goto: '/my-profile/articles',
+    },
+    {
+      title: `Followed Topics (${myTags?.length || 0})`,
+      goto: '/my-profile/topics',
+    },
+    {
+      title: `Following (${user?.followersArray.length || 0})`,
+      goto: '/my-profile/following',
+    },
+    {
+      title: `Followers (${user?.followersCount || 0})`,
+      goto: '/my-profile/followers',
+    },
+    {
+      title: 'My wallet',
+      goto: '/my-profile/wallet',
+    },
+  ]
   const darkTheme = useTheme();
   const darkOptionsAndColors = {
     background: darkTheme

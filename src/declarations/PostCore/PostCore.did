@@ -1,3 +1,8 @@
+type ViolatedRules = 
+ record {
+   id: text;
+   rejectionCount: nat;
+ };
 type Validate = 
  variant {
    Err: text;
@@ -8,6 +13,7 @@ type UserPostCounts =
    draftCount: text;
    handle: text;
    publishedCount: text;
+   submittedToReviewCount: text;
    totalPostCount: text;
    totalViewCount: text;
    uniqueClaps: text;
@@ -19,23 +25,15 @@ type TagModel =
    id: text;
    value: text;
  };
-type Rule = 
- record {
-   description: text;
-   id: text;
- };
 type Result_9 = 
  variant {
    err: text;
-   ok: vec record {
-             text;
-             text;
-           };
+   ok: TagModel;
  };
 type Result_8 = 
  variant {
    err: text;
-   ok: TagModel;
+   ok: PostKeyProperties;
  };
 type Result_7 = 
  variant {
@@ -50,32 +48,49 @@ type Result_6 =
 type Result_5 = 
  variant {
    err: text;
-   ok: PostKeyProperties;
+   ok: record {
+         vec record {
+               text;
+               vec text;
+             };
+         vec record {
+               text;
+               vec text;
+             };
+       };
  };
 type Result_4 = 
  variant {
    err: text;
-   ok: vec Result_5;
+   ok: Post;
  };
 type Result_3 = 
  variant {
    err: text;
-   ok: Post;
+   ok: nat;
  };
 type Result_2 = 
  variant {
    err: text;
-   ok: nat;
+   ok: text;
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: vec record {
+             text;
+             text;
+           };
  };
 type Result_1 = 
  variant {
    err: text;
-   ok: text;
+   ok;
  };
 type Result = 
  variant {
    err: text;
-   ok;
+   ok: bool;
  };
 type RecallOptions = 
  variant {
@@ -109,6 +124,7 @@ type PostSaveModel =
    category: text;
    content: text;
    creator: text;
+   handle: text;
    headerImage: text;
    isDraft: bool;
    isPremium: bool;
@@ -118,11 +134,11 @@ type PostSaveModel =
    tagIds: vec text;
    title: text;
  };
-type PostModerationStatus = 
+type PostModerationStatusV2 = 
  variant {
    approved;
+   new;
    rejected;
-   reviewRequired;
  };
 type PostKeyProperties__1 = 
  record {
@@ -202,27 +218,30 @@ type GetPostsByFollowers =
 type ContentStatus = 
  variant {
    approved;
+   new;
    rejected;
-   reviewRequired;
  };
 type ContentResult = 
  record {
+   approvedCount: nat;
+   rejectedCount: nat;
    sourceId: text;
    status: ContentStatus;
+   violatedRules: vec ViolatedRules;
  };
 service : {
   acceptCycles: () -> ();
-  addCanisterToCyclesDispenser: (text, nat, nat) -> (Result);
+  addCanisterToCyclesDispenser: (text, nat, nat) -> (Result_1);
   addNewRules: (vec text) -> ();
   addPostCategory: (text, text, int) -> ();
-  addWasmChunk: (blob) -> (Result);
+  addWasmChunk: (blob) -> (Result_1);
   availableCycles: () -> (nat) query;
   checkViewsLast24Hours: () -> ();
   clapPost: (text) -> () oneway;
-  copyPublicationCanisters: (text) -> (Result_9);
+  copyPublicationCanisters: (text) -> (Result_10);
   copyTrustedCanisters: (text) -> (Result_7);
-  createNewBucketCanister: () -> (Result_1);
-  createTag: (text) -> (Result_8);
+  createNewBucketCanister: () -> (Result_2);
+  createTag: (text) -> (Result_9);
   currentId: () -> (nat) query;
   debugApplaudsHashMap: () -> (vec record {
                                      text;
@@ -232,26 +251,19 @@ service : {
                                         text;
                                         nat;
                                       }) query;
-  debugGetModeration: () -> (vec record {
-                                   text;
-                                   nat;
-                                 },
-   vec record {
-         text;
-         PostModerationStatus;
-       }) query;
-  delete: (text) -> (Result_2);
+  delete: (text) -> (Result_3);
   deletePostFromUserDebug: (text, text) -> (Result_7);
-  deleteUserPosts: (text) -> (Result_2);
-  dumpIds: () -> (Result);
-  dumpPosts: () -> (Result);
-  dumpUserIds: () -> (Result);
-  followTag: (text) -> (Result);
+  deleteUserPosts: (text) -> (Result_3);
+  dumpIds: () -> (Result_1);
+  dumpPosts: () -> (Result_1);
+  dumpUserIds: () -> (Result_1);
+  followTag: (text) -> (Result_1);
   generateLatestPosts: () -> ();
   generatePublishedDates: () -> ();
-  getActiveBucketCanisterId: () -> (Result_1);
+  getActiveBucketCanisterId: () -> (Result_2);
   getAdmins: () -> (Result_7) query;
   getAllBuckets: () -> (Result_7);
+  getAllStatusCount: () -> (Result_2);
   getAllTags: () -> (vec TagModel) query;
   getBucketCanisterIdsOfGivenHandles: (vec text) -> (vec text) query;
   getBucketCanisters: () -> (vec record {
@@ -260,7 +272,7 @@ service : {
                                  }) query;
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_7) query;
-  getFrontendCanisterId: () -> (Result_1) query;
+  getFrontendCanisterId: () -> (Result_2) query;
   getKinicList: () -> (Result_7);
   getLatestPosts: (nat32, nat32) -> (GetPostsByFollowers) query;
   getLatestTimerCall: () -> (text, text) query;
@@ -268,18 +280,22 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getMoreLatestPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
+  getMyAllPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMyDailyPostsStatus: () -> (bool) query;
-  getMyPosts: (bool, bool, nat32, nat32) -> (vec PostKeyProperties) query;
+  getMyDraftPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
+  getMyPublishedPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
+  getMySubmittedToReviewPosts: (nat32, nat32) ->
+   (vec PostKeyProperties) query;
   getMyTags: () -> (vec PostTagModel__1) query;
-  getNextPostId: () -> (Result_1);
+  getNextPostId: () -> (Result_2);
   getNftCanisters: () -> (vec NftCanisterEntry) query;
   getPlatformOperators: () -> (List) query;
   getPopular: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularThisMonth: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularThisWeek: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularToday: (nat32, nat32) -> (GetPostsByFollowers) query;
-  getPostKeyProperties: (text) -> (Result_5) query;
-  getPostUrls: () -> (Result_1);
+  getPostKeyProperties: (text) -> (Result_8) query;
+  getPostUrls: () -> (Result_2);
   getPostViewsPerHourLast24Hours: () -> (nat, vec record {
                                                     nat;
                                                     nat;
@@ -297,7 +313,7 @@ service : {
                                         text;
                                         text;
                                       }) query;
-  getRegisteredRules: () -> (vec Rule);
+  getPublicationPosts: (nat32, nat32, text) -> (vec PostKeyProperties) query;
   getTagsByUser: (text) -> (vec PostTag) query;
   getTotalArticleViews: () -> (nat) query;
   getTotalClaps: () -> (nat) query;
@@ -309,44 +325,50 @@ service : {
   getUserPosts: (text) -> (vec PostKeyProperties) query;
   getViewsByRange: (RecallOptions) -> (int);
   getWasmChunks: () -> (Result_6);
-  handleModclubMigration: (text) -> (Result_1);
+  handleModclubMigration: (text) -> (Result_2);
   idQuick: () -> (principal) query;
   incrementApplauds: (text, nat) -> ();
   indexPopular: () -> ();
-  initializeCanister: (text, text, text) -> (Result_1);
-  initializePostCoreCanister: () -> (Result_1);
+  initializeCanister: (text, text, text) -> (Result_2);
+  initializePostCoreCanister: () -> (Result_2);
+  isEditorPublic: (text, principal) -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
+  isWriterPublic: (text, principal) -> (bool) query;
   makePostPublication: (text, text, text, bool) -> ();
-  migratePostsFromOldPostCanister: (text, nat, nat) -> (Result_4);
+  migrateAllPublicationEditorsAndWriters: () -> (Result_5);
+  migrateAllSubmittedForReview: () -> (Result_3);
+  migrateModclubInterface: () -> (Result_2);
   modClubCallback: (ContentResult) -> () oneway;
-  modClubCallbackDebug: (ContentResult) -> (text);
-  registerAdmin: (text) -> (Result);
-  registerCanister: (text) -> (Result);
-  registerCgUser: (text) -> (Result);
-  registerNftCanisterId: (text, text) -> (Result_1);
-  registerPlatformOperator: (text) -> (Result);
+  registerAdmin: (text) -> (Result_1);
+  registerCanister: (text) -> (Result_1);
+  registerCgUser: (text) -> (Result_1);
+  registerNftCanisterId: (text, text) -> (Result_2);
+  registerPlatformOperator: (text) -> (Result_1);
   registerPublisher: () -> ();
-  reindex: () -> (Result_1);
-  removeExistingRules: (vec text) -> ();
+  reindex: () -> (Result_2);
   resetWasmChunks: () -> () oneway;
-  save: (PostSaveModel) -> (Result_3);
-  setFrontendCanisterId: (text) -> (Result_1);
-  setMaxMemorySize: (nat) -> (Result_2);
+  save: (PostSaveModel) -> (Result_4);
+  setFrontendCanisterId: (text) -> (Result_2);
+  setMaxMemorySize: (nat) -> (Result_3);
   setUpModClub: (text) -> () oneway;
-  setUserDailyAllowedPostNumber: (nat) -> (Result_2);
-  simulateModClub: (text, PostModerationStatus) -> ();
+  setUserDailyAllowedPostNumber: (nat) -> (Result_3);
+  simulateModClub: (text, PostModerationStatusV2) -> ();
   sortPopularPosts: (PopularityType) -> ();
-  storeAllSEO: () -> (Result);
+  storeAllSEO: () -> (Result_1);
   testInstructionSize: () -> (text);
-  unfollowTag: (text) -> (Result);
-  unregisterAdmin: (text) -> (Result);
-  unregisterCanister: (text) -> (Result);
-  unregisterCgUser: (text) -> (Result);
-  unregisterPlatformOperator: (text) -> (Result);
-  updateHandle: (text, text) -> (Result_1);
+  unfollowTag: (text) -> (Result_1);
+  unregisterAdmin: (text) -> (Result_1);
+  unregisterCanister: (text) -> (Result_1);
+  unregisterCgUser: (text) -> (Result_1);
+  unregisterPlatformOperator: (text) -> (Result_1);
+  updateHandle: (text, text) -> (Result_2);
   updatePostDraft: (text, bool, int, text) -> (PostKeyProperties);
-  upgradeAllBuckets: (text, vec nat8) -> (Result);
-  upgradeBucket: (text, vec nat8) -> (Result);
+  updatePublicationEditorsAndWriters: (text, vec text, vec text) ->
+   (Result_1);
+  updateSettingsForAllBucketCanisters: () -> (Result_2);
+  upgradeAllBuckets: (text, vec nat8) -> (Result_1);
+  upgradeBucket: (text, vec nat8) -> (Result_1);
   validate: (reserved) -> (Validate);
+  verifyMigration: () -> (Result) query;
   viewPost: (text) -> () oneway;
 }

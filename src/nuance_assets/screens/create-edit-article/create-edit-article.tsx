@@ -24,7 +24,7 @@ import {
 import { downscaleImage } from '../../components/quill-text-editor/modules/quill-image-compress/downscaleImage.js';
 import { toast, toastError, ToastType } from '../../services/toastService';
 import CopyArticle from '../../UI/copy-article/copy-article';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 import { colors, icons, images } from '../../shared/constants';
 import { useLocation } from 'react-router-dom';
@@ -234,7 +234,6 @@ const CreateEditArticle = () => {
       let postId = window.location.pathname.split('/').pop();
       if (postId) {
         let post = await getPost(postId);
-        console.log('fetchPost-> ', post);
         if (post) {
           //fetch the other info if the post is premium
           if (post.isPremium) {
@@ -278,7 +277,6 @@ const CreateEditArticle = () => {
 
   //first load only
   useEffect(() => {
-    console.log('first load useEffect');
     //fetch the post
     fetchPost();
     //refresh the user object
@@ -480,6 +478,7 @@ const CreateEditArticle = () => {
       if (isPublication) {
         if (wasPublication) {
           //the post was a publication post and it's still a publication post -> just call savePublicationPost
+          
           let savePublicationResult = await savePublicationPost(
             {
               title: savingPost.title,
@@ -495,8 +494,8 @@ const CreateEditArticle = () => {
               subtitle: savingPost.subtitle,
               isPublication: true,
               postId: savingPost.postId,
-            },
-            lastSavedPost.handle
+              handle: lastSavedPost.handle
+            }
           );
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
@@ -516,16 +515,9 @@ const CreateEditArticle = () => {
             setLastSavedPost(migratePostResult);
             setPostHtml(migratePostResult.content);
 
-            //if the user is writer -> toast a success message and navigate to my-profile screen
-            if (
-              !notNavigate &&
-              userPublicationsWriter.includes(migratePostResult.handle)
-            ) {
-              toast('Post submitted for review!', ToastType.Success);
-              setTimeout(() => {
-                navigate('/my-profile');
-              }, 500);
-            }
+            navigate('/article/edit/' +  migratePostResult.postId, {
+              replace: true,
+            });
             return migratePostResult;
           }
         }
@@ -548,6 +540,7 @@ const CreateEditArticle = () => {
             subtitle: savingPost.subtitle,
             isPublication: false,
             postId: savingPost.postId,
+            handle: lastSavedPost.handle
           });
           if (saveResult) {
             setSavingPost(saveResult);
@@ -577,28 +570,17 @@ const CreateEditArticle = () => {
             subtitle: savingPost.subtitle,
             isPublication: true,
             postId: savingPost.postId,
-          },
-          selectedHandle
+            handle: selectedHandle
+          }
         );
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
           setLastSavedPost(savePublicationResult);
           setPostHtml(savePublicationResult.content);
-          //if the user is writer -> toast a success message and navigate to my-profile screen
-          //else if the user is editor -> navigate to edit-article screen
-          if (
-            !notNavigate &&
-            userPublicationsWriter.includes(savePublicationResult.handle)
-          ) {
-            toast('Post submitted for review!', ToastType.Success);
-            setTimeout(() => {
-              navigate('/my-profile/submitted-for-review');
-            }, 500);
-          } else if (!notNavigate) {
-            navigate('/article/edit/' + savePublicationResult.postId, {
-              replace: true,
-            });
-          }
+          
+          navigate('/article/edit/' + savePublicationResult.postId, {
+            replace: true,
+          });
           return savePublicationResult;
         }
       } else {
@@ -618,6 +600,7 @@ const CreateEditArticle = () => {
           subtitle: savingPost.subtitle,
           isPublication: false,
           postId: savingPost.postId,
+          handle: selectedHandle
         });
         if (saveResult) {
           setSavingPost(saveResult);
@@ -717,7 +700,6 @@ const CreateEditArticle = () => {
       }
     }
   };
-  console.log(lastSavedPost);
   const getManageItems = () => {
     if (lastSavedPost) {
       if (lastSavedPost.isDraft) {
@@ -921,8 +903,39 @@ const CreateEditArticle = () => {
             return (
               <div className='edit-article-left-manage-content-wrapper'>
                 <div className={darkTheme ? 'text-dark-mode' : 'text'}>
-                  This article is minted.
-                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>@{lastSavedPost.handle}</span>
+                  This article is minted and published to the publication:{' '}
+                  <br />
+                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>
+                    @{lastSavedPost.handle}
+                  </span>
+                </div>
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  You can not edit this article anymore.
+                </div>
+                <div className='horizontal-divider' />
+                <PremiumArticleOwners
+                  owners={ownersOfPremiumArticle}
+                  dark={darkTheme}
+                />
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  NFT keys are created that people need to buy to access this
+                  article.
+                </div>
+
+                <div
+                  onClick={()=>{
+                    window.open(
+                      'https://wiki.nuance.xyz/nuance/how-do-premium-articles-work',
+                      '_blank'
+                    );
+                  }}
+                  className={
+                    darkTheme
+                      ? 'external-url-text-dark-mode'
+                      : 'external-url-text'
+                  }
+                >
+                  More on NFT keys
                 </div>
               </div>
             );
@@ -1165,6 +1178,39 @@ const CreateEditArticle = () => {
       ];
     }
   };
+  
+  const isEditAllowed = () => {
+    if(lastSavedPost){
+      if(lastSavedPost.isDraft){
+        //post is draft
+        if(lastSavedPost.isPublication){
+          //draft and publication post
+          if (userPublicationsEditor.includes(lastSavedPost.handle)) {
+            //draft publication post but user is an editor
+            //allowed
+            return true;
+          } 
+          //user is not the editor
+          return false;
+        }
+        else{
+          //regular draft post
+          //user is allowed to edit
+          return true
+        }
+      }
+      else{
+        //post is published
+        //edit is not allowed before unpublishing it
+        return false;
+      }
+    }
+    else{
+      //there is no existing post
+      //edit is allowed
+      return true;
+    }
+  }
 
   return (
     <div className='edit-article-wrapper' style={darkOptionsAndColors}>
@@ -1178,7 +1224,6 @@ const CreateEditArticle = () => {
       {premiumModalOpen && (
         <EditArticlePremiumModal
           refreshPost={async (post) => {
-            console.log('refreshPost-> ', post);
             //set the post
             setSavingPost(post);
             setLastSavedPost(post);
@@ -1299,9 +1344,7 @@ const CreateEditArticle = () => {
           ) : (
             <div className='edit-article-right-content'>
               {/* if the post is premium, act like the read-article screen. if not, simply show the input fields */}
-              {lastSavedPost?.isPremium ? (
-                <NftArticleView post={lastSavedPost} />
-              ) : (
+              {isEditAllowed() ? (
                 <EditArticleInputFields
                   isMobile={isMobile()}
                   lastSavedPost={lastSavedPost}
@@ -1324,7 +1367,9 @@ const CreateEditArticle = () => {
                   onPostTagChange={onPostTagChange}
                   allTags={allTags}
                 />
-              )}
+              ) : lastSavedPost ? (
+                <NftArticleView post={lastSavedPost} />
+              ) : null}
             </div>
           )}
         </div>
