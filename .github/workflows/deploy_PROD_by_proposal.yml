@@ -1,5 +1,4 @@
 name: Deploy PROD by Proposal
-
 on:
   workflow_dispatch:
     inputs:
@@ -20,6 +19,9 @@ on:
       summary:
         description: 'Summary of proposal'
         required: true
+      branch: 
+        description: 'Branch or Tag to Deploy'
+        required: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,6 +29,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.branch }}
+        
+    - name: Verify branch
+      run: |
+        if [ "${{ github.ref }}" != "refs/heads/${{ github.event.inputs.branch }}" ]; then
+          echo "Error: The current branch does not match the input branch."
+          exit 1
+        fi
+
 
     - name: npm install
       run: npm install
