@@ -18,27 +18,27 @@ type SaveCommentModel =
 type Result_9 = 
  variant {
    err: text;
-   ok: Comment__1;
+   ok: vec Comment__1;
  };
 type Result_8 = 
  variant {
    err: text;
-   ok: Metadata;
+   ok: vec text;
  };
 type Result_7 = 
  variant {
    err: text;
-   ok: vec text;
+   ok: bool;
  };
 type Result_6 = 
  variant {
    err: text;
-   ok: bool;
+   ok: PostBucketType__1;
  };
 type Result_5 = 
  variant {
    err: text;
-   ok: PostBucketType__1;
+   ok: Comment__1;
  };
 type Result_4 = 
  variant {
@@ -55,10 +55,15 @@ type Result_2 =
    err: text;
    ok: text;
  };
-type Result_10 = 
+type Result_11 = 
  variant {
    err: text;
    ok: Applaud;
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: Metadata;
  };
 type Result_1 = 
  variant {
@@ -153,12 +158,12 @@ type PostBucketType =
 type PostBucket = 
  service {
    acceptCycles: () -> ();
-   addPostCategory: (text, text) -> (Result_5);
+   addPostCategory: (text, text) -> (Result_6);
    availableCycles: () -> (nat) query;
    checkTipping: (text) -> ();
-   checkTippingByTokenSymbol: (text, text, text) -> (Result_10);
+   checkTippingByTokenSymbol: (text, text, text) -> (Result_11);
    delete: (text) -> (Result_4);
-   deleteComment: (text) -> (Result_9);
+   deleteComment: (text) -> (Result_5);
    deleteUserPosts: (text) -> (Result_4);
    downvoteComment: (text) -> (Result);
    dumpIds: () -> (Result_3);
@@ -166,23 +171,23 @@ type PostBucket =
    dumpUserIds: () -> (Result_3);
    generateContent: (text) -> (text);
    generatePublishedDates: () -> ();
-   get: (text) -> (Result_5) query;
-   getAdmins: () -> (Result_7) query;
+   get: (text) -> (Result_6) query;
+   getAdmins: () -> (Result_8) query;
    getAllRejected: () -> (vec record {
                                 text;
                                 text;
                               }) query;
-   getApplaudById: (text) -> (Result_10) query;
+   getApplaudById: (text) -> (Result_11) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
-   getCgUsers: () -> (Result_7) query;
-   getComment: (text) -> (Result_9) query;
+   getCgUsers: () -> (Result_8) query;
+   getComment: (text) -> (Result_5) query;
    getFrontendCanisterId: () -> (text) query;
-   getKinicList: () -> (Result_7) query;
+   getKinicList: () -> (Result_8) query;
    getList: (vec text) -> (vec PostBucketType__1) query;
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
-   getMetadata: (text, nat) -> (Result_8) query;
+   getMetadata: (text, nat) -> (Result_10) query;
    getMyApplauds: () -> (vec Applaud) query;
    getNftCanisters: () -> (vec NftCanisterEntry) query;
    getPlatformOperators: () -> (List) query;
@@ -190,12 +195,14 @@ type PostBucket =
    getPostComments: (text) -> (Result) query;
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
-   getPostWithPublicationControl: (text) -> (Result_5);
+   getPostWithPublicationControl: (text) -> (Result_6);
    getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
-   getPremiumArticle: (text) -> (Result_5);
+   getPremiumArticle: (text) -> (Result_6);
+   getReportedCommentIds: () -> (vec text);
+   getReportedComments: () -> (Result_9);
    getSubmittedForReview: (vec text) -> (vec PostBucketType__1) query;
    getTotalPostCount: () -> (nat) query;
-   getTrustedCanisters: () -> (Result_7) query;
+   getTrustedCanisters: () -> (Result_8) query;
    getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
    getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
    initializeBucketCanister: (vec text, vec text, vec text,
@@ -205,7 +212,7 @@ type PostBucket =
         }, text, text, text, text) -> (Result_2);
    initializeCanister: (text, text) -> (Result_2);
    isBucketCanisterActivePublic: () -> (bool) query;
-   makeBucketCanisterNonActive: () -> (Result_6);
+   makeBucketCanisterNonActive: () -> (Result_7);
    makePostPremium: (text) -> (bool);
    migratePostToPublication: (text, text, bool) -> (Result_1);
    registerAdmin: (text) -> (Result_3);
@@ -217,7 +224,9 @@ type PostBucket =
    reindex: () -> (Result_2);
    rejectPostByModclub: (text) -> () oneway;
    removeCommentVote: (text) -> (Result);
-   removePostCategory: (text) -> (Result_5);
+   removePostCategory: (text) -> (Result_6);
+   reportComment: (text) -> (Result_2);
+   reviewComment: (text, bool) -> (Result_5);
    save: (PostSaveModel) -> (SaveResult);
    saveComment: (SaveCommentModel) -> (Result);
    saveMultiple: (vec PostSaveModelBucketMigration) -> (vec SaveResult);
@@ -322,6 +331,7 @@ type Comment__1 =
    downVotes: vec text;
    editedAt: opt text;
    handle: text;
+   isCensored: bool;
    postId: text;
    repliedCommentId: opt text;
    replies: vec Comment;
@@ -338,6 +348,7 @@ type Comment =
    downVotes: vec text;
    editedAt: opt text;
    handle: text;
+   isCensored: bool;
    postId: text;
    repliedCommentId: opt text;
    replies: vec Comment;

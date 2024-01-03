@@ -30,6 +30,7 @@ const Comments: React.FC<CommentProps> = ({
   avatar
 }) => {
   let identity = useAuthStore(state => state.userWallet?.principal.toString()) || '';
+  let censoredComment = <em> This comment was removed due to <a href="https://wiki.nuance.xyz/nuance/content-rules" target="_blank">content rules</a>. Please play nice. </em>;
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyToCommentId, setReplyToCommentId] = useState<string | undefined>();
   const [repliesVisible, setRepliesVisible] = useState(false);
@@ -45,7 +46,7 @@ const Comments: React.FC<CommentProps> = ({
   const modalContext = useContext(ModalContext);
   const darkTheme = useTheme();
 
-  const { upVoteComment, downVoteComment, getPostComments, removeCommentVote } = usePostStore(state => state);
+  const { upVoteComment, downVoteComment, getPostComments, removeCommentVote, reportComment } = usePostStore(state => state);
   const toggleReplies = () => {
     setRepliesVisible(!repliesVisible);
   };
@@ -154,6 +155,21 @@ const Comments: React.FC<CommentProps> = ({
     }
   };
 
+  const handleReport = async (isCensored: boolean) => {
+    if (isCensored) {
+      toastError('This comment has already been reported.');
+      return;
+    }
+
+    try {
+      await reportComment(comment.commentId, bucketCanisterId);
+      //toast('Comment reported!', ToastType.Success);
+    } catch (err) {
+      console.error('Failed to report: ', err);
+      toastError('Failed to report the comment.');
+    }
+  }
+
 
   function timeAgo(dateParam: number | null): string {
     if (typeof dateParam !== 'number' || dateParam === 0) {
@@ -226,7 +242,7 @@ const Comments: React.FC<CommentProps> = ({
       ) : (
         <>
           <>
-            <p className='content'>{comment.content}</p>
+            <p className='content'>{comment.isCensored ? censoredComment : comment.content}</p>
             {comment.creator !== 'TEMP' && (
               <div className='actions'>
                 {loggedInUser === comment.handle && (
@@ -278,6 +294,13 @@ const Comments: React.FC<CommentProps> = ({
                   <img className='icon' alt='share' src={icons.SHARE} />
                   <span className='comment-text'>Share</span>
                 </button>
+
+                {loggedInUser !== comment.handle &&
+                  <button className='report' onClick={() => handleReport(comment.isCensored)}>
+                    <img className='icon' alt='report' src={icons.REPORT} />
+                    <span className='comment-text'>Report</span>
+                  </button>
+                }
 
               </div>
             )}
