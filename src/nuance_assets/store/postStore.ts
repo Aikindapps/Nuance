@@ -558,6 +558,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     bucketCanisterId: string
   ): Promise<void> => {
     try {
+      toast('Reporting comment...', ToastType.Loading);
       const result = await (
         await getPostBucketActor(bucketCanisterId)
       ).reportComment(commentId);

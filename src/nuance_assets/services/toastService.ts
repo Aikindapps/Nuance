@@ -5,6 +5,7 @@ export enum ToastType {
   Plain,
   Success,
   Error,
+  Loading,
 }
 
 export const toastError = (err: any, preText: string = ''): void => {
@@ -35,6 +36,16 @@ export const toast = (message: string, toastType: ToastType): void => {
             secondary: colors.primaryTextColor, //background color
           },
         });
+      break;
+
+    case ToastType.Loading:
+      _toast.loading(message, {
+        duration: 2000,
+        iconTheme: {
+          primary: colors.accentColor, // check mark color
+          secondary: colors.primaryTextColor, //background color
+        },
+      });
       break;
     default:
       _toast(message);
