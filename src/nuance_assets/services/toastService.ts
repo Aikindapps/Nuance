@@ -40,7 +40,7 @@ export const toast = (message: string, toastType: ToastType): void => {
 
     case ToastType.Loading:
       _toast.loading(message, {
-        duration: 2000,
+        duration: 3000,
         iconTheme: {
           primary: colors.accentColor, // check mark color
           secondary: colors.primaryTextColor, //background color

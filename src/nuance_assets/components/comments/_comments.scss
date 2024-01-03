@@ -2,6 +2,17 @@
 
 .comment {
 
+   a{
+    color: #00e;
+    text-decoration: none;
+    cursor: pointer;
+    
+    &:hover {
+        color: darken(#00e, 10%);
+    }
+   }
+
+
     position: relative;
     display: flex;
     flex-direction: column;
