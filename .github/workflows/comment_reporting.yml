@@ -60,21 +60,19 @@ jobs:
             exit 0
           fi
 
-          SLACK_PAYLOAD='{"text":"*Reported Comments:*\n'
+          SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
           for BUCKET in $BUCKETS
           do
-            RESPONSE=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
-            echo "Raw Candid response from the canister call:"
-            echo "$RESPONSE"
-
-            
-            REPORTED_COMMENTS=$(echo "$RESPONSE" | grep -oP 'commentId = "\K[^"]+' | paste -d ':' - - | sed 's/^/Reported Comment - /')
-            if [ -z "$REPORTED_COMMENTS" ]; then
-              echo "No reported comments found for bucket $BUCKET."
-              continue
-            fi
-
-            SLACK_PAYLOAD+="$REPORTED_COMMENTS\n"
+            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq | grep -oP 'commentId = "\K[^"]+')
+            for ID in $COMMENT_IDS; do
+               
+                COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getCommentDetails --arg "$ID" --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+                IS_CENSORED=$(echo "$COMMENT_DETAIL" | grep -oP 'isCensored = \K[^;]+')
+                if [ "$IS_CENSORED" != "true" ]; then
+                    COMMENT_CONTENT=$(echo "$COMMENT_DETAIL" | grep -oP 'content = "\K[^"]+')
+                    SLACK_PAYLOAD+="Comment ID: $ID, Content: $COMMENT_CONTENT\n"
+                fi
+            done
           done
           SLACK_PAYLOAD+='"}'
           echo "Sending the following payload to Slack:"
@@ -82,6 +80,7 @@ jobs:
           curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+
 
 
 
