@@ -64,25 +64,25 @@ jobs:
           for BUCKET in $BUCKETS
           do
             RESPONSE=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
-            if echo "$RESPONSE" | jq empty; then
-              REPORTED_COMMENTS=$(echo "$RESPONSE" | jq -r '.ok[] | select(.isCensored == true) | "\(.commentId): \(.content)"' || echo '')
-              if [ -z "$REPORTED_COMMENTS" ]; then
-                echo "No reported comments found for bucket $BUCKET."
-                continue
-              fi
+            echo "Raw Candid response from the canister call:"
+            echo "$RESPONSE"
 
-              for COMMENT in $REPORTED_COMMENTS
-              do
-                SLACK_PAYLOAD+="Reported Comment - $COMMENT\n"
-              done
-            else
-              echo "Failed to parse response for bucket $BUCKET."
+            
+            REPORTED_COMMENTS=$(echo "$RESPONSE" | grep -oP 'commentId = "\K[^"]+' | paste -d ':' - - | sed 's/^/Reported Comment - /')
+            if [ -z "$REPORTED_COMMENTS" ]; then
+              echo "No reported comments found for bucket $BUCKET."
+              continue
             fi
+
+            SLACK_PAYLOAD+="$REPORTED_COMMENTS\n"
           done
           SLACK_PAYLOAD+='"}'
+          echo "Sending the following payload to Slack:"
+          echo "$SLACK_PAYLOAD"
           curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+
 
 
 
