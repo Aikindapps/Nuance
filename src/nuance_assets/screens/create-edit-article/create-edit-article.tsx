@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import {
   useAuthStore,
   useUserStore,
@@ -6,14 +6,14 @@ import {
   usePublisherStore,
 } from '../../store';
 import Button from '../../UI/Button/Button';
-import Footer from '../../components/footer/footer';
+import { Context as ModalContext } from '../../contextes/ModalContext';
 import Header from '../../components/header/header';
-import UnpublishArticle from '../../UI/unpublish article/unpublish-article';
 import Loader from '../../UI/loader/Loader';
 //import { PostSaveModel } from '../../services/actorService';
 import {
   PostType,
   PremiumArticleOwners as PremiumArticleOwnersObject,
+  PublicationType,
 } from '../../types/types';
 import {
   convertImagesToUrls,
@@ -31,7 +31,7 @@ import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../contextes/ThemeContext';
 import './create-edit-article-screen.scss';
 import PremiumArticleOwners from '../../components/premium-article-owners/premium-article-owners';
-import { NftArticleView } from '../../components/nft-article-view/NftArticleView';
+import { StaticArticleView } from '../../components/static-article-view/StaticArticleView';
 import { EditArticleInputFields } from '../../components/edit-article-input-fields/edit-article-input-fields';
 import { EditArticlePremiumModal } from '../../components/edit-article-premium-modal/edit-article-premium-modal';
 import { ButtonsTextsMobile } from '../../components/buttons-texts-mobile/buttons-texts-mobile';
@@ -54,6 +54,7 @@ const CreateEditArticle = () => {
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
   };
+  const modalContext = useContext(ModalContext);
 
   //postStore
   const {
@@ -75,9 +76,12 @@ const CreateEditArticle = () => {
   }));
 
   //publisherStore
-  const { savePublicationPost } = usePublisherStore((state) => ({
-    savePublicationPost: state.savePublicationPost,
-  }));
+  const { savePublicationPost, getPublication } = usePublisherStore(
+    (state) => ({
+      savePublicationPost: state.savePublicationPost,
+      getPublication: state.getPublication,
+    })
+  );
 
   //userStore
   const { getUser, user } = useUserStore((state) => ({
@@ -193,7 +197,7 @@ const CreateEditArticle = () => {
     return owners;
   };
 
-  const fillUserRelatedFields = () => {
+  const fillUserRelatedFields = async () => {
     if (user) {
       let allPublications: string[] = [];
       let writerPublications: string[] = [];
@@ -222,6 +226,25 @@ const CreateEditArticle = () => {
       setUserPublicationsEditor(editorPublications);
       setUserPublicationsWithNftCanister(publicationsWithNftCanister);
       setSelectedHandle(user.handle);
+
+      //fetch the publications that user is editor in parallel
+      const userEditorPublicationsDetailsArray = await Promise.all(
+        editorPublications.map((publicationHandle) => {
+          return getPublication(publicationHandle);
+        })
+      );
+      let userEditorPublicationsDetailsMap: Map<string, PublicationType> =
+        new Map();
+      for (const publicationDetail of userEditorPublicationsDetailsArray) {
+        if (publicationDetail) {
+          userEditorPublicationsDetailsMap.set(
+            publicationDetail.publicationHandle,
+            publicationDetail
+          );
+        }
+      }
+
+      setUserEditorPublicationsDetails(userEditorPublicationsDetailsMap);
     }
   };
 
@@ -247,6 +270,7 @@ const CreateEditArticle = () => {
             setPostHtml(post.content);
             if (post.isPublication) {
               setSelectedHandle(post.handle);
+              setSelectedCategory(post.category);
             }
           }
           //if it's not a premium post, simply put the post to local variable
@@ -256,6 +280,7 @@ const CreateEditArticle = () => {
             setPostHtml(post.content);
             if (post.isPublication) {
               setSelectedHandle(post.handle);
+              setSelectedCategory(post.category);
             }
           }
         } else {
@@ -272,20 +297,23 @@ const CreateEditArticle = () => {
         setSelectedHandle(user.handle);
       }
     }
-    setLoading(false);
   };
 
   //first load only
   useEffect(() => {
-    //fetch the post
-    fetchPost();
-    //refresh the user object
-    getUser();
-    //fill the user related fields by the user object
-    fillUserRelatedFields();
-    //get all the tags
-    getAllTags();
+    firstLoad();
   }, [location.pathname]);
+
+  const firstLoad = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchPost(),
+      getUser(),
+      fillUserRelatedFields(),
+      getAllTags(),
+    ]);
+    setLoading(false);
+  };
 
   //refresh the user related fields if the user object changes
   useEffect(() => {
@@ -305,9 +333,6 @@ const CreateEditArticle = () => {
   const [lastSavedPost, setLastSavedPost] = useState<PostType | undefined>();
   const [postHtml, setPostHtml] = useState('');
 
-  //premium modal
-  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
-
   //user related fields
   const [ownersOfPremiumArticle, setOwnersOfPremiumArticle] = useState(
     buildEmptyPremiumArticleOwners()
@@ -321,6 +346,9 @@ const CreateEditArticle = () => {
   >([]);
   const [userPublicationsWithNftCanister, setUserPublicationsWithNftCanister] =
     useState<string[]>([]);
+  const [userEditorPublicationsDetails, setUserEditorPublicationsDetails] =
+    useState<Map<string, PublicationType>>(new Map());
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   //loading
   const [loading, setLoading] = useState(true);
@@ -478,25 +506,23 @@ const CreateEditArticle = () => {
       if (isPublication) {
         if (wasPublication) {
           //the post was a publication post and it's still a publication post -> just call savePublicationPost
-          
-          let savePublicationResult = await savePublicationPost(
-            {
-              title: savingPost.title,
-              creator: savingPost.creator || user?.handle || '',
-              content: contentWithUrls || postHtml,
-              isPremium: false,
-              isDraft: isDraft,
-              tagIds: savingPost.tags.map((tag) => {
-                return tag.tagId;
-              }),
-              category: savingPost.category,
-              headerImage: headerUrl || '',
-              subtitle: savingPost.subtitle,
-              isPublication: true,
-              postId: savingPost.postId,
-              handle: lastSavedPost.handle
-            }
-          );
+
+          let savePublicationResult = await savePublicationPost({
+            title: savingPost.title,
+            creator: savingPost.creator || user?.handle || '',
+            content: contentWithUrls || postHtml,
+            isPremium: false,
+            isDraft: isDraft,
+            tagIds: savingPost.tags.map((tag) => {
+              return tag.tagId;
+            }),
+            category: selectedCategory,
+            headerImage: headerUrl || '',
+            subtitle: savingPost.subtitle,
+            isPublication: true,
+            postId: savingPost.postId,
+            handle: lastSavedPost.handle,
+          });
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
             setLastSavedPost(savePublicationResult);
@@ -515,7 +541,7 @@ const CreateEditArticle = () => {
             setLastSavedPost(migratePostResult);
             setPostHtml(migratePostResult.content);
 
-            navigate('/article/edit/' +  migratePostResult.postId, {
+            navigate('/article/edit/' + migratePostResult.postId, {
               replace: true,
             });
             return migratePostResult;
@@ -535,12 +561,12 @@ const CreateEditArticle = () => {
             tagIds: savingPost.tags.map((tag) => {
               return tag.tagId;
             }),
-            category: savingPost.category,
+            category: selectedCategory,
             headerImage: headerUrl || '',
             subtitle: savingPost.subtitle,
             isPublication: false,
             postId: savingPost.postId,
-            handle: lastSavedPost.handle
+            handle: lastSavedPost.handle,
           });
           if (saveResult) {
             setSavingPost(saveResult);
@@ -555,29 +581,27 @@ const CreateEditArticle = () => {
       let isPublication = user?.handle !== selectedHandle;
       if (isPublication) {
         //create a publication post
-        let savePublicationResult = await savePublicationPost(
-          {
-            title: savingPost.title,
-            creator: user?.handle || '',
-            content: contentWithUrls || postHtml,
-            isPremium: false,
-            isDraft: isDraft,
-            tagIds: savingPost.tags.map((tag) => {
-              return tag.tagId;
-            }),
-            category: savingPost.category,
-            headerImage: headerUrl || '',
-            subtitle: savingPost.subtitle,
-            isPublication: true,
-            postId: savingPost.postId,
-            handle: selectedHandle
-          }
-        );
+        let savePublicationResult = await savePublicationPost({
+          title: savingPost.title,
+          creator: user?.handle || '',
+          content: contentWithUrls || postHtml,
+          isPremium: false,
+          isDraft: isDraft,
+          tagIds: savingPost.tags.map((tag) => {
+            return tag.tagId;
+          }),
+          category: selectedCategory,
+          headerImage: headerUrl || '',
+          subtitle: savingPost.subtitle,
+          isPublication: true,
+          postId: savingPost.postId,
+          handle: selectedHandle,
+        });
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
           setLastSavedPost(savePublicationResult);
           setPostHtml(savePublicationResult.content);
-          
+
           navigate('/article/edit/' + savePublicationResult.postId, {
             replace: true,
           });
@@ -595,12 +619,12 @@ const CreateEditArticle = () => {
           tagIds: savingPost.tags.map((tag) => {
             return tag.tagId;
           }),
-          category: savingPost.category,
+          category: selectedCategory,
           headerImage: headerUrl || '',
           subtitle: savingPost.subtitle,
           isPublication: false,
           postId: savingPost.postId,
-          handle: selectedHandle
+          handle: selectedHandle,
         });
         if (saveResult) {
           setSavingPost(saveResult);
@@ -713,7 +737,9 @@ const CreateEditArticle = () => {
               <div className='edit-article-left-manage-content-wrapper'>
                 <div className={darkTheme ? 'text-dark-mode' : 'text'}>
                   This article is submitted to a publication:{' '}
-                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>@{lastSavedPost.handle}</span>
+                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>
+                    @{lastSavedPost.handle}
+                  </span>
                 </div>
                 <div className='horizontal-divider' />
                 <div className='text'>
@@ -765,7 +791,27 @@ const CreateEditArticle = () => {
                     styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={() => {
-                      setPremiumModalOpen(true);
+                      let validationResult = validate();
+                      if (!validationResult || savingPost.headerImage === '') {
+                        if (validationResult) {
+                          toastError(
+                            'You need to add an header image to mint an article.'
+                          );
+                        }
+                        return;
+                      }
+                      modalContext?.openModal('Premium article', {
+                        premiumPostNumberOfEditors:
+                          userEditorPublicationsDetails.get(selectedHandle)
+                            ?.editors.length || 1,
+                        premiumPostData: savingPost,
+                        premiumPostOnSave: async (isDraft) => {
+                          return await onSave(isDraft, true);
+                        },
+                        premiumPostRefreshPost: async (post) => {
+                          await firstLoad()
+                        },
+                      });
                     }}
                   >
                     <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
@@ -882,7 +928,27 @@ const CreateEditArticle = () => {
                     styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={() => {
-                      setPremiumModalOpen(true);
+                      let validationResult = validate();
+                      if (!validationResult || savingPost.headerImage === '') {
+                        if (validationResult) {
+                          toastError(
+                            'You need to add an header image to mint an article.'
+                          );
+                        }
+                        return;
+                      }
+                      modalContext?.openModal('Premium article', {
+                        premiumPostNumberOfEditors:
+                          userEditorPublicationsDetails.get(selectedHandle)
+                            ?.editors.length || 1,
+                        premiumPostData: savingPost,
+                        premiumPostOnSave: async (isDraft) => {
+                          return await onSave(isDraft, true);
+                        },
+                        premiumPostRefreshPost: async (post) => {
+                          await firstLoad()
+                        },
+                      });
                     }}
                   >
                     <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
@@ -923,7 +989,7 @@ const CreateEditArticle = () => {
                 </div>
 
                 <div
-                  onClick={()=>{
+                  onClick={() => {
                     window.open(
                       'https://wiki.nuance.xyz/nuance/how-do-premium-articles-work',
                       '_blank'
@@ -948,7 +1014,11 @@ const CreateEditArticle = () => {
                 <div className='edit-article-left-manage-content-wrapper'>
                   <div className={darkTheme ? 'text-dark-mode' : 'text'}>
                     This article is submitted to a publication:{' '}
-                    <span className={darkTheme ? 'text-lighter' : 'text-darker'}>@{lastSavedPost.handle}</span>
+                    <span
+                      className={darkTheme ? 'text-lighter' : 'text-darker'}
+                    >
+                      @{lastSavedPost.handle}
+                    </span>
                   </div>
                   <div className='horizontal-divider' />
                   <div className='text'>
@@ -1083,7 +1153,27 @@ const CreateEditArticle = () => {
                 styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
                 style={{ width: '100%', marginTop: '20px' }}
                 onClick={() => {
-                  setPremiumModalOpen(true);
+                  let validationResult = validate();
+                  if (!validationResult || savingPost.headerImage === '') {
+                    if (validationResult) {
+                      toastError(
+                        'You need to add an header image to mint an article.'
+                      );
+                    }
+                    return;
+                  }
+                  modalContext?.openModal('Premium article', {
+                    premiumPostNumberOfEditors:
+                      userEditorPublicationsDetails.get(selectedHandle)?.editors
+                        .length || 1,
+                    premiumPostData: savingPost,
+                    premiumPostOnSave: async (isDraft) => {
+                      return await onSave(isDraft, true);
+                    },
+                    premiumPostRefreshPost: async (post) => {
+                      await firstLoad()
+                    },
+                  });
                 }}
               >
                 <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
@@ -1178,39 +1268,46 @@ const CreateEditArticle = () => {
       ];
     }
   };
-  
+
   const isEditAllowed = () => {
-    if(lastSavedPost){
-      if(lastSavedPost.isDraft){
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
         //post is draft
-        if(lastSavedPost.isPublication){
+        if (lastSavedPost.isPublication) {
           //draft and publication post
           if (userPublicationsEditor.includes(lastSavedPost.handle)) {
             //draft publication post but user is an editor
             //allowed
             return true;
-          } 
+          }
           //user is not the editor
           return false;
-        }
-        else{
+        } else {
           //regular draft post
           //user is allowed to edit
-          return true
+          return true;
         }
-      }
-      else{
+      } else {
         //post is published
         //edit is not allowed before unpublishing it
         return false;
       }
-    }
-    else{
+    } else {
       //there is no existing post
       //edit is allowed
       return true;
     }
-  }
+  };
+
+  const getCategoriesIfExists = () => {
+    let publicationDetails = userEditorPublicationsDetails.get(selectedHandle);
+    if (publicationDetails) {
+      return [
+        '/',
+        ...publicationDetails.categories.map((category) => '/' + category),
+      ];
+    }
+  };
 
   return (
     <div className='edit-article-wrapper' style={darkOptionsAndColors}>
@@ -1221,33 +1318,6 @@ const CreateEditArticle = () => {
         isPublicationPage={false}
         isUserAdminScreen={true}
       />
-      {premiumModalOpen && (
-        <EditArticlePremiumModal
-          refreshPost={async (post) => {
-            //set the post
-            setSavingPost(post);
-            setLastSavedPost(post);
-            setPostHtml(post.content);
-            if (post.isPublication) {
-              setSelectedHandle(post.handle);
-            }
-            setTimeout(async () => {
-              if (location.pathname.includes('new')) {
-                navigate('/article/edit/' + post.postId, { replace: true });
-              } else {
-                fetchPost();
-              }
-            }, 6000);
-          }}
-          setLoading={setLoading}
-          onSave={async (isDraft) => {
-            return await onSave(isDraft, true);
-          }}
-          post={savingPost}
-          setPremiumModalOpen={setPremiumModalOpen}
-          publicationHandle={selectedHandle}
-        />
-      )}
       <div className='edit-article-content-wrapper'>
         <div className='edit-article-left'>
           <p className='edit-article-left-date'>
@@ -1314,11 +1384,43 @@ const CreateEditArticle = () => {
                       dropdownMenuItemStyle={{ fontSize: '12px' }}
                       onSelect={(item) => {
                         setSelectedHandle(item.slice(1));
+                        if (lastSavedPost?.category) {
+                          setSelectedCategory(lastSavedPost.category);
+                        } else {
+                          setSelectedCategory('');
+                        }
                       }}
                       notActiveIfOnlyOneItem={true}
                     />
                   </div>
                 )}
+                {getCategoriesIfExists() &&
+                  (lastSavedPost?.isDraft || !lastSavedPost) && (
+                    <div className='edit-article-left-location-wrapper'>
+                      <div className='edit-article-left-location-title'>
+                        CATEGORY
+                      </div>
+                      <Dropdown
+                        selected={'/' + selectedCategory}
+                        style={{ height: '30px' }}
+                        selectedTextStyle={{
+                          fontWeight: '400',
+                          fontSize: '14px',
+                        }}
+                        drodownItemsWrapperStyle={{ top: '32px' }}
+                        items={getCategoriesIfExists() as string[]}
+                        arrowWidth={12}
+                        dropdownMenuItemStyle={{
+                          fontSize: '12px',
+                          height: '20px',
+                        }}
+                        onSelect={(item) => {
+                          setSelectedCategory(item.slice(1));
+                        }}
+                        notActiveIfOnlyOneItem={false}
+                      />
+                    </div>
+                  )}
                 <div className='edit-article-left-manage-wrapper'>
                   <div className='edit-article-left-manage-title'>MANAGE</div>
                   {(!lastSavedPost ||
@@ -1368,7 +1470,7 @@ const CreateEditArticle = () => {
                   allTags={allTags}
                 />
               ) : lastSavedPost ? (
-                <NftArticleView post={lastSavedPost} />
+                <StaticArticleView post={lastSavedPost} />
               ) : null}
             </div>
           )}

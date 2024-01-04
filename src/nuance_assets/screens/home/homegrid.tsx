@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, Suspense, lazy } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore, useUserStore, usePostStore } from '../../store';
 import { PostType } from '../../types/types';
-import { colors, images } from '../../shared/constants';
+import { colors, icons, images } from '../../shared/constants';
 import { TagModel } from 'src/nuance_assets/services/actorService';
 import { slice } from 'lodash';
 import { useTheme } from '../../contextes/ThemeContext';
@@ -954,6 +954,7 @@ const HomePageGrid = () => {
               <div className='logged-in'>
                 {/* Will call this dynamically when functionalities are implemented */}
                 {/* <img className='avatar-pic' src={user?.avatar || assetPaths.DEFAULT_AVATAR} alt='' /> */}
+                <img className='homepage-left-background-image' src={images.NUANCE_LOGO_MASK_GROUP} />
                 <div className='left-content'>
                   <img
                     className='avatar'

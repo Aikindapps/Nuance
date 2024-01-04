@@ -103,9 +103,21 @@
                 .card-draft-articles-action-icon-pointer {
                     width: 18px;
                     height: 18px;
+                    border-radius: 2px;
                     cursor: pointer;
                     &:hover{
                         background: aliceblue;   
+                    }
+                }
+                .card-draft-articles-action-icon-pointer-dark {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 2px;
+                    color: #FFF;
+                    cursor: pointer;
+                    &:hover{
+                        background: aliceblue;
+                        color: #151451; 
                     }
                 }
             }
@@ -150,6 +162,7 @@
             flex-wrap: wrap;
             max-width: 250px;
             column-gap: 5px;
+            z-index: 4;
 
             .tooltip-inside-handle {
                 color: #FFF;

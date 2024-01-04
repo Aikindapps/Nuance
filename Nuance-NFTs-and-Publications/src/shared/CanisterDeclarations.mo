@@ -301,7 +301,7 @@ module{
 
     public type PostBucketCanisterInterface = actor {
         getPostsByPostIds : (postIds : [Text], includeDraft : Bool) -> async [PostBucketType];
-        get : (postId : Text) -> async Result.Result<PostBucketType, Text>;
+        getPost : query (postId : Text) -> async Result.Result<PostBucketType, Text>;
         removePostCategory : (postId : Text) -> async Result.Result<PostBucketType, Text>;
         addPostCategory : (postId : Text, category : Text) -> async Result.Result<PostBucketType, Text>;
         updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<PostBucketType, Text>;

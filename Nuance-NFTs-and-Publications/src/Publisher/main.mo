@@ -1606,7 +1606,7 @@ actor class Publisher() = this {
             case (#ok(keyProperties)) {
                 let bucketActor = actor (keyProperties.bucketCanisterId) : PostBucketInterface;
 
-                let bucketCanisterReturn = await bucketActor.get(postId);
+                let bucketCanisterReturn = await bucketActor.getPost(postId);
 
                 switch (bucketCanisterReturn) {
                     case (#ok(postBucketType)) {

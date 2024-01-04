@@ -6,6 +6,8 @@ import { WithdrawModal } from '../withdraw-modal/withdraw-modal';
 import { TransferNftModal } from '../transfer-nft-modal/transfer-nft-modal';
 import { DepositModal } from '../deposit-modal/deposit-modal';
 import { ClapModal } from '../clap-modal/clap-modal';
+import { EditArticlePremiumModal } from '../edit-article-premium-modal/edit-article-premium-modal';
+import { PostType } from 'src/nuance_assets/types/types';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   return (
@@ -38,6 +40,17 @@ export const ModalsWrapper = () => {
       ) : modalContext?.modalType === 'Clap' &&
         modalContext.modalData?.clappingPostData ? (
         <ClapModal post={modalContext.modalData?.clappingPostData} />
+      ) : modalContext?.modalType === 'Premium article' &&
+        modalContext.modalData?.premiumPostData &&
+        modalContext.modalData.premiumPostOnSave &&
+        modalContext.modalData.premiumPostRefreshPost &&
+        modalContext.modalData.premiumPostNumberOfEditors ? (
+        <EditArticlePremiumModal
+          post={modalContext.modalData.premiumPostData}
+          onSave={modalContext.modalData.premiumPostOnSave}
+          refreshPost={modalContext.modalData.premiumPostRefreshPost}
+          numberOfEditors={modalContext.modalData.premiumPostNumberOfEditors}
+        />
       ) : null}
     </div>
   );

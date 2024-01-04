@@ -356,7 +356,8 @@ export interface PostStore {
     post: PostType,
     totalSuppy: bigint,
     salePrice: bigint,
-    handle: string
+    handle: string,
+    image: string
   ) => Promise<PostType | undefined>;
   clerGetPublicationPostError: () => Promise<void>;
   getPremiumPost: (
@@ -1018,7 +1019,8 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     post: PostType,
     totalSuppy: bigint,
     salePrice: bigint,
-    handle: string
+    handle: string,
+    image: string
   ): Promise<PostType | undefined> => {
     try {
       if (!post.headerImage.length) {
@@ -1029,80 +1031,30 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const canisterId = await usePublisherStore
         .getState()
         .getCanisterIdByHandle(handle);
+      const result = await (
+        await getPublisherActor(canisterId)
+      ).createNftFromPremiumArticle(
+        post.postId,
+        totalSuppy,
+        salePrice,
+        image
+      );
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        toast('Premium article is created successfully.', ToastType.Success);
+        //since createNftFromArticle is successful, we can query the post by get method in Post canister
+        let bucketCanisterId = post.bucketCanisterId;
+        let bucketActor = await getPostBucketActor(bucketCanisterId);
+        let coreActor = await getPostCoreActor();
 
-      //get the image from url in base64 format and resize it to use in nft asset
-      let blob = await fetch(
-        window.location.origin.includes('local')
-          ? 'http://localhost:8081/assets/images/nuance-logo.svg'
-          : post.headerImage
-      ).then((r) => r.blob());
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onload = async (event) => {
-        const embeddedImage = event?.target?.result as string;
-        var image = new Image();
-        image.src = embeddedImage; // replace with your base64 encoded image
-        var newWidth = 612;
-        var newHeight = 321;
-        image.onload = async function () {
-          var canvas = document.createElement('canvas');
-          canvas.width = newWidth;
-          canvas.height = newHeight;
+        let [coreReturn, bucketReturn] = await Promise.all([
+          coreActor.getPostKeyProperties(post.postId),
+          bucketActor.getPremiumArticle(post.postId),
+        ]);
 
-          var context = canvas.getContext('2d');
-          var width = image.width;
-          var height = image.height;
-
-          if (width / height > newWidth / newHeight) {
-            var scale = newHeight / height;
-            var scaledWidth = scale * width;
-            var x = (newWidth - scaledWidth) / 2;
-            context?.drawImage(image, x, 0, scaledWidth, newHeight);
-          } else {
-            var scale = newWidth / width;
-            var scaledHeight = scale * height;
-            var y = (newHeight - scaledHeight) / 2;
-            context?.drawImage(image, 0, y, newWidth, scaledHeight);
-          }
-          const result = await (
-            await getPublisherActor(canisterId)
-          ).createNftFromPremiumArticle(
-            post.postId,
-            totalSuppy,
-            salePrice,
-            canvas.toDataURL('image/jpeg', 0.9)
-          );
-          if (Err in result) {
-            toastError(result.err);
-          } else {
-            toast(
-              'Premium article is created successfully.',
-              ToastType.Success
-            );
-            //since createNftFromArticle is successful, we can query the post by get method in Post canister
-            let bucketCanisterId = post.bucketCanisterId;
-            let bucketActor = await getPostBucketActor(bucketCanisterId);
-            let coreActor = await getPostCoreActor();
-
-            let [coreReturn, bucketReturn] = await Promise.all([
-              coreActor.getPostKeyProperties(post.postId),
-              bucketActor.getPremiumArticle(post.postId),
-            ]);
-
-            await get().getOwnedNfts();
-            if (Err in coreReturn || Err in bucketReturn) {
-              if (Err in bucketReturn) {
-                toastError(bucketReturn.err);
-              } else if (Err in coreReturn) {
-                toastError(coreReturn.err);
-              }
-            } else {
-              set({ savedPost: { ...coreReturn.ok, ...bucketReturn.ok } });
-              return { ...coreReturn.ok, ...bucketReturn.ok };
-            }
-          }
-        };
-      };
+        await get().getOwnedNfts();
+      }
     } catch (err) {
       handleError(err, Unexpected);
     }
@@ -1143,7 +1095,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         let [authorResult, coreReturn, bucketReturn] = await Promise.all([
           (await getUserActor()).getUserByHandle(handle.toLowerCase()),
           (await getPostCoreActor()).getPostKeyProperties(postId),
-          (await getPostBucketActor(bucketCanisterId)).getPostCompositeQuery(postId),
+          (
+            await getPostBucketActor(bucketCanisterId)
+          ).getPostCompositeQuery(postId),
         ]);
 
         if (Err in authorResult) {
@@ -1617,10 +1571,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ): Promise<PostType[] | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
-      const keyProperties = await coreActor.getMyDraftPosts(
-        indexFrom,
-        indexTo
-      );
+      const keyProperties = await coreActor.getMyDraftPosts(indexFrom, indexTo);
       const myDraftPosts = await fetchPostsByBuckets(keyProperties, true);
       set({ myDraftPosts });
 
@@ -1665,10 +1616,15 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         indexFrom,
         indexTo
       );
-      const submittedForReviewPosts = await fetchPostsByBuckets(keyProperties, true);
+      const submittedForReviewPosts = await fetchPostsByBuckets(
+        keyProperties,
+        true
+      );
       set({ submittedForReviewPosts });
 
-      const postsWithAvatars = await mergeAuthorAvatars(submittedForReviewPosts);
+      const postsWithAvatars = await mergeAuthorAvatars(
+        submittedForReviewPosts
+      );
       set({ submittedForReviewPosts: postsWithAvatars });
 
       return submittedForReviewPosts;
@@ -1683,13 +1639,10 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ): Promise<PostType[] | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
-      const keyProperties = await coreActor.getMyAllPosts(
-        indexFrom,
-        indexTo
-      );
-      console.log('keyProperties', keyProperties)
+      const keyProperties = await coreActor.getMyAllPosts(indexFrom, indexTo);
+      console.log('keyProperties', keyProperties);
       const myAllPosts = await fetchPostsByBuckets(keyProperties, true);
-      console.log('myAllPosts', myAllPosts)
+      console.log('myAllPosts', myAllPosts);
       set({ myAllPosts });
 
       const postsWithAvatars = await mergeAuthorAvatars(myAllPosts);
@@ -2649,50 +2602,50 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
   getUserIcpTransactions: async (): Promise<IcpTransactionListItem[]> => {
-    
     try {
       let icpIndexCanister = await getIcpIndexCanister();
-    let userWallet = await useAuthStore.getState().getUserWallet();
-    let response = await icpIndexCanister.get_account_identifier_transactions({
-      max_results: BigInt(100),
-      start: [],
-      account_identifier: userWallet.accountId,
-    });
-    if('Err' in response){
-      //should never happen
-      //just return an empty array
-      return [];
-    }
-    else{
-      let transactionItems = response.Ok.transactions.map((t) => {
-        let operation = t.transaction.operation;
-        if ('Transfer' in operation) {
-          return {
-            date:
-              t.transaction.created_at_time.length === 0
-                ? ''
-                : (
-                    Number(t.transaction.created_at_time[0].timestamp_nanos) /
-                    1000000
-                  ).toString(),
-            currency: 'ICP' as SupportedTokenSymbol,
-            receiver: operation.Transfer.to,
-            sender: operation.Transfer.from,
-            isDeposit: operation.Transfer.to === userWallet.accountId,
-            amount: Number(operation.Transfer.amount.e8s),
-          };
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      let response = await icpIndexCanister.get_account_identifier_transactions(
+        {
+          max_results: BigInt(100),
+          start: [],
+          account_identifier: userWallet.accountId,
         }
-      });
-      let result : IcpTransactionListItem[] = [];
-      for(const transactionItem of transactionItems){
-        if(transactionItem){
-          result.push(transactionItem);
+      );
+      if ('Err' in response) {
+        //should never happen
+        //just return an empty array
+        return [];
+      } else {
+        let transactionItems = response.Ok.transactions.map((t) => {
+          let operation = t.transaction.operation;
+          if ('Transfer' in operation) {
+            return {
+              date:
+                t.transaction.created_at_time.length === 0
+                  ? ''
+                  : (
+                      Number(t.transaction.created_at_time[0].timestamp_nanos) /
+                      1000000
+                    ).toString(),
+              currency: 'ICP' as SupportedTokenSymbol,
+              receiver: operation.Transfer.to,
+              sender: operation.Transfer.from,
+              isDeposit: operation.Transfer.to === userWallet.accountId,
+              amount: Number(operation.Transfer.amount.e8s),
+            };
+          }
+        });
+        let result: IcpTransactionListItem[] = [];
+        for (const transactionItem of transactionItems) {
+          if (transactionItem) {
+            result.push(transactionItem);
+          }
         }
+        return result;
       }
-      return result;
-    }
     } catch (error) {
-      handleError(error)
+      handleError(error);
       return [];
     }
   },

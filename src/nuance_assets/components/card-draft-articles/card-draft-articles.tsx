@@ -9,6 +9,10 @@ import { DateFormat, formatDate } from '../../shared/utils';
 import { Tooltip } from 'react-tooltip';
 import Badge from '../../UI/badge/badge';
 import { Context } from '../../contextes/Context';
+import { PiHandsClappingLight } from "react-icons/pi";
+import { PiPencilSimpleThin } from "react-icons/pi";
+
+
 
 interface CardVerticalProps {
   post: PostType;
@@ -122,9 +126,12 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
                 />
               ) : getEditStatus() === 'Draft' ||
                 getEditStatus() === 'Published' ? (
-                <img
-                  className='card-draft-articles-action-icon-pointer'
-                  src={dark ? icons.EDIT_WHITE : icons.EDIT}
+                <PiPencilSimpleThin
+                className={
+                  dark
+                    ? 'card-draft-articles-action-icon-pointer-dark'
+                    : 'card-draft-articles-action-icon-pointer'
+                }
                 />
               ) : (
                 <img
@@ -139,9 +146,12 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               <Badge status={getPostStatus()} dark={dark} />
             )}
             <div className={'card-draft-articles-right-action-wrapper'}>
-              <img
-                className='card-draft-articles-action-icon-pointer'
-                src={dark ? icons.CLAP_WHITE_2 : icons.CLAP_BLACK}
+              <PiHandsClappingLight
+                className={
+                  dark
+                    ? 'card-draft-articles-action-icon-pointer-dark'
+                    : 'card-draft-articles-action-icon-pointer'
+                }
                 id={'card-draft-article-tooltip-' + post.postId}
               />
               <div
