@@ -61,9 +61,13 @@ jobs:
          
 
       - name: Get All Post Canisters
-        #id: check_cycles
         run: |
-            dfx canister call --network ic PostCore getAllBuckets
+          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets | grep -oP '"\K[^"]+')
+          for BUCKET in $BUCKETS
+          do
+            echo "Querying $BUCKET for reported comments"
+            dfx canister call --network ic $BUCKET getReportedCommentIds
+          done
       #     BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
       #     echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
       # - name: Notify Slack
