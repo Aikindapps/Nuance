@@ -59,7 +59,11 @@ jobs:
           for BUCKET in $BUCKETS
           do
             echo "Querying $BUCKET for reported comments"
+            echo "Comment Ids: "
             dfx canister call --network ic $BUCKET getReportedCommentIds
+            echo "Comments: "
+            dfx canister call --network ic $BUCKET getReportedComments
+            
           done
       #     BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
       #     echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
