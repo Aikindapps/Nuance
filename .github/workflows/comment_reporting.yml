@@ -54,7 +54,7 @@ jobs:
 
       - name: Report Comments to Slack
         run: |
-          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets -qq | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
+          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
           if [ -z "$BUCKETS" ]; then
             echo "No buckets found."
             exit 0
@@ -63,7 +63,7 @@ jobs:
           SLACK_PAYLOAD='{"text":"*Reported Comments:*\n'
           for BUCKET in $BUCKETS
           do
-            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds -qq | jq -r '.[]?' || echo '')
+            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq | jq -r '.[]?' || echo '')
             if [ -z "$COMMENT_IDS" ]; then
               echo "No reported comments found for bucket $BUCKET."
               continue
@@ -71,7 +71,7 @@ jobs:
             
             for ID in $COMMENT_IDS
             do
-              COMMENT_TEXT=$(dfx canister call --network ic $BUCKET getReportedComments -qq | jq -r --arg ID "$ID" 'select(.id == $ID).text' || echo '')
+              COMMENT_TEXT=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq | jq -r --arg ID "$ID" 'select(.id == $ID).text' || echo '')
               if [ ! -z "$COMMENT_TEXT" ]; then
                 SLACK_PAYLOAD+="Comment ID $ID: $COMMENT_TEXT\n"
               fi
