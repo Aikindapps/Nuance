@@ -63,21 +63,27 @@ jobs:
           SLACK_PAYLOAD='{"text":"*Reported Comments:*\n'
           for BUCKET in $BUCKETS
           do
-            REPORTED_COMMENTS=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq | jq -r '.ok[] | select(.isCensored == true) | "\(.commentId): \(.content)"' || echo '')
-            if [ -z "$REPORTED_COMMENTS" ]; then
-              echo "No reported comments found for bucket $BUCKET."
-              continue
-            fi
+            RESPONSE=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+            if echo "$RESPONSE" | jq empty; then
+              REPORTED_COMMENTS=$(echo "$RESPONSE" | jq -r '.ok[] | select(.isCensored == true) | "\(.commentId): \(.content)"' || echo '')
+              if [ -z "$REPORTED_COMMENTS" ]; then
+                echo "No reported comments found for bucket $BUCKET."
+                continue
+              fi
 
-            for COMMENT in $REPORTED_COMMENTS
-            do
-              SLACK_PAYLOAD+="Reported Comment - $COMMENT\n"
-            done
+              for COMMENT in $REPORTED_COMMENTS
+              do
+                SLACK_PAYLOAD+="Reported Comment - $COMMENT\n"
+              done
+            else
+              echo "Failed to parse response for bucket $BUCKET."
+            fi
           done
           SLACK_PAYLOAD+='"}'
           curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+
 
 
 
