@@ -58,22 +58,20 @@ jobs:
           BUCKETS_RAW=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq)
           BUCKETS=$(echo "$BUCKETS_RAW" | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
           echo "Buckets: $BUCKETS"
-
+      
           SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
           for BUCKET in $BUCKETS
           do
             COMMENT_IDS_RAW=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq)
             COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '"\K[^"]+')
             echo "Comment IDs for bucket $BUCKET: $COMMENT_IDS"
-
+      
             for ID in $COMMENT_IDS; do
-               
-                COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getComment '("$ID")' --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
-                IS_CENSORED=$(echo "$COMMENT_DETAIL" | grep -oP 'isCensored = \K[^;]+')
-                if [ "$IS_CENSORED" != "true" ]; then
-                    COMMENT_CONTENT=$(echo "$COMMENT_DETAIL" | grep -oP 'content = "\K[^"]+')
-                    SLACK_PAYLOAD+="Comment ID: $ID, Content: $COMMENT_CONTENT\n"
-                fi
+              
+                ARGUMENT='("'$ID'")'
+                COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getComment $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+                COMMENT_CONTENT=$(echo "$COMMENT_DETAIL" | grep -oP 'content = "\K[^"]+')
+                SLACK_PAYLOAD+="Comment ID: $ID, Content: $COMMENT_CONTENT\n"
             done
           done
           SLACK_PAYLOAD+='"}'
@@ -82,6 +80,7 @@ jobs:
           curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+
 
 
       #     BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
