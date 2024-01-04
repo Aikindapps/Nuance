@@ -48,6 +48,11 @@ jobs:
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" }
           }' > canister_ids.json
+
+          env:
+          POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
+          POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
+         
   
          
           
