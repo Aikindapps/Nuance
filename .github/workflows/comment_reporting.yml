@@ -63,24 +63,22 @@ jobs:
           SLACK_PAYLOAD='{"text":"*Reported Comments:*\n'
           for BUCKET in $BUCKETS
           do
-            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq | jq -r '.[]?' || echo '')
-            if [ -z "$COMMENT_IDS" ]; then
+            REPORTED_COMMENTS=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq | jq -r '.ok[] | select(.isCensored == true) | "\(.commentId): \(.content)"' || echo '')
+            if [ -z "$REPORTED_COMMENTS" ]; then
               echo "No reported comments found for bucket $BUCKET."
               continue
             fi
-            
-            for ID in $COMMENT_IDS
+
+            for COMMENT in $REPORTED_COMMENTS
             do
-              COMMENT_TEXT=$(dfx canister call --network ic $BUCKET getReportedComments --candid src/declarations/PostBucket/PostBucket.did -qq | jq -r --arg ID "$ID" 'select(.id == $ID).text' || echo '')
-              if [ ! -z "$COMMENT_TEXT" ]; then
-                SLACK_PAYLOAD+="Comment ID $ID: $COMMENT_TEXT\n"
-              fi
+              SLACK_PAYLOAD+="Reported Comment - $COMMENT\n"
             done
           done
           SLACK_PAYLOAD+='"}'
           curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+
 
 
       #     BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
