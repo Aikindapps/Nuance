@@ -52,39 +52,19 @@ jobs:
           POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
           POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
 
-      - name: Report Comments to Slack
+      - name: Debug Report Comments to Slack
         run: |
-          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
-          if [ -z "$BUCKETS" ]; then
-            echo "No buckets found."
-            exit 0
-          fi
-
-          SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
-          for BUCKET in $BUCKETS
-          do
-            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq | grep -oP 'commentId = "\K[^"]+')
-            for ID in $COMMENT_IDS; do
-               
-                COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getCommentDetails --arg "$ID" --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
-                IS_CENSORED=$(echo "$COMMENT_DETAIL" | grep -oP 'isCensored = \K[^;]+')
-                if [ "$IS_CENSORED" != "true" ]; then
-                    COMMENT_CONTENT=$(echo "$COMMENT_DETAIL" | grep -oP 'content = "\K[^"]+')
-                    SLACK_PAYLOAD+="Comment ID: $ID, Content: $COMMENT_CONTENT\n"
-                fi
-            done
+          echo "Fetching buckets..."
+          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+          echo "Buckets: $BUCKETS"
+          
+          for BUCKET in $(echo "$BUCKETS" | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}'); do
+            echo "Fetching reported comment IDs for bucket: $BUCKET"
+            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+            echo "Comment IDs: $COMMENT_IDS"
           done
-          SLACK_PAYLOAD+='"}'
-          echo "Sending the following payload to Slack:"
-          echo "$SLACK_PAYLOAD"
-          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
-
-
-
-
-
 
       #     BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
       #     echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
