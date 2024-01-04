@@ -55,19 +55,19 @@ jobs:
 
       - name: Report Comments to Slack
         run: |
-          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}')
+          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets -qq | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}')
           SLACK_PAYLOAD='{"text":"*Reported Comments:*\n'
           for BUCKET in $BUCKETS
           do
-            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds | grep -oE '"[0-9]+"' | tr -d '"')
+            COMMENT_IDS=$(dfx canister call --network ic $BUCKET getReportedCommentIds -qq | grep -oE '"[0-9]+"' | tr -d '"')
             for ID in $COMMENT_IDS
             do
-              COMMENT_TEXT=$(dfx canister call --network ic $BUCKET getReportedComments | jq --arg ID "$ID" '.[] | select(.id == $ID) | .text')
+              COMMENT_TEXT=$(dfx canister call --network ic $BUCKET getReportedComments -qq | jq --arg ID "$ID" '.[] | select(.id == $ID) | .text')
               SLACK_PAYLOAD+="Comment ID $ID: $COMMENT_TEXT\n"
             done
           done
           SLACK_PAYLOAD+='"}'
-          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.SLACK_WEBHOOK_URL }}
+          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.COMMENT_BOT_WEBHOOK }}
 
