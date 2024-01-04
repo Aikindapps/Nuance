@@ -68,7 +68,8 @@ jobs:
       
             for ID in $COMMENT_IDS; do
               ARGUMENT='("'$ID'")'
-              COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getComment $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+              #COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getComment $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
+              COMMENT_DETAIL="test"
               COMMENT_CONTENT=$(echo "$COMMENT_DETAIL" | grep -oP 'content = "\K[^"]+')
               SLACK_PAYLOAD+="Comment ID: $ID, Content: $COMMENT_CONTENT\n"
             done
