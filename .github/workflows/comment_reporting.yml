@@ -46,7 +46,7 @@ jobs:
           echo '{
            
             "PostCore": { "ic": "'"$POSTCORE"'" },
-            "PostBucket": { "ic": "'"$POSTBUCKET"'" },
+            "PostBucket": { "ic": "'"$POSTBUCKET"'" }
           }' > canister_ids.json
   
          
