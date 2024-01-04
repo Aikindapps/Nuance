@@ -52,17 +52,10 @@ jobs:
         env:
           POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
           POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
-         
-  
-         
-          
-         
-  
-         
 
       - name: Get All Post Canisters
         run: |
-          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets | grep -oP '"\K[^"]+')
+          BUCKETS=$(dfx canister call --network ic PostCore getAllBuckets | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}')
           for BUCKET in $BUCKETS
           do
             echo "Querying $BUCKET for reported comments"
