@@ -56,34 +56,19 @@ jobs:
         run: |
           echo "Fetching buckets..."
           BUCKETS_RAW=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq)
-          echo "Raw Buckets Response: $BUCKETS_RAW"
           BUCKETS=$(echo "$BUCKETS_RAW" | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
           echo "Buckets: $BUCKETS"
-      
-          if [ -z "$BUCKETS" ]; then
-            echo "No buckets found. Exiting."
-            exit 0
-          fi
       
           SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
           for BUCKET in $BUCKETS
           do
-            echo "Processing bucket: $BUCKET"
             COMMENT_IDS_RAW=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq)
-            echo "Raw Comment IDs Response: $COMMENT_IDS_RAW"
-            COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=vec \*\*\* ")[^"]+(?=")' || echo '')
+            COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=vec \*\*\* ")[^"]+')
             echo "Comment IDs for bucket $BUCKET: $COMMENT_IDS"
       
-            if [ -z "$COMMENT_IDS" ]; then
-              echo "No comment IDs found for bucket $BUCKET. Continuing to next bucket."
-              continue
-            fi
-      
             for ID in $COMMENT_IDS; do
-              echo "Processing comment ID: $ID"
               ARGUMENT='("'$ID'")'
               COMMENT_DETAIL=$(dfx canister call --network ic $BUCKET getComment $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq || echo '')
-              echo "Comment Detail: $COMMENT_DETAIL"
               COMMENT_CONTENT=$(echo "$COMMENT_DETAIL" | grep -oP 'content = "\K[^"]+' || echo 'No content found')
               SLACK_PAYLOAD+="Comment ID: $ID, Content: $COMMENT_CONTENT\n"
             done
