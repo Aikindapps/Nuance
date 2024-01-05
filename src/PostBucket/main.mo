@@ -105,6 +105,7 @@ actor class PostBucket() = this {
   stable var isActive = true;
   stable var commentId = 0;
   stable var applaudId = 0;
+  
 
   // in-memory state swap (holds hashmap entries between preupgrade and postupgrade) then is cleared
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
@@ -145,6 +146,9 @@ actor class PostBucket() = this {
   stable var commentIdToDownvotedPrincipalIdsEntries : [(Text, [Text])] = [];
   stable var commentIdToReplyCommentIdsEntries : [(Text, [Text])] = [];
   stable var replyCommentIdToCommentIdEntries : [(Text, Text)] = [];
+  stable var isCensoredEntries : [(Text, Bool)] = [];
+  stable var reportCommentQueue : [Text] = [];
+
 
   //applaud data
   stable var postIdToApplaudIdsEntries : [(Text, [Text])] = [];
@@ -215,6 +219,8 @@ actor class PostBucket() = this {
   var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   //key: replyCommentId, value: commentId
   var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: isCensored bool
+  var isCensoredHashMap = HashMap.fromIter<Text, Bool>(isCensoredEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //applaud hashmaps
   //key: postId, value: [applaudId]
@@ -2141,6 +2147,152 @@ actor class PostBucket() = this {
     Nat.toText(commentId);
   };
 
+public type CommentQueueAction = {
+    #add;
+    #remove;
+};
+
+//When a comment is reported, it's added to the queue. When a comment is reviewed, it's removed from the queue.
+private func updateCommentQueue(commentId : Text, action : CommentQueueAction) : Result.Result<(), Text> {
+    var newCommentQueue = Buffer.Buffer<Text>(0);
+
+    // Whether the commentId is found in the queue
+    var isCommentIdFound = false;
+
+  
+    for (reportedCommentId in reportCommentQueue.vals()) {
+        if (Text.equal(reportedCommentId, commentId)) {
+            isCommentIdFound := true;
+
+            //comment reviewed
+            if (action == #remove) {
+             Debug.print("Skip, commentId is removed from the queue");
+            };
+            //if action is add, do nothing since the commentId is already in the queue
+            } else {
+            newCommentQueue.add(reportedCommentId);
+        };
+       
+    };
+
+   // comment reported
+    if (action == #add) {
+        if (isCommentIdFound) {
+            return #err("Comment already reported");
+        };
+        newCommentQueue.add(commentId);
+    };
+
+    reportCommentQueue := Buffer.toArray(newCommentQueue);
+    return #ok();
+};
+
+
+
+  private func isCensored(commentId : Text) : Bool {
+    switch (isCensoredHashMap.get(commentId)) {
+      case (?value) {
+        Debug.print("isCensoredHashMap.get(" # commentId # ") -> " # Bool.toText(value));
+        if (value) {
+          
+          return true;
+        } else {
+          return false;
+        };
+      };
+      case (null) {
+        return false;
+      };
+    };
+  };
+
+  
+  public shared func reportComment(commentId : Text) : async Result.Result<Text, Text> {
+    if (not U.isTextLengthValid(commentId, 20)) {
+      return #err("Invalid commentId");
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+   switch (updateCommentQueue(commentId, #add)) {
+      case (#ok) {
+        return #ok("Comment reported");
+      };
+      case (#err(err)) {
+        return #err(err);
+      };
+    };
+    
+  };
+
+  //returns all the reported commentIds that need to be reviewed
+  public shared ({ caller }) func getReportedCommentIds() : async [Text] {
+    if (isAnonymous(caller) and not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return ["not authorized"];
+    };
+
+    return reportCommentQueue;
+  };
+
+//returns all the reported comments that need to be reviewed
+  public shared ({caller}) func getReportedComments() : async Result.Result<[Comment], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous user cannot run this method");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+
+    var reportedComments = Buffer.Buffer<Comment>(0);
+    for (reportedCommentId in reportCommentQueue.vals()) {
+      let comment = buildComment(reportedCommentId);
+      reportedComments.add(comment);
+    };
+
+    return #ok(Buffer.toArray(reportedComments));
+  };
+
+  public shared ({ caller }) func reviewComment(commentId : Text, censor : Bool) : async Result.Result<Comment, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous user cannot run this method");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+    //validate input
+    if (not U.isTextLengthValid(commentId, 20)) {
+      return #err("Invalid commentId");
+    };
+
+    let comment = buildComment(commentId);
+
+    
+    switch (updateCommentQueue(commentId, #remove)) {
+      case (#ok) {
+        isCensoredHashMap.put(commentId, censor);
+        return #ok(comment);
+      };
+      case (#err(err)) {
+        return #err(err);
+      };
+    };
+  };
+
+  let censoredMessage= "<p><em>
+    This comment was removed due to 
+    <a href=\"https://wiki.nuance.xyz/nuance/content-rules\" target=\"_blank\">content rules</a>. 
+    Please play nice. </em></p>";
+
   //build a comment by commentId
   private func buildComment(commentId : Text) : Comment {
     let editedAt : ?Text = switch (commentIdToEditedAtHashMap.get(commentId)) {
@@ -2158,11 +2310,12 @@ actor class PostBucket() = this {
       replies.add(buildComment(replyCommentId));
     };
 
+    let censored = isCensored(commentId);
     return {
       commentId = commentId;
       handle = "";
       avatar = ""; //doesn't need to be set or stored, but its useful to have so the frontend can populate the avatar
-      content = U.safeGet(commentIdToContentHashMap, commentId, "");
+      content = if (censored) { censoredMessage  } else { U.safeGet(commentIdToContentHashMap, commentId, "")};
       postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
       upVotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
@@ -2172,6 +2325,7 @@ actor class PostBucket() = this {
       creator = U.safeGet(commentIdToUserPrincipalIdHashMap, commentId, "");
       replies = Buffer.toArray(replies);
       repliedCommentId = replyCommentIdToCommentIdHashMap.get(commentId);
+      isCensored = censored;
     };
   };
 
@@ -2187,6 +2341,15 @@ actor class PostBucket() = this {
       totalNumberOfComments = Nat.toText(U.safeGet(postIdToNumberOfCommentsHashMap, postId, 0));
     };
   };
+
+  public shared query func buildCommentUrl(commentId : Text) : async Text {
+    let postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
+    let post = buildPost(postId);
+    let postUrl = post.url;
+    let commentUrl = postUrl # "?comment=" # commentId;
+    return commentUrl;
+  };
+
   //returns the comment by a commentId
   public shared query func getComment(commentId : Text) : async Result.Result<Comment, Text> {
     switch (commentIdToUserPrincipalIdHashMap.get(commentId)) {
@@ -2953,6 +3116,7 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := Iter.toArray(commentIdToDownvotedPrincipalIdsHashMap.entries());
     commentIdToReplyCommentIdsEntries := Iter.toArray(commentIdToReplyCommentIdsHashMap.entries());
     replyCommentIdToCommentIdEntries := Iter.toArray(replyCommentIdToCommentIdHashMap.entries());
+    isCensoredEntries := Iter.toArray(isCensoredHashMap.entries());
 
     //applaud
     postIdToApplaudIdsEntries := Iter.toArray(postIdToApplaudIdsHashMap.entries());
@@ -3012,6 +3176,7 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := [];
     commentIdToReplyCommentIdsEntries := [];
     replyCommentIdToCommentIdEntries := [];
+    isCensoredEntries := [];
 
     postIdToApplaudIdsEntries := [];
     principalIdToApplaudIdsEntries := [];

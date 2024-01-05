@@ -181,9 +181,9 @@ actor class Publisher() = this {
     var writerPremiumArticlePostIdsHashmap = HashMap.fromIter<Text, [Text]>(writerPremiumArticlePostIdsEntries.vals(), maxHashmapSize, isEq, Text.hash);
 
     //the address that secondary marketplace royalties goes. default to baran's terminal icp address :)
-    var marketplaceRoyaltyAddress : AccountIdentifier = "52f392985629ce9ab5df139534e4a8bf59848866a93c43be0a1bf60f78c198d9";
+    var marketplaceRoyaltyAddress : AccountIdentifier = "f77cc353c778b02ad26974891950e4cb3ae1203e5cd8218e1b99bfc4f316d897";
     //the address that nuance share goes. default to baran's terminal icp address :)
-    var nuanceShareAddress : AccountIdentifier = "3b773518fc8c03ad338f7f1190489017a9456d521b4624a00927907aab889d1d";
+    var nuanceShareAddress : AccountIdentifier = "f77cc353c778b02ad26974891950e4cb3ae1203e5cd8218e1b99bfc4f316d897";
     //defualt to 1%
     var marketplaceRoyaltyPercentage : Nat64 = 1000;
     //default to 10%

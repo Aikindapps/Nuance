@@ -466,7 +466,7 @@ export interface PostStore {
     commentId: string,
     bucketCanisterId: string
   ) => Promise<void>;
-
+  reportComment: ( commentId: string, bucketCanisterId: string) => Promise<void>;
   clearAll: () => void;
 }
 
@@ -551,6 +551,25 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           .catch((error) => {
             console.error(error);
           });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  reportComment: async (
+    commentId: string,
+    bucketCanisterId: string
+  ): Promise<void> => {
+    try {
+      toast('Reporting comment...', ToastType.Loading);
+      const result = await (
+        await getPostBucketActor(bucketCanisterId)
+      ).reportComment(commentId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+       toast('Comment reported!', ToastType.Success);
       }
     } catch (err) {
       handleError(err, Unexpected);

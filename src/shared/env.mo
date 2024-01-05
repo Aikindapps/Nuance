@@ -105,7 +105,7 @@ module {
   public let TIPPING_TOKENS = ["NUA", "ICP", "ckBTC", "GHOST"];
   //means 10%
   public let TIP_FEE_AMOUNT = 10.0;
-  public let TIP_FEE_RECEIVER_PRINCIPAL_ID = BARAN_PRINCIPAL_ID;
+  public let TIP_FEE_RECEIVER_PRINCIPAL_ID = SNS_GOVERNANCE_CANISTER;
 
   public let NUA_TOKEN_CANISTER_ID = "rxdbk-dyaaa-aaaaq-aabtq-cai";
   public let NUA_TOKEN_DECIMALS = 8;

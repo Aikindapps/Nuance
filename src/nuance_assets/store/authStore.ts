@@ -168,6 +168,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           await window_any?.ic?.bitfinityWallet?.getPrincipal()
         );
         Usergeek.trackSession();
+        Usergeek.flush();
+
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
@@ -191,6 +193,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       set({ isLoggedIn: true, loginMethod: 'stoic' });
       Usergeek.setPrincipal(identity.getPrincipal());
       Usergeek.trackSession();
+      Usergeek.flush();
       await useUserStore.getState().getUser();
       if (useUserStore.getState().user === undefined) {
         //check for brave browser
@@ -234,6 +237,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
               Usergeek.trackSession();
+              Usergeek.flush();
 
               await useUserStore.getState().getUser();
               if (useUserStore.getState().user === undefined) {
@@ -299,6 +303,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
               Usergeek.trackSession();
+              Usergeek.flush();
 
               await useUserStore.getState().getUser();
               if (useUserStore.getState().user === undefined) {
@@ -353,6 +358,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           await window_any.ic.bitfinityWallet.getPrincipal()
         );
         Usergeek.trackSession();
+        Usergeek.flush();
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
