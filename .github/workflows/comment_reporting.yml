@@ -67,7 +67,8 @@ jobs:
             for ID in $COMMENT_IDS; do
               ARGUMENT='("'$ID'")'
               COMMENT_URL_RAW=$(dfx canister call --network ic $BUCKET buildCommentUrl $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq)
-              COMMENT_URL="https://equ7v-uaaaa-aaaam-qbbcq-cai.ic0.app$COMMENT_URL_RAW"
+              COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n')
+              COMMENT_URL="https://equ7v-uaaaa-aaaam-qbbcq-cai.ic0.app$COMMENT_URL_CLEANED"
               SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
             done
           done
