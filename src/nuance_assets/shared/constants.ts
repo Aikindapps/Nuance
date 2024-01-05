@@ -36,6 +36,7 @@ export const icons = {
   THUMBS_DOWN: iconsPath + 'thumbs-down.svg',
   REPLY: iconsPath + 'reply.svg',
   SHARE: iconsPath + 'share.svg',
+  REPORT: iconsPath + 'reportComment.svg',
   EDIT_COMMENT: iconsPath + 'edit-comment.svg',
   TAG: iconsPath + 'tag.svg',
   UPLOAD_PICTURE: iconsPath + 'upload-picture.svg',
