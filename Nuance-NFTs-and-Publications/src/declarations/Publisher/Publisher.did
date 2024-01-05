@@ -1,0 +1,323 @@
+type User = 
+ record {
+   accountCreated: text;
+   avatar: text;
+   bio: text;
+   displayName: text;
+   followers: Followers;
+   followersArray: vec text;
+   followersCount: nat32;
+   handle: text;
+   nuaTokens: float64;
+   publicationsArray: vec PublicationObject;
+ };
+type UpdateCallsAggregatedData = vec nat64;
+type TransferResponse = 
+ variant {
+   err:
+    variant {
+      CannotNotify: AccountIdentifier__1;
+      InsufficientBalance;
+      InvalidToken: TokenIdentifier;
+      Other: text;
+      Rejected;
+      Unauthorized: AccountIdentifier__1;
+    };
+   ok: Balance;
+ };
+type TokenIndex = nat32;
+type TokenIdentifier = text;
+type SocialLinksObject__1 = 
+ record {
+   distrikt: text;
+   dscvr: text;
+   twitter: text;
+   website: text;
+ };
+type SocialLinksObject = 
+ record {
+   distrikt: text;
+   dscvr: text;
+   twitter: text;
+   website: text;
+ };
+type Result_9 = 
+ variant {
+   err: text;
+   ok: GetPremiumArticleInfoReturn;
+ };
+type Result_8 = 
+ variant {
+   err: CommonError;
+   ok;
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: record {
+         nat;
+         AccountIdentifier;
+       };
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: AccountIdentifier;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: User;
+ };
+type Result_11 = 
+ variant {
+   err: text;
+   ok: CreateNftFromArticleResponse;
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: Post;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: Publication;
+ };
+type Publisher = 
+ service {
+   acceptCycles: () -> ();
+   addEditor: (text) -> (Result);
+   addNftCanister: (text) -> ();
+   addPublicationPostCategory: (text, text) -> (Result_1);
+   addWriter: (text) -> (Result);
+   availableCycles: () -> (nat) query;
+   collectCanisterMetrics: () -> ();
+   createNftCanister: (nat, AccountIdentifier) -> (Result_3);
+   createNftFromPremiumArticle: (text, nat, nat, text) -> (Result_11);
+   debugRemoveNftCanister: () -> ();
+   disperseIcpGainedFromPost: (text) -> (Result_3);
+   disperseIcpTimerMethod: () -> ();
+   getAccountIdByPostIdPublic: (text) -> (text) query;
+   getAdmins: () -> (Result_10) query;
+   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+   getCanisterVersion: () -> (text) query;
+   getCgUsers: () -> (Result_10) query;
+   getEditorAndWriterPrincipalIds: () -> (vec text, vec text) query;
+   getMaxMemorySize: () -> (nat) query;
+   getMemorySize: () -> (nat) query;
+   getNftCanisterInformation: () -> (NftCanisterInformation) query;
+   getPlatformOperators: () -> (List) query;
+   getPremiumArticleInfo: (text) -> (Result_9) query;
+   getPremiumArticleInformationsByWriterHandle: (text) ->
+    (vec GetPremiumArticleInfoReturn) query;
+   getPublication: (text) -> (Result);
+   getPublicationPost: (text) -> (Result_1);
+   getPublicationPosts: (bool, bool, nat32, nat32) -> (vec Post);
+   getPublicationQuery: (text) -> (Result) query;
+   getWritersDrafts: () -> (vec Post);
+   idQuick: () -> (principal);
+   initializeCanister: (text, text, text) -> (Result_3);
+   isThereEnoughMemory: () -> (bool) query;
+   listAllTokens: (text) -> (vec Result_8);
+   migrateEditorsWritersHandles: () -> (Result);
+   registerAdmin: (text) -> (Result_4);
+   registerCgUser: (text) -> (Result_4);
+   registerPlatformOperator: (text) -> (Result_4);
+   registerPublication: (text, text) -> (Result);
+   removeEditor: (text) -> (Result);
+   removePublicationPostCategory: (text) -> (Result_1);
+   removeWriter: (text) -> (Result);
+   setMaxMemorySize: (nat) -> (Result_7);
+   setNftCanisterRoyalty: (nat, AccountIdentifier) -> (Result_6);
+   setNuanceAddress: (AccountIdentifier) -> (Result_5);
+   setNuanceSharePercentage: (nat) -> (Result_3);
+   unregisterAdmin: (text) -> (Result_4);
+   unregisterCgUser: (text) -> (Result_4);
+   unregisterPlatformOperator: (text) -> (Result_4);
+   unregisterPublication: () -> (Result_3);
+   updateEditorOrWriterHandle: (text, text) -> ();
+   updatePublicationCta: (PublicationCta__1) -> (Result);
+   updatePublicationDetails: (text, text, text, vec text, vec text, vec text,
+    text, text, SocialLinksObject__1, text) -> (Result);
+   updatePublicationHandle: (text) -> (Result_2);
+   updatePublicationPostDraft: (text, bool) -> (Result_1);
+   updatePublicationStyling: (text, text, text) -> (Result);
+   updatePublicationWriters: (vec text) -> (Result);
+ };
+type PublicationStyling = 
+ record {
+   fontType: text;
+   logo: text;
+   primaryColor: text;
+ };
+type PublicationObject = 
+ record {
+   isEditor: bool;
+   publicationName: text;
+ };
+type PublicationCta__1 = 
+ record {
+   buttonCopy: text;
+   ctaCopy: text;
+   icon: text;
+   link: text;
+ };
+type PublicationCta = 
+ record {
+   buttonCopy: text;
+   ctaCopy: text;
+   icon: text;
+   link: text;
+ };
+type Publication = 
+ record {
+   avatar: text;
+   categories: vec text;
+   created: text;
+   cta: PublicationCta;
+   description: text;
+   editors: vec text;
+   headerImage: text;
+   modified: text;
+   nftCanisterId: text;
+   publicationHandle: text;
+   publicationTitle: text;
+   socialLinks: SocialLinksObject;
+   styling: PublicationStyling;
+   subtitle: text;
+   writers: vec text;
+ };
+type PostTagModel = 
+ record {
+   tagId: text;
+   tagName: text;
+ };
+type Post = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   claps: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tags: vec PostTagModel;
+   title: text;
+   url: text;
+   views: text;
+   wordCount: text;
+ };
+type NumericEntity = 
+ record {
+   avg: nat64;
+   first: nat64;
+   last: nat64;
+   max: nat64;
+   min: nat64;
+ };
+type NftCanisterInformation = 
+ record {
+   canisterId: text;
+   marketplaceRoyaltyAddress: text;
+   marketplaceRoyaltyPercentage: text;
+   nuanceShareAddress: text;
+   nuanceSharePercentage: text;
+ };
+type MetricsGranularity = 
+ variant {
+   daily;
+   hourly;
+ };
+type List = 
+ opt record {
+       text;
+       List;
+     };
+type HourlyMetricsData = 
+ record {
+   canisterCycles: CanisterCyclesAggregatedData;
+   canisterHeapMemorySize: CanisterHeapMemoryAggregatedData;
+   canisterMemorySize: CanisterMemoryAggregatedData;
+   timeMillis: int;
+   updateCalls: UpdateCallsAggregatedData;
+ };
+type GetPremiumArticleInfoReturn = 
+ record {
+   nftCanisterId: text;
+   postId: text;
+   sellerAccount: text;
+   tokenIndexStart: text;
+   totalSupply: text;
+   writerHandle: text;
+ };
+type GetMetricsParameters = 
+ record {
+   dateFromMillis: nat;
+   dateToMillis: nat;
+   granularity: MetricsGranularity;
+ };
+type Followers = 
+ opt record {
+       text;
+       List;
+     };
+type DailyMetricsData = 
+ record {
+   canisterCycles: NumericEntity;
+   canisterHeapMemorySize: NumericEntity;
+   canisterMemorySize: NumericEntity;
+   timeMillis: int;
+   updateCalls: nat64;
+ };
+type CreateNftFromArticleResponse = 
+ record {
+   tokenIndexes: vec TokenIndex;
+   transferResponses: vec TransferResponse;
+ };
+type CommonError = 
+ variant {
+   InvalidToken: TokenIdentifier;
+   Other: text;
+ };
+type CanisterMetricsData = 
+ variant {
+   daily: vec DailyMetricsData;
+   hourly: vec HourlyMetricsData;
+ };
+type CanisterMetrics = record {data: CanisterMetricsData;};
+type CanisterMemoryAggregatedData = vec nat64;
+type CanisterHeapMemoryAggregatedData = vec nat64;
+type CanisterCyclesAggregatedData = vec nat64;
+type Balance = nat;
+type AccountIdentifier__1 = text;
+type AccountIdentifier = text;
+service : () -> Publisher

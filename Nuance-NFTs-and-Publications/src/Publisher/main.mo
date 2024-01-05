@@ -388,6 +388,7 @@ actor class Publisher() = this {
                 link = "";
                 icon = "";
             };
+            nftCanisterId = "";
         };
     };
 
@@ -443,6 +444,7 @@ actor class Publisher() = this {
                 link = "";
                 icon = "";
             };
+            nftCanisterId = "";
         };
     };
 
@@ -450,7 +452,6 @@ actor class Publisher() = this {
         canistergeekMonitor.collectMetrics();
         var publication : Publication = getNullPublication(canisterId);
         //var canisterId = U.safeGet(canisterIdHashMap, canisterId, "");
-
         if (canisterId != "") {
             publication := {
                 publicationHandle = U.safeGet(publicationHandleHashMap, canisterId, "");
@@ -481,6 +482,7 @@ actor class Publisher() = this {
                     link = U.safeGet(publicationCtaLinkHashMap, canisterId, "");
                     icon = U.safeGet(publicationCtaIconHashMap, canisterId, "");
                 };
+                nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
             };
         };
 
@@ -508,6 +510,7 @@ actor class Publisher() = this {
             modified = publication.modified;
             styling = publication.styling;
             cta = publication.cta;
+            nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
         };
 
         publication;
@@ -1399,6 +1402,7 @@ actor class Publisher() = this {
             modified = publication.modified;
             styling = publication.styling;
             cta = publication.cta;
+            nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
         };
 
         #ok(publication);
@@ -1438,6 +1442,7 @@ actor class Publisher() = this {
             modified = publication.modified;
             styling = publication.styling;
             cta = publication.cta;
+            nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
         };
 
         #ok(publication);

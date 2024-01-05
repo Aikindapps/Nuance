@@ -39,6 +39,7 @@ module {
     modified : Text;
     styling : PublicationStyling;
     cta : PublicationCta;
+    nftCanisterId : Text;
   };
 
   public type PublicationCta = {

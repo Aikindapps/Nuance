@@ -202,21 +202,10 @@ const CreateEditArticle = () => {
       let allPublications: string[] = [];
       let writerPublications: string[] = [];
       let editorPublications: string[] = [];
-      let publicationsWithNftCanister: string[] = [];
-      let allPublicationsWithNftCanister = nftCanistersEntries.map((entry) => {
-        return entry.handle;
-      });
       user.publicationsArray.forEach((publicationObject) => {
         allPublications.push(publicationObject.publicationName);
         if (publicationObject.isEditor) {
           editorPublications.push(publicationObject.publicationName);
-          if (
-            allPublicationsWithNftCanister.includes(
-              publicationObject.publicationName
-            )
-          ) {
-            publicationsWithNftCanister.push(publicationObject.publicationName);
-          }
         } else {
           writerPublications.push(publicationObject.publicationName);
         }
@@ -224,7 +213,6 @@ const CreateEditArticle = () => {
       setUserAllPublications(allPublications);
       setUserPublicationsWriter(writerPublications);
       setUserPublicationsEditor(editorPublications);
-      setUserPublicationsWithNftCanister(publicationsWithNftCanister);
       setSelectedHandle(user.handle);
 
       //fetch the publications that user is editor in parallel
@@ -235,15 +223,20 @@ const CreateEditArticle = () => {
       );
       let userEditorPublicationsDetailsMap: Map<string, PublicationType> =
         new Map();
+      let publicationsWithNftCanister : string[] = [];
       for (const publicationDetail of userEditorPublicationsDetailsArray) {
         if (publicationDetail) {
           userEditorPublicationsDetailsMap.set(
             publicationDetail.publicationHandle,
             publicationDetail
           );
+          if(publicationDetail.nftCanisterId !== ""){
+            publicationsWithNftCanister.push(publicationDetail.publicationHandle);
+          }
         }
       }
 
+      setUserPublicationsWithNftCanister(publicationsWithNftCanister);
       setUserEditorPublicationsDetails(userEditorPublicationsDetailsMap);
     }
   };
@@ -644,7 +637,7 @@ const CreateEditArticle = () => {
   const [radioButtonIndex, setRadioButtonIndex] = useState(
     lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
   );
-
+  
   const getRadioButtonItems = (): JSX.Element[] => {
     if (isPublishAsPremiumVisible()) {
       if (isPublishButtonVisible()) {

@@ -73,7 +73,7 @@ const PremiumArticleThumbnail: React.FC<PremiumArticleThumbnailProps> = ({
   }
   return (
     <svg
-      style={{ maxWidth: '250px' }}
+      style={{ minHeight: '150px', maxWidth: '250px', maxHeight:'250px' }}
       width={659}
       height={709}
       viewBox='0 0 659 709'

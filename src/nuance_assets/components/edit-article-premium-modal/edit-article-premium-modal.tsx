@@ -99,7 +99,8 @@ export const EditArticlePremiumModal = (props: {
   const loadHeaderImage = async () => {
     //get the image from url in base64 format and resize it to use in nft asset
     let blob = await fetch(
-      window.location.origin.includes('local')
+      window.location.origin.includes('local') &&
+        window.location.origin.includes('8081')
         ? 'http://localhost:8081/assets/images/nuance-logo.svg'
         : props.post.headerImage
     ).then((r) => r.blob());
@@ -163,6 +164,7 @@ export const EditArticlePremiumModal = (props: {
         }
         className='close-modal-icon'
       />
+      <img className='nuance-logo-and-nft-icon' src={images.NUANCE_LOGO_AND_NFT_ICON}/>
       <p
         style={
           darkTheme

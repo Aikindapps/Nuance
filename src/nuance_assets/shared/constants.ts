@@ -23,7 +23,8 @@ export const images = {
   NUANCE_LOGO_NFT_PURCHASED: imagesPath + 'nuance-logo-nft-purchased.svg',
   NUANCE_LOGO_UNSUFFICIENT_BALANCE:
     imagesPath + 'nuance_unsufficient_balance.svg',
-  NUANCE_LOGO_MASK_GROUP: imagesPath + '/backgrounds/mask-group.svg',
+  NUANCE_LOGO_MASK_GROUP: imagesPath + 'backgrounds/mask-group.svg',
+  NUANCE_LOGO_AND_NFT_ICON: imagesPath + 'nuance_logo_and_nft_icon.svg'
 };
 
 export const icons = {

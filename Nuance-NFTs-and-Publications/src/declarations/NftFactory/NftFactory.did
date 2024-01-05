@@ -1,0 +1,54 @@
+type Result_4 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: List;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: record {
+         text;
+         text;
+       };
+ };
+type List = 
+ opt record {
+       text;
+       List;
+     };
+service : {
+  acceptCycles: () -> ();
+  availableCycles: () -> (nat) query;
+  createNftCanister: () -> (Result_4);
+  getAdmins: () -> (Result_3) query;
+  getCanisterVersion: () -> (text) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  getPlatformOperators: () -> (List) query;
+  getWhitelistedPublishers: () -> (vec record {
+                                         text;
+                                         text;
+                                       }) query;
+  isThereEnoughMemory: () -> (bool) query;
+  registerAdmin: (text) -> (Result_1);
+  registerPlatformOperator: (text) -> (Result_1);
+  setMaxMemorySize: (nat) -> (Result_2);
+  unregisterAdmin: (text) -> (Result_1);
+  unregisterPlatformOperator: (text) -> (Result_1);
+  whitelistPublication: (text, text) -> (Result);
+}
