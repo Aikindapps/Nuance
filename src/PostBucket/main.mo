@@ -2449,6 +2449,15 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       totalNumberOfComments = Nat.toText(U.safeGet(postIdToNumberOfCommentsHashMap, postId, 0));
     };
   };
+
+  public shared query func buildCommentUrl(commentId : Text) : async Text {
+    let postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
+    let post = buildPost(postId);
+    let postUrl = post.url;
+    let commentUrl = postUrl # "?comment=" # commentId;
+    return commentUrl;
+  };
+
   //returns the comment by a commentId
   public shared query func getComment(commentId : Text) : async Result.Result<Comment, Text> {
     switch (commentIdToUserPrincipalIdHashMap.get(commentId)) {
