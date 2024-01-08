@@ -103,6 +103,7 @@ export interface PostBucket {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addPostCategory' : ActorMethod<[string, string], Result_6>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'buildCommentUrl' : ActorMethod<[string], string>,
   'checkTipping' : ActorMethod<[string], undefined>,
   'checkTippingByTokenSymbol' : ActorMethod<
     [string, string, string],
@@ -117,9 +118,9 @@ export interface PostBucket {
   'dumpUserIds' : ActorMethod<[], Result_3>,
   'generateContent' : ActorMethod<[string], string>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
-  'get' : ActorMethod<[string], Result_6>,
   'getAdmins' : ActorMethod<[], Result_8>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
+  'getAllSubmittedForReviews' : ActorMethod<[], Result_12>,
   'getApplaudById' : ActorMethod<[string], Result_11>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
   'getCanisterVersion' : ActorMethod<[], string>,
@@ -134,8 +135,10 @@ export interface PostBucket {
   'getMyApplauds' : ActorMethod<[], Array<Applaud>>,
   'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
   'getPlatformOperators' : ActorMethod<[], List>,
+  'getPost' : ActorMethod<[string], Result_6>,
   'getPostApplauds' : ActorMethod<[string], Array<Applaud>>,
   'getPostComments' : ActorMethod<[string], Result>,
+  'getPostCompositeQuery' : ActorMethod<[string], Result_6>,
   'getPostCoreCanisterId' : ActorMethod<[], string>,
   'getPostUrls' : ActorMethod<[], Result_2>,
   'getPostWithPublicationControl' : ActorMethod<[string], Result_6>,
@@ -144,12 +147,12 @@ export interface PostBucket {
     Array<PostBucketType__1>
   >,
   'getPremiumArticle' : ActorMethod<[string], Result_6>,
-  'getReportedCommentIds' : ActorMethod<[], Array<string>>,
-  'getReportedComments' : ActorMethod<[], Result_9>,
-  'getSubmittedForReview' : ActorMethod<
-    [Array<string>],
+  'getPublicationPosts' : ActorMethod<
+    [Array<string>, string],
     Array<PostBucketType__1>
   >,
+  'getReportedCommentIds' : ActorMethod<[], Array<string>>,
+  'getReportedComments' : ActorMethod<[], Result_9>,
   'getTotalPostCount' : ActorMethod<[], bigint>,
   'getTrustedCanisters' : ActorMethod<[], Result_8>,
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
@@ -189,10 +192,6 @@ export interface PostBucket {
   'reviewComment' : ActorMethod<[string, boolean], Result_5>,
   'save' : ActorMethod<[PostSaveModel], SaveResult>,
   'saveComment' : ActorMethod<[SaveCommentModel], Result>,
-  'saveMultiple' : ActorMethod<
-    [Array<PostSaveModelBucketMigration>],
-    Array<SaveResult>
-  >,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_4>,
   'simulatePremiumArticle' : ActorMethod<[string, boolean], undefined>,
   'storeAllSEO' : ActorMethod<[], Result_3>,
@@ -200,7 +199,6 @@ export interface PostBucket {
     [Array<[string, string]>],
     Result_2
   >,
-  'storeSEO' : ActorMethod<[string, boolean], Result_3>,
   'testInstructionSize' : ActorMethod<[], string>,
   'unRejectPostByModclub' : ActorMethod<[string], undefined>,
   'unregisterAdmin' : ActorMethod<[string], Result_3>,
@@ -257,27 +255,10 @@ export interface PostSaveModel {
   'content' : string,
   'isPremium' : boolean,
   'isDraft' : boolean,
+  'postOwnerPrincipalId' : string,
   'category' : string,
   'caller' : Principal,
-  'headerImage' : string,
-  'subtitle' : string,
-  'isPublication' : boolean,
-  'postId' : string,
-}
-export interface PostSaveModelBucketMigration {
-  'tagNames' : Array<string>,
-  'title' : string,
-  'created' : string,
-  'creator' : string,
-  'modified' : string,
-  'content' : string,
-  'isRejected' : boolean,
-  'isPremium' : boolean,
-  'publishedDate' : string,
-  'isDraft' : boolean,
-  'category' : string,
-  'caller' : Principal,
-  'creatorHandle' : string,
+  'handle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -291,6 +272,8 @@ export type Result_1 = { 'ok' : Post } |
 export type Result_10 = { 'ok' : Metadata } |
   { 'err' : string };
 export type Result_11 = { 'ok' : Applaud } |
+  { 'err' : string };
+export type Result_12 = { 'ok' : Array<[string, Array<string>]> } |
   { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };

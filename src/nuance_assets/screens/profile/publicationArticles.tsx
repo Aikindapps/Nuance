@@ -451,7 +451,7 @@ const PublicationArticles = () => {
           <div className='publication-info-horizontal-flex'>
             <img
               className='header-image'
-              src={publicationHeaderImage || images.NUANCE_LOGO}
+              src={publicationHeaderImage}
             />
             <div className='publication-info-vertical-flex'>
               <div className='name-edit-button'>
@@ -511,6 +511,7 @@ const PublicationArticles = () => {
               </div>
             </div>
           </div>
+          
         </div>
         {showSearchResults ? (
           <EditorSearchList

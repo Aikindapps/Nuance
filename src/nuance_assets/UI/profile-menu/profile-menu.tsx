@@ -109,7 +109,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
         style={
           props.shown
             ? {
-                height: 235,
+                height: 180,
                 boxShadow: '0px 2px 10px 5px rgba(117, 117, 117, 0.08)',
                 background: darkOptionsAndColors.background,
                 color: darkOptionsAndColors.color,
@@ -124,14 +124,9 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
           <Link to='/my-profile'>
             <li style={{ color: darkOptionsAndColors.color }}>My profile</li>
           </Link>
-          <Link to='/my-profile/draft'>
+          <Link to='/my-profile/articles'>
             <li style={{ color: darkOptionsAndColors.color }}>
-              My draft articles
-            </li>
-          </Link>
-          <Link to='/my-profile/published'>
-            <li style={{ color: darkOptionsAndColors.color }}>
-              My published articles
+              Personal articles
             </li>
           </Link>
           <Link to='/article/new'>

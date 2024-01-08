@@ -5,7 +5,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
     'err' : IDL.Text,
   });
-  const Result_8 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const TagModel = IDL.Record({
     'id' : IDL.Text,
@@ -56,7 +56,7 @@ export const idlFactory = ({ IDL }) => {
     'canisterId' : IDL.Text,
   });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
-  const Result_6 = IDL.Variant({ 'ok' : PostKeyProperties, 'err' : IDL.Text });
+  const Result_8 = IDL.Variant({ 'ok' : PostKeyProperties, 'err' : IDL.Text });
   const PostTag = IDL.Record({
     'tagId' : IDL.Text,
     'createdDate' : IDL.Int,
@@ -70,6 +70,7 @@ export const idlFactory = ({ IDL }) => {
     'uniqueReaderCount' : IDL.Text,
     'publishedCount' : IDL.Text,
     'handle' : IDL.Text,
+    'submittedToReviewCount' : IDL.Text,
     'totalPostCount' : IDL.Text,
   });
   const RecallOptions = IDL.Variant({
@@ -81,8 +82,14 @@ export const idlFactory = ({ IDL }) => {
     'ninetydays' : IDL.Null,
     'thisMonth' : IDL.Null,
   });
-  const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
-  const Result_5 = IDL.Variant({ 'ok' : IDL.Vec(Result_6), 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({
+    'ok' : IDL.Tuple(
+      IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
+      IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
+    ),
+    'err' : IDL.Text,
+  });
   const ContentStatus = IDL.Variant({
     'new' : IDL.Null,
     'approved' : IDL.Null,
@@ -107,6 +114,7 @@ export const idlFactory = ({ IDL }) => {
     'isDraft' : IDL.Bool,
     'tagIds' : IDL.Vec(IDL.Text),
     'category' : IDL.Text,
+    'handle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -162,7 +170,7 @@ export const idlFactory = ({ IDL }) => {
     'checkViewsLast24Hours' : IDL.Func([], [], []),
     'clapPost' : IDL.Func([IDL.Text], [], ['oneway']),
     'copyPublicationCanisters' : IDL.Func([IDL.Text], [Result_10], []),
-    'copyTrustedCanisters' : IDL.Func([IDL.Text], [Result_8], []),
+    'copyTrustedCanisters' : IDL.Func([IDL.Text], [Result_7], []),
     'createNewBucketCanister' : IDL.Func([], [Result_2], []),
     'createTag' : IDL.Func([IDL.Text], [Result_9], []),
     'currentId' : IDL.Func([], [IDL.Nat], ['query']),
@@ -177,7 +185,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'delete' : IDL.Func([IDL.Text], [Result_3], []),
-    'deletePostFromUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_8], []),
+    'deletePostFromUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_7], []),
     'deleteUserPosts' : IDL.Func([IDL.Text], [Result_3], []),
     'dumpIds' : IDL.Func([], [Result_1], []),
     'dumpPosts' : IDL.Func([], [Result_1], []),
@@ -186,8 +194,8 @@ export const idlFactory = ({ IDL }) => {
     'generateLatestPosts' : IDL.Func([], [], []),
     'generatePublishedDates' : IDL.Func([], [], []),
     'getActiveBucketCanisterId' : IDL.Func([], [Result_2], []),
-    'getAdmins' : IDL.Func([], [Result_8], ['query']),
-    'getAllBuckets' : IDL.Func([], [Result_8], []),
+    'getAdmins' : IDL.Func([], [Result_7], ['query']),
+    'getAllBuckets' : IDL.Func([], [Result_7], []),
     'getAllStatusCount' : IDL.Func([], [Result_2], []),
     'getAllTags' : IDL.Func([], [IDL.Vec(TagModel)], ['query']),
     'getBucketCanisterIdsOfGivenHandles' : IDL.Func(
@@ -201,9 +209,9 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
-    'getCgUsers' : IDL.Func([], [Result_8], ['query']),
+    'getCgUsers' : IDL.Func([], [Result_7], ['query']),
     'getFrontendCanisterId' : IDL.Func([], [Result_2], ['query']),
-    'getKinicList' : IDL.Func([], [Result_8], []),
+    'getKinicList' : IDL.Func([], [Result_7], []),
     'getLatestPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [GetPostsByFollowers],
@@ -222,9 +230,24 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getMyAllPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
     'getMyDailyPostsStatus' : IDL.Func([], [IDL.Bool], ['query']),
-    'getMyPosts' : IDL.Func(
-        [IDL.Bool, IDL.Bool, IDL.Nat32, IDL.Nat32],
+    'getMyDraftPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
+    'getMyPublishedPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
+    'getMySubmittedToReviewPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
@@ -252,7 +275,7 @@ export const idlFactory = ({ IDL }) => {
         [GetPostsByFollowers],
         ['query'],
       ),
-    'getPostKeyProperties' : IDL.Func([IDL.Text], [Result_6], ['query']),
+    'getPostKeyProperties' : IDL.Func([IDL.Text], [Result_8], ['query']),
     'getPostUrls' : IDL.Func([], [Result_2], []),
     'getPostViewsPerHourLast24Hours' : IDL.Func(
         [],
@@ -284,21 +307,26 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
+    'getPublicationPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32, IDL.Text],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
     'getTagsByUser' : IDL.Func([IDL.Text], [IDL.Vec(PostTag)], ['query']),
     'getTotalArticleViews' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalClaps' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalPostCount' : IDL.Func([], [IDL.Nat], ['query']),
-    'getTrustedCanisters' : IDL.Func([], [Result_8], ['query']),
+    'getTrustedCanisters' : IDL.Func([], [Result_7], ['query']),
     'getUserDailyAllowedPostNumber' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserPostCounts' : IDL.Func([IDL.Text], [UserPostCounts], ['query']),
-    'getUserPostIds' : IDL.Func([IDL.Text], [Result_8], ['query']),
+    'getUserPostIds' : IDL.Func([IDL.Text], [Result_7], ['query']),
     'getUserPosts' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
     'getViewsByRange' : IDL.Func([RecallOptions], [IDL.Int], []),
-    'getWasmChunks' : IDL.Func([], [Result_7], []),
+    'getWasmChunks' : IDL.Func([], [Result_6], []),
     'handleModclubMigration' : IDL.Func([IDL.Text], [Result_2], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
     'incrementApplauds' : IDL.Func([IDL.Text, IDL.Nat], [], []),
@@ -309,18 +337,25 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'initializePostCoreCanister' : IDL.Func([], [Result_2], []),
+    'isEditorPublic' : IDL.Func(
+        [IDL.Text, IDL.Principal],
+        [IDL.Bool],
+        ['query'],
+      ),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
+    'isWriterPublic' : IDL.Func(
+        [IDL.Text, IDL.Principal],
+        [IDL.Bool],
+        ['query'],
+      ),
     'makePostPublication' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
         [],
         [],
       ),
+    'migrateAllPublicationEditorsAndWriters' : IDL.Func([], [Result_5], []),
+    'migrateAllSubmittedForReview' : IDL.Func([], [Result_3], []),
     'migrateModclubInterface' : IDL.Func([], [Result_2], []),
-    'migratePostsFromOldPostCanister' : IDL.Func(
-        [IDL.Text, IDL.Nat, IDL.Nat],
-        [Result_5],
-        [],
-      ),
     'modClubCallback' : IDL.Func([ContentResult], [], ['oneway']),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCanister' : IDL.Func([IDL.Text], [Result_1], []),
@@ -348,6 +383,11 @@ export const idlFactory = ({ IDL }) => {
     'updatePostDraft' : IDL.Func(
         [IDL.Text, IDL.Bool, IDL.Int, IDL.Text],
         [PostKeyProperties],
+        [],
+      ),
+    'updatePublicationEditorsAndWriters' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)],
+        [Result_1],
         [],
       ),
     'updateSettingsForAllBucketCanisters' : IDL.Func([], [Result_2], []),

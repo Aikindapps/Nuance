@@ -6,6 +6,7 @@ import { colors } from '../../shared/constants';
 interface DropdownProps {
   items: string[];
   onSelect: (item: string) => void;
+  selected?: string;
   icons?: string[];
   style?: any;
   nonActive?: boolean;
@@ -21,6 +22,7 @@ interface DropdownProps {
 const Dropdown: React.FC<DropdownProps> = ({
   items,
   onSelect,
+  selected,
   icons,
   style,
   nonActive,
@@ -52,7 +54,6 @@ const Dropdown: React.FC<DropdownProps> = ({
     };
   }, []);
   */
- 
 
   return (
     <div
@@ -73,8 +74,8 @@ const Dropdown: React.FC<DropdownProps> = ({
             return;
           }
           setIsOpen(!isOpen);
-          if(onIsOpenChanged){
-            onIsOpenChanged(!isOpen)
+          if (onIsOpenChanged) {
+            onIsOpenChanged(!isOpen);
           }
         }}
         style={{
@@ -102,7 +103,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 : { ...selectedTextStyle }
             }
           >
-            {items[index]}
+            {selected || items[index] || items[0]}
           </div>
         </div>
         {!onlyOneItem && (
@@ -148,8 +149,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                   setIndex(index_);
                   onSelect(items[index_]);
                   setIsOpen(false);
-                  if(onIsOpenChanged){
-                    onIsOpenChanged(false)
+                  if (onIsOpenChanged) {
+                    onIsOpenChanged(false);
                   }
                 }}
                 style={{ ...dropdownMenuItemStyle }}

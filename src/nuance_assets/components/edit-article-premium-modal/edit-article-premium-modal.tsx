@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Button from '../../UI/Button/Button';
 import { colors, icons, images } from '../../shared/constants';
 import InputField2 from '../../UI/InputField2/InputField2';
@@ -6,133 +6,84 @@ import RequiredFieldMessage from '../required-field-message/required-field-messa
 import { useTheme } from '../../contextes/ThemeContext';
 import './edit-article-premium-modal.scss';
 import { PostType } from '../../types/types';
-import { usePostStore, usePublisherStore } from '../../store';
+import {
+  useAuthStore,
+  usePostStore,
+  usePublisherStore,
+  useUserStore,
+} from '../../store';
 import { toastError } from '../../services/toastService';
-
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import { IoCloseOutline } from 'react-icons/io5';
+import { LuLoader2 } from 'react-icons/lu';
+import PremiumArticleThumbnail from '../../UI/premium-article-thumbnail/premium-article-thumbnail';
+import { IoInformationCircleOutline } from 'react-icons/io5';
+import { Tooltip } from 'react-tooltip';
 export const EditArticlePremiumModal = (props: {
-  setPremiumModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   refreshPost: (post: PostType) => Promise<void>;
   post: PostType;
-  publicationHandle: string;
   onSave: (isDraft: boolean) => Promise<PostType | undefined>;
+  numberOfEditors: number;
 }) => {
-  //publisherStore
-  const { getPublication } = usePublisherStore((state) => ({
-    getPublication: state.getPublicationReturnOnly,
-  }));
+  const modalContext = useContext(ModalContext);
+  const darkTheme = useTheme();
+  const user = useUserStore((state) => state.user);
+
+  //number of keys
+  const [inputAmount, setInputAmount] = useState(0);
+  //price of the keys
+  const [keyPrice, setKeyPrice] = useState('');
+
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [headerImageUsedInNft, setHeaderImageUsedInNft] = useState('');
+
+  const [loading, setLoading] = useState(false);
+
   //postStore
   const { createNftFromPremiumArticle } = usePostStore((state) => ({
     createNftFromPremiumArticle: state.createNftFromPremiumArticle,
   }));
-  //dark theme
-  const darkTheme = useTheme();
-  const darkOptionsAndColors = {
-    background: darkTheme
-      ? colors.darkModePrimaryBackgroundColor
-      : colors.primaryBackgroundColor,
-    color: darkTheme
-      ? colors.darkModePrimaryTextColor
-      : colors.primaryTextColor,
-  };
 
-  const [nftKeys, setNftKeys] = useState('');
-  const [nftKeysWarning, setNftKeysWarning] = useState(false);
-  const onNftKeysChange = (value: string) => {
-    setNftKeysWarning(false);
-    setNftKeys(value);
-  };
-
-  const [nftCost, setNftCost] = useState('');
-  const [nftCostWarning, setNftCostWarning] = useState(false);
-  const onNFTCostChange = (value: string) => {
-    setNftCostWarning(false);
-    setNftCost(value);
-  };
-
-  const [termsCheck, setTermsCheck] = useState(false);
-  const [termsCheckWarning, setTermsCheckWarning] = useState(false);
-  const onTermsCheckChange = (value: boolean) => {
-    setTermsCheckWarning(false);
-    setTermsCheck(value);
-  };
-
-  const [loading, setLoading] = useState(false);
-
-  const validateNft = async () => {
-    //check the input fields first
-    if (!termsCheck) {
-      setTermsCheckWarning(true);
-      return false;
+  useEffect(() => {
+    if (modalContext?.modalType === 'Premium article') {
+      loadHeaderImage();
     }
-    var nftCount: bigint | undefined = undefined;
-    var salePrice: bigint | undefined = undefined;
+  }, [modalContext?.modalType]);
 
-    //try to convert the inputs to bigInt and if that returns an error, terminate the process and give an error
+  const validateNft = () => {
     try {
-      nftCount = BigInt(Number(nftKeys));
-      console.log(nftCount);
-    } catch (err) {
-      toastError('Invalid number of NFT keys.');
-      setNftKeysWarning(true);
-      return false;
+      return (
+        headerImageUsedInNft !== '' &&
+        termsAccepted &&
+        parseFloat(keyPrice) > 0 &&
+        inputAmount > props.numberOfEditors + 1
+      );
+    } catch (error) {
+      return false
     }
-    try {
-      salePrice = BigInt(Number(nftCost) * 100000000);
-    } catch (err) {
-      toastError('Invalid cost per key.');
-      setNftCostWarning(true);
-      return false;
-    }
-    if (salePrice === BigInt(0)) {
-      toastError('Sale price can not be 0');
-      setNftCostWarning(true);
-      return false;
-    }
-
-    if (props.post.headerImage === '') {
-      toastError('Header image can not be empty.');
-      return false;
-    }
-    if (nftCount === BigInt(0)) {
-      toastError('Number of keys can not be 0.');
-      return false;
-    }
-    //if here, everything is cool -> check the number of editors in the publication
-    let publication = await getPublication(props.publicationHandle);
-    if (publication) {
-      let minimum = publication.editors.length + 1;
-      if (nftCount < BigInt(minimum)) {
-        toastError(
-          'Number of NFTs can not be lower than ' + minimum.toString()
-        );
-        return false;
-      }
-      return true;
-    } else {
-      toastError('Publication not found.');
-      return false;
-    }
+    
   };
-
+  console.log(keyPrice)
   const onPremiumPublish = async () => {
     setLoading(true);
-    if (await validateNft()) {
-      //if the validation passes, close the modal
-      props.setLoading(true);
-      props.setPremiumModalOpen(false);
+    if (validateNft()) {
+      //modalContext?.closeModal();
       //save the post as draft first
       let saveReturn = await props.onSave(true);
+      console.log('saveReturn: ', saveReturn)
+      console.log(saveReturn);
       if (saveReturn) {
         //save as draft is successful
         let pubHandle = saveReturn.handle;
-        let salePrice = BigInt(Number(nftCost) * 100000000);
+        let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
         let createNftReturn = await createNftFromPremiumArticle(
           saveReturn,
-          BigInt(nftKeys),
+          BigInt(inputAmount),
           salePrice,
-          pubHandle
+          pubHandle,
+          headerImageUsedInNft
         );
+        console.log('createNftREturn: ', createNftReturn)
 
         await props.refreshPost({
           ...saveReturn,
@@ -142,178 +93,258 @@ export const EditArticlePremiumModal = (props: {
       }
     }
     setLoading(false);
+    modalContext?.closeModal();
+  };
+
+  const loadHeaderImage = async () => {
+    //get the image from url in base64 format and resize it to use in nft asset
+    let blob = await fetch(
+      window.location.origin.includes('local') &&
+        window.location.origin.includes('8081')
+        ? 'http://localhost:8081/assets/images/nuance-logo.svg'
+        : props.post.headerImage
+    ).then((r) => r.blob());
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onload = async (event) => {
+      const embeddedImage = event?.target?.result as string;
+      var image = new Image();
+      image.src = embeddedImage; // replace with your base64 encoded image
+      var newWidth = 612;
+      var newHeight = 321;
+      image.onload = async function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+
+        var context = canvas.getContext('2d');
+        var width = image.width;
+        var height = image.height;
+
+        if (width / height > newWidth / newHeight) {
+          var scale = newHeight / height;
+          var scaledWidth = scale * width;
+          var x = (newWidth - scaledWidth) / 2;
+          context?.drawImage(image, x, 0, scaledWidth, newHeight);
+        } else {
+          var scale = newWidth / width;
+          var scaledHeight = scale * height;
+          var y = (newHeight - scaledHeight) / 2;
+          context?.drawImage(image, 0, y, newWidth, scaledHeight);
+        }
+        setHeaderImageUsedInNft(canvas.toDataURL());
+      };
+    };
   };
 
   return (
-    <div className='premium-modal'>
-      <div
-        className='premium-modal-content'
-        style={{
-          background: darkOptionsAndColors.background,
+    <div
+      className='premium-modal'
+      style={
+        darkTheme ? { background: colors.darkModePrimaryBackgroundColor } : {}
+      }
+    >
+      <Tooltip
+        className='tooltip-wrapper'
+        id='premium-article-modal-info-tooltip'
+      />
+      <IoCloseOutline
+        onClick={() => {
+          if (loading) {
+            return;
+          }
+          modalContext?.closeModal();
         }}
+        style={
+          loading
+            ? {
+                cursor: 'not-allowed',
+              }
+            : {}
+        }
+        className='close-modal-icon'
+      />
+      <img className='nuance-logo-and-nft-icon' src={images.NUANCE_LOGO_AND_NFT_ICON}/>
+      <p
+        style={
+          darkTheme
+            ? {
+                color: colors.darkModePrimaryTextColor,
+              }
+            : {}
+        }
+        className='modal-title'
       >
-        <Button
-          disabled={loading}
-          type='button'
-          styleType='secondary-NFT'
-          style={{ width: '96px' }}
-          onClick={() => {
-            props.setPremiumModalOpen(false);
-          }}
-        >
-          Cancel
-        </Button>
-        <div className='modal-inner-container'>
-          <img
-            className='modal-NFT-logo'
-            src={
-              loading
-                ? darkTheme
-                  ? images.loaders.NUANCE_LOADER_DARK
-                  : images.loaders.NUANCE_LOADER
-                : icons.NUANCE_NFT_LG
-            }
-            style={{ filter: darkTheme ? 'contrast(.5)' : 'none' }}
-          ></img>
-          <div
-            className='modal-content-block'
-            style={{
-              background: darkOptionsAndColors.background,
-              opacity: loading ? '0' : '1',
-            }}
-          >
-            <p
-              className='modal-inner-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              You are about to limit access to this article by creating NFT
-              access keys. Only readers that bought a key can access the
-              article.
-            </p>
-            <p
-              className='modal-inner-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              Set the amount of NFT keys and cost per key in ICP
-            </p>
-            <div className='modal-inputs-container'>
-              <div className='modal-inputs'>
-                <p className='NFT-number-of-keys'>NUMBER OF KEYS</p>
-                <InputField2
-                  width='50%'
-                  height='24px'
-                  defaultText='0'
-                  fontSize='16px'
-                  fontFamily='Georgia'
-                  fontColor={colors.primaryTextColor}
-                  hasError={nftKeysWarning}
-                  value={nftKeys}
-                  onChange={onNftKeysChange}
-                  isNaturalNumberInput={true}
-                  theme={darkTheme ? 'dark' : 'light'}
-                ></InputField2>
-                <div
-                  style={{
-                    position: 'relative',
-                    top: '0px',
-                    width: '10px',
-                  }}
-                >
-                  {
-                    <RequiredFieldMessage
-                      hasError={nftKeysWarning}
-                      NFTModal={true}
-                      //errorMessage={"Must be greater than number of editors"}
-                    />
-                  }
-                </div>
-              </div>
-              <div className='modal-inputs'>
-                <p className='NFT-number-of-keys'>COST PER KEY</p>
-                <InputField2
-                  width='50%'
-                  height='24px'
-                  defaultText='0'
-                  fontSize='16px'
-                  fontFamily='Georgia'
-                  fontColor={colors.primaryTextColor}
-                  hasError={nftCostWarning}
-                  value={nftCost as string}
-                  onChange={onNFTCostChange}
-                  isFloatInput={true}
-                  theme={darkTheme ? 'dark' : 'light'}
-                ></InputField2>
-                <div style={{ position: 'relative', top: '0px' }}>
-                  {
-                    <RequiredFieldMessage
-                      hasError={nftCostWarning}
-                      NFTModal={true}
-                    />
-                  }
-                </div>
-              </div>
-              <div className='ICP-units'>
-                <p className='modal-inner-text'>ICP</p>
-              </div>
-            </div>
-            <p
-              className='modal-inner-text'
-              style={{ color: darkOptionsAndColors.color }}
-            >
-              NOTE: after creating NFT access keys you can never change the
-              article.
-            </p>
-            <div className='NFT-terms-and-conditions'>
+        Mint article
+      </p>
+      <p
+        style={
+          darkTheme
+            ? {
+                color: colors.darkSecondaryTextColor,
+              }
+            : {}
+        }
+        className='minting-article-title-text'
+      >
+        {`"${props.post.title}"`}
+        <br />
+      </p>
+      {user && headerImageUsedInNft && (
+        <PremiumArticleThumbnail
+          post={{ ...props.post, headerImage: headerImageUsedInNft }}
+          handle={props.post.creator || user.handle}
+        />
+      )}
+      <div className='selection-input-wrapper'>
+        <div className='input-amount-wrapper'>
+          <p className='premium-modal-field-text'>AMOUNT OF KEYS</p>
+          <div className='amount-input-wrapper'>
+            <div className='input-info-wrapper'>
               <input
-                className='NFT-terms-and-conditions-checkbox'
-                type='checkbox'
-                id='terms'
-                name='terms'
-                value='terms'
-                onChange={(e) => onTermsCheckChange(e.target.checked)}
-              />
-              <p
-                className='NFT-terms-and-conditions-text'
-                style={{
-                  color: darkOptionsAndColors.color,
-                }}
-              >
-                I accept the{' '}
-                <a
-                  href='https://wiki.nuance.xyz/nuance/terms-and-conditions'
-                  style={{
-                    color: darkOptionsAndColors.color,
-                    textDecoration: 'underline',
-                  }}
-                >
-                  terms and conditions
-                </a>
-                <div style={{ position: 'relative', top: '0px' }}>
-                  {
-                    <RequiredFieldMessage
-                      hasError={termsCheckWarning}
-                      NFTModal={true}
-                    />
+                className='amount-input'
+                type='number'
+                style={
+                  darkTheme
+                    ? {
+                        color: colors.darkModePrimaryTextColor,
+                        cursor: loading ? 'not-allowed' : '',
+                      }
+                    : { cursor: loading ? 'not-allowed' : '' }
+                }
+                placeholder={`Fill in amount of keys (min. ${
+                  props.numberOfEditors + 2
+                })`}
+                min={0}
+                max={7777}
+                step='1'
+                onChange={(e) => {
+                  if (loading) {
+                    return;
                   }
-                </div>
-              </p>
+
+                  const value = e.target.value;
+                  if (value === '') {
+                    setInputAmount(0);
+                  }
+                  if (/^\d*$/.test(value)) {
+                    if ((parseInt(value, 10) || 0) <= 10000) {
+                      setInputAmount(parseInt(value, 10) || 0);
+                    }
+                  }
+                }}
+                value={inputAmount !== 0 ? inputAmount : ''}
+              />
+              <IoInformationCircleOutline
+                data-tooltip-id='premium-article-modal-info-tooltip'
+                data-tooltip-content='Note: The amount of editors who have access to the publication are automatically given a key. This is the minimum number of keys. You cannot generate revenue from the keys for editors.'
+                data-tooltip-place='top'
+                className='info-icon'
+              />
             </div>
           </div>
+        </div>
 
+        <div className='input-amount-wrapper'>
+          <p className='premium-modal-field-text'>COST PER KEY (IN ICP)</p>
+          <div className='amount-input-wrapper'>
+            <div className='input-info-wrapper'>
+              <input
+                className='amount-input'
+                type='number'
+                style={
+                  darkTheme
+                    ? {
+                        color: colors.darkModePrimaryTextColor,
+                        cursor: loading ? 'not-allowed' : '',
+                      }
+                    : { cursor: loading ? 'not-allowed' : '' }
+                }
+                placeholder='Amount'
+                min={0}
+                max={100}
+                step='0.0001'
+                onChange={(e) => {
+                  if (loading) {
+                    return;
+                  }
+                  const newValue = e.target.value;
+                  if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
+                  if (
+                    newValue === '' ||
+                    (parseFloat(newValue) * Math.pow(10, 8) <= 10_000_000_000 &&
+                      newValue.match(/^\d*\.?\d{0,4}$/))
+                  ) {
+                    setKeyPrice(newValue);
+                  }
+                }}
+                value={keyPrice}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          className='terms-wrapper'
+          onClick={() => {
+            if (loading) {
+              return;
+            }
+            setTermsAccepted(!termsAccepted);
+          }}
+        >
+          <input className='terms-checkbox' type='checkbox' checked={termsAccepted} onChange={() => {}} />
+          <p
+            className='terms-text'
+            style={darkTheme ? { color: colors.darkModePrimaryTextColor } : {}}
+          >
+            I am aware when I mint this article, I can not change it again. I am
+            aware of terms and conditions, general policy and agree to them.
+          </p>
+        </div>
+        <div className='buttons-wrapper'>
           <Button
-            disabled={loading}
+            styleType='deposit'
             type='button'
-            styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-            style={{ width: '170px', opacity: loading ? '0' : '1' }}
-            onClick={async () => {
-              await onPremiumPublish();
+            onClick={() => {
+              if (loading) {
+                return;
+              }
+              modalContext?.closeModal();
+            }}
+            style={
+              loading
+                ? {
+                    cursor: 'not-allowed',
+                  }
+                : {}
+            }
+          >
+            Cancel
+          </Button>
+          <Button
+            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
+            style={
+              !validateNft()
+                ? {
+                    cursor: 'not-allowed',
+                    background: 'gray',
+                    borderColor: 'gray',
+                  }
+                : {}
+            }
+            type='button'
+            onClick={() => {
+              if (loading) {
+                return;
+              }
+              if (validateNft()) {
+                onPremiumPublish();
+              }
             }}
           >
-            Create NFT access keys
+            {loading && <LuLoader2 className='button-loader-icon' />}
+            Mint article
           </Button>
         </div>
       </div>

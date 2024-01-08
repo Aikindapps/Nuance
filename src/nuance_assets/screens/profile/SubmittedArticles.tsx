@@ -18,12 +18,7 @@ const SubmittedArticles = () => {
     user: state.user,
     getUser: state.getUser,
   }));
-  const { submittedForReviewPosts, getSubmittedForReviewPosts } = usePostStore(
-    (state) => ({
-      submittedForReviewPosts: state.submittedForReviewPosts,
-      getSubmittedForReviewPosts: state.getSubmittedForReviewPosts,
-    })
-  );
+  
   const darkTheme = useTheme();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [loading, setLoading] = useState(false);
@@ -32,9 +27,9 @@ const SubmittedArticles = () => {
   const fetchPosts = async () => {
     if (user) {
       setLoading(true);
-      await getSubmittedForReviewPosts(
-        user.publicationsArray.map((obj) => obj.publicationName)
-      );
+      //await getSubmittedForReviewPosts(
+      //  user.publicationsArray.map((obj) => obj.publicationName)
+      //);
       setLoading(false);
     }
   };
@@ -54,7 +49,7 @@ const SubmittedArticles = () => {
   return (
     <div className='wrapper'>
       <p className='title'>
-        SUBMITTED FOR REVIEW ({submittedForReviewPosts?.length || 0})
+        SUBMITTED FOR REVIEW ({0})
       </p>
       <div
         className='list-card-draft-articles'
@@ -64,8 +59,8 @@ const SubmittedArticles = () => {
         }}
       >
         {!loading ? (
-          submittedForReviewPosts?.length ? (
-            submittedForReviewPosts.map((post: PostType) => (
+          true ? (
+            [].map((post: PostType) => (
               <CardDraftArticles
                 post={post}
                 key={post.postId}

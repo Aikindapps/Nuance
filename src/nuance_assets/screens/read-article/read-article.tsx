@@ -91,7 +91,7 @@ const ReadArticle = () => {
     deleteComment,
     comments,
   } = usePostStore((state) => ({
-    getPost: state.getPostWithPublicationControl,
+    getPost: state.getPost,
     clearPost: state.clearPost,
     setSearchText: state.setSearchText,
     post: state.post,

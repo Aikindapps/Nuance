@@ -25,10 +25,29 @@
       margin: 0 auto;
       width: 100%;
       border-right: 1px solid $vertical-divider;
-      background-image: url('../../assets/assets/images/backgrounds/mask-group.svg');
-      background-size: auto 560px;
-      background-position: 100% 55vh;
-      background-repeat: no-repeat;
+      position: relative;
+
+      .logged-in {
+        position: sticky;
+        top: 40px;
+
+        .homepage-left-background-image {
+          position: absolute;
+          right: 0;
+          top: 30ch;
+        }
+      }
+
+      .logged-out {
+        position: sticky;
+        top: 40px;
+
+        .homepage-left-background-image {
+          position: absolute;
+          right: 0;
+          top: 30ch;
+        }
+      }
 
       .left-content {
         display: flex;
@@ -94,6 +113,7 @@
         padding: 0 auto;
       }
     }
+
     .posts {
       margin-right: 100px;
 
@@ -525,7 +545,7 @@
     display: flex;
     align-items: center;
     column-gap: 12px;
-  
+
     .publication-image-search {
       width: 124px;
       height: 70px;
@@ -533,13 +553,13 @@
       transition: none;
       object-fit: cover;
     }
-  
+
     .user-image-search {
       width: 70px;
       height: 70px;
       transition: none;
     }
-  
+
     .user-search-info {
       flex: auto;
       height: 70px;
@@ -548,17 +568,17 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-  
+
       .handle {
         color: rgb(21, 20, 81);
         cursor: pointer;
         font-size: 10px;
       }
-  
+
       .handle:hover {
         text-decoration: underline;
       }
-  
+
       .display-name-search-item {
         margin: 0 0 10px 0;
         font-family: Georgia, "Times New Roman", Times, serif;
@@ -567,20 +587,20 @@
         font-size: 16px;
         cursor: pointer;
       }
-  
+
       .display-name-search-item:hover {
         text-decoration: underline;
       }
-  
+
       .bio {
         cursor: pointer;
         font-size: 12px;
       }
-  
+
       .bio:hover {
         text-decoration: none !important;
       }
     }
-  
+
   }
 }

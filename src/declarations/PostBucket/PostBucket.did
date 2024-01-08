@@ -55,6 +55,14 @@ type Result_2 =
    err: text;
    ok: text;
  };
+type Result_12 = 
+ variant {
+   err: text;
+   ok: vec record {
+             text;
+             vec text;
+           };
+ };
 type Result_11 = 
  variant {
    err: text;
@@ -80,37 +88,19 @@ type PostTagModel =
    tagId: text;
    tagName: text;
  };
-type PostSaveModelBucketMigration = 
- record {
-   caller: principal;
-   category: text;
-   content: text;
-   created: text;
-   creator: text;
-   creatorHandle: text;
-   headerImage: text;
-   isDraft: bool;
-   isPremium: bool;
-   isPublication: bool;
-   isRejected: bool;
-   modified: text;
-   postId: text;
-   publishedDate: text;
-   subtitle: text;
-   tagNames: vec text;
-   title: text;
- };
 type PostSaveModel = 
  record {
    caller: principal;
    category: text;
    content: text;
    creator: text;
+   handle: text;
    headerImage: text;
    isDraft: bool;
    isPremium: bool;
    isPublication: bool;
    postId: text;
+   postOwnerPrincipalId: text;
    subtitle: text;
    tagNames: vec text;
    title: text;
@@ -160,6 +150,7 @@ type PostBucket =
    acceptCycles: () -> ();
    addPostCategory: (text, text) -> (Result_6);
    availableCycles: () -> (nat) query;
+   buildCommentUrl: (text) -> (text) query;
    checkTipping: (text) -> ();
    checkTippingByTokenSymbol: (text, text, text) -> (Result_11);
    delete: (text) -> (Result_4);
@@ -171,12 +162,12 @@ type PostBucket =
    dumpUserIds: () -> (Result_3);
    generateContent: (text) -> (text);
    generatePublishedDates: () -> ();
-   get: (text) -> (Result_6) query;
    getAdmins: () -> (Result_8) query;
    getAllRejected: () -> (vec record {
                                 text;
                                 text;
                               }) query;
+   getAllSubmittedForReviews: () -> (Result_12);
    getApplaudById: (text) -> (Result_11) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
@@ -191,16 +182,19 @@ type PostBucket =
    getMyApplauds: () -> (vec Applaud) query;
    getNftCanisters: () -> (vec NftCanisterEntry) query;
    getPlatformOperators: () -> (List) query;
+   getPost: (text) -> (Result_6) query;
    getPostApplauds: (text) -> (vec Applaud) query;
    getPostComments: (text) -> (Result) query;
+   getPostCompositeQuery: (text) -> (Result_6) composite_query;
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
    getPostWithPublicationControl: (text) -> (Result_6);
    getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
    getPremiumArticle: (text) -> (Result_6);
+   getPublicationPosts: (vec text, text) ->
+    (vec PostBucketType__1) composite_query;
    getReportedCommentIds: () -> (vec text);
    getReportedComments: () -> (Result_9);
-   getSubmittedForReview: (vec text) -> (vec PostBucketType__1) query;
    getTotalPostCount: () -> (nat) query;
    getTrustedCanisters: () -> (Result_8) query;
    getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
@@ -229,7 +223,6 @@ type PostBucket =
    reviewComment: (text, bool) -> (Result_5);
    save: (PostSaveModel) -> (SaveResult);
    saveComment: (SaveCommentModel) -> (Result);
-   saveMultiple: (vec PostSaveModelBucketMigration) -> (vec SaveResult);
    setMaxMemorySize: (nat) -> (Result_4);
    simulatePremiumArticle: (text, bool) -> ();
    storeAllSEO: () -> (Result_3);
@@ -237,7 +230,6 @@ type PostBucket =
                                      text;
                                      text;
                                    }) -> (Result_2);
-   storeSEO: (text, bool) -> (Result_3);
    testInstructionSize: () -> (text);
    unRejectPostByModclub: (text) -> () oneway;
    unregisterAdmin: (text) -> (Result_3);

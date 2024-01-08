@@ -1,4 +1,5 @@
 .meatball-menu {
+  z-index: 4;
   .drop-down-content-menu {
     position: absolute;
     margin-left: -200px;
@@ -12,6 +13,7 @@
     width: 208px;
     // height: 235px;
     transition: 0.5s;
+    z-index: 4;
 
     .alignment {
       width: 70%;
