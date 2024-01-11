@@ -48,7 +48,7 @@ jobs:
             "PostBucket": { "ic": "'"$POSTBUCKET"'" }
           }' > canister_ids.json
         env:
-          POSTCORE: ${{ secrets.UAT_POST_CORE }}
+          POSTCORE: ${{ secrets.UAT_POSTCORE }}
           POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
 
       - name: Report Comments to Slack
