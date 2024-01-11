@@ -51,38 +51,50 @@ jobs:
           POSTCORE: ${{ secrets.UAT_POSTCORE }}
           POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
 
-      - name: Report Comments to Slack
-        run: |
-          echo "Fetching buckets..."
-          BUCKETS_RAW=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq)
-          echo "Raw Buckets Output: $BUCKETS_RAW"
-          BUCKETS=$(echo "$BUCKETS_RAW" | grep -oP '"\K[a-z0-9-]+(?=";)' || echo '')
-          echo "Buckets: $BUCKETS"
+     - name: Report Comments to Slack
+  run: |
+    echo "Fetching buckets..."
+    BUCKETS_RAW=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq)
+    echo "Raw Buckets Output: $BUCKETS_RAW"
+    BUCKETS=$(echo "$BUCKETS_RAW" | grep -oP '"\K[a-z0-9-]+(?=";)' || echo '')
+    echo "Buckets: $BUCKETS"
 
-          SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
-           for BUCKET in $BUCKETS
-            do
-              echo "Fetching comment IDs for bucket: $BUCKET"
-              COMMENT_IDS_RAW=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq)
-              echo "Raw Comment IDs Output: $COMMENT_IDS_RAW"
-              COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=\")\d+(?=\")')
-              if [ -z "$COMMENT_IDS" ]; then
-                echo "No reported comments in bucket $BUCKET."
-                continue
-              fi
-              echo "Comment IDs for bucket $BUCKET: $COMMENT_IDS"
+    SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
+    for BUCKET in $BUCKETS
+    do
+      echo "Fetching comment IDs for bucket: $BUCKET"
+      COMMENT_IDS_RAW=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq)
+      if [ $? -ne 0 ]; then
+        echo "Error fetching comment IDs for bucket $BUCKET"
+        continue
+      fi
+      echo "Raw Comment IDs Output: $COMMENT_IDS_RAW"
+      COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=\")\d+(?=\")')
+      if [ -z "$COMMENT_IDS" ]; then
+        echo "No reported comments in bucket $BUCKET."
+        continue
+      fi
+      echo "Comment IDs for bucket $BUCKET: $COMMENT_IDS"
 
-            for ID in $COMMENT_IDS; do
-              ARGUMENT='("'$ID'")'
-              COMMENT_URL_RAW=$(dfx canister call --network ic $BUCKET buildCommentUrl $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq)
-              COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n')
-              COMMENT_URL="https://3e6ni-fyaaa-aaaaf-qagiq-cai.ic0.app$COMMENT_URL_CLEANED"
-              SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
-            done
-          done
-          SLACK_PAYLOAD+='"}'
-          echo "Sending the following payload to Slack:"
-          echo "$SLACK_PAYLOAD"
-          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
-        env:
-          COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+      for ID in $COMMENT_IDS; do
+        ARGUMENT='("'$ID'")'
+        COMMENT_URL_RAW=$(dfx canister call --network ic $BUCKET buildCommentUrl $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq)
+        if [ $? -ne 0 ]; then
+          echo "Error building comment URL for comment ID $ID in bucket $BUCKET"
+          continue
+        fi
+        COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n')
+        COMMENT_URL="https://3e6ni-fyaaa-aaaaf-qagiq-cai.ic0.app$COMMENT_URL_CLEANED"
+        SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
+      done
+    done
+    SLACK_PAYLOAD+='"}'
+    echo "Sending the following payload to Slack:"
+    echo "$SLACK_PAYLOAD"
+    curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
+    if [ $? -ne 0 ]; then
+      echo "Error sending payload to Slack"
+      exit 1
+    fi
+  env:
+    COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
