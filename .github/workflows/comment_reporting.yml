@@ -59,6 +59,11 @@ jobs:
           BUCKETS=$(echo "$BUCKETS_RAW" | grep -oP '"\K[a-z0-9-]+(?=";)' || echo '')
           echo "Buckets: $BUCKETS"
       
+          if [ -z "$BUCKETS" ]; then
+            echo "No buckets found. Exiting."
+            exit 0
+          fi
+      
           SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
           for BUCKET in $BUCKETS
           do
@@ -69,7 +74,7 @@ jobs:
               continue
             fi
             echo "Raw Comment IDs Output: $COMMENT_IDS_RAW"
-            COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=\")\d+(?=\")')
+            COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=\")\d+(?=\")' || echo '')
             if [ -z "$COMMENT_IDS" ]; then
               echo "No reported comments in bucket $BUCKET."
               continue
