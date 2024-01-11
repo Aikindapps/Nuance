@@ -30,7 +30,7 @@ jobs:
           echo "$UAT_WALLET" > ~/.config/dfx/identity/UAT/wallets.json
           dfx identity use UAT
           dfx identity get-principal
-          dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
+          dfx identity set-wallet "$UAT_WALLET" --network ic
         env:
           UAT_IDENT: ${{ secrets.UAT_IDENT }}
           UAT_WALLET: ${{ secrets.UAT_WALLET }}
