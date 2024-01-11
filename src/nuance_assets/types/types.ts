@@ -30,6 +30,7 @@ export type PublicationType = {
   modified: string;
   styling: PublicationStylingObject;
   cta: PublicationCta;
+  nftCanisterId: string;
 };
 
 export type PublicationStylingObject = {

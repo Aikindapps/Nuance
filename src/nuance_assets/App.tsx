@@ -29,7 +29,7 @@ const ReadArticle = lazy(() => import('./screens/read-article/read-article'));
 const ProfileSidebar = lazy(() => import('./screens/profile/profileSidebar'));
 const MyProfile = lazy(() => import('./screens/profile/myProfile'));
 const EditProfile = lazy(() => import('./screens/profile/editProfile'));
-const DraftArticles = lazy(() => import('./screens/profile/draftArticles'));
+const PersonalArticles = lazy(() => import('./screens/profile/personal-articles/personalArticles'));
 const PublishedArticles = lazy(
   () => import('./screens/profile/publishedArticles')
 );
@@ -76,7 +76,7 @@ const Routes = () => {
         { path: '', element: <MyProfile /> },
         { path: 'edit', element: <EditProfile /> },
         { path: 'submitted-for-review', element: <SubmittedArticles /> },
-        { path: 'draft', element: <DraftArticles /> },
+        { path: 'articles', element: <PersonalArticles /> },
         { path: 'published', element: <PublishedArticles /> },
         { path: 'topics', element: <FollowedTags /> },
         { path: 'following', element: <Following /> },

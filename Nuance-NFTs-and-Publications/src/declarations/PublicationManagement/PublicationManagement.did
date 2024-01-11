@@ -1,0 +1,99 @@
+type User = 
+ record {
+   accountCreated: text;
+   avatar: text;
+   bio: text;
+   displayName: text;
+   followers: Followers;
+   followersArray: vec text;
+   handle: text;
+   nuaTokens: float64;
+   publicationsArray: vec PublicationObject;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: blob;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: record {
+         text;
+         text;
+       };
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type RegisterUserReturn = 
+ variant {
+   err: text;
+   ok: User;
+ };
+type PublicationObject = 
+ record {
+   isEditor: bool;
+   publicationName: text;
+ };
+type Management = 
+ service {
+   acceptCycles: () -> ();
+   addWasmChunk: (blob) -> (Result);
+   availableCycles: () -> (nat) query;
+   createPublication: (text, text, text) -> (Result_3);
+   getAdmins: () -> (Result_5) query;
+   getAllPublisherIds: () -> (vec text) query;
+   getCanisterVersion: () -> (text) query;
+   getMaxMemorySize: () -> (nat) query;
+   getMemorySize: () -> (nat) query;
+   getPlatformOperators: () -> (List) query;
+   getPublishers: () -> (vec record {
+                               text;
+                               text;
+                             }) query;
+   getWasmChunks: () -> (Result_4);
+   idQuick: () -> (principal) query;
+   initManagementCanister: () -> (RegisterUserReturn);
+   initializeCanister: (text, text, text) -> (Result_1);
+   isThereEnoughMemory: () -> (bool) query;
+   registerAdmin: (text) -> (Result);
+   registerExistingPublisher: (text, text) -> (Result_3);
+   registerPlatformOperator: (text) -> (Result);
+   registerPublisherCanisters: () -> ();
+   resetWasmChunks: () -> () oneway;
+   setMaxMemorySize: (nat) -> (Result_2);
+   unregisterAdmin: (text) -> (Result);
+   unregisterPlatformOperator: (text) -> (Result);
+   updateSettingsForAllBucketCanisters: () -> (Result_1);
+   upgradeAllBuckets: (text, vec nat8) -> (Result);
+   upgradeBucket: (text, vec nat8) -> (Result);
+ };
+type List = 
+ opt record {
+       text;
+       List;
+     };
+type Followers = 
+ opt record {
+       text;
+       List;
+     };
+service : () -> Management

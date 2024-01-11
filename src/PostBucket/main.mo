@@ -105,6 +105,7 @@ actor class PostBucket() = this {
   stable var isActive = true;
   stable var commentId = 0;
   stable var applaudId = 0;
+  
 
   // in-memory state swap (holds hashmap entries between preupgrade and postupgrade) then is cleared
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
@@ -145,6 +146,9 @@ actor class PostBucket() = this {
   stable var commentIdToDownvotedPrincipalIdsEntries : [(Text, [Text])] = [];
   stable var commentIdToReplyCommentIdsEntries : [(Text, [Text])] = [];
   stable var replyCommentIdToCommentIdEntries : [(Text, Text)] = [];
+  stable var isCensoredEntries : [(Text, Bool)] = [];
+  stable var reportCommentQueue : [Text] = [];
+
 
   //applaud data
   stable var postIdToApplaudIdsEntries : [(Text, [Text])] = [];
@@ -215,6 +219,8 @@ actor class PostBucket() = this {
   var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
   //key: replyCommentId, value: commentId
   var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  //key: commentId, value: isCensored bool
+  var isCensoredHashMap = HashMap.fromIter<Text, Bool>(isCensoredEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
 
   //applaud hashmaps
   //key: postId, value: [applaudId]
@@ -772,6 +778,22 @@ actor class PostBucket() = this {
     };
   };
 
+  private func addPostIdToUser(principalId: Text, postId: Text) : () {
+    // add this postId to the user's posts if not already added
+    var userPostIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
+    let exists = List.find<Text>(userPostIds, func(val : Text) : Bool { val == postId });
+    if (exists == null) {
+      let updatedUserPostIds = List.append<Text>(List.fromArray([postId]), userPostIds);
+      userPostsHashMap.put(principalId, updatedUserPostIds);
+    };
+  };
+
+  private func removePostIdFromUser(principalId: Text, postId: Text) : () {
+    var existingPostIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
+    let filteredPostIds = List.filter<Text>(existingPostIds, func(val : Text) : Bool { val != postId });
+    userPostsHashMap.put(principalId, filteredPostIds);
+  };
+
   private func addOrUpdatePost(
     isNew : Bool,
     postId : Text,
@@ -828,7 +850,7 @@ actor class PostBucket() = this {
     };
   };
   //only returns the post stored in this bucket
-  public shared query ({ caller }) func get(postId : Text) : async Result.Result<PostBucketType, Text> {
+  public shared query ({ caller }) func getPost(postId : Text) : async Result.Result<PostBucketType, Text> {
     Debug.print("PostBucket->Get: " # postId);
 
     //only the author can retrieve own drafts
@@ -873,6 +895,72 @@ actor class PostBucket() = this {
     };
 
   };
+
+  //only returns the post stored in this bucket
+  public shared composite query ({ caller }) func getPostCompositeQuery(postId : Text) : async Result.Result<PostBucketType, Text> {
+    Debug.print("PostBucket->Get: " # postId);
+
+    //only the author can retrieve own drafts
+    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller) and not isNuanceCanister(caller)) {
+      if(U.safeGet(isPublicationHashMap, postId, false)){
+        //publication post
+        //if the caller is the creator, allow caller to see the post
+        let callerPrincipalId = Principal.toText(caller);
+        let callerPostIds = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil());
+        if(not U.arrayContains(List.toArray(callerPostIds), postId)){
+          //caller is not the creator, check if the caller is an editor
+          let publicationCanisterId = U.safeGet(principalIdHashMap, postId, "");
+          let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+          if(not (await postCoreCanister.isEditorPublic(publicationCanisterId, caller))){
+            //caller is not an editor either
+            return #err(Unauthorized)
+          };
+        };
+      }
+      else{
+        return #err(Unauthorized);
+      };
+      
+    };
+
+    if (rejectedByModClub(postId) and not isNuanceCanister(caller)) {
+      return #err(RejectedByModerators);
+    };
+
+    if (principalIdHashMap.get(postId) == null) {
+      return #err(ArticleNotFound);
+    };
+
+    var post = buildPost(postId);
+
+    if (post.isPremium) {
+      post := {
+        postId = post.postId;
+        handle = post.handle;
+        url = post.url;
+        title = post.title;
+        subtitle = post.subtitle;
+        headerImage = post.headerImage;
+        content = "";
+        isDraft = post.isDraft;
+        created = post.created;
+        modified = post.modified;
+        publishedDate = post.publishedDate;
+        creator = post.creator;
+        isPublication = post.isPublication;
+        category = post.category;
+        isPremium = post.isPremium;
+        wordCount = post.wordCount;
+        bucketCanisterId = Principal.toText(Principal.fromActor(this));
+      };
+      #ok(post);
+    } else {
+      #ok(post);
+    };
+
+  };
+
   //checks whether the caller owns the NFT, if the caller owns, returns the post with the content
   public shared ({ caller }) func getPremiumArticle(postId : Text) : async Result.Result<PostBucketType, Text> {
     Debug.print("PostBucket->GetPremiumArticle: " # postId);
@@ -1084,18 +1172,14 @@ actor class PostBucket() = this {
       principalIdHashMap.delete(postId);
 
       // remove postId from the user's posts
-      let userPosts = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
-      let filteredPosts = List.filter<Text>(userPosts, func(val : Text) : Bool { val != postId });
-      userPostsHashMap.put(principalId, filteredPosts);
+      removePostIdFromUser(principalId, postId);
 
       // remove postId from the writer's posts if post is not draft
-      if (U.safeGet(isPublicationHashMap, postId, true) and not U.safeGet(isDraftHashMap, postId, false)) {
+      if (U.safeGet(isPublicationHashMap, postId, true)) {
         let writerHandle = U.safeGet(creatorHashMap, postId, "");
         let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
         if (writerPrincipalId != "") {
-          let writerPosts = U.safeGet(userPostsHashMap, writerPrincipalId, List.nil<Text>());
-          let filteredPostsWriter = List.filter<Text>(writerPosts, func(val : Text) : Bool { val != postId });
-          userPostsHashMap.put(writerPrincipalId, filteredPostsWriter);
+          removePostIdFromUser(writerPrincipalId, postId);
         };
       };
 
@@ -1175,7 +1259,6 @@ actor class PostBucket() = this {
     await makePostPublication(postId, publicationHandle, userHandle, isDraft);
 
     let keyProperties = await postCoreActor.updatePostDraft(postId, isDraft, U.epochTime(), Principal.toText(caller));
-    ignore storeSEO(postId, isDraft);
 
     Debug.print("PostBucket -> building full post.");
     let postBucketType = buildPost(postId);
@@ -1238,46 +1321,20 @@ actor class PostBucket() = this {
       principalIdHashMap.put(postId, publicationPrincipalId);
       isPublicationHashMap.put(postId, true);
       creatorHashMap.put(postId, userHandle);
-      //remove postId from the user's posts if it's draft
       //add postId to publication's posts
-      //remove the post from latest posts if it's draft
+      addPostIdToUser(publicationPrincipalId, postId);
       if (isDraft) {
-        let userPosts = U.safeGet(userPostsHashMap, userPrincipalId, List.nil<Text>());
-        let filteredPosts = List.filter<Text>(userPosts, func(val : Text) : Bool { val != postId });
-        userPostsHashMap.put(userPrincipalId, filteredPosts);
-
-        var publicationPostIds = U.safeGet(userPostsHashMap, publicationPrincipalId, List.nil<Text>());
-        let exists = List.find<Text>(publicationPostIds, func(val : Text) : Bool { val == postId });
-        if (exists == null) {
-          let updatedPublicationPostIds = List.push(postId, publicationPostIds);
-          userPostsHashMap.put(publicationPrincipalId, updatedPublicationPostIds);
-        };
-
+       
       } else {
         let now = U.epochTime();
         modifiedHashMap.put(postId, now);
         isDraftHashMap.put(postId, isDraft);
-
-        var writerPostIds = U.safeGet(userPostsHashMap, userPrincipalId, List.nil<Text>());
-        let exists = List.find<Text>(writerPostIds, func(val : Text) : Bool { val == postId });
-        if (exists == null) {
-          let updatedWriterPostIds = List.push(postId, writerPostIds);
-          userPostsHashMap.put(userPrincipalId, updatedWriterPostIds);
-        };
-
-        var publicationPostIds = U.safeGet(userPostsHashMap, publicationPrincipalId, List.nil<Text>());
-        let exists_2 = List.find<Text>(publicationPostIds, func(val : Text) : Bool { val == postId });
-        if (exists_2 == null) {
-          let updatedPublicationPostIds = List.push(postId, publicationPostIds);
-          userPostsHashMap.put(publicationPrincipalId, updatedPublicationPostIds);
-        };
-
       };
 
     };
   };
 
-  //save method can only be called from PostCore canister. Users will call the save method in PostCore and it'll do the call.
+  //save method can only be called from PostCore canister. Users will call the save method in PostCore and it'll do the rest.
   //Reject all the other callers if they're not admin or a nuance canister.
   //indexing, postVersion management and modclub verification will also be handled by PostCore canister.
   public shared (msg) func save(postModel : PostSaveModel) : async SaveResult {
@@ -1295,17 +1352,10 @@ actor class PostBucket() = this {
     };
 
     let caller = postModel.caller;
+    let postOwnerPrincipalId = postModel.postOwnerPrincipalId;
     let postIdTrimmed = U.trim(postModel.postId);
     let isNew = (postIdTrimmed == "");
-
-    // ensure the caller owns the post before updating it
-    if (not isNew and not isAuthor(caller, postIdTrimmed)) {
-      return #err(Unauthorized);
-    };
-    //even if the isPublication field is true, caller should be a nuance canister
-    let isPublication = if (postModel.isPublication and isNuanceCanister(caller)) {
-      true;
-    } else { false };
+    let isPublication = postModel.isPublication;
 
     //if category is not empty, ensure it's a publication post
     if (not Text.equal(postModel.category, "") and not isPublication) {
@@ -1318,7 +1368,6 @@ actor class PostBucket() = this {
     };
     let postCoreActor = CanisterDeclarations.getPostCoreCanister();
 
-    let principalId = Principal.toText(caller);
     var savedCreatedDate : Int = 0;
     var postId = "";
     //if it's a new post, get the new postId from core canister
@@ -1337,7 +1386,7 @@ actor class PostBucket() = this {
       true;
     } else { false };
 
-    //if it's premium and not a new article, give an error
+    //if it's premium and not a new article, give an error if it's not a category change
     if (not isNew and isPremium and not U.safeGet(isDraftHashMap, postId, true)) {
       let category = U.safeGet(categoryHashMap, postId, "");
       if (postModel.category != category) {
@@ -1350,20 +1399,20 @@ actor class PostBucket() = this {
     };
 
     // retrieve user handle if it's not already mapped to the principalId
-    var userHandle = U.safeGet(handleHashMap, principalId, "");
+    var userHandle = U.safeGet(handleHashMap, postOwnerPrincipalId, "");
     if (userHandle == "") {
       let UserCanister = CanisterDeclarations.getUserCanister();
-      var user : ?User = await UserCanister.getUserInternal(principalId);
+      var user : ?User = await UserCanister.getUserInternal(postOwnerPrincipalId);
       switch (user) {
         case (null) return #err("cross canister User not found");
         case (?value) {
           userHandle := value.handle;
 
-          handleHashMap.put(principalId, value.handle);
-          handleReverseHashMap.put(value.handle, principalId);
-          lowercaseHandleHashMap.put(principalId, U.lowerCase(value.handle));
-          lowercaseHandleReverseHashMap.put(U.lowerCase(value.handle), principalId);
-          accountIdsToHandleHashMap.put(U.principalToAID(principalId), value.handle);
+          handleHashMap.put(postOwnerPrincipalId, value.handle);
+          handleReverseHashMap.put(value.handle, postOwnerPrincipalId);
+          lowercaseHandleHashMap.put(postOwnerPrincipalId, U.lowerCase(value.handle));
+          lowercaseHandleReverseHashMap.put(U.lowerCase(value.handle), postOwnerPrincipalId);
+          accountIdsToHandleHashMap.put(U.principalToAID(postOwnerPrincipalId), value.handle);
         };
       };
     };
@@ -1377,20 +1426,6 @@ actor class PostBucket() = this {
           return #err("Cross canister user not found");
         };
         case (?value) {
-          //here only if a publication post
-          //check if the user given as creator is writer or editor in the publication
-          var isAllowed = false;
-
-          for (creatorPubs in value.publicationsArray.vals()) {
-            if (creatorPubs.publicationName == userHandle) {
-              isAllowed := true;
-            };
-          };
-
-          if (not isAllowed) {
-            return #err("Creator is not a writer or editor of the publication!");
-          };
-
           handleHashMap.put(postModel.creator, value.handle);
           handleReverseHashMap.put(value.handle, postModel.creator);
           lowercaseHandleHashMap.put(postModel.creator, U.lowerCase(value.handle));
@@ -1403,7 +1438,7 @@ actor class PostBucket() = this {
     addOrUpdatePost(
       isNew,
       postId,
-      principalId,
+      postOwnerPrincipalId,
       postModel.title,
       postModel.subtitle,
       postModel.headerImage,
@@ -1417,34 +1452,12 @@ actor class PostBucket() = this {
     );
 
     // add this postId to the user's posts if not already added
-    var userPostIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
-    let exists = List.find<Text>(userPostIds, func(val : Text) : Bool { val == postId });
-    if (exists == null) {
-      let updatedUserPostIds = List.push(postId, userPostIds);
-      userPostsHashMap.put(principalId, updatedUserPostIds);
-    };
+    addPostIdToUser(postOwnerPrincipalId, postId);
 
     // if it's a publication post add this postId to the writer's posts if not already added
-    if (isPublication and not postModel.isDraft) {
-      var writerPostIds = U.safeGet(userPostsHashMap, postModel.creator, List.nil<Text>());
-      let exists = List.find<Text>(writerPostIds, func(val : Text) : Bool { val == postId });
-      if (exists == null) {
-        let updatedWriterPostIds = List.push(postId, writerPostIds);
-        userPostsHashMap.put(postModel.creator, updatedWriterPostIds);
-      };
-
+    if (isPublication) {
+      addPostIdToUser(postModel.creator, postId);
     };
-
-    //remove the postId from writer's postIds if this is a publication post and it's draft
-    if (isPublication and postModel.isDraft and Text.notEqual(postModel.creator, principalId)) {
-      var writerPostIds = U.safeGet(userPostsHashMap, postModel.creator, List.nil<Text>());
-      let filteredPostsWriter = List.filter<Text>(writerPostIds, func(val : Text) : Bool { val != postId });
-      userPostsHashMap.put(postModel.creator, filteredPostsWriter);
-      List.iterate(filteredPostsWriter, func(val : Text) : () { Debug.print(val) });
-
-    };
-
-    ignore storeSEO(postId, postModel.isDraft);
 
     #ok(buildPost(postId));
   };
@@ -1485,34 +1498,81 @@ actor class PostBucket() = this {
     Buffer.toArray(postsBuffer);
   };
 
-  //returns the submitted for review posts of the caller
-  public shared query ({ caller }) func getSubmittedForReview(publicationHandles : [Text]) : async [PostBucketType] {
-    let callerPrincipalId = Principal.toText(caller);
-    let callerHandle = U.safeGet(handleHashMap, callerPrincipalId, "");
-    if (callerHandle == "") {
-      //if the principal id of the caller is not stored in the hashmap, caller has no post submitted for review
-      return [];
+  public shared ({caller}) func getAllSubmittedForReviews() : async Result.Result<[(Text, [Text])], Text>{
+    if(not isAdmin(caller)){
+      return #err(Unauthorized)
+    };
+    //key: creatorHandle(lowercase), value: postIds
+    var creatorToPostIdsHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, Text.equal, Text.hash);
+    for((postId, isPublication) in isPublicationHashMap.entries()){
+      if(isPublication and U.safeGet(isDraftHashMap, postId, false)){
+        //draft publication post
+        let creatorHandle = U.safeGet(creatorHashMap, postId, "");
+        if(creatorHandle != ""){
+          let existingPostIds = U.safeGet(creatorToPostIdsHashMap, creatorHandle, []);
+          if(not U.arrayContains(existingPostIds, postId)){
+            creatorToPostIdsHashMap.put(U.lowerCase(creatorHandle), Array.append(existingPostIds, [postId]));
+          }
+        };
+      }
+    };
+    let userCanister = CanisterDeclarations.getUserCanister();
+    let creatorUserListItems = await userCanister.getUsersByHandles(Iter.toArray(creatorToPostIdsHashMap.keys()));
+    //key: creator handle (lowercase), value: principal id
+    var creatorHandleToPrincipalIdsHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, Text.equal, Text.hash);
+    for(creatorUserListItem in creatorUserListItems.vals()){
+      creatorHandleToPrincipalIdsHashMap.put(U.lowerCase(creatorUserListItem.handle), creatorUserListItem.principal);
     };
 
-    var result = Buffer.Buffer<PostBucketType>(0);
-
-    for (publicationHandle in publicationHandles.vals()) {
-      let publicationCanisterId = U.safeGet(handleReverseHashMap, publicationHandle, "");
-      if (publicationCanisterId != "") {
-        let postIdsOfPublication = U.safeGet(userPostsHashMap, publicationCanisterId, List.nil<Text>());
-        for (postId in Iter.fromList(postIdsOfPublication)) {
-          let creator = U.safeGet(creatorHashMap, postId, "");
-          let isDraft = U.safeGet(isDraftHashMap, postId, false);
-          if (creator == callerHandle and isDraft) {
-            result.add(buildPost(postId));
+    var resultBuffer = Buffer.Buffer<(Text, [Text])>(0);
+    for((creatorHandle, postIds) in creatorToPostIdsHashMap.entries()){
+      switch(creatorHandleToPrincipalIdsHashMap.get(creatorHandle)) {
+        case(?principalId) {
+          //internal state change
+          for(postId in postIds.vals()){
+            addPostIdToUser(principalId, postId);
           };
+          //add data to array
+          resultBuffer.add((principalId, postIds));
+        };
+        case(null) {
+          //principal not found
         };
       };
-
     };
-
-    Buffer.toArray(result);
+    #ok(Buffer.toArray(resultBuffer))
   };
+  //only callable by editors
+  public shared composite query ({caller}) func getPublicationPosts(postIds: [Text], publicationHandle: Text) : async [PostBucketType] {
+    let publicationCanisterId = U.safeGet(handleReverseHashMap, publicationHandle, "");
+    let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+    if(not (await postCoreCanister.isEditorPublic(publicationCanisterId, caller))){
+      //caller is not an editor
+      //return an empty array
+      return [];
+    };
+    let resultBuffer = Buffer.Buffer<PostBucketType>(0);
+    for(postId in postIds.vals()){
+      switch(principalIdHashMap.get(postId)) {
+        case(?postOwnerPrincipalId) {
+          if(publicationCanisterId == postOwnerPrincipalId){
+            //if the owner is the publication canister, add the post to the resultBuffer
+            resultBuffer.add(buildPost(postId))
+          }
+          else{
+            //owner is not the given publication
+            //do nothing
+          }
+        };
+        case(null) {
+          //there's no post with that id
+          //do nothing
+        };
+      };
+    };
+    Buffer.toArray(resultBuffer)
+  };
+
 
   //Allows getting posts by postIds including drafts
   public shared query ({ caller }) func getPostsByPostIds(postIds : [Text], includeDraft : Bool) : async [PostBucketType] {
@@ -1528,10 +1588,13 @@ actor class PostBucket() = this {
       func(postId : Text) : () {
         let isDraft = U.safeGet(isDraftHashMap, postId, true);
         let authorPrincipalId = U.safeGet(principalIdHashMap, postId, "");
+        //only for publication posts
+        let callerPostIds = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
+        let isWriter = U.arrayContains(List.toArray(callerPostIds), postId);
         if (not isDraft and not rejectedByModClub(postId)) {
           let postListItem = buildPostListItem(postId);
           postsBuffer.add(postListItem);
-        } else if (isDraft and not rejectedByModClub(postId) and includeDraft and authorPrincipalId == callerPrincipalId) {
+        } else if (isDraft and not rejectedByModClub(postId) and includeDraft and (authorPrincipalId == callerPrincipalId or isWriter)) {
           let postListItem = buildPostListItem(postId);
           postsBuffer.add(postListItem);
         };
@@ -1670,25 +1733,6 @@ actor class PostBucket() = this {
     let writerHandle = updatingPost.creator;
     let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
     let keyProperties = await postCoreActor.updatePostDraft(postId, isDraft, now, writerPrincipalId);
-    if (isDraft) {
-      if (writerPrincipalId != "" and Text.notEqual(Principal.toText(caller), writerPrincipalId)) {
-        let writerPosts = U.safeGet(userPostsHashMap, writerPrincipalId, List.nil<Text>());
-        let filteredPostsWriter = List.filter<Text>(writerPosts, func(val : Text) : Bool { val != postId });
-        userPostsHashMap.put(writerPrincipalId, filteredPostsWriter);
-      };
-    } else {
-      if (Text.notEqual(Principal.toText(caller), writerPrincipalId)) {
-        var writerPostIds = U.safeGet(userPostsHashMap, writerPrincipalId, List.nil<Text>());
-        let exists = List.find<Text>(writerPostIds, func(val : Text) : Bool { val == postId });
-        if (exists == null) {
-          let updatedWriterPostIds = List.push(postId, writerPostIds);
-          userPostsHashMap.put(writerPrincipalId, updatedWriterPostIds);
-        };
-      };
-
-    };
-
-    ignore storeSEO(postId, isDraft);
 
     let postBucketType = buildPost(postId);
     #ok({
@@ -1715,117 +1759,6 @@ actor class PostBucket() = this {
     });
   };
 
-  //#region migration
-
-  public shared (msg) func saveMultiple(postSaveModels : [PostSaveModelBucketMigration]) : async [SaveResult] {
-    if (isAnonymous(msg.caller)) {
-      return [#err("Anonymous user cannot run this method")];
-    };
-
-    if (not isNuanceCanister(msg.caller) and not isAdmin(msg.caller)) {
-      Debug.print("PostBucket-> " # Unauthorized);
-      return [#err(Unauthorized)];
-    };
-    var resultsHashmap = HashMap.HashMap<Text, SaveResult>(maxHashmapSize, Text.equal, Text.hash);
-    for (postModel in postSaveModels.vals()) {
-      var isValid = true;
-
-      let caller = postModel.caller;
-      let postIdTrimmed = U.trim(postModel.postId);
-      var postId = postIdTrimmed;
-      let isNew = true;
-
-      //even if the isPublication field is true, caller should be a nuance canister
-      let isPublication = if (postModel.isPublication and isNuanceCanister(caller)) {
-        true;
-      } else { false };
-
-      //if category is not empty, ensure it's a publication post
-      if (isValid and not Text.equal(postModel.category, "") and not isPublication) {
-        resultsHashmap.put(postId, #err(NotPublicationPost));
-        isValid := false;
-      };
-
-      //if the creator field is not empty and it's not a publication post, return an error
-      if (isValid and not isPublication and postModel.creator != "") {
-        resultsHashmap.put(postId, #err(Unauthorized));
-        isValid := false;
-      };
-      let postCoreActor = CanisterDeclarations.getPostCoreCanister();
-
-      let principalId = Principal.toText(caller);
-      var savedCreatedDate : Int = 0;
-
-      var isPremium : Bool = postModel.isPremium;
-
-      // retrieve user handle if it's not already mapped to the principalId
-      var userHandle = U.safeGet(handleHashMap, principalId, "");
-      if (isValid and userHandle == "") {
-        resultsHashmap.put(postId, #err("Handle not found for the postId " # postId));
-        isValid := false;
-      };
-
-      if (isValid) {
-        addOrUpdatePost(
-          isNew,
-          postId,
-          principalId,
-          postModel.title,
-          postModel.subtitle,
-          postModel.headerImage,
-          postModel.content,
-          postModel.isDraft,
-          postModel.tagNames,
-          postModel.creator,
-          isPublication,
-          postModel.category,
-          isPremium,
-        );
-        modifiedHashMap.put(postId, U.textToNat(postModel.modified));
-        publishedDateHashMap.put(postId, U.textToNat(postModel.publishedDate));
-        createdHashMap.put(postId, U.textToNat(postModel.created));
-        creatorHashMap.put(postId, postModel.creatorHandle);
-        if (postModel.isRejected) {
-          rejectedByModclubPostIdsHashmap.put(postId, postId);
-        };
-      };
-
-      // add this postId to the user's posts if not already added
-      var userPostIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
-      let exists = List.find<Text>(userPostIds, func(val : Text) : Bool { val == postId });
-      if (isValid and exists == null) {
-        let updatedUserPostIds = List.push(postId, userPostIds);
-        userPostsHashMap.put(principalId, updatedUserPostIds);
-      };
-
-      // if it's a publication post add this postId to the writer's posts if not already added
-      if (isValid and isPublication and not postModel.isDraft) {
-        var writerPostIds = U.safeGet(userPostsHashMap, postModel.creator, List.nil<Text>());
-        let exists = List.find<Text>(writerPostIds, func(val : Text) : Bool { val == postId });
-        if (exists == null) {
-          let updatedWriterPostIds = List.push(postId, writerPostIds);
-          userPostsHashMap.put(postModel.creator, updatedWriterPostIds);
-        };
-
-      };
-
-      //remove the postId from writer's postIds if this is a publication post and it's draft
-      if (isValid and isPublication and postModel.isDraft and Text.notEqual(postModel.creator, principalId)) {
-        var writerPostIds = U.safeGet(userPostsHashMap, postModel.creator, List.nil<Text>());
-        let filteredPostsWriter = List.filter<Text>(writerPostIds, func(val : Text) : Bool { val != postId });
-        userPostsHashMap.put(postModel.creator, filteredPostsWriter);
-        List.iterate(filteredPostsWriter, func(val : Text) : () { Debug.print(val) });
-
-      };
-      if (isValid) {
-        resultsHashmap.put(postId, #ok(buildPost(postId)));
-      };
-
-    };
-    ignore storeAllSEO();
-    Iter.toArray(resultsHashmap.vals())
-
-  };
 
   //gets the handles and principals of the users that created at least 1 post as argument and stores them in the handle hashmaps - migration method
   public shared (msg) func storeHandlesAndPrincipals(handlesAndPrincipalIds : [(Text, Text)]) : async Result.Result<Text, Text> {
@@ -2119,41 +2052,6 @@ actor class PostBucket() = this {
     #ok();
   };
 
-  public shared ({ caller }) func storeSEO(postId : Text, delete : Bool) : async Result.Result<(), Text> {
-
-    if (isAnonymous(caller)) {
-      return #err("Anonymous user cannot run this method");
-    };
-
-    let postCanister = Principal.toText(idInternal());
-    if (not isAdmin(caller) and Principal.toText(caller) != postCanister) {
-      return #err("Not authorized");
-    };
-
-    let FrontEndCanister = CanisterDeclarations.getFrontendCanister();
-
-    var post : PostBucketType = buildPost(postId);
-    var content = await generateContent(postId);
-
-    if (delete) {
-      FrontEndCanister.delete_asset({
-        key = "/share" # "/" # postId;
-      });
-      return #ok();
-    } else {
-      FrontEndCanister.store({
-        key = "/share" # "/" # postId;
-        content_type = "text/html";
-        content_encoding = "identity";
-        content = Text.encodeUtf8(content);
-        sha256 = null;
-      });
-
-    };
-
-    #ok();
-  };
-
   public shared func generateContent(postId : Text) : async Text {
 
     //validate input
@@ -2249,6 +2147,152 @@ actor class PostBucket() = this {
     Nat.toText(commentId);
   };
 
+public type CommentQueueAction = {
+    #add;
+    #remove;
+};
+
+//When a comment is reported, it's added to the queue. When a comment is reviewed, it's removed from the queue.
+private func updateCommentQueue(commentId : Text, action : CommentQueueAction) : Result.Result<(), Text> {
+    var newCommentQueue = Buffer.Buffer<Text>(0);
+
+    // Whether the commentId is found in the queue
+    var isCommentIdFound = false;
+
+  
+    for (reportedCommentId in reportCommentQueue.vals()) {
+        if (Text.equal(reportedCommentId, commentId)) {
+            isCommentIdFound := true;
+
+            //comment reviewed
+            if (action == #remove) {
+             Debug.print("Skip, commentId is removed from the queue");
+            };
+            //if action is add, do nothing since the commentId is already in the queue
+            } else {
+            newCommentQueue.add(reportedCommentId);
+        };
+       
+    };
+
+   // comment reported
+    if (action == #add) {
+        if (isCommentIdFound) {
+            return #err("Comment already reported");
+        };
+        newCommentQueue.add(commentId);
+    };
+
+    reportCommentQueue := Buffer.toArray(newCommentQueue);
+    return #ok();
+};
+
+
+
+  private func isCensored(commentId : Text) : Bool {
+    switch (isCensoredHashMap.get(commentId)) {
+      case (?value) {
+        Debug.print("isCensoredHashMap.get(" # commentId # ") -> " # Bool.toText(value));
+        if (value) {
+          
+          return true;
+        } else {
+          return false;
+        };
+      };
+      case (null) {
+        return false;
+      };
+    };
+  };
+
+  
+  public shared func reportComment(commentId : Text) : async Result.Result<Text, Text> {
+    if (not U.isTextLengthValid(commentId, 20)) {
+      return #err("Invalid commentId");
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+   switch (updateCommentQueue(commentId, #add)) {
+      case (#ok) {
+        return #ok("Comment reported");
+      };
+      case (#err(err)) {
+        return #err(err);
+      };
+    };
+    
+  };
+
+  //returns all the reported commentIds that need to be reviewed
+  public shared ({ caller }) func getReportedCommentIds() : async [Text] {
+    if (isAnonymous(caller) and not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return ["not authorized"];
+    };
+
+    return reportCommentQueue;
+  };
+
+//returns all the reported comments that need to be reviewed
+  public shared ({caller}) func getReportedComments() : async Result.Result<[Comment], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous user cannot run this method");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+
+    var reportedComments = Buffer.Buffer<Comment>(0);
+    for (reportedCommentId in reportCommentQueue.vals()) {
+      let comment = buildComment(reportedCommentId);
+      reportedComments.add(comment);
+    };
+
+    return #ok(Buffer.toArray(reportedComments));
+  };
+
+  public shared ({ caller }) func reviewComment(commentId : Text, censor : Bool) : async Result.Result<Comment, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous user cannot run this method");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+    //validate input
+    if (not U.isTextLengthValid(commentId, 20)) {
+      return #err("Invalid commentId");
+    };
+
+    let comment = buildComment(commentId);
+
+    
+    switch (updateCommentQueue(commentId, #remove)) {
+      case (#ok) {
+        isCensoredHashMap.put(commentId, censor);
+        return #ok(comment);
+      };
+      case (#err(err)) {
+        return #err(err);
+      };
+    };
+  };
+
+  let censoredMessage= "<p><em>
+    This comment was removed due to 
+    <a href=\"https://wiki.nuance.xyz/nuance/content-rules\" target=\"_blank\">content rules</a>. 
+    Please play nice. </em></p>";
+
   //build a comment by commentId
   private func buildComment(commentId : Text) : Comment {
     let editedAt : ?Text = switch (commentIdToEditedAtHashMap.get(commentId)) {
@@ -2266,11 +2310,12 @@ actor class PostBucket() = this {
       replies.add(buildComment(replyCommentId));
     };
 
+    let censored = isCensored(commentId);
     return {
       commentId = commentId;
       handle = "";
       avatar = ""; //doesn't need to be set or stored, but its useful to have so the frontend can populate the avatar
-      content = U.safeGet(commentIdToContentHashMap, commentId, "");
+      content = if (censored) { censoredMessage  } else { U.safeGet(commentIdToContentHashMap, commentId, "")};
       postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
       upVotes = U.safeGet(commentIdToUpvotedPrincipalIdsHashMap, commentId, []);
@@ -2280,6 +2325,7 @@ actor class PostBucket() = this {
       creator = U.safeGet(commentIdToUserPrincipalIdHashMap, commentId, "");
       replies = Buffer.toArray(replies);
       repliedCommentId = replyCommentIdToCommentIdHashMap.get(commentId);
+      isCensored = censored;
     };
   };
 
@@ -2295,6 +2341,15 @@ actor class PostBucket() = this {
       totalNumberOfComments = Nat.toText(U.safeGet(postIdToNumberOfCommentsHashMap, postId, 0));
     };
   };
+
+  public shared query func buildCommentUrl(commentId : Text) : async Text {
+    let postId = U.safeGet(commentIdToPostIdHashMap, commentId, "");
+    let post = buildPost(postId);
+    let postUrl = post.url;
+    let commentUrl = postUrl # "?comment=" # commentId;
+    return commentUrl;
+  };
+
   //returns the comment by a commentId
   public shared query func getComment(commentId : Text) : async Result.Result<Comment, Text> {
     switch (commentIdToUserPrincipalIdHashMap.get(commentId)) {
@@ -3061,6 +3116,7 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := Iter.toArray(commentIdToDownvotedPrincipalIdsHashMap.entries());
     commentIdToReplyCommentIdsEntries := Iter.toArray(commentIdToReplyCommentIdsHashMap.entries());
     replyCommentIdToCommentIdEntries := Iter.toArray(replyCommentIdToCommentIdHashMap.entries());
+    isCensoredEntries := Iter.toArray(isCensoredHashMap.entries());
 
     //applaud
     postIdToApplaudIdsEntries := Iter.toArray(postIdToApplaudIdsHashMap.entries());
@@ -3120,6 +3176,7 @@ actor class PostBucket() = this {
     commentIdToDownvotedPrincipalIdsEntries := [];
     commentIdToReplyCommentIdsEntries := [];
     replyCommentIdToCommentIdEntries := [];
+    isCensoredEntries := [];
 
     postIdToApplaudIdsEntries := [];
     principalIdToApplaudIdsEntries := [];

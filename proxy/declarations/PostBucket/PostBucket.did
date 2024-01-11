@@ -1,0 +1,359 @@
+type Validate = 
+ variant {
+   Err: text;
+   Ok: text;
+ };
+type SaveResult = 
+ variant {
+   err: text;
+   ok: PostBucketType;
+ };
+type SaveCommentModel = 
+ record {
+   commentId: opt text;
+   content: text;
+   postId: text;
+   replyToCommentId: opt text;
+ };
+type Result_9 = 
+ variant {
+   err: text;
+   ok: Comment__1;
+ };
+type Result_8 = 
+ variant {
+   err: text;
+   ok: Metadata;
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: PostBucketType__1;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: Applaud;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: Post;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: CommentsReturnType;
+ };
+type PostTagModel = 
+ record {
+   tagId: text;
+   tagName: text;
+ };
+type PostSaveModelBucketMigration = 
+ record {
+   caller: principal;
+   category: text;
+   content: text;
+   created: text;
+   creator: text;
+   creatorHandle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   isRejected: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tagNames: vec text;
+   title: text;
+ };
+type PostSaveModel = 
+ record {
+   caller: principal;
+   category: text;
+   content: text;
+   creator: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   postId: text;
+   subtitle: text;
+   tagNames: vec text;
+   title: text;
+ };
+type PostBucketType__1 = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   title: text;
+   url: text;
+   wordCount: text;
+ };
+type PostBucketType = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   title: text;
+   url: text;
+   wordCount: text;
+ };
+type PostBucket = 
+ service {
+   acceptCycles: () -> ();
+   addPostCategory: (text, text) -> (Result_5);
+   availableCycles: () -> (nat) query;
+   checkTipping: (text) -> ();
+   checkTippingByTokenSymbol: (text, text, text) -> (Result_10);
+   delete: (text) -> (Result_4);
+   deleteComment: (text) -> (Result_9);
+   deleteUserPosts: (text) -> (Result_4);
+   downvoteComment: (text) -> (Result);
+   dumpIds: () -> (Result_3);
+   dumpPosts: () -> (Result_3);
+   dumpUserIds: () -> (Result_3);
+   generateContent: (text) -> (text);
+   generatePublishedDates: () -> ();
+   get: (text) -> (Result_5) query;
+   getAdmins: () -> (Result_7) query;
+   getAllRejected: () -> (vec record {
+                                text;
+                                text;
+                              }) query;
+   getApplaudById: (text) -> (Result_10) query;
+   getBucketCanisterVersion: () -> (text) query;
+   getCanisterVersion: () -> (text) query;
+   getCgUsers: () -> (Result_7) query;
+   getComment: (text) -> (Result_9) query;
+   getFrontendCanisterId: () -> (text) query;
+   getKinicList: () -> (Result_7) query;
+   getList: (vec text) -> (vec PostBucketType__1) query;
+   getMaxMemorySize: () -> (nat) query;
+   getMemorySize: () -> (nat) query;
+   getMetadata: (text, nat) -> (Result_8) query;
+   getMyApplauds: () -> (vec Applaud) query;
+   getNftCanisters: () -> (vec NftCanisterEntry) query;
+   getPlatformOperators: () -> (List) query;
+   getPostApplauds: (text) -> (vec Applaud) query;
+   getPostComments: (text) -> (Result) query;
+   getPostCoreCanisterId: () -> (text) query;
+   getPostUrls: () -> (Result_2) query;
+   getPostWithPublicationControl: (text) -> (Result_5);
+   getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
+   getPremiumArticle: (text) -> (Result_5);
+   getSubmittedForReview: (vec text) -> (vec PostBucketType__1) query;
+   getTotalPostCount: () -> (nat) query;
+   getTrustedCanisters: () -> (Result_7) query;
+   getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
+   getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
+   initializeBucketCanister: (vec text, vec text, vec text,
+    vec record {
+          text;
+          text;
+        }, text, text, text, text) -> (Result_2);
+   initializeCanister: (text, text) -> (Result_2);
+   isBucketCanisterActivePublic: () -> (bool) query;
+   makeBucketCanisterNonActive: () -> (Result_6);
+   makePostPremium: (text) -> (bool);
+   migratePostToPublication: (text, text, bool) -> (Result_1);
+   registerAdmin: (text) -> (Result_3);
+   registerCanister: (text) -> (Result_3);
+   registerCgUser: (text) -> (Result_3);
+   registerNftCanisterId: (text, text) -> (Result_2);
+   registerNftCanisterIdAdminFunction: (text, text) -> (Result_2);
+   registerPlatformOperator: (text) -> (Result_3);
+   reindex: () -> (Result_2);
+   rejectPostByModclub: (text) -> () oneway;
+   removeCommentVote: (text) -> (Result);
+   removePostCategory: (text) -> (Result_5);
+   save: (PostSaveModel) -> (SaveResult);
+   saveComment: (SaveCommentModel) -> (Result);
+   saveMultiple: (vec PostSaveModelBucketMigration) -> (vec SaveResult);
+   setMaxMemorySize: (nat) -> (Result_4);
+   simulatePremiumArticle: (text, bool) -> ();
+   storeAllSEO: () -> (Result_3);
+   storeHandlesAndPrincipals: (vec record {
+                                     text;
+                                     text;
+                                   }) -> (Result_2);
+   storeSEO: (text, bool) -> (Result_3);
+   testInstructionSize: () -> (text);
+   unRejectPostByModclub: (text) -> () oneway;
+   unregisterAdmin: (text) -> (Result_3);
+   unregisterCanister: (text) -> (Result_3);
+   unregisterCgUser: (text) -> (Result_3);
+   unregisterPlatformOperator: (text) -> (Result_3);
+   updateHandle: (text, text) -> (Result_2);
+   updatePostDraft: (text, bool) -> (Result_1);
+   upvoteComment: (text) -> (Result);
+   validate: (reserved) -> (Validate);
+ };
+type Post = 
+ record {
+   bucketCanisterId: text;
+   category: text;
+   claps: text;
+   content: text;
+   created: text;
+   creator: text;
+   handle: text;
+   headerImage: text;
+   isDraft: bool;
+   isPremium: bool;
+   isPublication: bool;
+   modified: text;
+   postId: text;
+   publishedDate: text;
+   subtitle: text;
+   tags: vec PostTagModel;
+   title: text;
+   url: text;
+   views: text;
+   wordCount: text;
+ };
+type NftCanisterEntry = 
+ record {
+   canisterId: text;
+   handle: text;
+ };
+type MetadataValue = 
+ record {
+   text;
+   variant {
+     "blob": blob;
+     "nat": nat;
+     "nat8": nat8;
+     "text": text;
+   };
+ };
+type MetadataContainer = 
+ variant {
+   "blob": blob;
+   data: vec MetadataValue;
+   json: text;
+ };
+type Metadata = 
+ variant {
+   fungible:
+    record {
+      decimals: nat8;
+      metadata: opt MetadataContainer;
+      name: text;
+      symbol: text;
+    };
+   nonfungible:
+    record {
+      asset: text;
+      metadata: opt MetadataContainer;
+      name: text;
+      thumbnail: text;
+    };
+ };
+type List = 
+ opt record {
+       text;
+       List;
+     };
+type CommentsReturnType = 
+ record {
+   comments: vec Comment;
+   totalNumberOfComments: text;
+ };
+type Comment__1 = 
+ record {
+   avatar: text;
+   bucketCanisterId: text;
+   commentId: text;
+   content: text;
+   createdAt: text;
+   creator: text;
+   downVotes: vec text;
+   editedAt: opt text;
+   handle: text;
+   postId: text;
+   repliedCommentId: opt text;
+   replies: vec Comment;
+   upVotes: vec text;
+ };
+type Comment = 
+ record {
+   avatar: text;
+   bucketCanisterId: text;
+   commentId: text;
+   content: text;
+   createdAt: text;
+   creator: text;
+   downVotes: vec text;
+   editedAt: opt text;
+   handle: text;
+   postId: text;
+   repliedCommentId: opt text;
+   replies: vec Comment;
+   upVotes: vec text;
+ };
+type Applaud = 
+ record {
+   applaudId: text;
+   bucketCanisterId: text;
+   currency: text;
+   date: text;
+   numberOfApplauds: nat;
+   postId: text;
+   receivedTokenAmount: nat;
+   receiver: text;
+   sender: text;
+   tokenAmount: nat;
+ };
+service : () -> PostBucket

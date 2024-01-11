@@ -1,9 +1,13 @@
 import React, { useState, createContext, ReactNode, useEffect } from 'react';
 import { PostType, PremiumPostActivityListItem } from '../types/types';
-type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Tipping' | 'Deposit' | 'Clap';
+type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Deposit' | 'Clap' | 'Premium article';
 type ModalData = {
-    transferNftData?: PremiumPostActivityListItem,
-    clappingPostData?: PostType
+  transferNftData?: PremiumPostActivityListItem;
+  clappingPostData?: PostType;
+  premiumPostData?: PostType;
+  premiumPostNumberOfEditors?: number;
+  premiumPostOnSave?: (isDraft: boolean) => Promise<PostType | undefined>;
+  premiumPostRefreshPost?: (post: PostType) => Promise<void>;
 };
 type FakeApplaud = {
   postId: string;

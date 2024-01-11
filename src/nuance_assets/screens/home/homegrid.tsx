@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, Suspense, lazy } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore, useUserStore, usePostStore } from '../../store';
 import { PostType } from '../../types/types';
-import { colors, images } from '../../shared/constants';
+import { colors, icons, images } from '../../shared/constants';
 import { TagModel } from 'src/nuance_assets/services/actorService';
 import { slice } from 'lodash';
 import { useTheme } from '../../contextes/ThemeContext';
@@ -343,6 +343,19 @@ const HomePageGrid = () => {
     }
     return true;
   };
+
+  const getUserSearchResultsWithoutPublications = () => {
+    return searchUserResults?.filter((user)=>{
+      if(searchPublicationResults){
+        return !searchPublicationResults
+          .map((v) => v.publicationHandle)
+          .includes(user.handle);
+      }
+      else{
+        return true;
+      }
+    })
+  }
 
   const resetSearchfield = () => {
     setShowSearchResults(false);
@@ -712,7 +725,7 @@ const HomePageGrid = () => {
         );
         break;
       case 'People':
-        let totalCount = searchUserResults?.length || 0;
+        let totalCount = getUserSearchResultsWithoutPublications()?.length || 0;
         return (
           <div className='search-summary'>
             <div className='search-count'>
@@ -800,7 +813,7 @@ const HomePageGrid = () => {
       case 'People':
         return (
           <div style={{ marginLeft: '3%' }}>
-            {searchUserResults?.map((user) => {
+            {getUserSearchResultsWithoutPublications()?.map((user) => {
               return (
                 <div className='user-search-item' key={user.handle}>
                   <Link to={'/' + user.handle}>
@@ -941,6 +954,7 @@ const HomePageGrid = () => {
               <div className='logged-in'>
                 {/* Will call this dynamically when functionalities are implemented */}
                 {/* <img className='avatar-pic' src={user?.avatar || assetPaths.DEFAULT_AVATAR} alt='' /> */}
+                <img className='homepage-left-background-image' src={images.NUANCE_LOGO_MASK_GROUP} />
                 <div className='left-content'>
                   <img
                     className='avatar'

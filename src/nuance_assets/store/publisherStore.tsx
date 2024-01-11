@@ -21,8 +21,12 @@ import {
   PostTagModel,
   TagModel,
   getExtActor,
+  getPostCoreActor,
+  getPostBucketActor,
 } from '../services/actorService';
 import { Listing, Metadata } from '../services/ext-service/ext_v2.did';
+import { PostKeyProperties } from '../../../src/declarations/PostCore/PostCore.did';
+import { PostBucketType } from '../../../src/declarations/PostBucket/PostBucket.did';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -52,6 +56,72 @@ const handleError = (err: any, preText?: string) => {
   } else {
     toastError(err, preText);
   }
+};
+
+const fetchPostsByBuckets = async (
+  coreReturns: PostKeyProperties[],
+  includeDraft: boolean,
+  publicationHandle?: string //
+) => {
+  let bucketsMap = new Map<string, PostKeyProperties[]>();
+  let postIdToKeyPropertiesMap = new Map<string, PostKeyProperties>();
+  let filteredCoreReturns = coreReturns.filter(
+    (c) => c.bucketCanisterId !== ''
+  );
+  filteredCoreReturns.forEach((keyProperties) => {
+    let existing = bucketsMap.get(keyProperties.bucketCanisterId);
+    if (existing) {
+      bucketsMap.set(keyProperties.bucketCanisterId, [
+        ...existing,
+        keyProperties,
+      ]);
+    } else {
+      bucketsMap.set(keyProperties.bucketCanisterId, [keyProperties]);
+    }
+    postIdToKeyPropertiesMap.set(keyProperties.postId, keyProperties);
+  });
+
+  let promises: Promise<PostBucketType[]>[] = [];
+
+  for (let bucketCanisterId of bucketsMap.keys()) {
+    let keyProperties = bucketsMap.get(bucketCanisterId);
+    if (keyProperties) {
+      let bucketActor = await getPostBucketActor(bucketCanisterId);
+      if(publicationHandle){
+        promises.push(
+          bucketActor.getPublicationPosts(
+            keyProperties.map((keyProperty) => {
+              return keyProperty.postId;
+            }),
+            publicationHandle
+          )
+        );
+      }
+      else{
+        promises.push(
+          bucketActor.getPostsByPostIds(
+            keyProperties.map((keyProperty) => {
+              return keyProperty.postId;
+            }),
+            includeDraft
+          )
+        );
+      }
+      
+    }
+  }
+
+  let resultsArray = (await Promise.all(promises)).flat(1);
+
+  return resultsArray.map((bucketType) => {
+    let keyProperties = postIdToKeyPropertiesMap.get(bucketType.postId);
+    if (keyProperties) {
+      return { ...keyProperties, ...bucketType } as PostType;
+    } else {
+      //should never happen
+      return { ...bucketType } as PostType;
+    }
+  });
 };
 
 export interface PublisherStore {
@@ -127,14 +197,8 @@ export interface PublisherStore {
     publicationHandle: string
   ) => Promise<void>;
   savePublicationPost: (
-    post: PostSaveModel,
-    publicationHandle: string
+    post: PostSaveModel
   ) => Promise<PostType | undefined>;
-  getPublicationDraftPosts: (
-    indexFrom: number,
-    indexTo: number,
-    publicationHandle: string
-  ) => Promise<void>;
   getPublicationPosts: (
     indexFrom: number,
     indexTo: number,
@@ -374,29 +438,6 @@ const createPublisherStore:
     }
   },
 
-  getPublicationDraftPosts: async (
-    indexFrom: number,
-    indexTo: number,
-    publicationHandle: string
-  ): Promise<void> => {
-    try {
-      const canisterId = await get().getCanisterIdByHandle(publicationHandle);
-      const publicationDraftPosts = (await (
-        await getPublisherActor(canisterId)
-      ).getPublicationPosts(
-        true, //includeDraft
-        false, //includePublished
-        indexFrom,
-        indexTo
-      )) as PostType[];
-      set({ publicationDraftPosts });
-
-      const postsWithAvatars = await mergeAuthorAvatars(publicationDraftPosts);
-      set({ publicationDraftPosts: postsWithAvatars.reverse() });
-    } catch (err: any) {
-      handleError(err, Unexpected);
-    }
-  },
 
   getPublicationPosts: async (
     indexFrom: number,
@@ -404,15 +445,9 @@ const createPublisherStore:
     publicationHandle: string
   ): Promise<PostType[] | undefined> => {
     try {
-      const canisterId = await get().getCanisterIdByHandle(publicationHandle);
-      const publicationPosts = (await (
-        await getPublisherActor(canisterId)
-      ).getPublicationPosts(
-        true, //includeDraft
-        true, //includePublished
-        indexFrom,
-        indexTo
-      )) as PostType[];
+      let postCoreCanister = await getPostCoreActor();
+      let coreReturn = await postCoreCanister.getPublicationPosts(indexFrom, indexTo, publicationHandle);
+      const publicationPosts = await fetchPostsByBuckets(coreReturn, true, publicationHandle);
       set({ publicationPosts });
       const postsWithAvatars = await mergeAuthorAvatars(publicationPosts);
       set({ publicationPosts: postsWithAvatars });
@@ -522,16 +557,14 @@ const createPublisherStore:
 
   savePublicationPost: async (
     post: PostSaveModel,
-    publicationHandle: string
   ): Promise<PostType | undefined> => {
     try {
       const creator = await useUserStore
         .getState()
         .getPrincipalByHandle(post.creator);
-      const canisterId = await get().getCanisterIdByHandle(publicationHandle);
-      const result = await (
-        await getPublisherActor(canisterId)
-      ).publicationPost({
+      const postCoreCanister = await getPostCoreActor();
+      console.log('TRYING TO SAVE PUBLICATION POST')
+      const result = await postCoreCanister.save({
         postId: post.postId,
         title: post.title,
         subtitle: post.subtitle,
@@ -543,6 +576,7 @@ const createPublisherStore:
         isPublication: post.isPublication,
         category: post.category,
         isPremium: false,
+        handle: post.handle
       });
       if (Err in result) {
         set({ savePublicationPostError: result.err });

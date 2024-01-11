@@ -3,8 +3,8 @@ import { PostType, PublicationType } from '../../types/types';
 import { colors, icons, images } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
 import parse from 'html-react-parser';
-import './nft-article-view.scss'
-export const NftArticleView = (props: {
+import './static-article-view.scss'
+export const StaticArticleView = (props: {
   post: PostType;
 }) => {
   let post = props.post;
@@ -19,12 +19,18 @@ export const NftArticleView = (props: {
       : colors.primaryTextColor,
   };
   return (
-    <div style={{ paddingRight: '15%', width:'100%' }}>
+    <div style={{ paddingRight: '15%', width: '100%' }}>
       <div className='title-post-info-wrapper'>
         {post.isPremium ? (
           <img
-            className='nft-lock-icon'
+            className='static-article-view-icon'
             src={icons.NFT_LOCK_ICON}
+            style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
+          />
+        ) : post.isPublication ? (
+          <img
+            className='static-article-view-icon'
+            src={icons.PUBLICATION_ICON}
             style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
           />
         ) : null}
@@ -45,7 +51,7 @@ export const NftArticleView = (props: {
       </div>
       <div className='header-content-wrapper'>
         <img
-          className='header-image-nft-view'
+          className='header-image-static-article-view'
           src={post.headerImage || images.NUANCE_LOGO}
         />
         <div

@@ -1,8 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-} from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import {
   useAuthStore,
   useUserStore,
@@ -10,32 +6,39 @@ import {
   usePublisherStore,
 } from '../../store';
 import Button from '../../UI/Button/Button';
-import Footer from '../../components/footer/footer';
+import { Context as ModalContext } from '../../contextes/ModalContext';
 import Header from '../../components/header/header';
-import UnpublishArticle from '../../UI/unpublish article/unpublish-article';
 import Loader from '../../UI/loader/Loader';
 //import { PostSaveModel } from '../../services/actorService';
 import {
   PostType,
   PremiumArticleOwners as PremiumArticleOwnersObject,
+  PublicationType,
 } from '../../types/types';
-import { convertImagesToUrls, formatDate } from '../../shared/utils';
+import {
+  convertImagesToUrls,
+  DateFormat,
+  formatDate,
+} from '../../shared/utils';
 
 import { downscaleImage } from '../../components/quill-text-editor/modules/quill-image-compress/downscaleImage.js';
 import { toast, toastError, ToastType } from '../../services/toastService';
 import CopyArticle from '../../UI/copy-article/copy-article';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 import { colors, icons, images } from '../../shared/constants';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '../../contextes/ThemeContext';
 import './create-edit-article-screen.scss';
 import PremiumArticleOwners from '../../components/premium-article-owners/premium-article-owners';
-import { NftArticleView } from '../../components/nft-article-view/NftArticleView';
+import { StaticArticleView } from '../../components/static-article-view/StaticArticleView';
 import { EditArticleInputFields } from '../../components/edit-article-input-fields/edit-article-input-fields';
 import { EditArticlePremiumModal } from '../../components/edit-article-premium-modal/edit-article-premium-modal';
-import { PublicationDropdownMenu } from '../../components/publication-dropdown-menu/publication-dropdown-menu';
 import { ButtonsTextsMobile } from '../../components/buttons-texts-mobile/buttons-texts-mobile';
+import Badge from '../../UI/badge/badge';
+import Dropdown from '../../UI/dropdown/dropdown';
+import { RxAvatar } from 'react-icons/rx';
+import RadioButtons from '../../UI/radio-buttons/radio-buttons';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
@@ -51,6 +54,7 @@ const CreateEditArticle = () => {
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
   };
+  const modalContext = useContext(ModalContext);
 
   //postStore
   const {
@@ -72,9 +76,12 @@ const CreateEditArticle = () => {
   }));
 
   //publisherStore
-  const { savePublicationPost } = usePublisherStore((state) => ({
-    savePublicationPost: state.savePublicationPost,
-  }));
+  const { savePublicationPost, getPublication } = usePublisherStore(
+    (state) => ({
+      savePublicationPost: state.savePublicationPost,
+      getPublication: state.getPublication,
+    })
+  );
 
   //userStore
   const { getUser, user } = useUserStore((state) => ({
@@ -86,17 +93,17 @@ const CreateEditArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
   //returns the current status of the post
-  const getPostCurrentStatus = () => {
+  const getCurrentStatus = () => {
     if (location.pathname === '/article/new') {
       return 'Draft';
     } else {
-      if (lastSavedPost?.isDraft) {
+      if (!lastSavedPost || lastSavedPost?.isDraft) {
         return 'Draft';
       } else {
         if (lastSavedPost?.isPremium) {
-          return 'Published as premium';
+          return 'Published';
         } else {
-          ('Published');
+          return 'Published';
         }
       }
     }
@@ -109,24 +116,22 @@ const CreateEditArticle = () => {
         return false;
       } else {
         //post is not premium
-        if(user?.handle === selectedHandle){
+        if (user?.handle === selectedHandle) {
           //regular post -> display the button
-          return true
-        }
-        else{
+          return true;
+        } else {
           //publication post -> display if the user is an editor
-          return userPublicationsEditor.includes(selectedHandle)
+          return userPublicationsEditor.includes(selectedHandle);
         }
       }
     } else {
       //last saved post is undefined -> new article screen
-      if(user?.handle === selectedHandle){
+      if (user?.handle === selectedHandle) {
         //regular post -> display the button
-        return true
-      }
-      else{
+        return true;
+      } else {
         //publication post -> diplay if the user is an editor
-        return userPublicationsEditor.includes(selectedHandle)
+        return userPublicationsEditor.includes(selectedHandle);
       }
     }
   };
@@ -192,26 +197,15 @@ const CreateEditArticle = () => {
     return owners;
   };
 
-  const fillUserRelatedFields = () => {
+  const fillUserRelatedFields = async () => {
     if (user) {
       let allPublications: string[] = [];
       let writerPublications: string[] = [];
       let editorPublications: string[] = [];
-      let publicationsWithNftCanister: string[] = [];
-      let allPublicationsWithNftCanister = nftCanistersEntries.map((entry) => {
-        return entry.handle;
-      });
       user.publicationsArray.forEach((publicationObject) => {
         allPublications.push(publicationObject.publicationName);
         if (publicationObject.isEditor) {
           editorPublications.push(publicationObject.publicationName);
-          if (
-            allPublicationsWithNftCanister.includes(
-              publicationObject.publicationName
-            )
-          ) {
-            publicationsWithNftCanister.push(publicationObject.publicationName);
-          }
         } else {
           writerPublications.push(publicationObject.publicationName);
         }
@@ -219,8 +213,31 @@ const CreateEditArticle = () => {
       setUserAllPublications(allPublications);
       setUserPublicationsWriter(writerPublications);
       setUserPublicationsEditor(editorPublications);
-      setUserPublicationsWithNftCanister(publicationsWithNftCanister);
       setSelectedHandle(user.handle);
+
+      //fetch the publications that user is editor in parallel
+      const userEditorPublicationsDetailsArray = await Promise.all(
+        editorPublications.map((publicationHandle) => {
+          return getPublication(publicationHandle);
+        })
+      );
+      let userEditorPublicationsDetailsMap: Map<string, PublicationType> =
+        new Map();
+      let publicationsWithNftCanister : string[] = [];
+      for (const publicationDetail of userEditorPublicationsDetailsArray) {
+        if (publicationDetail) {
+          userEditorPublicationsDetailsMap.set(
+            publicationDetail.publicationHandle,
+            publicationDetail
+          );
+          if(publicationDetail.nftCanisterId !== ""){
+            publicationsWithNftCanister.push(publicationDetail.publicationHandle);
+          }
+        }
+      }
+
+      setUserPublicationsWithNftCanister(publicationsWithNftCanister);
+      setUserEditorPublicationsDetails(userEditorPublicationsDetailsMap);
     }
   };
 
@@ -233,7 +250,6 @@ const CreateEditArticle = () => {
       let postId = window.location.pathname.split('/').pop();
       if (postId) {
         let post = await getPost(postId);
-        console.log('fetchPost-> ', post);
         if (post) {
           //fetch the other info if the post is premium
           if (post.isPremium) {
@@ -247,6 +263,7 @@ const CreateEditArticle = () => {
             setPostHtml(post.content);
             if (post.isPublication) {
               setSelectedHandle(post.handle);
+              setSelectedCategory(post.category);
             }
           }
           //if it's not a premium post, simply put the post to local variable
@@ -256,6 +273,7 @@ const CreateEditArticle = () => {
             setPostHtml(post.content);
             if (post.isPublication) {
               setSelectedHandle(post.handle);
+              setSelectedCategory(post.category);
             }
           }
         } else {
@@ -272,21 +290,23 @@ const CreateEditArticle = () => {
         setSelectedHandle(user.handle);
       }
     }
-    setLoading(false);
   };
 
   //first load only
   useEffect(() => {
-    console.log('first load useEffect');
-    //fetch the post
-    fetchPost();
-    //refresh the user object
-    getUser();
-    //fill the user related fields by the user object
-    fillUserRelatedFields();
-    //get all the tags
-    getAllTags();
+    firstLoad();
   }, [location.pathname]);
+
+  const firstLoad = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchPost(),
+      getUser(),
+      fillUserRelatedFields(),
+      getAllTags(),
+    ]);
+    setLoading(false);
+  };
 
   //refresh the user related fields if the user object changes
   useEffect(() => {
@@ -306,9 +326,6 @@ const CreateEditArticle = () => {
   const [lastSavedPost, setLastSavedPost] = useState<PostType | undefined>();
   const [postHtml, setPostHtml] = useState('');
 
-  //premium modal
-  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
-
   //user related fields
   const [ownersOfPremiumArticle, setOwnersOfPremiumArticle] = useState(
     buildEmptyPremiumArticleOwners()
@@ -322,6 +339,9 @@ const CreateEditArticle = () => {
   >([]);
   const [userPublicationsWithNftCanister, setUserPublicationsWithNftCanister] =
     useState<string[]>([]);
+  const [userEditorPublicationsDetails, setUserEditorPublicationsDetails] =
+    useState<Map<string, PublicationType>>(new Map());
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   //loading
   const [loading, setLoading] = useState(true);
@@ -479,24 +499,23 @@ const CreateEditArticle = () => {
       if (isPublication) {
         if (wasPublication) {
           //the post was a publication post and it's still a publication post -> just call savePublicationPost
-          let savePublicationResult = await savePublicationPost(
-            {
-              title: savingPost.title,
-              creator: savingPost.creator || user?.handle || '',
-              content: contentWithUrls || postHtml,
-              isPremium: false,
-              isDraft: isDraft,
-              tagIds: savingPost.tags.map((tag) => {
-                return tag.tagId;
-              }),
-              category: savingPost.category,
-              headerImage: headerUrl || '',
-              subtitle: savingPost.subtitle,
-              isPublication: true,
-              postId: savingPost.postId,
-            },
-            lastSavedPost.handle
-          );
+
+          let savePublicationResult = await savePublicationPost({
+            title: savingPost.title,
+            creator: savingPost.creator || user?.handle || '',
+            content: contentWithUrls || postHtml,
+            isPremium: false,
+            isDraft: isDraft,
+            tagIds: savingPost.tags.map((tag) => {
+              return tag.tagId;
+            }),
+            category: selectedCategory,
+            headerImage: headerUrl || '',
+            subtitle: savingPost.subtitle,
+            isPublication: true,
+            postId: savingPost.postId,
+            handle: lastSavedPost.handle,
+          });
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
             setLastSavedPost(savePublicationResult);
@@ -515,22 +534,15 @@ const CreateEditArticle = () => {
             setLastSavedPost(migratePostResult);
             setPostHtml(migratePostResult.content);
 
-            //if the user is writer -> toast a success message and navigate to my-profile screen
-            if(!notNavigate && userPublicationsWriter.includes(migratePostResult.handle)){
-              toast(
-                'Post submitted for review!',
-                ToastType.Success
-              );
-              setTimeout(()=>{
-                navigate('/my-profile')
-              }, 500)
-            }
+            navigate('/article/edit/' + migratePostResult.postId, {
+              replace: true,
+            });
             return migratePostResult;
           }
         }
       } else {
         if (wasPublication) {
-          //not possible to reach here 
+          //not possible to reach here
         } else {
           //just a regular post edit -> call savePost
           let saveResult = await savePost({
@@ -542,11 +554,12 @@ const CreateEditArticle = () => {
             tagIds: savingPost.tags.map((tag) => {
               return tag.tagId;
             }),
-            category: savingPost.category,
+            category: selectedCategory,
             headerImage: headerUrl || '',
             subtitle: savingPost.subtitle,
             isPublication: false,
             postId: savingPost.postId,
+            handle: lastSavedPost.handle,
           });
           if (saveResult) {
             setSavingPost(saveResult);
@@ -561,44 +574,30 @@ const CreateEditArticle = () => {
       let isPublication = user?.handle !== selectedHandle;
       if (isPublication) {
         //create a publication post
-        let savePublicationResult = await savePublicationPost(
-          {
-            title: savingPost.title,
-            creator: user?.handle || '',
-            content: contentWithUrls || postHtml,
-            isPremium: false,
-            isDraft: isDraft,
-            tagIds: savingPost.tags.map((tag) => {
-              return tag.tagId;
-            }),
-            category: savingPost.category,
-            headerImage: headerUrl || '',
-            subtitle: savingPost.subtitle,
-            isPublication: true,
-            postId: savingPost.postId,
-          },
-          selectedHandle
-        );
+        let savePublicationResult = await savePublicationPost({
+          title: savingPost.title,
+          creator: user?.handle || '',
+          content: contentWithUrls || postHtml,
+          isPremium: false,
+          isDraft: isDraft,
+          tagIds: savingPost.tags.map((tag) => {
+            return tag.tagId;
+          }),
+          category: selectedCategory,
+          headerImage: headerUrl || '',
+          subtitle: savingPost.subtitle,
+          isPublication: true,
+          postId: savingPost.postId,
+          handle: selectedHandle,
+        });
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
           setLastSavedPost(savePublicationResult);
           setPostHtml(savePublicationResult.content);
-          //if the user is writer -> toast a success message and navigate to my-profile screen
-          //else if the user is editor -> navigate to edit-article screen
-          if(!notNavigate && userPublicationsWriter.includes(savePublicationResult.handle)){
-            toast(
-              'Post submitted for review!',
-              ToastType.Success
-            );
-            setTimeout(()=>{
-              navigate('/my-profile/submitted-for-review')
-            }, 500)
-          }
-          else if (!notNavigate) {
-            navigate('/article/edit/' + savePublicationResult.postId, {
-              replace: true,
-            });
-          }
+
+          navigate('/article/edit/' + savePublicationResult.postId, {
+            replace: true,
+          });
           return savePublicationResult;
         }
       } else {
@@ -613,11 +612,12 @@ const CreateEditArticle = () => {
           tagIds: savingPost.tags.map((tag) => {
             return tag.tagId;
           }),
-          category: savingPost.category,
+          category: selectedCategory,
           headerImage: headerUrl || '',
           subtitle: savingPost.subtitle,
           isPublication: false,
           postId: savingPost.postId,
+          handle: selectedHandle,
         });
         if (saveResult) {
           setSavingPost(saveResult);
@@ -634,6 +634,674 @@ const CreateEditArticle = () => {
     }
   };
 
+  const [radioButtonIndex, setRadioButtonIndex] = useState(
+    lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
+  );
+  
+  const getRadioButtonItems = (): JSX.Element[] => {
+    if (isPublishAsPremiumVisible()) {
+      if (isPublishButtonVisible()) {
+        return [
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
+            Save as draft under{' '}
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
+          </div>,
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
+            Publish this article under{' '}
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
+          </div>,
+
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
+            Publish and mint this article and create NFT keys that people need
+            to buy to read the article.
+            <br /> <br /> You can then no longer edit this article or un-publish
+            it....ever.
+          </div>,
+        ];
+      } else {
+        //not possible
+        return [<div></div>];
+      }
+    } else {
+      if (isPublishButtonVisible()) {
+        return [
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
+            Save as draft under{' '}
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
+          </div>,
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
+            Publish this article under{' '}
+            <span className={darkTheme ? 'lighter' : 'darker'}>
+              @{selectedHandle}
+            </span>
+          </div>,
+        ];
+      } else {
+        //Only for writers in publications
+        //we have different UI for this -> this code will never get executed
+        return [
+          <div
+            className={
+              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
+            }
+          >
+            Save as draft under <span className='dark'>@{selectedHandle}</span>
+          </div>,
+        ];
+      }
+    }
+  };
+  const getManageItems = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        if (lastSavedPost.isPublication) {
+          //saved post -> draft publication post
+          //two possibilities to be here
+          if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+            //user(writer) submitted the post for review
+            //no action here. Just display that this post is submitted
+            return (
+              <div className='edit-article-left-manage-content-wrapper'>
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  This article is submitted to a publication:{' '}
+                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>
+                    @{lastSavedPost.handle}
+                  </span>
+                </div>
+                <div className='horizontal-divider' />
+                <div className='text'>
+                  An editor manages the article there. You cannot edit this
+                  article anymore.
+                </div>
+              </div>
+            );
+          } else if (userPublicationsEditor.includes(lastSavedPost.handle)) {
+            //user is an editor
+            //radio buttons are rendered. Just display the button according to the radioButtonIndex var
+            switch (radioButtonIndex) {
+              case 0:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Save as Draft
+                  </Button>
+                );
+              case 1:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(false);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Publish
+                  </Button>
+                );
+              case 2:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={() => {
+                      let validationResult = validate();
+                      if (!validationResult || savingPost.headerImage === '') {
+                        if (validationResult) {
+                          toastError(
+                            'You need to add an header image to mint an article.'
+                          );
+                        }
+                        return;
+                      }
+                      modalContext?.openModal('Premium article', {
+                        premiumPostNumberOfEditors:
+                          userEditorPublicationsDetails.get(selectedHandle)
+                            ?.editors.length || 1,
+                        premiumPostData: savingPost,
+                        premiumPostOnSave: async (isDraft) => {
+                          return await onSave(isDraft, true);
+                        },
+                        premiumPostRefreshPost: async (post) => {
+                          await firstLoad()
+                        },
+                      });
+                    }}
+                  >
+                    <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
+                    Publish as premium
+                  </Button>
+                );
+            }
+          }
+        } else {
+          //saved post -> regular user post (draft)
+
+          if (selectedHandle === user?.handle) {
+            //dropdown uses the regular handle
+
+            switch (radioButtonIndex) {
+              case 0:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Save as Draft
+                  </Button>
+                );
+              case 1:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(false);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Publish
+                  </Button>
+                );
+                break;
+            }
+          } else if (userPublicationsWriter.includes(selectedHandle)) {
+            //post is saved as draft under the writer
+            //writer can only submit this post to the publication
+            return (
+              <div className='edit-article-left-manage-content-wrapper'>
+                <div className='text'>
+                  Submit this article for review in a publication. An editor
+                  will manage the article there
+                </div>
+                <Button
+                  type='button'
+                  styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                  style={{ width: '100%', marginTop: '20px' }}
+                  onClick={async () => {
+                    setLoading(true);
+                    await onSave(true);
+                    setLoading(false);
+                  }}
+                  dark={darkTheme}
+                >
+                  Submit to publication
+                </Button>
+              </div>
+            );
+          } else if (userPublicationsEditor.includes(selectedHandle)) {
+            //user is an editor
+            //radio buttons are rendered. Just display the button according to the radioButtonIndex var
+            switch (radioButtonIndex) {
+              case 0:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Save as Draft
+                  </Button>
+                );
+              case 1:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(false);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Publish
+                  </Button>
+                );
+              case 2:
+                return (
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={() => {
+                      let validationResult = validate();
+                      if (!validationResult || savingPost.headerImage === '') {
+                        if (validationResult) {
+                          toastError(
+                            'You need to add an header image to mint an article.'
+                          );
+                        }
+                        return;
+                      }
+                      modalContext?.openModal('Premium article', {
+                        premiumPostNumberOfEditors:
+                          userEditorPublicationsDetails.get(selectedHandle)
+                            ?.editors.length || 1,
+                        premiumPostData: savingPost,
+                        premiumPostOnSave: async (isDraft) => {
+                          return await onSave(isDraft, true);
+                        },
+                        premiumPostRefreshPost: async (post) => {
+                          await firstLoad()
+                        },
+                      });
+                    }}
+                  >
+                    <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
+                    Publish as premium
+                  </Button>
+                );
+            }
+          }
+        }
+      } else {
+        //there is a published post
+        if (lastSavedPost.isPublication) {
+          //published publication post
+          if (lastSavedPost.isPremium) {
+            //post is premium
+            //it doesn't matter if the user is editor or writer
+            //display the generic info
+            return (
+              <div className='edit-article-left-manage-content-wrapper'>
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  This article is minted and published to the publication:{' '}
+                  <br />
+                  <span className={darkTheme ? 'text-lighter' : 'text-darker'}>
+                    @{lastSavedPost.handle}
+                  </span>
+                </div>
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  You can not edit this article anymore.
+                </div>
+                <div className='horizontal-divider' />
+                <PremiumArticleOwners
+                  owners={ownersOfPremiumArticle}
+                  dark={darkTheme}
+                />
+                <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                  NFT keys are created that people need to buy to access this
+                  article.
+                </div>
+
+                <div
+                  onClick={() => {
+                    window.open(
+                      'https://wiki.nuance.xyz/nuance/how-do-premium-articles-work',
+                      '_blank'
+                    );
+                  }}
+                  className={
+                    darkTheme
+                      ? 'external-url-text-dark-mode'
+                      : 'external-url-text'
+                  }
+                >
+                  More on NFT keys
+                </div>
+              </div>
+            );
+          } else {
+            //published publication post
+            if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+              //user is a writer
+              //no action permission, just display the info
+              return (
+                <div className='edit-article-left-manage-content-wrapper'>
+                  <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                    This article is submitted to a publication:{' '}
+                    <span
+                      className={darkTheme ? 'text-lighter' : 'text-darker'}
+                    >
+                      @{lastSavedPost.handle}
+                    </span>
+                  </div>
+                  <div className='horizontal-divider' />
+                  <div className='text'>
+                    An editor manages the article there. You cannot edit this
+                    article anymore.
+                  </div>
+                </div>
+              );
+            } else if (userPublicationsEditor.includes(lastSavedPost.handle)) {
+              //user is an editor
+              return (
+                <div className='edit-article-left-manage-content-wrapper'>
+                  <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                    Unpublish from{' '}
+                    <span
+                      className={darkTheme ? 'text-lighter' : 'text-darker'}
+                    >
+                      @{lastSavedPost.handle}
+                    </span>
+                  </div>
+                  <Button
+                    type='button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    style={{ width: '100%', marginTop: '20px' }}
+                    onClick={async () => {
+                      setLoading(true);
+                      await onSave(true);
+                      setLoading(false);
+                    }}
+                    dark={darkTheme}
+                  >
+                    Unpublish
+                  </Button>
+                </div>
+              );
+            }
+          }
+        } else {
+          //published, regular post
+          //user is the owner, just display the unpublish button and text
+
+          return (
+            <div className='edit-article-left-manage-content-wrapper'>
+              <div className={darkTheme ? 'text-dark-mode' : 'text'}>
+                Unpublish from{' '}
+                <span className={darkTheme ? 'text-lighter' : 'text-darker'}>
+                  @{lastSavedPost.handle}
+                </span>
+              </div>
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(true);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Unpublish
+              </Button>
+            </div>
+          );
+        }
+      }
+    } else {
+      if (userPublicationsWriter.includes(selectedHandle)) {
+        //there is no saved post
+        //user wants to submit it to a publication (user is a writer in the selected publication)
+        return (
+          <div className='edit-article-left-manage-content-wrapper'>
+            <div className='text'>
+              Submit this article for review in a publication. An editor will
+              manage the article there
+            </div>
+            <Button
+              type='button'
+              styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+              style={{ width: '100%', marginTop: '20px' }}
+              onClick={async () => {
+                setLoading(true);
+                await onSave(true);
+                setLoading(false);
+              }}
+              dark={darkTheme}
+            >
+              Submit to publication
+            </Button>
+          </div>
+        );
+      } else if (userPublicationsEditor.includes(selectedHandle)) {
+        //there is no saved post
+        //user is an editor in the selected publication
+        switch (radioButtonIndex) {
+          case 0:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(true);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Save as Draft
+              </Button>
+            );
+          case 1:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(false);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Publish
+              </Button>
+            );
+          case 2:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={() => {
+                  let validationResult = validate();
+                  if (!validationResult || savingPost.headerImage === '') {
+                    if (validationResult) {
+                      toastError(
+                        'You need to add an header image to mint an article.'
+                      );
+                    }
+                    return;
+                  }
+                  modalContext?.openModal('Premium article', {
+                    premiumPostNumberOfEditors:
+                      userEditorPublicationsDetails.get(selectedHandle)?.editors
+                        .length || 1,
+                    premiumPostData: savingPost,
+                    premiumPostOnSave: async (isDraft) => {
+                      return await onSave(isDraft, true);
+                    },
+                    premiumPostRefreshPost: async (post) => {
+                      await firstLoad()
+                    },
+                  });
+                }}
+              >
+                <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
+                Publish as premium
+              </Button>
+            );
+        }
+      } else {
+        //there is no saved post
+        //user selected his/her own handle
+        switch (radioButtonIndex) {
+          case 0:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(true);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Save as Draft
+              </Button>
+            );
+          case 1:
+            return (
+              <Button
+                type='button'
+                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                style={{ width: '100%', marginTop: '20px' }}
+                onClick={async () => {
+                  setLoading(true);
+                  await onSave(false);
+                  setLoading(false);
+                }}
+                dark={darkTheme}
+              >
+                Publish
+              </Button>
+            );
+        }
+      }
+    }
+  };
+
+  const getDropdownItems = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        if (lastSavedPost.isPublication) {
+          return ['@' + lastSavedPost.handle];
+        } else {
+          return [
+            '@' + user?.handle,
+            ...userAllPublications.map((v) => '@' + v),
+          ];
+        }
+      } else {
+        return ['@' + lastSavedPost.handle];
+      }
+    } else {
+      return ['@' + user?.handle, ...userAllPublications.map((v) => '@' + v)];
+    }
+  };
+
+  const getDropdownIcons = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        if (lastSavedPost.isPublication) {
+          return [icons.PUBLICATION_ICON];
+        } else {
+          return [
+            darkTheme ? icons.PROFILE_ICON_DARK : icons.PROFILE_ICON,
+            ...userAllPublications.map((v) => icons.PUBLICATION_ICON),
+          ];
+        }
+      } else {
+        return [
+          lastSavedPost.isPublication
+            ? icons.PUBLICATION_ICON
+            : darkTheme
+            ? icons.PROFILE_ICON_DARK
+            : icons.PROFILE_ICON,
+        ];
+      }
+    } else {
+      return [
+        darkTheme ? icons.PROFILE_ICON_DARK : icons.PROFILE_ICON,
+        ...userAllPublications.map((v) => icons.PUBLICATION_ICON),
+      ];
+    }
+  };
+
+  const isEditAllowed = () => {
+    if (lastSavedPost) {
+      if (lastSavedPost.isDraft) {
+        //post is draft
+        if (lastSavedPost.isPublication) {
+          //draft and publication post
+          if (userPublicationsEditor.includes(lastSavedPost.handle)) {
+            //draft publication post but user is an editor
+            //allowed
+            return true;
+          }
+          //user is not the editor
+          return false;
+        } else {
+          //regular draft post
+          //user is allowed to edit
+          return true;
+        }
+      } else {
+        //post is published
+        //edit is not allowed before unpublishing it
+        return false;
+      }
+    } else {
+      //there is no existing post
+      //edit is allowed
+      return true;
+    }
+  };
+
+  const getCategoriesIfExists = () => {
+    let publicationDetails = userEditorPublicationsDetails.get(selectedHandle);
+    if (publicationDetails) {
+      return [
+        '/',
+        ...publicationDetails.categories.map((category) => '/' + category),
+      ];
+    }
+  };
+
   return (
     <div className='edit-article-wrapper' style={darkOptionsAndColors}>
       <Header
@@ -643,158 +1311,126 @@ const CreateEditArticle = () => {
         isPublicationPage={false}
         isUserAdminScreen={true}
       />
-      {premiumModalOpen && (
-        <EditArticlePremiumModal
-          refreshPost={async (post) => {
-            console.log('refreshPost-> ', post);
-            //set the post
-            setSavingPost(post);
-            setLastSavedPost(post);
-            setPostHtml(post.content);
-            if (post.isPublication) {
-              setSelectedHandle(post.handle);
-            }
-            setTimeout(async () => {
-              if (location.pathname.includes('new')) {
-                navigate('/article/edit/' + post.postId, { replace: true });
-              } else {
-                fetchPost();
-              }
-            }, 6000);
-          }}
-          setLoading={setLoading}
-          onSave={async (isDraft) => {
-            return await onSave(isDraft, true);
-          }}
-          post={savingPost}
-          setPremiumModalOpen={setPremiumModalOpen}
-          publicationHandle={selectedHandle}
-        />
-      )}
       <div className='edit-article-content-wrapper'>
         <div className='edit-article-left'>
-          <p className='edit-article-date'>
+          <p className='edit-article-left-date'>
             {formatDate(
-              lastSavedPost?.modified || new Date().getTime().toString()
+              lastSavedPost?.modified || new Date().getTime().toString(),
+              DateFormat.NoYear
             )}
           </p>
-          <div className='edit-article-menus'>
-            {lastSavedPost && (
-              <CopyArticle
-                url={lastSavedPost.url}
-                shown={copyArticle}
-                setShown={setCopyArticle}
-                dark={darkTheme}
-                postId={lastSavedPost.postId}
-              />
-            )}
-            {lastSavedPost &&
-              !lastSavedPost.isDraft &&
-              !lastSavedPost.isPremium && (
-                <UnpublishArticle
-                  shown={shownMeatball}
-                  setIsDraft={setIsDraft}
-                  setShown={setShownMeatball}
-                  savePost={async () => {
-                    setLoading(true);
-                    await onSave(true);
-                    setLoading(false);
-                  }}
-                  dark={darkTheme}
-                />
-              )}
-          </div>
-          <div className='edit-article-horizontal-divider' />
-          <p className='edit-article-left-text'>
-            last modified: {formatDate(lastSavedPost?.modified) || ' - '}
-          </p>
-          {(location.pathname === '/article/new' || lastSavedPost?.isDraft) && (
-            <Button
-              disabled={loading}
-              type='button'
-              styleType='primary-1'
-              style={{
-                width: '96px',
-                margin: '10px 0',
-                border: darkTheme ? '1px solid #fff' : 'none',
-              }}
-              onClick={async () => {
-                setLoading(true);
-                await onSave(true);
-                setLoading(false);
-              }}
-            >
-              {userPublicationsWriter.includes(selectedHandle)
-                ? 'Submit'
-                : 'Save'}
-            </Button>
-          )}
-          <div className='edit-article-horizontal-divider' />
-          <p className='edit-article-left-text'>
-            Current status: {getPostCurrentStatus()}
-          </p>
-          {!lastSavedPost?.isPremium && (
-            <PublicationDropdownMenu
-              user={user}
-              lastSavedPost={lastSavedPost}
-              userAllPublications={userAllPublications}
-              loading={loading}
-              selectedHandle={selectedHandle}
-              setSelectedHandle={setSelectedHandle}
-            />
-          )}
-          {isPublishButtonVisible() ? (
-            <Button
-              disabled={loading}
-              type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-              style={{ width: '96px' }}
-              onClick={async () => {
-                setLoading(true);
-                await onSave(false);
-                setLoading(false);
-              }}
-              dark={darkTheme}
-            >
-              Publish
-            </Button>
-          ) : null}
-          <div className='edit-article-horizontal-divider' />
-
-          {/* display the owners of the post if it's a premium post */}
-          {lastSavedPost?.isPremium ? (
-            <PremiumArticleOwners
-              owners={ownersOfPremiumArticle}
-              dark={darkTheme}
-            />
-          ) : null}
-
-          {/* Display the publish as premium button if the selected handle is a publication with an nft canister */}
-          {isPublishAsPremiumVisible() ? (
-            <div className='NFT-field-wrapper'>
-              <div className='NFT-left-text-container'>
-                <p className='NFT-left-text'>
-                  Limit access to this article by selling exclusive NFT keys.
-                </p>
-                <p className='NFT-left-text'>
-                  NOTE: after creating NFT keys you cannot edit the article
-                  anymore.
-                </p>
+          {!loading && (
+            <div className='edit-article-left-manage-wrapper'>
+              <div className='edit-article-horizontal-divider' />
+              <div className='edit-article-left-info-list-wrapper'>
+                <div className='edit-article-left-info-list-item'>
+                  <div>Current status</div>
+                  <Badge status={getCurrentStatus()} dark={darkTheme} />
+                </div>
+                <div className='edit-article-left-info-list-item'>
+                  <div>Last modified</div>
+                  {formatDate(
+                    lastSavedPost?.modified || new Date().getTime().toString(),
+                    DateFormat.WithYear
+                  )}
+                </div>
+                {lastSavedPost && (
+                  <div className='edit-article-left-info-list-item'>
+                    <div>Location</div>
+                    {'@' + lastSavedPost.handle}
+                  </div>
+                )}
+                {lastSavedPost?.isPublication && (
+                  <div className='edit-article-left-info-list-item'>
+                    <div>Category</div>
+                    {'/' + lastSavedPost.category}
+                  </div>
+                )}
               </div>
-              <Button
-                disabled={false}
-                type='button'
-                styleType='secondary-NFT'
-                style={{ width: '190px' }}
-                onClick={() => {
-                  setPremiumModalOpen(true);
-                }}
+              <div
+                className='edit-article-left-manage-location-wrapper'
+                style={
+                  darkTheme
+                    ? {
+                        background: colors.darkModePrimaryBackgroundColor,
+                        border: '1px solid rgb(153, 153, 153)',
+                      }
+                    : {}
+                }
               >
-                <img src={icons.NFT_LOCK_ICON} className='NFT-icon'></img>
-                Publish as premium
-              </Button>
+                {(lastSavedPost?.isDraft || !lastSavedPost) && (
+                  <div className='edit-article-left-location-wrapper'>
+                    <div className='edit-article-left-location-title'>
+                      LOCATION
+                    </div>
+                    <Dropdown
+                      style={{ height: '30px' }}
+                      selectedTextStyle={{
+                        fontWeight: '400',
+                        fontSize: '14px',
+                      }}
+                      icons={getDropdownIcons()}
+                      drodownItemsWrapperStyle={{ top: '32px' }}
+                      items={getDropdownItems()}
+                      arrowWidth={12}
+                      imageStyle={{ width: '20px', height: '20px' }}
+                      dropdownMenuItemStyle={{ fontSize: '12px' }}
+                      onSelect={(item) => {
+                        setSelectedHandle(item.slice(1));
+                        if (lastSavedPost?.category) {
+                          setSelectedCategory(lastSavedPost.category);
+                        } else {
+                          setSelectedCategory('');
+                        }
+                      }}
+                      notActiveIfOnlyOneItem={true}
+                    />
+                  </div>
+                )}
+                {getCategoriesIfExists() &&
+                  (lastSavedPost?.isDraft || !lastSavedPost) && (
+                    <div className='edit-article-left-location-wrapper'>
+                      <div className='edit-article-left-location-title'>
+                        CATEGORY
+                      </div>
+                      <Dropdown
+                        selected={'/' + selectedCategory}
+                        style={{ height: '30px' }}
+                        selectedTextStyle={{
+                          fontWeight: '400',
+                          fontSize: '14px',
+                        }}
+                        drodownItemsWrapperStyle={{ top: '32px' }}
+                        items={getCategoriesIfExists() as string[]}
+                        arrowWidth={12}
+                        dropdownMenuItemStyle={{
+                          fontSize: '12px',
+                          height: '20px',
+                        }}
+                        onSelect={(item) => {
+                          setSelectedCategory(item.slice(1));
+                        }}
+                        notActiveIfOnlyOneItem={false}
+                      />
+                    </div>
+                  )}
+                <div className='edit-article-left-manage-wrapper'>
+                  <div className='edit-article-left-manage-title'>MANAGE</div>
+                  {(!lastSavedPost ||
+                    (lastSavedPost && lastSavedPost.isDraft)) &&
+                    !userPublicationsWriter.includes(selectedHandle) && (
+                      <RadioButtons
+                        items={getRadioButtonItems()}
+                        onSelect={(index) => {
+                          setRadioButtonIndex(index);
+                        }}
+                      />
+                    )}
+                  {getManageItems()}
+                </div>
+              </div>
             </div>
-          ) : null}
+          )}
         </div>
         <div className='vertical-divider' />
         <div className='edit-article-right'>
@@ -803,9 +1439,7 @@ const CreateEditArticle = () => {
           ) : (
             <div className='edit-article-right-content'>
               {/* if the post is premium, act like the read-article screen. if not, simply show the input fields */}
-              {lastSavedPost?.isPremium ? (
-                <NftArticleView post={lastSavedPost} />
-              ) : (
+              {isEditAllowed() ? (
                 <EditArticleInputFields
                   isMobile={isMobile()}
                   lastSavedPost={lastSavedPost}
@@ -828,30 +1462,9 @@ const CreateEditArticle = () => {
                   onPostTagChange={onPostTagChange}
                   allTags={allTags}
                 />
-              )}
-              {/*Left sidebar is gone in mobile,  */}
-              {isMobile() ? (
-                <ButtonsTextsMobile
-                  lastSavedPost={lastSavedPost}
-                  user={user}
-                  userAllPublications={userAllPublications}
-                  userPublicationsWriter={userPublicationsWriter}
-                  darkTheme={darkTheme}
-                  loading={loading}
-                  setLoading={setLoading}
-                  selectedHandle={selectedHandle}
-                  setSelectedHandle={setSelectedHandle}
-                  ownersOfPremiumArticle={ownersOfPremiumArticle}
-                  onSave={onSave}
-                  getPostCurrentStatus={getPostCurrentStatus}
-                  isPublishButtonVisible={isPublishButtonVisible}
-                  isPublishAsPremiumVisible={isPublishAsPremiumVisible}
-                  setPremiumModalOpen={setPremiumModalOpen}
-                />
+              ) : lastSavedPost ? (
+                <StaticArticleView post={lastSavedPost} />
               ) : null}
-              <div className='footer-wrapper'>
-                <Footer />
-              </div>
             </div>
           )}
         </div>

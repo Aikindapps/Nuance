@@ -22,7 +22,7 @@ import Text "mo:base/Text";
 import Time "mo:base/Time";
 
 import Canistergeek "../canistergeek/canistergeek";
-import PostCoreTypes "./types_post_core";
+import PostCoreTypes "../../../src/PostCore/types";
 import Types "./types";
 import U "../shared/utils";
 import ExtUtil "../motoko/util/AccountIdentifier";
@@ -388,6 +388,7 @@ actor class Publisher() = this {
                 link = "";
                 icon = "";
             };
+            nftCanisterId = "";
         };
     };
 
@@ -443,6 +444,7 @@ actor class Publisher() = this {
                 link = "";
                 icon = "";
             };
+            nftCanisterId = "";
         };
     };
 
@@ -450,7 +452,6 @@ actor class Publisher() = this {
         canistergeekMonitor.collectMetrics();
         var publication : Publication = getNullPublication(canisterId);
         //var canisterId = U.safeGet(canisterIdHashMap, canisterId, "");
-
         if (canisterId != "") {
             publication := {
                 publicationHandle = U.safeGet(publicationHandleHashMap, canisterId, "");
@@ -481,6 +482,7 @@ actor class Publisher() = this {
                     link = U.safeGet(publicationCtaLinkHashMap, canisterId, "");
                     icon = U.safeGet(publicationCtaIconHashMap, canisterId, "");
                 };
+                nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
             };
         };
 
@@ -508,6 +510,7 @@ actor class Publisher() = this {
             modified = publication.modified;
             styling = publication.styling;
             cta = publication.cta;
+            nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
         };
 
         publication;
@@ -566,6 +569,7 @@ actor class Publisher() = this {
 
         //used ignore. no need to wait, just informs post canister about the handle
         let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        //ToDo: migrate this to PublicationManagement
         ignore PostCoreCanister.registerPublisher();
 
         putPublication(canisterId, principalId, publisher);
@@ -657,79 +661,6 @@ actor class Publisher() = this {
         exists != null;
     };
 
-    public shared ({ caller }) func publicationPost(input : PostSaveModel) : async PostCrossCanisterReturn {
-        if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-
-        //validate inputs
-        if (not U.isTextLengthValid(input.category, 50)) {
-            return #err("Invalid category");
-        };
-        if (not U.isTextLengthValid(input.content, 300000)) {
-            return #err("Your content is unusually large, please contact support to post");
-        };
-        if (not U.isTextLengthValid(input.creator, 64)) {
-            return #err("Invalid creator");
-        };
-        if (not U.isTextLengthValid(input.headerImage, 1000)) {
-            return #err("Invalid headerImage size");
-        };
-        if (not U.isTextLengthValid(input.postId, 20)) {
-            return #err("Invalid postId");
-        };
-        if (not U.isTextLengthValid(input.subtitle, 400)) {
-            return #err("Invalid subtitle");
-        };
-        if (not U.isTextLengthValid(input.title, 400)) {
-            return #err("Invalid title");
-        };
-        for (tagId in Iter.fromArray(input.tagIds)) {
-            if (not U.isTextLengthValid(tagId, 50)) {
-                return #err("Invalid tagId");
-            };
-        };
-        canistergeekMonitor.collectMetrics();
-        var publicationCanisterId = idInternal();
-        var canisterId = Principal.toText(publicationCanisterId);
-
-        var isDraft = input.isDraft;
-        var postModel : PostSaveModel = input;
-
-        postModel := {
-            title = input.title;
-            content = input.content;
-            isDraft = isDraft;
-            tagIds = input.tagIds;
-            headerImage = input.headerImage;
-            subtitle = input.subtitle;
-            postId = input.postId;
-            creator = input.creator;
-            isPublication = true;
-            category = input.category;
-            isPremium = input.isPremium;
-        };
-        if (not isEditor(caller, canisterId) and not isWriter(caller, canisterId)) {
-            return #err(Unauthorized);
-        };
-
-        if (isWriter(caller, canisterId) and not isDraft) {
-            return #err(WriterNotEditor);
-        };
-
-        if (not Text.equal(input.postId, "") and isWriter(caller, canisterId)) {
-            return #err(WriterNotEditor);
-        };
-
-        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
-        var postReturn = await PostCoreCanister.save(postModel);
-        Debug.print("publication post called and working");
-        switch (postReturn) {
-            case (#ok(post)) return #ok(post);
-            case (#err(err)) return #err(err);
-        };
-    };
-
     public shared ({ caller }) func addEditor(editorHandle : Text) : async Result.Result<Publication, Text> {
         if (isAnonymous(caller)) {
             return #err("Cannot use this method anonymously.");
@@ -816,6 +747,8 @@ actor class Publisher() = this {
                         return #err(err);
                     };
                 };
+                let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+                ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, publishersArray, publication.writers);
             } catch e {
                 //reverse the state changes if the inter canister call fails
                 editorsHashMap.put(canisterId, List.toArray(existingEditorsList));
@@ -910,6 +843,8 @@ actor class Publisher() = this {
                         return #err(err);
                     };
                 };
+                let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+                ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, publication.editors, publicationWriters);
             } catch e {
                 //reverse the state changes if the inter canister call fails
                 editorsHashMap.put(canisterId, List.toArray(existingWritersList));
@@ -970,6 +905,9 @@ actor class Publisher() = this {
             case (#ok(user))();
             case (#err(err)) return #err(err);
         };
+
+        let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, publication.editors, List.toArray(writersList));
 
         let publicationWriters = List.toArray(writersList);
         writersHashMap.put(canisterId, publicationWriters);
@@ -1040,6 +978,9 @@ actor class Publisher() = this {
             case (#ok(user))();
             case (#err(err)) return #err(err);
         };
+
+        let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        ignore postCoreCanister.updatePublicationEditorsAndWriters(publication.publicationHandle, List.toArray(editorsList), publication.writers);
 
         //ToDo: check if editor is in the list
 
@@ -1461,6 +1402,7 @@ actor class Publisher() = this {
             modified = publication.modified;
             styling = publication.styling;
             cta = publication.cta;
+            nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
         };
 
         #ok(publication);
@@ -1500,9 +1442,15 @@ actor class Publisher() = this {
             modified = publication.modified;
             styling = publication.styling;
             cta = publication.cta;
+            nftCanisterId = if(nftCanisterIds.size() == 0){""} else{nftCanisterIds[0]};
         };
 
         #ok(publication);
+    };
+
+    public shared query func getEditorAndWriterPrincipalIds() : async ([Text], [Text]){
+        let canisterId = Principal.toText(idInternal());
+        return (U.safeGet(editorsHashMap, canisterId, []), U.safeGet(writersHashMap, canisterId, []))
     };
 
     public shared ({ caller }) func getPublicationPosts(includeDraft : Bool, includePublished : Bool, indexFrom : Nat32, indexTo : Nat32) : async [Post] {
@@ -1663,7 +1611,7 @@ actor class Publisher() = this {
             case (#ok(keyProperties)) {
                 let bucketActor = actor (keyProperties.bucketCanisterId) : PostBucketInterface;
 
-                let bucketCanisterReturn = await bucketActor.get(postId);
+                let bucketCanisterReturn = await bucketActor.getPost(postId);
 
                 switch (bucketCanisterReturn) {
                     case (#ok(postBucketType)) {

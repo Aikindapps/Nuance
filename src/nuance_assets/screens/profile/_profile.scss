@@ -70,6 +70,8 @@
       flex-direction: column;
       margin-left: -8%;
       height: 100vh;
+      position: sticky;
+      top: 10px;
 
       .route {
         color: $primary-text-color;

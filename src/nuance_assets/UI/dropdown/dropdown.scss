@@ -29,7 +29,7 @@
     justify-content: space-between;
     width: 100%;
     cursor: pointer;
-
+    overflow: hidden;
 
 }
 
@@ -37,6 +37,7 @@
     font-weight: bold;
     font-size: 16px;
     user-select: none;
+    text-wrap: nowrap;
 }
 
 .dropdown-menu-items {
@@ -66,14 +67,16 @@
     width: 100%;
     height: 35px;
     align-items: center;
-    justify-content: space-between;
-    justify-content: space-between;
     cursor: pointer;
     font-weight: normal;
     font-size: 14px;
     user-select: none;
     padding-left: 10px;
-
+    column-gap: 6px;
+    .dropdown-menu-item-icon{
+        width: 20px;
+        height: 20px;
+    }
 }
 
 .dropdown-menu-item:hover {
@@ -108,6 +111,7 @@
     display: flex;
     align-items: center;
     column-gap: 8px;
+    overflow: hidden;
 }
 
 .filter-icon {

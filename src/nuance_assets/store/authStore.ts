@@ -18,10 +18,12 @@ import {
 } from '../services/actorService';
 import { SUPPORTED_CANISTER_IDS, SUPPORTED_TOKENS, TokenBalance } from '../shared/constants';
 import { PairInfoExt } from '../services/sonic/Sonic.did';
-
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 // II
 const identityProvider: string =
-  process.env.II_PROVIDER_URL || 'https://identity.ic0.app/#authorize';
+  isLocal? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' : 'https://identity.ic0.app/#authorize';
 
 //NFID
 const APPLICATION_NAME = 'Nuance';
@@ -51,9 +53,7 @@ const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
 const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
 
-const isLocal: boolean =
-  window.location.origin.includes('localhost') ||
-  window.location.origin.includes('127.0.0.1');
+
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
 )
@@ -168,6 +168,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           await window_any?.ic?.bitfinityWallet?.getPrincipal()
         );
         Usergeek.trackSession();
+        Usergeek.flush();
+
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
@@ -191,6 +193,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       set({ isLoggedIn: true, loginMethod: 'stoic' });
       Usergeek.setPrincipal(identity.getPrincipal());
       Usergeek.trackSession();
+      Usergeek.flush();
       await useUserStore.getState().getUser();
       if (useUserStore.getState().user === undefined) {
         //check for brave browser
@@ -234,6 +237,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
               Usergeek.trackSession();
+              Usergeek.flush();
 
               await useUserStore.getState().getUser();
               if (useUserStore.getState().user === undefined) {
@@ -299,6 +303,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
               Usergeek.trackSession();
+              Usergeek.flush();
 
               await useUserStore.getState().getUser();
               if (useUserStore.getState().user === undefined) {
@@ -353,6 +358,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           await window_any.ic.bitfinityWallet.getPrincipal()
         );
         Usergeek.trackSession();
+        Usergeek.flush();
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
@@ -377,6 +383,10 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       Usergeek.setPrincipal(Principal.anonymous());
     } else if (loginMethod === 'bitfinity') {
       get().clearLoginMethod();
+    }
+    else if(loginMethod === 'NFID'){
+      Usergeek.setPrincipal(Principal.anonymous());
+      await authClient.logout();
     }
     set({ isLoggedIn: false });
     // clear all stores, and sessionStorage

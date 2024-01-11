@@ -84,7 +84,11 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
                 location.pathname === route?.goto && 'sub-route-active'
               }`}
               key={route?.goto}
-              to={context.profileSidebarDisallowed ? location.pathname : route?.goto}
+              to={
+                context.profileSidebarDisallowed
+                  ? location.pathname
+                  : route?.goto
+              }
               style={{
                 marginLeft: '-15px',
                 background: darkOptionsAndColors.background,
@@ -94,6 +98,7 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
                     : darkOptionsAndColors.color,
                 cursor: context.profileSidebarDisallowed ? 'not-allowed' : '',
                 textDecoration: context.profileSidebarDisallowed ? 'none' : '',
+                fontWeight: 'normal',
               }}
             >
               {location.pathname === route?.goto ? (
