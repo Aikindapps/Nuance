@@ -1,11 +1,11 @@
 module {
-  public let USER_VERSION = "Tipple Tequila v7";
-  public let POSTCORE_VERSION = "Tipple Tequila v7";
-  public let POSTBUCKET_VERSION = "Tipple Tequila v7";
-  public let KINICENDPOINT_VERSION = "Tipple Tequila v7";
-  public let FASTBLOCKSEMAILOPTIN_VERSION = "Tipple Tequila v7";
-  public let POSTINDEX_VERSION = "Tipple Tequila v7";
-  public let STORAGE_VERSION = "Tipple Tequila v7";
-  public let CYCLESDISPENSER_VERSION = "Tipple Tequila v7";
-  public let METRICS_VERSION = "Tipple Tequila v7";
+  public let USER_VERSION = "Beer";
+  public let POSTCORE_VERSION = "Beer";
+  public let POSTBUCKET_VERSION = "Beer";
+  public let KINICENDPOINT_VERSION = "Beer";
+  public let FASTBLOCKSEMAILOPTIN_VERSION = "Beer";
+  public let POSTINDEX_VERSION = "Beer";
+  public let STORAGE_VERSION = "Beer";
+  public let CYCLESDISPENSER_VERSION = "Beer";
+  public let METRICS_VERSION = "Beer";
 };
