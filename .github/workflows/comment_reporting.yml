@@ -88,7 +88,7 @@ jobs:
                 echo "Error building comment URL for comment ID $ID in bucket $BUCKET"
                 continue
               fi
-              COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n')
+              COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n' | tr -d ' ')
               COMMENT_URL="https://3e6ni-fyaaa-aaaaf-qagiq-cai.ic0.app$COMMENT_URL_CLEANED"
               SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
             done
