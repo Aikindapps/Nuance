@@ -1,7 +1,32 @@
 #!/bin/bash
 
+
+# Function to add color
+color_echo() {
+    local color_code=$1
+    local text=$2
+    echo -e "\033[${color_code}m${text}\033[0m"
+}
+
+# Accepted versions array
+ACCEPTED_VERSIONS=(\(\"Tipple Tequila\"\) \(\"Tipple Tequila v7\"\))
+
+# Initialize a counter for matched versions
+MATCHED_COUNT=0
+
+
 # Define an array of versions
 canisters=(
+    "353ux-wqaaa-aaaaf-qakga-cai"
+    "dgwwd-jaaaa-aaaaf-qai7a-cai"
+    "4m3sz-lqaaa-aaaaf-qagza-cai"
+    "xjlvo-hyaaa-aaaam-qbcga-cai"
+    "322sd-3iaaa-aaaaf-qakgq-cai"
+    "r5sjg-7iaaa-aaaaf-qaama-cai"
+    "y2pkg-ciaaa-aaaaf-qagbq-cai"
+    "rtqeo-eyaaa-aaaaf-qaana-cai"
+    "kc4mb-myaaa-aaaaf-qajpq-cai"
+    "kq23y-aiaaa-aaaaf-qajmq-cai"
     "2lqm4-daaaa-aaaaf-qakda-cai"
     "yrmea-5qaaa-aaaaf-qakma-cai"
     "yypp4-lyaaa-aaaaf-qaknq-cai"
@@ -35,9 +60,18 @@ canisters=(
     "nd2ym-uyaaa-aaaaf-qaj7q-cai"
 )
 
-# Loop through the array and execute the command for each version
+
 for canister in "${canisters[@]}"
 do
-    echo "Running for version: $canister"
-    dfx canister call $canister --network ic getCanisterVersion -qq
+    color_echo "0;29" "Running for canister: $canister"
+    CANISTER_VERSION=$(dfx canister call $canister --network ic getCanisterVersion -qq)
+
+    if [[ " ${ACCEPTED_VERSIONS[*]} " == *" $CANISTER_VERSION "* ]]; then
+        color_echo "0;32" "Version match: $CANISTER_VERSION\n"
+        MATCHED_COUNT=$((MATCHED_COUNT + 1))
+    else
+        color_echo "0;31" "Version mismatch. Got: $CANISTER_VERSION\n "
+    fi
 done
+
+color_echo "0;32" "Total canisters with accepted versions: $MATCHED_COUNT"

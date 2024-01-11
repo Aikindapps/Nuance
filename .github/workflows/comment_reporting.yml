@@ -42,6 +42,7 @@ jobs:
         run: |
           mkdir -p ./.dfx/local && touch ./.dfx/local/canister_ids.json
           echo '{}' > ./.dfx/local/canister_ids.json
+
           echo '{
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" }
