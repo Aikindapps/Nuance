@@ -26,14 +26,14 @@ jobs:
         run: |
           rm -f ~/.config/dfx/identity/sns_uat/identity.pem
           mkdir -p ~/.config/dfx/identity/sns_uat/
-          echo "$SNS_UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
-          echo "$SNS_UAT_WALLET" > ~/.config/dfx/identity/sns_uat/wallets.json
-          dfx identity use sns_uat
+          echo "$UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
+          echo "$UAT_WALLET" > ~/.config/dfx/identity/sns_uat/wallets.json
+          dfx identity use UAT
           dfx identity get-principal
           dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
         env:
-          SNS_UAT_IDENT: ${{ secrets.SNS_UAT_IDENT }}
-          SNS_UAT_WALLET: ${{ secrets.SNS_UAT_WALLET }}
+          SNS_UAT_IDENT: ${{ secrets.UAT_IDENT }}
+          SNS_UAT_WALLET: ${{ secrets.UAT_WALLET }}
 
       - name: Get Principal
         run: dfx identity get-principal
@@ -47,8 +47,8 @@ jobs:
             "PostBucket": { "ic": "'"$POSTBUCKET"'" }
           }' > canister_ids.json
         env:
-          POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
-          POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
+          POSTCORE: ${{ secrets.UAT_POST_CORE }}
+          POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
 
       - name: Report Comments to Slack
         run: |
@@ -68,7 +68,7 @@ jobs:
               ARGUMENT='("'$ID'")'
               COMMENT_URL_RAW=$(dfx canister call --network ic $BUCKET buildCommentUrl $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq)
               COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n')
-              COMMENT_URL="https://equ7v-uaaaa-aaaam-qbbcq-cai.ic0.app$COMMENT_URL_CLEANED"
+              COMMENT_URL="https://https://3e6ni-fyaaa-aaaaf-qagiq-cai.ic0.app$COMMENT_URL_CLEANED"
               SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
             done
           done
