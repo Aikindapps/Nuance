@@ -55,7 +55,8 @@ jobs:
         run: |
           echo "Fetching buckets..."
           BUCKETS_RAW=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq)
-          BUCKETS=$(echo "$BUCKETS_RAW" | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
+          echo "Raw Buckets Output: $BUCKETS_RAW"
+          BUCKETS=$(echo "$BUCKETS_RAW" | grep -oP '"\K[a-z0-9-]+(?=";)' || echo '')
           echo "Buckets: $BUCKETS"
 
           SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
