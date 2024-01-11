@@ -27,7 +27,7 @@ jobs:
           rm -f ~/.config/dfx/identity/UAT/identity.pem
           mkdir -p ~/.config/dfx/identity/UAT/
           echo "$UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/UAT/identity.pem
-          echo "$UAT_WALLET" > ~/.config/dfx/identity/uat/wallets.json
+          echo "$UAT_WALLET" > ~/.config/dfx/identity/UAT/wallets.json
           dfx identity use UAT
           dfx identity get-principal
           dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
