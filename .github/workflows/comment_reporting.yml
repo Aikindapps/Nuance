@@ -2,8 +2,8 @@ name: CommentReporting
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: '0 * * * *'
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
   build:
@@ -65,6 +65,7 @@ jobs:
           fi
       
           SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
+          COMMENTS_FOUND=false
           for BUCKET in $BUCKETS
           do
             echo "Fetching comment IDs for bucket: $BUCKET"
@@ -82,6 +83,7 @@ jobs:
             echo "Comment IDs for bucket $BUCKET: $COMMENT_IDS"
       
             for ID in $COMMENT_IDS; do
+              COMMENTS_FOUND=true
               ARGUMENT='("'$ID'")'
               COMMENT_URL_RAW=$(dfx canister call --network ic $BUCKET buildCommentUrl $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq)
               if [ $? -ne 0 ]; then
@@ -94,12 +96,26 @@ jobs:
             done
           done
           SLACK_PAYLOAD+='"}'
-          echo "Sending the following payload to Slack:"
-          echo "$SLACK_PAYLOAD"
-          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
-          if [ $? -ne 0 ]; then
-            echo "Error sending payload to Slack"
-            exit 1
+      
+          # Time check for sending notification
+          CURRENT_HOUR=$(date -u +"%H")
+          if [ "$COMMENTS_FOUND" = true ]; then
+            echo "Sending the following payload to Slack:"
+            echo "$SLACK_PAYLOAD"
+            curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
+            if [ $? -ne 0 ]; then
+              echo "Error sending payload to Slack"
+              exit 1
+            fi
+          elif [ "$CURRENT_HOUR" = "00" ]; then
+            # It's midnight UTC, and no comments are found, send notification
+            echo "No comments to review. Sending daily notification to Slack."
+            SLACK_PAYLOAD='{"text":"Daily check in. No new comments reported."}'
+            curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
+          else
+            echo "No comments to review. Not time for daily notification."
           fi
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+      
+            
