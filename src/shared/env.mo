@@ -14,6 +14,7 @@ module {
   public let NFT_FACTORY_CANISTER_ID = CanisterIds.NFT_FACTORY_CANISTER_ID;
   public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";
+  public let PAUL_DASHBOARD_PRINCIPAL_ID = "wfcdk-bgpsf-gghqn-m5v6j-454p2-n4aco-e2fd3-lsg6u-g7nns-az2bm-pqe";
   public let MITCH_PRINCIPAL_ID = "3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe";
   public let MITCH_DASHBOARD_PRINCIPAL_ID = "rzft3-wnao6-7wepo-5asq7-ou2p3-u35pg-jbtul-b2puf-fr24l-iyyjr-5ae";
   public let BARAN_PRINCIPAL_ID = "p5x7e-xqqb3-orerc-tmqof-rnhhy-5y7r7-vpoog-bpqrf-6cuki-bwdpd-3ae";
@@ -28,12 +29,17 @@ module {
 
   public let PLATFORM_OPERATORS = [
     PAUL_PRINCIPAL_ID,
+    PAUL_DASHBOARD_PRINCIPAL_ID,
+
     MITCH_PRINCIPAL_ID,
     MITCH_DASHBOARD_PRINCIPAL_ID,
+
     BARAN_PRINCIPAL_ID,
     BARAN_DASHBOARD_PRINCIPAL_ID,
+
     NICK_PRINCIPAL_ID,
     NICK_DASHBOARD_PRINCIPAL_ID,
+    
     RHIANNON_PRINCIPAL_ID,
     KYLE_PRINCIPAL_ID,
     VM_1_PRINCIPAL_ID,
