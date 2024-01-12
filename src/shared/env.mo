@@ -15,8 +15,11 @@ module {
   public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";
   public let MITCH_PRINCIPAL_ID = "3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe";
+  public let MITCH_DASHBOARD_PRINCIPAL_ID = "rzft3-wnao6-7wepo-5asq7-ou2p3-u35pg-jbtul-b2puf-fr24l-iyyjr-5ae";
   public let BARAN_PRINCIPAL_ID = "p5x7e-xqqb3-orerc-tmqof-rnhhy-5y7r7-vpoog-bpqrf-6cuki-bwdpd-3ae";
+  public let BARAN_DASHBOARD_PRINCIPAL_ID = "cy7n3-o7lpm-lij55-yisew-ubfjf-bjq5a-46vej-2xw3d-5hjxs-znnvm-eae";
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
+  public let NICK_DASHBOARD_PRINCIPAL_ID = "67owo-lqhq6-2vsvz-ne4qm-g4e2q-2kasi-at36g-zppj6-obsdc-d32rg-jqe";
   public let RHIANNON_PRINCIPAL_ID = "cqt7v-ben4o-y335u-srt3v-nzd6e-wknuf-2t2mb-mji7i-ar3bf-7ysop-2qe";
   public let KYLE_PRINCIPAL_ID = "ftiej-pml6t-p3n5s-afoi2-ksnxp-3yyis-lzg6v-mwdwn-evzhq-6j56q-xqe";
   public let VM_1_PRINCIPAL_ID = "btrx2-makdj-pw2cp-u264a-cntkp-2mzjv-56oqc-6r7uu-ocexg-mf3sn-qqe";
@@ -26,8 +29,11 @@ module {
   public let PLATFORM_OPERATORS = [
     PAUL_PRINCIPAL_ID,
     MITCH_PRINCIPAL_ID,
+    MITCH_DASHBOARD_PRINCIPAL_ID,
     BARAN_PRINCIPAL_ID,
+    BARAN_DASHBOARD_PRINCIPAL_ID,
     NICK_PRINCIPAL_ID,
+    NICK_DASHBOARD_PRINCIPAL_ID,
     RHIANNON_PRINCIPAL_ID,
     KYLE_PRINCIPAL_ID,
     VM_1_PRINCIPAL_ID,
