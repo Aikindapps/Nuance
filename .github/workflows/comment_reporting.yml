@@ -1,9 +1,8 @@
 name: CommentReporting
 
 on:
-  workflow_dispatch:
-  # schedule:
-  #   - cron: '0 * * * *'
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
   build:
@@ -24,16 +23,17 @@ jobs:
 
       - name: Set up dfx identity
         run: |
-          rm -f ~/.config/dfx/identity/sns_uat/identity.pem
-          mkdir -p ~/.config/dfx/identity/sns_uat/
-          echo "$SNS_UAT_IDENT" | base64 --decode > ~/.config/dfx/identity/sns_uat/identity.pem
-          echo "$SNS_UAT_WALLET" > ~/.config/dfx/identity/sns_uat/wallets.json
-          dfx identity use sns_uat
+          IDENTITY_DIR="$HOME/.config/dfx/identity/uat"
+          rm -rf "${IDENTITY_DIR}" 
+          mkdir -p "${IDENTITY_DIR}"
+          echo "${UAT_IDENT}" | base64 --decode > "${IDENTITY_DIR}/identity.pem"
+          # echo "${UAT_WALLET}" > "${IDENTITY_DIR}/wallets.json"
+          dfx identity use uat
           dfx identity get-principal
-          dfx identity set-wallet vf5cm-vaaaa-aaaak-qcqgq-cai --network ic
+          dfx identity set-wallet pmba3-piaaa-aaaal-adawa-cai --network ic
         env:
-          SNS_UAT_IDENT: ${{ secrets.SNS_UAT_IDENT }}
-          SNS_UAT_WALLET: ${{ secrets.SNS_UAT_WALLET }}
+          UAT_IDENT: ${{ secrets.UAT_IDENT }}
+          UAT_WALLET: ${{ secrets.UAT_WALLET }}
 
       - name: Get Principal
         run: dfx identity get-principal
@@ -48,34 +48,74 @@ jobs:
             "PostBucket": { "ic": "'"$POSTBUCKET"'" }
           }' > canister_ids.json
         env:
-          POSTCORE: ${{ secrets.SNS_UAT_POST_CORE }}
-          POSTBUCKET: ${{ secrets.SNS_UAT_POST_BUCKET }}
+          POSTCORE: ${{ secrets.UAT_POSTCORE }}
+          POSTBUCKET: ${{ secrets.UAT_POST_BUCKET }}
 
       - name: Report Comments to Slack
         run: |
           echo "Fetching buckets..."
           BUCKETS_RAW=$(dfx canister call --network ic PostCore getAllBuckets --candid src/declarations/PostBucket/PostBucket.did -qq)
-          BUCKETS=$(echo "$BUCKETS_RAW" | grep -oE '[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{3}' || echo '')
+          echo "Raw Buckets Output: $BUCKETS_RAW"
+          BUCKETS=$(echo "$BUCKETS_RAW" | grep -oP '"\K[a-z0-9-]+(?=";)' || echo '')
           echo "Buckets: $BUCKETS"
-
+      
+          if [ -z "$BUCKETS" ]; then
+            echo "No buckets found. Exiting."
+            exit 0
+          fi
+      
           SLACK_PAYLOAD='{"text":"*Comments Pending Review:*\n'
+          COMMENTS_FOUND=false
           for BUCKET in $BUCKETS
           do
+            echo "Fetching comment IDs for bucket: $BUCKET"
             COMMENT_IDS_RAW=$(dfx canister call --network ic $BUCKET getReportedCommentIds --candid src/declarations/PostBucket/PostBucket.did -qq)
-            COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=\")\d+(?=\")')
+            if [ $? -ne 0 ]; then
+              echo "Error fetching comment IDs for bucket $BUCKET"
+              continue
+            fi
+            echo "Raw Comment IDs Output: $COMMENT_IDS_RAW"
+            COMMENT_IDS=$(echo "$COMMENT_IDS_RAW" | grep -oP '(?<=\")\d+(?=\")' || echo '')
+            if [ -z "$COMMENT_IDS" ]; then
+              echo "No reported comments in bucket $BUCKET."
+              continue
+            fi
             echo "Comment IDs for bucket $BUCKET: $COMMENT_IDS"
-
+      
             for ID in $COMMENT_IDS; do
+              COMMENTS_FOUND=true
               ARGUMENT='("'$ID'")'
               COMMENT_URL_RAW=$(dfx canister call --network ic $BUCKET buildCommentUrl $ARGUMENT --candid src/declarations/PostBucket/PostBucket.did -qq)
-              COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n')
-              COMMENT_URL="https://equ7v-uaaaa-aaaam-qbbcq-cai.ic0.app$COMMENT_URL_CLEANED"
+              if [ $? -ne 0 ]; then
+                echo "Error building comment URL for comment ID $ID in bucket $BUCKET"
+                continue
+              fi
+              COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n' | tr -d ' ')
+              COMMENT_URL="https://3e6ni-fyaaa-aaaaf-qagiq-cai.ic0.app$COMMENT_URL_CLEANED"
               SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
             done
           done
           SLACK_PAYLOAD+='"}'
-          echo "Sending the following payload to Slack:"
-          echo "$SLACK_PAYLOAD"
-          curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
+      
+          # Time check for sending notification
+          CURRENT_HOUR=$(date -u +"%H")
+          if [ "$COMMENTS_FOUND" = true ]; then
+            echo "Sending the following payload to Slack:"
+            echo "$SLACK_PAYLOAD"
+            curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
+            if [ $? -ne 0 ]; then
+              echo "Error sending payload to Slack"
+              exit 1
+            fi
+          elif [ "$CURRENT_HOUR" = "00" ]; then
+            # It's midnight UTC, and no comments are found, send notification
+            echo "No comments to review. Sending daily notification to Slack."
+            SLACK_PAYLOAD='{"text":"Daily check in. No new comments reported."}'
+            curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
+          else
+            echo "No comments to review. Not time for daily notification."
+          fi
         env:
           COMMENT_BOT_WEBHOOK: ${{ secrets.COMMENT_BOT_WEBHOOK }}
+      
+            
