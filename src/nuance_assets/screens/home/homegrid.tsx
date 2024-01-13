@@ -7,7 +7,7 @@ import { TagModel } from 'src/nuance_assets/services/actorService';
 import { slice } from 'lodash';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
-import {Context as ModalContext} from '../../contextes/ModalContext'
+import { Context as ModalContext } from '../../contextes/ModalContext'
 
 
 const Header = lazy(() => import('../../components/header/header'));
@@ -345,13 +345,13 @@ const HomePageGrid = () => {
   };
 
   const getUserSearchResultsWithoutPublications = () => {
-    return searchUserResults?.filter((user)=>{
-      if(searchPublicationResults){
+    return searchUserResults?.filter((user) => {
+      if (searchPublicationResults) {
         return !searchPublicationResults
           .map((v) => v.publicationHandle)
           .includes(user.handle);
       }
-      else{
+      else {
         return true;
       }
     })
@@ -816,7 +816,7 @@ const HomePageGrid = () => {
             {getUserSearchResultsWithoutPublications()?.map((user) => {
               return (
                 <div className='user-search-item' key={user.handle}>
-                  <Link to={'/' + user.handle}>
+                  <Link to={'/user/' + user.handle}>
                     <img
                       src={user.avatar || images.DEFAULT_AVATAR}
                       className='profile-picture user-image-search'
@@ -829,7 +829,7 @@ const HomePageGrid = () => {
                   </Link>
 
                   <div className='user-search-info'>
-                    <Link to={'/' + user.handle}>
+                    <Link to={'/user/' + user.handle}>
                       <p className='handle'>{'@' + user.handle}</p>
                     </Link>
 
@@ -972,7 +972,7 @@ const HomePageGrid = () => {
                   <div className='handle'>
                     <Link
                       style={{ color: darkOptionsAndColors.secondaryColor }}
-                      to={`/${user?.handle}`}
+                      to={`/user/${user?.handle}`}
                     >
                       @{user?.handle}
                     </Link>
@@ -1138,8 +1138,8 @@ const HomePageGrid = () => {
                       <p className='mainTitle'>LATEST ARTICLES</p>
                       <div className='article-grid'>
                         {tab === 'popular' &&
-                        dropdownMenuOpen &&
-                        !modalContext?.isModalOpen ? (
+                          dropdownMenuOpen &&
+                          !modalContext?.isModalOpen ? (
                           <div
                             className='dropdown-wrapper active'
                             style={darkOptionsAndColors}

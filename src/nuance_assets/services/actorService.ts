@@ -222,7 +222,7 @@ export async function getPublisherActor(
   if (canisterId) {
     return createPublisherActor(canisterId as string, {
       agentOptions: {
-        identity,
+        identity : identity,
         host: isLocal ? undefined : 'https://icp-api.io ',
       },
     });

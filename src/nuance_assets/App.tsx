@@ -59,6 +59,7 @@ const Routes = () => {
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
     { path: '/:handle', element: <Profile /> },
+    { path: '/user/:handle', element: <Profile /> },
     { path: '/:handle/:id/:title', element: <ReadArticle /> },
     { path: '/article/new', element: <CreateEditArticle /> },
     { path: '/article/edit/:id', element: <CreateEditArticle /> },
