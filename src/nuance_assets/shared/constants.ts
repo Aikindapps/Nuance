@@ -85,7 +85,7 @@ export const icons = {
   CLAP_WHITE_2: iconsPath + 'clap-white-2.svg',
   PROFILE_ICON: iconsPath + 'profile-icon.svg',
   PROFILE_ICON_DARK: iconsPath + 'profile-icon-dark.svg',
-
+  EMPTY_BOX: iconsPath + 'empty_box.svg',
 };
 
 export const colors = {
