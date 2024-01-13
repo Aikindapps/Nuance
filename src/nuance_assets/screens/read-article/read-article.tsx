@@ -171,7 +171,7 @@ const ReadArticle = () => {
   const getLeftStyle = () => {
     if (context.width <= 768) {
       if (isToggled) {
-        return { width: 'max-content', minWidth:'unset' };
+        return { width: 'max-content', minWidth: 'unset' };
       } else {
         return {
           width: '30px',
@@ -542,7 +542,7 @@ const ReadArticle = () => {
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/${post.isPublication ? post.creator : author.handle}`}
+                  to={`/user/${post.isPublication ? post.creator : author.handle}`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -745,7 +745,7 @@ const ReadArticle = () => {
                     alt=''
                   ></img>
                   <Link
-                    to={`/${post.isPublication ? post.creator : author.handle}`}
+                    to={`/user/${post.isPublication ? post.creator : author.handle}`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='handle'
                   >

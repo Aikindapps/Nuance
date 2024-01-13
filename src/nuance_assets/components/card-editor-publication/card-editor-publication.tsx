@@ -86,11 +86,11 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             ? { filter: 'blur(3px)' }
             : {}
           : isLoading
-          ? {
+            ? {
               filter: 'blur(3px) grayscale(1)',
               zIndex: isDropdownOpen ? '3' : 'unset',
             }
-          : { filter: 'grayscale(1)', zIndex: isDropdownOpen ? '3' : 'unset' }
+            : { filter: 'grayscale(1)', zIndex: isDropdownOpen ? '3' : 'unset' }
       }
     >
       <div className='field-published field-general'>
@@ -127,7 +127,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         </p>
       </Link>
       <Link
-        to={'/' + post.creator || post.handle}
+        to={'/user/' + post.creator || post.handle}
         className='field-writer field-general'
         style={darkOptionsAndColors}
       >
@@ -169,8 +169,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         style={
           darkTheme
             ? {
-                color: darkOptionsAndColors.secondaryColor,
-              }
+              color: darkOptionsAndColors.secondaryColor,
+            }
             : {}
         }
         className='field-published-date field-general'
@@ -182,8 +182,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         style={
           darkTheme
             ? {
-                color: darkOptionsAndColors.secondaryColor,
-              }
+              color: darkOptionsAndColors.secondaryColor,
+            }
             : {}
         }
         className='field-modified field-general'
@@ -205,7 +205,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             if (index === applaudedHandles.length - 1 && index < 10) {
               //last element
               return (
-                <Link to={'/' + handle}>
+                <Link to={'/user/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
                     {'@' + handle + ' applauded this article.'}
                   </p>
@@ -214,7 +214,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             } else if (index === 10) {
               //there are more than 10, this is last
               return (
-                <Link to={'/' + handle}>
+                <Link to={'/user/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
                     {'@' +
                       handle +
@@ -226,7 +226,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
               );
             } else if (index < 10) {
               return (
-                <Link to={'/' + handle}>
+                <Link to={'/user/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
                     {'@' + handle + ', '}
                   </p>

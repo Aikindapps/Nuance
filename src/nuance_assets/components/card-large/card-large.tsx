@@ -45,14 +45,14 @@ const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
                 {post.isPublication ? (
                   <Link
                     style={{ color: darkOptionsAndColors.color }}
-                    to={`/${post.creator}`}
+                    to={`/user/${post.creator}`}
                   >
                     @{post.creator}
                   </Link>
                 ) : (
                   <Link
                     style={{ color: darkOptionsAndColors.color }}
-                    to={`/${post.handle}`}
+                    to={`/user/${post.handle}`}
                   >
                     @{post.handle}
                   </Link>
@@ -98,9 +98,9 @@ const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
             style={
               post.fontType && post.fontType !== 'default'
                 ? {
-                    fontFamily: post.fontType,
-                    color: darkOptionsAndColors.color,
-                  }
+                  fontFamily: post.fontType,
+                  color: darkOptionsAndColors.color,
+                }
                 : { color: darkOptionsAndColors.color }
             }
           >

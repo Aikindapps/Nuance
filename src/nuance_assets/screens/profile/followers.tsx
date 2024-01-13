@@ -49,16 +49,16 @@ const Followers = () => {
   };
 
   const getFollowers = async () => {
-    if(!myFollowers){
+    if (!myFollowers) {
       await getMyFollowers(0, 20);
     }
-    
+
   };
 
   const handleClickMore = async () => {
     setLoadingMore(true)
-    await getMyFollowers((page + 1)*20, (page+2)*20)
-    setPage(page+1)
+    await getMyFollowers((page + 1) * 20, (page + 2) * 20)
+    setPage(page + 1)
     setLoadingMore(false);
   }
 
@@ -98,7 +98,7 @@ const Followers = () => {
                   key={user.handle}
                   style={{ width: '100%' }}
                 >
-                  <Link to={'/' + user.handle}>
+                  <Link to={'/user/' + user.handle}>
                     <img
                       src={user.avatar || images.DEFAULT_AVATAR}
                       className='profile-picture user-image-search'
@@ -111,14 +111,14 @@ const Followers = () => {
                   </Link>
 
                   <div className='user-search-info'>
-                    <Link to={'/' + user.handle}>
+                    <Link to={'/user/' + user.handle}>
                       <p className='handle'>{'@' + user.handle}</p>
                     </Link>
 
                     <p
                       className='display-name-search-item'
                       onClick={() => {
-                        navigate('/' + user.handle);
+                        navigate('/user/' + user.handle);
                       }}
                     >
                       {user.displayName}
@@ -127,7 +127,7 @@ const Followers = () => {
                     <p
                       className='bio'
                       onClick={() => {
-                        navigate('/' + user.handle);
+                        navigate('/user/' + user.handle);
                       }}
                     >
                       {user.bio.length !== 0
