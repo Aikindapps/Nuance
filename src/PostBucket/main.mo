@@ -3006,7 +3006,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
         memo = null;
         to = {
           owner = Principal.fromText(ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID);
-          subaccount = null;
+          subaccount = ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT);
         }
       })) {
         case(#Ok(value)) {

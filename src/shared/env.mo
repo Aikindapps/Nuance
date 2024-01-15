@@ -118,6 +118,7 @@ module {
   //means 10%
   public let TIP_FEE_AMOUNT = 10.0;
   public let TIP_FEE_RECEIVER_PRINCIPAL_ID = SNS_GOVERNANCE_CANISTER;
+  public let TIP_FEE_RECEIVER_SUBACCOUNT : [Nat8] = [102, 220, 17, 70, 218, 116, 14, 60, 212, 188, 181, 179, 119, 252, 105, 10, 10, 131, 95, 223, 76, 125, 151, 200, 83, 208, 10, 80, 18, 198, 50, 254];
 
   public let NUA_TOKEN_CANISTER_ID = "rxdbk-dyaaa-aaaaq-aabtq-cai";
   public let NUA_TOKEN_DECIMALS = 8;
