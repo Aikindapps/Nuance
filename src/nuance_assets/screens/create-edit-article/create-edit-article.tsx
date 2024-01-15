@@ -95,16 +95,18 @@ const CreateEditArticle = () => {
   //returns the current status of the post
   const getCurrentStatus = () => {
     if (location.pathname === '/article/new') {
-      return 'Draft';
+      return 'Not saved';
     } else {
-      if (!lastSavedPost || lastSavedPost?.isDraft) {
-        return 'Draft';
-      } else {
-        if (lastSavedPost?.isPremium) {
-          return 'Published';
-        } else {
-          return 'Published';
+      if (lastSavedPost?.isDraft) {
+        if(userPublicationsWriter.includes(lastSavedPost.handle)){
+          return "Submitted for review"
         }
+        else{
+          return "Draft"
+        }
+        
+      } else {
+        return "Published"
       }
     }
   };
@@ -520,6 +522,7 @@ const CreateEditArticle = () => {
             setSavingPost(savePublicationResult);
             setLastSavedPost(savePublicationResult);
             setPostHtml(savePublicationResult.content);
+            setRadioButtonIndex(savePublicationResult.isDraft? 0 : 1);
             return savePublicationResult;
           }
         } else {
@@ -533,7 +536,7 @@ const CreateEditArticle = () => {
             setSavingPost(migratePostResult);
             setLastSavedPost(migratePostResult);
             setPostHtml(migratePostResult.content);
-
+            setRadioButtonIndex(migratePostResult.isDraft? 0 : 1);
             navigate('/article/edit/' + migratePostResult.postId, {
               replace: true,
             });
@@ -565,6 +568,7 @@ const CreateEditArticle = () => {
             setSavingPost(saveResult);
             setLastSavedPost(saveResult);
             setPostHtml(saveResult.content);
+            setRadioButtonIndex(saveResult.isDraft? 0 : 1);
             return saveResult;
           }
         }
@@ -594,7 +598,7 @@ const CreateEditArticle = () => {
           setSavingPost(savePublicationResult);
           setLastSavedPost(savePublicationResult);
           setPostHtml(savePublicationResult.content);
-
+          setRadioButtonIndex(savePublicationResult.isDraft? 0 : 1);
           navigate('/article/edit/' + savePublicationResult.postId, {
             replace: true,
           });
@@ -623,6 +627,7 @@ const CreateEditArticle = () => {
           setSavingPost(saveResult);
           setLastSavedPost(saveResult);
           setPostHtml(saveResult.content);
+          setRadioButtonIndex(saveResult.isDraft? 0 : 1);
           //navigate to the /article/edit/<post-id>
           if (!notNavigate) {
             navigate('/article/edit/' + saveResult.postId, { replace: true });
@@ -676,7 +681,7 @@ const CreateEditArticle = () => {
         ];
       } else {
         //not possible
-        return [<div></div>];
+        return [];
       }
     } else {
       if (isPublishButtonVisible()) {
@@ -704,16 +709,8 @@ const CreateEditArticle = () => {
         ];
       } else {
         //Only for writers in publications
-        //we have different UI for this -> this code will never get executed
-        return [
-          <div
-            className={
-              darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
-            }
-          >
-            Save as draft under <span className='dark'>@{selectedHandle}</span>
-          </div>,
-        ];
+        //nothing here
+        return [];
       }
     }
   };
@@ -861,7 +858,7 @@ const CreateEditArticle = () => {
               <div className='edit-article-left-manage-content-wrapper'>
                 <div className='text'>
                   Submit this article for review in a publication. An editor
-                  will manage the article there
+                  will manage the article there.
                 </div>
                 <Button
                   type='button'
@@ -869,8 +866,14 @@ const CreateEditArticle = () => {
                   style={{ width: '100%', marginTop: '20px' }}
                   onClick={async () => {
                     setLoading(true);
-                    await onSave(true);
+                    let response = await onSave(true);
                     setLoading(false);
+                    if(response && userPublicationsWriter.includes(response.handle)){
+                      toast(
+                        `Your article is submitted to review in @${response.handle}!`,
+                        ToastType.Plain
+                      );
+                    }
                   }}
                   dark={darkTheme}
                 >
@@ -1086,7 +1089,7 @@ const CreateEditArticle = () => {
           <div className='edit-article-left-manage-content-wrapper'>
             <div className='text'>
               Submit this article for review in a publication. An editor will
-              manage the article there
+              manage the article there.
             </div>
             <Button
               type='button'
@@ -1094,8 +1097,17 @@ const CreateEditArticle = () => {
               style={{ width: '100%', marginTop: '20px' }}
               onClick={async () => {
                 setLoading(true);
-                await onSave(true);
+                let response = await onSave(true);
                 setLoading(false);
+                if (
+                  response &&
+                  userPublicationsWriter.includes(response.handle)
+                ) {
+                  toast(
+                    `Your article is submitted to review in @${response.handle}!`,
+                    ToastType.Plain
+                  );
+                }
               }}
               dark={darkTheme}
             >
@@ -1382,6 +1394,14 @@ const CreateEditArticle = () => {
                         } else {
                           setSelectedCategory('');
                         }
+                        setRadioButtonIndex(
+                          lastSavedPost
+                            ? lastSavedPost.isDraft ||
+                              lastSavedPost.handle !== item.slice(1)
+                              ? 0
+                              : 1
+                            : 0
+                        );
                       }}
                       notActiveIfOnlyOneItem={true}
                     />
@@ -1416,16 +1436,16 @@ const CreateEditArticle = () => {
                   )}
                 <div className='edit-article-left-manage-wrapper'>
                   <div className='edit-article-left-manage-title'>MANAGE</div>
-                  {(!lastSavedPost ||
-                    (lastSavedPost && lastSavedPost.isDraft)) &&
-                    !userPublicationsWriter.includes(selectedHandle) && (
-                      <RadioButtons
-                        items={getRadioButtonItems()}
-                        onSelect={(index) => {
-                          setRadioButtonIndex(index);
-                        }}
-                      />
-                    )}
+                  {(getCurrentStatus() === 'Draft' ||
+                    getCurrentStatus() === 'Not saved') && (
+                    <RadioButtons
+                      items={getRadioButtonItems()}
+                      onSelect={(index) => {
+                        setRadioButtonIndex(index);
+                      }}
+                      selectedIndex={radioButtonIndex}
+                    />
+                  )}
                   {getManageItems()}
                 </div>
               </div>

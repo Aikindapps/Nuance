@@ -127,11 +127,11 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               ) : getEditStatus() === 'Draft' ||
                 getEditStatus() === 'Published' ? (
                 <PiPencilSimpleThin
-                className={
-                  dark
-                    ? 'card-draft-articles-action-icon-pointer-dark'
-                    : 'card-draft-articles-action-icon-pointer'
-                }
+                  className={
+                    dark
+                      ? 'card-draft-articles-action-icon-pointer-dark'
+                      : 'card-draft-articles-action-icon-pointer'
+                  }
                 />
               ) : (
                 <img
@@ -143,7 +143,10 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
           </div>
           <div className='card-draft-articles-actions-right'>
             {context.width > 600 && (
-              <Badge status={getPostStatus()} dark={dark} />
+              <div className='card-draft-articles-badge-wrapper'>
+                <Badge status={getPostStatus()} dark={dark} />
+                <div className='card-draft-articles-vertical-divider'></div>
+              </div>
             )}
             <div className={'card-draft-articles-right-action-wrapper'}>
               <PiHandsClappingLight

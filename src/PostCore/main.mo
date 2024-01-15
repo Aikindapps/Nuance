@@ -1708,8 +1708,10 @@ actor PostCore {
           totalViewCount += postViewCount;
           let clapCount = U.safeGet(clapsHashMap, postId, 0);
           totalClapCount += clapCount;
-          let applaudCount = U.safeGet(applaudsHashMap, postId, 0);
-          totalClapCount += applaudCount / Nat.pow(10, ENV.NUA_TOKEN_DECIMALS);
+          let applauds_e8s = (U.safeGet(applaudsHashMap, postId, 0));
+          let applauds = Float.fromInt(applauds_e8s) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS));
+          let applaudsNat = Int.abs(Float.toInt(Float.nearest(applauds)));
+          totalClapCount += applaudsNat;
         },
       );
     };

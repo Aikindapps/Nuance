@@ -357,7 +357,7 @@ export const WithdrawModal = () => {
                     return;
                   }
                   const newValue = e.target.value;
-                  if (!newValue.match(/^\d*\.?\d{0,4}$/)) return;
+                  if (!newValue.match(/^\d*\.?\d{0,8}$/)) return;
                   if (
                     newValue === '' ||
                     (parseFloat(newValue) *
@@ -366,7 +366,7 @@ export const WithdrawModal = () => {
                         getSelectedCurrencyBalance().token.decimals
                       ) <=
                       getMaxAmountToTransfer() &&
-                      newValue.match(/^\d*\.?\d{0,4}$/))
+                      newValue.match(/^\d*\.?\d{0,8}$/))
                   ) {
                     setInputAmount(newValue);
                   }
@@ -390,7 +390,7 @@ export const WithdrawModal = () => {
                           10,
                           getSelectedCurrencyBalance().token.decimals
                         ),
-                      4
+                      selectedCurrency === 'ckBTC' ? 8 : 4
                     )
                   );
                 }}
