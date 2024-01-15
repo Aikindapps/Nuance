@@ -55,7 +55,7 @@ const Following = () => {
           </FollowAuthor>
           <div className='follower-handle'>
             <Link
-              to={`/${follower}`}
+              to={`/user/${follower}`}
               className='handle'
               style={{ color: darkOptionsAndColors.color }}
             >
@@ -73,9 +73,9 @@ const Following = () => {
   );
 
   const fetchFollowers = async () => {
-    if(user){
+    if (user) {
       let userListItems = await getUsersByHandles(user.followersArray);
-      if(userListItems){
+      if (userListItems) {
         let mergedWithAvatar = userListItems.map((follower) => (
           <div className='list-container wrapper' key={follower.handle}>
             <li className='follower-container'>
@@ -89,7 +89,7 @@ const Following = () => {
               </FollowAuthor>
               <div className='follower-handle'>
                 <Link
-                  to={`/${follower.handle}`}
+                  to={`/user/${follower.handle}`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -109,11 +109,11 @@ const Following = () => {
     }
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchFollowers()
   }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchFollowers()
   }, [user])
 

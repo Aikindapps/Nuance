@@ -76,15 +76,15 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
   };
 
   const getPostStatus = () => {
-    if(post.isDraft){
-      if(post.isPublication){
+    if (post.isDraft) {
+      if (post.isPublication) {
         return 'Submitted for review'
       }
-      else{
+      else {
         return 'Draft'
       }
     }
-    else{
+    else {
       return 'Published'
     }
   }
@@ -161,8 +161,8 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
                 style={
                   dark
                     ? {
-                        color: darkOptionsAndColors.secondaryColor,
-                      }
+                      color: darkOptionsAndColors.secondaryColor,
+                    }
                     : {}
                 }
                 className='card-draft-articles-right-action-text'
@@ -174,8 +174,8 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               style={
                 dark
                   ? {
-                      color: darkOptionsAndColors.secondaryColor,
-                    }
+                    color: darkOptionsAndColors.secondaryColor,
+                  }
                   : {}
               }
               className='card-draft-articles-date'
@@ -190,8 +190,8 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
             style={
               dark
                 ? {
-                    color: darkOptionsAndColors.color,
-                  }
+                  color: darkOptionsAndColors.color,
+                }
                 : {}
             }
             className='card-draft-articles-title'
@@ -205,8 +205,8 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
           style={
             dark
               ? {
-                  color: darkOptionsAndColors.secondaryColor,
-                }
+                color: darkOptionsAndColors.secondaryColor,
+              }
               : {}
           }
           className='card-draft-articles-subtitle'
@@ -230,7 +230,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
             if (index === applaudedHandles.length - 1 && index < 10) {
               //last element
               return (
-                <Link to={'/' + handle}>
+                <Link to={'/user/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
                     {'@' + handle + ' applauded this article.'}
                   </p>
@@ -239,7 +239,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
             } else if (index === 10) {
               //there are more than 10, this is last
               return (
-                <Link to={'/' + handle}>
+                <Link to={'/user/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
                     {'@' +
                       handle +
@@ -251,7 +251,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               );
             } else if (index < 10) {
               return (
-                <Link to={'/' + handle}>
+                <Link to={'/user/' + handle}>
                   <p key={handle} className='tooltip-inside-handle'>
                     {'@' + handle + ', '}
                   </p>

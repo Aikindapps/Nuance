@@ -210,7 +210,7 @@ const Comments: React.FC<CommentProps> = ({
       <div className='comment-header-container'>
         <div className='comment-avatar-and-name'>
           <div className='user-icon'>
-            <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
+            <Link to={`/user/${comment.handle}`} rel='noopener noreferrer'>
               <img
                 className='user-icon'
                 alt='user icon'
@@ -218,7 +218,7 @@ const Comments: React.FC<CommentProps> = ({
               />
             </Link>
           </div>
-          <Link to={`/${comment.handle}`} rel='noopener noreferrer'>
+          <Link to={`/user/${comment.handle}`} rel='noopener noreferrer'>
             <strong className={darkTheme ? 'username-dark' : 'username'}>
               {comment.handle}
             </strong>

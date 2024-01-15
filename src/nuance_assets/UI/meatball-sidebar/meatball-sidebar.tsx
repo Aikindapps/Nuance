@@ -54,7 +54,7 @@ const MeatBallSidebar = () => {
                   src={user?.avatar || images.DEFAULT_AVATAR}
                   alt=''
                 />
-                <Link to={`/${user?.handle}`}>@{user?.handle}</Link>
+                <Link to={`/user/${user?.handle}`}>@{user?.handle}</Link>
               </div>
             </li>
             <Link to='/my-profile'>
