@@ -1203,7 +1203,7 @@ actor PostCore {
       case (#ok(postBucketReturn)) {
         //if the bucket canister saved the post succesfully, change the internal state (tagIds, modclub - postVersion - indexing- user post ids)
 
-        addOrUpdatePost(isNew, postOwnerPrincipalId, postModel.tagIds, bucketCanisterId, postBucketReturn);
+        await addOrUpdatePost(isNew, postOwnerPrincipalId, postModel.tagIds, bucketCanisterId, postBucketReturn);
 
         // add this postId to the user's posts if not already added
         addPostIdToUser(postOwnerPrincipalId, postBucketReturn.postId);
@@ -1307,7 +1307,17 @@ actor PostCore {
     userPostsHashMap.put(principalId, filteredPostIds);
   };
 
-  private func addOrUpdatePost(isNew : Bool, principal : Text, tagIds : [Text], bucketCanisterId : Text, saveReturn : PostBucketType) : () {
+  public shared ({caller}) func removePostFromPopularityArrays(id: Text) : () {
+    if(idInternal() != caller){
+      return;
+    };
+    popularitySortedArray := Array.filter<(Text, Nat)>(popularitySortedArray, func ((postId : Text, p: Nat)) : Bool {postId != id;});
+    popularitySortedArrayToday := Array.filter<(Text, Nat)>(popularitySortedArrayToday, func ((postId : Text, p: Nat)) : Bool {postId != id;});
+    popularitySortedArrayThisWeek := Array.filter<(Text, Nat)>(popularitySortedArrayThisWeek, func ((postId : Text, p: Nat)) : Bool {postId != id;});
+    popularitySortedArrayThisMonth := Array.filter<(Text, Nat)>(popularitySortedArrayThisMonth, func ((postId : Text, p: Nat)) : Bool {postId != id;});
+  };
+
+  private func addOrUpdatePost(isNew : Bool, principal : Text, tagIds : [Text], bucketCanisterId : Text, saveReturn : PostBucketType) : async () {
 
     principalIdHashMap.put(saveReturn.postId, principal);
     postIdsToBucketCanisterIdsHashMap.put(saveReturn.postId, bucketCanisterId);
@@ -1327,6 +1337,8 @@ actor PostCore {
     //draft
     if (saveReturn.isDraft) {
       isDraftHashMap.put(saveReturn.postId, saveReturn.isDraft);
+      //remove the post from popularity sorted arrays
+      removePostFromPopularityArrays(saveReturn.postId);
     } else {
       isDraftHashMap.delete(saveReturn.postId);
     };
@@ -1696,8 +1708,10 @@ actor PostCore {
           totalViewCount += postViewCount;
           let clapCount = U.safeGet(clapsHashMap, postId, 0);
           totalClapCount += clapCount;
-          let applaudCount = U.safeGet(applaudsHashMap, postId, 0);
-          totalClapCount += applaudCount / Nat.pow(10, ENV.NUA_TOKEN_DECIMALS);
+          let applauds_e8s = (U.safeGet(applaudsHashMap, postId, 0));
+          let applauds = Float.fromInt(applauds_e8s) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS));
+          let applaudsNat = Int.abs(Float.toInt(Float.nearest(applauds)));
+          totalClapCount += applaudsNat;
         },
       );
     };
@@ -2035,6 +2049,9 @@ actor PostCore {
         let now = U.epochTime();
         modifiedHashMap.put(postId, now);
         isDraftHashMap.put(postId, isDraft);
+        if(isDraft){
+          removePostFromPopularityArrays(postId);
+        }
       };
 
     };
@@ -2061,6 +2078,7 @@ actor PostCore {
         if (isDraft) {
           isDraftHashMap.put(postId, true);
           modifiedHashMap.put(postId, time);
+          removePostFromPopularityArrays(postId);
           buildPostKeyProperties(postId);
         } else {
           isDraftHashMap.delete(postId);
@@ -2328,6 +2346,7 @@ actor PostCore {
       };
     };
   };
+  
 
   public shared ({ caller }) func indexPopular() : async () {
     if (isAnonymous(caller)) {

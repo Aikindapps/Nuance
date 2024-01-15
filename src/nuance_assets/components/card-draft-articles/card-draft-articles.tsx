@@ -143,7 +143,10 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
           </div>
           <div className='card-draft-articles-actions-right'>
             {context.width > 600 && (
-              <Badge status={getPostStatus()} dark={dark} />
+              <div className='card-draft-articles-badge-wrapper'>
+                <Badge status={getPostStatus()} dark={dark} />
+                <div className='card-draft-articles-vertical-divider'></div>
+              </div>
             )}
             <div className={'card-draft-articles-right-action-wrapper'}>
               <PiHandsClappingLight

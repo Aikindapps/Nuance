@@ -494,7 +494,10 @@ const Wallet = () => {
                         color: darkOptionsAndColors.color,
                       }}
                     >
-                      <div className='amount'>
+                      <div
+                        className='amount'
+                        style={!activity.isDeposit ? { color: '#cc4747' } : {}}
+                      >
                         {activity.isDeposit
                           ? `+ ${truncateToDecimalPlace(
                               activity.amount /
@@ -575,7 +578,10 @@ const Wallet = () => {
                         color: darkOptionsAndColors.color,
                       }}
                     >
-                      <div className='amount'>
+                      <div
+                        className='amount'
+                        style={activity.isSender ? { color: '#cc4747' } : {}}
+                      >
                         {activity.isSender
                           ? `- ${truncateToDecimalPlace(
                               activity.tokenAmount /

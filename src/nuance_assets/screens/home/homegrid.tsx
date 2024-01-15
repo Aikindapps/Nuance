@@ -7,8 +7,7 @@ import { TagModel } from 'src/nuance_assets/services/actorService';
 import { slice } from 'lodash';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
-import { Context as ModalContext } from '../../contextes/ModalContext'
-
+import { Context as ModalContext } from '../../contextes/ModalContext';
 
 const Header = lazy(() => import('../../components/header/header'));
 const Footer = lazy(() => import('../../components/footer/footer'));
@@ -34,7 +33,7 @@ const HomePageGrid = () => {
   const darkTheme = useTheme() as boolean;
   const searchPageSize = 20;
   const context = useContext(Context);
-  const modalContext = useContext(ModalContext)
+  const modalContext = useContext(ModalContext);
 
   const { isLoggedIn, redirect, redirectScreen } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
@@ -83,19 +82,12 @@ const HomePageGrid = () => {
     setSearchText,
     search,
     populateTags,
-    popularPosts,
-    popularPostsThisWeek,
-    popularPostsToday,
-    popularPostsThisMonth,
     clearSearch,
     searchText,
     searchResults,
     postResults,
     searchTotalCount,
     postTotalCount,
-    postTotalCountToday,
-    postTotalCountThisWeek,
-    postTotalCountThisMonth,
     followTag,
     unfollowTag,
     getAllTags,
@@ -118,10 +110,6 @@ const HomePageGrid = () => {
     getPopularPostsToday: state.getPopularPostsToday,
     getPopularPostsThisWeek: state.getPopularPostsThisWeek,
     getPopularPostsThisMonth: state.getPopularPostsThisMonth,
-    popularPosts: state.popularPosts,
-    popularPostsToday: state.popularPostsToday,
-    popularPostsThisWeek: state.popularPostsThisWeek,
-    popularPostsThisMonth: state.popularPostsThisMonth,
 
     setSearchText: state.setSearchText,
     search: state.search,
@@ -132,9 +120,6 @@ const HomePageGrid = () => {
     postResults: state.postResults,
     searchTotalCount: state.searchTotalCount,
     postTotalCount: state.postTotalCount,
-    postTotalCountToday: state.postTotalCountToday,
-    postTotalCountThisWeek: state.postTotalCountThisWeek,
-    postTotalCountThisMonth: state.postTotalCountThisMonth,
     followTag: state.followTag,
     unfollowTag: state.unfollowTag,
     getAllTags: state.getAllTags,
@@ -316,23 +301,24 @@ const HomePageGrid = () => {
           switch (timeFrame) {
             case 'Today':
               return (
-                postTotalCountToday >
+                popularPostsTodayTotalCount >
                 slice1.length + slice2.length + slice3.length
               );
             case 'This week':
               return (
-                postTotalCountThisWeek >
+                popularPostsThisWeekTotalCount >
                 slice1.length + slice2.length + slice3.length
               );
             case 'This month':
               return (
-                postTotalCountThisMonth >
+                popularPostsThisMonthTotalCount >
                 slice1.length + slice2.length + slice3.length
               );
               break;
             case 'Ever':
               return (
-                postTotalCount > slice1.length + slice2.length + slice3.length
+                popularPostsEverTotalCount >
+                slice1.length + slice2.length + slice3.length
               );
           }
           break;
@@ -350,12 +336,11 @@ const HomePageGrid = () => {
         return !searchPublicationResults
           .map((v) => v.publicationHandle)
           .includes(user.handle);
-      }
-      else {
+      } else {
         return true;
       }
-    })
-  }
+    });
+  };
 
   const resetSearchfield = () => {
     setShowSearchResults(false);
@@ -399,7 +384,7 @@ const HomePageGrid = () => {
       return;
     }
     if (!user) {
-      modalContext?.openModal('Login')
+      modalContext?.openModal('Login');
       return;
     }
 
@@ -421,14 +406,32 @@ const HomePageGrid = () => {
 
   // let slice1 = latestPosts?.slice(0, 10);
   // let slice2 = latestPosts?.slice(11, 21);
-  const [slice1, setSlice1] = useState(popularPostsThisWeek?.slice(0, 10));
-  const [slice2, setSlice2] = useState(popularPostsThisWeek?.slice(10, 20));
+  const [slice1, setSlice1] = useState<PostType[]>([]);
+  const [slice2, setSlice2] = useState<PostType[]>([]);
   const [slice3, setSlice3] = useState<PostType[]>([]);
   const [HGSpinner, setHGSpinner] = useState(false);
   const [tab, setTab] = useState('popular');
   const [page, setPage] = useState(1);
   //const indexSubVal = page * 10;
   const indexLength = latestPosts?.length;
+
+  //holds popular posts
+  const [popularPostsToday, setPopularPostsToday] = useState<PostType[]>([]);
+  const [popularPostsThisWeek, setPopularPostsThisWeek] = useState<PostType[]>(
+    []
+  );
+  const [popularPostsThisMonth, setPopularPostsThisMonth] = useState<
+    PostType[]
+  >([]);
+  const [popularPosts, setPopularPosts] = useState<PostType[]>([]);
+  const [popularPostsTodayTotalCount, setPopularPostsTodayTotalCount] =
+    useState(0);
+  const [popularPostsThisWeekTotalCount, setPopularPostsThisWeekTotalCount] =
+    useState(0);
+  const [popularPostsThisMonthTotalCount, setPopularPostsThisMonthTotalCount] =
+    useState(0);
+  const [popularPostsEverTotalCount, setPopularPostsEverTotalCount] =
+    useState(0);
 
   useEffect(() => {
     setSlice3([]);
@@ -453,32 +456,24 @@ const HomePageGrid = () => {
     if (tab === 'popular') {
       switch (timeFrame) {
         case 'Today':
-          setSlice1(popularPostsToday?.slice(0, 10));
-          setSlice2(popularPostsToday?.slice(10, 20));
-          if (popularPostsToday) {
-            setSlice3(popularPostsToday?.slice(20, undefined));
-          }
+          setSlice1(popularPostsToday.slice(0, 10));
+          setSlice2(popularPostsToday.slice(10, 20));
+          setSlice3(popularPostsToday.slice(20, undefined));
           break;
         case 'This week':
-          setSlice1(popularPostsThisWeek?.slice(0, 10));
-          setSlice2(popularPostsThisWeek?.slice(10, 20));
-          if (popularPostsThisWeek) {
-            setSlice3(popularPostsThisWeek?.slice(20, undefined));
-          }
+          setSlice1(popularPostsThisWeek.slice(0, 10));
+          setSlice2(popularPostsThisWeek.slice(10, 20));
+          setSlice3(popularPostsThisWeek.slice(20, undefined));
           break;
         case 'This month':
-          setSlice1(popularPostsThisMonth?.slice(0, 10));
-          setSlice2(popularPostsThisMonth?.slice(10, 20));
-          if (popularPostsThisMonth) {
-            setSlice3(popularPostsThisMonth?.slice(20, undefined));
-          }
+          setSlice1(popularPostsThisMonth.slice(0, 10));
+          setSlice2(popularPostsThisMonth.slice(10, 20));
+          setSlice3(popularPostsThisMonth.slice(20, undefined));
           break;
         case 'Ever':
-          setSlice1(popularPosts?.slice(0, 10));
-          setSlice2(popularPosts?.slice(10, 20));
-          if (popularPosts) {
-            setSlice3(popularPosts?.slice(20, undefined));
-          }
+          setSlice1(popularPosts.slice(0, 10));
+          setSlice2(popularPosts.slice(10, 20));
+          setSlice3(popularPosts.slice(20, undefined));
           break;
       }
       setHGSpinner(false);
@@ -523,62 +518,66 @@ const HomePageGrid = () => {
     setTab('new');
     setPage(1);
     getLatestPosts(0, 20);
-    setSlice1(latestPosts?.slice(0, 10));
-    setSlice2(latestPosts?.slice(10, 20));
-    setSlice3([]);
+    if (latestPosts) {
+      setSlice1(latestPosts?.slice(0, 10));
+      setSlice2(latestPosts?.slice(10, 20));
+      setSlice3([]);
+    } else {
+      setSlice1([]);
+      setSlice2([]);
+      setSlice3([]);
+    }
+
     resetSearchfield();
   };
 
-  const handlePopularTab = (timeFrame: string) => {
+  const handlePopularTab = async (timeFrame: string) => {
     setTab('popular');
     setPage(1);
+    let [today, thisWeek, thisMonth, ever] = await Promise.all([
+      getPopularPostsToday(0, 20),
+      getPopularPostsThisWeek(0, 20),
+      getPopularPostsThisMonth(0, 20),
+      getPopularPosts(0, 20),
+    ]);
+    setPopularPostsToday(today.posts);
+    setPopularPostsTodayTotalCount(today.totalCount);
+
+    setPopularPostsThisWeek(thisWeek.posts);
+    setPopularPostsThisWeekTotalCount(thisWeek.totalCount);
+
+    setPopularPostsThisMonth(thisMonth.posts);
+    setPopularPostsThisMonthTotalCount(thisMonth.totalCount);
+
+    setPopularPosts(ever.posts);
+    setPopularPostsEverTotalCount(ever.totalCount);
+
     switch (timeFrame) {
       case 'Today':
-        setSlice1(popularPostsToday?.slice(0, 10));
-        setSlice2(popularPostsToday?.slice(10, 20));
-        if (popularPostsToday) {
-          setSlice3(popularPostsToday?.slice(20, undefined));
-        } else {
-          setSlice3([]);
-        }
+        setSlice1(today.posts.slice(0, 10));
+        setSlice2(today.posts.slice(10, 20));
+        setSlice3(today.posts.slice(20, undefined));
         break;
       case 'This week':
-        setSlice1(popularPostsThisWeek?.slice(0, 10));
-        setSlice2(popularPostsThisWeek?.slice(10, 20));
-        if (popularPostsThisWeek) {
-          setSlice3(popularPostsThisWeek?.slice(20, undefined));
-        } else {
-          setSlice3([]);
-        }
+        setSlice1(thisWeek.posts.slice(0, 10));
+        setSlice2(thisWeek.posts.slice(10, 20));
+        setSlice3(thisWeek.posts.slice(20, undefined));
         break;
       case 'This month':
-        setSlice1(popularPostsThisMonth?.slice(0, 10));
-        setSlice2(popularPostsThisMonth?.slice(10, 20));
-        if (popularPostsThisMonth) {
-          setSlice3(popularPostsThisMonth?.slice(20, undefined));
-        } else {
-          setSlice3([]);
-        }
+        setSlice1(thisMonth.posts.slice(0, 10));
+        setSlice2(thisMonth.posts.slice(10, 20));
+        setSlice3(thisMonth.posts.slice(20, undefined));
         break;
       case 'Ever':
-        setSlice1(popularPosts?.slice(0, 10));
-        setSlice2(popularPosts?.slice(10, 20));
-        if (popularPosts) {
-          setSlice3(popularPosts?.slice(20, undefined));
-        } else {
-          setSlice3([]);
-        }
+        setSlice1(ever.posts.slice(0, 10));
+        setSlice2(ever.posts.slice(10, 20));
+        setSlice3(ever.posts.slice(20, undefined));
         break;
 
       default:
         break;
     }
-    Promise.all([
-      getPopularPosts(0, 20),
-      getPopularPostsToday(0, 20),
-      getPopularPostsThisWeek(0, 20),
-      getPopularPostsThisMonth(0, 20),
-    ]);
+
     resetSearchfield();
   };
 
@@ -590,9 +589,16 @@ const HomePageGrid = () => {
   const handleTopicsTab = async () => {
     setTab('topics');
     setPage(1);
-    setSlice1(postResults?.slice(0, 10));
-    setSlice2(postResults?.slice(10, 22));
-    setSlice3([]);
+    if (postResults) {
+      setSlice1(postResults?.slice(0, 10));
+      setSlice2(postResults?.slice(10, 22));
+      setSlice3([]);
+    } else {
+      setSlice1([]);
+      setSlice2([]);
+      setSlice3([]);
+    }
+
     let tags = await getMyTags();
     let postsByTopic = (tags || []).map((tag: any) => {
       let modifiedTag = tag.tagName.toUpperCase();
@@ -610,9 +616,16 @@ const HomePageGrid = () => {
       getPostsByFollowers(user?.followersArray, 0, 21);
     }
     setPage(1);
-    setSlice1(postsByFollowers?.slice(1, 10));
-    setSlice2(postsByFollowers?.slice(10, 21));
-    setSlice3([]);
+    if (postsByFollowers) {
+      setSlice1(postsByFollowers?.slice(1, 10));
+      setSlice2(postsByFollowers?.slice(10, 21));
+      setSlice3([]);
+    } else {
+      setSlice1([]);
+      setSlice2([]);
+      setSlice3([]);
+    }
+
     resetSearchfield();
   };
 
@@ -656,19 +669,45 @@ const HomePageGrid = () => {
         case 'popular':
           switch (timeFrame) {
             case 'Today':
-              getPopularPostsToday((page + 1) * 10, (page + 2) * 10);
+              let today = await getPopularPostsToday(
+                (page + 1) * 10 + 1,
+                (page + 2) * 10
+              );
+              setPopularPostsToday([...popularPostsToday, ...today.posts]);
+              setPopularPostsTodayTotalCount(today.totalCount);
               setPage(page + 1);
               break;
             case 'This week':
-              getPopularPostsThisWeek((page + 1) * 10, (page + 2) * 10);
+              let thisWeek = await getPopularPostsThisWeek(
+                (page + 1) * 10 + 1,
+                (page + 2) * 10
+              );
+              setPopularPostsThisWeek([
+                ...popularPostsThisWeek,
+                ...thisWeek.posts,
+              ]);
+              setPopularPostsThisWeekTotalCount(thisWeek.totalCount);
               setPage(page + 1);
               break;
             case 'This month':
-              getPopularPostsThisMonth((page + 1) * 10, (page + 2) * 10);
+              let thisMonth = await getPopularPostsThisMonth(
+                (page + 1) * 10 + 1,
+                (page + 2) * 10
+              );
+              setPopularPostsThisMonth([
+                ...popularPostsThisMonth,
+                ...thisMonth.posts,
+              ]);
+              setPopularPostsThisMonthTotalCount(thisMonth.totalCount);
               setPage(page + 1);
               break;
             case 'Ever':
-              getPopularPosts((page + 1) * 10, (page + 2) * 10);
+              let ever = await getPopularPosts(
+                (page + 1) * 10 + 1,
+                (page + 2) * 10
+              );
+              setPopularPosts([...popularPosts, ...ever.posts]);
+              setPopularPostsEverTotalCount(ever.totalCount);
               setPage(page + 1);
               break;
           }
@@ -816,7 +855,7 @@ const HomePageGrid = () => {
             {getUserSearchResultsWithoutPublications()?.map((user) => {
               return (
                 <div className='user-search-item' key={user.handle}>
-                  <Link to={'/user/' + user.handle}>
+                  <Link to={'/' + user.handle}>
                     <img
                       src={user.avatar || images.DEFAULT_AVATAR}
                       className='profile-picture user-image-search'
@@ -829,7 +868,7 @@ const HomePageGrid = () => {
                   </Link>
 
                   <div className='user-search-info'>
-                    <Link to={'/user/' + user.handle}>
+                    <Link to={'/' + user.handle}>
                       <p className='handle'>{'@' + user.handle}</p>
                     </Link>
 
@@ -954,7 +993,10 @@ const HomePageGrid = () => {
               <div className='logged-in'>
                 {/* Will call this dynamically when functionalities are implemented */}
                 {/* <img className='avatar-pic' src={user?.avatar || assetPaths.DEFAULT_AVATAR} alt='' /> */}
-                <img className='homepage-left-background-image' src={images.NUANCE_LOGO_MASK_GROUP} />
+                <img
+                  className='homepage-left-background-image'
+                  src={images.NUANCE_LOGO_MASK_GROUP}
+                />
                 <div className='left-content'>
                   <img
                     className='avatar'
@@ -972,7 +1014,7 @@ const HomePageGrid = () => {
                   <div className='handle'>
                     <Link
                       style={{ color: darkOptionsAndColors.secondaryColor }}
-                      to={`/user/${user?.handle}`}
+                      to={`/${user?.handle}`}
                     >
                       @{user?.handle}
                     </Link>
@@ -1138,8 +1180,8 @@ const HomePageGrid = () => {
                       <p className='mainTitle'>LATEST ARTICLES</p>
                       <div className='article-grid'>
                         {tab === 'popular' &&
-                          dropdownMenuOpen &&
-                          !modalContext?.isModalOpen ? (
+                        dropdownMenuOpen &&
+                        !modalContext?.isModalOpen ? (
                           <div
                             className='dropdown-wrapper active'
                             style={darkOptionsAndColors}

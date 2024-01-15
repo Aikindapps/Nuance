@@ -56,6 +56,7 @@ global.fetch = fetch;
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const ArticleNotFound = 'Article not found';
+type GetPopularReturnType = { posts: PostType[]; totalCount: number };
 
 // fetch and merge author avatars into a list of posts
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
@@ -338,16 +339,22 @@ export interface PostStore {
   clearPostsByFollowers: () => void;
   clapPost: (postId: string) => Promise<void>;
   clearSearchBar: (isTagScreen: boolean) => void;
-  getPopularPosts: (indexFrom: number, indexTo: number) => Promise<void>;
-  getPopularPostsToday: (indexFrom: number, indexTo: number) => Promise<void>;
+  getPopularPosts: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<GetPopularReturnType>;
+  getPopularPostsToday: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<GetPopularReturnType>;
   getPopularPostsThisWeek: (
     indexFrom: number,
     indexTo: number
-  ) => Promise<void>;
+  ) => Promise<GetPopularReturnType>;
   getPopularPostsThisMonth: (
     indexFrom: number,
     indexTo: number
-  ) => Promise<void>;
+  ) => Promise<GetPopularReturnType>;
   getPublicationPost: (
     postId: string,
     publicationHandle: string
@@ -466,7 +473,7 @@ export interface PostStore {
     commentId: string,
     bucketCanisterId: string
   ) => Promise<void>;
-  reportComment: ( commentId: string, bucketCanisterId: string) => Promise<void>;
+  reportComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
   clearAll: () => void;
 }
 
@@ -569,7 +576,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       if (Err in result) {
         toastError(result.err);
       } else {
-       toast('Comment reported!', ToastType.Success);
+        toast('Comment reported!', ToastType.Success);
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -1052,12 +1059,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         .getCanisterIdByHandle(handle);
       const result = await (
         await getPublisherActor(canisterId)
-      ).createNftFromPremiumArticle(
-        post.postId,
-        totalSuppy,
-        salePrice,
-        image
-      );
+      ).createNftFromPremiumArticle(post.postId, totalSuppy, salePrice, image);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -1415,87 +1417,41 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getPopularPosts: async (
     indexFrom: number,
     indexTo: number
-  ): Promise<void> => {
+  ): Promise<GetPopularReturnType> => {
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getPopular(indexFrom, indexTo);
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
-      const totalCount = keyProperties.totalCount;
-
-      if (posts?.length) {
-        const postsWithAvatars = await mergeAuthorAvatars(posts);
-        var existingPopularPosts = get().popularPosts;
-
-        let addingPopularPosts = postsWithAvatars.filter((post) => {
-          var valid = true;
-          existingPopularPosts?.forEach((existingPost) => {
-            if (existingPost.postId === post.postId) {
-              valid = false;
-            }
-          });
-          return valid;
-        });
-        if (existingPopularPosts) {
-          set({
-            popularPosts: [...existingPopularPosts, ...addingPopularPosts],
-            postTotalCount: Number(totalCount) || 0,
-          });
-        } else {
-          set({
-            popularPosts: addingPopularPosts,
-            postTotalCount: Number(totalCount) || 0,
-          });
-        }
-      }
+      const totalCount = parseInt(keyProperties.totalCount);
+      const postsWithAvatars = await mergeAuthorAvatars(posts);
+      return { posts: postsWithAvatars, totalCount };
     } catch (err) {
       handleError(err, Unexpected);
+      return { posts: [], totalCount: 0 };
     }
   },
   getPopularPostsToday: async (
     indexFrom: number,
     indexTo: number
-  ): Promise<void> => {
+  ): Promise<GetPopularReturnType> => {
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getPopularToday(indexFrom, indexTo);
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
-      const totalCount = keyProperties.totalCount;
-
-      if (posts?.length) {
-        const postsWithAvatars = await mergeAuthorAvatars(posts);
-        var existingPopularPosts = get().popularPostsToday;
-
-        let addingPopularPosts = postsWithAvatars.filter((post) => {
-          var valid = true;
-          existingPopularPosts?.forEach((existingPost) => {
-            if (existingPost.postId === post.postId) {
-              valid = false;
-            }
-          });
-          return valid;
-        });
-        if (existingPopularPosts) {
-          set({
-            popularPostsToday: [...existingPopularPosts, ...addingPopularPosts],
-            postTotalCountToday: Number(totalCount) || 0,
-          });
-        } else {
-          set({
-            popularPostsToday: addingPopularPosts,
-            postTotalCountToday: Number(totalCount) || 0,
-          });
-        }
-      }
+      const totalCount = parseInt(keyProperties.totalCount);
+      const postsWithAvatars = await mergeAuthorAvatars(posts);
+      return { posts: postsWithAvatars, totalCount };
     } catch (err) {
       handleError(err, Unexpected);
+      return { posts: [], totalCount: 0};
     }
   },
   getPopularPostsThisWeek: async (
     indexFrom: number,
     indexTo: number
-  ): Promise<void> => {
+  ): Promise<GetPopularReturnType> => {
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getPopularThisWeek(
@@ -1504,43 +1460,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       );
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
-      const totalCount = keyProperties.totalCount;
-
-      if (posts?.length) {
-        const postsWithAvatars = await mergeAuthorAvatars(posts);
-        var existingPopularPosts = get().popularPostsThisWeek;
-        let addingPopularPosts = postsWithAvatars.filter((post) => {
-          var valid = true;
-          existingPopularPosts?.forEach((existingPost) => {
-            if (existingPost.postId === post.postId) {
-              valid = false;
-            }
-          });
-          return valid;
-        });
-        if (existingPopularPosts) {
-          set({
-            popularPostsThisWeek: [
-              ...existingPopularPosts,
-              ...addingPopularPosts,
-            ],
-            postTotalCountThisWeek: Number(totalCount) || 0,
-          });
-        } else {
-          set({
-            popularPostsThisWeek: addingPopularPosts,
-            postTotalCountThisWeek: Number(totalCount) || 0,
-          });
-        }
-      }
+      const totalCount = parseInt(keyProperties.totalCount);
+      const postsWithAvatars = await mergeAuthorAvatars(posts);
+      return { posts: postsWithAvatars, totalCount };
     } catch (err) {
       handleError(err, Unexpected);
+      return { posts: [], totalCount: 0 };
     }
   },
   getPopularPostsThisMonth: async (
     indexFrom: number,
     indexTo: number
-  ): Promise<void> => {
+  ): Promise<GetPopularReturnType> => {
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getPopularThisMonth(
@@ -1549,38 +1480,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       );
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
-      const totalCount = keyProperties.totalCount;
-
-      if (posts?.length) {
-        const postsWithAvatars = await mergeAuthorAvatars(posts);
-        var existingPopularPosts = get().popularPostsThisMonth;
-
-        let addingPopularPosts = postsWithAvatars.filter((post) => {
-          var valid = true;
-          existingPopularPosts?.forEach((existingPost) => {
-            if (existingPost.postId === post.postId) {
-              valid = false;
-            }
-          });
-          return valid;
-        });
-        if (existingPopularPosts) {
-          set({
-            popularPostsThisMonth: [
-              ...existingPopularPosts,
-              ...addingPopularPosts,
-            ],
-            postTotalCountThisMonth: Number(totalCount) || 0,
-          });
-        } else {
-          set({
-            popularPostsThisMonth: addingPopularPosts,
-            postTotalCountThisMonth: Number(totalCount) || 0,
-          });
-        }
-      }
+      const totalCount = parseInt(keyProperties.totalCount);
+      const postsWithAvatars = await mergeAuthorAvatars(posts);
+      return { posts: postsWithAvatars, totalCount };
     } catch (err) {
       handleError(err, Unexpected);
+      return { posts: [], totalCount: 0 };
     }
   },
 

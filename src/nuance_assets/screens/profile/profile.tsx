@@ -308,7 +308,7 @@ const Profile = () => {
 
             <div className='statistic'>
               <div className='stat'>
-                <p className='count'>{counts?.totalPostCount || 0}</p>
+                <p className='count'>{counts?.publishedCount || 0}</p>
                 <p className='title'>Articles</p>
               </div>
               <div className='stat'>
@@ -317,7 +317,7 @@ const Profile = () => {
               </div>
               <div className='stat'>
                 <p className='count'>{counts?.uniqueClaps || 0}</p>
-                <p className='title'>Claps</p>
+                <p className='title'>Applauses</p>
               </div>
               <div className='stat'>
                 <p className='count'>{userFollowersCount || 0}</p>

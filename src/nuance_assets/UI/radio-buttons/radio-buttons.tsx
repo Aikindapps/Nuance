@@ -6,10 +6,10 @@ import { MdRadioButtonUnchecked } from "react-icons/md";
 type RadioButtonsProps = {
   items: JSX.Element[];
   onSelect: (item: number) => void;
+  selectedIndex: number;
 };
 
 const RadioButtons: React.FC<RadioButtonsProps> = (props): JSX.Element => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
 
   return (
     <div className='radio-buttons-wrapper'>{props.items.map((element, index) => {
@@ -18,11 +18,10 @@ const RadioButtons: React.FC<RadioButtonsProps> = (props): JSX.Element => {
           className='radio-button-item'
           key={index}
           onClick={() => {
-            setSelectedIndex(index);
             props.onSelect(index);
           }}
         >
-          {index === selectedIndex ? (
+          {index === props.selectedIndex ? (
             <RiRadioButtonFill className='radio-button-icon-selected' />
           ) : (
             <MdRadioButtonUnchecked className='radio-button-icon-not-selected' />
