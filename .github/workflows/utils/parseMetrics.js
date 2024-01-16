@@ -2,17 +2,20 @@
 const rawData = process.argv[2];
 
 function parseMetrics(data) {
-  // Regex to extract numbers. Adjust if the format changes.
-  const regex = /(\d+) : nat/g;
-  let match;
-  const metrics = [];
+  // Splitting the data by spaces to get an array of numbers
+  const metrics = data.trim().split(/\s+/).map(Number);
 
-  while ((match = regex.exec(data)) !== null) {
-    metrics.push(match[1]);
-  }
+  // Performing data analysis
+  const totalPosts = metrics.reduce((acc, val) => acc + val, 0);
+  const maxPosts = Math.max(...metrics);
+  const minPosts = Math.min(...metrics);
+  const averagePosts = (totalPosts / metrics.length).toFixed(2);
 
-  return metrics.join(", ");
+  // Formatting the results
+  const analysisResult = `Total Posts: ${totalPosts}, Max Posts in an Hour: ${maxPosts}, Min Posts in an Hour: ${minPosts}, Average Posts per Hour: ${averagePosts}`;
+  
+  return analysisResult;
 }
 
-const formattedMetrics = parseMetrics(rawData);
-console.log(formattedMetrics);
+const analysisMetrics = parseMetrics(rawData);
+console.log(analysisMetrics);
