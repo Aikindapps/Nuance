@@ -3,7 +3,15 @@ const rawData = process.argv[2];
 const metricType = process.argv[3]; // 'posts' or 'views'
 
 function parseMetrics(data, type) {
-  const regex = /: int; (\d+) : nat;/g;
+  let regex;
+  if (type === 'posts') {
+    regex = /record \{ \d+ : int; (\d+) : nat; \};/g;
+  } else if (type === 'views') {
+    regex = /record \{ \d+ : nat; (\d+) : nat; \};/g;
+  } else {
+    return `Invalid metric type: ${type}`;
+  }
+
   let match;
   const metrics = [];
 
