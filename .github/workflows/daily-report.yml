@@ -48,11 +48,12 @@ jobs:
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
       - name: Get Metrics
-        id: get_metrics
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
           METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW" "posts")
-          echo "METRICS=$METRICS" >> $GITHUB_ENV
+          echo "METRICS<<EOF" >> $GITHUB_ENV
+          echo "$METRICS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
       - name: Get Post Views 24hrs
