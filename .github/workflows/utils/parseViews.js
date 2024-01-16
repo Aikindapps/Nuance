@@ -1,8 +1,9 @@
 // parseViews.js
 const rawData = process.argv[2];
 
+console.log("Received raw data:", rawData); // Debugging line
+
 function parseViews(data) {
-  // Regular expression to match the first numeric value
   const regex = /(\d+) : nat/;
   const match = regex.exec(data);
 
@@ -15,4 +16,4 @@ function parseViews(data) {
 }
 
 const analysisMetrics = parseViews(rawData);
-console.log(analysisMetrics);
+console.log(analysisMetrics); // Debugging line
