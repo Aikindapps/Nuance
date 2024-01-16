@@ -65,6 +65,6 @@ jobs:
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nMetrics: ${{ env.METRICS }}"
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nPost Metrics: ${{ env.METRICS }}\nPost Views: ${{ env.POST_VIEWS }}"
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
