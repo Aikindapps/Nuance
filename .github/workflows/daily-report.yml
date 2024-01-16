@@ -63,8 +63,14 @@ jobs:
           echo "POST_VIEWS=$POST_VIEWS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
+      - name: Get Number of Registered Users
+        run: |
+          REGISTERED_USERS_RAW=$(dfx canister call --network ic User getNumberOfAllRegisteredUsers -qq)
+          REGISTERED_USERS=$(echo $REGISTERED_USERS_RAW | grep -oP '(?<=\()\d+(?=\s*: nat\))')
+          echo "REGISTERED_USERS=$REGISTERED_USERS" >> $GITHUB_ENV
+
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="*Daily Report:*\n>>>*Cycles Dispenser Status:*\n ${{ env.CYCLES_BALANCE }}\n\n*Post Metrics (past 24 hrs):*\n- ${{ env.METRICS }}\n\n*Post Views (past 24 hrs):*\n- Total Views: ${{ env.POST_VIEWS }}"
+          MESSAGE="*Daily Report:*\n>>>*Cycles Dispenser Status:*\n ${{ env.CYCLES_BALANCE }}\n\n*Post Metrics (past 24 hrs):*\n- ${{ env.METRICS }}\n\n*Post Views (past 24 hrs):*\n- Total Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users:*\n- ${{ env.REGISTERED_USERS }}"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
