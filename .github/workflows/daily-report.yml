@@ -54,8 +54,12 @@ jobs:
       - name: Get Post Views 24hrs
         run: |
           POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
+          echo "Raw Post Views Data: $POST_VIEWS_RAW"
           POST_VIEWS=$(node .github/workflows/utils/parseMetrics.js "$POST_VIEWS_RAW" "views")
-          echo "POST_VIEWS=$POST_VIEWS" >> $GITHUB_ENV
+          echo "Formatted Post Views: $POST_VIEWS"
+          POST_VIEWS_CLEANED=$(echo "$POST_VIEWS" | tr -d '\r\n' | sed 's/[^[:alnum:][:space:].,]//g')
+          echo "POST_VIEWS=$POST_VIEWS_CLEANED" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
         run: |
