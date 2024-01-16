@@ -51,7 +51,7 @@ jobs:
         id: get_metrics
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
-          METRICS=$(node github/workflows/utils/parseMetrics.js "$METRICS_RAW")
+          METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW")
           echo "METRICS=$METRICS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
