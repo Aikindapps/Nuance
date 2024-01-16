@@ -47,12 +47,19 @@ jobs:
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
-      - name: Get Metrics
+      - name: Get Post Metrics 24hrs
         id: get_metrics
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
-          METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW")
+          METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW" "posts")
           echo "METRICS=$METRICS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: Get Post Views 24hrs
+        run: |
+          POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
+          POST_VIEWS=$(node .github/workflows/utils/parseMetrics.js "$POST_VIEWS_RAW" "views")
+          echo "POST_VIEWS=$POST_VIEWS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
