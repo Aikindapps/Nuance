@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
 
 #on:
-  # schedule:
-  #   # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
-  
+# schedule:
+#   # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
 
 jobs:
   build:
@@ -51,8 +50,10 @@ jobs:
       - name: Get Metrics
         id: get_metrics
         run: |
-          METRICS=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
+          METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
+          METRICS=$(node utils/parseMetrics.js "$METRICS_RAW")
           echo "METRICS=$METRICS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
         run: |
