@@ -3,6 +3,8 @@ const rawData = process.argv[2];
 const metricType = process.argv[3]; // 'posts' or 'views'
 
 function parseMetrics(data, type) {
+  console.log(`Raw data for ${type}:`, data);
+
   let regex;
   if (type === 'posts') {
     regex = /record \{ \d+ : int; (\d+) : nat; \};/g;
