@@ -3,14 +3,20 @@ const rawData = process.argv[2];
 const metricType = process.argv[3]; // 'posts' or 'views'
 
 function parseMetrics(data, type) {
-  // Generalized regex to match both 'posts' and 'views' data formats
-  const regex = /record \{ \d+ : (int|nat); (\d+) : nat; \};/g;
-  
+  let regex;
+  if (type === 'posts') {
+    regex = /record \{ \d+ : int; (\d+) : nat; \};/g;
+  } else if (type === 'views') {
+    regex = /record \{ \d+ : nat; (\d+) : nat; \};/g;
+  } else {
+    return `Invalid metric type: ${type}`;
+  }
+
   let match;
   const metrics = [];
 
   while ((match = regex.exec(data)) !== null) {
-    const value = parseInt(match[2], 10);
+    const value = parseInt(match[1], 10);
     if (!isNaN(value)) {
       metrics.push(value);
     }
