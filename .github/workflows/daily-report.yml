@@ -44,8 +44,12 @@ jobs:
       - name: Get Post Metrics 24hrs
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
+          echo "Raw Metrics Data: $METRICS_RAW"
           METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW" "posts")
-          echo "METRICS=$METRICS" >> $GITHUB_ENV
+          echo "Formatted Metrics: $METRICS"
+          METRICS_CLEAN=$(echo "$METRICS" | tr -d '\r\n' | sed 's/[^[:alnum:][:space:].,]//g')
+          echo "METRICS=$METRICS_CLEAN" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
 
       - name: Get Post Views 24hrs
         run: |
