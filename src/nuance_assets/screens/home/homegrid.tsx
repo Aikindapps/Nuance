@@ -534,6 +534,32 @@ const HomePageGrid = () => {
   const handlePopularTab = async (timeFrame: string) => {
     setTab('popular');
     setPage(1);
+    switch (timeFrame) {
+      case 'Today':
+        setSlice1(popularPostsToday.slice(0, 10));
+        setSlice2(popularPostsToday.slice(10, 20));
+        setSlice3(popularPostsToday.slice(20, undefined));
+        break;
+      case 'This week':
+        setSlice1(popularPostsThisWeek.slice(0, 10));
+        setSlice2(popularPostsThisWeek.slice(10, 20));
+        setSlice3(popularPostsThisWeek.slice(20, undefined));
+        break;
+      case 'This month':
+        setSlice1(popularPostsThisMonth.slice(0, 10));
+        setSlice2(popularPostsThisMonth.slice(10, 20));
+        setSlice3(popularPostsThisMonth.slice(20, undefined));
+        break;
+      case 'Ever':
+        setSlice1(popularPosts.slice(0, 10));
+        setSlice2(popularPosts.slice(10, 20));
+        setSlice3(popularPosts.slice(20, undefined));
+        break;
+
+      default:
+        break;
+    }
+
     let [today, thisWeek, thisMonth, ever] = await Promise.all([
       getPopularPostsToday(0, 20),
       getPopularPostsThisWeek(0, 20),
