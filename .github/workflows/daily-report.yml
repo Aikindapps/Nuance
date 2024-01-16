@@ -3,23 +3,28 @@ name: Daily Report
 on:
   workflow_dispatch:
 
+#on:
+# schedule:
+#   # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Dependencies
+      - name: npm install
         run: npm install
 
       - name: Install DFX
-        run: |
-          echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
-          dfx start --background
+        run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
 
-      - name: Set Up DFX Identity
+      - name: Start DFX background
+        run: dfx start --background
+
+      - name: Set up dfx identity
         run: |
           sudo apt-get install -y jq
           rm -f ~/.config/dfx/identity/prod/identity.pem
@@ -37,33 +42,22 @@ jobs:
         run: dfx identity get-principal
 
       - name: Check Cycles Dispenser
+        id: check_cycles
         run: |
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
-      - name: Get Post Metrics 24hrs
+      - name: Get Metrics
+        id: get_metrics
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
-          echo "Raw Metrics Data: $METRICS_RAW"
-          METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW" "posts")
-          echo "Formatted Metrics: $METRICS"
-          METRICS_CLEAN=$(echo "$METRICS" | tr -d '\r\n' | sed 's/[^[:alnum:][:space:].,]//g')
-          echo "METRICS=$METRICS_CLEAN" >> $GITHUB_ENV
-        shell: /usr/bin/bash -e {0}
-
-      - name: Get Post Views 24hrs
-        run: |
-          POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
-          echo "Raw Post Views Data: $POST_VIEWS_RAW"
-          POST_VIEWS=$(node .github/workflows/utils/parseMetrics.js "$POST_VIEWS_RAW" "views")
-          echo "Formatted Post Views: $POST_VIEWS"
-          POST_VIEWS_CLEANED=$(echo "$POST_VIEWS" | tr -d '\r\n' | sed 's/[^[:alnum:][:space:].,]//g')
-          echo "POST_VIEWS=$POST_VIEWS_CLEANED" >> $GITHUB_ENV
+          METRICS=$(node utils/parseMetrics.js "$METRICS_RAW")
+          echo "METRICS=$METRICS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nPost Metrics: ${{ env.METRICS }}\nPost Views: ${{ env.POST_VIEWS }}"
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nMetrics: ${{ env.METRICS }}"
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
