@@ -2,13 +2,12 @@
 const rawData = process.argv[2];
 
 function parseMetrics(data) {
-  // Extract the numbers from the structured format
-  const regex = /record \{ (\d+) : int; (\d+) : nat; \};/g;
+  const regex = /: int; (\d+) : nat;/g;
   let match;
   const metrics = [];
 
   while ((match = regex.exec(data)) !== null) {
-    const posts = parseInt(match[2], 10);
+    const posts = parseInt(match[1], 10);
     if (!isNaN(posts)) {
       metrics.push(posts);
     }
