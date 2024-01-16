@@ -31,10 +31,10 @@ function parseMetrics(data, type) {
   const total = metrics.reduce((acc, val) => acc + val, 0);
   const max = Math.max(...metrics);
   const min = Math.min(...metrics);
-  const average = (total / metrics.length).toFixed(2);
+  const average = (total / metricslength).toFixed(2);
 
   return `Total ${type.charAt(0).toUpperCase() + type.slice(1)}: ${total}, Max ${type.charAt(0).toUpperCase() + type.slice(1)} in an Hour: ${max}, Min ${type.charAt(0).toUpperCase() + type.slice(1)} in an Hour: ${min}, Average ${type.charAt(0).toUpperCase() + type.slice(1)} per Hour: ${average}`;
-}
-
-const analysisMetrics = parseMetrics(rawData, metricType);
-console.log(analysisMetrics);
+  }
+  
+  const analysisMetrics = parseMetrics(rawData, metricType);
+  console.log(analysisMetrics);
