@@ -58,9 +58,7 @@ jobs:
       - name: Get Post Views 24hrs
         run: |
           POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
-          echo "Raw Post Views Data: $POST_VIEWS_RAW" # Debugging line
           POST_VIEWS=$(node .github/workflows/utils/parseViews.js "$POST_VIEWS_RAW")
-          echo "Processed Post Views Data: $POST_VIEWS" # Debugging line
           POST_VIEWS_CLEAN=$(echo "$POST_VIEWS" | tr -d '\r\n' | sed 's/[^[:alnum:][:space:].,]//g')
           echo "POST_VIEWS=$POST_VIEWS_CLEAN" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
