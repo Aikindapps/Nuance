@@ -66,6 +66,7 @@ jobs:
       - name: Get Number of Registered Users
         run: |
           REGISTERED_USERS_RAW=$(dfx canister call --network ic User getNumberOfAllRegisteredUsers -qq)
+          echo "Raw Output: $REGISTERED_USERS_RAW"
           REGISTERED_USERS=$(echo $REGISTERED_USERS_RAW | grep -oP '(?<=\()\d+(?=\s*: nat\))')
           echo "REGISTERED_USERS=$REGISTERED_USERS" >> $GITHUB_ENV
 
