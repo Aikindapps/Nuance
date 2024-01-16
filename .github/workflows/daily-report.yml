@@ -3,28 +3,23 @@ name: Daily Report
 on:
   workflow_dispatch:
 
-#on:
-# schedule:
-#   # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: npm install
+      - name: Install Dependencies
         run: npm install
 
       - name: Install DFX
-        run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+        run: |
+          echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+          dfx start --background
 
-      - name: Start DFX background
-        run: dfx start --background
-
-      - name: Set up dfx identity
+      - name: Set Up DFX Identity
         run: |
           sudo apt-get install -y jq
           rm -f ~/.config/dfx/identity/prod/identity.pem
@@ -42,25 +37,21 @@ jobs:
         run: dfx identity get-principal
 
       - name: Check Cycles Dispenser
-        id: check_cycles
         run: |
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
       - name: Get Post Metrics 24hrs
-        id: get_metrics
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
           METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW" "posts")
           echo "METRICS=$METRICS" >> $GITHUB_ENV
-        shell: /usr/bin/bash -e {0}
 
       - name: Get Post Views 24hrs
         run: |
           POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
           POST_VIEWS=$(node .github/workflows/utils/parseMetrics.js "$POST_VIEWS_RAW" "views")
           echo "POST_VIEWS=$POST_VIEWS" >> $GITHUB_ENV
-        shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
         run: |
