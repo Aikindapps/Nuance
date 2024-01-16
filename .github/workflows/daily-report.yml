@@ -55,9 +55,16 @@ jobs:
           echo "METRICS=$METRICS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
+      - name: Get Post Views 24hrs
+        run: |
+          VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
+          VIEWS=$(node .github/workflows/utils/parseMetrics.js "$VIEWS_RAW" "views")
+          echo "VIEWS=$VIEWS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nMetrics: ${{ env.METRICS }}"
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nPost Metrics: ${{ env.METRICS }}\nPost Views: ${{ env.VIEWS }}"
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
