@@ -2,10 +2,18 @@
 const rawData = process.argv[2];
 
 function parseMetrics(data) {
-  // Ensure the data is a string and split it into an array of numbers
-  const metrics = data.split(' ').map(num => parseInt(num, 10)).filter(num => !isNaN(num));
+  // Extract the numbers from the structured format
+  const regex = /record \{ (\d+) : int; (\d+) : nat; \};/g;
+  let match;
+  const metrics = [];
 
-  // If there are no valid numbers, return a message indicating this
+  while ((match = regex.exec(data)) !== null) {
+    const posts = parseInt(match[2], 10);
+    if (!isNaN(posts)) {
+      metrics.push(posts);
+    }
+  }
+
   if (metrics.length === 0) {
     return 'No valid metric data found.';
   }
