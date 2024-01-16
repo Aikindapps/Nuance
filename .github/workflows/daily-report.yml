@@ -48,10 +48,15 @@ jobs:
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
+      - name: Get Metrics
+        id: get_metrics
+        run: |
+          METRICS=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
+          echo "METRICS=$METRICS" >> $GITHUB_ENV
+
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nMetrics: ${{ env.METRICS }}"
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
-
