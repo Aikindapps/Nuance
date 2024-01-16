@@ -71,8 +71,16 @@ jobs:
           echo "REGISTERED_USERS=$REGISTERED_USERS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
+      - name: Get Number of Active Users
+        run: |
+          ACTIVE_USERS_RAW=$(dfx canister call --network ic User getActiveUsersByRange '(record {day= 1 : nat; month= 0 : nat; hour= 0 : nat; year= 0 : nat})' -qq)
+          echo "Raw Output: $ACTIVE_USERS_RAW"
+          ACTIVE_USERS=$(echo $ACTIVE_USERS_RAW | grep -oP '(?<=\()\d+(?=\s*: nat\))')
+          echo "ACTIVE_USERS=$ACTIVE_USERS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="*Daily Report:*\n>>>*Cycles Dispenser Status:*\n ${{ env.CYCLES_BALANCE }}\n\n*Post Metrics (past 24 hrs):*\n- ${{ env.METRICS }}\n\n*Post Views (past 24 hrs):*\n- Total Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users:*\n- ${{ env.REGISTERED_USERS }}"
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
+          MESSAGE="*Daily Report:*\n>>>*Cycles Dispenser Status:*\n ${{ env.CYCLES_BALANCE }}\n\n*Post Metrics (past 24 hrs):*\n- ${{ env.METRICS }}\n\n*Post Views (past 24 hrs):*\n- Total Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users:*\n- ${{ env.REGISTERED_USERS }}\n\nNumber of Active Users:\n- ${{ env.ACTIVE_USERS }}"
+          curl -X POST -H 'Content-type: application/json' --data "{"text":"$MESSAGE"}" $SLACK_WEBHOOK_URL
