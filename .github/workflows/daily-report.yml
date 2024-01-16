@@ -59,13 +59,11 @@ jobs:
         run: |
           POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
           POST_VIEWS=$(node .github/workflows/utils/parseViews.js "$POST_VIEWS_RAW")
-          POST_VIEWS_CLEAN=$(echo "$POST_VIEWS" | tr -d '\r\n' | sed 's/[^[:alnum:][:space:].,]//g')
-          echo "POST_VIEWS=$POST_VIEWS_CLEAN" >> $GITHUB_ENV
+          echo "POST_VIEWS=$POST_VIEWS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nPost Metrics: ${{ env.METRICS }}\nPost Views: ${{ env.POST_VIEWS_CLEAN }}"
-          MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}\nPost Metrics: ${{ env.METRICS }}\nPost Views: ${{ env.POST_VIEWS }}"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
