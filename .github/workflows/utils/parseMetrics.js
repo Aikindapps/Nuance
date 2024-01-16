@@ -2,8 +2,13 @@
 const rawData = process.argv[2];
 
 function parseMetrics(data) {
-  // Splitting the data by spaces to get an array of numbers
-  const metrics = data.trim().split(/\s+/).map(Number);
+  // Ensure the data is a string and split it into an array of numbers
+  const metrics = data.split(' ').map(num => parseInt(num, 10)).filter(num => !isNaN(num));
+
+  // If there are no valid numbers, return a message indicating this
+  if (metrics.length === 0) {
+    return 'No valid metric data found.';
+  }
 
   // Performing data analysis
   const totalPosts = metrics.reduce((acc, val) => acc + val, 0);
