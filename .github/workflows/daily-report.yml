@@ -109,7 +109,7 @@ jobs:
         id: list_proposals
         run: |
           # Define familiar address
-          FAMILIAR_ADDRESS="\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1"
+          FAMILIAR_ADDRESS="\b0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1"
 
           # Fetch proposals and process output
           PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
@@ -130,7 +130,7 @@ jobs:
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
 
-          # Start constructing the message
+          # Constructing the message
           MESSAGE="*Daily Report*"
           MESSAGE+=$'\n\n'"*Cycles Dispenser Status*"
           MESSAGE+=$'\n'"${{ env.CYCLES_BALANCE }}"
@@ -145,8 +145,14 @@ jobs:
           MESSAGE+=$'\n'"${{ env.REGISTERED_USERS }}"
           MESSAGE+=$'\n\n'"*Number of Active Users*"
           MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
+
+          # Add the Unfamiliar Proposal Submissions section
+          UNFAMILIAR_SUBMISSIONS="There are ${{ env.UNFAMILIAR_COUNT }} proposal(s) from unfamiliar addresses."
+          if [ "${{ env.UNFAMILIAR_COUNT }}" -gt 0 ]; then
+            UNFAMILIAR_SUBMISSIONS+=" :red_exclamation_mark:"
+          fi
           MESSAGE+=$'\n\n'"*Unfamiliar Proposal Submissions*"
-          MESSAGE+=$'\n'"There are ${{ env.UNFAMILIAR_COUNT }} proposal(s) from unfamiliar addresses."
+          MESSAGE+=$'\n'"$UNFAMILIAR_SUBMISSIONS"
 
           # Send the message
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
