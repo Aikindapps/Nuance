@@ -55,9 +55,14 @@ jobs:
           for CANISTER in "${CANISTERS[@]}"; do
             OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
             CYCLES=$(echo $OUTPUT | grep -oP '(?<=cycles = )\d+')
-            # Remove last 12 digits to convert to trillions
-            CYCLES_TRILLIONS=${CYCLES::-12}
+            echo "Cycles for $CANISTER: $CYCLES"
             
+            if [[ "${#CYCLES}" -ge 13 ]]; then
+              CYCLES_TRILLIONS=${CYCLES::-12}
+            else
+              CYCLES_TRILLIONS=0
+            fi
+
             if [ "$CYCLES_TRILLIONS" -ge 25 ]; then
               STATUS="🟢" # Green for >= 25T
             elif [ "$CYCLES_TRILLIONS" -ge 10 ]; then
