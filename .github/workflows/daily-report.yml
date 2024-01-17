@@ -54,21 +54,18 @@ jobs:
           SNS_CYCLES=""
           for CANISTER in "${CANISTERS[@]}"; do
             OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
-            CYCLES=$(echo $OUTPUT | grep -oP '(?<=cycles = )\d+')
+            CYCLES=$(echo "$OUTPUT" | grep -oP '(?<=cycles = )\d+')
             echo "Cycles for $CANISTER: $CYCLES"
-            
-            if [[ "${#CYCLES}" -ge 13 ]]; then
-              CYCLES_TRILLIONS=${CYCLES::-12}
-            else
-              CYCLES_TRILLIONS=0
-            fi
 
-            if [ "$CYCLES_TRILLIONS" -ge 25 ]; then
+            if [[ $CYCLES -ge 25000000000000 ]]; then
               STATUS="🟢" # Green for >= 25T
-            elif [ "$CYCLES_TRILLIONS" -ge 10 ]; then
+              CYCLES_TRILLIONS=$(($CYCLES / 1000000000000))
+            elif [[ $CYCLES -ge 10000000000000 ]]; then
               STATUS="🟡" # Yellow for >= 10T and < 25T
+              CYCLES_TRILLIONS=$(($CYCLES / 1000000000000))
             else
               STATUS="🔴" # Red for < 10T
+              CYCLES_TRILLIONS=0
             fi
             SNS_CYCLES+="$CANISTER - ${CYCLES_TRILLIONS}T $STATUS\n"
           done
