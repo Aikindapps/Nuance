@@ -111,20 +111,18 @@ jobs:
           REGISTERED_USERS="${{ env.REGISTERED_USERS }}"
           ACTIVE_USERS="${{ env.ACTIVE_USERS }}"
 
-          MESSAGE="*Daily Report*\n\n"\
-                  "*Cycles Dispenser Status*\n"\
-                  "> ${CYCLES_BALANCE}\n\n"\
-                  "*SNS Canister Cycles*\n"\
-                  "$(echo -e "${SNS_CYCLES}" | sed 's/\\n/\n>/g')\n\n"\
-                  "*Metrics*\n"\
-                  "*Post Metrics (past 24 hrs)*\n"\
-                  "$(echo -e "${METRICS}" | sed 's/\\n/\n>/g')\n\n"\
-                  "*Post Views (past 24 hrs)*\n"\
-                  "> Total Views: ${POST_VIEWS}\n\n"\
-                  "*Number of Registered Users*\n"\
-                  "> ${REGISTERED_USERS}\n\n"\
-                  "*Number of Active Users*\n"\
-                  "> ${ACTIVE_USERS}"
+          MESSAGE="*Daily Report*\n\n*${CYCLES_BALANCE}*"
+          MESSAGE+="\n\n*SNS Canister Cycles*\n"
+          for LINE in $SNS_CYCLES; do
+            MESSAGE+="> $LINE\n"
+          done
+          MESSAGE+="\n*Metrics*\n*Post Metrics (past 24 hrs)*\n"
+          for LINE in $METRICS; do
+            MESSAGE+="> $LINE\n"
+          done
+          MESSAGE+="\n*Post Views (past 24 hrs)*\n> Total Views: ${POST_VIEWS}"
+          MESSAGE+="\n\n*Number of Registered Users*\n> ${REGISTERED_USERS}"
+          MESSAGE+="\n\n*Number of Active Users*\n> ${ACTIVE_USERS}"
 
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE}\"}" $SLACK_WEBHOOK_URL
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
         shell: /usr/bin/bash -e {0}
