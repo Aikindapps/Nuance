@@ -108,34 +108,28 @@ jobs:
       - name: List Proposals
         id: list_proposals
         run: |
-          # Define familiar addresses
-          FAMILIAR_ADDRESSES=("\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1") # Replace with actual addresses
+          # Define familiar address
+          FAMILIAR_ADDRESS="\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1"
 
-          # Fetch proposals
+          # Fetch proposals and process output
           PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
           '(record {include_reward_status = vec {}; before_proposal = null; limit = 100 : nat32; exclude_type = vec {}; include_status = vec {1 : int32}})' \
           --candid ./.github/workflows/candid/sns_gov.did -qq)
-          echo "$PROPOSALS_OUTPUT"
 
           # Initialize count of unfamiliar proposals
           UNFAMILIAR_COUNT=0
 
-          # Parse and check each proposal
-          while IFS= read -r line; do
-            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
-              PROPOSER_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
-              if [[ ! " ${FAMILIAR_ADDRESSES[*]} " =~ " $PROPOSER_ADDRESS " ]]; then
-                ((UNFAMILIAR_COUNT++))
-              fi
-            fi
-          done <<< "$PROPOSALS_OUTPUT"
+          # Check if the familiar address is in the output
+          if [[ "$PROPOSALS_OUTPUT" != *"$FAMILIAR_ADDRESS"* ]]; then
+            UNFAMILIAR_COUNT=1
+          fi
 
-          echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
+          echo "Number of proposals from unfamiliar addresses: $UNFAMILIAR_COUNT"
 
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
           MESSAGE="*Daily Report*"$'\n\n'...
-                "*Unfamiliar Proposal Submissions*"$'\n'"$UNFAMILIAR_COUNT proposal(s) from unfamiliar addresses."$'\n\n'...
+                "*Unfamiliar Proposal Submissions*"$'\n'"There are $UNFAMILIAR_COUNT proposal(s) from unfamiliar addresses."$'\n\n'...
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
         shell: /usr/bin/bash -e {0}
