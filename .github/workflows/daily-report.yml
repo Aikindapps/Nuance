@@ -50,7 +50,7 @@ jobs:
       - name: Check SNS Canister Cycles
         id: check_sns_cycles
         run: |
-          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "q2nfe-mqaaa-aaaaq-aabua-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai")
+          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai"  "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai")
           SNS_CYCLES=""
           for CANISTER in "${CANISTERS[@]}"; do
             OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
