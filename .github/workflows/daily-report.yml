@@ -54,7 +54,7 @@ jobs:
           SNS_CYCLES=""
           for CANISTER in "${CANISTERS[@]}"; do
             if [ "$CANISTER" = "q2nfe-mqaaa-aaaaq-aabua-cai" ]; then
-              OUTPUT=$(dfx canister call --network ic $CANISTER get_canister_status --candid ./.github/workflows/candid/sns_gov.did -qq)
+              OUTPUT=$(dfx canister call --network ic $CANISTER get_canister_status --candid ./.github/workflows/candid/sns_swap.did -qq)
             else
               OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
             fi
