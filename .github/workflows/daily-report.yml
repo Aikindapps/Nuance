@@ -129,7 +129,25 @@ jobs:
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="*Daily Report*"$'\n\n'...
-                "*Unfamiliar Proposal Submissions*"$'\n'"There are $UNFAMILIAR_COUNT proposal(s) from unfamiliar addresses."$'\n\n'...
+
+          # Start constructing the message
+          MESSAGE="*Daily Report*"
+          MESSAGE+=$'\n\n'"*Cycles Dispenser Status*"
+          MESSAGE+=$'\n'"${{ env.CYCLES_BALANCE }}"
+          MESSAGE+=$'\n\n'"*SNS Canister Cycles*"
+          MESSAGE+=$'\n'"${{ env.SNS_CYCLES }}"
+          MESSAGE+=$'\n\n'"*Metrics*"
+          MESSAGE+=$'\n'"*Post Metrics (past 24 hrs)*"
+          MESSAGE+=$'\n'"${{ env.METRICS }}"
+          MESSAGE+=$'\n\n'"*Post Views (past 24 hrs)*"
+          MESSAGE+=$'\n'"Total Views: ${{ env.POST_VIEWS }}"
+          MESSAGE+=$'\n\n'"*Number of Registered Users*"
+          MESSAGE+=$'\n'"${{ env.REGISTERED_USERS }}"
+          MESSAGE+=$'\n\n'"*Number of Active Users*"
+          MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
+          MESSAGE+=$'\n\n'"*Unfamiliar Proposal Submissions*"
+          MESSAGE+=$'\n'"There are $UNFAMILIAR_COUNT proposal(s) from unfamiliar addresses."
+
+          # Send the message
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
         shell: /usr/bin/bash -e {0}
