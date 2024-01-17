@@ -119,10 +119,14 @@ jobs:
           # Initialize count of unfamiliar proposals
           UNFAMILIAR_COUNT=0
 
-          # Check if the familiar address is in the output
-          if [[ "$PROPOSALS_OUTPUT" != *"$FAMILIAR_ADDRESS"* ]]; then
-            UNFAMILIAR_COUNT=1
-          fi
+          # Parse each proposal and check for familiar address
+          while IFS= read -r line; do
+            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
+              if [[ "$line" != *"$FAMILIAR_ADDRESS"* ]]; then
+                ((UNFAMILIAR_COUNT++))
+              fi
+            fi
+          done <<< "$(echo "$PROPOSALS_OUTPUT" | grep '3_000_311_732 = opt record')"
 
           echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
 
