@@ -124,7 +124,7 @@ jobs:
             UNFAMILIAR_COUNT=1
           fi
 
-          echo "Number of proposals from unfamiliar addresses: $UNFAMILIAR_COUNT"
+          echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
 
       - name: Notify Slack
         run: |
@@ -146,7 +146,7 @@ jobs:
           MESSAGE+=$'\n\n'"*Number of Active Users*"
           MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
           MESSAGE+=$'\n\n'"*Unfamiliar Proposal Submissions*"
-          MESSAGE+=$'\n'"There are $UNFAMILIAR_COUNT proposal(s) from unfamiliar addresses."
+          MESSAGE+=$'\n'"There are ${{ env.UNFAMILIAR_COUNT }} proposal(s) from unfamiliar addresses."
 
           # Send the message
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
