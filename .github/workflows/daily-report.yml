@@ -57,17 +57,14 @@ jobs:
             CYCLES=$(echo "$OUTPUT" | grep -oP '(?<=cycles = )\d+')
             echo "Cycles for $CANISTER: $CYCLES"
 
-            if [[ $CYCLES -ge 25000000000000 ]]; then
+            if [ "$CYCLES" -ge 25 ]; then
               STATUS="🟢" # Green for >= 25T
-              CYCLES_TRILLIONS=$(($CYCLES / 1000000000000))
-            elif [[ $CYCLES -ge 10000000000000 ]]; then
+            elif [ "$CYCLES" -ge 10 ]; then
               STATUS="🟡" # Yellow for >= 10T and < 25T
-              CYCLES_TRILLIONS=$(($CYCLES / 1000000000000))
             else
               STATUS="🔴" # Red for < 10T
-              CYCLES_TRILLIONS=0
             fi
-            SNS_CYCLES+="$CANISTER - ${CYCLES_TRILLIONS}T $STATUS\n"
+            SNS_CYCLES+="$CANISTER - ${CYCLES}T $STATUS\n"
           done
           echo "SNS_CYCLES=$SNS_CYCLES" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
