@@ -53,7 +53,7 @@ jobs:
           CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "q2nfe-mqaaa-aaaaq-aabua-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai" )
           SNS_CYCLES=""
           for CANISTER in "${CANISTERS[@]}"; do
-            OUTPUT=$(dfx canister call --network ic $CANISTER canister_status '(record {canister_id = principal "rqch6-oaaaa-aaaaq-aabta-cai"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
+            OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "$CANISTER"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
             CYCLES=$(echo $OUTPUT | grep -oP '(?<=cycles = )\d+')
             SNS_CYCLES+="$CANISTER - ${CYCLES}T\n"
           done
