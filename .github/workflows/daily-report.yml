@@ -50,19 +50,20 @@ jobs:
       - name: Check SNS Canister Cycles
         id: check_sns_cycles
         run: |
-          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai"  "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai")
+          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai")
           SNS_CYCLES=""
           for CANISTER in "${CANISTERS[@]}"; do
             OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
             CYCLES=$(echo $OUTPUT | grep -oP '(?<=cycles = )\d+')
-            # Convert cycles to trillions for comparison
-            CYCLES_TRILLIONS=$(echo "$CYCLES" | awk '{print $1/1000000000000}')
-            if (( $(echo "$CYCLES_TRILLIONS >= 25" | bc -l) )); then
-              STATUS="🟢"
-            elif (( $(echo "$CYCLES_TRILLIONS >= 10" | bc -l) )); then
-              STATUS="🌕"
+            echo "Cycles for $CANISTER: $CYCLES"
+            
+            # Assuming CYCLES is in unit cycles, not trillions
+            if [ "$CYCLES" -ge 25000000000000 ]; then
+              STATUS="🟢" # Green for >= 25T
+            elif [ "$CYCLES" -ge 10000000000000 ]; then
+              STATUS="🌕" # Yellow for >= 10T and < 25T
             else
-              STATUS="🔴"
+              STATUS="🔴" # Red for < 10T
             fi
             SNS_CYCLES+="$CANISTER - ${CYCLES}T $STATUS\n"
           done
