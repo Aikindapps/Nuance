@@ -47,6 +47,18 @@ jobs:
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
+      - name: Check SNS Canister Cycles
+        id: check_sns_cycles
+        run: |
+          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "q2nfe-mqaaa-aaaaq-aabua-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai" )
+          SNS_CYCLES=""
+          for CANISTER in "${CANISTERS[@]}"; do
+            OUTPUT=$(sudo dfx canister call --network ic $CANISTER canister_status '(record {canister_id = principal "rqch6-oaaaa-aaaaq-aabta-cai"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
+            CYCLES=$(echo $OUTPUT | grep -oP '(?<=cycles = )\d+')
+            SNS_CYCLES+="$CANISTER - ${CYCLES}T\n"
+          done
+          echo "SNS_CYCLES=$SNS_CYCLES" >> $GITHUB_ENV
+
       - name: Get Metrics
         run: |
           METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
@@ -82,6 +94,5 @@ jobs:
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="*Daily Report:*\n>>>*Cycles Dispenser Status:*\n ${{ env.CYCLES_BALANCE }}\n\n\n *Metrics*\n*Post Metrics (past 24 hrs)*\n ${{ env.METRICS }}\n\n*Post Views (past 24 hrs):*\n Total Views ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n ${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n ${{ env.ACTIVE_USERS }}"
+          MESSAGE="*Daily Report:*\n>>>*Cycles Dispenser Status:*\n ${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles:*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n________\n*Post Metrics (past 24 hrs)*\n ${{ env.METRICS }}\n\n*Post Views (past 24 hrs):*\n Total Views ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n ${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n ${{ env.ACTIVE_USERS }}"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
-        shell: /usr/bin/bash -e {0}
