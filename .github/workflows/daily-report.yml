@@ -109,7 +109,7 @@ jobs:
         id: list_proposals
         run: |
           # Define familiar address
-          FAMILIAR_ADDRESS="\b0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1"
+          FAMILIAR_ADDRESS="\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1"
 
           # Fetch proposals and process output
           PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
