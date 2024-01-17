@@ -104,5 +104,18 @@ jobs:
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="*Daily Report*\n>>>*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n ${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\n Total Views ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n ${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n ${{ env.ACTIVE_USERS }}"
+          MESSAGE="*Daily Report*\n\n"\
+                  "*Cycles Dispenser Status*\n"\
+                  "> ${CYCLES_BALANCE}\n\n"\
+                  "*SNS Canister Cycles*\n"\
+                  "$(echo "${{ env.SNS_CYCLES }}" | sed 's/\\n/\n>/g')\n\n"\
+                  "*Metrics*\n"\
+                  "*Post Metrics (past 24 hrs)*\n"\
+                  "> $(echo "${{ env.METRICS }}" | sed 's/\\n/\n>/g')\n\n"\
+                  "*Post Views (past 24 hrs)*\n"\
+                  "> Total Views: ${{ env.POST_VIEWS }}\n\n"\
+                  "*Number of Registered Users*\n"\
+                  "> ${{ env.REGISTERED_USERS }}\n\n"\
+                  "*Number of Active Users*\n"\
+                  "> ${{ env.ACTIVE_USERS }}"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
