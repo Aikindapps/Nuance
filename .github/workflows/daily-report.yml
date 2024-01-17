@@ -149,7 +149,7 @@ jobs:
           # Add the Unfamiliar Proposal Submissions section
           UNFAMILIAR_SUBMISSIONS="There are ${{ env.UNFAMILIAR_COUNT }} proposal(s) from unfamiliar addresses."
           if [ "${{ env.UNFAMILIAR_COUNT }}" -gt 0 ]; then
-            UNFAMILIAR_SUBMISSIONS+=" :red_exclamation_mark:"
+            UNFAMILIAR_SUBMISSIONS+=" :exclamation:"
           fi
           MESSAGE+=$'\n\n'"*Unfamiliar Proposal Submissions*"
           MESSAGE+=$'\n'"$UNFAMILIAR_SUBMISSIONS"
