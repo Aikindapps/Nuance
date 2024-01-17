@@ -50,10 +50,14 @@ jobs:
       - name: Check SNS Canister Cycles
         id: check_sns_cycles
         run: |
-          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai")
+          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai" "q2nfe-mqaaa-aaaaq-aabua-cai")
           SNS_CYCLES=""
           for CANISTER in "${CANISTERS[@]}"; do
-            OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
+            if [ "$CANISTER" = "q2nfe-mqaaa-aaaaq-aabua-cai" ]; then
+              OUTPUT=$(dfx canister call --network ic $CANISTER get_canister_status --candid ./.github/workflows/candid/sns_gov.did -qq)
+            else
+              OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
+            fi
             CYCLES=$(echo "$OUTPUT" | grep -oP '(?<=cycles = )\d+')
             echo "Cycles for $CANISTER: $CYCLES"
 
@@ -103,6 +107,6 @@ jobs:
 
       - name: Notify Slack
         run: |
-          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
+          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
           MESSAGE="*Daily Report*\n>>>*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n ${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\n Total Views ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n ${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n ${{ env.ACTIVE_USERS }}"
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
