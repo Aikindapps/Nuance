@@ -123,27 +123,25 @@ jobs:
           FAMILIAR_COUNT=0
           UNFAMILIAR_COUNT=0
 
-          # Parse each proposal and check for familiar addresses
-          echo "$PROPOSALS_OUTPUT" | while read -r line; do
-            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
-              CURRENT_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
-              ADDRESS_FOUND=false
-              for addr in "${FAMILIAR_ADDRESSES[@]}"; do
-                if [[ "$CURRENT_ADDRESS" == "$addr" ]]; then
-                  ADDRESS_FOUND=true
-                  ((FAMILIAR_COUNT++))
-                  break
-                fi
-              done
-              if [[ "$ADDRESS_FOUND" == false ]]; then
-                ((UNFAMILIAR_COUNT++))
+          # Extract each proposal's address blob and compare against familiar addresses
+          echo "$PROPOSALS_OUTPUT" | grep -oP '3_000_311_732 = opt record \{[^}]+\}' | while read -r proposal; do
+            CURRENT_ADDRESS=$(echo "$proposal" | grep -oP 'blob "\K[^"]+')
+            IS_FAMILIAR=false
+            for addr in "${FAMILIAR_ADDRESSES[@]}"; do
+              if [[ "$CURRENT_ADDRESS" == "$addr" ]]; then
+                IS_FAMILIAR=true
+                break
               fi
+            done
+            if [[ "$IS_FAMILIAR" == true ]]; then
+              ((FAMILIAR_COUNT++))
+            else
+              ((UNFAMILIAR_COUNT++))
             fi
           done
 
           echo "FAMILIAR_COUNT=$FAMILIAR_COUNT" >> $GITHUB_ENV
           echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
-
         shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
