@@ -1,8 +1,8 @@
 const fs = require('fs');
 
 const FAMILIAR_ADDRESSES = [
-  "\\a0\\e3\\88\\9b@kv\\86d\\06\\19d\\8d\\84\\8dZ\\0d\\80\\0f+Zz*D\\ff|\\da{-&A1",
-  "\\d9\\ab\\ad\\e7\\01\\0d\\f8:4\\12\\96\\93=t\\dd\\ac\\db\\e6\\02]\\d0Y\\b0\\0dE\\90\\dc\\9e\\d2s:\\c7"
+  "a0e3889b40686d0619648d848d5a0d800f2b5a7a2d44ff7cda7d2d264131",
+  "d9abade7010df83a34129693d3ddacdbe6025d059b00d0e490dc9ed2a3c7"
 ];
 
 function countProposals(proposalsOutput) {
@@ -13,7 +13,7 @@ function countProposals(proposalsOutput) {
 
   proposals.forEach(proposal => {
     const addressMatch = proposal.match(/blob "\\([^"]+)"/);
-    const address = addressMatch ? addressMatch[1] : "";
+    const address = addressMatch ? addressMatch[1].replace(/\\/, '') : "";
     if (FAMILIAR_ADDRESSES.includes(address)) {
       familiarCount++;
     } else {
@@ -27,5 +27,6 @@ function countProposals(proposalsOutput) {
 const proposalsOutput = fs.readFileSync(process.argv[2], 'utf8');
 const { familiarCount, unfamiliarCount } = countProposals(proposalsOutput);
 
-console.log(`::set-output name=familiar_count::${familiarCount}`);
-console.log(`::set-output name=unfamiliar_count::${unfamiliarCount}`);
+// Write to the GitHub Actions environment file
+fs.appendFileSync(process.env.GITHUB_ENV, `FAMILIAR_COUNT=${familiarCount}\n`);
+fs.appendFileSync(process.env.GITHUB_ENV, `UNFAMILIAR_COUNT=${unfamiliarCount}\n`);

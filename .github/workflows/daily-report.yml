@@ -124,8 +124,8 @@ jobs:
           # Constructing the message
           MESSAGE="*Daily Report*\n\n*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\nTotal Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n${{ env.ACTIVE_USERS }}"
 
-          FAMILIAR_COUNT=${{ steps.parse_proposals.outputs.familiar_count }}
-          UNFAMILIAR_COUNT=${{ steps.parse_proposals.outputs.unfamiliar_count }}
+          FAMILIAR_COUNT=${{env.FAMILIAR_COUNT}}
+          UNFAMILIAR_COUNT=${{env.UNFAMILIAR_COUNT}}
 
           PROPOSAL_SUBMISSIONS="*Proposal Submissions*\nProposals from Aikin neurons: $FAMILIAR_COUNT"
           if [ "$UNFAMILIAR_COUNT" -gt 0 ]; then
