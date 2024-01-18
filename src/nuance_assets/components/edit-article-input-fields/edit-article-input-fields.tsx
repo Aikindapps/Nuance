@@ -43,6 +43,7 @@ export const EditArticleInputFields = (props: {
 
       <div className='input-wrapper' ref={props.titleRef}>
         <InputField2
+          classname='input-attributes2'
           width='100%'
           height='53px'
           defaultText='Title...'
@@ -61,6 +62,7 @@ export const EditArticleInputFields = (props: {
 
       <div className='input-wrapper' ref={props.introRef}>
         <InputField2
+          classname='input-attributes2'
           width='100%'
           height='24px'
           defaultText='Intro...'

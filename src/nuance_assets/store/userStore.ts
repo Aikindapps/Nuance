@@ -106,19 +106,21 @@ export interface UserStore {
     avatar: string
   ) => Promise<void>;
   isRegistrationOpen: () => Promise<boolean>;
-  getUser: () => Promise<void>;
-  getAuthor: (handle: string) => Promise<void>;
+  getUser: () => Promise<UserType | undefined>;
+  getAuthor: (handle: string) => Promise<UserType | undefined>;
   getAllUsersHandles: () => Promise<string[]>;
   getAllPublicationsHandles: () => Promise<[string, string][]>;
   searchUsers: (input: string) => Promise<void>;
   searchPublications: (input: string) => Promise<void>;
-  getUserPostCounts: (handle: string) => Promise<void>;
+  getUserPostCounts: (handle: string) => Promise<UserPostCounts | undefined>;
   getWriterPostCounts: (handle: string) => Promise<void>;
   getUserFollowersCount: (handle: string) => Promise<void>;
   clearUser: () => Promise<void>;
   clearAuthor: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<void>;
   updateAvatar: (avatarUrl: string) => Promise<void>;
+  updateSocialLinks: (websiteUrl: string, socialChannelUrls: string[]) => Promise<void>;
+  updateUserDetails: (bio: string, avatarUrl: string, displayName: string, websiteUrl: string, socialChannelUrls: string[]) => Promise<UserType | undefined>;
   updateBio: (bio: string) => Promise<void>;
   followAuthor: (author: string) => Promise<void>;
   unfollowAuthor: (author: string) => Promise<void>;
@@ -187,7 +189,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return (await getUserActor()).isRegistrationOpen();
   },
 
-  getUser: async (): Promise<void> => {
+  getUser: async (): Promise<UserType | undefined> => {
     try {
       const result = await (await getUserActor()).getUser();
       if (Err in result) {
@@ -206,6 +208,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           user,
           unregistered: false,
         });
+        return user;
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -222,13 +225,14 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return undefined;
   },
 
-  getUserPostCounts: async (handle: string): Promise<void> => {
+  getUserPostCounts: async (handle: string): Promise<UserPostCounts | undefined> => {
     try {
       const userPostCounts = await (
         await getPostCoreActor()
       ).getUserPostCounts(handle.toLowerCase());
 
       set({ userPostCounts });
+      return userPostCounts
     } catch (err) {
       toastError(err, Unexpected);
     }
@@ -258,7 +262,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  getAuthor: async (handle: string): Promise<void> => {
+  getAuthor: async (handle: string): Promise<UserType | undefined> => {
     try {
       const result = await (
         await getUserActor()
@@ -268,6 +272,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         toastError(result.err);
       } else {
         set({ author: toUserModel(result.ok) });
+        return toUserModel(result.ok)
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -455,6 +460,33 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         toastError(result.err);
       } else {
         set({ user: toUserModel(result.ok) });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  updateSocialLinks: async (websiteUrl: string, socialChannelUrls: string[]): Promise<void> => {
+    try {
+      const result = await (await getUserActor()).updateSocialLinks(websiteUrl, socialChannelUrls);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        set({ user: toUserModel(result.ok) });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  updateUserDetails: async (bio: string, avatarUrl: string, displayName: string, websiteUrl: string, socialChannelUrls: string[]): Promise<UserType | undefined> => {
+    try {
+      const result = await (await getUserActor()).updateUserDetails(bio, avatarUrl, displayName, websiteUrl, socialChannelUrls);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        set({ user: toUserModel(result.ok) });
+        return toUserModel(result.ok)
       }
     } catch (err) {
       handleError(err, Unexpected);

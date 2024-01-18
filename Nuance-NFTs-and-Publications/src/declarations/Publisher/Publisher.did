@@ -29,16 +29,12 @@ type TokenIndex = nat32;
 type TokenIdentifier = text;
 type SocialLinksObject__1 = 
  record {
-   distrikt: text;
-   dscvr: text;
-   twitter: text;
+   socialChannels: vec text;
    website: text;
  };
 type SocialLinksObject = 
  record {
-   distrikt: text;
-   dscvr: text;
-   twitter: text;
+   socialChannels: vec text;
    website: text;
  };
 type Result_9 = 

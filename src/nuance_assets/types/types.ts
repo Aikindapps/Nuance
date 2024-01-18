@@ -3,9 +3,7 @@ import { SupportedTokenSymbol } from '../shared/constants';
 
 export type SocialLinksObject = {
   website: string;
-  twitter: string;
-  dscvr: string;
-  distrikt: string;
+  socialChannels: string[]
 };
 
 export type PublicationCta = {
@@ -55,6 +53,8 @@ export type UserType = {
   followers: Array<string>;
   followersArray: Array<string>;
   publicationsArray: Array<PublicationObject>;
+  website: string;
+  socialChannels: Array<string>
   nuaTokens: number;
   followersCount: number;
 };

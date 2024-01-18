@@ -8,6 +8,7 @@ import {
   SupportedTokenSymbol,
   ckBTC_CANISTER_ID,
   getDecimalsByTokenSymbol,
+  icons,
 } from './constants';
 import { PairInfo } from '../types/types';
 
@@ -504,4 +505,40 @@ export function truncateToDecimalPlace(num: number, decimalPlaces: number): stri
 
   const cutIndex = dotIndex + decimalPlaces + 1;
   return numStr.substring(0, cutIndex);
+}
+
+
+export const getIconForSocialChannel = (url: string, dark: boolean) => {
+  let input = url;
+  if(input.startsWith('https://') || input.startsWith('http://')){
+      input = (new URL(input)).hostname;
+  }
+  input = input.split('/')[0];
+  const psl = require('psl')
+  const supportedChannels = [
+    ['whatsapp', 'com'],
+    ['youtube', 'com'],
+    ['discord', 'com'],
+    ['telegram', 'org'],
+    ['x', 'com'],
+    ['twitter', 'com'],
+    ['linkedin', 'com'],
+    ['wechat', 'com'],
+    ['facebook', 'com'],
+    ['instagram', 'com'],
+    ['dscvr', 'one'],
+    ['distrikt', 'app'],
+    ['reddit', 'com'],
+    ['medium', 'com'],
+    ['pinterest', 'com'],
+    ['snapchat', 'com'],
+    ['tiktok', 'com'],
+  ]
+  const path = '/assets/images/icons/social-channels/';
+  for(const supportedChannel of supportedChannels){
+    if(psl.parse(input).domain === supportedChannel[0] + '.' + supportedChannel[1]){
+      return path + supportedChannel[0] + '.svg';
+    }
+  }
+  return dark ? icons.WEBSITE_ICON_DARK : icons.WEBSITE_ICON;
 }

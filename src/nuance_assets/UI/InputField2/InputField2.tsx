@@ -1,7 +1,7 @@
 import { number } from 'prop-types';
 import React from 'react';
 import { stripVTControlCharacters } from 'util';
-import { colors } from '../../shared/constants';
+import { colors, icons } from '../../shared/constants';
 
 type InputProps = {
   defaultText: string;
@@ -24,6 +24,9 @@ type InputProps = {
   isNaturalNumberInput?: boolean;
   theme?: string;
   style?: any;
+  classname: string;
+  icon?: string;
+  button?: { icon: string; onClick: () => void };
 };
 
 const InputField: React.FC<InputProps> = (props): JSX.Element => {
@@ -40,7 +43,11 @@ const InputField: React.FC<InputProps> = (props): JSX.Element => {
         : colors.primaryTextColor,
   };
   return (
-    <div className='input-attributes2'>
+    <div
+      className={
+        props.button ? props.classname + ' with-button' : props.classname
+      }
+    >
       <input
         className={className}
         role='input'
@@ -62,7 +69,7 @@ const InputField: React.FC<InputProps> = (props): JSX.Element => {
             props.theme === 'dark'
               ? darkOptionsAndColors.background
               : darkOptionsAndColors.background,
-          ...props.style
+          ...props.style,
         }}
         contentEditable
         maxLength={props.maxLength}
@@ -74,6 +81,14 @@ const InputField: React.FC<InputProps> = (props): JSX.Element => {
         }
         min={props.isFloatInput ? '0' : props.isNaturalNumberInput ? '0' : ''}
       />
+      {props.icon && <img className='icon' src={props.icon} />}
+      {props.button && (
+        <img
+          className='button'
+          onClick={props.button.onClick}
+          src={props.button.icon}
+        />
+      )}
     </div>
   );
 };

@@ -1317,6 +1317,7 @@ const CreateEditPublication = () => {
 
               <div id='name-wrapper'>
                 <InputField2
+                  classname='input-attributes2'
                   width='100%'
                   height='53px'
                   defaultText='Publication title'
@@ -1337,6 +1338,7 @@ const CreateEditPublication = () => {
 
               <div id='subtitle-wrapper'>
                 <InputField2
+                  classname='input-attributes2'
                   width='100%'
                   height='24px'
                   defaultText='Subtitle'
@@ -1369,6 +1371,7 @@ const CreateEditPublication = () => {
                 </p>
               </div>
               <InputField2
+                classname='input-attributes2'
                 width='100%'
                 height='24px'
                 defaultText=''
@@ -1391,6 +1394,7 @@ const CreateEditPublication = () => {
                 </p>
               </div>
               <InputField2
+                classname='input-attributes2'
                 width='100%'
                 height='24px'
                 defaultText=''
@@ -1536,6 +1540,7 @@ const CreateEditPublication = () => {
                   }
                 >
                   <InputField2
+                    classname='input-attributes2'
                     style={
                       isCtaActive
                         ? {}
@@ -1558,6 +1563,7 @@ const CreateEditPublication = () => {
                     }}
                   ></InputField2>
                   <InputField2
+                    classname='input-attributes2'
                     style={
                       isCtaActive
                         ? {}
@@ -1580,6 +1586,7 @@ const CreateEditPublication = () => {
                     }}
                   ></InputField2>
                   <InputField2
+                    classname='input-attributes2'
                     style={
                       isCtaActive
                         ? {}
@@ -1893,6 +1900,7 @@ const CreateEditPublication = () => {
                 </p>
               </div>
               <InputField2
+                classname='input-attributes2'
                 width='100%'
                 height='24px'
                 defaultText=''
@@ -1916,6 +1924,7 @@ const CreateEditPublication = () => {
                 LINK TO TWITTER
               </p>
               <InputField2
+                classname='input-attributes2'
                 width='100%'
                 height='24px'
                 defaultText=''
@@ -1939,6 +1948,7 @@ const CreateEditPublication = () => {
                 LINK TO DSCVR
               </p>
               <InputField2
+                classname='input-attributes2'
                 width='100%'
                 height='24px'
                 defaultText=''
@@ -1962,6 +1972,7 @@ const CreateEditPublication = () => {
                 LINK TO DISTRIKT
               </p>
               <InputField2
+                classname='input-attributes2'
                 width='100%'
                 height='24px'
                 defaultText=''

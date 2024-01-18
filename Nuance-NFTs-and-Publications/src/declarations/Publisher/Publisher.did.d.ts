@@ -234,16 +234,12 @@ export type Result_8 = { 'ok' : null } |
 export type Result_9 = { 'ok' : GetPremiumArticleInfoReturn } |
   { 'err' : string };
 export interface SocialLinksObject {
-  'twitter' : string,
+  'socialChannels' : Array<string>,
   'website' : string,
-  'distrikt' : string,
-  'dscvr' : string,
 }
 export interface SocialLinksObject__1 {
-  'twitter' : string,
+  'socialChannels' : Array<string>,
   'website' : string,
-  'distrikt' : string,
-  'dscvr' : string,
 }
 export type TokenIdentifier = string;
 export type TokenIndex = number;

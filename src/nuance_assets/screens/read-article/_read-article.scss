@@ -4,6 +4,7 @@
 .read-article-wrapper {
   width: 100vw;
   margin: 0px;
+
   .page {
     display: flex;
     justify-content: center;
@@ -124,7 +125,7 @@
           .header-image {
             height: 578px;
             max-width: 915px;
-            
+
             object-fit: cover;
             margin-left: -91px;
             width: -webkit-fill-available;
@@ -134,9 +135,10 @@
             @media only screen and (max-width: 768px) {
               height: 500px;
             }
+
             @media screen and (max-width: 425px) {
               height: 280px;
-              
+
             }
           }
 
@@ -161,7 +163,7 @@
           .text {
             max-width: 715px;
             padding-right: 35px;
-           
+
             a:visited {
               color: purple;
               font-size: 18px;
@@ -261,6 +263,24 @@
           width: 55%;
           text-align: center;
           padding: 20px 0;
+        }
+
+        .social-channels {
+          display: flex;
+          align-items: center;
+          column-gap: 12px;
+
+          .social-channel-icon {
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            padding: 4px;
+            border-radius: 2px;
+
+            &:hover {
+              background-color: rgba(27, 193, 240, 0.10);
+            }
+          }
         }
       }
 
@@ -590,7 +610,7 @@
       justify-content: flex-start;
 
       .left {
-       
+
         .date {
           margin: 0 -10px 0 0;
           width: max-content;
@@ -613,7 +633,7 @@
         margin-top: 20px;
 
         .content {
-          
+
 
           h1 {
             font-size: 32px;
@@ -658,9 +678,9 @@
               object-fit: cover;
               margin-left: -35px;
               height: 240px;
-             
-             
-              
+
+
+
               background: white;
             }
 

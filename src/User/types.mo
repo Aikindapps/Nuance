@@ -24,6 +24,8 @@ module {
         followers: Followers;
         followersArray: [Text];
         publicationsArray: [PublicationObject];
+        website: Text;
+        socialChannels: [Text];
         nuaTokens: Float;
         followersCount: Nat32;
     };

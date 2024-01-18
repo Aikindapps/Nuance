@@ -14,7 +14,7 @@ import {
   useUserStore,
 } from '../../store';
 import Loader from '../../UI/loader/Loader';
-import { formatDate } from '../../shared/utils';
+import { formatDate, getIconForSocialChannel } from '../../shared/utils';
 import {
   colors,
   images,
@@ -38,6 +38,7 @@ import Comments from '../../components/comments/comments';
 import WriteComment from '../../components/comments/write-comments';
 import { PostBucket } from 'src/declarations/PostBucket';
 import { get } from 'lodash';
+import { Tooltip } from 'react-tooltip';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -432,6 +433,20 @@ const ReadArticle = () => {
     }
   };
 
+  const getSocialChannelUrls = () => {
+    if(author){
+      if(author.website !== ''){
+        return [author.website, ...author.socialChannels]
+      }
+      else{
+        return author.socialChannels
+      }
+    }
+    else{
+      return []
+    }
+  }
+
   //for customizing linkify npm package
   const componentDecorator = (href: any, text: any, key: any) => (
     <a href={href} key={key} target='_blank' rel='noopener noreferrer'>
@@ -542,7 +557,9 @@ const ReadArticle = () => {
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/user/${post.isPublication ? post.creator : author.handle}`}
+                  to={`/user/${
+                    post.isPublication ? post.creator : author.handle
+                  }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -629,9 +646,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                        fontFamily: publication?.styling.fontType,
-                        color: darkOptionsAndColors.color,
-                      }
+                          fontFamily: publication?.styling.fontType,
+                          color: darkOptionsAndColors.color,
+                        }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -745,12 +762,45 @@ const ReadArticle = () => {
                     alt=''
                   ></img>
                   <Link
-                    to={`/user/${post.isPublication ? post.creator : author.handle}`}
+                    to={`/user/${
+                      post.isPublication ? post.creator : author.handle
+                    }`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='handle'
                   >
                     @{post.isPublication ? post.creator : author.handle}
                   </Link>
+                  <div className='social-channels'>
+                    {getSocialChannelUrls().map((url, index) => {
+                      return (
+                        <div
+                          onClick={() => {
+                            let urlWithProtocol =
+                              url.startsWith('https://') ||
+                              url.startsWith('http://')
+                                ? url
+                                : 'https://' + url;
+                            window.open(urlWithProtocol, '_blank');
+                          }}
+                        >
+                          <Tooltip
+                            clickable={true}
+                            className='tooltip-wrapper'
+                            anchorSelect={'#social-channel-' + index}
+                            place='top'
+                            noArrow={true}
+                          >
+                            {url}
+                          </Tooltip>
+                          <img
+                            className='social-channel-icon'
+                            src={getIconForSocialChannel(url, darkTheme)}
+                            id={'social-channel-' + index}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                   <Linkify componentDecorator={componentDecorator}>
                     <p className='biography'>{getBio()}</p>
                   </Linkify>

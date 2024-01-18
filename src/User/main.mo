@@ -69,6 +69,8 @@ actor User {
   stable var followers : [(Text, Followers)] = [];
   stable var followersArray : [(Text, [Text])] = []; //the accounts that a user follows
   stable var followersCounts : [(Text, Text)] = [];
+  stable var website : [(Text, Text)] = [];
+  stable var socialChannels : [(Text, [Text])] = [];
   stable var publicationsArray : [(Text, [PublicationObject])] = [];
   stable var nuaTokens : [(Text, Float)] = [];
   stable var fontTypes : [(Text, Text)] = [];
@@ -91,6 +93,8 @@ actor User {
   var followersHashMap = HashMap.HashMap<Text, Followers>(maxHashmapSize, isEq, Text.hash);
   var followersArrayHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
   var followersCountsHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
+  var websiteHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
+  var socialChannelsHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
   var publicationsArrayHashMap = HashMap.HashMap<Text, [PublicationObject]>(maxHashmapSize, isEq, Text.hash);
   var nuaTokensHashMap = HashMap.HashMap<Text, Float>(maxHashmapSize, isEq, Text.hash);
   var fontTypesHashmap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
@@ -286,6 +290,8 @@ actor User {
       followers = List.nil();
       followersArray = [];
       publicationsArray = [];
+      website = "";
+      socialChannels = [];
       nuaTokens = 0.0;
       followersCount = 0;
 
@@ -306,6 +312,8 @@ actor User {
         followers = U.safeGet(followersHashMap, principalId, List.nil());
         followersArray = U.safeGet(followersArrayHashMap, principalId, []);
         publicationsArray = U.safeGet(publicationsArrayHashMap, principalId, []);
+        website = U.safeGet(websiteHashMap, principalId, "");
+        socialChannels = U.safeGet(socialChannelsHashMap, principalId, []);
         nuaTokens = U.safeGet(nuaTokensHashMap, principalId, 0.0);
         followersCount = Nat32.fromNat(U.safeGet(myFollowersHashMap, userPrincipalId, []).size());
       };
@@ -334,6 +342,8 @@ actor User {
     followersHashMap.put(principalId, user.followers);
     followersArrayHashMap.put(principalId, user.followersArray);
     publicationsArrayHashMap.put(principalId, user.publicationsArray);
+    websiteHashMap.put(principalId, user.website);
+    socialChannelsHashMap.put(principalId, user.socialChannels);
     nuaTokensHashMap.put(principalId, user.nuaTokens);
     accountIdsToHandleHashMap.put(accountId, handleTrimmed);
   };
@@ -453,6 +463,8 @@ actor User {
       followers = List.nil();
       followersArray = [];
       publicationsArray = [];
+      website = "";
+      socialChannels = [];
       nuaTokens = 0.0;
       followersCount = 0;
     };
@@ -753,6 +765,97 @@ actor User {
     };
 
     avatarHashMap.put(principalId, avatarUrl);
+    #ok(buildUser(principalId));
+  };
+
+  public shared ({ caller }) func updateSocialLinks(websiteUrl : Text, socialChannelsUrls: [Text]) : async Result.Result<User, Text> {
+    canistergeekMonitor.collectMetrics();
+
+    if (isAnonymous(caller)) {
+      return #err(Unauthorized);
+    };
+
+    //validate website url
+    if (not U.isTextLengthValid(websiteUrl, 256)) {
+      return #err("Avatar Url Text length exceeded");
+    };
+
+    for(socialChannelsUrl in socialChannelsUrls.vals()){
+      if (not U.isTextLengthValid(socialChannelsUrl, 256)) {
+        return #err("Social Channel Url Text length exceeded");
+      };
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+    var principalId = Principal.toText(caller);
+    if (principalIdHashMap.get(principalId) == null) {
+      return #err(UserNotFound);
+    };
+
+    websiteHashMap.put(principalId, websiteUrl);
+    socialChannelsHashMap.put(principalId, socialChannelsUrls);
+    #ok(buildUser(principalId));
+  };
+
+  public shared ({ caller }) func updateUserDetails(bio: Text, avatarUrl: Text, displayName: Text, websiteUrl : Text, socialChannelsUrls: [Text]) : async Result.Result<User, Text> {
+    canistergeekMonitor.collectMetrics();
+
+    if (isAnonymous(caller)) {
+      return #err(Unauthorized);
+    };
+    //validate bio
+    if (not U.isTextLengthValid(bio, 160)) {
+      return #err("Bio Text length exceeded");
+    };
+
+    //validate avatar
+    if (not U.isTextLengthValid(avatarUrl, 256)) {
+      return #err("Avatar Url Text length exceeded");
+    };
+
+    //validate input
+    if (not U.isTextLengthValid(displayName, 64)) {
+      return #err("Display Name Text length exceeded");
+    };
+
+    //validate website url
+    if (not U.isTextLengthValid(websiteUrl, 256)) {
+      return #err("Avatar Url Text length exceeded");
+    };
+    //validate social channels
+    for(socialChannelsUrl in socialChannelsUrls.vals()){
+      if (not U.isTextLengthValid(socialChannelsUrl, 256)) {
+        return #err("Social Channel Url Text length exceeded");
+      };
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+    var principalId = Principal.toText(caller);
+    if (principalIdHashMap.get(principalId) == null) {
+      return #err(UserNotFound);
+    };
+
+    //bio
+    bioHashMap.put(principalId, bio);
+
+    //avatar
+    avatarHashMap.put(principalId, avatarUrl);
+
+    //display name
+    displayNameHashMap.put(principalId, displayName);
+
+    //website
+    websiteHashMap.put(principalId, websiteUrl);
+
+    //social channels
+    socialChannelsHashMap.put(principalId, socialChannelsUrls);
+    
     #ok(buildUser(principalId));
   };
 
@@ -1710,6 +1813,8 @@ actor User {
     followersArray := Iter.toArray(followersArrayHashMap.entries());
     followersCounts := Iter.toArray(followersCountsHashMap.entries());
     publicationsArray := Iter.toArray(publicationsArrayHashMap.entries());
+    website := Iter.toArray(websiteHashMap.entries());
+    socialChannels := Iter.toArray(socialChannelsHashMap.entries());
     nuaTokens := Iter.toArray(nuaTokensHashMap.entries());
     fontTypes := Iter.toArray(fontTypesHashmap.entries());
     nftCanisterIds := Iter.toArray(nftCanisterIdsHashmap.entries());
@@ -1737,6 +1842,8 @@ actor User {
     followersArrayHashMap := HashMap.fromIter(followersArray.vals(), maxHashmapSize, isEq, Text.hash);
     followersCountsHashMap := HashMap.fromIter(followersCounts.vals(), maxHashmapSize, isEq, Text.hash);
     publicationsArrayHashMap := HashMap.fromIter(publicationsArray.vals(), maxHashmapSize, isEq, Text.hash);
+    websiteHashMap := HashMap.fromIter(website.vals(), maxHashmapSize, isEq, Text.hash);
+    socialChannelsHashMap := HashMap.fromIter(socialChannels.vals(), maxHashmapSize, isEq, Text.hash);
     nuaTokensHashMap := HashMap.fromIter(nuaTokens.vals(), maxHashmapSize, isEq, Text.hash);
     fontTypesHashmap := HashMap.fromIter(fontTypes.vals(), maxHashmapSize, isEq, Text.hash);
     nftCanisterIdsHashmap := HashMap.fromIter(nftCanisterIds.vals(), maxHashmapSize, isEq, Text.hash);

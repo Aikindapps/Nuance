@@ -607,6 +607,8 @@ const HomePageGrid = () => {
     resetSearchfield();
   };
 
+
+
   var postsByTopic = (myTags || []).map((tag: any) => {
     let modifiedTag = tag.tagName.toUpperCase();
     return `#${modifiedTag}`;
@@ -1053,7 +1055,7 @@ const HomePageGrid = () => {
                     <h6 className='leftt'>
                       <Link
                         style={{ color: darkOptionsAndColors.secondaryColor }}
-                        to='/my-profile/published'
+                        to='/my-profile/articles?page=published'
                       >
                         {counts?.publishedCount || 0} articles published
                       </Link>
@@ -1065,7 +1067,7 @@ const HomePageGrid = () => {
                     >
                       <Link
                         style={{ color: darkOptionsAndColors.secondaryColor }}
-                        to='/my-profile/draft'
+                        to='/my-profile/articles?page=draft'
                       >
                         {counts?.draftCount || 0} articles in draft
                       </Link>
