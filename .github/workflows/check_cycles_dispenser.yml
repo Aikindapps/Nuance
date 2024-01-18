@@ -64,10 +64,10 @@ jobs:
           PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
           '(record {include_reward_status = vec {}; before_proposal = null; limit = 100 : nat32; exclude_type = vec {}; include_status = vec {1 : int32}})' \
           --candid ./.github/workflows/candid/sns_gov.did -qq)
-          echo "$PROPOSALS_OUTPUT" > proposals_output.txt
+          echo "$PROPOSALS_OUTPUT" > .github/workflows/utils/proposals_output.txt
 
       - name: Parse Proposals Output
-        run: node .github/workflows/utils/parseProposals.js proposals_output.txt
+        run: node .github/workflows/utils/parseProposals.js .github/workflows/utils/proposals_output.txt
         id: parse_proposals
 
       - name: Notify Slack - Unfamiliar Proposals
