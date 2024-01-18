@@ -53,6 +53,6 @@ jobs:
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
 
           # Check if the message contains 'Everything is fine' and it's not the first hour of the day
-          if [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]] || [[ "$CURRENT_HOUR" == "00" ]]; then
+          if [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]]; then
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
           fi
