@@ -123,37 +123,27 @@ jobs:
           FAMILIAR_COUNT=0
           UNFAMILIAR_COUNT=0
 
-          # Create a temporary file for counts
-          COUNT_FILE=$(mktemp)
+          # Convert output into an array of lines
+          IFS=$'\n' read -r -d '' -a lines <<< "$PROPOSALS_OUTPUT"
 
-          # Extract each proposal's address blob and compare against familiar addresses
-          echo "$PROPOSALS_OUTPUT" | grep -oP '3_000_311_732 = opt record \{[^}]+\}' | while read -r proposal; do
-            CURRENT_ADDRESS=$(echo "$proposal" | grep -oP 'blob "\K[^"]+')
-            IS_FAMILIAR=false
-            for addr in "${FAMILIAR_ADDRESSES[@]}"; do
-              if [[ "$CURRENT_ADDRESS" == "$addr" ]]; then
-                IS_FAMILIAR=true
-                break
+          # Process each line
+          for line in "${lines[@]}"; do
+            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
+              CURRENT_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
+              IS_FAMILIAR=false
+              for addr in "${FAMILIAR_ADDRESSES[@]}"; do
+                if [[ "$CURRENT_ADDRESS" == "$addr" ]]; then
+                  IS_FAMILIAR=true
+                  break
+                fi
+              done
+              if [[ "$IS_FAMILIAR" == true ]]; then
+                ((FAMILIAR_COUNT++))
+              else
+                ((UNFAMILIAR_COUNT++))
               fi
-            done
-            if [[ "$IS_FAMILIAR" == true ]]; then
-              echo "familiar" >> "$COUNT_FILE"
-            else
-              echo "unfamiliar" >> "$COUNT_FILE"
             fi
           done
-
-          # Read counts from the temporary file
-          while read -r line; do
-            if [[ "$line" == "familiar" ]]; then
-              ((FAMILIAR_COUNT++))
-            elif [[ "$line" == "unfamiliar" ]]; then
-              ((UNFAMILIAR_COUNT++))
-            fi
-          done < "$COUNT_FILE"
-
-          # Clean up
-          rm "$COUNT_FILE"
 
           echo "FAMILIAR_COUNT=$FAMILIAR_COUNT" >> $GITHUB_ENV
           echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
@@ -179,7 +169,7 @@ jobs:
           MESSAGE+=$'\n\n'"*Number of Active Users*"
           MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
 
-          # Add the Proposal Submissions section
+
           PROPOSAL_SUBMISSIONS="*Proposal Submissions*"
           PROPOSAL_SUBMISSIONS+=$'\n'"Proposals from Aikin neurons: ${{ env.FAMILIAR_COUNT }}"
           if [ "${{ env.UNFAMILIAR_COUNT }}" -gt 0 ]; then
@@ -188,5 +178,4 @@ jobs:
           MESSAGE+=$'\n\n'"$PROPOSAL_SUBMISSIONS"
 
           # Send the message
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
-        shell: /usr/bin/bash -e {0}
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"
