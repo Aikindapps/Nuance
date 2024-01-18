@@ -68,7 +68,7 @@ jobs:
             else
               STATUS="🔴" # Red for < 10T
             fi
-            SNS_CYCLES+="$CANISTER - ${CYCLES}T $STATUS\n"
+            SNS_CYCLES+="$STATUS $CANISTER - ${CYCLES}T\n"
           done
           echo "SNS_CYCLES=$SNS_CYCLES" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
