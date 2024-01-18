@@ -1,10 +1,10 @@
 name: CyclesDispenser and Proposal Notification
 
-# on:
-#   schedule:
-#     - cron: '0 * * * *'
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+# on:
+#   workflow_dispatch:
 
 jobs:
   build:
@@ -46,18 +46,37 @@ jobs:
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
-      - name: Notify Slack for Cycles Dispenser Status
-        if: ${{ env.CYCLES_BALANCE != 'Everything is fine' }}
+      - name: Notify Slack - Cycles Dispenser
         run: |
-          SLACK_WEBHOOK_URL_CYCLES="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY}}"
-          MESSAGE_CYCLES="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE_CYCLES\"}" $SLACK_WEBHOOK_URL_CYCLES
+          CURRENT_HOUR=$(date +"%H")
+          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
+          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
 
-      - name: Notify Slack for Unfamiliar Proposals
-        if: ${{ steps.parse_proposals.outputs.unfamiliar_count }} > 0
+          MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
+
+          if [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]]; then
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
+          fi
+
+      - name: List Proposals
+        id: list_proposals
         run: |
-          SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          UNFAMILIAR_COUNT=${{ steps.parse_proposals.outputs.unfamiliar_count }}
-          MESSAGE_PROPOSALS="Alert: $UNFAMILIAR_COUNT unfamiliar proposals detected."
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE_PROPOSALS\"}" $SLACK_WEBHOOK_URL_PROPOSALS
+          PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
+          '(record {include_reward_status = vec {}; before_proposal = null; limit = 100 : nat32; exclude_type = vec {}; include_status = vec {1 : int32}})' \
+          --candid ./.github/workflows/candid/sns_gov.did -qq)
+          echo "$PROPOSALS_OUTPUT" > .github/workflows/utils/proposals_output.txt
+
+      - name: Parse Proposals Output
+        run: node .github/workflows/utils/parseProposals.js .github/workflows/utils/proposals_output.txt
+        id: parse_proposals
+
+      - name: Notify Slack - Unfamiliar Proposals
+        run: |
+
+          UNFAMILIAR_COUNT=${{env.UNFAMILIAR_COUNT}}
+          if [ "$UNFAMILIAR_COUNT" -gt 0 ]; then
+            cat .github/workflows/utils/proposals_output.txt
+            SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.PROPOSAL_WATCHER_BOT_WEBHOOK }}"
+            MESSAGE_PROPOSALS="Alert: $UNFAMILIAR_COUNT unfamiliar proposals detected."
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE_PROPOSALS\"}" $SLACK_WEBHOOK_URL_PROPOSALS
           fi
