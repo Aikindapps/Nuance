@@ -73,6 +73,7 @@ jobs:
       - name: Notify Slack - Unfamiliar Proposals
         if: ${{ steps.parse_proposals.outputs.unfamiliar_count }} > 0
         run: |
+          cat .github/workflows/utils/proposals_output.txt
           SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
           UNFAMILIAR_COUNT=${{ steps.parse_proposals.outputs.unfamiliar_count }}
           MESSAGE_PROPOSALS="Alert: $UNFAMILIAR_COUNT unfamiliar proposals detected."
