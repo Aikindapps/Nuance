@@ -108,46 +108,14 @@ jobs:
       - name: List Proposals
         id: list_proposals
         run: |
-          # Define familiar addresses
-          FAMILIAR_ADDRESSES=("\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1" "\d9\ab\ad\e7\01\0d\f8:4\12\96\93=t\dd\ac\db\e6\02]\d0Y\b0\0dE\90\dc\9e\d2s:\c7")
-
-          # Fetch proposals and process output
           PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
           '(record {include_reward_status = vec {}; before_proposal = null; limit = 100 : nat32; exclude_type = vec {}; include_status = vec {1 : int32}})' \
           --candid ./.github/workflows/candid/sns_gov.did -qq)
+          echo "$PROPOSALS_OUTPUT" > proposals_output.txt
 
-          echo "Debug: PROPOSALS_OUTPUT"
-          echo "$PROPOSALS_OUTPUT"
-
-          # Initialize counts
-          FAMILIAR_COUNT=0
-          UNFAMILIAR_COUNT=0
-
-          # Convert output into an array of lines
-          IFS=$'\n' read -r -d '' -a lines <<< "$PROPOSALS_OUTPUT"
-
-          # Process each line
-          for line in "${lines[@]}"; do
-            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
-              CURRENT_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
-              IS_FAMILIAR=false
-              for addr in "${FAMILIAR_ADDRESSES[@]}"; do
-                if [[ "$CURRENT_ADDRESS" == "$addr" ]]; then
-                  IS_FAMILIAR=true
-                  break
-                fi
-              done
-              if [[ "$IS_FAMILIAR" == true ]]; then
-                ((FAMILIAR_COUNT++))
-              else
-                ((UNFAMILIAR_COUNT++))
-              fi
-            fi
-          done
-
-          echo "FAMILIAR_COUNT=$FAMILIAR_COUNT" >> $GITHUB_ENV
-          echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
-        shell: /usr/bin/bash -e {0}
+      - name: Parse Proposals Output
+        run: node .github/workflows/utils/parseProposals.js proposals_output.txt
+        id: parse_proposals
 
       - name: Notify Slack
         run: |
@@ -171,11 +139,11 @@ jobs:
 
 
           PROPOSAL_SUBMISSIONS="*Proposal Submissions*"
-          PROPOSAL_SUBMISSIONS+=$'\n'"Proposals from Aikin neurons: ${{ env.FAMILIAR_COUNT }}"
-          if [ "${{ env.UNFAMILIAR_COUNT }}" -gt 0 ]; then
-            PROPOSAL_SUBMISSIONS+=$'\n'"Unfamiliar Proposals: ${{ env.UNFAMILIAR_COUNT }} :exclamation:"
+          PROPOSAL_SUBMISSIONS+=$'\n'"Proposals from Aikin neurons: ${{ steps.parse_proposals.outputs.familiar_count }}"
+          if [ "${{ steps.parse_proposals.outputs.unfamiliar_count }}" -gt 0 ]; then
+            PROPOSAL_SUBMISSIONS+=$'\n'"Unfamiliar Proposals: ${{ steps.parse_proposals.outputs.unfamiliar_count }} :exclamation:"
           fi
           MESSAGE+=$'\n\n'"$PROPOSAL_SUBMISSIONS"
 
           # Send the message
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"
+          curl -X POST -H 'Content-type
