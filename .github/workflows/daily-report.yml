@@ -122,21 +122,7 @@ jobs:
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
 
           # Constructing the message
-          MESSAGE="*Daily Report*"
-          MESSAGE+=$'\n\n'"*Cycles Dispenser Status*"
-          MESSAGE+=$'\n'"${{ env.CYCLES_BALANCE }}"
-          MESSAGE+=$'\n\n'"*SNS Canister Cycles*"
-          MESSAGE+=$'\n'"${{ env.SNS_CYCLES }}"
-          MESSAGE+=$'\n\n'"*Metrics*"
-          MESSAGE+=$'\n'"*Post Metrics (past 24 hrs)*"
-          MESSAGE+=$'\n'"${{ env.METRICS }}"
-          MESSAGE+=$'\n\n'"*Post Views (past 24 hrs)*"
-          MESSAGE+=$'\n'"Total Views: ${{ env.POST_VIEWS }}"
-          MESSAGE+=$'\n\n'"*Number of Registered Users*"
-          MESSAGE+=$'\n'"${{ env.REGISTERED_USERS }}"
-          MESSAGE+=$'\n\n'"*Number of Active Users*"
-          MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
-
+          MESSAGE="*Daily Report*\n\n*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\nTotal Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n${{ env.ACTIVE_USERS }}"
 
           FAMILIAR_COUNT=${{ steps.parse_proposals.outputs.familiar_count }}
           UNFAMILIAR_COUNT=${{ steps.parse_proposals.outputs.unfamiliar_count }}
@@ -148,4 +134,5 @@ jobs:
           MESSAGE+="\n\n$PROPOSAL_SUBMISSIONS"
 
           # Send the message
-          curl -X POST -H 'Content-type
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
+        shell: bash
