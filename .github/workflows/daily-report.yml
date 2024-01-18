@@ -1,12 +1,11 @@
 name: Daily Report
 
-on:
-  workflow_dispatch:
+# on:
+#   workflow_dispatch:
 
-#on:
-  # schedule:
-  #   # - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
-  
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs at 00:00 UTC every day
 
 jobs:
   build:
@@ -48,10 +47,92 @@ jobs:
           BALANCE=$(dfx canister --network ic call CyclesDispenser getStatus -qq | tr -d '\r\n"')
           echo "CYCLES_BALANCE=$BALANCE" >> $GITHUB_ENV
 
+      - name: Check SNS Canister Cycles
+        id: check_sns_cycles
+        run: |
+          CANISTERS=("rzbmc-yiaaa-aaaaq-aabsq-cai" "rxdbk-dyaaa-aaaaq-aabtq-cai" "q5mdq-biaaa-aaaaq-aabuq-cai" "rqch6-oaaaa-aaaaq-aabta-cai" "ssx2b-6qaaa-aaaaq-aabya-cai" "q2nfe-mqaaa-aaaaq-aabua-cai")
+          SNS_CYCLES=""
+          for CANISTER in "${CANISTERS[@]}"; do
+            if [ "$CANISTER" = "q2nfe-mqaaa-aaaaq-aabua-cai" ]; then
+              OUTPUT=$(dfx canister call --network ic $CANISTER get_canister_status '(record {})' --candid ./.github/workflows/candid/sns_swap.did -qq)
+            else
+              OUTPUT=$(dfx canister call --network ic rzbmc-yiaaa-aaaaq-aabsq-cai canister_status '(record {canister_id = principal "'"$CANISTER"'"})' --candid ./.github/workflows/candid/sns_gov.did -qq)
+            fi
+            CYCLES=$(echo "$OUTPUT" | grep -oP '(?<=cycles = )\d+')
+            echo "Cycles for $CANISTER: $CYCLES"
+
+            if [ "$CYCLES" -ge 25 ]; then
+              STATUS="🟢" # Green for >= 25T
+            elif [ "$CYCLES" -ge 10 ]; then
+              STATUS="🟡" # Yellow for >= 10T and < 25T
+            else
+              STATUS="🔴" # Red for < 10T
+            fi
+            SNS_CYCLES+="$CANISTER - ${CYCLES}T $STATUS\n"
+          done
+          echo "SNS_CYCLES=$SNS_CYCLES" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: Get Metrics
+        run: |
+          METRICS_RAW=$(dfx canister call --network ic PostCore getPostsPerHourLast24Hours -qq)
+          METRICS=$(node .github/workflows/utils/parseMetrics.js "$METRICS_RAW" "posts")
+          echo "METRICS<<EOF" >> $GITHUB_ENV
+          echo "$METRICS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: Get Post Views 24hrs
+        run: |
+          POST_VIEWS_RAW=$(dfx canister call --network ic PostCore getPostViewsPerHourLast24Hours -qq)
+          POST_VIEWS=$(node .github/workflows/utils/parseViews.js "$POST_VIEWS_RAW")
+          echo "POST_VIEWS=$POST_VIEWS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: Get Number of Registered Users
+        run: |
+          REGISTERED_USERS_RAW=$(dfx canister call --network ic User getNumberOfAllRegisteredUsers -qq)
+          echo "Raw Output: $REGISTERED_USERS_RAW"
+          REGISTERED_USERS=$(echo $REGISTERED_USERS_RAW | grep -oP '(?<=\()\d+(_\d+)?(?=\s*: nat\))')
+          echo "REGISTERED_USERS=$REGISTERED_USERS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: Get Number of Active Users
+        run: |
+          ACTIVE_USERS_RAW=$(dfx canister call --network ic User getActiveUsersByRange '(record {day= 1 : nat; month= 0 : nat; hour= 0 : nat; year= 0 : nat})' -qq)
+          echo "Raw Output: $ACTIVE_USERS_RAW"
+          ACTIVE_USERS=$(echo $ACTIVE_USERS_RAW | grep -oP '(?<=\()\d+(?=\s*: nat\))')
+          echo "ACTIVE_USERS=$ACTIVE_USERS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: List Proposals
+        id: list_proposals
+        run: |
+          PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
+          '(record {include_reward_status = vec {}; before_proposal = null; limit = 100 : nat32; exclude_type = vec {}; include_status = vec {1 : int32}})' \
+          --candid ./.github/workflows/candid/sns_gov.did -qq)
+          echo "$PROPOSALS_OUTPUT" > proposals_output.txt
+
+      - name: Parse Proposals Output
+        run: node .github/workflows/utils/parseProposals.js proposals_output.txt
+        id: parse_proposals
+
       - name: Notify Slack
         run: |
-          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
-          MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
-          MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
-          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
+          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.DAILY_REPORT_BOT_WEBHOOK }}"
 
+          # Constructing the message
+          MESSAGE="*Daily Report*\n\n*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\nTotal Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n${{ env.ACTIVE_USERS }}"
+
+          FAMILIAR_COUNT=${{env.FAMILIAR_COUNT}}
+          UNFAMILIAR_COUNT=${{env.UNFAMILIAR_COUNT}}
+
+          PROPOSAL_SUBMISSIONS="*Proposal Submissions*\nProposals from Aikin neurons: $FAMILIAR_COUNT"
+          if [ "$UNFAMILIAR_COUNT" -gt 0 ]; then
+            PROPOSAL_SUBMISSIONS+="\nUnfamiliar Proposals: $UNFAMILIAR_COUNT :exclamation:"
+          fi
+          MESSAGE+="\n\n$PROPOSAL_SUBMISSIONS"
+
+          # Send the message
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
+        shell: bash
