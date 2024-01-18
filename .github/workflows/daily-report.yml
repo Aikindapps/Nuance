@@ -123,6 +123,9 @@ jobs:
           FAMILIAR_COUNT=0
           UNFAMILIAR_COUNT=0
 
+          # Create a temporary file for counts
+          COUNT_FILE=$(mktemp)
+
           # Extract each proposal's address blob and compare against familiar addresses
           echo "$PROPOSALS_OUTPUT" | grep -oP '3_000_311_732 = opt record \{[^}]+\}' | while read -r proposal; do
             CURRENT_ADDRESS=$(echo "$proposal" | grep -oP 'blob "\K[^"]+')
@@ -134,11 +137,23 @@ jobs:
               fi
             done
             if [[ "$IS_FAMILIAR" == true ]]; then
-              ((FAMILIAR_COUNT++))
+              echo "familiar" >> "$COUNT_FILE"
             else
-              ((UNFAMILIAR_COUNT++))
+              echo "unfamiliar" >> "$COUNT_FILE"
             fi
           done
+
+          # Read counts from the temporary file
+          while read -r line; do
+            if [[ "$line" == "familiar" ]]; then
+              ((FAMILIAR_COUNT++))
+            elif [[ "$line" == "unfamiliar" ]]; then
+              ((UNFAMILIAR_COUNT++))
+            fi
+          done < "$COUNT_FILE"
+
+          # Clean up
+          rm "$COUNT_FILE"
 
           echo "FAMILIAR_COUNT=$FAMILIAR_COUNT" >> $GITHUB_ENV
           echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
