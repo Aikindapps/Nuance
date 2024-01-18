@@ -138,12 +138,14 @@ jobs:
           MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
 
 
-          PROPOSAL_SUBMISSIONS="*Proposal Submissions*"
-          PROPOSAL_SUBMISSIONS+=$'\n'"Proposals from Aikin neurons: ${{ steps.parse_proposals.outputs.familiar_count }}"
-          if [ "${{ steps.parse_proposals.outputs.unfamiliar_count }}" -gt 0 ]; then
-            PROPOSAL_SUBMISSIONS+=$'\n'"Unfamiliar Proposals: ${{ steps.parse_proposals.outputs.unfamiliar_count }} :exclamation:"
+          FAMILIAR_COUNT=${{ steps.parse_proposals.outputs.familiar_count }}
+          UNFAMILIAR_COUNT=${{ steps.parse_proposals.outputs.unfamiliar_count }}
+
+          PROPOSAL_SUBMISSIONS="*Proposal Submissions*\nProposals from Aikin neurons: $FAMILIAR_COUNT"
+          if [ "$UNFAMILIAR_COUNT" -gt 0 ]; then
+            PROPOSAL_SUBMISSIONS+="\nUnfamiliar Proposals: $UNFAMILIAR_COUNT :exclamation:"
           fi
-          MESSAGE+=$'\n\n'"$PROPOSAL_SUBMISSIONS"
+          MESSAGE+="\n\n$PROPOSAL_SUBMISSIONS"
 
           # Send the message
           curl -X POST -H 'Content-type

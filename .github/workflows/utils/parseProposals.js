@@ -9,26 +9,23 @@ function countProposals(proposalsOutput) {
   let familiarCount = 0;
   let unfamiliarCount = 0;
 
-  const proposals = proposalsOutput.match(/3_000_311_732 = opt record \{[^}]+\}/g);
+  const proposals = proposalsOutput.match(/3_000_311_732 = opt record \{[^}]+\}/g) || [];
 
-  if (proposals) {
-    proposals.forEach(proposal => {
-      const addressMatch = proposal.match(/blob "\\([^"]+)"/);
-      const address = addressMatch ? addressMatch[1] : null;
-      if (address && FAMILIAR_ADDRESSES.includes(address)) {
-        familiarCount++;
-      } else {
-        unfamiliarCount++;
-      }
-    });
-  }
+  proposals.forEach(proposal => {
+    const addressMatch = proposal.match(/blob "\\([^"]+)"/);
+    const address = addressMatch ? addressMatch[1] : "";
+    if (FAMILIAR_ADDRESSES.includes(address)) {
+      familiarCount++;
+    } else {
+      unfamiliarCount++;
+    }
+  });
 
   return { familiarCount, unfamiliarCount };
 }
 
-// Read proposals output from a file passed as an argument
 const proposalsOutput = fs.readFileSync(process.argv[2], 'utf8');
 const { familiarCount, unfamiliarCount } = countProposals(proposalsOutput);
 
-console.log(`FAMILIAR_COUNT=${familiarCount}`);
-console.log(`UNFAMILIAR_COUNT=${unfamiliarCount}`);
+console.log(`::set-output name=familiar_count::${familiarCount}`);
+console.log(`::set-output name=unfamiliar_count::${unfamiliarCount}`);
