@@ -122,20 +122,17 @@ jobs:
           # Initialize count of unfamiliar proposals
           UNFAMILIAR_COUNT=0
 
-          # Parse the entire output for each proposal
-          echo "$PROPOSALS_OUTPUT" | while IFS= read -r line; do
-            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
-              # Extract the address blob from the current record
-              CURRENT_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
-              
-              # Check if the current address is the familiar address
-              if [[ "$CURRENT_ADDRESS" != "$FAMILIAR_ADDRESS" ]]; then
-                ((UNFAMILIAR_COUNT++))
-              fi
+          # Parse each proposal and check for familiar address
+          PROPOSALS=$(echo "$PROPOSALS_OUTPUT" | grep -oP '3_000_311_732 = opt record \{[^}]+\}')
+          while read -r proposal; do
+            CURRENT_ADDRESS=$(echo "$proposal" | grep -oP 'blob "\K[^"]+')
+            if [[ "$CURRENT_ADDRESS" != "$FAMILIAR_ADDRESS" ]]; then
+              ((UNFAMILIAR_COUNT++))
             fi
-          done
+          done <<< "$PROPOSALS"
 
           echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
 
       - name: Notify Slack
         run: |
