@@ -119,18 +119,24 @@ jobs:
           echo "Debug: PROPOSALS_OUTPUT"
           echo "$PROPOSALS_OUTPUT"
 
-          # Initialize count of unfamiliar proposals
+          # Initialize counts
+          FAMILIAR_COUNT=0
           UNFAMILIAR_COUNT=0
 
           # Use awk to parse the output for address blobs
           echo "$PROPOSALS_OUTPUT" | awk -v familiar="$FAMILIAR_ADDRESS" '
           /3_000_311_732 = opt record/ {
             getline; # move to the next line which contains the blob
-            if ($0 !~ familiar) {
+            if ($0 ~ familiar) {
+              familiar_count++;
+            } else {
               unfamiliar_count++;
             }
           }
-          END {print "UNFAMILIAR_COUNT="unfamiliar_count}' >> $GITHUB_ENV
+          END {
+            print "FAMILIAR_COUNT="familiar_count;
+            print "UNFAMILIAR_COUNT="unfamiliar_count
+          }' >> $GITHUB_ENV
 
         shell: /usr/bin/bash -e {0}
 
@@ -154,13 +160,13 @@ jobs:
           MESSAGE+=$'\n\n'"*Number of Active Users*"
           MESSAGE+=$'\n'"${{ env.ACTIVE_USERS }}"
 
-          # Add the Unfamiliar Proposal Submissions section
-          UNFAMILIAR_SUBMISSIONS="There are ${{ env.UNFAMILIAR_COUNT }} proposal(s) from unfamiliar addresses."
+          # Add the Proposal Submissions section
+          PROPOSAL_SUBMISSIONS="*Proposal Submissions*"
+          PROPOSAL_SUBMISSIONS+=$'\n'"Familiar Proposals: ${{ env.FAMILIAR_COUNT }}"
           if [ "${{ env.UNFAMILIAR_COUNT }}" -gt 0 ]; then
-            UNFAMILIAR_SUBMISSIONS+=" :exclamation:"
+            PROPOSAL_SUBMISSIONS+=$'\n'"Unfamiliar Proposals: ${{ env.UNFAMILIAR_COUNT }} :exclamation:"
           fi
-          MESSAGE+=$'\n\n'"*Unfamiliar Proposal Submissions*"
-          MESSAGE+=$'\n'"$UNFAMILIAR_SUBMISSIONS"
+          MESSAGE+=$'\n\n'"$PROPOSAL_SUBMISSIONS"
 
           # Send the message
           curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE\"}" $SLACK_WEBHOOK_URL
