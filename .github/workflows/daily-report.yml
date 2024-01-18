@@ -119,18 +119,21 @@ jobs:
           echo "Debug: PROPOSALS_OUTPUT"
           echo "$PROPOSALS_OUTPUT"
 
-
           # Initialize count of unfamiliar proposals
           UNFAMILIAR_COUNT=0
 
-          # Parse each proposal and check for familiar address
-          while IFS= read -r line; do
+          # Parse the entire output for each proposal
+          echo "$PROPOSALS_OUTPUT" | while IFS= read -r line; do
             if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
-              if [[ "$line" != *"$FAMILIAR_ADDRESS"* ]]; then
+              # Extract the address blob from the current record
+              CURRENT_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
+              
+              # Check if the current address is the familiar address
+              if [[ "$CURRENT_ADDRESS" != "$FAMILIAR_ADDRESS" ]]; then
                 ((UNFAMILIAR_COUNT++))
               fi
             fi
-          done <<< "$(echo "$PROPOSALS_OUTPUT" | grep '3_000_311_732 = opt record')"
+          done
 
           echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
 
