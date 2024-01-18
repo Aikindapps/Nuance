@@ -54,7 +54,7 @@ jobs:
 
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
 
-          if [[ "$MESSAGE_CLEANED" != *"this is a test"* ]]; then
+          if [[ "$MESSAGE_CLEANED" != *"Everything is fine"* ]]; then
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE_CLEANED}\"}" $SLACK_WEBHOOK_URL
           fi
 
