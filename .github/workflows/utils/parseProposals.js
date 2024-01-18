@@ -1,9 +1,10 @@
 const fs = require('fs');
 
 const FAMILIAR_ADDRESSES = [
-  "d9abade7010df83a34129693d3ddacdbe6025d059b00d0e490dc9ed2a3c7"
- 
-];
+    "d9ab\\ad\\e7\\01\\0d\\f8:4\\12\\96\\93=t\\dd\\ac\\db\\e6\\02]\\d0Y\\b0\\0dE\\90\\dc\\9e\\d2s:\\c7",
+    "a0e3\\88\\9b@kv\\86d\\06\\19d\\8d\\84\\8dZ\\0d\\80\\0f+Zz*D\\ff|\\da{-&A1"
+  ];
+  
 
 function countProposals(proposalsOutput) {
   let familiarCount = 0;
