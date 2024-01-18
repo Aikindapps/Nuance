@@ -109,7 +109,7 @@ jobs:
         id: list_proposals
         run: |
           # Define familiar addresses
-          FAMILIAR_ADDRESSES=("\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1" "\d9\ab\ad\e7\01\0d\f8:4\12\96\93=t\dd\ac\db\e6\02]\d0Y\b0\0dE\90\dc\9e\d2s:\c7") # Add more addresses as needed
+          FAMILIAR_ADDRESSES=("\a0\e3\88\9b@kv\86d\06\19d\8d\84\8dZ\0d\80\0f+Zz*D\ff|\da{-&A1" "\d9\ab\ad\e7\01\0d\f8:4\12\96\93=t\dd\ac\db\e6\02]\d0Y\b0\0dE\90\dc\9e\d2s:\c7")
 
           # Fetch proposals and process output
           PROPOSALS_OUTPUT=$(dfx canister call --network ic rqch6-oaaaa-aaaaq-aabta-cai list_proposals \
@@ -123,20 +123,26 @@ jobs:
           FAMILIAR_COUNT=0
           UNFAMILIAR_COUNT=0
 
-          # Use awk to parse the output for address blobs
-          echo "$PROPOSALS_OUTPUT" | awk -v fam1="${FAMILIAR_ADDRESSES[0]}" -v fam2="${FAMILIAR_ADDRESSES[1]}" '
-          /3_000_311_732 = opt record/ {
-            getline; # move to the next line which contains the blob
-            if ($0 ~ fam1 || $0 ~ fam2) { # Check against multiple familiar addresses
-              familiar_count++;
-            } else {
-              unfamiliar_count++;
-            }
-          }
-          END {
-            print "FAMILIAR_COUNT="familiar_count;
-            print "UNFAMILIAR_COUNT="unfamiliar_count
-          }' >> $GITHUB_ENV
+          # Parse each proposal and check for familiar addresses
+          echo "$PROPOSALS_OUTPUT" | while read -r line; do
+            if [[ "$line" =~ "3_000_311_732 = opt record" ]]; then
+              CURRENT_ADDRESS=$(echo "$line" | grep -oP 'blob "\K[^"]+')
+              ADDRESS_FOUND=false
+              for addr in "${FAMILIAR_ADDRESSES[@]}"; do
+                if [[ "$CURRENT_ADDRESS" == "$addr" ]]; then
+                  ADDRESS_FOUND=true
+                  ((FAMILIAR_COUNT++))
+                  break
+                fi
+              done
+              if [[ "$ADDRESS_FOUND" == false ]]; then
+                ((UNFAMILIAR_COUNT++))
+              fi
+            fi
+          done
+
+          echo "FAMILIAR_COUNT=$FAMILIAR_COUNT" >> $GITHUB_ENV
+          echo "UNFAMILIAR_COUNT=$UNFAMILIAR_COUNT" >> $GITHUB_ENV
 
         shell: /usr/bin/bash -e {0}
 
