@@ -1,10 +1,10 @@
 name: CyclesDispenser and Proposal Notification
 
-# on:
-#   schedule:
-#     - cron: '0 * * * *'
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+# on:
+#   workflow_dispatch:
 
 jobs:
   build:
@@ -49,7 +49,7 @@ jobs:
       - name: Notify Slack - Cycles Dispenser
         run: |
           CURRENT_HOUR=$(date +"%H")
-          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
+          SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.SLACK_WEBHOOK_KEY }}"
           MESSAGE="Cycles Dispenser Status: ${{ env.CYCLES_BALANCE }}"
 
           MESSAGE_CLEANED=$(echo "$MESSAGE" | sed 's/[(),]//g')
@@ -76,7 +76,7 @@ jobs:
           UNFAMILIAR_COUNT=${{env.UNFAMILIAR_COUNT}}
           if [ "$UNFAMILIAR_COUNT" -gt 0 ]; then
             cat .github/workflows/utils/proposals_output.txt
-            SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
+            SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.PROPOSAL_WATCHER_BOT_WEBHOOK }}"
             MESSAGE_PROPOSALS="Alert: $UNFAMILIAR_COUNT unfamiliar proposals detected."
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE_PROPOSALS\"}" $SLACK_WEBHOOK_URL_PROPOSALS
           fi
