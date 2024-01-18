@@ -71,7 +71,7 @@ jobs:
         id: parse_proposals
 
       - name: Notify Slack - Unfamiliar Proposals
-        if: ${{ steps.parse_proposals.outputs.unfamiliar_count > 0 }}
+        if: ${{ steps.parse_proposals.outputs.unfamiliar_count }} > 0
         run: |
           SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.TEST_SLACK_KEY }}"
           UNFAMILIAR_COUNT=${{ steps.parse_proposals.outputs.unfamiliar_count }}
