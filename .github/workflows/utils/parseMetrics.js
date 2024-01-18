@@ -24,9 +24,9 @@ function parseMetrics(data, type) {
   const average = (total / metrics.length).toFixed(2);
 
   return `- Total ${type.charAt(0).toUpperCase() + type.slice(1)}: ${total}\n` +
-  `- Max ${type.charAt(0).toUpperCase() + type.slice(1)} in an Hour: ${max}\n` +
-  `- Min ${type.charAt(0).toUpperCase() + type.slice(1)} in an Hour: ${min}\n` +
-  `- Average ${type.charAt(0).toUpperCase() + type.slice(1)} per Hour: ${average}`;
+  `    • _Max ${type.charAt(0).toUpperCase() + type.slice(1)} in an Hour: ${max}_\n` +
+  `    • _Min ${type.charAt(0).toUpperCase() + type.slice(1)} in an Hour: ${min}_\n` +
+  `    • _Average ${type.charAt(0).toUpperCase() + type.slice(1)} per Hour: ${average}_`;
 }
 
 const analysisMetrics = parseMetrics(rawData, metricType);
