@@ -24,7 +24,7 @@ export const createActor = (canisterId, options = {}) => {
     window.location.origin.includes("localhost") ||
     window.location.origin.includes("127.0.0.1")
 
-  console.log("isLocal: ", isLocal)
+
 
   // Fetch root key for certificate validation during development
   if (isLocal) {

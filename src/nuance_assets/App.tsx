@@ -12,6 +12,7 @@ import {
   ContextProvider as ModalContextProvider,
 } from './contextes/ModalContext';
 import { images, colors } from './shared/constants';
+import { authChannel } from './store/authStore';
 
 const HomePageGrid = lazy(() => import('./screens/home/homegrid'));
 const Metrics = lazy(() => import('./screens/metrics/metrics'));
@@ -137,21 +138,27 @@ function App() {
     }
   };
 
-  // const idleTimer = useIdleTimer({
-  //   timeout: inactivityTimeout,
-  //   onIdle,
-  //   crossTab: true,
-  //   startManually: true,
-  // });
+  useEffect(() => {
 
-  // useEffect(() => {
-  //   if (isLoggedIn) {
-  //     idleTimer.start();
-  //   } else {
-  //     idleTimer.pause();
-  //   }
-  // }, [isLoggedIn]);
+    const handleMessage = (event: any) => {
+      if (event.data.type === 'logout') {
+        console.log('Logout initiated from another tab');
+        window.location.href = '/timed-out';
+      }
 
+      if (event.data.type === 'login') {
+        window.location.reload();
+      }
+
+    };
+
+
+    authChannel.onmessage = handleMessage;
+
+    return () => {
+      authChannel.close();
+    };
+  }, []);
 
 
   return (
