@@ -115,6 +115,15 @@ public class StorageSolution(storageStableState : StorageState.DataCanisterState
       return b;
     };
 
+
+
+    public func addStorageBucket(canisterId: Principal) : async Text {
+      
+      let b = actor (Principal.toText(canisterId)) : Bucket.Bucket;
+      storageState.dataCanisters.put(canisterId, b);
+      return Principal.toText(canisterId) # " added";
+    };
+
     // canister memory is set to 4GB and compute allocation to 5 as the purpose 
     // of this canisters is mostly storage
     // set canister owners to the wallet canister and the container canister ie: this
