@@ -287,6 +287,22 @@
               font-weight: 300;
               font-family: 'Roboto';
             }
+
+            .nua-equivalance {
+              border-radius: 4px;
+              background: #F2F2F2;
+              display: flex;
+              align-items: center;
+              padding: 5px;
+              color: #999999;
+              justify-content: space-between;
+              column-gap: 5px;
+              font-size: 12px;
+
+              .eq {}
+
+              .value {}
+            }
           }
         }
       }
@@ -771,18 +787,20 @@
           }
 
           .statistic {
-            &:last-child{
-              .stat{
-                &:last-child{
+            &:last-child {
+              .stat {
+                &:last-child {
                   border-right: none;
                 }
               }
             }
+
             .stat {
               &:last-child {
                 border-right: none;
               }
-              &:first-child{
+
+              &:first-child {
                 border-left: none;
               }
             }
