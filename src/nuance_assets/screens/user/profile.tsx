@@ -242,7 +242,18 @@ const Profile = () => {
                   className='profile-picture'
                 />
                 <p className='name'>{author?.displayName}</p>
-                <p className='username'>@{author?.handle}</p>
+                <p
+                  style={
+                    darkTheme
+                      ? {
+                          color: darkOptionsAndColors.color,
+                        }
+                      : {}
+                  }
+                  className='username'
+                >
+                  @{author?.handle}
+                </p>
                 <div className='social-channels'>
                   {getSocialChannelUrls().map((url, index) => {
                     return (
@@ -274,7 +285,13 @@ const Profile = () => {
                     );
                   })}
                 </div>
-                <p className='description'>{author?.bio}</p>
+                <p className='description' style={
+                    darkTheme
+                      ? {
+                          color: darkOptionsAndColors.secondaryColor,
+                        }
+                      : {}
+                  }>{author?.bio}</p>
 
                 <FollowAuthor
                   AuthorHandle={author?.handle || ''}

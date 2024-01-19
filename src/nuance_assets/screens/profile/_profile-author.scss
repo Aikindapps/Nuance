@@ -133,40 +133,6 @@
           margin-bottom: 20px;
         }
       }
-      .statistic {
-        display: flex;
-        height: 144px;
-        width: 100%;
-        .stat {
-          border-left: 1px dashed $medium-border-color;
-          height: 100%;
-          box-sizing: border-box;
-          width: 33%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-          &:last-child {
-            border-right: 1px dashed $medium-border-color;
-          }
-          .count {
-            font-family: 'Roboto';
-            font-size: 32px;
-            font-weight: 900;
-            background: -webkit-linear-gradient($highlight-one, $highlight-two);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
-          .title {
-            color: $darker-border-color;
-            font-size: 16px;
-            line-height: 24px;
-            font-weight: 300;
-            font-family: 'Roboto';
-          }
-        }
-      }
     }
   }
 }
@@ -209,31 +175,6 @@
         }
         .pub-art {
           margin-bottom: 30px;
-        }
-        .statistic {
-          margin: 50px 0;
-          
-          .title {
-            margin-bottom: 20px;
-          }
-
-          .stat {
-
-            padding-top: 40px;
-            justify-content: flex-start;
-            text-align: center;
-            border-right: 1px dashed $medium-border-color;
-            border-left: none;
-            font-size: 12px;
-            &:last-child {
-              border-right: none;
-            }
-            p.title {
-              font-size: 12px;
-              padding: 7px
-            }
-            
-          }
         }
       }
     }

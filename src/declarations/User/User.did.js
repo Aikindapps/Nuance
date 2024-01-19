@@ -98,8 +98,10 @@ export const idlFactory = ({ IDL }) => {
   const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const UserListItem = IDL.Record({
     'bio' : IDL.Text,
+    'socialChannelsUrls' : IDL.Vec(IDL.Text),
     'principal' : IDL.Text,
     'displayName' : IDL.Text,
+    'website' : IDL.Text,
     'handle' : IDL.Text,
     'fontType' : IDL.Text,
     'avatar' : IDL.Text,

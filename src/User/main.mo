@@ -1132,6 +1132,8 @@ actor User {
           fontType = U.safeGet(fontTypesHashmap, principalId, "");
           bio = U.safeGet(bioHashMap, principalId, "");
           principal = principalId;
+          website = U.safeGet(websiteHashMap, principalId, "");
+          socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
         };
         users.add(user);
       };
@@ -1544,6 +1546,8 @@ actor User {
           fontType = U.safeGet(fontTypesHashmap, principalId, "");
           bio = U.safeGet(bioHashMap, principalId, "");
           principal = principalId;
+          website = U.safeGet(websiteHashMap, principalId, "");
+          socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
         };
         users := List.push<UserListItem>(user, users);
       };

@@ -50,6 +50,7 @@ const ReadArticle = () => {
   const [isToggled, setIsToggled] = useState(false);
   const [avatar, setAvatar] = useState('');
   const [bio, setBio] = useState('');
+  const [socialUrls, setSocialUrls] = useState<string[]>([]);
   const [premiumAvailableCount, setPremiumAvailableCount] = useState('');
   const [premiumTotalSupply, setPremiumTotalSupply] = useState('');
   const [premiumSalePrice, setPremiumSalePrice] = useState('');
@@ -114,9 +115,9 @@ const ReadArticle = () => {
     deleteComment: state.deleteComment,
   }));
 
-  const { user, getUsersByHandles, usersByHandles } = useUserStore((state) => ({
+  const { user, getUsersByHandlesReturnOnly } = useUserStore((state) => ({
     user: state.user,
-    getUsersByHandles: state.getUsersByHandles,
+    getUsersByHandlesReturnOnly: state.getUsersByHandlesReturnOnly,
     usersByHandles: state.usersByHandles,
   }));
 
@@ -304,7 +305,7 @@ const ReadArticle = () => {
         getOwnedNfts();
       }
       if (post.creator) {
-        getUsersByHandles([post.creator]);
+        handleWriterFields(post.creator);
       }
       if (
         post.isPublication &&
@@ -324,12 +325,24 @@ const ReadArticle = () => {
     }
   }, [premiumArticleInfo]);
 
-  useEffect(() => {
-    if (usersByHandles && usersByHandles.length > 0) {
-      setAvatar(usersByHandles[0].avatar);
-      setBio(usersByHandles[0].bio);
+  const handleWriterFields = async (handle: string) => {
+    let response = await getUsersByHandlesReturnOnly([handle])
+    if(response){
+      let writer = response[0];
+      setAvatar(writer.avatar);
+      setBio(writer.bio);
+      if(writer.website === ''){
+        setSocialUrls(writer.socialChannelsUrls)
+      }
+      else{
+        setSocialUrls([
+          writer.website,
+          ...writer.socialChannelsUrls,
+        ]);
+      }
     }
-  }, [usersByHandles]);
+
+  }
 
   useEffect(
     (window.onresize = window.onload =
@@ -421,6 +434,24 @@ const ReadArticle = () => {
     }
   };
 
+  const getSocialChannelUrls = () => {
+    if (!post?.isPublication) {
+      if(author){
+        if(author.website !== ''){
+          return [author.website, ...author.socialChannels]
+        }
+        else{
+          return author.socialChannels
+        }
+      }
+      else{
+        return []
+      }
+    } else{
+      return socialUrls
+    }
+  };
+
   const getReadTime = () => {
     if (post?.wordCount) {
       let time = Math.round(parseInt(post?.wordCount) / 250).toString();
@@ -433,19 +464,7 @@ const ReadArticle = () => {
     }
   };
 
-  const getSocialChannelUrls = () => {
-    if(author){
-      if(author.website !== ''){
-        return [author.website, ...author.socialChannels]
-      }
-      else{
-        return author.socialChannels
-      }
-    }
-    else{
-      return []
-    }
-  }
+ 
 
   //for customizing linkify npm package
   const componentDecorator = (href: any, text: any, key: any) => (
@@ -465,6 +484,9 @@ const ReadArticle = () => {
       ? colors.darkModeSecondaryButtonColor
       : colors.tagTokenBackGround,
     tagText: darkTheme ? colors.primaryBackgroundColor : colors.tagTextColor,
+    secondaryColor: darkTheme
+      ? colors.darkSecondaryTextColor
+      : colors.primaryTextColor,
   };
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
@@ -754,19 +776,18 @@ const ReadArticle = () => {
                     })}
                   </div>
                 </div>
-
-                <div className='about-author'>
+                <div className='author-content'>
                   <img
-                    className='profile-picture'
                     src={getAvatar() || images.DEFAULT_AVATAR}
-                    alt=''
-                  ></img>
+                    alt='background'
+                    className='profile-picture'
+                  />
                   <Link
                     to={`/user/${
                       post.isPublication ? post.creator : author.handle
                     }`}
                     style={{ color: darkOptionsAndColors.color }}
-                    className='handle'
+                    className='username'
                   >
                     @{post.isPublication ? post.creator : author.handle}
                   </Link>
@@ -801,9 +822,19 @@ const ReadArticle = () => {
                       );
                     })}
                   </div>
-                  <Linkify componentDecorator={componentDecorator}>
-                    <p className='biography'>{getBio()}</p>
-                  </Linkify>
+                  <p
+                    className='description'
+                    style={
+                      darkTheme
+                        ? {
+                            color: darkOptionsAndColors.secondaryColor,
+                          }
+                        : {}
+                    }
+                  >
+                    {getBio()}
+                  </p>
+
                   <FollowAuthor
                     AuthorHandle={author?.handle || ''}
                     Followers={user?.followersArray || undefined}
@@ -811,6 +842,7 @@ const ReadArticle = () => {
                     isPublication={false}
                   />
                 </div>
+
                 <div className='publication-email-opt-in' ref={refEmailOptIn}>
                   {context.width < 1089 && publicationHandle == 'FastBlocks' ? (
                     <EmailOptIn

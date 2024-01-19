@@ -95,8 +95,10 @@ export interface User {
 }
 export interface UserListItem {
   'bio' : string,
+  'socialChannelsUrls' : Array<string>,
   'principal' : string,
   'displayName' : string,
+  'website' : string,
   'handle' : string,
   'fontType' : string,
   'avatar' : string,

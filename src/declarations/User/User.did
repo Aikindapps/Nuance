@@ -26,6 +26,8 @@ type UserListItem =
    fontType: text;
    handle: text;
    "principal": text;
+   socialChannelsUrls: vec text;
+   website: text;
  };
 type User = 
  record {

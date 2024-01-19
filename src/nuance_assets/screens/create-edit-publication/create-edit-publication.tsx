@@ -16,6 +16,7 @@ import Loader from '../../UI/loader/Loader';
 import {
   formatDate,
   getEmbeddedImages,
+  getIconForSocialChannel,
   parseEmbeddedImage,
 } from '../../shared/utils';
 
@@ -117,15 +118,8 @@ const CreateEditPublication = () => {
     publication?.socialLinks.website || ''
   );
 
-  const [publicationTwitter, setPublicationTwitter] = useState(
-    publication?.socialLinks.twitter || ''
-  );
-  const [publicationDSCVR, setPublicationDSCVR] = useState(
-    publication?.socialLinks.dscvr || ''
-  );
-  const [publicationDistrikt, setPublicationDistrikt] = useState(
-    publication?.socialLinks.distrikt || ''
-  );
+  const [publicationSocialChannelUrls, setPublicationSocialChannelUrls] =
+    useState(publication?.socialLinks.socialChannels || []);
 
   const [avatar, setAvatar] = useState(publication?.avatar || '');
   const [breadcrumbLogo, setBreadcrumbLogo] = useState('');
@@ -157,13 +151,6 @@ const CreateEditPublication = () => {
   const [publicationDescriptionWarning, setPublicationDescriptionWarning] =
     useState(false);
   const [publicationBannerImageWarning, setPublicationBannerImageWarning] =
-    useState(false);
-  const [publicationWebsiteWarning, setPublicationWebsiteWarning] =
-    useState(false);
-  const [publicationTwitterWarning, setPublicationTwitterWarning] =
-    useState(false);
-  const [publicationDSCVRWarning, setPublicationDSCVRWarning] = useState(false);
-  const [publicationDistriktWarning, setPublicationDistriktWarning] =
     useState(false);
   const [publicationCtaWebsiteWarning, setPublicationCtaWebsiteWarning] =
     useState(false);
@@ -220,18 +207,10 @@ const CreateEditPublication = () => {
   useEffect(() => {
     setSocialLinks({
       website: publicationWebsite,
-      twitter: publicationTwitter,
-      dscvr: publicationDSCVR,
-      distrikt: publicationDistrikt,
+      socialChannels: publicationSocialChannelUrls,
     });
     setIsCtaActive(!isCtaEmpty(publication?.cta));
-  }, [
-    publicationWebsite,
-    publicationTwitter,
-    publicationDSCVR,
-    publicationDistrikt,
-    publication,
-  ]);
+  }, [publicationWebsite, publicationSocialChannelUrls, publication]);
 
   useEffect(() => {
     setLoadingPublication(true);
@@ -330,19 +309,6 @@ const CreateEditPublication = () => {
       return;
     }
 
-    if (
-      publicationWebsiteWarning ||
-      publicationTwitterWarning ||
-      publicationDSCVRWarning ||
-      publicationDistriktWarning
-    ) {
-      let el = document.getElementById('links');
-      if (el) {
-        console.log(0, el.offsetTop);
-        window.scrollTo(0, el.offsetTop - 10);
-      }
-      return;
-    }
     window.scrollTo(0, 0);
   };
 
@@ -354,10 +320,6 @@ const CreateEditPublication = () => {
       !publicationWarning &&
       !publicationDescriptionWarning &&
       !publicationCtaWebsiteWarning &&
-      !publicationWebsiteWarning &&
-      !publicationTwitterWarning &&
-      !publicationDSCVRWarning &&
-      !publicationDistriktWarning &&
       publicationBannerImage !== '';
     return isValid;
   }
@@ -375,25 +337,44 @@ const CreateEditPublication = () => {
     } else return true;
   }
 
-  useEffect(() => {
-    setPublicationWebsiteWarning(!validateUrl(publicationWebsite));
-  }, [publicationWebsite, firstSave]);
+  const validateURL = (input?: string) => {
+    const urlRegex =
+      /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    return input && urlRegex.test(input);
+  };
+
+  const isAddNewSocialLinkActive = () => {
+    if (publicationSocialChannelUrls.length === 0) {
+      return true;
+    } else {
+      return validateURL(
+        publicationSocialChannelUrls[publicationSocialChannelUrls.length - 1]
+      );
+    }
+    return false;
+  };
+
+  const validateSocialLinks = () => {
+    for (const socialChannelUrl of publicationSocialChannelUrls) {
+      if (socialChannelUrl !== '' && !validateURL(socialChannelUrl)) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const validateWebsiteAndSocialLinks = () => {
+    if (publicationWebsite === '') {
+      return validateSocialLinks();
+    } else {
+      return validateURL(publicationWebsite) && validateSocialLinks();
+    }
+  };
 
   useEffect(() => {
     setPublicationCtaWebsiteWarning(!validateUrl(buttonLink));
   }, [buttonLink, firstSave]);
-
-  useEffect(() => {
-    setPublicationTwitterWarning(!validateUrl(publicationTwitter));
-  }, [publicationTwitter, firstSave]);
-
-  useEffect(() => {
-    setPublicationDSCVRWarning(!validateUrl(publicationDSCVR));
-  }, [publicationDSCVR, firstSave]);
-
-  useEffect(() => {
-    setPublicationDistriktWarning(!validateUrl(publicationDistrikt));
-  }, [publicationDistrikt, firstSave]);
 
   useEffect(() => {
     setPublicationWarning(firstSave && publicationTitle === '');
@@ -460,18 +441,6 @@ const CreateEditPublication = () => {
     //publication website
     if (publication?.socialLinks.website) {
       setPublicationWebsite(publication?.socialLinks.website);
-    }
-    //publication twitter
-    if (publication?.socialLinks.twitter) {
-      setPublicationTwitter(publication?.socialLinks.twitter);
-    }
-    //publication dscvr
-    if (publication?.socialLinks.dscvr) {
-      setPublicationDSCVR(publication?.socialLinks.dscvr);
-    }
-    //publication distrikt
-    if (publication?.socialLinks.distrikt) {
-      setPublicationDistrikt(publication?.socialLinks.distrikt);
     }
 
     //Editors
@@ -1253,13 +1222,25 @@ const CreateEditPublication = () => {
               <div style={{ display: 'inline-block' }}>
                 <Button
                   onClick={() => {
+                    if (!validateWebsiteAndSocialLinks()) {
+                      return;
+                    }
                     handleScrolls();
                     setTimeout(onSave, 800);
                   }}
                   disabled={saveBtnIsDisabled}
                   type='button'
                   styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-                  style={{ width: '96px' }}
+                  style={
+                    validateWebsiteAndSocialLinks()
+                      ? { width: '96px' }
+                      : {
+                          width: '96px',
+                          cursor: 'not-allowed',
+                          background: 'gray',
+                          borderColor: 'gray',
+                        }
+                  }
                 >
                   Save
                 </Button>
@@ -1900,92 +1881,107 @@ const CreateEditPublication = () => {
                 </p>
               </div>
               <InputField2
-                classname='input-attributes2'
+                classname='input-attributes-3'
+                defaultText='Enter your website...'
                 width='100%'
-                height='24px'
-                defaultText=''
-                fontSize='22px'
+                height='50px'
+                fontSize={'14px'}
                 fontFamily='Roboto'
-                fontColor={colors.darkerBorderColor}
-                hasError={publicationWebsiteWarning}
-                value={publicationWebsite}
+                fontColor={colors.editProfileInputTextColor}
+                hasError={user?.website !== '' && !validateURL(user?.website)}
                 onChange={setPublicationWebsite}
+                value={user?.website}
+                maxLength={161}
                 theme={darkTheme ? 'dark' : 'light'}
-              ></InputField2>
-              <div style={{ position: 'relative', top: '-20px' }}>
-                {<RequiredFieldMessage hasError={publicationWebsiteWarning} />}
-              </div>
-
-              <p
-                className={
-                  context.width < 768 ? 'mainTitle mobile-title' : 'mainTitle'
+                icon={darkTheme ? icons.WEBSITE_ICON_DARK : icons.WEBSITE_ICON}
+                button={{
+                  icon: icons.CLOSE_BUTTON,
+                  onClick: () => {
+                    setPublicationWebsite('');
+                  },
+                }}
+              />
+              {publicationSocialChannelUrls.map((socialChannelUrl, index) => {
+                return (
+                  <div className='edit-publication-input' key={index}>
+                    <p
+                      className={
+                        context.width < 768
+                          ? 'mainTitle mobile-title'
+                          : 'mainTitle'
+                      }
+                      style={{ marginTop: '10px' }}
+                    >
+                      LINK TO SOCIAL CHANNEL
+                    </p>
+                    <InputField2
+                      classname='input-attributes-3'
+                      defaultText='Enter URL to social channel'
+                      width='100%'
+                      height='50px'
+                      fontSize={'14px'}
+                      fontFamily='Roboto'
+                      fontColor={colors.editProfileInputTextColor}
+                      hasError={
+                        socialChannelUrl !== '' &&
+                        !validateURL(socialChannelUrl)
+                      }
+                      onChange={(newVal) => {
+                        let allUrls = publicationSocialChannelUrls;
+                        allUrls = allUrls.map((val, i) => {
+                          if (i === index) {
+                            return newVal;
+                          } else {
+                            return val;
+                          }
+                        });
+                        setPublicationSocialChannelUrls(allUrls);
+                      }}
+                      value={socialChannelUrl}
+                      maxLength={161}
+                      theme={darkTheme ? 'dark' : 'light'}
+                      icon={getIconForSocialChannel(
+                        socialChannelUrl,
+                        darkTheme
+                      )}
+                      button={{
+                        icon: icons.CLOSE_BUTTON,
+                        onClick: () => {
+                          let allUrls = publicationSocialChannelUrls;
+                          allUrls = allUrls.filter((v, i) => i !== index);
+                          setPublicationSocialChannelUrls(allUrls);
+                        },
+                      }}
+                    />
+                  </div>
+                );
+              })}
+              <div
+                style={
+                  !isAddNewSocialLinkActive()
+                    ? {
+                        cursor: 'not-allowed',
+                        opacity: '0.5',
+                        marginTop: '20px',
+                        marginBottom: '20px',
+                      }
+                    : {
+                        marginTop: '20px',
+                        marginBottom: '20px',
+                      }
                 }
+                className='edit-publication-add-new-social-channel'
+                onClick={() => {
+                  if (isAddNewSocialLinkActive()) {
+                    setPublicationSocialChannelUrls([
+                      ...publicationSocialChannelUrls,
+                      '',
+                    ]);
+                  }
+                }}
               >
-                LINK TO TWITTER
-              </p>
-              <InputField2
-                classname='input-attributes2'
-                width='100%'
-                height='24px'
-                defaultText=''
-                fontSize='22px'
-                fontFamily='Roboto'
-                fontColor={colors.darkerBorderColor}
-                hasError={publicationTwitterWarning}
-                value={publicationTwitter}
-                onChange={setPublicationTwitter}
-                theme={darkTheme ? 'dark' : 'light'}
-              ></InputField2>
-              <div style={{ position: 'relative', top: '-20px' }}>
-                {<RequiredFieldMessage hasError={publicationTwitterWarning} />}
-              </div>
-
-              <p
-                className={
-                  context.width < 768 ? 'mainTitle mobile-title' : 'mainTitle'
-                }
-              >
-                LINK TO DSCVR
-              </p>
-              <InputField2
-                classname='input-attributes2'
-                width='100%'
-                height='24px'
-                defaultText=''
-                fontSize='22px'
-                fontFamily='Roboto'
-                fontColor={colors.darkerBorderColor}
-                hasError={publicationDSCVRWarning}
-                value={publicationDSCVR}
-                onChange={setPublicationDSCVR}
-                theme={darkTheme ? 'dark' : 'light'}
-              ></InputField2>
-              <div style={{ position: 'relative', top: '-20px' }}>
-                {<RequiredFieldMessage hasError={publicationDSCVRWarning} />}
-              </div>
-
-              <p
-                className={
-                  context.width < 768 ? 'mainTitle mobile-title' : 'mainTitle'
-                }
-              >
-                LINK TO DISTRIKT
-              </p>
-              <InputField2
-                classname='input-attributes2'
-                width='100%'
-                height='24px'
-                defaultText=''
-                fontSize='22px'
-                fontFamily='Roboto'
-                fontColor={colors.darkerBorderColor}
-                hasError={publicationDistriktWarning}
-                value={publicationDistrikt}
-                onChange={setPublicationDistrikt}
-                theme={darkTheme ? 'dark' : 'light'}
-              ></InputField2>
-              <div style={{ position: 'relative', top: '-20px' }}>
-                {<RequiredFieldMessage hasError={publicationDistriktWarning} />}
+                <span>+</span>
+                {'  Add new link to social channel'}
               </div>
 
               <div style={{ display: 'inline-block' }}>
@@ -2001,13 +1997,25 @@ const CreateEditPublication = () => {
               <div style={{ display: 'inline-block' }}>
                 <Button
                   onClick={() => {
+                    if (!validateWebsiteAndSocialLinks()) {
+                      return;
+                    }
                     handleScrolls();
                     setTimeout(onSave, 800);
                   }}
                   disabled={saveBtnIsDisabled}
                   type='button'
                   styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-                  style={{ width: '96px' }}
+                  style={
+                    validateWebsiteAndSocialLinks()
+                      ? { width: '96px' }
+                      : {
+                          width: '96px',
+                          cursor: 'not-allowed',
+                          background: 'gray',
+                          borderColor: 'gray',
+                        }
+                  }
                 >
                   Save
                 </Button>

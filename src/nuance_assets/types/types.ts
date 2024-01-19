@@ -65,6 +65,8 @@ export type UserListItem = {
   displayName: string;
   fontType: string;
   bio: string;
+  website: string;
+  socialChannelsUrls: string[];
 };
 
 //TODO: phase out in postStore and use Post type from canister

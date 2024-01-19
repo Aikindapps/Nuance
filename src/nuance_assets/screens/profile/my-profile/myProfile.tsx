@@ -136,7 +136,18 @@ const MyProfile = () => {
           className='profile-picture'
         />
         <p className='name'>{user?.displayName}</p>
-        <p className='username'>@{user?.handle}</p>
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: darkOptionsAndColors.color,
+                }
+              : {}
+          }
+          className='username'
+        >
+          @{user?.handle}
+        </p>
         <div className='social-channels'>
           {getSocialChannelUrls().map((url, index) => {
             return (
@@ -167,7 +178,13 @@ const MyProfile = () => {
             );
           })}
         </div>
-        <p className='description'>{user?.bio}</p>
+        <p style={
+                    darkTheme
+                      ? {
+                          color: darkOptionsAndColors.secondaryColor,
+                        }
+                      : {}
+                  } className='description'>{user?.bio}</p>
       </div>
       <div className='statistic-wrapper'>
         <div className='statistic'>
