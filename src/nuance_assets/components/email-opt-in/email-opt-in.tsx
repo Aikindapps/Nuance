@@ -138,6 +138,7 @@ const EmailOptIn: React.FC<EmailOptInProps> = (props): JSX.Element => {
         <label className='email-address-label'>E-MAIL ADDRESS</label>
 
         <InputField2
+          classname='input-attributes2'
           width='100%'
           height='24px'
           defaultText='E-mail address'

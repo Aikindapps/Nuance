@@ -146,153 +146,85 @@ const Wallet = () => {
     }
   };
   const getStatsElement = () => {
-    if (context.width > 768) {
-      //desktop
-      return (
-        <div
-          className='statistic'
-          style={{ marginBottom: '40px', marginTop: '5px' }}
-        >
-          <div className='statistic'>
-            {tokenBalances.map((tokenBalance) => {
-              return (
-                <div
-                  className='stat'
-                  style={{ borderRight: '1px dashed #B2B2B2' }}
-                  key={tokenBalance.token.symbol}
-                >
-                  <p className='count'>
-                    {truncateToDecimalPlace(
-                      tokenBalance.balance /
-                        Math.pow(10, tokenBalance.token.decimals),
-                      4
-                    )}
-                  </p>
-                  <p className='title'>{tokenBalance.token.symbol}</p>
-                  {tokenBalance.token.symbol === 'NUA' ? (
-                    <p className='title'>(Nuance Token)</p>
-                  ) : (
-                    <div className='nua-equivalance'>
-                      <div className='eq'>=</div>
-                      <div className='value'>
-                        {(
-                          getNuaEquivalance(
-                            sonicTokenPairs,
-                            tokenBalance.token.symbol,
-                            tokenBalance.balance
-                          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                        ).toFixed(0) + ' NUA'}
-                      </div>
-                    </div>
+    return (
+      <div
+        className='statistic-wrapper'
+        style={{ marginBottom: '40px', marginTop: '5px' }}
+      >
+        <div className='statistic'>
+          {tokenBalances.slice(0, 2).map((tokenBalance, index) => {
+            return (
+              <div
+                className='stat'
+                key={tokenBalance.token.symbol}
+              >
+                <p className='count'>
+                  {truncateToDecimalPlace(
+                    tokenBalance.balance /
+                      Math.pow(10, tokenBalance.token.decimals),
+                    4
                   )}
-                </div>
-              );
-            })}
-            <div className='stat'>
-              <p className='count'>{ownedKeys}</p>
-              <p className='title'>Article Keys</p>
-            </div>
+                </p>
+                <p className='title'>{tokenBalance.token.symbol}</p>
+                {tokenBalance.token.symbol === 'NUA' ? (
+                  <p className='title'>(Nuance Token)</p>
+                ) : (
+                  <div className='nua-equivalance'>
+                    <div className='eq'>=</div>
+                    <div className='value'>
+                      {(
+                        getNuaEquivalance(
+                          sonicTokenPairs,
+                          tokenBalance.token.symbol,
+                          tokenBalance.balance
+                        ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                      ).toFixed(0) + ' NUA'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className='statistic-horizontal-divider'/>
+        <div className='statistic'>
+          {tokenBalances.slice(2).map((tokenBalance, index) => {
+            return (
+              <div className='stat' key={tokenBalance.token.symbol}>
+                <p className='count'>
+                  {truncateToDecimalPlace(
+                    tokenBalance.balance /
+                      Math.pow(10, tokenBalance.token.decimals),
+                    4
+                  )}
+                </p>
+                <p className='title'>{tokenBalance.token.symbol}</p>
+                {tokenBalance.token.symbol === 'NUA' ? (
+                  <p className='title'>(Nuance Token)</p>
+                ) : (
+                  <div className='nua-equivalance'>
+                    <div className='eq'>=</div>
+                    <div className='value'>
+                      {(
+                        getNuaEquivalance(
+                          sonicTokenPairs,
+                          tokenBalance.token.symbol,
+                          tokenBalance.balance
+                        ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                      ).toFixed(0) + ' NUA'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className='stat'>
+            <p className='count'>{ownedKeys}</p>
+            <p className='title'>Article Keys</p>
           </div>
         </div>
-      );
-    } else {
-      //mobile
-      return (
-        <div
-          className='statictis-mobile-wrapper'
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <div className='statistic'>
-            {tokenBalances.slice(0, 2).map((tokenBalance, index) => {
-              return (
-                <div
-                  className='stat'
-                  style={{
-                    width: '50%',
-                    borderRight: index === 0 ? '1px dashed #B2B2B2' : 'none',
-                  }}
-                  key={tokenBalance.token.symbol}
-                >
-                  <p className='count'>
-                    {truncateToDecimalPlace(
-                      tokenBalance.balance /
-                        Math.pow(10, tokenBalance.token.decimals),
-                      4
-                    )}
-                  </p>
-                  <p className='title'>{tokenBalance.token.symbol}</p>
-                  {tokenBalance.token.symbol === 'NUA' ? (
-                    <p className='title'>(Nuance Token)</p>
-                  ) : (
-                    <div className='nua-equivalance'>
-                      <div className='eq'>=</div>
-                      <div className='value'>
-                        {(
-                          getNuaEquivalance(
-                            sonicTokenPairs,
-                            tokenBalance.token.symbol,
-                            tokenBalance.balance
-                          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                        ).toFixed(0) + ' NUA'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div className='horizontal-dashed-divider' />
-          <div className='statistic'>
-            {tokenBalances.slice(2).map((tokenBalance) => {
-              return (
-                <div
-                  className='stat'
-                  style={{
-                    borderRight: '1px dashed #B2B2B2',
-                    width: '50%',
-                  }}
-                  key={tokenBalance.token.symbol}
-                >
-                  <p className='count'>
-                    {truncateToDecimalPlace(
-                      tokenBalance.balance /
-                        Math.pow(10, tokenBalance.token.decimals),
-                      4
-                    )}
-                  </p>
-                  <p className='title'>{tokenBalance.token.symbol}</p>
-                  {tokenBalance.token.symbol === 'NUA' ? (
-                    <p className='title'>(Nuance Token)</p>
-                  ) : (
-                    <div className='nua-equivalance'>
-                      <div className='eq'>=</div>
-                      <div className='value'>
-                        {(
-                          getNuaEquivalance(
-                            sonicTokenPairs,
-                            tokenBalance.token.symbol,
-                            tokenBalance.balance
-                          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                        ).toFixed(0) + ' NUA'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <div style={{ width: '50%' }} className='stat'>
-              <p className='count'>{ownedKeys}</p>
-              <p className='title'>Article Keys</p>
-            </div>
-          </div>
-        </div>
-      );
-    }
+      </div>
+    );
   };
 
   return (

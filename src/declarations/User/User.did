@@ -15,6 +15,8 @@ type User__1 =
    handle: text;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
+   socialChannels: vec text;
+   website: text;
  };
 type UserListItem = 
  record {
@@ -24,6 +26,8 @@ type UserListItem =
    fontType: text;
    handle: text;
    "principal": text;
+   socialChannelsUrls: vec text;
+   website: text;
  };
 type User = 
  record {
@@ -37,6 +41,8 @@ type User =
    handle: text;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
+   socialChannels: vec text;
+   website: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
 type Result_6 = 
@@ -250,5 +256,7 @@ service : {
   updateFontType: (text) -> (Result);
   updateHandle: (text, text, text, opt vec text) -> (Result);
   updateLastLogin: () -> () oneway;
+  updateSocialLinks: (text, vec text) -> (Result);
+  updateUserDetails: (text, text, text, text, vec text) -> (Result);
   validate: (reserved) -> (Validate);
 }

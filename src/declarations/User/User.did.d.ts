@@ -81,32 +81,38 @@ export type Result_6 = { 'ok' : Array<User> } |
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
   'bio' : string,
+  'socialChannels' : Array<string>,
   'followersArray' : Array<string>,
   'displayName' : string,
   'followersCount' : number,
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'website' : string,
   'handle' : string,
   'followers' : Followers,
   'avatar' : string,
 }
 export interface UserListItem {
   'bio' : string,
+  'socialChannelsUrls' : Array<string>,
   'principal' : string,
   'displayName' : string,
+  'website' : string,
   'handle' : string,
   'fontType' : string,
   'avatar' : string,
 }
 export interface User__1 {
   'bio' : string,
+  'socialChannels' : Array<string>,
   'followersArray' : Array<string>,
   'displayName' : string,
   'followersCount' : number,
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'website' : string,
   'handle' : string,
   'followers' : Followers,
   'avatar' : string,
@@ -197,5 +203,10 @@ export interface _SERVICE {
     Result
   >,
   'updateLastLogin' : ActorMethod<[], undefined>,
+  'updateSocialLinks' : ActorMethod<[string, Array<string>], Result>,
+  'updateUserDetails' : ActorMethod<
+    [string, string, string, string, Array<string>],
+    Result
+  >,
   'validate' : ActorMethod<[any], Validate>,
 }

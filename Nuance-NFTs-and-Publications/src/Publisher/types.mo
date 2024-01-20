@@ -57,9 +57,7 @@ module {
 
   public type SocialLinksObject = {
     website : Text;
-    twitter : Text;
-    dscvr : Text;
-    distrikt : Text;
+    socialChannels: [Text]
   };
   public type Followers = List.List<Text>;
 

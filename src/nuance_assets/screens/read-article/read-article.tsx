@@ -14,7 +14,7 @@ import {
   useUserStore,
 } from '../../store';
 import Loader from '../../UI/loader/Loader';
-import { formatDate } from '../../shared/utils';
+import { formatDate, getIconForSocialChannel } from '../../shared/utils';
 import {
   colors,
   images,
@@ -38,6 +38,7 @@ import Comments from '../../components/comments/comments';
 import WriteComment from '../../components/comments/write-comments';
 import { PostBucket } from 'src/declarations/PostBucket';
 import { get } from 'lodash';
+import { Tooltip } from 'react-tooltip';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -49,6 +50,7 @@ const ReadArticle = () => {
   const [isToggled, setIsToggled] = useState(false);
   const [avatar, setAvatar] = useState('');
   const [bio, setBio] = useState('');
+  const [socialUrls, setSocialUrls] = useState<string[]>([]);
   const [premiumAvailableCount, setPremiumAvailableCount] = useState('');
   const [premiumTotalSupply, setPremiumTotalSupply] = useState('');
   const [premiumSalePrice, setPremiumSalePrice] = useState('');
@@ -113,9 +115,9 @@ const ReadArticle = () => {
     deleteComment: state.deleteComment,
   }));
 
-  const { user, getUsersByHandles, usersByHandles } = useUserStore((state) => ({
+  const { user, getUsersByHandlesReturnOnly } = useUserStore((state) => ({
     user: state.user,
-    getUsersByHandles: state.getUsersByHandles,
+    getUsersByHandlesReturnOnly: state.getUsersByHandlesReturnOnly,
     usersByHandles: state.usersByHandles,
   }));
 
@@ -303,7 +305,7 @@ const ReadArticle = () => {
         getOwnedNfts();
       }
       if (post.creator) {
-        getUsersByHandles([post.creator]);
+        handleWriterFields(post.creator);
       }
       if (
         post.isPublication &&
@@ -323,12 +325,24 @@ const ReadArticle = () => {
     }
   }, [premiumArticleInfo]);
 
-  useEffect(() => {
-    if (usersByHandles && usersByHandles.length > 0) {
-      setAvatar(usersByHandles[0].avatar);
-      setBio(usersByHandles[0].bio);
+  const handleWriterFields = async (handle: string) => {
+    let response = await getUsersByHandlesReturnOnly([handle])
+    if(response){
+      let writer = response[0];
+      setAvatar(writer.avatar);
+      setBio(writer.bio);
+      if(writer.website === ''){
+        setSocialUrls(writer.socialChannelsUrls)
+      }
+      else{
+        setSocialUrls([
+          writer.website,
+          ...writer.socialChannelsUrls,
+        ]);
+      }
     }
-  }, [usersByHandles]);
+
+  }
 
   useEffect(
     (window.onresize = window.onload =
@@ -420,6 +434,24 @@ const ReadArticle = () => {
     }
   };
 
+  const getSocialChannelUrls = () => {
+    if (!post?.isPublication) {
+      if(author){
+        if(author.website !== ''){
+          return [author.website, ...author.socialChannels]
+        }
+        else{
+          return author.socialChannels
+        }
+      }
+      else{
+        return []
+      }
+    } else{
+      return socialUrls
+    }
+  };
+
   const getReadTime = () => {
     if (post?.wordCount) {
       let time = Math.round(parseInt(post?.wordCount) / 250).toString();
@@ -431,6 +463,8 @@ const ReadArticle = () => {
       return '1';
     }
   };
+
+ 
 
   //for customizing linkify npm package
   const componentDecorator = (href: any, text: any, key: any) => (
@@ -450,6 +484,9 @@ const ReadArticle = () => {
       ? colors.darkModeSecondaryButtonColor
       : colors.tagTokenBackGround,
     tagText: darkTheme ? colors.primaryBackgroundColor : colors.tagTextColor,
+    secondaryColor: darkTheme
+      ? colors.darkSecondaryTextColor
+      : colors.primaryTextColor,
   };
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
@@ -542,7 +579,9 @@ const ReadArticle = () => {
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/user/${post.isPublication ? post.creator : author.handle}`}
+                  to={`/user/${
+                    post.isPublication ? post.creator : author.handle
+                  }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -629,9 +668,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                        fontFamily: publication?.styling.fontType,
-                        color: darkOptionsAndColors.color,
-                      }
+                          fontFamily: publication?.styling.fontType,
+                          color: darkOptionsAndColors.color,
+                        }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -737,23 +776,65 @@ const ReadArticle = () => {
                     })}
                   </div>
                 </div>
-
-                <div className='about-author'>
+                <div className='author-content'>
                   <img
-                    className='profile-picture'
                     src={getAvatar() || images.DEFAULT_AVATAR}
-                    alt=''
-                  ></img>
+                    alt='background'
+                    className='profile-picture'
+                  />
                   <Link
-                    to={`/user/${post.isPublication ? post.creator : author.handle}`}
+                    to={`/user/${
+                      post.isPublication ? post.creator : author.handle
+                    }`}
                     style={{ color: darkOptionsAndColors.color }}
-                    className='handle'
+                    className='username'
                   >
                     @{post.isPublication ? post.creator : author.handle}
                   </Link>
-                  <Linkify componentDecorator={componentDecorator}>
-                    <p className='biography'>{getBio()}</p>
-                  </Linkify>
+                  <div className='social-channels'>
+                    {getSocialChannelUrls().map((url, index) => {
+                      return (
+                        <div
+                          onClick={() => {
+                            let urlWithProtocol =
+                              url.startsWith('https://') ||
+                              url.startsWith('http://')
+                                ? url
+                                : 'https://' + url;
+                            window.open(urlWithProtocol, '_blank');
+                          }}
+                        >
+                          <Tooltip
+                            clickable={true}
+                            className='tooltip-wrapper'
+                            anchorSelect={'#social-channel-' + index}
+                            place='top'
+                            noArrow={true}
+                          >
+                            {url}
+                          </Tooltip>
+                          <img
+                            className='social-channel-icon'
+                            src={getIconForSocialChannel(url, darkTheme)}
+                            id={'social-channel-' + index}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p
+                    className='description'
+                    style={
+                      darkTheme
+                        ? {
+                            color: darkOptionsAndColors.secondaryColor,
+                          }
+                        : {}
+                    }
+                  >
+                    {getBio()}
+                  </p>
+
                   <FollowAuthor
                     AuthorHandle={author?.handle || ''}
                     Followers={user?.followersArray || undefined}
@@ -761,6 +842,7 @@ const ReadArticle = () => {
                     isPublication={false}
                   />
                 </div>
+
                 <div className='publication-email-opt-in' ref={refEmailOptIn}>
                   {context.width < 1089 && publicationHandle == 'FastBlocks' ? (
                     <EmailOptIn

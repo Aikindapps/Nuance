@@ -12,12 +12,14 @@ export const idlFactory = ({ IDL }) => {
   const Followers = IDL.Opt(IDL.Tuple(IDL.Text, List));
   const User__1 = IDL.Record({
     'bio' : IDL.Text,
+    'socialChannels' : IDL.Vec(IDL.Text),
     'followersArray' : IDL.Vec(IDL.Text),
     'displayName' : IDL.Text,
     'followersCount' : IDL.Nat32,
     'nuaTokens' : IDL.Float64,
     'accountCreated' : IDL.Text,
     'publicationsArray' : IDL.Vec(PublicationObject),
+    'website' : IDL.Text,
     'handle' : IDL.Text,
     'followers' : Followers,
     'avatar' : IDL.Text,
@@ -30,12 +32,14 @@ export const idlFactory = ({ IDL }) => {
   const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const User = IDL.Record({
     'bio' : IDL.Text,
+    'socialChannels' : IDL.Vec(IDL.Text),
     'followersArray' : IDL.Vec(IDL.Text),
     'displayName' : IDL.Text,
     'followersCount' : IDL.Nat32,
     'nuaTokens' : IDL.Float64,
     'accountCreated' : IDL.Text,
     'publicationsArray' : IDL.Vec(PublicationObject),
+    'website' : IDL.Text,
     'handle' : IDL.Text,
     'followers' : Followers,
     'avatar' : IDL.Text,
@@ -94,8 +98,10 @@ export const idlFactory = ({ IDL }) => {
   const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const UserListItem = IDL.Record({
     'bio' : IDL.Text,
+    'socialChannelsUrls' : IDL.Vec(IDL.Text),
     'principal' : IDL.Text,
     'displayName' : IDL.Text,
+    'website' : IDL.Text,
     'handle' : IDL.Text,
     'fontType' : IDL.Text,
     'avatar' : IDL.Text,
@@ -241,6 +247,12 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateLastLogin' : IDL.Func([], [], ['oneway']),
+    'updateSocialLinks' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [Result], []),
+    'updateUserDetails' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+        [Result],
+        [],
+      ),
     'validate' : IDL.Func([IDL.Reserved], [Validate], []),
   });
 };

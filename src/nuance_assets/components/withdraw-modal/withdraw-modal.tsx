@@ -302,6 +302,7 @@ export const WithdrawModal = () => {
           <p className='withdraw-modal-field-text'>RECEIVER</p>
           <div className='input-wrapper'>
             <InputField2
+            classname='input-attributes2'
               width='100%'
               height='28px'
               style={{

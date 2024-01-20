@@ -90,6 +90,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
           </p>
           <div className='input-wrapper'>
             <InputField2
+              classname='input-attributes2'
               value={receiver}
               width='100%'
               height='24px'

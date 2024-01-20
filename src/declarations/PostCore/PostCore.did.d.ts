@@ -274,6 +274,7 @@ export interface _SERVICE {
   'registerPlatformOperator' : ActorMethod<[string], Result_1>,
   'registerPublisher' : ActorMethod<[], undefined>,
   'reindex' : ActorMethod<[], Result_2>,
+  'removePostFromPopularityArrays' : ActorMethod<[string], undefined>,
   'resetWasmChunks' : ActorMethod<[], undefined>,
   'save' : ActorMethod<[PostSaveModel], Result_4>,
   'setFrontendCanisterId' : ActorMethod<[string], Result_2>,

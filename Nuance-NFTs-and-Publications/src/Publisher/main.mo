@@ -114,9 +114,7 @@ actor class Publisher() = this {
     stable var subtitleEntries : [(Text, Text)] = [];
     stable var descriptionEntries : [(Text, Text)] = [];
     stable var websiteEntries : [(Text, Text)] = [];
-    stable var twitterEntries : [(Text, Text)] = [];
-    stable var dscvrEntries : [(Text, Text)] = [];
-    stable var distriktEntries : [(Text, Text)] = [];
+    stable var socialChannelUrlsEntries : [(Text, [Text])] = [];
     stable var categoriesEntries : [(Text, [Text])] = [];
     stable var avatarEntries : [(Text, Text)] = [];
     stable var modifiedEntries : [(Text, Text)] = [];
@@ -142,9 +140,7 @@ actor class Publisher() = this {
     var descriptionHashMap = HashMap.fromIter<Text, Text>(descriptionEntries.vals(), maxHashmapSize, isEq, Text.hash);
     var categoriesHashMap = HashMap.fromIter<Text, [Text]>(categoriesEntries.vals(), maxHashmapSize, isEq, Text.hash);
     var websiteHashMap = HashMap.fromIter<Text, Text>(websiteEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var twitterHashMap = HashMap.fromIter<Text, Text>(twitterEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var dscvrHashMap = HashMap.fromIter<Text, Text>(dscvrEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var distriktHashMap = HashMap.fromIter<Text, Text>(distriktEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var socialChannelsUrlsHashMap = HashMap.fromIter<Text, [Text]>(socialChannelUrlsEntries.vals(), maxHashmapSize, isEq, Text.hash);
     var avatarHashMap = HashMap.fromIter<Text, Text>(avatarEntries.vals(), maxHashmapSize, isEq, Text.hash);
     var userHandleHashmap = HashMap.fromIter<Text, Text>(canisterIdEntries.vals(), maxHashmapSize, isEq, Text.hash);
     var createdHashMap = HashMap.fromIter<Text, Text>(createdEntries.vals(), maxHashmapSize, isEq, Text.hash);
@@ -370,9 +366,7 @@ actor class Publisher() = this {
             categories = [];
             socialLinks = {
                 website = "";
-                twitter = "";
-                dscvr = "";
-                distrikt = "";
+                socialChannels = [];
             };
             avatar = "";
             created = "0";
@@ -405,9 +399,7 @@ actor class Publisher() = this {
         subtitleHashMap.put(canisterId, publisher.subtitle);
         descriptionHashMap.put(canisterId, publisher.description);
         websiteHashMap.put(canisterId, publisher.socialLinks.website);
-        twitterHashMap.put(canisterId, publisher.socialLinks.twitter);
-        dscvrHashMap.put(canisterId, publisher.socialLinks.dscvr);
-        distriktHashMap.put(canisterId, publisher.socialLinks.distrikt);
+        socialChannelsUrlsHashMap.put(canisterId, publisher.socialLinks.socialChannels);
         avatarHashMap.put(canisterId, publisher.avatar);
         createdHashMap.put(canisterId, publisher.created);
         modifiedHashMap.put(canisterId, publisher.modified);
@@ -426,9 +418,7 @@ actor class Publisher() = this {
             categories = [];
             socialLinks = {
                 website = "";
-                twitter = "";
-                dscvr = "";
-                distrikt = "";
+                socialChannels = [];
             };
             avatar = "";
             created = Int.toText(U.epochTime());
@@ -464,9 +454,7 @@ actor class Publisher() = this {
                 categories = U.safeGet(categoriesHashMap, canisterId, []);
                 socialLinks = {
                     website = U.safeGet(websiteHashMap, canisterId, "");
-                    twitter = U.safeGet(twitterHashMap, canisterId, "");
-                    dscvr = U.safeGet(dscvrHashMap, canisterId, "");
-                    distrikt = U.safeGet(distriktHashMap, canisterId, "");
+                    socialChannels = U.safeGet(socialChannelsUrlsHashMap, canisterId, []);
                 };
                 avatar = U.safeGet(avatarHashMap, canisterId, "");
                 created = U.safeGet(createdHashMap, canisterId, "");
@@ -607,9 +595,7 @@ actor class Publisher() = this {
         subtitleHashMap.delete(canisterId);
         descriptionHashMap.delete(canisterId);
         websiteHashMap.delete(canisterId);
-        twitterHashMap.delete(canisterId);
-        dscvrHashMap.delete(canisterId);
-        distriktHashMap.delete(canisterId);
+        socialChannelsUrlsHashMap.delete(canisterId);
         avatarHashMap.delete(canisterId);
         createdHashMap.delete(canisterId);
         modifiedHashMap.delete(canisterId);
@@ -1168,9 +1154,7 @@ actor class Publisher() = this {
         headerImageHashMap.put(canisterId, headerImage);
         categoriesHashMap.put(canisterId, categories);
         websiteHashMap.put(canisterId, socialLinks.website);
-        twitterHashMap.put(canisterId, socialLinks.twitter);
-        dscvrHashMap.put(canisterId, socialLinks.dscvr);
-        distriktHashMap.put(canisterId, socialLinks.distrikt);
+        socialChannelsUrlsHashMap.put(canisterId, socialLinks.socialChannels);
         modifiedHashMap.put(canisterId, modified);
         var getPublicationWithHandles = await getPublicationQuery(publication.publicationHandle);
         switch (getPublicationWithHandles) {
@@ -2640,9 +2624,7 @@ actor class Publisher() = this {
         descriptionEntries := Iter.toArray(descriptionHashMap.entries());
         categoriesEntries := Iter.toArray(categoriesHashMap.entries());
         websiteEntries := Iter.toArray(websiteHashMap.entries());
-        twitterEntries := Iter.toArray(twitterHashMap.entries());
-        dscvrEntries := Iter.toArray(dscvrHashMap.entries());
-        distriktEntries := Iter.toArray(distriktHashMap.entries());
+        socialChannelUrlsEntries := Iter.toArray(socialChannelsUrlsHashMap.entries());
         avatarEntries := Iter.toArray(avatarHashMap.entries());
         createdEntries := Iter.toArray(createdHashMap.entries());
         modifiedEntries := Iter.toArray(modifiedHashMap.entries());
@@ -2679,9 +2661,7 @@ actor class Publisher() = this {
         descriptionEntries := [];
         categoriesEntries := [];
         websiteEntries := [];
-        twitterEntries := [];
-        dscvrEntries := [];
-        distriktEntries := [];
+        socialChannelUrlsEntries := [];
         avatarEntries := [];
         createdEntries := [];
         modifiedEntries := [];

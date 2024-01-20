@@ -27,13 +27,13 @@ const CreateEditPublication = lazy(
 );
 const ReadArticle = lazy(() => import('./screens/read-article/read-article'));
 const ProfileSidebar = lazy(() => import('./screens/profile/profileSidebar'));
-const MyProfile = lazy(() => import('./screens/profile/myProfile'));
-const EditProfile = lazy(() => import('./screens/profile/editProfile'));
+const MyProfile = lazy(() => import('./screens/profile/my-profile/myProfile'));
+const EditProfile = lazy(() => import('./screens/profile/edit-profile/editProfile'));
 const PersonalArticles = lazy(() => import('./screens/profile/personal-articles/personalArticles'));
 const PublishedArticles = lazy(
   () => import('./screens/profile/publishedArticles')
 );
-const Profile = lazy(() => import('./screens/profile/profile'));
+const Profile = lazy(() => import('./screens/user/profile'));
 const FollowedTags = lazy(() => import('./screens/profile/followedTags'));
 const Following = lazy(() => import('./screens/profile/following'));
 // const PublicationLanding = lazy(

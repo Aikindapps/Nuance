@@ -86,6 +86,9 @@ export const icons = {
   PROFILE_ICON: iconsPath + 'profile-icon.svg',
   PROFILE_ICON_DARK: iconsPath + 'profile-icon-dark.svg',
   EMPTY_BOX: iconsPath + 'empty_box.svg',
+  WEBSITE_ICON: iconsPath + 'website.svg',
+  WEBSITE_ICON_DARK: iconsPath + 'website_dark.svg',
+  CLOSE_BUTTON: iconsPath + 'close-button.svg'
 };
 
 export const colors = {

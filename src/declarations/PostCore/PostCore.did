@@ -346,6 +346,7 @@ service : {
   registerPlatformOperator: (text) -> (Result_1);
   registerPublisher: () -> ();
   reindex: () -> (Result_2);
+  removePostFromPopularityArrays: (text) -> () oneway;
   resetWasmChunks: () -> () oneway;
   save: (PostSaveModel) -> (Result_4);
   setFrontendCanisterId: (text) -> (Result_2);

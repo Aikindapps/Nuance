@@ -24,7 +24,6 @@ import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sid
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [copyProfile, setCopyProfile] = useState(false);
-  const [screenWidth, setScreenWidth] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
@@ -124,13 +123,6 @@ const Profile = () => {
     redirect(window.location.pathname);
   }, [author]);
 
-  useEffect(
-    (window.onresize = window.onload =
-      () => {
-        setScreenWidth(window.innerWidth);
-      }),
-    [screenWidth]
-  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -225,7 +217,7 @@ const Profile = () => {
       <Header
         loggedIn={isLoggedIn}
         isArticlePage={false}
-        ScreenWidth={screenWidth}
+        ScreenWidth={context.width}
         isPublicationPage={false}
       />
       <div
@@ -234,7 +226,7 @@ const Profile = () => {
       >
         <div className='profile-sidebar'>
           <div className='wrapper'>
-            {screenWidth < 768 ? (
+            {context.width < 768 ? (
               <div className='left-profile-menu'>
                 <AuthorProfileSidebar />
               </div>
@@ -317,82 +309,19 @@ const Profile = () => {
               </div>
               <div className='stat'>
                 <p className='count'>{counts?.uniqueClaps || 0}</p>
-                <p className='title'>Applauses</p>
+                <p className='title'>Applauds</p>
               </div>
               <div className='stat'>
                 <p className='count'>{userFollowersCount || 0}</p>
                 <p className='title'>Followers</p>
               </div>
             </div>
-            {(user?.publicationsArray.length || [].length) > 0 &&
-              featureIsLive ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  marginTop: '100px',
-                  marginBottom: '100px',
-                }}
-              >
-                <p style={{ color: darkOptionsAndColors.color }}>
-                  Linked as writer to the following Publications:
-                </p>
-                <br></br>
-                <ul
-                  style={{
-                    listStyleType: 'none',
-                  }}
-                >
-                  {(user?.publicationsArray || []).map((publication) => {
-                    let avatar = '';
-                    usersByHandles?.forEach((user) => {
-                      if (user.handle == publication.publicationName) {
-                        avatar = user.avatar;
-                      }
-                    });
-                    return (
-                      <li
-                        key={publication.publicationName}
-                        style={{ color: darkOptionsAndColors.color }}
-                      >
-                        <Row>
-                          <Col>
-                            <Link
-                              to={`/${publication.publicationName}`}
-                              style={{ color: darkOptionsAndColors.color }}
-                            >
-                              <p style={{ color: darkOptionsAndColors.color }}>
-                                <img
-                                  style={{ width: '30px' }}
-                                  src={avatar || images.DEFAULT_AVATAR}
-                                />
-                                &nbsp; @{publication.publicationName}
-                              </p>
-                            </Link>
-                          </Col>
-                          <Col>
-                            {publication.isEditor ? (
-                              <p style={{ color: darkOptionsAndColors.color }}>
-                                Editor
-                              </p>
-                            ) : (
-                              <p style={{ color: darkOptionsAndColors.color }}>
-                                Writer
-                              </p>
-                            )}
-                          </Col>
-                        </Row>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ) : null}
             <div style={{ marginTop: '50px' }}>
               <p className='pub-art'>
                 PUBLISHED ARTICLES ({counts?.publishedCount || 0})
               </p>
 
-              {screenWidth > 768 ? (
+              {context.width > 768 ? (
                 <div
                   className='article-grid-horizontal'
                   style={{ margin: '50px -42px 50px 0' }}

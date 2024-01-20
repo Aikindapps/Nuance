@@ -12,10 +12,8 @@ export const idlFactory = ({ IDL }) => {
     'fontType' : IDL.Text,
   });
   const SocialLinksObject = IDL.Record({
-    'twitter' : IDL.Text,
+    'socialChannels' : IDL.Vec(IDL.Text),
     'website' : IDL.Text,
-    'distrikt' : IDL.Text,
-    'dscvr' : IDL.Text,
   });
   const Publication = IDL.Record({
     'cta' : PublicationCta,
@@ -163,10 +161,8 @@ export const idlFactory = ({ IDL }) => {
     'buttonCopy' : IDL.Text,
   });
   const SocialLinksObject__1 = IDL.Record({
-    'twitter' : IDL.Text,
+    'socialChannels' : IDL.Vec(IDL.Text),
     'website' : IDL.Text,
-    'distrikt' : IDL.Text,
-    'dscvr' : IDL.Text,
   });
   const PublicationObject = IDL.Record({
     'isEditor' : IDL.Bool,

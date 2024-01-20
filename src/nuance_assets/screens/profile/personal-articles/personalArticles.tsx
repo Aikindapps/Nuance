@@ -30,6 +30,22 @@ const PersonalArticles = () => {
     getMySubmittedForReviewPosts: state.getMySubmittedForReviewPosts,
   }));
 
+  const getInitialPage = () => {
+    if(window.location.href.includes('?page=all')){
+      return 'All'
+    }
+    else if(window.location.href.includes('?page=draft')){
+      return 'Drafts'
+    }
+    else if(window.location.href.includes('?page=submitted')){
+      return 'Submitted to review'
+    }
+    else if(window.location.href.includes('?page=published')) {
+      return 'Published'
+    }
+    return 'All'
+  }
+
   type Page = 'All' | 'Drafts' | 'Published' | 'Submitted to review';
   const pages : Page [] = ['All', 'Drafts', 'Submitted to review', 'Published']
 
@@ -46,7 +62,7 @@ const PersonalArticles = () => {
   const [submittedToReviewPosts, setSubmittedToReviewPosts] = useState<
     PostType[]
   >([]);
-  const [page, setPage] = useState<Page>('All');
+  const [page, setPage] = useState<Page>(getInitialPage());
 
   const navigate = useNavigate();
 
@@ -203,6 +219,19 @@ const PersonalArticles = () => {
                 }
                 onClick={() => {
                   setPage(pageName);
+                  navigate(
+                    `/my-profile/articles?page=${
+                      pageName === 'All'
+                        ? 'all'
+                        : pageName === 'Drafts'
+                        ? 'draft'
+                        : pageName === 'Published'
+                        ? 'published'
+                        : pageName === 'Submitted to review'
+                        ? 'submitted'
+                        : ''
+                    }`
+                  );
                 }}
               >{`${pageName} (${
                 pageName === 'All'

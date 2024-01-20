@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Button from '../../UI/Button/Button';
+import Button from '../../../UI/Button/Button';
 import { useNavigate } from 'react-router';
-import InputField from '../../UI/InputField2/InputField2';
-import { useUserStore, useAuthStore } from '../../store';
+import InputField from '../../../UI/InputField2/InputField2';
+import { useUserStore, useAuthStore } from '../../../store';
 import {
   base64toBlob,
   formatDate,
   getEmbeddedImages,
   parseEmbeddedImage,
-} from '../../shared/utils';
-import { getNewContentId, uploadBlob } from '../../services/storageService';
+} from '../../../shared/utils';
+import { getNewContentId, uploadBlob } from '../../../services/storageService';
 import AvatarEditor from 'react-avatar-editor';
-import ProfilePictureButton from '../../UI/profile-picture-button/profile-picture-button';
-import { downscaleImage } from '../../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
-import { toast, toastError, ToastType } from '../../services/toastService';
-import Loader from '../../UI/loader/Loader';
-import { useTheme } from '../../contextes/ThemeContext';
-import { colors, images } from '../../shared/constants';
+import ProfilePictureButton from '../../../UI/profile-picture-button/profile-picture-button';
+import { downscaleImage } from '../../../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
+import { toast, toastError, ToastType } from '../../../services/toastService';
+import Loader from '../../../UI/loader/Loader';
+import { useTheme } from '../../../contextes/ThemeContext';
+import { colors, images } from '../../../shared/constants';
 
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -316,6 +316,7 @@ const EditProfile = () => {
             DISPLAY NAME
           </p>
           <InputField
+          classname='input-attributes2'
             defaultText='Enter display name...'
             width='100%'
             height='50px'
@@ -333,6 +334,7 @@ const EditProfile = () => {
         <div className='entry'>
           <p className='label'>BIOGRAPHY</p>
           <InputField
+            classname='input-attributes-3'
             defaultText='Enter biography...'
             width='100%'
             height='50px'

@@ -364,6 +364,7 @@ export const idlFactory = ({ IDL }) => {
     'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
     'registerPublisher' : IDL.Func([], [], []),
     'reindex' : IDL.Func([], [Result_2], []),
+    'removePostFromPopularityArrays' : IDL.Func([IDL.Text], [], ['oneway']),
     'resetWasmChunks' : IDL.Func([], [], ['oneway']),
     'save' : IDL.Func([PostSaveModel], [Result_4], []),
     'setFrontendCanisterId' : IDL.Func([IDL.Text], [Result_2], []),

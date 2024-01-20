@@ -14,6 +14,8 @@ module{
         followers: Followers;
         followersArray: [Text];
         publicationsArray: [PublicationObject];
+        website: Text;
+        socialChannels: [Text];
         nuaTokens: Float;
         followersCount: Nat32;
     };
@@ -33,7 +35,9 @@ module{
         displayName: Text;
         fontType: Text;
         bio: Text;
-        principal:Text;
+        principal: Text;
+        website: Text;
+        socialChannelsUrls: [Text];
     };
 
     public type GetPrincipalByHandleReturn = Result.Result<?Text, Text>;
