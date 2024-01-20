@@ -41,6 +41,23 @@ shared ({caller = initializer}) actor class Storage () = this {
     stable var storageStateStable  = StorageState.emptyStableState();
     var storageSolution = StorageSolution.StorageSolution(storageStateStable, initializer, initializer);
 
+    public shared ({caller}) func addStorageBucket (canisterId: Text) : async Result.Result<(), Text> {
+        if (isAnonymous(caller)) {
+            return #err("Cannot use this method anonymously.");
+        };
+
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+            return #err("Unauthorized");
+        };
+
+        switch (await storageSolution.addStorageBucket(Principal.fromText(canisterId))) {
+            case (ok) {
+                return #ok();
+            };
+        };
+        #ok();
+    };
+
     //SNS
     public type Validate =  {
         #Ok : Text;
@@ -279,7 +296,7 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
         };
 
         let wasm = wasmChunks;
-        if (not isAdmin(caller) and Principal.fromActor(this) != caller) {
+        if (not isAdmin(caller) and Principal.fromActor(this) != caller and not isPlatformOperator(caller)) {
 
             return #err("Unauthorized");
         };
