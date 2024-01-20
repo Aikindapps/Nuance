@@ -60,8 +60,10 @@ const derivationOrigin: string = window.location.origin.includes(
   ? NuanceUAT
   : NuancePROD;
 
-console.log('derivationOrigin', derivationOrigin);
-console.log(window.location.origin);
+// For login/logout across tabs
+export const authChannel = new BroadcastChannel('auth_channel');
+
+
 
 export interface AuthStore {
   readonly isInitialized: boolean;
@@ -191,6 +193,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     if (_loginMethod === 'stoic') {
       let identity = await StoicIdentity.connect();
       set({ isLoggedIn: true, loginMethod: 'stoic' });
+      authChannel.postMessage({ type: 'login', date: new Date() });
       Usergeek.setPrincipal(identity.getPrincipal());
       Usergeek.trackSession();
       Usergeek.flush();
@@ -234,7 +237,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
             onSuccess: async () => {
               console.log('Logged in: ' + new Date());
               set({ isLoggedIn: true });
-
+              authChannel.postMessage({ type: 'login', date: new Date() });
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
               Usergeek.trackSession();
               Usergeek.flush();
@@ -300,6 +303,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
             onSuccess: async () => {
               console.log('Logged in: ' + new Date());
               set({ isLoggedIn: true });
+              authChannel.postMessage({ type: 'login', date: new Date() });
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
               Usergeek.trackSession();
@@ -354,6 +358,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           whitelist: await getAllCanisterIds(),
         });
         set({ isLoggedIn: true, loginMethod: 'bitfinity' });
+        authChannel.postMessage({ type: 'login', date: new Date() });
         Usergeek.setPrincipal(
           await window_any.ic.bitfinityWallet.getPrincipal()
         );
@@ -389,6 +394,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       await authClient.logout();
     }
     set({ isLoggedIn: false });
+    authChannel.postMessage({ type: 'logout', date: new Date() });
     // clear all stores, and sessionStorage
     usePostStore.getState().clearAll();
     useUserStore.getState().clearAll();
