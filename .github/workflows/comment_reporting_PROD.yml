@@ -77,7 +77,7 @@ jobs:
                 continue
               fi
               COMMENT_URL_CLEANED=$(echo $COMMENT_URL_RAW | tr -d '()"' | tr -d '\n' | tr -d ' ')
-              COMMENT_URL="https://https://nuance.xyz$COMMENT_URL_CLEANED"
+              COMMENT_URL="https://nuance.xyz$COMMENT_URL_CLEANED"
               SLACK_PAYLOAD+="Comment ID: $ID, URL: $COMMENT_URL\n"
             done
           done
