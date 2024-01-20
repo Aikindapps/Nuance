@@ -33,7 +33,7 @@ export async function fetchPostData(postId : string, bucketCanisterId : string) 
 
         // Fetch full post data from the bucket canister
         console.log('Fetching post data from bucket canister...');
-        let bucketReturn = await getPostBucketActor(bucketCanisterId).get(postId);
+        let bucketReturn = await getPostBucketActor(bucketCanisterId).getPostCompositeQuery(postId);
 
         return { bucketReturn };
     } catch (err) {
