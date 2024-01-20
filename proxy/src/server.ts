@@ -1,10 +1,13 @@
 import * as http from 'http';
+import * as fs from 'fs';
 import pkg from 'http-proxy';
 const { createProxyServer } = pkg;
 import { URL } from 'url';
 import { fetchPostData, getUserByHandle } from './actor.js'; 
 import { Post } from '../declarations/PostBucket/PostBucket.did.js';
 import { User } from '../declarations/User/User.did';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 
 
@@ -29,7 +32,7 @@ const crawlers = [
     'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider',
     'YandexBot', 'Sogou', 'Slackbot-LinkExpanding', 'Slack-ImgProxy', 
     'Twitterbot', 'facebookexternalhit', 'LinkedInBot', 'Facebot',
-    'Pinterestbot', 'Applebot', 'SkypeUriPreview', 'WhatsApp'
+    'Pinterestbot', 'Applebot', 'SkypeUriPreview', 'WhatsApp', 'Notion'
 ];
 
 function isCrawler(userAgent = '') {
@@ -127,7 +130,7 @@ function buildPostSEO(post: Post, handle: string, canonicalUrl: string) {
 
 
 const reservedPaths = new Set([
-    '', 'metrics', 'timed-out', 'register', 'article', 'publication', 'my-profile', 'favicon.ico', 'api', 'assets', 'user'
+    '', 'metrics', 'timed-out', 'register', 'article', 'publication', 'my-profile', 'favicon.ico', 'api', 'assets', 'user', 'sitemap.xml'
   ]);
   
 
@@ -144,6 +147,21 @@ const server = http.createServer(async (req, res) => {
 
     console.log('Request received: ' + req.url);
     console.log('User Agent: ' + userAgent);
+
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const sitemapPath = path.join(__dirname, 'sitemap.xml');
+
+    if (parsedUrl.pathname === '/sitemap.xml') {
+        fs.readFile(sitemapPath, (err, data) => {
+            if (err) {
+                res.writeHead(404); 
+                res.end('Sitemap not found');
+            } else {
+                res.writeHead(200, { 'Content-Type': 'text/xml' });
+                res.end(data);
+            }
+        });
+     } else {
 
     if (isCrawler(userAgent)) {
         if (pathSegments.length >= 3 && pathSegments[0] !== 'publication'  && !reservedPaths.has(pathSegments[0])) {
@@ -243,6 +261,7 @@ const server = http.createServer(async (req, res) => {
             target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
             changeOrigin: true
         });
+    }
     }
 });
 
