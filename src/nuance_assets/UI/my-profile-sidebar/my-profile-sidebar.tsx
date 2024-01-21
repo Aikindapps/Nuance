@@ -120,7 +120,7 @@ const MyProfileSidebar: React.FC<MyProfileSidebarProps> = (
       goto: '/my-profile/followers',
     },
     {
-      title: 'My wallet',
+      title: 'My Wallet',
       goto: '/my-profile/wallet',
     },
   ]

@@ -320,7 +320,7 @@ const Profile = () => {
                 <div className='statistic'>
                   <div className='stat'>
                     <p className='count'>{userPostCounts?.uniqueClaps || 0}</p>
-                    <p className='title'>Applauds</p>
+                    <p className='title'>Applause</p>
                   </div>
                   <div className='stat'>
                     <p className='count'>{author?.followersCount || 0}</p>

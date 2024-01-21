@@ -38,7 +38,7 @@ const PersonalArticles = () => {
       return 'Drafts'
     }
     else if(window.location.href.includes('?page=submitted')){
-      return 'Submitted to review'
+      return 'Submitted for review'
     }
     else if(window.location.href.includes('?page=published')) {
       return 'Published'
@@ -46,8 +46,8 @@ const PersonalArticles = () => {
     return 'All'
   }
 
-  type Page = 'All' | 'Drafts' | 'Published' | 'Submitted to review';
-  const pages : Page [] = ['All', 'Drafts', 'Submitted to review', 'Published']
+  type Page = 'All' | 'Drafts' | 'Published' | 'Submitted for review';
+  const pages : Page [] = ['All', 'Drafts', 'Submitted for review', 'Published']
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [loading, setLoading] = useState(false);
@@ -116,7 +116,7 @@ const PersonalArticles = () => {
         }
         setLoadMoreCounterDraft(loadMoreCounterDraft + 1);
         break;
-      case 'Submitted to review':
+      case 'Submitted for review':
         let postsSubmittedToReview = await getMyAllPosts(
           (loadMoreCounterSubmittedToReview - 1) * 20 + 20,
           19 + loadMoreCounterSubmittedToReview * 20
@@ -163,7 +163,7 @@ const PersonalArticles = () => {
         return draftPosts
       case 'Published':
         return publishedPosts
-      case 'Submitted to review':
+      case 'Submitted for review':
         return submittedToReviewPosts;
     }
   }
@@ -178,7 +178,7 @@ const PersonalArticles = () => {
           return parseInt(counts.draftCount) > draftPosts.length
         case 'Published':
           return parseInt(counts.publishedCount) > publishedPosts.length
-        case 'Submitted to review':
+        case 'Submitted for review':
           return parseInt(counts.submittedToReviewCount) > submittedToReviewPosts.length
       }
     }
@@ -227,7 +227,7 @@ const PersonalArticles = () => {
                         ? 'draft'
                         : pageName === 'Published'
                         ? 'published'
-                        : pageName === 'Submitted to review'
+                        : pageName === 'Submitted for review'
                         ? 'submitted'
                         : ''
                     }`
@@ -240,7 +240,7 @@ const PersonalArticles = () => {
                   ? counts?.draftCount || 0
                   : pageName === 'Published'
                   ? counts?.publishedCount || 0
-                  : pageName === 'Submitted to review'
+                  : pageName === 'Submitted for review'
                   ? counts?.submittedToReviewCount || 0
                   : null
               })`}</div>

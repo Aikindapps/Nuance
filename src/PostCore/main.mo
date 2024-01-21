@@ -1582,7 +1582,7 @@ actor PostCore {
     let callerPrincipalId = Principal.toText(caller);
     let userPosts = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
 
-    // filter: only submitted to review posts
+    // filter: only submitted for review posts
     // posts are already stored desc by created time
     let postIds = Array.filter<Text>(
       List.toArray(userPosts),

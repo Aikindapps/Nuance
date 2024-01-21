@@ -870,7 +870,7 @@ const CreateEditArticle = () => {
                     setLoading(false);
                     if(response && userPublicationsWriter.includes(response.handle)){
                       toast(
-                        `Your article is submitted to review in @${response.handle}!`,
+                        `Your article is submitted for review in @${response.handle}!`,
                         ToastType.Plain
                       );
                     }
@@ -1104,7 +1104,7 @@ const CreateEditArticle = () => {
                   userPublicationsWriter.includes(response.handle)
                 ) {
                   toast(
-                    `Your article is submitted to review in @${response.handle}!`,
+                    `Your article is submitted for review in @${response.handle}!`,
                     ToastType.Plain
                   );
                 }

@@ -487,7 +487,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 navigate('/my-profile/wallet');
               }}
             >
-              My wallet
+              My Wallet
             </Button>{' '}
             <Button
               disabled={false}
@@ -581,7 +581,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 navigate('/my-profile/wallet');
               }}
             >
-              My wallet
+              My Wallet
             </Button>{' '}
             <Button
               disabled={false}
@@ -703,7 +703,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 navigate('/my-profile/wallet');
               }}
             >
-              My wallet
+              My Wallet
             </Button>{' '}
           </div>
         </div>

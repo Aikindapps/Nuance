@@ -108,6 +108,8 @@ function App() {
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     fetchTokenBalances()
+    handleResize()
+    setTimeout(handleResize, 200)
   }, []);
 
   useEffect(() => {

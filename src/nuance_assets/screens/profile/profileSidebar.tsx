@@ -102,7 +102,7 @@ const ProfileSidebar = () => {
       goto: '/my-profile/followers',
     },
     {
-      title: 'My wallet',
+      title: 'My Wallet',
       goto: '/my-profile/wallet',
     },
   ]
