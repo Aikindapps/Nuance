@@ -9,7 +9,7 @@ import { getPostBucketActor} from '../services/actorService';
 import {
   Comment,
   SaveCommentModel,
-} from '../../declarations/PostBucket/PostBucket.did';
+} from '../../../../src/declarations/PostBucket/PostBucket.did';
 
 global.fetch = fetch;
 
