@@ -126,7 +126,7 @@ const MyProfile = () => {
           }}
           onClick={goToProfileEditPage}
         >
-          Edit profile
+          Edit Profile
         </Button>
       </div>
       <div className='content'>
@@ -201,7 +201,7 @@ const MyProfile = () => {
         <div className='statistic'>
           <div className='stat'>
             <p className='count'>{counts?.uniqueClaps || 0}</p>
-            <p className='title'>Applauds</p>
+            <p className='title'>Applause</p>
           </div>
           <div className='stat'>
             <p className='count'>{user?.followersCount || 0}</p>
