@@ -150,8 +150,10 @@ const server = http.createServer(async (req, res) => {
 
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const sitemapPath = path.join(__dirname, 'sitemap.xml');
+    const sitemap2Path = path.join(__dirname, 'sitemap2.xml');
 
-    if (parsedUrl.pathname === '/sitemap.xml') {
+    if (parsedUrl.pathname === '/sitemap.xml' || parsedUrl.pathname === '/sitemap2.xml') {
+        if (parsedUrl.pathname === '/sitemap.xml') {
         fs.readFile(sitemapPath, (err, data) => {
             if (err) {
                 res.writeHead(404); 
@@ -160,7 +162,21 @@ const server = http.createServer(async (req, res) => {
                 res.writeHead(200, { 'Content-Type': 'text/xml' });
                 res.end(data);
             }
+    
         });
+    }
+    if (parsedUrl.pathname === '/sitemap2.xml') {
+        fs.readFile(sitemap2Path, (err, data) => {
+            if (err) {
+                res.writeHead(404); 
+                res.end('Sitemap not found');
+            } else {
+                res.writeHead(200, { 'Content-Type': 'text/xml' });
+                res.end(data);
+            }
+    
+        });
+    }
      } else {
 
     if (isCrawler(userAgent)) {
