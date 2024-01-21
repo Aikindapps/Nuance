@@ -1,11 +1,11 @@
 module {
-  public let USER_VERSION = "Beer-v5";
-  public let POSTCORE_VERSION = "Beer-v5";
-  public let POSTBUCKET_VERSION = "Beer-v5";
-  public let KINICENDPOINT_VERSION = "Beer-v5";
-  public let FASTBLOCKSEMAILOPTIN_VERSION = "Beer-v5";
-  public let POSTINDEX_VERSION = "Beer-v5";
-  public let STORAGE_VERSION = "Beer-v5";
-  public let CYCLESDISPENSER_VERSION = "Beer-v5";
-  public let METRICS_VERSION = "Beer-v5";
+  public let USER_VERSION = "Quick-fix-martini";
+  public let POSTCORE_VERSION = "Quick-fix-martini";
+  public let POSTBUCKET_VERSION = "Quick-fix-martini";
+  public let KINICENDPOINT_VERSION = "Quick-fix-martini";
+  public let FASTBLOCKSEMAILOPTIN_VERSION = "Quick-fix-martini";
+  public let POSTINDEX_VERSION = "Quick-fix-martini";
+  public let STORAGE_VERSION = "Quick-fix-martini";
+  public let CYCLESDISPENSER_VERSION = "Quick-fix-martini";
+  public let METRICS_VERSION = "Quick-fix-martini";
 };
