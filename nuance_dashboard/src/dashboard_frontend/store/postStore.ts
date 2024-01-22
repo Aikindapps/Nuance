@@ -10,6 +10,8 @@ import {
   Comment,
   SaveCommentModel,
 } from '../../../../src/declarations/PostBucket/PostBucket.did';
+import { useAuthStore } from './authStore';
+import { CommentType } from '../shared/types';
 
 global.fetch = fetch;
 
@@ -19,6 +21,7 @@ export interface PostStore {
   comments: Comment[];
   isLocal: boolean;
   postCoreCanisterId: string;
+  frontendCanisterId: string;
   postBucketCanisterIds: string[];
   metricsCanisterId: string;
   deleteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
@@ -30,8 +33,10 @@ export interface PostStore {
   setupEnvironment: (
     isLocal: boolean,
     postCoreCanisterId: string,
-    metricsCanisterId: string
+    metricsCanisterId: string,
+    userPrincipalId: string
   ) => Promise<void>;
+  getAllReportedComments: () => Promise<CommentType[]>
   clearAll: () => void;
 }
 
@@ -40,6 +45,7 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
   postBucketCanisterIds: [],
   postCoreCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
   metricsCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
+  frontendCanisterId: '',
   isLocal: false,
 
   deleteComment: async (
@@ -80,21 +86,89 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
     }
   },
 
+  getAllReportedComments: async () : Promise<CommentType[]> => {
+    let bucketCanisterIds = get().postBucketCanisterIds;
+    console.log('buckets: ', bucketCanisterIds)
+    let promises = [];
+    for(const bucketCanisterId of bucketCanisterIds){
+      let bucketActor = await  getPostBucketActor(bucketCanisterId, get().isLocal);
+      promises.push(bucketActor.getReportedComments());
+    };
+    try {
+      let responses = await Promise.all(promises)
+      console.log('responses: ', responses)
+      let comments : Comment[] = []
+      for(const response of responses){
+        if (!(Err in response)) {
+          comments = [...comments, ...response.ok];
+        }
+      }
+      let postIds = comments.map((c) => c.postId);
+      let postCoreActor = await getPostCoreActor(
+        get().postCoreCanisterId,
+        get().isLocal
+      );
+      let keyProperties = await postCoreActor.getPostsByPostIds(postIds);
+
+      let result = comments.map((comment)=>{
+        let filtered = keyProperties.filter((postKeyProperty)=>{
+          return postKeyProperty.postId === comment.postId
+        })
+        if(filtered.length !== 0){
+          return { ...comment, post: filtered[0] };
+        }
+        else{
+          return {
+            ...comment,
+            post: {
+              bucketCanisterId: comment.bucketCanisterId,
+              created: comment.createdAt,
+              principal: '',
+              modified: comment.createdAt,
+              views: '',
+              publishedDate: '',
+              claps: '',
+              tags: [],
+              isDraft: false,
+              category: '',
+              handle: '',
+              postId: comment.postId,
+            },
+          };
+        }
+      })
+      
+      return result
+    } catch (error) {
+      toastError(error);
+      return []
+    }
+  },
+
   setupEnvironment: async (
     isLocal: boolean,
     postCoreCanisterId: string,
-    metricsCanisterId: string
+    metricsCanisterId: string,
+    userPrincipalId: string
   ): Promise<void> => {
+    console.log('userPrincipalId from setup', userPrincipalId)
     let postCoreActor = await getPostCoreActor(postCoreCanisterId, isLocal);
     try {
-      let bucketCanisterIds = (await postCoreActor.getBucketCanisters()).map(
-        (v) => v[0]
-      );
-      set({
-        postBucketCanisterIds: bucketCanisterIds,
-        postCoreCanisterId,
-        metricsCanisterId,
-      });
+      let [bucketResponse, frontendCanisterIdResponse] = await Promise.all([
+        postCoreActor.getBucketCanisters(),
+        postCoreActor.getFrontendCanisterId()
+      ])
+      let bucketCanisterIds = bucketResponse.map((v) => v[0]);
+      if(!(Err in frontendCanisterIdResponse)){
+        set({
+          postBucketCanisterIds: bucketCanisterIds,
+          postCoreCanisterId,
+          metricsCanisterId,
+          frontendCanisterId: frontendCanisterIdResponse.ok,
+          isLocal,
+        });
+      }
+      
     } catch (error) {
       toastError(error);
     }
@@ -106,6 +180,7 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
       postBucketCanisterIds: [],
       postCoreCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
       metricsCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
+      isLocal: false
     });
   },
 });

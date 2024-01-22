@@ -12,7 +12,9 @@ export const LoginModal = () => {
 
   const [advancedLoginOptions, setAdvancedLoginOptions] = useState(false);
 
-  const [isLocal, setIsLocal] = useState(false);
+  const [isLocal, setIsLocal] = useState(
+    window.location.hostname.includes('local')
+  );
 
   const [postCoreCanisterId, setPostCoreCanisterId] = useState(
     '322sd-3iaaa-aaaaf-qakgq-cai'
@@ -37,25 +39,11 @@ export const LoginModal = () => {
   };
 
   const {
-    isLoggedIn,
-    logout,
     login,
     getIdentity,
-    init,
-    principalString,
-    identity,
   } = useAuthStore((state) => ({
-    init: state.init,
-    isLoggedIn: state.isLoggedIn,
     login: state.login,
-    logout: state.logout,
-    getIdentity: state.getIdentity,
-    principalString: state.principalString,
-    identity: state.identity,
-  }));
-
-  const { setupEnvironment } = usePostStore((state) => ({
-    setupEnvironment: state.setupEnvironment,
+    getIdentity: state.getIdentity
   }));
 
   return (
@@ -135,9 +123,8 @@ export const LoginModal = () => {
             : {}
         }
         onClick={async () => {
-          login(isLocal);
+          await login(isLocal, postCoreCanisterId, metricsCanisterId);
           await getIdentity();
-          await setupEnvironment(isLocal, postCoreCanisterId, metricsCanisterId);
           modalContext?.closeModal();
         }}
         disabled={!verifyLogin()}

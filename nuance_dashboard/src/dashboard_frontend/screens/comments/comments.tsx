@@ -1,82 +1,62 @@
-import React, { useState } from 'react';
-import './_reviewComment.scss';
-import { usePostStore } from '../../store';
-import { useAuthStore } from '../../store';
-import { Toggle } from '../../components/toggle/toggle';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../../components/sidebar/sidebar';
+import { useAuthStore, usePostStore } from '../../store';
+import { useNavigate } from 'react-router-dom';
+import { Comment } from '../../../../../src/declarations/PostBucket/PostBucket.did';
+import './comments.scss'
+import CommentCard from '../../components/comment-card/comment-card';
+import { CommentType } from '../../shared/types';
 
-const ReviewComment = () => {
-  const [isToggled, setIsToggled] = useState(false);
-  const [commentUrl, setCommentUrl] = useState('');
+export const Comments: React.FC = () => {
+  const navigate = useNavigate();
 
-  const { reviewComment } = usePostStore((state) => ({
-    reviewComment: state.reviewComment,
+  const [loading, setLoading] = useState(false)
+  const [displayingComments, setDisplayingComments] = useState<CommentType[]>([]);
+
+  const { isLoggedIn } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
   }));
 
-  const handleToggle = () => {
-    setIsToggled(!isToggled);
+  const { getAllReportedComments, isLocal } = usePostStore((state) => ({
+    getAllReportedComments: state.getAllReportedComments,
+    isLocal: state.isLocal,
+  }));
+
+  const firstLoad = async () => {
+    setLoading(true)
+    let comments = await getAllReportedComments();
+    setDisplayingComments(comments)
+    setLoading(false)
   };
 
-  const handleCommentUrlChange = (e: any) => {
-    setCommentUrl(e.target.value);
-  };
+  console.log('isLocal: ', isLocal);
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    //  various URL formats, including localhost
-    const urlPattern =
-      /https?:\/\/[^\/]+\/[^\/]+\/\d*-*([a-zA-Z0-9-]+)\/[^?]+\?comment=(\d+)/;
-    const match = commentUrl.match(urlPattern);
-
-    if (match && match.length >= 3) {
-      const bucketCanisterId = match[1];
-      const commentId = match[2];
-      console.log('Submitted Comment URL:', commentUrl);
-      console.log(
-        'Extracted - Bucket Canister ID:',
-        bucketCanisterId,
-        'Comment ID:',
-        commentId,
-        'Is Violating:',
-        isToggled
-      );
-      reviewComment(commentId, bucketCanisterId, isToggled);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/');
     } else {
-      console.log('Invalid comment URL');
-      toast.error(
-        'Invalid URL, please use the share link from the comment or slack notification.'
-      );
+      firstLoad();
     }
-  };
+  }, [isLoggedIn]);
 
   return (
     <div className='page-wrapper'>
       <Sidebar />
-      <div className='grid-item two-by-two'>
-        <div>
-          <h1>Review Comment</h1>
-          <form className='form' onSubmit={handleSubmit}>
-            <div className='form-group'>
-              <label htmlFor='commentUrl'>COMMENT URL:</label>
-              <input
-                type='text'
-                id='commentUrl'
-                value={commentUrl}
-                onChange={handleCommentUrlChange}
-                placeholder=''
-              />
-            </div>
-            <div className='form-group'>
-              <label>Comment violates the rules?</label>
-              <Toggle toggled={isToggled} callBack={handleToggle} />
-            </div>
-            <button type='submit'>Submit</button>
-          </form>
+      {loading ? (
+        <div className='loading-wrapper'>Loading...</div>
+      ) : displayingComments.length !== 0 ? (
+        <div className='comments-wrapper'>
+          {displayingComments.map((c) => (
+            <CommentCard comment={c} callbackRefresh={firstLoad} />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className='loading-wrapper'>
+          Nothing to display here. Everyone plays nice or no one uses our app :(
+        </div>
+      )}
     </div>
   );
 };
 
-export default ReviewComment;
+export default Comments;

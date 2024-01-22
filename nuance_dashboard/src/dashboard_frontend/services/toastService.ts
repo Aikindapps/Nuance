@@ -15,6 +15,10 @@ export const toastError = (err: any, preText: string = ''): void => {
     }
 };
 
+export const toastSuccess = (text: string = ''): void => {
+    toast(text, ToastType.Success);
+};
+
 export const toast = (message: string, toastType: ToastType): void => {
     switch (toastType) {
         case ToastType.Success:

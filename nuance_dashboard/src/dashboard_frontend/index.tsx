@@ -12,6 +12,7 @@ import {
   Context as ModalContext,
   ContextProvider as ModalContextProvider,
 } from './contextes/ModalContext';
+import Homepage from './screens/homepage/homepage';
 
 // Get the root element from the DOM
 const rootElement = document.getElementById('root');
@@ -21,7 +22,7 @@ if (rootElement) {
 
   const Routes = () => {
     return useRoutes([
-      { path: '/', element: <ReviewComment /> },
+      { path: '/', element: <Homepage /> },
       { path: '/review-comments', element: <ReviewComment /> },
       { path: '/metrics', element: <Metrics /> },
       { path: '/cycles', element: <Cycles /> },

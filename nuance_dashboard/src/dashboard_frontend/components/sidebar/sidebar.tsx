@@ -7,11 +7,26 @@ import cycles from '../../assets/images/icons/cycles.svg';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import toast from 'react-hot-toast';
+import { toastSuccess } from '../../services/toastService';
 
 const Sidebar = () => {
   const modalContext = useContext(ModalContext);
 
-  const [activeIcon, setActiveIcon] = useState('home');
+  const getActiveIcon = () => {
+    if (window.location.pathname === '/home') {
+      return 'home';
+    } else if (window.location.pathname === '/cycles') {
+      return 'cycles';
+    } else if (window.location.pathname === '/review-comments') {
+      return 'review-comments';
+    } else if (window.location.pathname === '/metrics') {
+      return 'metrics';
+    }
+    return 'home';
+  };
+
+  const [activeIcon, setActiveIcon] = useState(getActiveIcon());
 
   const {
     isLoggedIn,
@@ -31,6 +46,7 @@ const Sidebar = () => {
     identity: state.identity,
   }));
 
+  
   return (
     <aside className='sidebar'>
       <div className='logo-container' onClick={() => setActiveIcon('home')}>
@@ -69,10 +85,34 @@ const Sidebar = () => {
           </Link>
         </div>
       ) : (
-        <button type='submit' onClick={() => {
+        <button
+          type='submit'
+          onClick={() => {
             modalContext?.openModal('Login');
-        }}>
+          }}
+        >
           Login
+        </button>
+      )}
+      {isLoggedIn && (
+        <div
+          onClick={() => {
+            navigator.clipboard.writeText(principalString);
+            toastSuccess('Copied to clipboard!');
+          }}
+          className='principal-text'
+        >
+          {principalString}
+        </div>
+      )}
+      {isLoggedIn && (
+        <button
+          type='submit'
+          onClick={() => {
+            logout();
+          }}
+        >
+          Log out
         </button>
       )}
     </aside>
