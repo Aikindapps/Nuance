@@ -6,8 +6,7 @@ import { Identity } from "@dfinity/agent";
 import { identity } from "lodash";
 // import { useUserStore } from "./userStore";
 
-const isLocal = process.env.NODE_ENV === "development";
-const identityProvider = isLocal ? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' : "https://identity.ic0.app/#authorize";
+//const identityProvider = isLocal ? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' : "https://identity.ic0.app/#authorize";
 const sessionTimeout = BigInt(480) * BigInt(60) * BigInt(1_000_000_000);
 const fakeProvider = process.env.II_PROVIDER_USE_FAKE == "true";
 const derivationOrigin: string = "https://uq3uu-nqaaa-aaaam-qbcpq-cai.ic0.app";
@@ -33,24 +32,29 @@ async function getAuthClient() {
   return authClient;
 }
 
-const loginOptions = (set : any) => ({
-    identityProvider: identityProvider,
-    maxTimeToLive: BigInt(7) * BigInt(24) * BigInt(3_600_000_000_000), // 1 week
-    derivationOrigin: isLocal ? undefined : derivationOrigin,
-    windowOpenerFeatures:
-      "toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100",
-    onSuccess: async () => {
-      console.log("Login Successful!");
-      const client = await getAuthClient();
-      await client.getIdentity(); 
-      set({ isLoggedIn: true, identity: client.getIdentity(), principal: client.getIdentity().getPrincipal(), principalString: client.getIdentity().getPrincipal().toText() }); 
-      toast("Login Successful!", ToastType.Success);
-    },
-    onError: (error: any) => {
-      console.error("Login Failed: ", error);
-      toastError("Login Failed: " + error);
-    },
-  });
+const loginOptions = (identityProvider: string, isLocal: boolean, set: any) => ({
+  identityProvider: identityProvider,
+  maxTimeToLive: BigInt(7) * BigInt(24) * BigInt(3_600_000_000_000), // 1 week
+  derivationOrigin: isLocal ? undefined : derivationOrigin,
+  windowOpenerFeatures:
+    'toolbar=0,location=0,menubar=0,width=500,height=500,left=100,top=100',
+  onSuccess: async () => {
+    console.log('Login Successful!');
+    const client = await getAuthClient();
+    await client.getIdentity();
+    set({
+      isLoggedIn: true,
+      identity: client.getIdentity(),
+      principal: client.getIdentity().getPrincipal(),
+      principalString: client.getIdentity().getPrincipal().toText(),
+    });
+    toast('Login Successful!', ToastType.Success);
+  },
+  onError: (error: any) => {
+    console.error('Login Failed: ', error);
+    toastError('Login Failed: ' + error);
+  },
+});
 
 async function initAuth(set : any) {
   console.log("initAuth")
@@ -109,9 +113,10 @@ export const useAuthStore = create(
     
 
     // Actions
-    login: async () => {
+    login: async (isLocal: boolean) => {
       const client = await getAuthClient();
-      await client.login(loginOptions(set));
+      const identityProvider = isLocal ? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' : "https://identity.ic0.app/#authorize";
+      await client.login(loginOptions(identityProvider, isLocal, set));
 
     },
 
