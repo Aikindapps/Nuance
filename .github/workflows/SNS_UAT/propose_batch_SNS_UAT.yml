@@ -138,4 +138,4 @@ jobs:
 
       - name: Create commit Proposal
         run: |
-          node scripts/sns/assetCanisterUpgrade.js --devNeuronId=$SNS_UAT_NEURON_ID --pemFilePath=./identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}
+          node scripts/sns/assetCanisterUpgrade.js --functionId=1690217631837 --devNeuronId=$SNS_UAT_NEURON_ID --pemFilePath=./identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}

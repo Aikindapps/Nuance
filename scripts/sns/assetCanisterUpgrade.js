@@ -50,10 +50,10 @@ function execShellCommand(cmd) {
 const snsCanisterIdsFile = "./sns_canister_ids.json";
 
 (async () => {
-  const network = argv.network || await prompt('🌐 Do you want to execute function on local or ic? (Enter "local" or "ic"): ');
-  const functionId = argv.functionId || (await prompt('🔖 Enter the Function ID: ')).trim(); // now optionally from argv
-  const batch_id = argv.batchId || (await prompt('🔖 Enter the batch id: ')).trim(); // now optionally from argv
-  const evidence = argv.evidence || (await prompt('🔖 Enter the evidence: ')).trim(); // now optionally from argv
+  const network = 'ic';
+  const functionId = argv.functionId || (await prompt('🔖 Enter the Function ID: ')).trim(); 
+  const batch_id = argv.batchId || (await prompt('🔖 Enter the batch id: ')).trim();
+  const evidence = argv.evidence || (await prompt('🔖 Enter the evidence: ')).trim(); 
 
 
   // Prepare evidence and batch_id
@@ -66,7 +66,7 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
     console.log("🚀 Preparing function execution proposal...");
     const payload = argumentEncoded;
 
-    const proposalStr = `(record { title="Upgrade Nuance Assets Canister"; url="https://example.com/"; summary="This proposal executes function with ID ${functionId}, to upgrade nuance assets canister."; action=opt variant {ExecuteGenericNervousSystemFunction = record {function_id=${functionId}:nat64; payload=${payload}}}})`;
+    const proposalStr = `(record { title="Upgrade Nuance Assets Canister"; url="https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178"; summary="This proposal executes function with ID ${functionId}, to upgrade nuance assets canister."; action=opt variant {ExecuteGenericNervousSystemFunction = record {function_id=${functionId}:nat64; payload=${payload}}}})`;
     const escapedProposalStr = proposalStr.replace(/"/g, '\\"');
 
     const executeCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-proposal --proposal "${escapedProposalStr}" ${developerNeuronId} > execute-function-${functionId}.json`;
@@ -74,7 +74,9 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
     await execShellCommand(executeCommand);
     console.log(`✅ Execution proposal prepared and saved to execute-function-${functionId}.json \n`);
     const sendExecuteCommand = `quill send -y execute-function-${functionId}.json ${network == 'ic' ? "" : "--insecure-local-dev-mode" }`;
-    console.log('\x1b[36m%s\x1b[0m',"Use this command to send proposal: ", sendExecuteCommand + "\n")
+    await execShellCommand(sendExecuteCommand);
+
+    // console.log('\x1b[36m%s\x1b[0m',"Use this command to send proposal: ", sendExecuteCommand + "\n")
 
   } catch (err) {
     console.error('❌ Error:', err);
