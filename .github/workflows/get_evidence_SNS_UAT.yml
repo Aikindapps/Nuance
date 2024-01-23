@@ -1,5 +1,5 @@
 # after running, you will recieve a batch id and evidence, these will be required for the commit proposed batch proposal.
-name: Commit Assets SNS_UAT
+name: Get Evidence SNS_UAT
 
 on:
   workflow_dispatch:

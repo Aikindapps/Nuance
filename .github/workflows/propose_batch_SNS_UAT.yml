@@ -1,7 +1,7 @@
 #Run after assets are commited to the asset canister by a developer with prepare permissions.
 # Next a proposal can be made to execute proposed batch.
 
-name: Commit Assets SNS_UAT
+name: Propose Batch SNS_UAT
 
 on:
   workflow_dispatch:
