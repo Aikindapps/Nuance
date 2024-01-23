@@ -53,7 +53,10 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
   const network = 'ic';
   const functionId = argv.functionId || (await prompt('🔖 Enter the Function ID: ')).trim(); 
   const batch_id = argv.batchId || (await prompt('🔖 Enter the batch id: ')).trim();
-  const evidence = argv.evidence || (await prompt('🔖 Enter the evidence: ')).trim(); 
+  const evidence = argv.evidence || (await prompt('🔖 Enter the evidence: ')).trim();
+  const pemFilePath = argv.pemFilePath;
+  const developerNeuronId = argv.developerNeuronId;
+   
 
 
   // Prepare evidence and batch_id
