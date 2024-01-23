@@ -1,7 +1,22 @@
 const path = require('path');
 const readline = require('readline');
 const { spawn } = require('child_process');
-const { developerNeuronId, pemFilePath } = require('./snsConfig');
+const { hideBin } = require('yargs/helpers');
+const yargs = require('yargs/yargs');
+const { developerNeuronId: defaultDevNeuronId, pemFilePath: defaultPemFilePath } = require('./snsConfig');
+
+const argv = yargs(hideBin(process.argv))
+  .option('developerNeuronId', {
+    describe: 'Developer Neuron ID',
+    type: 'string',
+    default: defaultDevNeuronId,
+  })
+  .option('pemFilePath', {
+    describe: 'Path to the PEM file',
+    type: 'string',
+    default: defaultPemFilePath,
+  })
+  .argv;
 
 async function prompt(question) {
   const rl = readline.createInterface({
@@ -18,33 +33,28 @@ async function prompt(question) {
 }
 
 function execShellCommand(cmd) {
-    return new Promise((resolve, reject) => {
-      const command = spawn(cmd, { shell: true, stdio: 'pipe' });
-      let result = '';
+  return new Promise((resolve, reject) => {
+    const command = spawn(cmd, { shell: true, stdio: 'inherit' });
 
-      command.stdout.on('data', (data) => {
-        result += data.toString();
-      });
-
-      command.on('error', (error) => reject(error));
-      command.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Command exited with code ${code}`));
-        } else {
-          resolve(result);
-        }
-      });
+    command.on('error', (error) => reject(error));
+    command.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Command exited with code ${code}`));
+      } else {
+        resolve();
+      }
     });
+  });
 }
 
 const snsCanisterIdsFile = "./sns_canister_ids.json";
 
-(async function executeFunction() {
-  console.log('🚀 Function Execution Script...');
-  const network = await prompt('🌐 Do you want to execute function on local or ic? (Enter "local" or "ic"): ');
-  const functionId = (await prompt('🔖 Enter the Function ID: ')).trim();
-  const batch_id = (await prompt('🔖 Enter the batch id: ')).trim();
-  const evidence = (await prompt('🔖 Enter the evidence: ')).trim();
+(async () => {
+  const network = argv.network || await prompt('🌐 Do you want to execute function on local or ic? (Enter "local" or "ic"): ');
+  const functionId = argv.functionId || (await prompt('🔖 Enter the Function ID: ')).trim(); // now optionally from argv
+  const batch_id = argv.batchId || (await prompt('🔖 Enter the batch id: ')).trim(); // now optionally from argv
+  const evidence = argv.evidence || (await prompt('🔖 Enter the evidence: ')).trim(); // now optionally from argv
+
 
   // Prepare evidence and batch_id
   const formattedEvidence = `blob "\\${evidence.match(/.{1,2}/g).join('\\')}"`;
@@ -56,7 +66,7 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
     console.log("🚀 Preparing function execution proposal...");
     const payload = argumentEncoded;
 
-    const proposalStr = `(record { title="Execute function with ID ${functionId}."; url="https://example.com/"; summary="This proposal executes function with ID ${functionId}."; action=opt variant {ExecuteGenericNervousSystemFunction = record {function_id=${functionId}:nat64; payload=${payload}}}})`;
+    const proposalStr = `(record { title="Upgrade Nuance Assets Canister"; url="https://example.com/"; summary="This proposal executes function with ID ${functionId}, to upgrade nuance assets canister."; action=opt variant {ExecuteGenericNervousSystemFunction = record {function_id=${functionId}:nat64; payload=${payload}}}})`;
     const escapedProposalStr = proposalStr.replace(/"/g, '\\"');
 
     const executeCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-proposal --proposal "${escapedProposalStr}" ${developerNeuronId} > execute-function-${functionId}.json`;
