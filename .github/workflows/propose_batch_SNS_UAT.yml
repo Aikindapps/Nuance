@@ -142,4 +142,5 @@ jobs:
 
       - name: Create commit Proposal
         run: |
+          echo "${{ secrets.SNS_UAT_IDENT }}" | base64 --decode > identity.pem
           node scripts/sns/assetCanisterUpgrade.js --functionId=1690217631837 --developerNeuronId=fe3037864547b825a53e0fa0e83110809905f8080aeb53cddad9e313d0a1ec6a --pemFilePath=./identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}
