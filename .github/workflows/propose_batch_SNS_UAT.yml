@@ -34,6 +34,9 @@ jobs:
           mkdir scripts/sns/install/bin
           bash scripts/sns/install/install.sh
           bash scripts/sns/install/move.sh
+      - name: Install didc
+        run: |
+          bash ./scripts/InstallDidc.sh
 
       - name: Start DFX background
         run: dfx start --background
