@@ -85,11 +85,11 @@ const proposalStr = `(record { title="Upgrade Nuance Assets Canister"; url="http
     const executeCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-proposal --proposal "${escapedProposalStr}" ${developerNeuronId} > execute-function-${functionId}.json`;
     console.log("executeCommand: ", executeCommand)
     await execShellCommand(executeCommand);
-    console.log(`✅ Execution proposal prepared and saved to execute-function-${functionId}.json \n`);
+    console.log(`Execution proposal prepared and saved to execute-function-${functionId}.json \n`);
+    console.log("🚀 Sending function execution proposal...");
     const sendExecuteCommand = `quill send -y execute-function-${functionId}.json ${network == 'ic' ? "" : "--insecure-local-dev-mode" }`;
     await execShellCommand(sendExecuteCommand);
-
-     console.log('\x1b[36m%s\x1b[0m',"Use this command to send proposal: ", sendExecuteCommand + "\n")
+    console.log("Function execution proposal sent. \n");
 
   } catch (err) {
     console.error('❌ Error:', err);
