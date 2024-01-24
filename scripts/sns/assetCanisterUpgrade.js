@@ -34,14 +34,23 @@ async function prompt(question) {
 
 function execShellCommand(cmd) {
   return new Promise((resolve, reject) => {
-    const command = spawn(cmd, { shell: true, stdio: 'inherit' });
+    const command = spawn(cmd, { shell: true, stdio: 'pipe' });
+    let result = '';
+
+    command.stdout.on('data', (data) => {
+      result += data.toString();
+    });
+
+    command.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
 
     command.on('error', (error) => reject(error));
     command.on('close', (code) => {
       if (code !== 0) {
         reject(new Error(`Command exited with code ${code}`));
       } else {
-        resolve();
+        resolve(result.trim());
       }
     });
   });
@@ -56,7 +65,7 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
   const evidence = argv.evidence || (await prompt('🔖 Enter the evidence: ')).trim();
   const pemFilePath = argv.pemFilePath;
   const developerNeuronId = argv.developerNeuronId;
-   
+
 
 
   // Prepare evidence and batch_id
@@ -64,12 +73,13 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
   const argument = `(record {batch_id=${batch_id}:nat; evidence= ${formattedEvidence}})`;
 
   const argumentEncoded = await execShellCommand(`scripts/didc encode '(${argument})' --format blob`);
+  console.log("Encoded Argument:", argumentEncoded);
 
   try {
     console.log("🚀 Preparing function execution proposal...");
     const payload = argumentEncoded;
 
-    const proposalStr = `(record { title="Upgrade Nuance Assets Canister"; url="https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178"; summary="This proposal executes function with ID ${functionId}, to upgrade nuance assets canister."; action=opt variant {ExecuteGenericNervousSystemFunction = record {function_id=${functionId}:nat64; payload=${payload}}}})`;
+const proposalStr = `(record { title="Upgrade Nuance Assets Canister"; url="https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178"; summary="This proposal executes function with ID ${functionId}, to upgrade nuance assets canister."; action=opt variant {ExecuteGenericNervousSystemFunction = record {function_id=${functionId}:nat64; payload=${argumentEncoded}}}})`;
     const escapedProposalStr = proposalStr.replace(/"/g, '\\"');
 
     const executeCommand = `quill sns --canister-ids-file ${snsCanisterIdsFile} --pem-file ${pemFilePath} make-proposal --proposal "${escapedProposalStr}" ${developerNeuronId} > execute-function-${functionId}.json`;
@@ -79,7 +89,7 @@ const snsCanisterIdsFile = "./sns_canister_ids.json";
     const sendExecuteCommand = `quill send -y execute-function-${functionId}.json ${network == 'ic' ? "" : "--insecure-local-dev-mode" }`;
     await execShellCommand(sendExecuteCommand);
 
-    // console.log('\x1b[36m%s\x1b[0m',"Use this command to send proposal: ", sendExecuteCommand + "\n")
+     console.log('\x1b[36m%s\x1b[0m',"Use this command to send proposal: ", sendExecuteCommand + "\n")
 
   } catch (err) {
     console.error('❌ Error:', err);
