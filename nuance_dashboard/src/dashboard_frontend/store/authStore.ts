@@ -13,10 +13,6 @@ const fakeProvider = process.env.II_PROVIDER_USE_FAKE == 'true';
 const derivationOrigin: string = 'https://uq3uu-nqaaa-aaaam-qbcpq-cai.ic0.app';
 var authClient: AuthClient;
 
-
-
-
-
 export interface AuthState {
   principal: Principal | null;
   principalString: string | null;
@@ -41,6 +37,9 @@ const loginOptions = (
   isLocal: boolean,
   postCoreCanisterId: string,
   metricsCanisterId: string,
+  userCanisterId: string,
+  publicationManagementCanisterId: string,
+  cyclesDispenserCanisterId: string,
   set: any
 ) => ({
   identityProvider: identityProvider,
@@ -51,13 +50,16 @@ const loginOptions = (
   onSuccess: async () => {
     console.log('Login Successful!');
     const client = await getAuthClient();
-    
+
     await usePostStore
       .getState()
       .setupEnvironment(
         isLocal,
         postCoreCanisterId,
         metricsCanisterId,
+        userCanisterId,
+        publicationManagementCanisterId,
+        cyclesDispenserCanisterId,
         client.getIdentity().getPrincipal().toText()
       );
     client.getIdentity();
@@ -141,7 +143,14 @@ export const useAuthStore = create(
     isAuthenticated: false,
 
     // Actions
-    login: async (isLocal: boolean, postCoreCanisterId: string, metricsCanisterId: string) => {
+    login: async (
+      isLocal: boolean,
+      postCoreCanisterId: string,
+      metricsCanisterId: string,
+      userCanisterId: string,
+      publicationManagementCanisterId: string,
+      cyclesDispenserCanisterId: string
+    ) => {
       const client = await getAuthClient();
       const identityProvider = isLocal
         ? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize'
@@ -152,6 +161,9 @@ export const useAuthStore = create(
           isLocal,
           postCoreCanisterId,
           metricsCanisterId,
+          userCanisterId,
+          publicationManagementCanisterId,
+          cyclesDispenserCanisterId,
           set
         )
       );

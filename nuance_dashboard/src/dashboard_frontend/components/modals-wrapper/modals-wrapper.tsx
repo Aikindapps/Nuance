@@ -2,6 +2,10 @@ import React, { useContext } from 'react';
 import './modals-wrapper.scss';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { LoginModal } from '../login-modal/LoginModal';
+import { UpdateHandleModal } from '../update-handle-modal/update-handle-modal';
+import { UpdatePublicationHandleModal } from '../update-publication-handle-modal/update-handle-modal';
+import { CreatePublicationModal } from '../create-publication-modal/create-publication-modal';
+import { ViewRejectedPostModal } from '../view-rejected-post-modal/view-rejected-post-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   return (
@@ -22,7 +26,18 @@ export const ModalsWrapper = () => {
           : {}
       }
     >
-      {modalContext?.modalType === 'Login' ? <LoginModal /> : null}
+      {modalContext?.modalType === 'Login' ? (
+        <LoginModal />
+      ) : modalContext?.modalType === 'Update handle' ? (
+        <UpdateHandleModal />
+      ) : modalContext?.modalType === 'Update publication handle' ? (
+        <UpdatePublicationHandleModal />
+      ) : modalContext?.modalType === 'Create Publication' ? (
+        <CreatePublicationModal />
+      ) : modalContext?.modalType === 'View rejected post' &&
+        modalContext.modalData?.post ? (
+        <ViewRejectedPostModal post={modalContext.modalData.post} />
+      ) : null}
     </div>
   );
 };

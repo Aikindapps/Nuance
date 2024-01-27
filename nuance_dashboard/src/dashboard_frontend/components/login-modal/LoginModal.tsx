@@ -23,6 +23,16 @@ export const LoginModal = () => {
     'xjlvo-hyaaa-aaaam-qbcga-cai'
   );
 
+  const [userCanisterId, setUserCanisterId] = useState(
+    'rtqeo-eyaaa-aaaaf-qaana-cai'
+  );
+
+  const [publicationManagementCanisterId, setPublicationManagementCanisterId] =
+    useState('kq23y-aiaaa-aaaaf-qajmq-cai');
+
+    const [cyclesDispenserCanisterId, setCyclesDispenserCanisterId] =
+    useState('353ux-wqaaa-aaaaf-qakga-cai');
+
   const verifyPrincipalId = (t: string) => {
     try {
       return Principal.fromText(t).toText() === t;
@@ -34,16 +44,16 @@ export const LoginModal = () => {
   const verifyLogin = () => {
     return (
       verifyPrincipalId(postCoreCanisterId) &&
-      verifyPrincipalId(metricsCanisterId)
+      verifyPrincipalId(metricsCanisterId) &&
+      verifyPrincipalId(userCanisterId) &&
+      verifyPrincipalId(publicationManagementCanisterId) &&
+      verifyPrincipalId(cyclesDispenserCanisterId)
     );
   };
 
-  const {
-    login,
-    getIdentity,
-  } = useAuthStore((state) => ({
+  const { login, getIdentity } = useAuthStore((state) => ({
     login: state.login,
-    getIdentity: state.getIdentity
+    getIdentity: state.getIdentity,
   }));
 
   return (
@@ -100,6 +110,48 @@ export const LoginModal = () => {
             hasError={!verifyPrincipalId(metricsCanisterId)}
             classname='input-attributes-3'
           />
+          <InputField
+            onChange={(cai) => {
+              setUserCanisterId(cai);
+            }}
+            value={userCanisterId}
+            defaultText={'User canister id'}
+            width={'100%'}
+            height={'40px'}
+            fontSize={'14px'}
+            fontFamily={''}
+            fontColor={''}
+            hasError={!verifyPrincipalId(userCanisterId)}
+            classname='input-attributes-3'
+          />
+          <InputField
+            onChange={(cai) => {
+              setPublicationManagementCanisterId(cai);
+            }}
+            value={publicationManagementCanisterId}
+            defaultText={'PublicationManagement canister id'}
+            width={'100%'}
+            height={'40px'}
+            fontSize={'14px'}
+            fontFamily={''}
+            fontColor={''}
+            hasError={!verifyPrincipalId(publicationManagementCanisterId)}
+            classname='input-attributes-3'
+          />
+           <InputField
+            onChange={(cai) => {
+              setCyclesDispenserCanisterId(cai);
+            }}
+            value={cyclesDispenserCanisterId}
+            defaultText={'CyclesDispenser canister id'}
+            width={'100%'}
+            height={'40px'}
+            fontSize={'14px'}
+            fontFamily={''}
+            fontColor={''}
+            hasError={!verifyPrincipalId(cyclesDispenserCanisterId)}
+            classname='input-attributes-3'
+          />
           <div className='is-local-flex'>
             <input
               type='checkbox'
@@ -123,7 +175,14 @@ export const LoginModal = () => {
             : {}
         }
         onClick={async () => {
-          await login(isLocal, postCoreCanisterId, metricsCanisterId);
+          await login(
+            isLocal,
+            postCoreCanisterId,
+            metricsCanisterId,
+            userCanisterId,
+            publicationManagementCanisterId,
+            cyclesDispenserCanisterId
+          );
           await getIdentity();
           modalContext?.closeModal();
         }}

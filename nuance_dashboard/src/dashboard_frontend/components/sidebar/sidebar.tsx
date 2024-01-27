@@ -1,9 +1,13 @@
 import React, { useContext, useState } from 'react';
 import './_sidebar.scss';
 import logo from '../../assets/images/icons/nuance-logo.svg';
-import metrics from '../../assets/images/icons/metrics.svg';
-import reviewComments from '../../assets/images/icons/review-comments.svg';
-import cycles from '../../assets/images/icons/cycles.svg';
+import { BsGraphUpArrow } from 'react-icons/bs';
+import { CiFlag1 } from 'react-icons/ci';
+import { BiSolidCylinder } from 'react-icons/bi';
+import { IoCreateSharp } from 'react-icons/io5';
+import { MdOutlineHowToVote } from 'react-icons/md';
+import { FaPerson } from 'react-icons/fa6';
+
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store';
 import { Context as ModalContext } from '../../contextes/ModalContext';
@@ -22,6 +26,12 @@ const Sidebar = () => {
       return 'review-comments';
     } else if (window.location.pathname === '/metrics') {
       return 'metrics';
+    } else if (window.location.pathname === '/actions') {
+      return 'actions';
+    } else if (window.location.pathname === '/proposals') {
+      return 'proposals';
+    } else if (window.location.pathname === '/modclub') {
+      return 'modclub';
     }
     return 'home';
   };
@@ -46,7 +56,6 @@ const Sidebar = () => {
     identity: state.identity,
   }));
 
-  
   return (
     <aside className='sidebar'>
       <div className='logo-container' onClick={() => setActiveIcon('home')}>
@@ -67,21 +76,42 @@ const Sidebar = () => {
             }`}
             onClick={() => setActiveIcon('review-comments')}
           >
-            <img src={reviewComments} alt='Review Comments' />
+            <CiFlag1 />
           </Link>
           <Link
             to='/metrics'
             className={`icon ${activeIcon === 'metrics' ? 'active' : ''}`}
             onClick={() => setActiveIcon('metrics')}
           >
-            <img src={metrics} alt='Metrics' />
+            <BsGraphUpArrow />
           </Link>
           <Link
             to='/cycles'
             className={`icon ${activeIcon === 'cycles' ? 'active' : ''}`}
             onClick={() => setActiveIcon('cycles')}
           >
-            <img src={cycles} alt='Cycles' />
+            <BiSolidCylinder />
+          </Link>
+          <Link
+            to='/actions'
+            className={`icon ${activeIcon === 'actions' ? 'active' : ''}`}
+            onClick={() => setActiveIcon('actions')}
+          >
+            <IoCreateSharp />
+          </Link>
+          <Link
+            to='/proposals'
+            className={`icon ${activeIcon === 'proposals' ? 'active' : ''}`}
+            onClick={() => setActiveIcon('proposals')}
+          >
+            <MdOutlineHowToVote />
+          </Link>
+          <Link
+            to='/modclub'
+            className={`icon ${activeIcon === 'modclub' ? 'active' : ''}`}
+            onClick={() => setActiveIcon('modclub')}
+          >
+            <FaPerson />
           </Link>
         </div>
       ) : (
@@ -95,15 +125,15 @@ const Sidebar = () => {
         </button>
       )}
       {isLoggedIn && (
-        <div
+        <button
+          type='submit'
           onClick={() => {
             navigator.clipboard.writeText(principalString);
             toastSuccess('Copied to clipboard!');
           }}
-          className='principal-text'
         >
-          {principalString}
-        </div>
+          Copy your principal
+        </button>
       )}
       {isLoggedIn && (
         <button

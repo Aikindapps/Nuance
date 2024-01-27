@@ -56,6 +56,7 @@ export type Result_4 = { 'ok' : [Array<Principal>, Array<string>] } |
   { 'err' : string };
 export interface Storage {
   'acceptCycles' : ActorMethod<[], undefined>,
+  'addStorageBucket' : ActorMethod<[string], Result_1>,
   'addWasmChunk' : ActorMethod<[Uint8Array | number[]], Result_1>,
   'availableCycles' : ActorMethod<[], bigint>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,

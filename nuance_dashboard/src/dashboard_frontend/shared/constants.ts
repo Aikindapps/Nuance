@@ -3,7 +3,7 @@ const iconsPath = imagesPath + 'icons/';
 // const loadersPath = imagesPath + 'loaders/';
 
 export const images = {
-  LOGO: imagesPath + 'logo.png',
+  LOGO: imagesPath + 'nuance-logo.svg',
   NUANCE_FLAG: imagesPath + 'nuance-flag.png',
 };
 

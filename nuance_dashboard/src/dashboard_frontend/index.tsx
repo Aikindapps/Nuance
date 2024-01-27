@@ -13,6 +13,8 @@ import {
   ContextProvider as ModalContextProvider,
 } from './contextes/ModalContext';
 import Homepage from './screens/homepage/homepage';
+import Proposals from './screens/proposals/proposals';
+import Modclub from './screens/modclub/modclub';
 
 // Get the root element from the DOM
 const rootElement = document.getElementById('root');
@@ -27,6 +29,8 @@ if (rootElement) {
       { path: '/metrics', element: <Metrics /> },
       { path: '/cycles', element: <Cycles /> },
       { path: '/actions', element: <Actions /> },
+      { path: '/proposals', element: <Proposals /> },
+      { path: '/modclub', element: <Modclub /> },
     ]);
   };
 

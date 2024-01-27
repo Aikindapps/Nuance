@@ -699,6 +699,16 @@ actor PostCore {
           case (null) {};
         };
 
+        //if it's a publication, update the publicationCanisterIdsHashmap
+        switch (publicationCanisterIdsHashmap.get(existingHandle)) {
+          case (?publicationCanisterId) {
+            publicationCanisterIdsHashmap.put(newHandle, publicationCanisterId);
+            publicationCanisterIdsHashmap.delete(existingHandle);
+          };
+          case (null) {};
+        };
+        
+
         return #ok("Success");
 
       };
@@ -778,6 +788,31 @@ actor PostCore {
   public shared query func currentId() : async Nat {
     Debug.print("PostCore->CurrentId");
     postId;
+  };
+
+  public shared query ({caller}) func getLastWeekRejectedPostKeyProperties() : async [PostKeyProperties] {
+    if(not isPlatformOperator(caller)){
+      return []
+    };
+
+    let result = Buffer.Buffer<PostKeyProperties>(0);
+
+    let now = U.epochTime();    
+    let WEEK = 604800000;
+    let lastWeek = now - WEEK;
+    
+    var i = postId;
+    var createdIter = now;
+    while(createdIter > lastWeek){
+      let created = U.safeGet(createdHashMap, Nat.toText(i), 0);
+      if(created > lastWeek and rejectedByModClub(Nat.toText(i))){
+        result.add(buildPostKeyProperties(Nat.toText(i)));
+      };
+      i -= 1;
+      createdIter := created;
+    };
+    
+    Buffer.toArray(result);
   };
 
   public shared ({ caller }) func deletePostFromUserDebug(handle : Text, postId : Text) : async Result.Result<[Text], Text> {
@@ -2808,6 +2843,16 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
       case (?versionId) {
         let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
         postModerationStatusMapV2.put(postIdWithVersion, status);
+        let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
+        let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+        if (status == #rejected) {
+          //inform the bucket canister that post was rejected
+          await bucketActor.rejectPostByModclub(postId);
+          await generateLatestPosts();
+        } else {
+          //inform the bucket canister that post is not rejected
+          await bucketActor.unRejectPostByModclub(postId);
+        };
       };
     };
   };

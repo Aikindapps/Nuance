@@ -36,7 +36,7 @@ import Float "mo:base/Float";
 import Prim "mo:prim";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
-import ENV "../shared/env";
+import ENV "../../../src/shared/env";
 
 actor class Publisher() = this {
 
@@ -1025,6 +1025,7 @@ actor class Publisher() = this {
         };
 
         if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+            Debug.print("I AM HERE, you are not an admin");
             return #err(Unauthorized);
         };
 

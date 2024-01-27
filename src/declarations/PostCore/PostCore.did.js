@@ -15,6 +15,20 @@ export const idlFactory = ({ IDL }) => {
   const Result_9 = IDL.Variant({ 'ok' : TagModel, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const PostTagModel = IDL.Record({ 'tagId' : IDL.Text, 'tagName' : IDL.Text });
+  const PostKeyProperties = IDL.Record({
+    'bucketCanisterId' : IDL.Text,
+    'created' : IDL.Text,
+    'principal' : IDL.Text,
+    'modified' : IDL.Text,
+    'views' : IDL.Text,
+    'publishedDate' : IDL.Text,
+    'claps' : IDL.Text,
+    'tags' : IDL.Vec(PostTagModel),
+    'isDraft' : IDL.Bool,
+    'category' : IDL.Text,
+    'handle' : IDL.Text,
+    'postId' : IDL.Text,
+  });
   const PostKeyProperties__1 = IDL.Record({
     'bucketCanisterId' : IDL.Text,
     'created' : IDL.Text,
@@ -32,20 +46,6 @@ export const idlFactory = ({ IDL }) => {
   const GetPostsByFollowers = IDL.Record({
     'totalCount' : IDL.Text,
     'posts' : IDL.Vec(PostKeyProperties__1),
-  });
-  const PostKeyProperties = IDL.Record({
-    'bucketCanisterId' : IDL.Text,
-    'created' : IDL.Text,
-    'principal' : IDL.Text,
-    'modified' : IDL.Text,
-    'views' : IDL.Text,
-    'publishedDate' : IDL.Text,
-    'claps' : IDL.Text,
-    'tags' : IDL.Vec(PostTagModel),
-    'isDraft' : IDL.Bool,
-    'category' : IDL.Text,
-    'handle' : IDL.Text,
-    'postId' : IDL.Text,
   });
   const PostTagModel__1 = IDL.Record({
     'tagId' : IDL.Text,
@@ -212,6 +212,11 @@ export const idlFactory = ({ IDL }) => {
     'getCgUsers' : IDL.Func([], [Result_7], ['query']),
     'getFrontendCanisterId' : IDL.Func([], [Result_2], ['query']),
     'getKinicList' : IDL.Func([], [Result_7], []),
+    'getLastWeekRejectedPostKeyProperties' : IDL.Func(
+        [],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
     'getLatestPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [GetPostsByFollowers],

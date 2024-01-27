@@ -1,6 +1,9 @@
 import React, { useState, createContext, ReactNode, useEffect } from 'react';
-type ModalType = 'Login';
-type ModalData = {};
+import { PostType } from '../shared/types';
+type ModalType = 'Login' | 'Update handle' | 'Update publication handle' | 'Create Publication' | 'View rejected post';
+type ModalData = {
+  post?: PostType
+};
 interface ContextType {
   isModalOpen: boolean;
   modalType: ModalType | undefined;
