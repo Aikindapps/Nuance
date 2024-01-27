@@ -44,11 +44,19 @@ export const Modclub: React.FC = () => {
   return (
     <div className='page-wrapper'>
       <Sidebar />
-      <div className='modclub-wrapper'>
-        {posts.map((post) => {
-          return <RejectedPostCard post={post} />;
-        })}
-      </div>
+      {isLoading ? (
+        <div className='text-wrapper'>Loading...</div>
+      ) : posts.length === 0 ? (
+        <div className='text-wrapper'>
+          There's no post rejected by Modclub last week!
+        </div>
+      ) : (
+        <div className='modclub-wrapper'>
+          {posts.map((post) => {
+            return <RejectedPostCard post={post} />;
+          })}
+        </div>
+      )}
     </div>
   );
 };
