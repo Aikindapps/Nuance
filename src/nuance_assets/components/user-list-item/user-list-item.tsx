@@ -35,7 +35,8 @@ export const UserListElement = (props: {
         <img
           className='user-list-item-avatar'
           src={
-            props.avatar || dark ? icons.PROFILE_ICON_DARK : icons.PROFILE_ICON
+            props.avatar ||
+            (dark ? icons.PROFILE_ICON_DARK : icons.PROFILE_ICON)
           }
         />
         {props.isPublication && (
@@ -58,14 +59,10 @@ export const UserListElement = (props: {
           >
             @{props.handle}
           </Link>
-          <div className='user-list-item-counts'>
-            <div className={getClassnameWithTheme('user-list-item-count')}>{`${
-              props.articlesCount || 0
-            } Articles`}</div>
+          <div className={getClassnameWithTheme('user-list-item-counts')}>
+            <div>{`${props.articlesCount || 0} Articles`}</div>
             <div>|</div>
-            <div
-              className={getClassnameWithTheme('user-list-item-count')}
-            >{`${props.followersCount} Followers`}</div>
+            <div>{`${props.followersCount} Followers`}</div>
           </div>
         </div>
         <Link
