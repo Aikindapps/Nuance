@@ -41,7 +41,7 @@ module {
         principal: Text;
         website: Text;
         socialChannelsUrls: [Text];
-
+        followersCount: Text;
     };
 
     public type PublicationObject = {

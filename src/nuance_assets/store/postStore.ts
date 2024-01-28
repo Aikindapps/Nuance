@@ -1633,12 +1633,14 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ): Promise<void> => {
     try {
       const actor = await getPostIndexActor();
+      console.log('search arguments: ', phrase, isTagSearch, indexFrom, indexTo, user)
       const results = await actor.search(
         phrase,
         isTagSearch,
         indexFrom,
         indexTo
       );
+      console.log('search results: ', results);
 
       const postIds = results.postIds;
       if (results.totalCount === 'Search term is too long') {
@@ -1648,7 +1650,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         const coreActor = await getPostCoreActor();
         const keyProperties = await coreActor.getList(postIds);
         const posts = await fetchPostsByBuckets(keyProperties, false);
-
+        console.log('posts: ', posts)
         if (posts?.length) {
           var draftCounter = 0;
           const postsWithAvatars = await mergeAuthorAvatars(

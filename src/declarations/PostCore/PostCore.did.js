@@ -325,6 +325,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getUsersPostCountsByHandles' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(UserPostCounts)],
+        ['query'],
+      ),
     'getViewsByRange' : IDL.Func([RecallOptions], [IDL.Int], []),
     'getWasmChunks' : IDL.Func([], [Result_6], []),
     'handleModclubMigration' : IDL.Func([IDL.Text], [Result_2], []),

@@ -323,6 +323,7 @@ service : {
   getUserPostCounts: (text) -> (UserPostCounts) query;
   getUserPostIds: (text) -> (Result_7) query;
   getUserPosts: (text) -> (vec PostKeyProperties) query;
+  getUsersPostCountsByHandles: (vec text) -> (vec UserPostCounts) query;
   getViewsByRange: (RecallOptions) -> (int);
   getWasmChunks: () -> (Result_6);
   handleModclubMigration: (text) -> (Result_2);

@@ -39,8 +39,8 @@
             display: flex;
             flex-direction: column;
             aspect-ratio: 3.34;
-            min-width: 67%;
-            max-width: 67%;
+            min-width: 58.6%;
+            max-width: 58.6%;
             row-gap: 10px;
 
             .card-published-articles-actions-wrapper {
@@ -63,7 +63,7 @@
                         font-size: 12px;
                         font-style: normal;
                         font-weight: 700;
-                        line-height: 24px;
+                        line-height: 12px;
 
                         &:hover {
                             text-decoration: underline;
@@ -259,7 +259,6 @@
 
     .article-list-items-wrapper {
         .card-published-articles-wrapper {
-            width: 90%;
             column-gap: 4.4%;
 
             .card-published-articles-image-wrapper {
@@ -317,18 +316,33 @@
 
 @media only screen and (max-width: 943px) {
 
-    .article-list-items-wrapper .card-published-articles-wrapper .card-published-articles-right-wrapper .card-published-articles-actions-wrapper .card-published-articles-actions-right .card-published-articles-right-publication{
+    .article-list-items-wrapper .card-published-articles-wrapper .card-published-articles-right-wrapper .card-published-articles-actions-wrapper .card-published-articles-actions-right .card-published-articles-right-publication {
         display: none;
     }
 }
 
 @media only screen and (max-width: 459px) {
 
-    .list-card-published-articles {
+    .article-list-items-wrapper {
         .card-published-articles-wrapper {
 
             .card-published-articles-right-wrapper {
                 .card-published-articles-actions-wrapper {
+                    .card-published-articles-writer {
+                        column-gap: 5px;
+
+                        .card-published-articles-handle {
+                            font-size: 10px;
+                        }
+
+                        .card-published-articles-writer-avatar {
+                            border-radius: 50%;
+                            width: 16px;
+                            height: 16px;
+
+                        }
+                    }
+
                     .card-published-articles-actions-right {
                         height: 16px;
 

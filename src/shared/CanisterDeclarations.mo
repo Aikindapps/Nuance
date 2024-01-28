@@ -38,6 +38,7 @@ module{
         principal: Text;
         website: Text;
         socialChannelsUrls: [Text];
+        followersCount: Text;
     };
 
     public type GetPrincipalByHandleReturn = Result.Result<?Text, Text>;

@@ -428,6 +428,9 @@
           display: flex;
           flex-direction: column;
           margin: 0;
+          .homepage-search-results-wrapper{
+            padding-left: 20px;
+          }
         }
       }
     }
