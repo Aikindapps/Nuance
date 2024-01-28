@@ -1,0 +1,142 @@
+.proposals-wrapper {
+    width: calc(100vw - 100px);
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+
+    .proposals-box {
+        background: white;
+        width: calc(100% - 80px);
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        padding: 20px;
+        row-gap: 20px;
+
+        .proposals-title-refresh-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f2f5;
+            width: 100%;
+
+            .proposals-title-status-wrapper {
+                .proposals-title {
+                    color: rgba(0, 0, 0, .85);
+                    font-size: 20px;
+                    font-weight: 600;
+                    line-height: 32px;
+                    margin-bottom: 5px;
+                    margin-right: 12px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .proposals-status {
+                    color: rgba(0, 0, 0, .45);
+                    font-size: 14px;
+                    margin-bottom: 5px;
+                }
+            }
+
+            .proposals-title {
+                color: rgba(0, 0, 0, .85);
+                font-size: 20px;
+                font-weight: 600;
+                line-height: 32px;
+                margin-bottom: 5px;
+                margin-right: 12px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+
+            .buttons {
+                display: flex;
+                align-items: center;
+                column-gap: 20px;
+
+                .refresh-button {
+                    width: 20px;
+                    height: 20px;
+                    color: #2db671;
+                    cursor: pointer;
+                }
+
+                .arrow-button {
+                    width: 20px;
+                    height: 20px;
+                    color: black;
+                    cursor: pointer;
+                }
+
+
+            }
+
+            .refresh-button {
+                width: 20px;
+                height: 20px;
+                color: #2db671;
+                cursor: pointer;
+            }
+        }
+
+        .proposals-values-wrapper {
+            display: flex;
+            align-items: center;
+            column-gap: 50px;
+            flex-wrap: wrap;
+
+            .proposals-value-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: start;
+                row-gap: 5px;
+                box-sizing: border-box;
+                color: rgba(0, 0, 0, .85);
+                font-size: 14px;
+                font-variant: tabular-nums;
+                line-height: 1.5715;
+                list-style: none;
+
+                .name {
+                    color: rgba(0, 0, 0, .45);
+                    font-size: 14px;
+                }
+
+                .value {
+                    color: rgba(0, 0, 0, .85);
+                    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+                    font-size: 24px;
+                    margin-bottom: 10px;
+
+                }
+
+                .red {
+                    color: red;
+                    font-weight: bolder;
+                }
+            }
+        }
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinning {
+    display: inline-block;
+    animation: spin 0.5s linear infinite;
+}

@@ -59,6 +59,7 @@ export const idlFactory = ({ IDL }) => {
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   const Storage = IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
+    'addStorageBucket' : IDL.Func([IDL.Text], [Result_1], []),
     'addWasmChunk' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'collectCanisterMetrics' : IDL.Func([], [], []),

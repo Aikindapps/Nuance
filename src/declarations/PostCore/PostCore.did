@@ -274,6 +274,7 @@ service : {
   getCgUsers: () -> (Result_7) query;
   getFrontendCanisterId: () -> (Result_2) query;
   getKinicList: () -> (Result_7);
+  getLastWeekRejectedPostKeyProperties: () -> (vec PostKeyProperties) query;
   getLatestPosts: (nat32, nat32) -> (GetPostsByFollowers) query;
   getLatestTimerCall: () -> (text, text) query;
   getList: (vec text) -> (vec PostKeyProperties) query;

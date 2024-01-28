@@ -187,6 +187,10 @@ export interface _SERVICE {
   'getCgUsers' : ActorMethod<[], Result_7>,
   'getFrontendCanisterId' : ActorMethod<[], Result_2>,
   'getKinicList' : ActorMethod<[], Result_7>,
+  'getLastWeekRejectedPostKeyProperties' : ActorMethod<
+    [],
+    Array<PostKeyProperties>
+  >,
   'getLatestPosts' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getLatestTimerCall' : ActorMethod<[], [string, string]>,
   'getList' : ActorMethod<[Array<string>], Array<PostKeyProperties>>,

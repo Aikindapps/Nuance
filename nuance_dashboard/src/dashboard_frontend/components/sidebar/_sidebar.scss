@@ -6,25 +6,23 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    width: 100px;
     position: fixed;
-    top: 0;
     left: 0;
-    padding: 20px;
-    z-index: 99;
     overflow: hidden;
     transition: background-color 0.3s ease;
 
     .logo-container {
         align-self: center;
-        margin-bottom: 20px;
-        
+
         img {
             width: 50px;
             height: auto;
             cursor: pointer;
             transition: transform 0.3s ease;
 
-            &:hover, &.active {
+            &:hover,
+            &.active {
                 transform: scale(1.1);
             }
         }
@@ -34,7 +32,6 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: 20px;
         flex-grow: 1;
 
         .icon {
@@ -45,8 +42,10 @@
             padding: 12px;
             border-radius: 8px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            color: white;
 
-            img, svg {
+            img,
+            svg {
                 width: 25px;
                 height: 25px;
             }
@@ -79,4 +78,11 @@
             }
         }
     }
+
+    .principal-text{
+        cursor: pointer;
+        color: antiquewhite;
+        font-size: 10px;
+    }
+
 }

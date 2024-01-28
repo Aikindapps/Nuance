@@ -924,7 +924,7 @@ actor class PostBucket() = this {
       
     };
 
-    if (rejectedByModClub(postId) and not isNuanceCanister(caller)) {
+    if (rejectedByModClub(postId) and not isNuanceCanister(caller) and not isPlatformOperator(caller)) {
       return #err(RejectedByModerators);
     };
 
@@ -1591,10 +1591,10 @@ actor class PostBucket() = this {
         //only for publication posts
         let callerPostIds = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
         let isWriter = U.arrayContains(List.toArray(callerPostIds), postId);
-        if (not isDraft and not rejectedByModClub(postId)) {
+        if (not isDraft and not (rejectedByModClub(postId) and not isPlatformOperator(caller))) {
           let postListItem = buildPostListItem(postId);
           postsBuffer.add(postListItem);
-        } else if (isDraft and not rejectedByModClub(postId) and includeDraft and (authorPrincipalId == callerPrincipalId or isWriter)) {
+        } else if (isDraft and not (rejectedByModClub(postId) and not isPlatformOperator(caller)) and includeDraft and (authorPrincipalId == callerPrincipalId or isWriter)) {
           let postListItem = buildPostListItem(postId);
           postsBuffer.add(postListItem);
         };
@@ -2237,7 +2237,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
   };
 
 //returns all the reported comments that need to be reviewed
-  public shared ({caller}) func getReportedComments() : async Result.Result<[Comment], Text> {
+  public shared query ({caller}) func getReportedComments() : async Result.Result<[Comment], Text> {
     if (isAnonymous(caller)) {
       return #err("Anonymous user cannot run this method");
     };

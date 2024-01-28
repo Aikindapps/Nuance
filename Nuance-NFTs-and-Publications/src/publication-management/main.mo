@@ -20,7 +20,7 @@ import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Versions "../shared/versions";
-import ENV "../shared/env";
+import ENV "../../../src/shared/env";
 
 actor class Management() = this {
 

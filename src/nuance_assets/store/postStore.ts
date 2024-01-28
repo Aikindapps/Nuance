@@ -1125,7 +1125,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           set({ getPostError: `User not found for @${handle}` });
           toastError(authorResult.err);
         } else if (Err in coreReturn) {
-          set({ getPostError: ArticleNotFound });
+          set({ getPostError: coreReturn.err });
           toastError(coreReturn.err);
         } else {
           if (Err in bucketReturn) {
