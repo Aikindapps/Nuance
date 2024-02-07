@@ -186,6 +186,10 @@ export interface _SERVICE {
   'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_7>,
   'getFrontendCanisterId' : ActorMethod<[], Result_2>,
+  'getHistoricalPublishedArticlesData' : ActorMethod<
+    [],
+    Array<[string, bigint]>
+  >,
   'getKinicList' : ActorMethod<[], Result_7>,
   'getLastWeekRejectedPostKeyProperties' : ActorMethod<
     [],

@@ -317,6 +317,19 @@ module{
         #json : Text;
     };
 
+    public type Applaud = {
+        applaudId: Text; //unique id of the applaud
+        postId: Text; //postId of the applaud sent to
+        bucketCanisterId: Text; //bucket canister id of the post
+        currency: Text; //NUA, ICP or ckBTC
+        tokenAmount: Nat; // Number of tokens sent by the sender (e8s)
+        receivedTokenAmount: Nat; //The token amount received by the writer after the tipping fee (e8s)
+        numberOfApplauds: Nat; //number of applauds (The applauds are calculated at the time of the applause)
+        date: Text; //Date of the applaud. Stored as Int, returned as Text
+        sender: Text; //Principal id of the sender
+        receiver: Text; //Principal id of the receiver
+    };
+
     public type PostBucketCanisterInterface = actor {
         getPostsByPostIds : (postIds : [Text], includeDraft : Bool) -> async [PostBucketType];
         get : (postId : Text) -> async Result.Result<PostBucketType, Text>;
@@ -325,7 +338,8 @@ module{
         updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<PostBucketType, Text>;
         makePostPremium : (postId : Text) -> async Bool;
         getMetadata : (postId : Text, totalSupply : Nat) -> async Result.Result<Metadata, Text>;
-        getAllSubmittedForReviews : () -> async Result.Result<[(Text, [Text])], Text>
+        getAllSubmittedForReviews : () -> async Result.Result<[(Text, [Text])], Text>;
+        getAllApplauds : query () ->  async [Applaud]
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {

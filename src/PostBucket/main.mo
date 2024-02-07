@@ -2830,6 +2830,16 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     };
   };
 
+  public shared query func getAllApplauds() : async [Applaud] {
+    let result = Buffer.Buffer<Applaud>(0);
+
+    for(id in applaudIdToPostIdHashMap.keys()){
+      result.add(buildApplaud(id));
+    };
+
+    return Buffer.toArray(result)
+  };
+
   //query function to get all the applauds of a post by postId
   public shared query func getPostApplauds(postId: Text) : async [Applaud]{
     switch(postIdToApplaudIdsHashMap.get(postId)) {

@@ -785,6 +785,22 @@ actor PostCore {
     counter;
   };
 
+  public shared query func getHistoricalPublishedArticlesData() : async [(Text, Int)] {
+    Iter.toArray(publishedDateHashMap.entries())
+  };
+
+  public shared composite query func getTotalAmountOfTipsReceived() : async Nat {
+    var counter = 0;
+    for(cai in bucketCanisterIdsHashMap.vals()){
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(cai);
+      let allApplauds = await bucketActor.getAllApplauds();
+      for(applaud in allApplauds.vals()){
+        counter += applaud.numberOfApplauds
+      }
+    };
+    counter
+  };
+
   public shared query func currentId() : async Nat {
     Debug.print("PostCore->CurrentId");
     postId;
