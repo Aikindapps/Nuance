@@ -119,7 +119,7 @@ async function prompt(question) {
 
     // Add chunks to the canister
     for (const chunk of chunks) {
-      const chunkCommand = `dfx canister call Storage addWasmChunk 'vec {${chunk.join('; ')}}' --network=${network}`;
+      const chunkCommand = `dfx canister call Storage addWasmChunk 'vec {${chunk.join('; ')}}' --network=${network} -qq`;
       //TODO: pass the wasm without running into the e2Big system error
       console.log(`+ Adding chunk to the Storage canister`);
       await exec(chunkCommand);
@@ -129,10 +129,10 @@ async function prompt(question) {
 
     // Call the upgradeBucket function
     const upgradeFunction = deployType === 'single' ? 'upgradeBucket' : 'upgradeAllBuckets';
-    const upgradeCommand = `dfx canister call Storage ${upgradeFunction} '("${canisterId}" : text, vec {${payload.join('; ')}})' --network=${network}`;
+    const upgradeCommand = `dfx canister call Storage ${upgradeFunction} '("${canisterId}" : text, vec {${payload.join('; ')}})' --network=${network} -qq`;
     await exec(upgradeCommand);
 
-    const { stdout: allBucketsStdout } = await exec(`dfx canister --network=${network} call Storage getAllDataCanisterIds`);
+    const { stdout: allBucketsStdout } = await exec(`dfx canister --network=${network} call Storage getAllDataCanisterIds -qq`);
     console.log(`✅ All Bucket Canister IDs: ${allBucketsStdout}`);
   } catch (err) {
     console.error('❌ Error:', err);

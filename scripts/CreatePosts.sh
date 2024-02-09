@@ -37,7 +37,8 @@ do
         creator=""; 
         isPublication=false; 
         category=""; 
-        isPremium=false
+        isPremium=false;
+        handle=""
     })'
 
     counterLocal=$((counterLocal + 1))

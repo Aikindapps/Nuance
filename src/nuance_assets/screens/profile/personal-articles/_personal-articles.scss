@@ -13,6 +13,7 @@
         position: sticky;
         top: 0;
         z-index: 3;
+        overflow: auto;
 
         .personal-articles-title {
             font-family: "Roboto";
@@ -74,11 +75,16 @@
 @media only screen and (max-width: 1200px) {
     .personal-articles-wrapper {
         width: 90%;
+        overflow: auto;
+
         .personal-articles-title-navigation-wrapper{
             width: 100%;
             padding-left: 15px;
+            overflow: auto;
+
             .personal-articles-navigation-items-wrapper{
                 column-gap: 10px;
+
                 .personal-articles-navigation-item{
                     padding: 5px;
                     font-size: 12px;
@@ -88,6 +94,8 @@
         .article-list-items-wrapper{
             padding-left: 15px;
             width: 100%;
+            overflow: auto;
+
         }
     }
 }
