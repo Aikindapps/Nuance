@@ -1151,8 +1151,8 @@ const HomePageGrid = () => {
                       <p className='mainTitle'>LATEST ARTICLES</p>
                       <div className='article-grid'>
                         {tab === 'popular' &&
-                        dropdownMenuOpen &&
-                        !modalContext?.isModalOpen ? (
+                          dropdownMenuOpen &&
+                          !modalContext?.isModalOpen ? (
                           <div
                             className='dropdown-wrapper active'
                             style={darkOptionsAndColors}

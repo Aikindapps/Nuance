@@ -8,11 +8,11 @@ import {
 } from '../../store';
 import Header from '../../components/header/header';
 import Button from '../../UI/Button/Button';
-import MyProfileSidebar from '../../UI/my-profile-sidebar/my-profile-sidebar';
 import { PublicationObject } from 'src/nuance_assets/services/actorService';
 import PublicationLink from './publicationLink';
+import Activity from './activity';
 import { useTheme } from '../../contextes/ThemeContext';
-import { colors, images } from '../../shared/constants';
+import { colors, images, icons } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
 
 const ProfileSidebar = () => {
@@ -23,6 +23,22 @@ const ProfileSidebar = () => {
   const [userPublications, setUserPublications] = useState<PublicationObject[]>(
     []
   );
+  const [shown, setShown] = useState(screenWidth > 1089);
+  const ToggleMenu = () => {
+    if (screenWidth < 1089) {
+
+      setShown(!shown);
+      shown && setShown(!shown);
+    }
+  };
+
+  const CloseMenu = () => {
+    if (screenWidth < 1089) {
+      console.log('called');
+      setShown(false);
+    }
+  };
+
 
   //NFT feature toggle
   const context = useContext(Context)
@@ -51,9 +67,6 @@ const ProfileSidebar = () => {
   useEffect(() => {
     if (user) {
       getCounts(user.handle);
-      //getSubmittedForReviewPosts(
-      //  user.publicationsArray.map((obj) => obj.publicationName)
-      //);
       getMyTags();
       setUserPublications(
         user.publicationsArray.filter((publication) => publication.isEditor)
@@ -80,33 +93,6 @@ const ProfileSidebar = () => {
     [screenWidth]
   );
 
-  const sidebarRoutes = [
-    {
-      title: 'My Profile',
-      goto: '/my-profile',
-    },
-    {
-      title: `Personal Articles (${counts?.totalPostCount || 0})`,
-      goto: '/my-profile/articles',
-    },
-    {
-      title: `Followed Topics (${myTags?.length || 0})`,
-      goto: '/my-profile/topics',
-    },
-    {
-      title: `Following (${user?.followersArray.length || 0})`,
-      goto: '/my-profile/following',
-    },
-    {
-      title: `Followers (${user?.followersCount || 0})`,
-      goto: '/my-profile/followers',
-    },
-    {
-      title: 'My Wallet',
-      goto: '/my-profile/wallet',
-    },
-  ]
-
   const darkOptionsAndColors = {
     background: darkTheme
       ? colors.darkModePrimaryBackgroundColor
@@ -117,6 +103,10 @@ const ProfileSidebar = () => {
     secondaryColor: darkTheme
       ? colors.darkSecondaryTextColor
       : colors.primaryTextColor,
+    THREE_DOTS: darkTheme ? icons.THREE_DOTS_WHITE : icons.THREE_DOTS_BLUE,
+    THREE_DOTS_LIGHT_ICON: darkTheme
+      ? icons.THREE_DOTS_WHITE
+      : icons.THREE_DOTS,
   };
 
 
@@ -137,53 +127,126 @@ const ProfileSidebar = () => {
         isUserAdminScreen={true}
       />
       <div className='container'>
-        {mobile ? (
-          <MyProfileSidebar/>
-        ) : (
-          <div className='sidebar'>
-            {sidebarRoutes.map((route) => {
-              return (
-                <Link
-                  style={{
-                    background: darkOptionsAndColors.background,
-                    color:
-                      location.pathname === route?.goto
-                        ? colors.accentColor
-                        : darkOptionsAndColors.color,
-                    cursor: context.profileSidebarDisallowed ? 'not-allowed' : '',
-                    textDecoration: context.profileSidebarDisallowed ? 'none' : '',
-                  }}
-                  className={`route ${
-                    location.pathname === route?.goto && 'active'
-                  }`}
-                  key={route?.goto}
-                  to={context.profileSidebarDisallowed ? location.pathname : route?.goto}
-                >
-                  {route?.title}
-                </Link>
-              );
-            })}
-            {userPublications.length !== 0 ? (
-              <PublicationLink
-                publicationsArray={userPublications}
-                dark={darkTheme}
+
+        <div
+          style={
+            location.pathname.includes('publications') &&
+              screenWidth > 451 &&
+              screenWidth < 1089 &&
+              shown
+              ? {}
+              : (location.pathname.includes('published') ||
+                location.pathname.includes('draft')) &&
+                screenWidth < 1089 &&
+                shown
+                ? {} : {}
+          }
+          className={`sidebar ${!shown ? 'not-toggled' : ''}`}
+        >
+          <div className='meatball-menu'>
+            {screenWidth < 1089 && (
+              <img
+                className='sidebar-button'
+                onClick={ToggleMenu}
+                src={
+                  shown
+                    ? icons.THREE_DOTS_BLUE
+                    : darkOptionsAndColors.THREE_DOTS_LIGHT_ICON
+                }
+                alt='sidebar-button'
               />
-            ) : null}
 
-            <div className='hr' />
-            <Button
-              styleType='secondary'
-              type='button'
-              style={{ width: '130px' }}
-              onClick={() => {
-                navigate('/article/new');
-              }}
-            >
-              Create new article
-            </Button>
+            )}
+            {
+              <div
+                className='sidebar-content'
+                onMouseLeave={CloseMenu}
+                style={
+                  shown && !location.pathname.includes('publications')
+                    ? { width: 200 }
+                    : shown
+                      ? { width: 200 }
+                      : { width: 0 }
+                }
+
+              >
+
+                <div style={shown || screenWidth > 1089 ? {} : { display: 'none' }}>
+                  <div className='sidebar-dropdown'>
+
+                    <Link
+                      style={{
+                        color:
+                          location.pathname === '/my-profile'
+                            ? colors.accentColor
+                            : darkOptionsAndColors.color,
+                      }}
+                      className={`route ${location.pathname === '/my-profile' && 'active'
+                        }`}
+                      to='/my-profile'
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      style={{
+                        color:
+                          location.pathname === '/my-profile/articles'
+                            ? colors.accentColor
+                            : darkOptionsAndColors.color,
+                      }}
+                      className={`route ${location.pathname === '/my-profile/articles' && 'active'
+                        }`}
+                      to='/my-profile/articles'
+                    >
+                      My Articles ({counts?.totalPostCount || 0})
+                    </Link>
+
+
+                    <Activity
+                      dark={darkTheme}
+                      followedTopicsCount={myTags?.length || 0}
+                      followingCount={user?.followers.length || 0}
+                      followersCount={user?.followersCount || 0}
+
+                    />
+
+                    {userPublications.length !== 0 ? (
+                      <PublicationLink
+                        dark={darkTheme}
+                        publicationsArray={userPublications}
+                      />
+                    ) : null}
+
+                    <Link
+                      style={{
+                        color:
+                          location.pathname === '/my-profile/wallet'
+                            ? colors.accentColor
+                            : darkOptionsAndColors.color,
+                      }}
+                      className={`route ${location.pathname === '/my-profile/wallet' && 'active'
+                        }`}
+                      to='/my-profile/wallet'
+                    >
+                      My Wallet
+                    </Link>
+                    <div className='hr' />
+                    <Button
+                      styleType='secondary'
+                      type='button'
+                      style={{ width: '130px' }}
+                      onClick={() => {
+                        navigate('/article/new', { replace: true });
+                      }}
+                    >
+                      Create new article
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
-        )}
-
+        </div>
         <Outlet />
       </div>
     </div>

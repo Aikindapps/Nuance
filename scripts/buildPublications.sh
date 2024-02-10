@@ -4,8 +4,8 @@ nuanceMainRepoPath=$2
 network="local"
 
 publicationCanisterIdsPath=$publicationsRepoPath/.dfx/local/canister_ids.json
-nuanceCanisterIdsPath=$nuanceMainRepoPath/.dfx/local/canister_ids.json
-productionCanisterIdsPath=$publicationsRepoPath/canister_ids.json
+nuanceCanisterIdsPath=../.dfx/local/canister_ids.json
+productionCanisterIdsPath=./canister_ids.json
 
 principalId=$(dfx identity get-principal)
 

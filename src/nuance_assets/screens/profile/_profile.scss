@@ -51,6 +51,17 @@
     border-radius: 50%;
   }
 
+  .activities{
+    border-left: 1px solid $light-border-color;
+  }
+  .publications{
+  border-left: 1px solid $light-border-color;
+  }
+
+  .activity-dropdown {
+  cursor: pointer;
+  }
+
   .container {
     display: grid;
     align-items: baseline;
@@ -73,30 +84,65 @@
       position: sticky;
       top: 10px;
 
+      
+
       .route {
         color: $primary-text-color;
         font-size: 16px;
         font-weight: bold;
-        line-height: 24px;
-        margin: 10px 0;
-        padding: 0 15px;
-        margin-left: -15px;
+        line-height: 18px;
+        margin: 8px 0;
+        padding: 0px 15px;
+        margin-left: -15px; 
+        display: flex;
+        border-left: 2px solid transparent; // Transparent border for inactive states
+
 
         &.active {
-          border-left: 2px solid $accent-color;
           color: $accent-color;
+          border-left-color: $accent-color; // Change only the color, not the border size
           border-right-style: none;
-        }
-
-        &.sub-route-active {
-          border-left: 0px solid $accent-color;
-          color: $accent-color;
+          
         }
       }
 
+     
+
       .sub-route {
-        padding-left: 4%;
-        padding-right: 4%;
+       
+        margin-left: 4px;
+        margin-top: 10px;
+
+        .route { // Targeting the .route inside .sub-route
+          margin-left: -1px; 
+          display: flex;
+          margin: 0px;
+          margin: 16px 0px;
+          width: 180px;
+          font-size: 14px;
+          border-left: 2px solid transparent; // Transparent border for inactive states
+
+         
+
+          
+    
+          &.sub-route-active {
+            border-left: 2px solid $accent-color; 
+            padding: 0px 14px; 
+            margin-left: 0px;
+            
+          }
+        }
+      
+
+      }
+
+      .arrow-button {
+        transition: transform 0.3s;
+        
+        &.expanded {
+          transform: rotate(180deg);
+        }
       }
 
       .sub-route-active-flex {
@@ -123,6 +169,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      width: 164px;
     }
 
     .wrapper {
@@ -130,6 +177,7 @@
       padding: 0 5% 0 5%;
       display: flex;
       flex-direction: column;
+      overflow: auto;
 
       .title {
         font-family: 'Roboto';
@@ -666,25 +714,6 @@
   display: none;
 }
 
-@media only screen and (max-width: 1200px) {
-  .sub-route {
-    padding: 0 !important;
-  }
-}
-
-@media only screen and (max-width: 1180px) {
-  .sidebar {
-    margin-left: -25px;
-  }
-
-  .sub-route {
-    span {
-      font-size: small;
-      margin-left: -10px;
-    }
-  }
-}
-
 @media only screen and (max-width: 1089px) {
   .profile-wrapper {
     overflow-x: hidden;
@@ -700,7 +729,7 @@
         padding: 0px 0px 0px 10%;
 
         .route {
-          margin-left: -5px;
+        
         }
       }
 
@@ -807,189 +836,6 @@
           }
         }
 
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 603px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 12%;
-      }
-
-      .not-toggled {
-        padding-left: 16px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 546px) {
-  .profile-wrapper {
-    .container {
-      .wrapper {
-        padding: 20px;
-
-      }
-
-      .sidebar {
-        padding-left: 25%;
-
-        .route {
-          color: $primary-text-color;
-          font-size: 14px;
-          font-weight: bold;
-          line-height: 20px;
-          margin: 10px 0;
-          padding: 0 15px;
-          margin-left: -15px;
-        }
-      }
-
-      .not-toggled {
-        padding-left: 20px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 480px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 30%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 461px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 35%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 440px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 40%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 413px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 45%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 397px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 55%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 361px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 65%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 333px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 75%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 309px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 85%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 289px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 95%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
-      }
-    }
-  }
-}
-
-@media only screen and (max-width: 269px) {
-  .profile-wrapper {
-    .container {
-      .sidebar {
-        padding-left: 100%;
-      }
-
-      .not-toggled {
-        padding-left: 25px;
       }
     }
   }
