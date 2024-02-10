@@ -1,5 +1,6 @@
 import internal from 'stream';
 import { SupportedTokenSymbol } from '../shared/constants';
+import { UserPostCounts } from '../services/actorService';
 
 export type SocialLinksObject = {
   website: string;
@@ -29,6 +30,8 @@ export type PublicationType = {
   styling: PublicationStylingObject;
   cta: PublicationCta;
   nftCanisterId: string;
+  postCounts?: UserPostCounts;
+  userListItem?: UserListItem
 };
 
 export type PublicationStylingObject = {
@@ -67,6 +70,8 @@ export type UserListItem = {
   bio: string;
   website: string;
   socialChannelsUrls: string[];
+  followersCount: string;
+  postCounts?: UserPostCounts;
 };
 
 //TODO: phase out in postStore and use Post type from canister

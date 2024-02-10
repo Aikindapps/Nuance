@@ -1,0 +1,182 @@
+@import '../../shared/styles/Colors';
+
+.user-list-item-wrapper {
+    display: flex;
+    align-items: center;
+    column-gap: 8.4%;
+    width: 100%;
+
+    .user-list-item-avatar-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 33%;
+        max-width: 33%;
+        position: relative;
+
+        .user-list-item-avatar {
+            min-width: 97px;
+            max-width: 97px;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 0.5px solid #999;
+            cursor: pointer;
+
+            &:hover {
+                border-color: $accent-color;
+            }
+        }
+
+        .user-list-item-publication-icon {
+            position: absolute;
+            min-width: 24px;
+            max-width: 24px;
+            border-radius: 5%;
+            bottom: 0;
+            right: calc(50% - 48px);
+            aspect-ratio: 1;
+        }
+    }
+
+
+    .user-list-item-right {
+        display: flex;
+        flex-direction: column;
+        row-gap: 6px;
+        align-items: start;
+        min-width: 58.6%;
+        max-width: 58.6%;
+
+        .user-list-item-handle-counts {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+
+            .user-list-item-handle {
+                color: #4C4C52;
+                font-family: Roboto;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: 24px;
+            }
+
+            .user-list-item-handle-dark {
+                color: #999;
+                font-family: Roboto;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: 24px;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+
+            .user-list-item-counts {
+                color: #4C4C52;
+                text-align: center;
+                /* NUA/Roboto/12/Regular */
+                font-family: Roboto;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 18px;
+                display: flex;
+                column-gap: 8px;
+            }
+
+            .user-list-item-counts-dark {
+                color: #999;
+                text-align: center;
+                /* NUA/Roboto/12/Regular */
+                font-family: Roboto;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 18px;
+                display: flex;
+                column-gap: 8px;
+            }
+
+        }
+
+        .user-list-item-name {
+            color: #151451;
+            font-family: Georgia;
+            font-size: 26px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 35px;
+        }
+
+        .user-list-item-name-dark {
+            color: #FFF;
+            font-family: Georgia;
+            font-size: 26px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 35px;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        .user-list-item-bio {
+            color: #666;
+            font-family: Roboto;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 26px;
+        }
+
+        .user-list-item-bio-dark {
+            color: rgb(178, 178, 178);
+            font-family: Roboto;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 26px;
+        }
+    }
+}
+
+@media only screen and (max-width: 768px) {
+
+    .user-list-item-wrapper {
+        column-gap: 4.4%;
+
+        .user-list-item-avatar-wrapper {
+            .user-list-item-avatar {
+                min-width: 80px;
+                max-width: 80px;
+            }
+        }
+
+        .user-list-item-right {
+            row-gap: 0;
+
+            .user-list-item-name {
+                font-size: 18px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 24px;
+            }
+
+            .user-list-item-handle-counts {
+                .user-list-item-counts {
+                    display: none;
+                }
+            }
+        }
+    }
+
+    .user-list-item-right .user-list-item-bio {
+        display: none;
+    }
+}

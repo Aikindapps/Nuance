@@ -23,6 +23,7 @@ type UserListItem =
    avatar: text;
    bio: text;
    displayName: text;
+   followersCount: text;
    fontType: text;
    handle: text;
    "principal": text;

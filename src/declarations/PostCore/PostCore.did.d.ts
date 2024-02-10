@@ -256,6 +256,10 @@ export interface _SERVICE {
   'getUserPostCounts' : ActorMethod<[string], UserPostCounts>,
   'getUserPostIds' : ActorMethod<[string], Result_7>,
   'getUserPosts' : ActorMethod<[string], Array<PostKeyProperties>>,
+  'getUsersPostCountsByHandles' : ActorMethod<
+    [Array<string>],
+    Array<UserPostCounts>
+  >,
   'getViewsByRange' : ActorMethod<[RecallOptions], bigint>,
   'getWasmChunks' : ActorMethod<[], Result_6>,
   'handleModclubMigration' : ActorMethod<[string], Result_2>,

@@ -9,10 +9,8 @@ import { DateFormat, formatDate } from '../../shared/utils';
 import { Tooltip } from 'react-tooltip';
 import Badge from '../../UI/badge/badge';
 import { Context } from '../../contextes/Context';
-import { PiHandsClappingLight } from "react-icons/pi";
-import { PiPencilSimpleThin } from "react-icons/pi";
-
-
+import { PiHandsClappingLight } from 'react-icons/pi';
+import { PiPencilSimpleThin } from 'react-icons/pi';
 
 interface CardVerticalProps {
   post: PostType;
@@ -21,7 +19,7 @@ interface CardVerticalProps {
 const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
   const navigate = useNavigate();
   const dark = useTheme();
-  const context = useContext(Context)
+  const context = useContext(Context);
 
   const darkOptionsAndColors = {
     background: dark
@@ -33,8 +31,6 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
       : colors.primaryTextColor,
     filter: dark ? 'contrast(.5)' : 'none',
   };
-
-
 
   return (
     <div className='card-published-articles-wrapper'>
@@ -54,6 +50,7 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
             />
             <Link
               className='card-published-articles-handle'
+              style={dark ? { color: '#999' } : {}}
               to={
                 post.isPublication
                   ? '/user/' + post.creator

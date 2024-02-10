@@ -8,6 +8,7 @@ import { slice } from 'lodash';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import SearchResults from '../../components/search-results/search-results';
 
 const Header = lazy(() => import('../../components/header/header'));
 const Footer = lazy(() => import('../../components/footer/footer'));
@@ -280,7 +281,7 @@ const HomePageGrid = () => {
 
       resetPageIndexes();
       await Promise.all([
-        search(phrase, isTagSearch, 0, searchPageSize - 1, user),
+        search(phrase, isTagSearch, 0, 10000, user),
         searchPublications(phrase),
         searchUsers(phrase),
       ]);
@@ -606,8 +607,6 @@ const HomePageGrid = () => {
 
     resetSearchfield();
   };
-
-
 
   var postsByTopic = (myTags || []).map((tag: any) => {
     let modifiedTag = tag.tagName.toUpperCase();
@@ -1115,85 +1114,29 @@ const HomePageGrid = () => {
                 />
                 <div className='posts'>
                   {showSearchResults ? (
-                    <div>
-                      <div className='rowContainer'>
-                        {searchedTag ? (
-                          <div
-                            className='button-attributes-primary-3'
-                            style={{
-                              minWidth: '75px',
-                              cursor: 'default',
-                              padding: '0 15px',
-                            }}
-                          >
-                            {lastSearchPhrase}
-                          </div>
-                        ) : null}
-                        {/* (
-                        <Link to='/' className='link1'>
-                          SEARCH RESULTS
-                        </Link>
-                      )} */}
-                        {/* <span className='span'> | </span> */}
-                        {/* <div className='sec'>
-                        <Link
-                          to='/'
-                          className='link2'
-                          onClick={handleLatestArticlesClick}
-                        >
-                          LATEST ARTICLES
-                        </Link>
-                      </div> */}
-                      </div>
-                      <div className='search-nav-bar-flex'>
-                        <span
-                          className={
-                            searchType !== 'Articles'
-                              ? 'search-nav-bar-element'
-                              : 'search-nav-bar-element-active'
-                          }
-                          style={{ borderLeft: 'none' }}
-                          onClick={() => {
-                            setSearchType('Articles');
-                          }}
-                        >
-                          Articles
-                        </span>
-                        <span
-                          className={
-                            searchType !== 'People'
-                              ? 'search-nav-bar-element'
-                              : 'search-nav-bar-element-active'
-                          }
-                          onClick={() => {
-                            setSearchType('People');
-                          }}
-                        >
-                          People
-                        </span>
-                        <span
-                          className={
-                            searchType !== 'Publications'
-                              ? 'search-nav-bar-element'
-                              : 'search-nav-bar-element-active'
-                          }
-                          onClick={() => {
-                            setSearchType('Publications');
-                          }}
-                        >
-                          Publications
-                        </span>
-                      </div>
-                      {getSearchSummary()}
-                      {getSearchResults()}
+                    <div className='homepage-search-results-wrapper'>
+                      <SearchResults
+                        term={lastSearchPhrase}
+                        articles={loadedSearchResults}
+                        publications={searchPublicationResults || []}
+                        users={getUserSearchResultsWithoutPublications() || []}
+                        counts={{
+                          articlesCount: loadedSearchResults.length,
+                          publicationsCount:
+                            searchPublicationResults?.length || 0,
+                          usersCount:
+                            getUserSearchResultsWithoutPublications()?.length ||
+                            0,
+                        }}
+                      />
 
-                      {(loadedSearchResults?.length || 0) < searchTotalCount &&
+                      {/*(loadedSearchResults?.length || 0) < searchTotalCount && 
                         searchType === 'Articles' && (
                           <div className='load-more-container'>
                             <Button
                               styleType='secondary'
                               style={{ width: '152px' }}
-                              onClick={handleClickMore}
+                              onClick={()=>{}}
                               icon={
                                 loadingMore ? images.loaders.BUTTON_SPINNER : ''
                               }
@@ -1201,7 +1144,7 @@ const HomePageGrid = () => {
                               <span>Load More</span>
                             </Button>
                           </div>
-                        )}
+                            )*/}
                     </div>
                   ) : (
                     <div className='latestArticles'>

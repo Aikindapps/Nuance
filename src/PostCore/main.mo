@@ -1718,6 +1718,71 @@ actor PostCore {
     Buffer.toArray(postsBuffer);
   };
 
+  public shared query func getUsersPostCountsByHandles(userHandles: [Text]) : async [UserPostCounts] {
+    let result = Buffer.Buffer<UserPostCounts>(0);
+
+    for(userHandle in userHandles.vals()){
+      let trimmedHandle = U.trim(userHandle);
+      var totalPostCount : Nat = 0;
+      var draftCount : Nat = 0;
+      var submittedToReviewCount : Nat = 0;
+      var publishedCount : Nat = 0;
+      var totalViewCount : Nat = 0;
+      var totalClapCount : Nat = 0;
+
+      let principalId = U.safeGet(lowercaseHandleReverseHashMap, trimmedHandle, "");
+      if (principalId != "") {
+
+        let userPostIds = U.safeGet(userPostsHashMap, principalId, List.nil<Text>());
+
+        totalPostCount := List.size(userPostIds);
+
+        List.iterate(
+          userPostIds,
+          func(postId : Text) : () {
+            let isDraft = U.safeGet(isDraftHashMap, postId, false);
+            let postOwnerPrincipalId = U.safeGet(principalIdHashMap, postId, "");
+
+            if (isDraft) {
+              if(postOwnerPrincipalId != principalId){
+                submittedToReviewCount += 1;
+              }
+              else{
+                draftCount += 1;
+              }
+            } else {
+              publishedCount += 1;
+            };
+
+            let postViewCount = U.safeGet(viewsHashMap, postId, 0);
+            totalViewCount += postViewCount;
+            let clapCount = U.safeGet(clapsHashMap, postId, 0);
+            totalClapCount += clapCount;
+            let applauds_e8s = (U.safeGet(applaudsHashMap, postId, 0));
+            let applauds = Float.fromInt(applauds_e8s) / Float.pow(10, Float.fromInt(ENV.NUA_TOKEN_DECIMALS));
+            let applaudsNat = Int.abs(Float.toInt(Float.nearest(applauds)));
+            totalClapCount += applaudsNat;
+          },
+        );
+      };
+
+      let userPostCounts = {
+        handle = U.safeGet(handleHashMap, principalId, "");
+        totalPostCount = Nat.toText(totalPostCount);
+        publishedCount = Nat.toText(publishedCount);
+        draftCount = Nat.toText(draftCount);
+        submittedToReviewCount = Nat.toText(submittedToReviewCount);
+        totalViewCount = Nat.toText(totalViewCount);
+        // TODO: Implement counts
+        uniqueClaps = Nat.toText(totalClapCount);
+        uniqueReaderCount = "0";
+      };
+      result.add(userPostCounts);
+    };
+
+    Buffer.toArray(result)
+  };
+
   //returns user's post counts
   public shared query func getUserPostCounts(userHandle : Text) : async UserPostCounts {
     // Iterates all of the user's posts, then adds up the

@@ -1012,6 +1012,7 @@ actor User {
     return "0";
   };
 
+
   public shared ({ caller }) func clearAllMyFollowers() : async Text {
     if (isAnonymous(caller)) {
       return ("Anonymous cannot call this method");
@@ -1134,6 +1135,7 @@ actor User {
           principal = principalId;
           website = U.safeGet(websiteHashMap, principalId, "");
           socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
+          followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
         };
         users.add(user);
       };
@@ -1548,6 +1550,7 @@ actor User {
           principal = principalId;
           website = U.safeGet(websiteHashMap, principalId, "");
           socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
+          followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
         };
         users := List.push<UserListItem>(user, users);
       };

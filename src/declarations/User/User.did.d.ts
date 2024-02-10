@@ -98,6 +98,7 @@ export interface UserListItem {
   'socialChannelsUrls' : Array<string>,
   'principal' : string,
   'displayName' : string,
+  'followersCount' : string,
   'website' : string,
   'handle' : string,
   'fontType' : string,

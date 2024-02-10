@@ -13,6 +13,7 @@ import {
   getPostCoreActor,
   getPublisherActor,
 } from '../services/actorService';
+import UserListElement from '../components/user-list-item/user-list-item';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -30,7 +31,7 @@ const handleError = (err: any, preText?: string) => {
   }
 };
 
-function levenshteinDistance(a: string, b: string) {
+export function levenshteinDistance(a: string, b: string) {
   const an = a.length;
   const bn = b.length;
   const matrix = [];
@@ -73,7 +74,7 @@ const findSimilarHandles = (input: string, handles: string[]) => {
   const lowerInput = input.toLowerCase();
 
   for (const handle of handles) {
-    let distance = levenshteinDistance(lowerInput, handle.toLowerCase())
+    let distance = levenshteinDistance(lowerInput, handle.toLowerCase());
     if (distance <= tolerance) {
       results.push({ handle: handle, distance: distance });
     }
@@ -83,6 +84,40 @@ const findSimilarHandles = (input: string, handles: string[]) => {
       return h2.distance - h1.distance;
     })
     .map((handleObj) => handleObj.handle.toLowerCase());
+};
+
+const mergeUsersWithNumberOfPublishedArticles = async (
+  input: UserListItem[]
+): Promise<UserListItem[]> => {
+  let handles = input.map((el) => {
+    return el.handle.toLowerCase();
+  });
+  let postCoreActor = await getPostCoreActor();
+  let response = await postCoreActor.getUsersPostCountsByHandles(handles);
+  return input.map((el, index) => {
+    return { ...el, postCounts: response[index] };
+  });
+};
+
+const mergePublicationsWithNumberOfPublishedArticlesAndUserListItem = async (
+  input: PublicationType[]
+): Promise<PublicationType[]> => {
+  let handles = input.map((el) => {
+    return el.publicationHandle.toLowerCase();
+  });
+  let postCoreActor = await getPostCoreActor();
+  let userActor = await getUserActor();
+  let [responsePostCounts, responseUserListItems] = await Promise.all([
+    postCoreActor.getUsersPostCountsByHandles(handles),
+    userActor.getUsersByHandles(handles),
+  ]);
+  return input.map((el, index) => {
+    return {
+      ...el,
+      postCounts: responsePostCounts[index],
+      userListItem: responseUserListItems[index],
+    };
+  });
 };
 
 export interface UserStore {
@@ -119,8 +154,17 @@ export interface UserStore {
   clearAuthor: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<void>;
   updateAvatar: (avatarUrl: string) => Promise<void>;
-  updateSocialLinks: (websiteUrl: string, socialChannelUrls: string[]) => Promise<void>;
-  updateUserDetails: (bio: string, avatarUrl: string, displayName: string, websiteUrl: string, socialChannelUrls: string[]) => Promise<UserType | undefined>;
+  updateSocialLinks: (
+    websiteUrl: string,
+    socialChannelUrls: string[]
+  ) => Promise<void>;
+  updateUserDetails: (
+    bio: string,
+    avatarUrl: string,
+    displayName: string,
+    websiteUrl: string,
+    socialChannelUrls: string[]
+  ) => Promise<UserType | undefined>;
   updateBio: (bio: string) => Promise<void>;
   followAuthor: (author: string) => Promise<void>;
   unfollowAuthor: (author: string) => Promise<void>;
@@ -225,14 +269,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return undefined;
   },
 
-  getUserPostCounts: async (handle: string): Promise<UserPostCounts | undefined> => {
+  getUserPostCounts: async (
+    handle: string
+  ): Promise<UserPostCounts | undefined> => {
     try {
       const userPostCounts = await (
         await getPostCoreActor()
       ).getUserPostCounts(handle.toLowerCase());
 
       set({ userPostCounts });
-      return userPostCounts
+      return userPostCounts;
     } catch (err) {
       toastError(err, Unexpected);
     }
@@ -272,7 +318,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         toastError(result.err);
       } else {
         set({ author: toUserModel(result.ok) });
-        return toUserModel(result.ok)
+        return toUserModel(result.ok);
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -342,19 +388,20 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     indexEnd: number
   ): Promise<void> => {
     try {
-      let result = await (await getUserActor()).getMyFollowers(indexStart, indexEnd)
-      if(Err in result){
-        toastError(result.err)
-      }
-      else{
-        let followers = result.ok
+      let result = await (
+        await getUserActor()
+      ).getMyFollowers(indexStart, indexEnd);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        let followers = result.ok;
         let existingFollowers = get().myFollowers;
-        
+
         if (existingFollowers && indexStart !== 0) {
           let merged = existingFollowers;
-          followers.forEach((user)=>{
-            merged.push(user)
-          })
+          followers.forEach((user) => {
+            merged.push(user);
+          });
           let myFollowers = merged.filter(
             (v, i, a) => a.findIndex((t) => t.handle === v.handle) === i
           );
@@ -362,8 +409,6 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         } else {
           set({ myFollowers: followers });
         }
-        
-        
       }
     } catch (err) {
       handleError(err, Unexpected);
@@ -373,9 +418,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   getAllUsersHandles: async (): Promise<string[]> => {
     if (get().allUsersHandles.length > 0) {
       //refresh the users list but don't wait for the response
-      (await getUserActor()).getAllHandles().then((allUsersHandles)=>{
-        set({allUsersHandles})
-      })
+      (await getUserActor()).getAllHandles().then((allUsersHandles) => {
+        set({ allUsersHandles });
+      });
       return get().allUsersHandles;
     }
     let allUsersHandles = await (await getUserActor()).getAllHandles();
@@ -386,10 +431,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   getAllPublicationsHandles: async (): Promise<[string, string][]> => {
     if (get().allPublicationsHandlesAndCanisterIds.length > 0) {
       //refresh the publications list but don't wait for the response
-      (await getPostCoreActor()).getPublicationCanisters().then((allPublicationsHandlesAndCanisterIds)=>{
-        set({ allPublicationsHandlesAndCanisterIds });
-      })
-      return get().allPublicationsHandlesAndCanisterIds
+      (await getPostCoreActor())
+        .getPublicationCanisters()
+        .then((allPublicationsHandlesAndCanisterIds) => {
+          set({ allPublicationsHandlesAndCanisterIds });
+        });
+      return get().allPublicationsHandlesAndCanisterIds;
     }
     let allPublicationsHandlesAndCanisterIds = await (
       await getPostCoreActor()
@@ -402,42 +449,40 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     let allHandles = await get().getAllUsersHandles();
     let resultHandles = findSimilarHandles(input, allHandles);
     let users = await (await getUserActor()).getUsersByHandles(resultHandles);
-    set({searchUserResults: users});
+    let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users);
+    set({ searchUserResults: usersMerged });
   },
   searchPublications: async (input: string): Promise<void> => {
     let allPublications = await get().getAllPublicationsHandles();
-    console.log('allPublications: ', allPublications)
-    let handleToCanisterIdMap = new Map<string, string>()
-    let handles : string[] = [];
-    allPublications.forEach((entry)=>{
-      handleToCanisterIdMap.set(entry[0].toLowerCase(), entry[1])
-      handles.push(entry[0])
+    let handleToCanisterIdMap = new Map<string, string>();
+    let handles: string[] = [];
+    allPublications.forEach((entry) => {
+      handleToCanisterIdMap.set(entry[0].toLowerCase(), entry[1]);
+      handles.push(entry[0]);
     });
-    console.log('handles: ', handles)
     let resultHandles = findSimilarHandles(input, handles);
-    console.log('resultHandles: ',resultHandles)
-    let promises = []
-    console.log('handleToCanisterIdMap: ', handleToCanisterIdMap)
-    for(const handle of resultHandles){
+    let promises = [];
+    for (const handle of resultHandles) {
       let canisterId = handleToCanisterIdMap.get(handle);
-      console.log('canisterId: ', canisterId)
-      if(canisterId){
-        let promise = (await getPublisherActor(canisterId)).getPublicationQuery(handle);
-        promises.push(promise)
+      if (canisterId) {
+        let promise = (await getPublisherActor(canisterId)).getPublicationQuery(
+          handle
+        );
+        promises.push(promise);
       }
     }
-    console.log('promises: ', promises)
     let results = await Promise.all(promises);
-    console.log('results: ', results)
-    let publications : PublicationType[] = [];
-    results.forEach((result)=>{
-      if(!(Err in result)){
-        publications.push(result.ok)
+    let publications: PublicationType[] = [];
+    results.forEach((result) => {
+      if (!(Err in result)) {
+        publications.push(result.ok);
       }
     });
-    set({ searchPublicationResults: publications });
-    
-    
+    let mergedPublications =
+      await mergePublicationsWithNumberOfPublishedArticlesAndUserListItem(
+        publications
+      );
+    set({ searchPublicationResults: mergedPublications });
   },
 
   updateBio: async (bio: string): Promise<void> => {
@@ -466,9 +511,14 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  updateSocialLinks: async (websiteUrl: string, socialChannelUrls: string[]): Promise<void> => {
+  updateSocialLinks: async (
+    websiteUrl: string,
+    socialChannelUrls: string[]
+  ): Promise<void> => {
     try {
-      const result = await (await getUserActor()).updateSocialLinks(websiteUrl, socialChannelUrls);
+      const result = await (
+        await getUserActor()
+      ).updateSocialLinks(websiteUrl, socialChannelUrls);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -479,14 +529,28 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  updateUserDetails: async (bio: string, avatarUrl: string, displayName: string, websiteUrl: string, socialChannelUrls: string[]): Promise<UserType | undefined> => {
+  updateUserDetails: async (
+    bio: string,
+    avatarUrl: string,
+    displayName: string,
+    websiteUrl: string,
+    socialChannelUrls: string[]
+  ): Promise<UserType | undefined> => {
     try {
-      const result = await (await getUserActor()).updateUserDetails(bio, avatarUrl, displayName, websiteUrl, socialChannelUrls);
+      const result = await (
+        await getUserActor()
+      ).updateUserDetails(
+        bio,
+        avatarUrl,
+        displayName,
+        websiteUrl,
+        socialChannelUrls
+      );
       if (Err in result) {
         toastError(result.err);
       } else {
         set({ user: toUserModel(result.ok) });
-        return toUserModel(result.ok)
+        return toUserModel(result.ok);
       }
     } catch (err) {
       handleError(err, Unexpected);

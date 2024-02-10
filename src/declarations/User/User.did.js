@@ -101,6 +101,7 @@ export const idlFactory = ({ IDL }) => {
     'socialChannelsUrls' : IDL.Vec(IDL.Text),
     'principal' : IDL.Text,
     'displayName' : IDL.Text,
+    'followersCount' : IDL.Text,
     'website' : IDL.Text,
     'handle' : IDL.Text,
     'fontType' : IDL.Text,
