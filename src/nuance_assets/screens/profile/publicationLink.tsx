@@ -53,7 +53,7 @@ const PublicationLink: React.FC<PublicationLinkProps> = (props) => {
     <div>
       <div onClick={togglePublications}>
         <div className='route'>
-          <span style={{ flexGrow: 1, color: darkOptionsAndColors.color }}>
+          <span className='activity-dropdown' style={{ flexGrow: 1, color: darkOptionsAndColors.color }}>
             {`Publications (${props.publicationsArray.length})`}
           </span>
           <IoIosArrowDown

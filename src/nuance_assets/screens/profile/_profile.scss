@@ -58,6 +58,10 @@
   border-left: 1px solid $light-border-color;
   }
 
+  .activity-dropdown {
+  cursor: pointer;
+  }
+
   .container {
     display: grid;
     align-items: baseline;
