@@ -273,6 +273,10 @@ service : {
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_7) query;
   getFrontendCanisterId: () -> (Result_2) query;
+  getHistoricalPublishedArticlesData: () -> (vec record {
+                                                   text;
+                                                   int;
+                                                 }) query;
   getKinicList: () -> (Result_7);
   getLastWeekRejectedPostKeyProperties: () -> (vec PostKeyProperties) query;
   getLatestPosts: (nat32, nat32) -> (GetPostsByFollowers) query;

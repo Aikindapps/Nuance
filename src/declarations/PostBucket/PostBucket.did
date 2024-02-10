@@ -163,6 +163,7 @@ type PostBucket =
    generateContent: (text) -> (text);
    generatePublishedDates: () -> ();
    getAdmins: () -> (Result_8) query;
+   getAllApplauds: () -> (vec Applaud) query;
    getAllRejected: () -> (vec record {
                                 text;
                                 text;
@@ -194,7 +195,7 @@ type PostBucket =
    getPublicationPosts: (vec text, text) ->
     (vec PostBucketType__1) composite_query;
    getReportedCommentIds: () -> (vec text);
-   getReportedComments: () -> (Result_9);
+   getReportedComments: () -> (Result_9) query;
    getTotalPostCount: () -> (nat) query;
    getTrustedCanisters: () -> (Result_8) query;
    getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;

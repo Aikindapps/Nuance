@@ -211,6 +211,11 @@ export const idlFactory = ({ IDL }) => {
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_7], ['query']),
     'getFrontendCanisterId' : IDL.Func([], [Result_2], ['query']),
+    'getHistoricalPublishedArticlesData' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Int))],
+        ['query'],
+      ),
     'getKinicList' : IDL.Func([], [Result_7], []),
     'getLastWeekRejectedPostKeyProperties' : IDL.Func(
         [],

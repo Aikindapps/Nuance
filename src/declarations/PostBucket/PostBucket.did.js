@@ -209,6 +209,7 @@ export const idlFactory = ({ IDL }) => {
     'generateContent' : IDL.Func([IDL.Text], [IDL.Text], []),
     'generatePublishedDates' : IDL.Func([], [], []),
     'getAdmins' : IDL.Func([], [Result_8], ['query']),
+    'getAllApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
     'getAllRejected' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
@@ -256,7 +257,7 @@ export const idlFactory = ({ IDL }) => {
         ['composite_query'],
       ),
     'getReportedCommentIds' : IDL.Func([], [IDL.Vec(IDL.Text)], []),
-    'getReportedComments' : IDL.Func([], [Result_9], []),
+    'getReportedComments' : IDL.Func([], [Result_9], ['query']),
     'getTotalPostCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getTrustedCanisters' : IDL.Func([], [Result_8], ['query']),
     'getUserApplaudsByPrincipal' : IDL.Func(

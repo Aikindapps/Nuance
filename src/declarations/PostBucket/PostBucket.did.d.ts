@@ -119,6 +119,7 @@ export interface PostBucket {
   'generateContent' : ActorMethod<[string], string>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
   'getAdmins' : ActorMethod<[], Result_8>,
+  'getAllApplauds' : ActorMethod<[], Array<Applaud>>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
   'getAllSubmittedForReviews' : ActorMethod<[], Result_12>,
   'getApplaudById' : ActorMethod<[string], Result_11>,

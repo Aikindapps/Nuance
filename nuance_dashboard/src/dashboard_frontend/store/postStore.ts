@@ -21,6 +21,7 @@ import {
 // import { Principal } from '@dfinity/principal';
 // import { PostKeyProperties } from '../../../../src/declarations/PostCore/PostCore.did';
 import {
+  Applaud,
   Comment,
   PostBucketType,
   SaveCommentModel,
@@ -163,7 +164,14 @@ export interface PostStore {
   getSnsCanisters: () => Promise<GetSnsCanistersSummaryResponse | undefined>;
   getProposals: () => Promise<ProposalSummaryValue[] | undefined>;
   getRejectedPostsLastWeek: () => Promise<PostType[]>;
-  getPost:(bucketCanisterId: string, postId: string) => Promise<PostBucketType | undefined>
+  getPost: (
+    bucketCanisterId: string,
+    postId: string
+  ) => Promise<PostBucketType | undefined>;
+  getHistoricalData: () => Promise<{
+    posts: [string, bigint][];
+    applauds: Applaud[];
+  }>;
   clearAll: () => void;
 }
 
@@ -414,6 +422,7 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
       allRegisteredNumberResponse,
       createdPostsPerHourResponse,
       viewedPostsPerHourResponse,
+      numberofAllPosts,
     ] = await Promise.all([
       userActor.getActiveUsersByRange({
         day: BigInt(1),
@@ -448,7 +457,33 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
       userActor.getNumberOfAllRegisteredUsers(),
       postCoreActor.getPostsPerHourLast24Hours(),
       postCoreActor.getPostViewsPerHourLast24Hours(),
+      postCoreActor.getTotalPostCount(),
     ]);
+
+    let allApplaudsData = (
+      await Promise.all(
+        get().postBucketCanisterIds.map(async (postBucketCanisterId) => {
+          return (
+            await getPostBucketActor(postBucketCanisterId, get().isLocal)
+          ).getAllApplauds();
+        })
+      )
+    ).flat(1);
+
+    let applaudsMap = new Map<string, number>();
+    applaudsMap.set('NUA', 0);
+    applaudsMap.set('ckBTC', 0);
+    applaudsMap.set('ICP', 0);
+    for (const applaud of allApplaudsData) {
+      let n = applaudsMap.get(applaud.currency) || 0;
+      applaudsMap.set(applaud.currency, n + Number(applaud.numberOfApplauds));
+    }
+    let applaudsMetricsValues = Array.from(applaudsMap).map((value) => {
+      return {
+        value: value[1],
+        name: `Total Applauds (${value[0]})`,
+      };
+    });
 
     return [
       {
@@ -483,7 +518,47 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
         value: Number(viewedPostsPerHourResponse[0]),
         name: 'Viewed Posts Today',
       },
+      {
+        value: Number(numberofAllPosts),
+        name: 'Total number of posts',
+      },
+      ...applaudsMetricsValues,
     ];
+  },
+
+  getHistoricalData: async (): Promise<{
+    posts: [string, bigint][];
+    applauds: Applaud[];
+  }> => {
+    try {
+      let postCoreActor = await getPostCoreActor(
+        get().postCoreCanisterId,
+        get().isLocal
+      );
+      let publishedPostsHistoricalData =
+        await postCoreActor.getHistoricalPublishedArticlesData();
+  
+      let allApplaudsData = (
+        await Promise.all(
+          get().postBucketCanisterIds.map(async (postBucketCanisterId) => {
+            return (
+              await getPostBucketActor(postBucketCanisterId, get().isLocal)
+            ).getAllApplauds();
+          })
+        )
+      ).flat(1);
+  
+      return {
+        posts: publishedPostsHistoricalData,
+        applauds: allApplaudsData,
+      };
+    } catch (error) {
+      toastError(error)
+      return {
+        posts: [],
+        applauds: [],
+      };
+    }
   },
 
   getDappCanisters: async (): Promise<[RegisteredCanister[], string]> => {
@@ -604,18 +679,20 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
     }
   },
 
-  getPost: async (bucketCanisterId: string, postId: string): Promise<PostBucketType | undefined> => {
+  getPost: async (
+    bucketCanisterId: string,
+    postId: string
+  ): Promise<PostBucketType | undefined> => {
     try {
       let bucketActor = await getPostBucketActor(
         bucketCanisterId,
         get().isLocal
       );
-      let response =  await bucketActor.getPostCompositeQuery(postId);
-      if(!(Err in response)){
-        return response.ok
-      }
-      else{
-        toastError(response.err)
+      let response = await bucketActor.getPostCompositeQuery(postId);
+      if (!(Err in response)) {
+        return response.ok;
+      } else {
+        toastError(response.err);
       }
     } catch (error) {
       toastError(error);
