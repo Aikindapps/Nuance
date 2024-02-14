@@ -75,7 +75,6 @@ jobs:
 
           UNFAMILIAR_COUNT=${{env.UNFAMILIAR_COUNT}}
           if [ "$UNFAMILIAR_COUNT" -gt 0 ]; then
-            cat .github/workflows/utils/proposals_output.txt
             SLACK_WEBHOOK_URL_PROPOSALS="https://hooks.slack.com/services/${{ secrets.PROPOSAL_WATCHER_BOT_WEBHOOK }}"
             MESSAGE_PROPOSALS="Alert: $UNFAMILIAR_COUNT unfamiliar proposals detected."
             curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"$MESSAGE_PROPOSALS\"}" $SLACK_WEBHOOK_URL_PROPOSALS
