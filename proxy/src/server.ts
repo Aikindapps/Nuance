@@ -8,6 +8,11 @@ import { Post } from '../declarations/PostBucket/PostBucket.did.js';
 import { User } from '../declarations/User/User.did';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { buildUserSEO } from './screens/userProfile.js';
+import { buildPostSEO } from './screens/post.js';
+import { buildHomeSEO } from './screens/home.js';
+import { getUserPosts, getPostKeyProperties, getLatestPosts, getPopularThisWeek } from './actor.js';
+import { PostKeyProperties, GetPostsByFollowers } from '../declarations/PostCore/PostCore.did.js';
 
 
 
@@ -38,96 +43,6 @@ const crawlers = [
 function isCrawler(userAgent = '') {
         return crawlers.some(crawler => userAgent.includes(crawler));
 }
-
-function buildUserSEO(user : User, canonicalUrl : string, userAgent = '') {
-    return `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${user.displayName}</title>
-            <meta name="description" content="${user.bio}">
-            <meta name="author" content="${user.handle}">
-            <link rel="canonical" href="${canonicalUrl}">
-
-            <!-- Open Graph / Facebook -->
-            <meta property="og:type" content="profile">
-            <meta property="og:title" content="${user.displayName}">
-            <meta property="og:description" content="${user.bio}">
-            <meta property="og:image" content="${user.avatar}">
-            <meta property="og:url" content="${canonicalUrl}">
-
-            <!-- Twitter -->
-            <meta name="twitter:card" content="summary">
-            <meta property="twitter:title" content="${user.displayName}">
-            <meta property="twitter:description" content="${user.bio}">
-            <meta property="twitter:image" content="${user.avatar}">
-        </head>
-        <body>
-            <header>
-                <h1>${user.displayName}</h1>
-                <img src="${user.avatar}" alt="${user.displayName}">
-            </header>
-            <main>
-                <p>${user.bio}</p>
-                <p>Followers: ${user.followersCount}</p>
-                <!-- You can add more user details here -->
-            </main>
-            <footer>
-                Account created on: ${user.accountCreated}
-            </footer>
-        </body>
-        </html>
-    `;
-}
-
-function buildPostSEO(post: Post, handle: string, canonicalUrl: string) {
-    const userUrl = new URL(`/user/${post.creator || handle}`, canonicalUrl).href;
-    return `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${post.title}</title>
-            <meta name="description" content="${post.subtitle}">
-            <meta name="author" content="${handle}">
-            <link rel="canonical" href="${canonicalUrl}">
-
-            <!-- Open Graph / Facebook -->
-            <meta property="og:type" content="article">
-            <meta property="og:title" content="${post.title}">
-            <meta property="og:description" content="${post.subtitle}">
-            <meta property="og:image" content="${post.headerImage}">
-            <meta property="og:url" content="${canonicalUrl}">
-
-            <!-- Twitter -->
-            <meta property="twitter:card" content="summary_large_image">
-            <meta property="twitter:title" content="${post.title}">
-            <meta property="twitter:description" content="${post.subtitle}">
-            <meta property="twitter:image" content="${post.headerImage}">
-        </head>
-        <body>
-            <header>
-                <h1>${post.title}</h1>
-                <h2>By ${handle}</h2>
-                <img src="${post.headerImage}" alt="${post.title}">
-            </header>
-            <main>${post.content}</main>
-            <section id="author-info">
-                    <h2>About the Author</h2>
-                    <p>${post.creator || post.handle}</p>
-                    <p>More about the author: <a href="${userUrl}">${userUrl}</a></p>
-            <footer>
-                Published on: ${new Date(Number(post.publishedDate)).toLocaleDateString()}
-                
-            </footer>
-        </body>
-        </html>
-    `;
-}
-
 
 const reservedPaths = new Set([
     '', 'metrics', 'timed-out', 'register', 'article', 'publication', 'my-profile', 'favicon.ico', 'api', 'assets', 'user', 'sitemap.xml'
@@ -165,6 +80,7 @@ const server = http.createServer(async (req, res) => {
     
         });
     }
+
     if (parsedUrl.pathname === '/sitemap2.xml') {
         fs.readFile(sitemap2Path, (err, data) => {
             if (err) {
@@ -187,10 +103,18 @@ const server = http.createServer(async (req, res) => {
 
             const postId = combinedPostIdAndBucket.substring(0, splitIndex);
             const bucketCanisterId = combinedPostIdAndBucket.substring(splitIndex + 1);
+            var tags : string[] = [];
 
             try {
                 const postData = await fetchPostData(postId, bucketCanisterId) as BucketReturn;
                 console.log('Fetched Post Data',);
+                const fullPostData = await getPostKeyProperties(postId) as PostKeyProperties;
+                console.log('Fetched Full Post Data', fullPostData);
+                if (fullPostData) {
+                                
+            
+                tags = fullPostData.tags.map(tag => tag.tagName);
+                }
 
                 // Convert postData to SEO optimized HTML and serve it
                 if (postData.bucketReturn.ok) {
@@ -199,7 +123,7 @@ const server = http.createServer(async (req, res) => {
                
        
                 res.writeHead(200, {'Content-Type': 'text/html'});
-                res.end(buildPostSEO(postData.bucketReturn.ok, handle, parsedUrl.href));
+                res.end(buildPostSEO(postData.bucketReturn.ok, handle, parsedUrl.href, tags));
                 }
             } catch (error) {
                 proxy.web(req, res, {
@@ -219,19 +143,89 @@ const server = http.createServer(async (req, res) => {
 
         
             try {
-                console.log('Fetching user... ' + handle);
-                const response = await getUserByHandle(handle) as UserResponse;
-                if (response && response.ok) {
-                    const user = response.ok; // Unwrapping the 'ok' property
-                    res.writeHead(200, {'Content-Type': 'text/html'});
-                    res.end(buildUserSEO(user, parsedUrl.href));
-                } else {
-                    proxy.web(req, res, {
-                        target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
-                        changeOrigin: true
+                console.log('Fetching Publication... ' + handle);
+                const userResponse = await getUserByHandle(handle) as UserResponse;
+            
+                if (userResponse && userResponse.ok) {
+                    const user = userResponse.ok;
+                    let postsIdentifiers = await getUserPosts(handle);
+                    let uniqueTags = new Set<string>(); 
+            
+                    // Fetch full details for each post asynchronously
+                    let postsPromises = postsIdentifiers.map(async (postIdentifier) => {
+                        try {
+                            const fullPostData = await fetchPostData(postIdentifier.postId, postIdentifier.bucketCanisterId) as BucketReturn;
+                            if (fullPostData.bucketReturn.ok) {
+                                const fullPost = fullPostData.bucketReturn.ok;
+            
+                               postIdentifier.tags.forEach(tag => uniqueTags.add(tag.tagName));
+            
+                                return `<li><a href="https://nuance.xyz/${handle}/${postIdentifier.postId}-${postIdentifier.bucketCanisterId}/${fullPost.title}">${fullPost.title}</a>
+                                        <p>${fullPost.subtitle}</p>
+                                        </li>`;
+                            }
+                            return ''; // In case post data is not okay
+                        } catch (error) {
+                            console.error('Error fetching full post details:', error);
+                            return ''; // Return an empty string or some placeholder for failed fetch operations
+                        }
                     });
+            
+                    // Resolve all promises to get the full posts HTML strings
+                    let postsHtml = (await Promise.all(postsPromises)).join('') || 'No posts found';
+            
+                    // Convert Set to Array for the function argument
+                    let tagsArray = Array.from(uniqueTags);
+            
+                    const userSEOContent = buildUserSEO(user, parsedUrl.href, userAgent, postsHtml, tagsArray); // Adjust buildUserSEO to accept tagsArray
+                    res.writeHead(200, {'Content-Type': 'text/html'});
+                    res.end(userSEOContent);
+            
+                } else {
+                    throw new Error('User not found');
                 }
             } catch (error) {
+                console.error(error);
+                proxy.web(req, res, {
+                    target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                    changeOrigin: true
+                });
+            }
+
+            //home page
+        } else if (pathSegments && pathSegments.length === 0) {
+            try {
+                // Fetch latest and popular posts identifiers concurrently
+                const [latestPosts, popularPosts] = await Promise.all([
+                    getLatestPosts(0, 30) as Promise<GetPostsByFollowers>,
+                    getPopularThisWeek(0, 30) as Promise<GetPostsByFollowers>
+                ]);
+            
+                // Initiate concurrent fetches for the details of latest and popular posts
+                const latestPostDetailsPromises = latestPosts.posts.map(post =>
+                    fetchPostData(post.postId, post.bucketCanisterId) as Promise<BucketReturn>
+                );
+                const popularPostDetailsPromises = popularPosts.posts.map(post =>
+                    fetchPostData(post.postId, post.bucketCanisterId) as Promise<BucketReturn>
+                );
+            
+                // Wait for all details fetches to complete
+                const allDetailsPromises = [...latestPostDetailsPromises, ...popularPostDetailsPromises];
+                const allResults = await Promise.all(allDetailsPromises);
+            
+                // Separate the results back into fullLatestPosts and fullPopularPosts
+                const fullLatestPosts: Post[] = allResults.slice(0, latestPosts.posts.length)
+                    .filter(result => result.bucketReturn.ok)
+                    .map(result => result.bucketReturn.ok as Post);
+                const fullPopularPosts: Post[] = allResults.slice(latestPosts.posts.length)
+                    .filter(result => result.bucketReturn.ok)
+                    .map(result => result.bucketReturn.ok as Post);
+            
+                // Serve the response
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end(buildHomeSEO(fullLatestPosts, fullPopularPosts));
+            }
+            catch (error) {
                 proxy.web(req, res, {
                     target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
                     changeOrigin: true
@@ -248,23 +242,54 @@ const server = http.createServer(async (req, res) => {
         
             try {
                 console.log('Fetching user... ' + handle);
-                const response = await getUserByHandle(handle) as UserResponse;
-                if (response && response.ok) {
-                    const user = response.ok; // Unwrapping the 'ok' property
-                    res.writeHead(200, {'Content-Type': 'text/html'});
-                    res.end(buildUserSEO(user, parsedUrl.href, userAgent));
-                } else {
-                    proxy.web(req, res, {
-                        target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
-                        changeOrigin: true
+                const userResponse = await getUserByHandle(handle) as UserResponse;
+            
+                if (userResponse && userResponse.ok) {
+                    const user = userResponse.ok;
+                    let postsIdentifiers = await getUserPosts(handle);
+                    let uniqueTags = new Set<string>(); 
+            
+                    // Fetch full details for each post asynchronously
+                    let postsPromises = postsIdentifiers.map(async (postIdentifier) => {
+                        try {
+                            const fullPostData = await fetchPostData(postIdentifier.postId, postIdentifier.bucketCanisterId) as BucketReturn;
+                            if (fullPostData.bucketReturn.ok) {
+                                const fullPost = fullPostData.bucketReturn.ok;
+            
+                               postIdentifier.tags.forEach(tag => uniqueTags.add(tag.tagName));
+            
+                                return `<li><a href="https://nuance.xyz/${handle}/${postIdentifier.postId}-${postIdentifier.bucketCanisterId}/${fullPost.title}">${fullPost.title}</a>
+                                        <p>${fullPost.subtitle}</p>
+                                        </li>`;
+                            }
+                            return ''; // In case post data is not okay
+                        } catch (error) {
+                            console.error('Error fetching full post details:', error);
+                            return ''; // Return an empty string or some placeholder for failed fetch operations
+                        }
                     });
+            
+                    // Resolve all promises to get the full posts HTML strings
+                    let postsHtml = (await Promise.all(postsPromises)).join('') || 'No posts found';
+            
+                    // Convert Set to Array for the function argument
+                    let tagsArray = Array.from(uniqueTags);
+            
+                    const userSEOContent = buildUserSEO(user, parsedUrl.href, userAgent, postsHtml, tagsArray); // Adjust buildUserSEO to accept tagsArray
+                    res.writeHead(200, {'Content-Type': 'text/html'});
+                    res.end(userSEOContent);
+            
+                } else {
+                    throw new Error('User not found');
                 }
             } catch (error) {
+                console.error(error);
                 proxy.web(req, res, {
                     target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
                     changeOrigin: true
                 });
             }
+            
             
         } else {
             proxy.web(req, res, {
