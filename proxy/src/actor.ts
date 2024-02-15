@@ -2,6 +2,8 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { idlFactory as postCoreFactory } from '../declarations/PostCore/index.js';
 import { idlFactory as postBucketFactory } from '../declarations/PostBucket/index.js';
 import { idlFactory as userFactory } from '../declarations/User/index.js';
+import { Post } from '../declarations/PostBucket/PostBucket.did.js';
+import { PostKeyProperties } from '../declarations/PostCore/PostCore.did.js';
 
 
 // Replace these with actual canister IDs
@@ -28,6 +30,18 @@ function getPostBucketActor(bucketCanisterId : string) {
     return createActor(bucketCanisterId, postBucketFactory);
 }
 
+
+export async function getUserPosts(handle: string): Promise<PostKeyProperties[]> {
+    try {
+        let posts = await getPostCoreActor().getUserPosts(handle.toLowerCase()) as PostKeyProperties[];
+        return posts; 
+    } catch (err) {
+        console.error('Error fetching user posts:', err);
+        throw err;
+    }
+}
+
+
 export async function fetchPostData(postId : string, bucketCanisterId : string) {
     try {
 
@@ -50,6 +64,36 @@ export async function getUserByHandle(handle : string) {
         return user;
     } catch (err) {
         console.error('Error fetching user:', err);
+        throw err;
+    }
+}
+
+export async function getPostKeyProperties(postId : string) {
+    try {
+        let post = await getPostCoreActor().getPostKeyProperties(postId);
+        return post as PostKeyProperties;
+    } catch (err) {
+        console.error('Error fetching post:', err);
+        throw err;
+    }
+}
+
+export async function getLatestPosts(from: number, to: number) {
+    try {
+        let posts = await getPostCoreActor().getLatestPosts(from, to);
+        return posts;
+    } catch (err) {
+        console.error('Error fetching latest posts:', err);
+        throw err;
+    }
+}
+
+export async function getPopularThisWeek(from: number, to: number) {
+    try {
+        let posts = await getPostCoreActor().getPopularThisWeek(from, to);
+        return posts;
+    } catch (err) {
+        console.error('Error fetching popular posts:', err);
         throw err;
     }
 }
