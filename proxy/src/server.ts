@@ -26,6 +26,11 @@ interface BucketReturn {
     }
 }
 
+interface KeyPropertiesReturn {
+    ok?: PostKeyProperties;
+    err?: string;
+}
+
 interface UserResponse {
     ok?: User;
     err?: string;
@@ -106,26 +111,33 @@ const server = http.createServer(async (req, res) => {
             var tags : string[] = [];
 
             try {
-                const postData = await fetchPostData(postId, bucketCanisterId) as BucketReturn;
-                console.log('Fetched Post Data',);
-                const fullPostData = await getPostKeyProperties(postId) as PostKeyProperties;
-                console.log('Fetched Full Post Data', fullPostData);
-                if (fullPostData) {
-                                
+                const handle = pathSegments[0];
+                const combinedPostIdAndBucket = pathSegments[1];
+                const splitIndex = combinedPostIdAndBucket.indexOf('-');
+                const postId = combinedPostIdAndBucket.substring(0, splitIndex);
+                const bucketCanisterId = combinedPostIdAndBucket.substring(splitIndex + 1);
             
-                tags = fullPostData.tags.map(tag => tag.tagName);
+                // Fetch post data and post key properties concurrently
+                const [postData, fullPostData] = await Promise.all([
+                    fetchPostData(postId, bucketCanisterId) as Promise<BucketReturn>,
+                    getPostKeyProperties(postId) as Promise<KeyPropertiesReturn>
+                ]);
+            
+                let tags: string[] = [];
+                if (fullPostData.ok) {
+                    tags = fullPostData?.ok.tags.map(tag => tag.tagName);
                 }
-
-                // Convert postData to SEO optimized HTML and serve it
+            
                 if (postData.bucketReturn.ok) {
-                let post = postData?.bucketReturn.ok as Post;
+                    let post = postData.bucketReturn.ok;
             
-               
-       
-                res.writeHead(200, {'Content-Type': 'text/html'});
-                res.end(buildPostSEO(postData.bucketReturn.ok, handle, parsedUrl.href, tags));
+                    // Pass the tags to the SEO builder
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.end(buildPostSEO(post, handle, parsedUrl.href, tags));
                 }
+               
             } catch (error) {
+                console.error('Error processing post details:', error);
                 proxy.web(req, res, {
                     target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
                     changeOrigin: true
@@ -308,4 +320,4 @@ const server = http.createServer(async (req, res) => {
 
 console.log("Proxy server running...");
 
-server.listen(8080, '0.0.0.0');
+server.listen(8082, '0.0.0.0');

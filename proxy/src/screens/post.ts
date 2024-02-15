@@ -6,9 +6,8 @@ export function buildPostSEO(post: Post, handle: string, canonicalUrl: string, t
     const userUrl = new URL(`/user/${post.creator || handle}`, canonicalUrl).href;
    
     const staticKeywords = ['nuance'];
-    const dynamicKeywords = [post.handle, post.creator, ...tags, ]; 
+    let dynamicKeywords = [post.handle, ...tags, post.creator != "" ? post.creator : null ].filter(Boolean);
     const allKeywords = [...staticKeywords, ...dynamicKeywords].join(', ');
-    console.log('allKeywords:', allKeywords);
 
     return `
         <!DOCTYPE html>
