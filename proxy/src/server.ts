@@ -320,4 +320,4 @@ const server = http.createServer(async (req, res) => {
 
 console.log("Proxy server running...");
 
-server.listen(8082, '0.0.0.0');
+server.listen(8080, '0.0.0.0');
