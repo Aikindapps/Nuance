@@ -97,3 +97,13 @@ export async function getPopularThisWeek(from: number, to: number) {
         throw err;
     }
 }
+
+export async function getPostsByFollowers(handle: [string], from: number, to: number) {
+    try {
+        let posts = await getPostCoreActor().getPostsByFollowers(handle, from, to);
+        return posts;
+    } catch (err) {
+        console.error('Error fetching posts by followers:', err);
+        throw err;
+    }
+}
