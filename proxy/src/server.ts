@@ -11,7 +11,7 @@ import path from 'path';
 import { buildUserSEO } from './screens/userProfile.js';
 import { buildPostSEO } from './screens/post.js';
 import { buildHomeSEO } from './screens/home.js';
-import { getUserPosts, getPostKeyProperties, getLatestPosts, getPopularThisWeek } from './actor.js';
+import { getPostKeyProperties, getLatestPosts, getPopularThisWeek, getPostsByFollowers } from './actor.js';
 import { PostKeyProperties, GetPostsByFollowers } from '../declarations/PostCore/PostCore.did.js';
 
 
@@ -160,11 +160,11 @@ const server = http.createServer(async (req, res) => {
             
                 if (userResponse && userResponse.ok) {
                     const user = userResponse.ok;
-                    let postsIdentifiers = await getUserPosts(handle);
+                    let postsIdentifiers =  getPostsByFollowers([handle], 0, 30) as Promise<GetPostsByFollowers>; 
                     let uniqueTags = new Set<string>(); 
             
                     // Fetch full details for each post asynchronously
-                    let postsPromises = postsIdentifiers.map(async (postIdentifier) => {
+                    let postsPromises = (await postsIdentifiers).posts.map(async (postIdentifier) => {
                         try {
                             const fullPostData = await fetchPostData(postIdentifier.postId, postIdentifier.bucketCanisterId) as BucketReturn;
                             if (fullPostData.bucketReturn.ok) {
@@ -258,11 +258,11 @@ const server = http.createServer(async (req, res) => {
             
                 if (userResponse && userResponse.ok) {
                     const user = userResponse.ok;
-                    let postsIdentifiers = await getUserPosts(handle);
+                    let postsIdentifiers =  getPostsByFollowers([handle], 0, 30) as Promise<GetPostsByFollowers>; 
                     let uniqueTags = new Set<string>(); 
             
                     // Fetch full details for each post asynchronously
-                    let postsPromises = postsIdentifiers.map(async (postIdentifier) => {
+                    let postsPromises = (await postsIdentifiers).posts.map(async (postIdentifier) => {
                         try {
                             const fullPostData = await fetchPostData(postIdentifier.postId, postIdentifier.bucketCanisterId) as BucketReturn;
                             if (fullPostData.bucketReturn.ok) {
