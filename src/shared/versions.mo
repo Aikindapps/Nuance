@@ -1,11 +1,11 @@
 module {
-  public let USER_VERSION = "Quick-fix-martini";
-  public let POSTCORE_VERSION = "Quick-fix-martini";
-  public let POSTBUCKET_VERSION = "Quick-fix-martini";
-  public let KINICENDPOINT_VERSION = "Quick-fix-martini";
-  public let FASTBLOCKSEMAILOPTIN_VERSION = "Quick-fix-martini";
-  public let POSTINDEX_VERSION = "Quick-fix-martini";
-  public let STORAGE_VERSION = "Quick-fix-martini";
-  public let CYCLESDISPENSER_VERSION = "Quick-fix-martini";
-  public let METRICS_VERSION = "Quick-fix-martini";
+  public let USER_VERSION = "Searchlight Sipper";
+  public let POSTCORE_VERSION = "Searchlight Sipper";
+  public let POSTBUCKET_VERSION = "Searchlight Sipper";
+  public let KINICENDPOINT_VERSION = "Searchlight Sipper";
+  public let FASTBLOCKSEMAILOPTIN_VERSION = "Searchlight Sipper";
+  public let POSTINDEX_VERSION = "Searchlight Sipper";
+  public let STORAGE_VERSION = "Searchlight Sipper";
+  public let CYCLESDISPENSER_VERSION = "Searchlight Sipper";
+  public let METRICS_VERSION = "Searchlight Sipper";
 };
