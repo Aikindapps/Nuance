@@ -15,7 +15,7 @@ jobs:
         run: npm install
 
       - name: Install DFX
-        run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+        run: echo -e "yes" | DFXVM_INIT_YES=true DFX_VERSION=0.15.0 sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
 
       - name: Start DFX background
         run: dfx start --background
@@ -109,7 +109,7 @@ jobs:
           elif [ "$CURRENT_HOUR" = "00" ]; then
             # It's midnight UTC, and no comments are found, send notification
             echo "No comments to review. Sending daily notification to Slack."
-            SLACK_PAYLOAD='{"text":"Daily check in. No new comments reported."}'
+            SLACK_PAYLOAD='{"text":"Daily check in. No new comments reported. UAT"}'
             curl -X POST -H 'Content-type: application/json' --data "$SLACK_PAYLOAD" ${{ secrets.COMMENT_BOT_WEBHOOK }}
           else
             echo "No comments to review. Not time for daily notification."
