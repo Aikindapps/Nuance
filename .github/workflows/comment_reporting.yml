@@ -15,11 +15,11 @@ jobs:
         run: npm install
 
       - name: Install DFX
-        run: echo -e "yes" | DFXVM_INIT_YES=true DFX_VERSION=0.15.0 sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
-
-      - name: Start DFX background
-        run: dfx start --background
-
+        run: |
+          echo -e "yes" | DFXVM_INIT_YES=true DFX_VERSION=0.15.0 sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+          source "$HOME/.local/share/dfx/env"
+          dfx start --background
+          
       - name: Set up dfx identity
         run: |
           IDENTITY_DIR="$HOME/.config/dfx/identity/uat"
