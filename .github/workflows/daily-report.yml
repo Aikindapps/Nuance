@@ -18,8 +18,10 @@ jobs:
       - name: npm install
         run: npm install
 
-      - name: Install DFX
-        run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+      - name: Confirm successful installation
+        run: dfx --version
 
       - name: Start DFX background
         run: dfx start --background

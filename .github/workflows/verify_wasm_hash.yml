@@ -8,55 +8,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: npm install
-      run: npm install
+      - name: npm install
+        run: npm install
 
-    - name: Install DFX
-      run: echo -e "yes" | DFX_VERSION=0.15.0 sh -c "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
-    
-    - name: Install Vessel
-      run: |
-        cd ./Nuance-NFTs-and-Publications
-          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
-          mv vessel-linux64 vessel
-          chmod +x vessel
-          mv vessel /usr/local/bin/.
-          vessel --version
-        cd ..
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+      - name: Confirm successful installation
+        run: dfx --version
 
-    - name: Start DFX background
-      run: dfx start --background
+      - name: Install Vessel
+        run: |
+          cd ./Nuance-NFTs-and-Publications
+            wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+            mv vessel-linux64 vessel
+            chmod +x vessel
+            mv vessel /usr/local/bin/.
+            vessel --version
+          cd ..
 
-          
-    - name: Build all canisters
-      run: | 
-        dfx canister create --all
-        dfx build CyclesDispenser
-        dfx build FastBlocks_EmailOptIn
-        dfx build KinicEndpoint
-        dfx build Metrics
-        dfx build PostBucket
-        dfx build PostCore
-        dfx build PostIndex
-        dfx build Storage
-        dfx build User
-        cd Nuance-NFTs-and-Publications
-        dfx canister create --all
-        dfx build PublicationManagement
-        dfx build NftFactory
-        dfx build Publisher
-        
+      - name: Start DFX background
+        run: dfx start --background
 
-    - name: Get wasm hash for all
-      run: |
-        for canister in CyclesDispenser FastBlocks_EmailOptIn KinicEndpoint Metrics PostBucket PostCore PostIndex Storage User; do
-          sha256sum .dfx/local/canisters/$canister/$canister.wasm
-        done
-        cd Nuance-NFTs-and-Publications
-        for canister in PublicationManagement NftFactory Publisher; do
-          sha256sum .dfx/local/canisters/$canister/$canister.wasm
-        done
+      - name: Build all canisters
+        run: |
+          dfx canister create --all
+          dfx build CyclesDispenser
+          dfx build FastBlocks_EmailOptIn
+          dfx build KinicEndpoint
+          dfx build Metrics
+          dfx build PostBucket
+          dfx build PostCore
+          dfx build PostIndex
+          dfx build Storage
+          dfx build User
+          cd Nuance-NFTs-and-Publications
+          dfx canister create --all
+          dfx build PublicationManagement
+          dfx build NftFactory
+          dfx build Publisher
+
+      - name: Get wasm hash for all
+        run: |
+          for canister in CyclesDispenser FastBlocks_EmailOptIn KinicEndpoint Metrics PostBucket PostCore PostIndex Storage User; do
+            sha256sum .dfx/local/canisters/$canister/$canister.wasm
+          done
+          cd Nuance-NFTs-and-Publications
+          for canister in PublicationManagement NftFactory Publisher; do
+            sha256sum .dfx/local/canisters/$canister/$canister.wasm
+          done
