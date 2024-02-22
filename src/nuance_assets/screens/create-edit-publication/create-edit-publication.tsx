@@ -337,17 +337,11 @@ const CreateEditPublication = () => {
     } else return true;
   }
 
-  const validateURL = (input?: string) => {
-    const urlRegex =
-      /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-    return input && urlRegex.test(input);
-  };
-
   const isAddNewSocialLinkActive = () => {
     if (publicationSocialChannelUrls.length === 0) {
       return true;
     } else {
-      return validateURL(
+      return validateUrl(
         publicationSocialChannelUrls[publicationSocialChannelUrls.length - 1]
       );
     }
@@ -356,7 +350,7 @@ const CreateEditPublication = () => {
 
   const validateSocialLinks = () => {
     for (const socialChannelUrl of publicationSocialChannelUrls) {
-      if (socialChannelUrl !== '' && !validateURL(socialChannelUrl)) {
+      if (socialChannelUrl !== '' && !validateUrl(socialChannelUrl)) {
         return false;
       }
     }
@@ -368,7 +362,7 @@ const CreateEditPublication = () => {
     if (publicationWebsite === '') {
       return validateSocialLinks();
     } else {
-      return validateURL(publicationWebsite) && validateSocialLinks();
+      return validateUrl(publicationWebsite) && validateSocialLinks();
     }
   };
 
@@ -576,7 +570,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -677,7 +671,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -778,7 +772,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -1130,7 +1124,7 @@ const CreateEditPublication = () => {
     }
   };
 
-  const clearAll = () => {};
+  const clearAll = () => { };
 
   const KeyCodes = {
     comma: 188,
@@ -1183,10 +1177,10 @@ const CreateEditPublication = () => {
               {publicationDoesNotExist
                 ? 'This publication no longer exists or you have entered the wrong handle'
                 : featureIsLive === false
-                ? 'This feature is not yet live! Stay tuned...'
-                : userIsEditor == false || publication == undefined
-                ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
-                : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
+                  ? 'This feature is not yet live! Stay tuned...'
+                  : userIsEditor == false || publication == undefined
+                    ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
+                    : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
             </h2>
           </div>
         )}
@@ -1235,11 +1229,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                          width: '96px',
-                          cursor: 'not-allowed',
-                          background: 'gray',
-                          borderColor: 'gray',
-                        }
+                        width: '96px',
+                        cursor: 'not-allowed',
+                        background: 'gray',
+                        borderColor: 'gray',
+                      }
                   }
                 >
                   Save
@@ -1888,7 +1882,7 @@ const CreateEditPublication = () => {
                 fontSize={'14px'}
                 fontFamily='Roboto'
                 fontColor={colors.editProfileInputTextColor}
-                hasError={user?.website !== '' && !validateURL(user?.website)}
+                hasError={user?.website !== '' && !validateUrl(user?.website || '')}
                 onChange={setPublicationWebsite}
                 value={user?.website}
                 maxLength={161}
@@ -1924,7 +1918,7 @@ const CreateEditPublication = () => {
                       fontColor={colors.editProfileInputTextColor}
                       hasError={
                         socialChannelUrl !== '' &&
-                        !validateURL(socialChannelUrl)
+                        !validateUrl(socialChannelUrl)
                       }
                       onChange={(newVal) => {
                         let allUrls = publicationSocialChannelUrls;
@@ -1960,15 +1954,15 @@ const CreateEditPublication = () => {
                 style={
                   !isAddNewSocialLinkActive()
                     ? {
-                        cursor: 'not-allowed',
-                        opacity: '0.5',
-                        marginTop: '20px',
-                        marginBottom: '20px',
-                      }
+                      cursor: 'not-allowed',
+                      opacity: '0.5',
+                      marginTop: '20px',
+                      marginBottom: '20px',
+                    }
                     : {
-                        marginTop: '20px',
-                        marginBottom: '20px',
-                      }
+                      marginTop: '20px',
+                      marginBottom: '20px',
+                    }
                 }
                 className='edit-publication-add-new-social-channel'
                 onClick={() => {
@@ -2010,11 +2004,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                          width: '96px',
-                          cursor: 'not-allowed',
-                          background: 'gray',
-                          borderColor: 'gray',
-                        }
+                        width: '96px',
+                        cursor: 'not-allowed',
+                        background: 'gray',
+                        borderColor: 'gray',
+                      }
                   }
                 >
                   Save
