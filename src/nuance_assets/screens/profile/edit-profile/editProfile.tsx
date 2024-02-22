@@ -71,17 +71,19 @@ const EditProfile = () => {
     }
   };
 
-  const validateURL = (input?: string) => {
-    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-    return input && urlRegex.test(input)
-  };
+  function validateURL(url: string) {
+    var validUrl = require('valid-url');
+    if (url != '') {
+      return validUrl.isWebUri(url)
+    } else return true;
+  }
 
   const isAddNewSocialLinkActive = () => {
-    if(user){
-      if(user.socialChannels.length === 0){
+    if (user) {
+      if (user.socialChannels.length === 0) {
         return true
       }
-      else{
+      else {
         return validateURL(user.socialChannels[user.socialChannels.length - 1]);
       }
     }
@@ -89,9 +91,9 @@ const EditProfile = () => {
   }
 
   const validateSocialLinks = () => {
-    if(user){
-      for(const socialChannelUrl of user.socialChannels){
-        if(socialChannelUrl !== '' && !validateURL(socialChannelUrl)){
+    if (user) {
+      for (const socialChannelUrl of user.socialChannels) {
+        if (socialChannelUrl !== '' && !validateURL(socialChannelUrl)) {
           return false;
         }
       }
@@ -100,11 +102,11 @@ const EditProfile = () => {
   }
 
   const validate = () => {
-    if(user){
-      if(user.website !== ''){
+    if (user) {
+      if (user.website !== '') {
         return validateSocialLinks() && validateURL(user.website);
       }
-      else{
+      else {
         return validateSocialLinks()
       }
     }
@@ -112,19 +114,19 @@ const EditProfile = () => {
   }
 
   const onWebsiteChange = (value: string) => {
-    if(user){
+    if (user) {
       setUser({ ...user, website: value });
     }
   }
 
   const onSocialChannelUrlChange = (value: string, index: number) => {
-    if(user){
+    if (user) {
       let allUrls = user.socialChannels;
-      allUrls = allUrls.map((val, i)=>{
-        if(i === index){
+      allUrls = allUrls.map((val, i) => {
+        if (i === index) {
           return value
         }
-        else{
+        else {
           return val
         }
       })
@@ -132,7 +134,7 @@ const EditProfile = () => {
     }
   }
 
-  
+
 
   const editor = useRef(null);
   const [hideEditor, setHideEditor] = useState(true);
@@ -237,7 +239,7 @@ const EditProfile = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -455,7 +457,7 @@ const EditProfile = () => {
             fontSize={'14px'}
             fontFamily='Roboto'
             fontColor={colors.editProfileInputTextColor}
-            hasError={user?.website !== '' && !validateURL(user?.website)}
+            hasError={user?.website !== '' && !validateURL(user?.website || '')}
             onChange={onWebsiteChange}
             value={user?.website}
             maxLength={161}
@@ -511,9 +513,9 @@ const EditProfile = () => {
           style={
             !isAddNewSocialLinkActive()
               ? {
-                  cursor: 'not-allowed',
-                  opacity: '0.5',
-                }
+                cursor: 'not-allowed',
+                opacity: '0.5',
+              }
               : {}
           }
           className='edit-profile-add-new-social-channel'
@@ -549,11 +551,11 @@ const EditProfile = () => {
             style={
               !validate()
                 ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                    width: '120px',
-                  }
+                  cursor: 'not-allowed',
+                  background: 'gray',
+                  borderColor: 'gray',
+                  width: '120px',
+                }
                 : { width: '120px' }
             }
           >
