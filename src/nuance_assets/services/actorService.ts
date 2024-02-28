@@ -60,6 +60,16 @@ import {
   idlFactory as icpIndexFactory,
 } from './icp-index';
 
+import { _SERVICE as Icrc1ArchiveCanisterService } from './icrc1-archive/icrc1-archive.did';
+import {
+  createActor as createIcrc1ArchiveActor,
+} from './icrc1-archive';
+
+import { _SERVICE as Icrc1IndexCanisterService } from './icrc1-index/icrc1-index.did';
+import {
+  createActor as createIcrc1IndexActor,
+} from './icrc1-index';
+
 import { _SERVICE as SonicService } from './sonic/Sonic.did';
 import {
   createActor as createSonicActor,
@@ -350,16 +360,18 @@ export async function getIcrc1Actor(
 }
 
 export async function getIcrc1TokenActorAnonymous(
-  canisterId: string
+  canisterId: string,
+  mainnet?: boolean
 ): Promise<ActorSubclass<ICRC1Service>> {
   var identity = new AnonymousIdentity();
   return createIcrc1Actor(canisterId as string, {
     agentOptions: {
       identity,
-      host: isLocal ? undefined : 'https://icp-api.io ',
+      host: isLocal && !mainnet ? undefined : 'https://icp-api.io ',
     },
   });
 }
+
 
 //always uses anonymous identity
 //works only on mainnet
@@ -377,6 +389,28 @@ export async function getSonicActor(): Promise<ActorSubclass<SonicService>> {
 export async function getIcpIndexCanister(): Promise<IcpIndexCanisterService> {
   var identity = new AnonymousIdentity();
   return createIcpIndexActor('qhbym-qaaaa-aaaaa-aaafq-cai' as string, {
+    agentOptions: {
+      identity,
+      host: 'https://icp-api.io',
+    },
+  });
+};
+
+//always mainnet
+export async function getIcrc1ArchiveCanister(canisterId: string): Promise<Icrc1ArchiveCanisterService> {
+  var identity = new AnonymousIdentity();
+  return createIcrc1ArchiveActor(canisterId as string, {
+    agentOptions: {
+      identity,
+      host: 'https://icp-api.io',
+    },
+  });
+};
+
+//always mainnet
+export async function getIcrc1IndexCanister(canisterId: string): Promise<Icrc1IndexCanisterService> {
+  var identity = new AnonymousIdentity();
+  return createIcrc1IndexActor(canisterId as string, {
     agentOptions: {
       identity,
       host: 'https://icp-api.io',
