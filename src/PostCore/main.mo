@@ -39,7 +39,7 @@ import Sonic "../shared/sonic";
 actor PostCore {
 
   let canistergeekMonitor = Canistergeek.Monitor();
-  let maxHashmapSize = 1000000;
+  let initCapacity = 0;
 
   // error messages
   let Unauthorized = "Unauthorized";
@@ -135,53 +135,53 @@ actor PostCore {
 
 
   //   key: bucket canister id, value: first post id of the bucket canister
-  var bucketCanisterIdsHashMap = HashMap.fromIter<Text, Text>(bucketCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var bucketCanisterIdsHashMap = HashMap.fromIter<Text, Text>(bucketCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: principalId, value: handle
-  var handleHashMap = HashMap.fromIter<Text, Text>(handleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var handleHashMap = HashMap.fromIter<Text, Text>(handleEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: handle, value: principalId
-  var handleReverseHashMap = HashMap.fromIter<Text, Text>(handleReverseEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var handleReverseHashMap = HashMap.fromIter<Text, Text>(handleReverseEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: principalId, value: handle(lowercase)
-  var lowercaseHandleHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var lowercaseHandleHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: handle(lowercase), value: principalId
-  var lowercaseHandleReverseHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleReverseEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var lowercaseHandleReverseHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleReverseEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: principalId, value: List<postId>
-  var userPostsHashMap = HashMap.fromIter<Text, List.List<Text>>(userPostsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var userPostsHashMap = HashMap.fromIter<Text, List.List<Text>>(userPostsEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //post data
   //key: postId, value: corresponding value
-  var postIdsToBucketCanisterIdsHashMap = HashMap.fromIter<Text, Text>(postIdsToBucketCanisterIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var principalIdHashMap = HashMap.fromIter<Text, Text>(principalIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var createdHashMap = HashMap.fromIter<Text, Int>(createdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var modifiedHashMap = HashMap.fromIter<Text, Int>(modifiedEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var isDraftHashMap = HashMap.fromIter<Text, Bool>(isDraftEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var publishedDateHashMap = HashMap.fromIter<Text, Int>(publishedDateEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var latestPostsHashmap = HashMap.fromIter<Text, Text>(latestPostsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var viewsHashMap = HashMap.fromIter<Text, Nat>(viewsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var dailyViewHistoryHashMap = HashMap.fromIter<Text, Nat>(dailyViewHistory.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var postModerationStatusMap = HashMap.fromIter<Text, PostModerationStatus>(postModerationStatusEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var postModerationStatusMapV2 = HashMap.fromIter<Text, PostModerationStatusV2>(postModerationStatusEntriesV2.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var postVersionMap = HashMap.fromIter<Text, Nat>(postVersionEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var tagsHashMap = HashMap.fromIter<Text, Tag>(tagEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var relationships = HashMap.fromIter<Text, [PostTag]>(relationshipEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var userTagRelationships = HashMap.fromIter<Text, [PostTag]>(userTagRelationshipEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var clapsHashMap = HashMap.fromIter<Text, Nat>(clapsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var applaudsHashMap = HashMap.fromIter<Text, Nat>(applaudsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var popularityHashMap = HashMap.fromIter<Text, Nat>(popularity.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var popularityTodayHashMap = HashMap.fromIter<Text, Nat>(popularityToday.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var popularityThisWeekHashMap = HashMap.fromIter<Text, Nat>(popularityThisWeek.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var popularityThisMonthHashMap = HashMap.fromIter<Text, Nat>(popularityThisMonth.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var postIdsToBucketCanisterIdsHashMap = HashMap.fromIter<Text, Text>(postIdsToBucketCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var principalIdHashMap = HashMap.fromIter<Text, Text>(principalIdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var createdHashMap = HashMap.fromIter<Text, Int>(createdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var modifiedHashMap = HashMap.fromIter<Text, Int>(modifiedEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var isDraftHashMap = HashMap.fromIter<Text, Bool>(isDraftEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var publishedDateHashMap = HashMap.fromIter<Text, Int>(publishedDateEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var latestPostsHashmap = HashMap.fromIter<Text, Text>(latestPostsEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var viewsHashMap = HashMap.fromIter<Text, Nat>(viewsEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var dailyViewHistoryHashMap = HashMap.fromIter<Text, Nat>(dailyViewHistory.vals(), initCapacity, Text.equal, Text.hash);
+  var postModerationStatusMap = HashMap.fromIter<Text, PostModerationStatus>(postModerationStatusEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var postModerationStatusMapV2 = HashMap.fromIter<Text, PostModerationStatusV2>(postModerationStatusEntriesV2.vals(), initCapacity, Text.equal, Text.hash);
+  var postVersionMap = HashMap.fromIter<Text, Nat>(postVersionEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var tagsHashMap = HashMap.fromIter<Text, Tag>(tagEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var relationships = HashMap.fromIter<Text, [PostTag]>(relationshipEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var userTagRelationships = HashMap.fromIter<Text, [PostTag]>(userTagRelationshipEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var clapsHashMap = HashMap.fromIter<Text, Nat>(clapsEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var applaudsHashMap = HashMap.fromIter<Text, Nat>(applaudsEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var popularityHashMap = HashMap.fromIter<Text, Nat>(popularity.vals(), initCapacity, Text.equal, Text.hash);
+  var popularityTodayHashMap = HashMap.fromIter<Text, Nat>(popularityToday.vals(), initCapacity, Text.equal, Text.hash);
+  var popularityThisWeekHashMap = HashMap.fromIter<Text, Nat>(popularityThisWeek.vals(), initCapacity, Text.equal, Text.hash);
+  var popularityThisMonthHashMap = HashMap.fromIter<Text, Nat>(popularityThisMonth.vals(), initCapacity, Text.equal, Text.hash);
 
   //key: pub-handle, value: nft canister id
-  var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //key: pub-handle, value: publication canister id
-  var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //key: publication canister id, value:  editor principal ids
-  var publicationEditorsHashmap = HashMap.fromIter<Text, [Text]>(publicationEditorsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var publicationEditorsHashmap = HashMap.fromIter<Text, [Text]>(publicationEditorsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: publication canister id, value: writer principal ids
-  var publicationWritersHashmap = HashMap.fromIter<Text, [Text]>(publicationWritersEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var publicationWritersHashmap = HashMap.fromIter<Text, [Text]>(publicationWritersEntries.vals(), initCapacity, Text.equal, Text.hash);
 
 
 
@@ -2275,8 +2275,8 @@ actor PostCore {
 
     switch (await oldPostCanister.getAllModerationStatus()) {
       case (#ok(values)) {
-        postVersionMap := HashMap.fromIter<Text, Nat>(Iter.fromArray(values.0), maxHashmapSize, Text.equal, Text.hash);
-        postModerationStatusMap := HashMap.fromIter<Text, PostModerationStatus>(Iter.fromArray(values.1), maxHashmapSize, Text.equal, Text.hash);
+        postVersionMap := HashMap.fromIter<Text, Nat>(Iter.fromArray(values.0), initCapacity, Text.equal, Text.hash);
+        postModerationStatusMap := HashMap.fromIter<Text, PostModerationStatus>(Iter.fromArray(values.1), initCapacity, Text.equal, Text.hash);
         return #ok("Success");
 
       };
@@ -2744,7 +2744,7 @@ actor PostCore {
       getPublishers : () -> async [(Text, Text)];
     };
     let publishers = await publicationManagementCanister.getPublishers();
-    publicationCanisterIdsHashmap := HashMap.fromIter<Text, Text>(Iter.fromArray(publishers), maxHashmapSize, Text.equal, Text.hash);
+    publicationCanisterIdsHashmap := HashMap.fromIter<Text, Text>(Iter.fromArray(publishers), initCapacity, Text.equal, Text.hash);
     #ok(Iter.toArray(publicationCanisterIdsHashmap.entries()));
   };
 
@@ -3888,7 +3888,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
 
     };
 
-    var hourlyCreatedHashmap = HashMap.HashMap<Int, Nat>(maxHashmapSize, Int.equal, Int.hash);
+    var hourlyCreatedHashmap = HashMap.HashMap<Int, Nat>(initCapacity, Int.equal, Int.hash);
 
     for ((postId, created) in last24HoursPostsCreatedTimes.vals()) {
       let hour = (created - dayThreshold) / HOUR;

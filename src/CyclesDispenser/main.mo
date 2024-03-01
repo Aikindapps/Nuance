@@ -19,7 +19,7 @@ import ENV "../shared/env";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 
 actor CyclesDispenser {
-  let maxHashmapSize = 1000000;
+  let initCapacity = 0;
 
   // error messages
   let Unauthorized = "Unauthorized";
@@ -95,18 +95,18 @@ actor CyclesDispenser {
   stable var topUpIdToCanisterBalanceAfterEntries : [(Text, Nat)] = [];
 
   //registered canister hashmaps
-  var canisterIdToMinimumAmountOfCyclesHashmap = HashMap.fromIter<Text, Nat>(canisterIdToMinimumAmountOfCyclesEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var canisterIdToTopUpAmountHashmap = HashMap.fromIter<Text, Nat>(canisterIdToTopUpAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var canisterIdToBalanceHashmap = HashMap.fromIter<Text, Nat>(canisterIdToBalanceEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var canisterIdToTopUpIdsHashmap = HashMap.fromIter<Text, [Text]>(canisterIdToTopUpIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var canisterIdToIsStorageBucketHashmap = HashMap.fromIter<Text, Bool>(canisterIdToIsStorageBucketEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var canisterIdToMinimumAmountOfCyclesHashmap = HashMap.fromIter<Text, Nat>(canisterIdToMinimumAmountOfCyclesEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var canisterIdToTopUpAmountHashmap = HashMap.fromIter<Text, Nat>(canisterIdToTopUpAmountEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var canisterIdToBalanceHashmap = HashMap.fromIter<Text, Nat>(canisterIdToBalanceEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var canisterIdToTopUpIdsHashmap = HashMap.fromIter<Text, [Text]>(canisterIdToTopUpIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var canisterIdToIsStorageBucketHashmap = HashMap.fromIter<Text, Bool>(canisterIdToIsStorageBucketEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //logged top-ups hashmaps
-  var topUpIdToCanisterIdHashmap = HashMap.fromIter<Text, Text>(topUpIdToCanisterIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var topUpIdToTimeHashmap = HashMap.fromIter<Text, Int>(topUpIdToTimeEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var topUpIdToAmountHashmap = HashMap.fromIter<Text, Nat>(topUpIdToAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var topUpIdToCanisterBalanceBeforeHashmap = HashMap.fromIter<Text, Nat>(topUpIdToCanisterBalanceBeforeEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var topUpIdToCanisterBalanceAfterHashmap = HashMap.fromIter<Text, Nat>(topUpIdToCanisterBalanceAfterEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var topUpIdToCanisterIdHashmap = HashMap.fromIter<Text, Text>(topUpIdToCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var topUpIdToTimeHashmap = HashMap.fromIter<Text, Int>(topUpIdToTimeEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var topUpIdToAmountHashmap = HashMap.fromIter<Text, Nat>(topUpIdToAmountEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var topUpIdToCanisterBalanceBeforeHashmap = HashMap.fromIter<Text, Nat>(topUpIdToCanisterBalanceBeforeEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var topUpIdToCanisterBalanceAfterHashmap = HashMap.fromIter<Text, Nat>(topUpIdToCanisterBalanceAfterEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //SNS
   public type Validate = {

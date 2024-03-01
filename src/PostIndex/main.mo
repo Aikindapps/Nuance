@@ -25,7 +25,7 @@ actor PostIndex {
   let PostIdRequired = "PostIdRequired";
   let canistergeekMonitor = Canistergeek.Monitor();
 
-  var maxHashmapSize = 1000000;
+  var initCapacity = 0;
   type List<T> = List.List<T>;
 
   //See: https://forum.dfinity.org/t/motoko-multiple-canister-imports-compile-error/10491
@@ -37,7 +37,7 @@ actor PostIndex {
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
   func isEq(x : Text, y : Text) : Bool { x == y };
 
-  var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
+  var hashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
 
   //SNS
   public type Validate = {
@@ -607,7 +607,7 @@ actor PostIndex {
     };
 
     let wordCount : Nat = hashMap.size();
-    hashMap := HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
+    hashMap := HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
 
     Debug.print("PostIndex->clearIndex: Cleared " # Nat.toText(wordCount) # " words from the index");
 
@@ -709,7 +709,7 @@ actor PostIndex {
     canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
     _canistergeekMonitorUD := null;
     Debug.print("PostIndex->postupgrade:Inside Canistergeek postupgrade method");
-    hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
+    hashMap := HashMap.fromIter(index.vals(), initCapacity, isEq, Text.hash);
     index := [];
   };
 

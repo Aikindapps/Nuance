@@ -50,7 +50,7 @@ actor User {
 
   type List<T> = List.List<T>;
 
-  var maxHashmapSize = 1000000;
+  var initCapacity = 0;
 
   stable var userCount : Nat = 0;
   stable var userId : Nat = 0;
@@ -81,35 +81,35 @@ actor User {
 
   func isEq(x : Text, y : Text) : Bool { x == y };
 
-  var principalIdHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var handleHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var handleReverseHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var lowercaseHandleHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var lowercaseHandleReverseHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var displayNameHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var avatarHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var bioHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var accountCreatedHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var followersHashMap = HashMap.HashMap<Text, Followers>(maxHashmapSize, isEq, Text.hash);
-  var followersArrayHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
-  var followersCountsHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var websiteHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var socialChannelsHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
-  var publicationsArrayHashMap = HashMap.HashMap<Text, [PublicationObject]>(maxHashmapSize, isEq, Text.hash);
-  var nuaTokensHashMap = HashMap.HashMap<Text, Float>(maxHashmapSize, isEq, Text.hash);
-  var fontTypesHashmap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
-  var myFollowersHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
-  var lastLoginsHashMap = HashMap.HashMap<Text, Int>(maxHashmapSize, isEq, Text.hash);
+  var principalIdHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var handleHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var handleReverseHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var lowercaseHandleHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var lowercaseHandleReverseHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var displayNameHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var avatarHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var bioHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var accountCreatedHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var followersHashMap = HashMap.HashMap<Text, Followers>(initCapacity, isEq, Text.hash);
+  var followersArrayHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
+  var followersCountsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var websiteHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var socialChannelsHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
+  var publicationsArrayHashMap = HashMap.HashMap<Text, [PublicationObject]>(initCapacity, isEq, Text.hash);
+  var nuaTokensHashMap = HashMap.HashMap<Text, Float>(initCapacity, isEq, Text.hash);
+  var fontTypesHashmap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var myFollowersHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
+  var lastLoginsHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
 
   //nft canister ids mapped to publication handles (this can extend to regular user handles when we have nft feature for regular users too)
 
   stable var nftCanisterIds : [(Text, Text)] = [];
-  var nftCanisterIdsHashmap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
+  var nftCanisterIdsHashmap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
 
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
   stable var accountIdsToHandleEntries : [(Text, Text)] = [];
-  var accountIdsToHandleHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, isEq, Text.hash);
+  var accountIdsToHandleHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
 
   //SNS
   public type Validate = {
@@ -1836,27 +1836,27 @@ actor User {
     canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
     _canistergeekMonitorUD := null;
     Debug.print("User->postupgrade: Inside Canistergeek postupgrade method");
-    principalIdHashMap := HashMap.fromIter(principalId.vals(), maxHashmapSize, isEq, Text.hash);
-    handleHashMap := HashMap.fromIter(handle.vals(), maxHashmapSize, isEq, Text.hash);
-    handleReverseHashMap := HashMap.fromIter(handleReverse.vals(), maxHashmapSize, isEq, Text.hash);
-    lowercaseHandleHashMap := HashMap.fromIter(lowercaseHandle.vals(), maxHashmapSize, isEq, Text.hash);
-    lowercaseHandleReverseHashMap := HashMap.fromIter(lowercaseHandleReverse.vals(), maxHashmapSize, isEq, Text.hash);
-    displayNameHashMap := HashMap.fromIter(displayName.vals(), maxHashmapSize, isEq, Text.hash);
-    bioHashMap := HashMap.fromIter(bio.vals(), maxHashmapSize, isEq, Text.hash);
-    accountCreatedHashMap := HashMap.fromIter(accountCreatedStable.vals(), maxHashmapSize, isEq, Text.hash);
-    avatarHashMap := HashMap.fromIter(avatar.vals(), maxHashmapSize, isEq, Text.hash);
-    followersHashMap := HashMap.fromIter(followers.vals(), maxHashmapSize, isEq, Text.hash);
-    followersArrayHashMap := HashMap.fromIter(followersArray.vals(), maxHashmapSize, isEq, Text.hash);
-    followersCountsHashMap := HashMap.fromIter(followersCounts.vals(), maxHashmapSize, isEq, Text.hash);
-    publicationsArrayHashMap := HashMap.fromIter(publicationsArray.vals(), maxHashmapSize, isEq, Text.hash);
-    websiteHashMap := HashMap.fromIter(website.vals(), maxHashmapSize, isEq, Text.hash);
-    socialChannelsHashMap := HashMap.fromIter(socialChannels.vals(), maxHashmapSize, isEq, Text.hash);
-    nuaTokensHashMap := HashMap.fromIter(nuaTokens.vals(), maxHashmapSize, isEq, Text.hash);
-    fontTypesHashmap := HashMap.fromIter(fontTypes.vals(), maxHashmapSize, isEq, Text.hash);
-    nftCanisterIdsHashmap := HashMap.fromIter(nftCanisterIds.vals(), maxHashmapSize, isEq, Text.hash);
-    accountIdsToHandleHashMap := HashMap.fromIter(accountIdsToHandleEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    myFollowersHashMap := HashMap.fromIter(myFollowers.vals(), maxHashmapSize, isEq, Text.hash);
-    lastLoginsHashMap := HashMap.fromIter(lastLogins.vals(), maxHashmapSize, isEq, Text.hash);
+    principalIdHashMap := HashMap.fromIter(principalId.vals(), initCapacity, isEq, Text.hash);
+    handleHashMap := HashMap.fromIter(handle.vals(), initCapacity, isEq, Text.hash);
+    handleReverseHashMap := HashMap.fromIter(handleReverse.vals(), initCapacity, isEq, Text.hash);
+    lowercaseHandleHashMap := HashMap.fromIter(lowercaseHandle.vals(), initCapacity, isEq, Text.hash);
+    lowercaseHandleReverseHashMap := HashMap.fromIter(lowercaseHandleReverse.vals(), initCapacity, isEq, Text.hash);
+    displayNameHashMap := HashMap.fromIter(displayName.vals(), initCapacity, isEq, Text.hash);
+    bioHashMap := HashMap.fromIter(bio.vals(), initCapacity, isEq, Text.hash);
+    accountCreatedHashMap := HashMap.fromIter(accountCreatedStable.vals(), initCapacity, isEq, Text.hash);
+    avatarHashMap := HashMap.fromIter(avatar.vals(), initCapacity, isEq, Text.hash);
+    followersHashMap := HashMap.fromIter(followers.vals(), initCapacity, isEq, Text.hash);
+    followersArrayHashMap := HashMap.fromIter(followersArray.vals(), initCapacity, isEq, Text.hash);
+    followersCountsHashMap := HashMap.fromIter(followersCounts.vals(), initCapacity, isEq, Text.hash);
+    publicationsArrayHashMap := HashMap.fromIter(publicationsArray.vals(), initCapacity, isEq, Text.hash);
+    websiteHashMap := HashMap.fromIter(website.vals(), initCapacity, isEq, Text.hash);
+    socialChannelsHashMap := HashMap.fromIter(socialChannels.vals(), initCapacity, isEq, Text.hash);
+    nuaTokensHashMap := HashMap.fromIter(nuaTokens.vals(), initCapacity, isEq, Text.hash);
+    fontTypesHashmap := HashMap.fromIter(fontTypes.vals(), initCapacity, isEq, Text.hash);
+    nftCanisterIdsHashmap := HashMap.fromIter(nftCanisterIds.vals(), initCapacity, isEq, Text.hash);
+    accountIdsToHandleHashMap := HashMap.fromIter(accountIdsToHandleEntries.vals(), initCapacity, isEq, Text.hash);
+    myFollowersHashMap := HashMap.fromIter(myFollowers.vals(), initCapacity, isEq, Text.hash);
+    lastLoginsHashMap := HashMap.fromIter(lastLogins.vals(), initCapacity, isEq, Text.hash);
 
     principalId := [];
     handle := [];

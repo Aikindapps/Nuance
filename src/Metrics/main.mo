@@ -32,7 +32,7 @@ actor Metrics {
   private func isAnonymous(caller : Principal) : Bool {
     Principal.equal(caller, Principal.fromText("2vxsx-fae"));
   };
-  var maxHashmapSize = 1000000;
+  var initCapacity = 0;
 
   // error messages
   let Unauthorized = "Unauthorized";
@@ -61,7 +61,7 @@ actor Metrics {
   stable var nuanceCanisters : [Text] = [];
 
   stable var index : [(Text, [Text])] = [];
-  var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
+  var hashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
 
   public type CyclesDispenserActorType = actor {
     getAllRegisteredCanisters : () -> async [RegisteredCanister];
@@ -253,7 +253,7 @@ actor Metrics {
   };
 
   system func postupgrade() {
-    hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
+    hashMap := HashMap.fromIter(index.vals(), initCapacity, isEq, Text.hash);
     index := [];
   };
 };

@@ -31,7 +31,7 @@ import Sonic "../shared/sonic";
 
 actor class PostBucket() = this {
   let canistergeekMonitor = Canistergeek.Monitor();
-  let maxHashmapSize = 1000000;
+  let initCapacity = 0;
 
   // error messages
   let Unauthorized = "Unauthorized";
@@ -165,87 +165,87 @@ actor class PostBucket() = this {
   // in-memory state (holds object field data) - hashmaps must match entires in above stable vars and in preupgrade and postupgrade
   // HashMaps with one entry per user
   //   key: principalId, value: handle
-  var handleHashMap = HashMap.fromIter<Text, Text>(handleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var handleHashMap = HashMap.fromIter<Text, Text>(handleEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: handle, value: principalId
-  var handleReverseHashMap = HashMap.fromIter<Text, Text>(handleReverseEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var handleReverseHashMap = HashMap.fromIter<Text, Text>(handleReverseEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: principalId, value: handle(lowercase)
-  var lowercaseHandleHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var lowercaseHandleHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: handle(lowercase), value: principalId
-  var lowercaseHandleReverseHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleReverseEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var lowercaseHandleReverseHashMap = HashMap.fromIter<Text, Text>(lowercaseHandleReverseEntries.vals(), initCapacity, Text.equal, Text.hash);
   //   key: principalId, value: List<postId>
-  var userPostsHashMap = HashMap.fromIter<Text, List.List<Text>>(userPostsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var userPostsHashMap = HashMap.fromIter<Text, List.List<Text>>(userPostsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: account-id, value: handle
-  var accountIdsToHandleHashMap = HashMap.fromIter<Text, Text>(accountIdsToHandleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var accountIdsToHandleHashMap = HashMap.fromIter<Text, Text>(accountIdsToHandleEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   // HashMaps with one entry per post (key: postId)
-  var principalIdHashMap = HashMap.fromIter<Text, Text>(principalIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var titleHashMap = HashMap.fromIter<Text, Text>(titleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var subtitleHashMap = HashMap.fromIter<Text, Text>(subtitleEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var headerImageHashMap = HashMap.fromIter<Text, Text>(headerImageEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var contentHashMap = HashMap.fromIter<Text, Text>(contentEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var isDraftHashMap = HashMap.fromIter<Text, Bool>(isDraftEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var createdHashMap = HashMap.fromIter<Text, Int>(createdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var modifiedHashMap = HashMap.fromIter<Text, Int>(modifiedEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var publishedDateHashMap = HashMap.fromIter<Text, Int>(publishedDateEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var creatorHashMap = HashMap.fromIter<Text, Text>(creatorEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var isPublicationHashMap = HashMap.fromIter<Text, Bool>(isPublicationEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var wordCountsHashmap = HashMap.fromIter<Text, Nat>(wordCountsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var isPremiumHashMap = HashMap.fromIter<Text, Bool>(isPremiumEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var tagNamesHashMap = HashMap.fromIter<Text, [Text]>(tagNamesEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
-  var rejectedByModclubPostIdsHashmap = HashMap.fromIter<Text, Text>(rejectedByModclubPostIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var principalIdHashMap = HashMap.fromIter<Text, Text>(principalIdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var titleHashMap = HashMap.fromIter<Text, Text>(titleEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var subtitleHashMap = HashMap.fromIter<Text, Text>(subtitleEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var headerImageHashMap = HashMap.fromIter<Text, Text>(headerImageEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var contentHashMap = HashMap.fromIter<Text, Text>(contentEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var isDraftHashMap = HashMap.fromIter<Text, Bool>(isDraftEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var createdHashMap = HashMap.fromIter<Text, Int>(createdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var modifiedHashMap = HashMap.fromIter<Text, Int>(modifiedEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var publishedDateHashMap = HashMap.fromIter<Text, Int>(publishedDateEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var creatorHashMap = HashMap.fromIter<Text, Text>(creatorEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var isPublicationHashMap = HashMap.fromIter<Text, Bool>(isPublicationEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var wordCountsHashmap = HashMap.fromIter<Text, Nat>(wordCountsEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var isPremiumHashMap = HashMap.fromIter<Text, Bool>(isPremiumEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var tagNamesHashMap = HashMap.fromIter<Text, [Text]>(tagNamesEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var rejectedByModclubPostIdsHashmap = HashMap.fromIter<Text, Text>(rejectedByModclubPostIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //comment hashmaps
 
   //key: postId, value: [commentId]
-  var postIdToCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(postIdToCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var postIdToCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(postIdToCommentIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: postId, value: numberOfComments
-  var postIdToNumberOfCommentsHashMap = HashMap.fromIter<Text, Nat>(postIdToNumberOfCommentsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var postIdToNumberOfCommentsHashMap = HashMap.fromIter<Text, Nat>(postIdToNumberOfCommentsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: postId
-  var commentIdToPostIdHashMap = HashMap.fromIter<Text, Text>(commentIdToPostIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToPostIdHashMap = HashMap.fromIter<Text, Text>(commentIdToPostIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: principalId
-  var commentIdToUserPrincipalIdHashMap = HashMap.fromIter<Text, Text>(commentIdToUserPrincipalIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToUserPrincipalIdHashMap = HashMap.fromIter<Text, Text>(commentIdToUserPrincipalIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: content
-  var commentIdToContentHashMap = HashMap.fromIter<Text, Text>(commentIdToContentEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToContentHashMap = HashMap.fromIter<Text, Text>(commentIdToContentEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: createdAt
-  var commentIdToCreatedAtHashMap = HashMap.fromIter<Text, Int>(commentIdToCreatedAtEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToCreatedAtHashMap = HashMap.fromIter<Text, Int>(commentIdToCreatedAtEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: EditedAt
-  var commentIdToEditedAtHashMap = HashMap.fromIter<Text, Int>(commentIdToEditedAtEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToEditedAtHashMap = HashMap.fromIter<Text, Int>(commentIdToEditedAtEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: [upvotedPrincipalId]
-  var commentIdToUpvotedPrincipalIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToUpvotedPrincipalIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToUpvotedPrincipalIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToUpvotedPrincipalIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: [downvotedPrincipalId]
-  var commentIdToDownvotedPrincipalIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToDownvotedPrincipalIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToDownvotedPrincipalIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToDownvotedPrincipalIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: [replyCommentId] -> The replies will not be added to postIdToCommentIdsHashmap. They are mapped to the ancestor commentId
-  var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var commentIdToReplyCommentIdsHashMap = HashMap.fromIter<Text, [Text]>(commentIdToReplyCommentIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: replyCommentId, value: commentId
-  var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var replyCommentIdToCommentIdHashMap = HashMap.fromIter<Text, Text>(replyCommentIdToCommentIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: commentId, value: isCensored bool
-  var isCensoredHashMap = HashMap.fromIter<Text, Bool>(isCensoredEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var isCensoredHashMap = HashMap.fromIter<Text, Bool>(isCensoredEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //applaud hashmaps
   //key: postId, value: [applaudId]
-  var postIdToApplaudIdsHashMap = HashMap.fromIter<Text, [Text]>(postIdToApplaudIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var postIdToApplaudIdsHashMap = HashMap.fromIter<Text, [Text]>(postIdToApplaudIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: principalId, value: [applaudId]
-  var principalIdToApplaudIdsHashMap = HashMap.fromIter<Text, [Text]>(principalIdToApplaudIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var principalIdToApplaudIdsHashMap = HashMap.fromIter<Text, [Text]>(principalIdToApplaudIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: principalId
-  var applaudIdToSenderHashMap = HashMap.fromIter<Text, Text>(applaudIdToSenderEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToSenderHashMap = HashMap.fromIter<Text, Text>(applaudIdToSenderEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: principalId
-  var applaudIdToReceiverHashMap = HashMap.fromIter<Text, Text>(applaudIdToReceiverEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToReceiverHashMap = HashMap.fromIter<Text, Text>(applaudIdToReceiverEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: postId
-  var applaudIdToPostIdHashMap = HashMap.fromIter<Text, Text>(applaudIdToPostIdEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToPostIdHashMap = HashMap.fromIter<Text, Text>(applaudIdToPostIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: currency (NUA, ICP, ckBTC)
-  var applaudIdToCurrencyHashMap = HashMap.fromIter<Text, Text>(applaudIdToCurrencyEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToCurrencyHashMap = HashMap.fromIter<Text, Text>(applaudIdToCurrencyEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: tokenAmount (e8s)
-  var applaudIdToTokenAmountHashMap = HashMap.fromIter<Text, Nat>(applaudIdToTokenAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToTokenAmountHashMap = HashMap.fromIter<Text, Nat>(applaudIdToTokenAmountEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: receivedTokenAmount (e8s)
-  var applaudIdToReceivedTokenAmountHashMap = HashMap.fromIter<Text, Nat>(applaudIdToReceivedTokenAmountEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToReceivedTokenAmountHashMap = HashMap.fromIter<Text, Nat>(applaudIdToReceivedTokenAmountEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: number of applauds
-  var applaudIdToNumberOfApplaudsHashMap = HashMap.fromIter<Text, Nat>(applaudIdToNumberOfApplaudsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToNumberOfApplaudsHashMap = HashMap.fromIter<Text, Nat>(applaudIdToNumberOfApplaudsEntries.vals(), initCapacity, Text.equal, Text.hash);
   //key: applaudId, value: date
-  var applaudIdToDateHashMap = HashMap.fromIter<Text, Int>(applaudIdToDateEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var applaudIdToDateHashMap = HashMap.fromIter<Text, Int>(applaudIdToDateEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //key: pub-handle, value: nft canister id
-  var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), maxHashmapSize, Text.equal, Text.hash);
+  var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), initCapacity, Text.equal, Text.hash);
 
   //SNS
   public type Validate = {
@@ -1503,7 +1503,7 @@ actor class PostBucket() = this {
       return #err(Unauthorized)
     };
     //key: creatorHandle(lowercase), value: postIds
-    var creatorToPostIdsHashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, Text.equal, Text.hash);
+    var creatorToPostIdsHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, Text.equal, Text.hash);
     for((postId, isPublication) in isPublicationHashMap.entries()){
       if(isPublication and U.safeGet(isDraftHashMap, postId, false)){
         //draft publication post
@@ -1519,7 +1519,7 @@ actor class PostBucket() = this {
     let userCanister = CanisterDeclarations.getUserCanister();
     let creatorUserListItems = await userCanister.getUsersByHandles(Iter.toArray(creatorToPostIdsHashMap.keys()));
     //key: creator handle (lowercase), value: principal id
-    var creatorHandleToPrincipalIdsHashMap = HashMap.HashMap<Text, Text>(maxHashmapSize, Text.equal, Text.hash);
+    var creatorHandleToPrincipalIdsHashMap = HashMap.HashMap<Text, Text>(initCapacity, Text.equal, Text.hash);
     for(creatorUserListItem in creatorUserListItems.vals()){
       creatorHandleToPrincipalIdsHashMap.put(U.lowerCase(creatorUserListItem.handle), creatorUserListItem.principal);
     };
