@@ -26,7 +26,7 @@ actor FastBlocks_EmailOptIn {
   private func isAnonymous(caller : Principal) : Bool {
     Principal.equal(caller, Principal.fromText("2vxsx-fae"));
   };
-  var maxHashmapSize = 1000000;
+  var initCapacity = 0;
 
   // error messages
   let Unauthorized = "Unauthorized";
@@ -57,8 +57,8 @@ actor FastBlocks_EmailOptIn {
   stable var emailIdEntries : [(Text, Text)] = [];
 
   stable var index : [(Text, [Text])] = [];
-  var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
-  var emailIdHashMap = HashMap.fromIter<Text, Text>(emailIdEntries.vals(), maxHashmapSize, isEq, Text.hash);
+  var hashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
+  var emailIdHashMap = HashMap.fromIter<Text, Text>(emailIdEntries.vals(), initCapacity, isEq, Text.hash);
 
   private func isAdmin(caller : Principal) : Bool {
     var c = Principal.toText(caller);
@@ -201,7 +201,7 @@ actor FastBlocks_EmailOptIn {
   system func postupgrade() {
     Debug.print("EmailOptIn->postupgrade: hashmap size: " # Nat.toText(index.size()));
     Debug.print("EmailOptIn->postupgrade:Inside postupgrade method");
-    hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
+    hashMap := HashMap.fromIter(index.vals(), initCapacity, isEq, Text.hash);
     index := [];
   };
 };

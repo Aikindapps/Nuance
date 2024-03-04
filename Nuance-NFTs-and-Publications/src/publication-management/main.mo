@@ -24,7 +24,7 @@ import ENV "../../../src/shared/env";
 
 actor class Management() = this {
 
-    var maxHashmapSize = 1000000;
+    var initCapacity = 0;
 
     stable var admins : List.List<Text> = List.nil<Text>();
     stable var platformOperators : List.List<Text> = List.nil<Text>();
@@ -32,7 +32,7 @@ actor class Management() = this {
     stable var publicationCanisterIdsEntries : [(Text, Text)] = [];
 
     //key: publisher handle, value: canister id
-    var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+    var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
     private let ic = IC.IC;
 
     private func isAnonymous(caller : Principal) : Bool {

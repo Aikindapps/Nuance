@@ -17,7 +17,7 @@ import ENV "../shared/env";
 
 actor NftFactory {
 
-    var maxHashmapSize = 1000000;
+    var initCapacity = 0;
 
     stable var admins : List.List<Text> = List.nil<Text>();
     stable var platformOperators : List.List<Text> = List.nil<Text>();
@@ -25,7 +25,7 @@ actor NftFactory {
     stable var publicationCanisterIdsEntries : [(Text, Text)] = [];
 
     //key: publisher handle, value: canister id
-    var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), maxHashmapSize, Text.equal, Text.hash);
+    var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
     private let ic : IC.Self = actor "aaaaa-aa";
 
     //whitelist the publishers to allow create NFT canisters

@@ -27,11 +27,11 @@ shared ({caller = initializer}) actor class Storage () = this {
     let Unauthorized = "Unauthorized";
     private let ic : IC.Self = actor "aaaaa-aa";
     stable var globalIdMapEntries: [(Text, Nat)] = [];
-    let maxHashmapSize = 1000000;
+    let initCapacity = 0;
     func isEq(x: Text, y: Text): Bool { x == y };
 
     //var globalIdMap = HashMap.HashMap<Text, Nat>(5000, Text.equal, Text.hash);
-    var globalIdMap = HashMap.fromIter<Text, Nat>(globalIdMapEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var globalIdMap = HashMap.fromIter<Text, Nat>(globalIdMapEntries.vals(), initCapacity, isEq, Text.hash);
 
     
 

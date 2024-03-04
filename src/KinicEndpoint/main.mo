@@ -26,7 +26,7 @@ actor KinicEndpoint {
   // local variables
   let canistergeekMonitor = Canistergeek.Monitor();
   func isEq(x : Text, y : Text) : Bool { x == y };
-  var maxHashmapSize = 1000000;
+  var initCapacity = 0;
 
   // error messages
   let Unauthorized = "Unauthorized";
@@ -59,7 +59,7 @@ actor KinicEndpoint {
   stable var kinicPrincipals : List.List<Text> = List.nil<Text>();
 
   stable var index : [(Text, [Text])] = [];
-  var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
+  var hashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
 
   private func isAnonymous(caller : Principal) : Bool {
     Principal.equal(caller, Principal.fromText("2vxsx-fae"));
@@ -312,7 +312,7 @@ actor KinicEndpoint {
     Debug.print("KinicEndpoint->postupgrade: hashmap size: " # Nat.toText(index.size()));
     canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
     Debug.print("KinicEndpoint->postupgrade:Inside Canistergeek postupgrade method");
-    hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
+    hashMap := HashMap.fromIter(index.vals(), initCapacity, isEq, Text.hash);
     _canistergeekMonitorUD := null;
     index := [];
   };

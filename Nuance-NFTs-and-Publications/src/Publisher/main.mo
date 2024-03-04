@@ -99,8 +99,8 @@ actor class Publisher() = this {
     // local variables
     let canistergeekMonitor = Canistergeek.Monitor();
     func isEq(x : Text, y : Text) : Bool { x == y };
-    var maxHashmapSize = 1000000;
-    var hashMap = HashMap.HashMap<Text, [Text]>(maxHashmapSize, isEq, Text.hash);
+    var initCapacity = 0;
+    var hashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
     stable var index : [(Text, [Text])] = [];
 
     // publisher data types
@@ -130,30 +130,30 @@ actor class Publisher() = this {
     stable var publicationCtaIconEntries : [(Text, Text)] = [];
 
     // publisher hashmaps
-    var publicationHandleHashMap = HashMap.fromIter<Text, Text>(publicationHandleEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var publicationTitleHashMap = HashMap.fromIter<Text, Text>(publicationTitleEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var editorsHashMap = HashMap.fromIter<Text, [Text]>(editorsEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var canisterIdHashMap = HashMap.fromIter<Text, Text>(canisterIdEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var writersHashMap = HashMap.fromIter<Text, [Text]>(writersEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var headerImageHashMap = HashMap.fromIter<Text, Text>(headerImageEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var subtitleHashMap = HashMap.fromIter<Text, Text>(subtitleEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var descriptionHashMap = HashMap.fromIter<Text, Text>(descriptionEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var categoriesHashMap = HashMap.fromIter<Text, [Text]>(categoriesEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var websiteHashMap = HashMap.fromIter<Text, Text>(websiteEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var socialChannelsUrlsHashMap = HashMap.fromIter<Text, [Text]>(socialChannelUrlsEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var avatarHashMap = HashMap.fromIter<Text, Text>(avatarEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var userHandleHashmap = HashMap.fromIter<Text, Text>(canisterIdEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var createdHashMap = HashMap.fromIter<Text, Text>(createdEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var modifiedHashMap = HashMap.fromIter<Text, Text>(modifiedEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var stylingFontTypeHashmap = HashMap.fromIter<Text, Text>(stylingFontTypeEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var stylingPrimaryColorHashmap = HashMap.fromIter<Text, Text>(stylingPrimaryColorEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var brandLogoHashmap = HashMap.fromIter<Text, Text>(brandLogoEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var publicationCtaButtonCopyHashMap = HashMap.fromIter<Text, Text>(publicationCtaButtonCopyEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var publicationCtaCopyHashMap = HashMap.fromIter<Text, Text>(publicationCtaCopyEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var publicationCtaLinkHashMap = HashMap.fromIter<Text, Text>(publicationCtaLinkEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var publicationCtaIconHashMap = HashMap.fromIter<Text, Text>(publicationCtaIconEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var editorsHandlesHashmap = HashMap.fromIter<Text, [Text]>(editorsHandlesEntries.vals(), maxHashmapSize, isEq, Text.hash);
-    var writersHandlesHashmap = HashMap.fromIter<Text, [Text]>(writersHandlesEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var publicationHandleHashMap = HashMap.fromIter<Text, Text>(publicationHandleEntries.vals(), initCapacity, isEq, Text.hash);
+    var publicationTitleHashMap = HashMap.fromIter<Text, Text>(publicationTitleEntries.vals(), initCapacity, isEq, Text.hash);
+    var editorsHashMap = HashMap.fromIter<Text, [Text]>(editorsEntries.vals(), initCapacity, isEq, Text.hash);
+    var canisterIdHashMap = HashMap.fromIter<Text, Text>(canisterIdEntries.vals(), initCapacity, isEq, Text.hash);
+    var writersHashMap = HashMap.fromIter<Text, [Text]>(writersEntries.vals(), initCapacity, isEq, Text.hash);
+    var headerImageHashMap = HashMap.fromIter<Text, Text>(headerImageEntries.vals(), initCapacity, isEq, Text.hash);
+    var subtitleHashMap = HashMap.fromIter<Text, Text>(subtitleEntries.vals(), initCapacity, isEq, Text.hash);
+    var descriptionHashMap = HashMap.fromIter<Text, Text>(descriptionEntries.vals(), initCapacity, isEq, Text.hash);
+    var categoriesHashMap = HashMap.fromIter<Text, [Text]>(categoriesEntries.vals(), initCapacity, isEq, Text.hash);
+    var websiteHashMap = HashMap.fromIter<Text, Text>(websiteEntries.vals(), initCapacity, isEq, Text.hash);
+    var socialChannelsUrlsHashMap = HashMap.fromIter<Text, [Text]>(socialChannelUrlsEntries.vals(), initCapacity, isEq, Text.hash);
+    var avatarHashMap = HashMap.fromIter<Text, Text>(avatarEntries.vals(), initCapacity, isEq, Text.hash);
+    var userHandleHashmap = HashMap.fromIter<Text, Text>(canisterIdEntries.vals(), initCapacity, isEq, Text.hash);
+    var createdHashMap = HashMap.fromIter<Text, Text>(createdEntries.vals(), initCapacity, isEq, Text.hash);
+    var modifiedHashMap = HashMap.fromIter<Text, Text>(modifiedEntries.vals(), initCapacity, isEq, Text.hash);
+    var stylingFontTypeHashmap = HashMap.fromIter<Text, Text>(stylingFontTypeEntries.vals(), initCapacity, isEq, Text.hash);
+    var stylingPrimaryColorHashmap = HashMap.fromIter<Text, Text>(stylingPrimaryColorEntries.vals(), initCapacity, isEq, Text.hash);
+    var brandLogoHashmap = HashMap.fromIter<Text, Text>(brandLogoEntries.vals(), initCapacity, isEq, Text.hash);
+    var publicationCtaButtonCopyHashMap = HashMap.fromIter<Text, Text>(publicationCtaButtonCopyEntries.vals(), initCapacity, isEq, Text.hash);
+    var publicationCtaCopyHashMap = HashMap.fromIter<Text, Text>(publicationCtaCopyEntries.vals(), initCapacity, isEq, Text.hash);
+    var publicationCtaLinkHashMap = HashMap.fromIter<Text, Text>(publicationCtaLinkEntries.vals(), initCapacity, isEq, Text.hash);
+    var publicationCtaIconHashMap = HashMap.fromIter<Text, Text>(publicationCtaIconEntries.vals(), initCapacity, isEq, Text.hash);
+    var editorsHandlesHashmap = HashMap.fromIter<Text, [Text]>(editorsHandlesEntries.vals(), initCapacity, isEq, Text.hash);
+    var writersHandlesHashmap = HashMap.fromIter<Text, [Text]>(writersHandlesEntries.vals(), initCapacity, isEq, Text.hash);
 
     //Premium article data
     stable var subaccountIndex : Nat = 1;
@@ -166,15 +166,15 @@ actor class Publisher() = this {
     stable var writerPremiumArticlePostIdsEntries : [(Text, [Text])] = [];
 
     //key: postId value: IcpPrice
-    var premiumArticlesIcpPricesHashmap = HashMap.fromIter<Text, Nat>(premiumArticlesIcpPricesEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var premiumArticlesIcpPricesHashmap = HashMap.fromIter<Text, Nat>(premiumArticlesIcpPricesEntries.vals(), initCapacity, isEq, Text.hash);
     //key: postId value: totalSupply
-    var premiumArticlesTotalSuppliesHashmap = HashMap.fromIter<Text, Nat>(premiumArticlesTotalSuppliesEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var premiumArticlesTotalSuppliesHashmap = HashMap.fromIter<Text, Nat>(premiumArticlesTotalSuppliesEntries.vals(), initCapacity, isEq, Text.hash);
     //key: postId value: AccountIdentifier
-    var premiumArticlesWriterHandlesHashmap = HashMap.fromIter<Text, Text>(premiumArticlesWriterHandlesEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var premiumArticlesWriterHandlesHashmap = HashMap.fromIter<Text, Text>(premiumArticlesWriterHandlesEntries.vals(), initCapacity, isEq, Text.hash);
     //key: postId value: AccountIdentifier
-    var premiumArticlesTokenIndexStartsHashmap = HashMap.fromIter<Text, Nat32>(premiumArticlesTokenIndexStartsEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var premiumArticlesTokenIndexStartsHashmap = HashMap.fromIter<Text, Nat32>(premiumArticlesTokenIndexStartsEntries.vals(), initCapacity, isEq, Text.hash);
     //key writer-handle, value: [postId]
-    var writerPremiumArticlePostIdsHashmap = HashMap.fromIter<Text, [Text]>(writerPremiumArticlePostIdsEntries.vals(), maxHashmapSize, isEq, Text.hash);
+    var writerPremiumArticlePostIdsHashmap = HashMap.fromIter<Text, [Text]>(writerPremiumArticlePostIdsEntries.vals(), initCapacity, isEq, Text.hash);
 
     //the address that secondary marketplace royalties goes. default to baran's terminal icp address :)
     var marketplaceRoyaltyAddress : AccountIdentifier = "f77cc353c778b02ad26974891950e4cb3ae1203e5cd8218e1b99bfc4f316d897";
@@ -1449,7 +1449,7 @@ actor class Publisher() = this {
 
         var result = Buffer.Buffer<Post>(0);
 
-        var bucketCanisterIdToPostKeyPropertiesHashmap = HashMap.HashMap<Text, List<PostKeyProperties>>(maxHashmapSize, isEq, Text.hash);
+        var bucketCanisterIdToPostKeyPropertiesHashmap = HashMap.HashMap<Text, List<PostKeyProperties>>(initCapacity, isEq, Text.hash);
 
         for (keyProperty in myPostsKeyPropertiesReturn.vals()) {
             bucketCanisterIdToPostKeyPropertiesHashmap.put(keyProperty.bucketCanisterId, List.push(keyProperty, U.safeGet(bucketCanisterIdToPostKeyPropertiesHashmap, keyProperty.bucketCanisterId, List.nil<PostKeyProperties>())));
@@ -1522,7 +1522,7 @@ actor class Publisher() = this {
 
         var result = Buffer.Buffer<Post>(0);
 
-        var bucketCanisterIdToPostKeyPropertiesHashmap = HashMap.HashMap<Text, List<PostKeyProperties>>(maxHashmapSize, isEq, Text.hash);
+        var bucketCanisterIdToPostKeyPropertiesHashmap = HashMap.HashMap<Text, List<PostKeyProperties>>(initCapacity, isEq, Text.hash);
 
         for (keyProperty in myPostsKeyPropertiesReturn.vals()) {
             bucketCanisterIdToPostKeyPropertiesHashmap.put(keyProperty.bucketCanisterId, List.push(keyProperty, U.safeGet(bucketCanisterIdToPostKeyPropertiesHashmap, keyProperty.bucketCanisterId, List.nil<PostKeyProperties>())));
@@ -2650,7 +2650,7 @@ actor class Publisher() = this {
         Debug.print("Publisher0->postupgrade: hashmap size: " # Nat.toText(index.size()));
         canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
         Debug.print("Publisher0->postupgrade:Inside Canistergeek postupgrade method");
-        hashMap := HashMap.fromIter(index.vals(), maxHashmapSize, isEq, Text.hash);
+        hashMap := HashMap.fromIter(index.vals(), initCapacity, isEq, Text.hash);
         _canistergeekMonitorUD := null;
         index := [];
         publicationHandleEntries := [];
