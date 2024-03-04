@@ -198,7 +198,7 @@ export type ApplaudListItem = {
   bucketCanisterId: string;
 };
 
-export type IcpTransactionListItem = {
+export type TransactionListItem = {
   date: string;
   currency: SupportedTokenSymbol;
   receiver: string;

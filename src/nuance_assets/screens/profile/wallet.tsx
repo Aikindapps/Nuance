@@ -20,8 +20,8 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../UI/Button/Button';
 import {
   ApplaudListItem,
-  IcpTransactionListItem,
   PremiumPostActivityListItem,
+  TransactionListItem,
 } from '../../types/types';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
@@ -33,7 +33,7 @@ const Wallet = () => {
   const [ownedKeys, setOwnedKeys] = useState(0);
   const [soldKeys, setSoldKeys] = useState(0);
   const [displayingActivities, setDisplayingActivities] = useState<
-    (PremiumPostActivityListItem | ApplaudListItem | IcpTransactionListItem)[]
+    (PremiumPostActivityListItem | ApplaudListItem | TransactionListItem)[]
   >([]);
 
   //NFT feature toggle
@@ -71,11 +71,15 @@ const Wallet = () => {
     getSellingNfts,
     getUserApplauds,
     getUserIcpTransactions,
+    getUserNuaTransactions,
+    getUserCkbtcTransactions,
   } = usePostStore((state) => ({
     getOwnedNfts: state.getOwnedNfts,
     getSellingNfts: state.getSellingNfts,
     getUserApplauds: state.getUserApplauds,
     getUserIcpTransactions: state.getUserIcpTransactions,
+    getUserNuaTransactions: state.getUserNuaTransactions,
+    getUserCkbtcTransactions: state.getUserCkbtcTransactions,
   }));
 
   const { user } = useUserStore((state) => ({
@@ -117,31 +121,45 @@ const Wallet = () => {
   };
 
   const fetchAllActivities = async () => {
-    var [sellingActivites, premiumPostsActivities, applauds, transactions] =
-      await Promise.all([
-        getSellingNfts(),
-        getOwnedNfts(),
-        getUserApplauds(),
-        getUserIcpTransactions(),
-      ]);
+    var [
+      sellingActivites,
+      premiumPostsActivities,
+      applauds,
+      icpTransactions,
+      nuaTransactions,
+      ckBtcTransactions,
+    ] = await Promise.all([
+      getSellingNfts(),
+      getOwnedNfts(),
+      getUserApplauds(),
+      getUserIcpTransactions(),
+      getUserNuaTransactions(),
+      getUserCkbtcTransactions(),
+    ]);
     if (premiumPostsActivities) {
       setDisplayingActivities(
         [
           ...sellingActivites,
           ...premiumPostsActivities,
           ...applauds,
-          ...transactions,
+          ...icpTransactions,
+          ...nuaTransactions,
+          ...ckBtcTransactions,
         ].sort((act_1, act_2) => {
           return parseInt(act_2.date) - parseInt(act_1.date);
         })
       );
     } else {
       setDisplayingActivities(
-        [...sellingActivites, ...applauds, ...transactions].sort(
-          (act_1, act_2) => {
-            return parseInt(act_2.date) - parseInt(act_1.date);
-          }
-        )
+        [
+          ...sellingActivites,
+          ...applauds,
+          ...icpTransactions,
+          ...nuaTransactions,
+          ...ckBtcTransactions,
+        ].sort((act_1, act_2) => {
+          return parseInt(act_2.date) - parseInt(act_1.date);
+        })
       );
     }
   };
@@ -154,10 +172,7 @@ const Wallet = () => {
         <div className='statistic'>
           {tokenBalances.slice(0, 2).map((tokenBalance, index) => {
             return (
-              <div
-                className='stat'
-                key={tokenBalance.token.symbol}
-              >
+              <div className='stat' key={tokenBalance.token.symbol}>
                 <p className='count'>
                   {truncateToDecimalPlace(
                     tokenBalance.balance /
@@ -186,7 +201,7 @@ const Wallet = () => {
             );
           })}
         </div>
-        <div className='statistic-horizontal-divider'/>
+        <div className='statistic-horizontal-divider' />
         <div className='statistic'>
           {tokenBalances.slice(2).map((tokenBalance, index) => {
             return (
@@ -398,6 +413,7 @@ const Wallet = () => {
                         ) as SubAccount,
                       }).toHex()
                     );
+                    notIncludingReceivers.push(applaud.bucketCanisterId);
                   } else {
                     notIncludingSenders.push(
                       AccountIdentifier.fromPrincipal({
@@ -409,6 +425,7 @@ const Wallet = () => {
                         ) as SubAccount,
                       }).toHex()
                     );
+                    notIncludingSenders.push(applaud.bucketCanisterId);
                   }
                 }
                 if (
@@ -462,14 +479,25 @@ const Wallet = () => {
                       </div>
                       <div
                         onClick={() => {
-                          window.open(
-                            activity.isDeposit
-                              ? 'https://dashboard.internetcomputer.org/account/' +
-                                  activity.sender
-                              : 'https://dashboard.internetcomputer.org/account/' +
-                                  activity.receiver,
-                            '_blank'
-                          );
+                          if (activity.currency === 'ICP') {
+                            window.open(
+                              activity.isDeposit
+                                ? 'https://dashboard.internetcomputer.org/account/' +
+                                    activity.sender
+                                : 'https://dashboard.internetcomputer.org/account/' +
+                                    activity.receiver,
+                              '_blank'
+                            );
+                          } else {
+                            window.open(
+                              activity.isDeposit
+                                ? 'https://icscan.io/principal/' +
+                                    activity.sender
+                                : 'https://icscan.io/principal/' +
+                                    activity.receiver,
+                              '_blank'
+                            );
+                          }
                         }}
                         className='from'
                         style={{ color: darkOptionsAndColors.color }}

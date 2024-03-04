@@ -3,150 +3,224 @@ import type { ActorMethod } from '@dfinity/agent';
 
 export interface Account {
   'owner' : Principal,
-  'subaccount' : [] | [Subaccount],
+  'subaccount' : [] | [Uint8Array | number[]],
 }
-export interface Account__1 {
-  'owner' : Principal,
-  'subaccount' : [] | [Subaccount],
+export interface Allowance {
+  'allowance' : bigint,
+  'expires_at' : [] | [bigint],
 }
-export interface AdvancedSettings {
-  'permitted_drift' : Timestamp,
-  'burned_tokens' : Balance,
-  'transaction_window' : Timestamp,
+export interface AllowanceArgs { 'account' : Account, 'spender' : Account }
+export interface Approve {
+  'fee' : [] | [bigint],
+  'from' : Account,
+  'memo' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+  'amount' : bigint,
+  'expected_allowance' : [] | [bigint],
+  'expires_at' : [] | [bigint],
+  'spender' : Account,
 }
-export interface ArchivedTransaction {
-  'callback' : QueryArchiveFn,
-  'start' : TxIndex,
+export interface ApproveArgs {
+  'fee' : [] | [bigint],
+  'memo' : [] | [Uint8Array | number[]],
+  'from_subaccount' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+  'amount' : bigint,
+  'expected_allowance' : [] | [bigint],
+  'expires_at' : [] | [bigint],
+  'spender' : Account,
+}
+export type ApproveError = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'TemporarilyUnavailable' : null } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'BadFee' : { 'expected_fee' : bigint } } |
+  { 'AllowanceChanged' : { 'current_allowance' : bigint } } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
+  { 'TooOld' : null } |
+  { 'Expired' : { 'ledger_time' : bigint } } |
+  { 'InsufficientFunds' : { 'balance' : bigint } };
+export interface ArchiveOptions {
+  'num_blocks_to_archive' : bigint,
+  'max_transactions_per_response' : [] | [bigint],
+  'trigger_threshold' : bigint,
+  'max_message_size_bytes' : [] | [bigint],
+  'cycles_for_archive_creation' : [] | [bigint],
+  'node_max_memory_size_bytes' : [] | [bigint],
+  'controller_id' : Principal,
+}
+export interface ArchivedRange {
+  'callback' : [Principal, string],
+  'start' : bigint,
   'length' : bigint,
 }
-export type Balance = bigint;
-export type Balance__1 = bigint;
+export interface ArchivedRange_1 {
+  'callback' : [Principal, string],
+  'start' : bigint,
+  'length' : bigint,
+}
+export interface BlockRange { 'blocks' : Array<Value> }
 export interface Burn {
   'from' : Account,
   'memo' : [] | [Uint8Array | number[]],
   'created_at_time' : [] | [bigint],
-  'amount' : Balance,
+  'amount' : bigint,
+  'spender' : [] | [Account],
 }
-export interface BurnArgs {
-  'memo' : [] | [Uint8Array | number[]],
-  'from_subaccount' : [] | [Subaccount],
-  'created_at_time' : [] | [bigint],
-  'amount' : Balance,
+export type ChangeFeeCollector = { 'SetTo' : Account } |
+  { 'Unset' : null };
+export interface DataCertificate {
+  'certificate' : [] | [Uint8Array | number[]],
+  'hash_tree' : Uint8Array | number[],
 }
-export interface GetTransactionsRequest { 'start' : TxIndex, 'length' : bigint }
-export interface GetTransactionsRequest__1 {
-  'start' : TxIndex,
-  'length' : bigint,
+export interface FeatureFlags { 'icrc2' : boolean }
+export interface GetBlocksRequest { 'start' : bigint, 'length' : bigint }
+export interface GetBlocksResponse {
+  'certificate' : [] | [Uint8Array | number[]],
+  'first_index' : bigint,
+  'blocks' : Array<Value>,
+  'chain_length' : bigint,
+  'archived_blocks' : Array<ArchivedRange>,
 }
 export interface GetTransactionsResponse {
-  'first_index' : TxIndex,
+  'first_index' : bigint,
   'log_length' : bigint,
   'transactions' : Array<Transaction>,
-  'archived_transactions' : Array<ArchivedTransaction>,
+  'archived_transactions' : Array<ArchivedRange_1>,
 }
-export type MetaDatum = [string, Value];
+export interface InitArgs {
+  'decimals' : [] | [number],
+  'token_symbol' : string,
+  'transfer_fee' : bigint,
+  'metadata' : Array<[string, MetadataValue]>,
+  'minting_account' : Account,
+  'initial_balances' : Array<[Account, bigint]>,
+  'maximum_number_of_accounts' : [] | [bigint],
+  'accounts_overflow_trim_quantity' : [] | [bigint],
+  'fee_collector_account' : [] | [Account],
+  'archive_options' : ArchiveOptions,
+  'max_memo_length' : [] | [number],
+  'token_name' : string,
+  'feature_flags' : [] | [FeatureFlags],
+}
+export type LedgerArgument = { 'Upgrade' : [] | [UpgradeArgs] } |
+  { 'Init' : InitArgs };
+export type MetadataValue = { 'Int' : bigint } |
+  { 'Nat' : bigint } |
+  { 'Blob' : Uint8Array | number[] } |
+  { 'Text' : string };
 export interface Mint {
   'to' : Account,
   'memo' : [] | [Uint8Array | number[]],
   'created_at_time' : [] | [bigint],
-  'amount' : Balance,
+  'amount' : bigint,
 }
-export interface Mint__1 {
-  'to' : Account,
-  'memo' : [] | [Uint8Array | number[]],
-  'created_at_time' : [] | [bigint],
-  'amount' : Balance,
-}
-export type QueryArchiveFn = ActorMethod<
-  [GetTransactionsRequest__1],
-  TransactionRange
->;
-export type Result = { 'ok' : bigint } |
-  { 'err' : Array<TransferResult> };
-export type Subaccount = Uint8Array | number[];
-export interface SupportedStandard { 'url' : string, 'name' : string }
-export type Timestamp = bigint;
-export interface Token {
-  'burn' : ActorMethod<[BurnArgs], TransferResult>,
-  'deposit_cycles' : ActorMethod<[], undefined>,
-  'get_transaction' : ActorMethod<[TxIndex__1], [] | [Transaction__1]>,
-  'get_transactions' : ActorMethod<
-    [GetTransactionsRequest],
-    GetTransactionsResponse
-  >,
-  'icrc1_balance_of' : ActorMethod<[Account__1], Balance__1>,
-  'icrc1_decimals' : ActorMethod<[], number>,
-  'icrc1_fee' : ActorMethod<[], Balance__1>,
-  'icrc1_metadata' : ActorMethod<[], Array<MetaDatum>>,
-  'icrc1_minting_account' : ActorMethod<[], [] | [Account__1]>,
-  'icrc1_name' : ActorMethod<[], string>,
-  'icrc1_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
-  'icrc1_symbol' : ActorMethod<[], string>,
-  'icrc1_total_supply' : ActorMethod<[], Balance__1>,
-  'icrc1_transfer' : ActorMethod<[TransferArgs], TransferResult>,
-  'mint' : ActorMethod<[Mint], TransferResult>,
-  'mint_multiple' : ActorMethod<[Array<Mint>], Result>,
-}
-export interface TokenInitArgs {
-  'fee' : Balance,
-  'advanced_settings' : [] | [AdvancedSettings],
-  'decimals' : number,
-  'minting_account' : [] | [Account],
-  'name' : string,
-  'initial_balances' : Array<[Account, Balance]>,
-  'min_burn_amount' : Balance,
-  'max_supply' : Balance,
-  'symbol' : string,
-}
+export type Result = { 'Ok' : bigint } |
+  { 'Err' : TransferError };
+export type Result_1 = { 'Ok' : bigint } |
+  { 'Err' : ApproveError };
+export type Result_2 = { 'Ok' : bigint } |
+  { 'Err' : TransferFromError };
+export interface StandardRecord { 'url' : string, 'name' : string }
 export interface Transaction {
   'burn' : [] | [Burn],
   'kind' : string,
-  'mint' : [] | [Mint__1],
-  'timestamp' : Timestamp,
-  'index' : TxIndex,
+  'mint' : [] | [Mint],
+  'approve' : [] | [Approve],
+  'timestamp' : bigint,
   'transfer' : [] | [Transfer],
 }
 export interface TransactionRange { 'transactions' : Array<Transaction> }
-export interface Transaction__1 {
-  'burn' : [] | [Burn],
-  'kind' : string,
-  'mint' : [] | [Mint__1],
-  'timestamp' : Timestamp,
-  'index' : TxIndex,
-  'transfer' : [] | [Transfer],
-}
 export interface Transfer {
   'to' : Account,
-  'fee' : [] | [Balance],
+  'fee' : [] | [bigint],
   'from' : Account,
   'memo' : [] | [Uint8Array | number[]],
   'created_at_time' : [] | [bigint],
-  'amount' : Balance,
+  'amount' : bigint,
+  'spender' : [] | [Account],
 }
-export interface TransferArgs {
+export interface TransferArg {
   'to' : Account,
-  'fee' : [] | [Balance],
+  'fee' : [] | [bigint],
   'memo' : [] | [Uint8Array | number[]],
-  'from_subaccount' : [] | [Subaccount],
+  'from_subaccount' : [] | [Uint8Array | number[]],
   'created_at_time' : [] | [bigint],
-  'amount' : Balance,
+  'amount' : bigint,
 }
 export type TransferError = {
     'GenericError' : { 'message' : string, 'error_code' : bigint }
   } |
   { 'TemporarilyUnavailable' : null } |
-  { 'BadBurn' : { 'min_burn_amount' : Balance } } |
-  { 'Duplicate' : { 'duplicate_of' : TxIndex } } |
-  { 'BadFee' : { 'expected_fee' : Balance } } |
-  { 'CreatedInFuture' : { 'ledger_time' : Timestamp } } |
+  { 'BadBurn' : { 'min_burn_amount' : bigint } } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'BadFee' : { 'expected_fee' : bigint } } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
   { 'TooOld' : null } |
-  { 'InsufficientFunds' : { 'balance' : Balance } };
-export type TransferResult = { 'Ok' : TxIndex } |
-  { 'Err' : TransferError };
-export type TxIndex = bigint;
-export type TxIndex__1 = bigint;
+  { 'InsufficientFunds' : { 'balance' : bigint } };
+export interface TransferFromArgs {
+  'to' : Account,
+  'fee' : [] | [bigint],
+  'spender_subaccount' : [] | [Uint8Array | number[]],
+  'from' : Account,
+  'memo' : [] | [Uint8Array | number[]],
+  'created_at_time' : [] | [bigint],
+  'amount' : bigint,
+}
+export type TransferFromError = {
+    'GenericError' : { 'message' : string, 'error_code' : bigint }
+  } |
+  { 'TemporarilyUnavailable' : null } |
+  { 'InsufficientAllowance' : { 'allowance' : bigint } } |
+  { 'BadBurn' : { 'min_burn_amount' : bigint } } |
+  { 'Duplicate' : { 'duplicate_of' : bigint } } |
+  { 'BadFee' : { 'expected_fee' : bigint } } |
+  { 'CreatedInFuture' : { 'ledger_time' : bigint } } |
+  { 'TooOld' : null } |
+  { 'InsufficientFunds' : { 'balance' : bigint } };
+export interface UpgradeArgs {
+  'token_symbol' : [] | [string],
+  'transfer_fee' : [] | [bigint],
+  'metadata' : [] | [Array<[string, MetadataValue]>],
+  'maximum_number_of_accounts' : [] | [bigint],
+  'accounts_overflow_trim_quantity' : [] | [bigint],
+  'change_fee_collector' : [] | [ChangeFeeCollector],
+  'max_memo_length' : [] | [number],
+  'token_name' : [] | [string],
+  'feature_flags' : [] | [FeatureFlags],
+}
 export type Value = { 'Int' : bigint } |
+  { 'Map' : Array<[string, Value]> } |
   { 'Nat' : bigint } |
+  { 'Nat64' : bigint } |
   { 'Blob' : Uint8Array | number[] } |
-  { 'Text' : string };
-export interface _SERVICE extends Token {}
+  { 'Text' : string } |
+  { 'Array' : Vec };
+export type Vec = Array<
+  { 'Int' : bigint } |
+    { 'Map' : Array<[string, Value]> } |
+    { 'Nat' : bigint } |
+    { 'Nat64' : bigint } |
+    { 'Blob' : Uint8Array | number[] } |
+    { 'Text' : string } |
+    { 'Array' : Vec }
+>;
+export interface _SERVICE {
+  'get_blocks' : ActorMethod<[GetBlocksRequest], GetBlocksResponse>,
+  'get_data_certificate' : ActorMethod<[], DataCertificate>,
+  'get_transactions' : ActorMethod<[GetBlocksRequest], GetTransactionsResponse>,
+  'icrc1_balance_of' : ActorMethod<[Account], bigint>,
+  'icrc1_decimals' : ActorMethod<[], number>,
+  'icrc1_fee' : ActorMethod<[], bigint>,
+  'icrc1_metadata' : ActorMethod<[], Array<[string, MetadataValue]>>,
+  'icrc1_minting_account' : ActorMethod<[], [] | [Account]>,
+  'icrc1_name' : ActorMethod<[], string>,
+  'icrc1_supported_standards' : ActorMethod<[], Array<StandardRecord>>,
+  'icrc1_symbol' : ActorMethod<[], string>,
+  'icrc1_total_supply' : ActorMethod<[], bigint>,
+  'icrc1_transfer' : ActorMethod<[TransferArg], Result>,
+  'icrc2_allowance' : ActorMethod<[AllowanceArgs], Allowance>,
+  'icrc2_approve' : ActorMethod<[ApproveArgs], Result_1>,
+  'icrc2_transfer_from' : ActorMethod<[TransferFromArgs], Result_2>,
+}

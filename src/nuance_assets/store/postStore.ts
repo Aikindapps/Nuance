@@ -12,7 +12,7 @@ import {
   PremiumArticleOwners,
   PremiumArticleOwner,
   ApplaudListItem,
-  IcpTransactionListItem,
+  TransactionListItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -29,9 +29,19 @@ import {
   getLedgerActor,
   getIcrc1Actor,
   getIcpIndexCanister,
+  getIcrc1TokenActorAnonymous,
+  getIcrc1IndexCanister,
+  getIcrc1ArchiveCanister,
 } from '../services/actorService';
 import { AccountIdentifier, LedgerCanister } from '@dfinity/ledger-icp';
-import { TransferResult as Icrc1TransferResult } from '../services/icrc1/icrc1.did';
+import {
+  Result as Icrc1TransferResult,
+  TransactionRange,
+  Transfer,
+} from '../services/icrc1/icrc1.did';
+import {
+  Transaction as ArchiveTransaction
+} from '../services/icrc1-archive/icrc1-archive.did';
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
@@ -50,7 +60,12 @@ import {
   SaveCommentModel,
 } from '../../../src/declarations/PostBucket/PostBucket.did';
 import Comments from '../components/comments/comments';
-import { SupportedTokenSymbol } from '../shared/constants';
+import {
+  NUA_CANISTER_ID,
+  SupportedTokenSymbol,
+  ckBTC_CANISTER_ID,
+  ckBTC_INDEX_CANISTER_ID,
+} from '../shared/constants';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -432,7 +447,9 @@ export interface PostStore {
     bucketCanisterId: string
   ) => Promise<string[]>;
   getUserApplauds: () => Promise<ApplaudListItem[]>;
-  getUserIcpTransactions: () => Promise<IcpTransactionListItem[]>;
+  getUserIcpTransactions: () => Promise<TransactionListItem[]>;
+  getUserNuaTransactions: () => Promise<TransactionListItem[]>;
+  getUserCkbtcTransactions: () => Promise<TransactionListItem[]>;
   settleToken: (
     tokenId: string,
     canisterId: string,
@@ -1445,7 +1462,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       return { posts: postsWithAvatars, totalCount };
     } catch (err) {
       handleError(err, Unexpected);
-      return { posts: [], totalCount: 0};
+      return { posts: [], totalCount: 0 };
     }
   },
   getPopularPostsThisWeek: async (
@@ -1564,9 +1581,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getMyAllPosts(indexFrom, indexTo);
-      console.log('keyProperties', keyProperties);
       const myAllPosts = await fetchPostsByBuckets(keyProperties, true);
-      console.log('myAllPosts', myAllPosts);
       set({ myAllPosts });
 
       const postsWithAvatars = await mergeAuthorAvatars(myAllPosts);
@@ -1633,14 +1648,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   ): Promise<void> => {
     try {
       const actor = await getPostIndexActor();
-      console.log('search arguments: ', phrase, isTagSearch, indexFrom, indexTo, user)
       const results = await actor.search(
         phrase,
         isTagSearch,
         indexFrom,
         indexTo
       );
-      console.log('search results: ', results);
 
       const postIds = results.postIds;
       if (results.totalCount === 'Search term is too long') {
@@ -1650,7 +1663,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         const coreActor = await getPostCoreActor();
         const keyProperties = await coreActor.getList(postIds);
         const posts = await fetchPostsByBuckets(keyProperties, false);
-        console.log('posts: ', posts)
         if (posts?.length) {
           var draftCounter = 0;
           const postsWithAvatars = await mergeAuthorAvatars(
@@ -2527,7 +2539,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       return [];
     }
   },
-  getUserIcpTransactions: async (): Promise<IcpTransactionListItem[]> => {
+  getUserIcpTransactions: async (): Promise<TransactionListItem[]> => {
     try {
       let icpIndexCanister = await getIcpIndexCanister();
       let userWallet = await useAuthStore.getState().getUserWallet();
@@ -2562,7 +2574,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             };
           }
         });
-        let result: IcpTransactionListItem[] = [];
+        let result: TransactionListItem[] = [];
         for (const transactionItem of transactionItems) {
           if (transactionItem) {
             result.push(transactionItem);
@@ -2570,6 +2582,112 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         }
         return result;
       }
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  },
+  getUserNuaTransactions: async (): Promise<TransactionListItem[]> => {
+    try {
+      let nuaLedgerCanister = await getIcrc1TokenActorAnonymous(
+        NUA_CANISTER_ID,
+        true
+      );
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      let nuaTransactionsLedgerResponse =
+        await nuaLedgerCanister.get_transactions({
+          start: BigInt(0),
+          length: BigInt(100_000_000_000_000), //just an arbitrary big number to get all the info we need for ALL transactions
+        });
+      var transactions : ArchiveTransaction[] = nuaTransactionsLedgerResponse.transactions;
+      //archive canister promises
+      let promises = [];
+      for (const archivedTransaction of nuaTransactionsLedgerResponse.archived_transactions) {
+        let archiveCanister = await getIcrc1ArchiveCanister(archivedTransaction.callback[0].toText());
+        promises.push(
+          archiveCanister.get_transactions({
+            start: archivedTransaction.start,
+            length: archivedTransaction.length,
+          })
+        );
+      }
+      
+      let archivedTransactionsResults = await Promise.all(promises);
+      archivedTransactionsResults.forEach((archived) => {
+        transactions = [...archived.transactions, ...transactions];
+      });
+      //filter the transactions to just include user's transactions
+      transactions = transactions.filter((transaction) => {
+        if (transaction.transfer.length !== 0) {
+          return (
+            transaction.transfer[0].from.owner.toText() ===
+              userWallet.principal ||
+            transaction.transfer[0].to.owner.toText() === userWallet.principal
+          );
+        }
+        return false;
+      });
+      let transfers = transactions.map((transaction) => {
+        return transaction.transfer[0];
+      }) as Transfer[];
+      return transfers.map((t, index) => {
+        return {
+          date: (Number(transactions[index].timestamp) / 1000000).toString(),
+          currency: 'NUA' as SupportedTokenSymbol,
+          receiver: t.to.owner.toText(),
+          sender: t.from.owner.toText(),
+          isDeposit: t.to.owner.toText() === userWallet.principal,
+          amount: Number(t.amount),
+        };
+      });
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  },
+  getUserCkbtcTransactions: async (): Promise<TransactionListItem[]> => {
+    try {
+      let ckBtcIndexCanister = await getIcrc1IndexCanister(
+        ckBTC_INDEX_CANISTER_ID
+      );
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      let indexCanisterTransactionsResponse =
+        await ckBtcIndexCanister.get_account_transactions({
+          max_results: BigInt(100_000), //max of 100_000 transactions :)
+          start: [BigInt(0)],
+          account: {
+            owner: Principal.fromText(userWallet.principal),
+            subaccount: [],
+          },
+        });
+      if ('Err' in indexCanisterTransactionsResponse) {
+        handleError(indexCanisterTransactionsResponse.Err.message);
+        return [];
+      } else {
+        let transactions =
+          indexCanisterTransactionsResponse.Ok.transactions.filter(
+            (transaction) => {
+              return transaction.transaction.transfer.length !== 0;
+            }
+          );
+        let transfers = transactions
+          .map((t) => {
+            return t.transaction.transfer[0];
+          }) as Transfer[];
+        return transfers.map((t, index) => {
+          return {
+            date: (
+              Number(transactions[index].transaction.timestamp) / 1000000
+            ).toString(),
+            currency: 'ckBTC' as SupportedTokenSymbol,
+            receiver: t.to.owner.toText(),
+            sender: t.from.owner.toText(),
+            isDeposit: t.to.owner.toText() === userWallet.principal,
+            amount: Number(t.amount),
+          };
+        });
+      }
+      //filter the transactions to just include user's transactions
     } catch (error) {
       handleError(error);
       return [];
