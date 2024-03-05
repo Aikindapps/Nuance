@@ -96,7 +96,7 @@ echo "Publication canister id: $firstPublicationCanisterId"
 echo ""
 echo "Updating the details of the first publication"
 echo ""
-dfx canister --network $network call $firstPublicationCanisterId updatePublicationDetails '("Description of the awesome publication!", "Awesome publication", "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5187", vec {}, vec {}, vec {}, "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5147", "Subtitle of this thing.", record {website=""; twitter=""; dscvr=""; distrikt="";}, "1688564984626")'
+dfx canister --network $network call $firstPublicationCanisterId updatePublicationDetails '("Description of the awesome publication!", "Awesome publication", "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5187", vec {}, vec {}, vec {"Awesome-publication"}, "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5147", "Subtitle of this thing.", record {website=""; socialChannels=vec{""};}, "1688564984626")'
 
 
 echo ""
@@ -109,7 +109,8 @@ counter=0
     title=DevInstall-publication-article-$counter
     subtitle=Subtitle-$counter
     content=DevInstall-$counter-content-publication
-    dfx canister call --network $network $firstPublicationCanisterId publicationPost '(record {
+    dfx canister call --network $network $postCoreCanisterId save '(record {
+        handle="Awesome-publication";
         postId=""; 
         title="'$title'"; 
         subtitle="'$subtitle'"; 
@@ -142,7 +143,8 @@ echo ""
 echo "Create a premium article"
 echo ""
 userPrincipal=$(dfx identity get-principal)
-savePostReturn=$(dfx canister --network $network call $firstPublicationCanisterId publicationPost '(record {
+savePostReturn=$(dfx canister --network $network call $postCoreCanisterId save '(record {
+    handle="Awesome-publication";
     postId=""; 
     title="Nft article"; 
     subtitle="Nft article subtitle"; 
@@ -150,10 +152,10 @@ savePostReturn=$(dfx canister --network $network call $firstPublicationCanisterI
     content="Nft article content"; 
     isDraft=true; 
     tagIds= vec{"1"; "5";}; 
-    creator="'$userPrincipal'"; 
+    creator="'$principal'"; 
     isPublication=true; 
     category=""; 
-    isPremium=false
+    isPremium=true
 })')
 nftArticlePostId=$(echo "$savePostReturn" | sed -n 's/.*4_258_176_091 = "\(.*\)";/\1/p')
 dfx canister --network $network call $firstPublicationCanisterId createNftFromPremiumArticle '("'$nftArticlePostId'", 50: nat, 10000000: nat, "")'
