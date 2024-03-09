@@ -402,6 +402,7 @@ module {
   public type BucketCanisterInterface = actor{
     getKinicList : () -> async Result.Result<[Text], Text>;
     get : (postId: Text) -> async Result.Result<PostBucketType, Text>;
+    getPost : (postId: Text) -> async Result.Result<PostBucketType, Text>;
     deleteUserPosts : (principalId: Text) -> async Result.Result<Nat, Text>;
     delete : (postId: Text) -> async Result.Result<Nat, Text>;
     reindex : () -> async Result.Result<Text, Text>;
