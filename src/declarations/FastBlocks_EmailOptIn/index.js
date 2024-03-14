@@ -40,4 +40,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const FastBlocks_EmailOptIn = createActor(canisterId);
+export const FastBlocks_EmailOptIn = canisterId ? createActor(canisterId) : undefined;

@@ -11,6 +11,7 @@ import Header from '../../components/header/header';
 import Loader from '../../UI/loader/Loader';
 //import { PostSaveModel } from '../../services/actorService';
 import {
+  CreatePremiumArticleData,
   PostType,
   PremiumArticleOwners as PremiumArticleOwnersObject,
   PublicationType,
@@ -98,15 +99,13 @@ const CreateEditArticle = () => {
       return 'Not saved';
     } else {
       if (lastSavedPost?.isDraft) {
-        if(userPublicationsWriter.includes(lastSavedPost.handle)){
-          return "Submitted for review"
+        if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+          return 'Submitted for review';
+        } else {
+          return 'Draft';
         }
-        else{
-          return "Draft"
-        }
-        
       } else {
-        return "Published"
+        return 'Published';
       }
     }
   };
@@ -141,20 +140,16 @@ const CreateEditArticle = () => {
   const isPublishAsPremiumVisible = () => {
     if (lastSavedPost) {
       //the post has already been saved
-      //if it's draft, check the userPublicationsWithNftCanister array, if it's not return false
+      //if it's draft, check the userPublicationsEditor array, if it's not there, return false
       if (lastSavedPost.isDraft) {
-        return (
-          userPublicationsWithNftCanister.includes(selectedHandle) && !loading
-        );
+        return userPublicationsEditor.includes(selectedHandle) && !loading;
       } else {
         return false;
       }
     } else {
       //new article screen
-      //just check the userPublicationsWithNftCanister array
-      return (
-        userPublicationsWithNftCanister.includes(selectedHandle) && !loading
-      );
+      //just check the userPublicationsEditor array
+      return userPublicationsEditor.includes(selectedHandle) && !loading;
     }
   };
 
@@ -225,20 +220,14 @@ const CreateEditArticle = () => {
       );
       let userEditorPublicationsDetailsMap: Map<string, PublicationType> =
         new Map();
-      let publicationsWithNftCanister : string[] = [];
       for (const publicationDetail of userEditorPublicationsDetailsArray) {
         if (publicationDetail) {
           userEditorPublicationsDetailsMap.set(
             publicationDetail.publicationHandle,
             publicationDetail
           );
-          if(publicationDetail.nftCanisterId !== ""){
-            publicationsWithNftCanister.push(publicationDetail.publicationHandle);
-          }
         }
       }
-
-      setUserPublicationsWithNftCanister(publicationsWithNftCanister);
       setUserEditorPublicationsDetails(userEditorPublicationsDetailsMap);
     }
   };
@@ -339,8 +328,6 @@ const CreateEditArticle = () => {
   const [userPublicationsWriter, setUserPublicationsWriter] = useState<
     string[]
   >([]);
-  const [userPublicationsWithNftCanister, setUserPublicationsWithNftCanister] =
-    useState<string[]>([]);
   const [userEditorPublicationsDetails, setUserEditorPublicationsDetails] =
     useState<Map<string, PublicationType>>(new Map());
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -486,7 +473,11 @@ const CreateEditArticle = () => {
   };
 
   //will be used for regular posts and publication posts
-  const onSave = async (isDraft: boolean, notNavigate?: boolean) => {
+  const onSave = async (
+    isDraft: boolean,
+    notNavigate?: boolean,
+    premium?: CreatePremiumArticleData
+  ) => {
     if (!validate()) {
       return;
     }
@@ -506,7 +497,7 @@ const CreateEditArticle = () => {
             title: savingPost.title,
             creator: savingPost.creator || user?.handle || '',
             content: contentWithUrls || postHtml,
-            isPremium: false,
+            premium: premium ? [premium] : [],
             isDraft: isDraft,
             tagIds: savingPost.tags.map((tag) => {
               return tag.tagId;
@@ -522,7 +513,7 @@ const CreateEditArticle = () => {
             setSavingPost(savePublicationResult);
             setLastSavedPost(savePublicationResult);
             setPostHtml(savePublicationResult.content);
-            setRadioButtonIndex(savePublicationResult.isDraft? 0 : 1);
+            setRadioButtonIndex(savePublicationResult.isDraft ? 0 : 1);
             return savePublicationResult;
           }
         } else {
@@ -536,7 +527,7 @@ const CreateEditArticle = () => {
             setSavingPost(migratePostResult);
             setLastSavedPost(migratePostResult);
             setPostHtml(migratePostResult.content);
-            setRadioButtonIndex(migratePostResult.isDraft? 0 : 1);
+            setRadioButtonIndex(migratePostResult.isDraft ? 0 : 1);
             navigate('/article/edit/' + migratePostResult.postId, {
               replace: true,
             });
@@ -552,7 +543,7 @@ const CreateEditArticle = () => {
             title: savingPost.title,
             creator: savingPost.creator || '',
             content: contentWithUrls || postHtml,
-            isPremium: false,
+            premium: premium ? [premium] : [],
             isDraft: isDraft,
             tagIds: savingPost.tags.map((tag) => {
               return tag.tagId;
@@ -568,7 +559,7 @@ const CreateEditArticle = () => {
             setSavingPost(saveResult);
             setLastSavedPost(saveResult);
             setPostHtml(saveResult.content);
-            setRadioButtonIndex(saveResult.isDraft? 0 : 1);
+            setRadioButtonIndex(saveResult.isDraft ? 0 : 1);
             return saveResult;
           }
         }
@@ -582,7 +573,7 @@ const CreateEditArticle = () => {
           title: savingPost.title,
           creator: user?.handle || '',
           content: contentWithUrls || postHtml,
-          isPremium: false,
+          premium: premium ? [premium] : [],
           isDraft: isDraft,
           tagIds: savingPost.tags.map((tag) => {
             return tag.tagId;
@@ -598,7 +589,7 @@ const CreateEditArticle = () => {
           setSavingPost(savePublicationResult);
           setLastSavedPost(savePublicationResult);
           setPostHtml(savePublicationResult.content);
-          setRadioButtonIndex(savePublicationResult.isDraft? 0 : 1);
+          setRadioButtonIndex(savePublicationResult.isDraft ? 0 : 1);
           navigate('/article/edit/' + savePublicationResult.postId, {
             replace: true,
           });
@@ -611,7 +602,7 @@ const CreateEditArticle = () => {
           title: savingPost.title,
           creator: '',
           content: contentWithUrls || postHtml,
-          isPremium: false,
+          premium: premium ? [premium] : [],
           isDraft: isDraft,
           tagIds: savingPost.tags.map((tag) => {
             return tag.tagId;
@@ -627,7 +618,7 @@ const CreateEditArticle = () => {
           setSavingPost(saveResult);
           setLastSavedPost(saveResult);
           setPostHtml(saveResult.content);
-          setRadioButtonIndex(saveResult.isDraft? 0 : 1);
+          setRadioButtonIndex(saveResult.isDraft ? 0 : 1);
           //navigate to the /article/edit/<post-id>
           if (!notNavigate) {
             navigate('/article/edit/' + saveResult.postId, { replace: true });
@@ -642,7 +633,7 @@ const CreateEditArticle = () => {
   const [radioButtonIndex, setRadioButtonIndex] = useState(
     lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
   );
-  
+
   const getRadioButtonItems = (): JSX.Element[] => {
     if (isPublishAsPremiumVisible()) {
       if (isPublishButtonVisible()) {
@@ -795,12 +786,18 @@ const CreateEditArticle = () => {
                           userEditorPublicationsDetails.get(selectedHandle)
                             ?.editors.length || 1,
                         premiumPostData: savingPost,
-                        premiumPostOnSave: async (isDraft) => {
-                          return await onSave(isDraft, true);
+                        premiumPostOnSave: async (
+                          maxSupply: bigint,
+                          icpPrice: bigint,
+                          thumbnail: string
+                        ) => {
+                          await onSave(false, true, {
+                            thumbnail,
+                            icpPrice,
+                            maxSupply,
+                          });
                         },
-                        premiumPostRefreshPost: async (post) => {
-                          await firstLoad()
-                        },
+                        premiumPostRefreshPost: firstLoad,
                       });
                     }}
                   >
@@ -868,7 +865,10 @@ const CreateEditArticle = () => {
                     setLoading(true);
                     let response = await onSave(true);
                     setLoading(false);
-                    if(response && userPublicationsWriter.includes(response.handle)){
+                    if (
+                      response &&
+                      userPublicationsWriter.includes(response.handle)
+                    ) {
                       toast(
                         `Your article is submitted for review in @${response.handle}!`,
                         ToastType.Plain
@@ -938,12 +938,18 @@ const CreateEditArticle = () => {
                           userEditorPublicationsDetails.get(selectedHandle)
                             ?.editors.length || 1,
                         premiumPostData: savingPost,
-                        premiumPostOnSave: async (isDraft) => {
-                          return await onSave(isDraft, true);
+                        premiumPostOnSave: async (
+                          maxSupply: bigint,
+                          icpPrice: bigint,
+                          thumbnail: string
+                        ) => {
+                          await onSave(false, true, {
+                            thumbnail,
+                            icpPrice,
+                            maxSupply,
+                          });
                         },
-                        premiumPostRefreshPost: async (post) => {
-                          await firstLoad()
-                        },
+                        premiumPostRefreshPost: firstLoad,
                       });
                     }}
                   >
@@ -1172,12 +1178,18 @@ const CreateEditArticle = () => {
                       userEditorPublicationsDetails.get(selectedHandle)?.editors
                         .length || 1,
                     premiumPostData: savingPost,
-                    premiumPostOnSave: async (isDraft) => {
-                      return await onSave(isDraft, true);
+                    premiumPostOnSave: async (
+                      maxSupply: bigint,
+                      icpPrice: bigint,
+                      thumbnail: string
+                    ) => {
+                      await onSave(false, true, {
+                        thumbnail,
+                        icpPrice,
+                        maxSupply,
+                      });
                     },
-                    premiumPostRefreshPost: async (post) => {
-                      await firstLoad()
-                    },
+                    premiumPostRefreshPost: firstLoad,
                   });
                 }}
               >

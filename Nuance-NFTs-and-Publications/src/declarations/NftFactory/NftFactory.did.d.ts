@@ -1,32 +1,60 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
+export interface InitNftCanisterData {
+  'thumbnail' : string,
+  'initialMintingAddresses' : Array<string>,
+  'metadata' : Metadata,
+  'writerPrincipal' : Principal,
+  'admins' : Array<Principal>,
+  'icpPrice' : bigint,
+  'royalty' : Array<[string, bigint]>,
+  'maxSupply' : bigint,
+  'marketplaceOpen' : Time,
+  'collectionName' : string,
+  'postId' : string,
+}
 export type List = [] | [[string, List]];
-export type Result = { 'ok' : [string, string] } |
+export type Metadata = {
+    'fungible' : {
+      'decimals' : number,
+      'metadata' : [] | [MetadataContainer],
+      'name' : string,
+      'symbol' : string,
+    }
+  } |
+  {
+    'nonfungible' : {
+      'thumbnail' : string,
+      'asset' : string,
+      'metadata' : [] | [MetadataContainer],
+      'name' : string,
+    }
+  };
+export type MetadataContainer = { 'blob' : Uint8Array | number[] } |
+  { 'data' : Array<MetadataValue> } |
+  { 'json' : string };
+export type MetadataValue = [
+  string,
+  { 'nat' : bigint } |
+    { 'blob' : Uint8Array | number[] } |
+    { 'nat8' : number } |
+    { 'text' : string },
+];
+export type Result = { 'ok' : List } |
   { 'err' : string };
-export type Result_1 = { 'ok' : null } |
+export type Result_1 = { 'ok' : string } |
   { 'err' : string };
-export type Result_2 = { 'ok' : bigint } |
-  { 'err' : string };
-export type Result_3 = { 'ok' : List } |
-  { 'err' : string };
-export type Result_4 = { 'ok' : string } |
-  { 'err' : string };
+export type Time = bigint;
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
-  'createNftCanister' : ActorMethod<[], Result_4>,
-  'getAdmins' : ActorMethod<[], Result_3>,
+  'createNftCanister' : ActorMethod<[InitNftCanisterData], Result_1>,
+  'getAdmins' : ActorMethod<[], Result>,
+  'getAllNftCanisterIds' : ActorMethod<[], Array<[string, string]>>,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getMaxMemorySize' : ActorMethod<[], bigint>,
-  'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
-  'getWhitelistedPublishers' : ActorMethod<[], Array<[string, string]>>,
-  'isThereEnoughMemory' : ActorMethod<[], boolean>,
-  'registerAdmin' : ActorMethod<[string], Result_1>,
-  'registerPlatformOperator' : ActorMethod<[string], Result_1>,
-  'setMaxMemorySize' : ActorMethod<[bigint], Result_2>,
-  'unregisterAdmin' : ActorMethod<[string], Result_1>,
-  'unregisterPlatformOperator' : ActorMethod<[string], Result_1>,
-  'whitelistPublication' : ActorMethod<[string, string], Result>,
 }
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

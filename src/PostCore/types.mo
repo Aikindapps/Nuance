@@ -23,26 +23,36 @@ module {
         creator: Text; //publication author
         isPublication: Bool;
         category: Text;
-        isPremium: Bool;
+        premium : ?{
+          //we  can extend this object with new fields to have more customization
+          thumbnail: Text;
+          maxSupply: Nat;
+          icpPrice: Nat;
+        };
     };
 
     
 
     public type PostSaveModelBucket = {
-        postId: Text;
-        handle: Text; //useless for the regular posts, it's used to determine the publication handle
-        postOwnerPrincipalId: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        creator: Text; //publication author
-        isPublication: Bool;
-        category: Text;
-        isPremium: Bool;
-        tagNames : [Text];
-        caller: Principal;
+      postId : Text;
+      handle: Text; //useless for the regular posts, it's used to determine the publication handle
+      postOwnerPrincipalId: Text;
+      title : Text;
+      subtitle : Text;
+      headerImage : Text;
+      content : Text;
+      isDraft : Bool;
+      creator : Text; //publication author
+      isPublication : Bool;
+      category : Text;
+      premium : ?{
+        //we  can extend this object with new fields to have more customization
+        thumbnail: Text;
+        maxSupply: Nat;
+        icpPrice: Nat;
+      };
+      tagNames : [Text];
+      caller : Principal;
     };
 
     public type PostSaveModelBucketMigration = {
@@ -75,6 +85,7 @@ module {
         content: Text;
         isDraft: Bool;
         isPremium: Bool;
+        nftCanisterId: ?Text;
 
         // fields stored as Int, but returned to UI as Text
         created: Text; //determined at draft creation
@@ -95,26 +106,28 @@ module {
     };
 
     public type PostBucketType = {
-        postId: Text;
-        handle: Text;
-        url: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        isPremium: Bool;
+      postId : Text;
+      handle : Text;
+      url : Text;
+      title : Text;
+      subtitle : Text;
+      headerImage : Text;
+      content : Text;
+      isDraft : Bool;
+      isPremium : Bool;
+      nftCanisterId: ?Text;
 
-        // fields stored as Int, but returned to UI as Text
-        created: Text; //determined at draft creation
-        publishedDate: Text; //determined at publish
-        modified: Text; //determined at save
-        
-        //publisher fields
-        creator: Text;
-        isPublication: Bool;
-        category: Text;
-        wordCount: Text;
+      // fields stored as Int, but returned to UI as Text
+      created : Text; //determined at draft creation
+      publishedDate : Text; //determined at publish
+      modified : Text; //determined at save
+
+      //publisher fields
+      creator : Text;
+      isPublication : Bool;
+      category : Text;
+      wordCount : Text;
+      bucketCanisterId : Text;
     };
 
     public type PostMigrationType = {
@@ -398,26 +411,4 @@ module {
     authorize: (principal: Principal) -> async ();
     take_ownership: () -> async ();
   };
-  //bucket canister interface
-  public type BucketCanisterInterface = actor{
-    getKinicList : () -> async Result.Result<[Text], Text>;
-    get : (postId: Text) -> async Result.Result<PostBucketType, Text>;
-    deleteUserPosts : (principalId: Text) -> async Result.Result<Nat, Text>;
-    delete : (postId: Text) -> async Result.Result<Nat, Text>;
-    reindex : () -> async Result.Result<Text, Text>;
-    generateContent : (postId : Text ) -> async  Text;
-    registerNftCanisterId : (canisterId: Text, handle: Text) -> async Result.Result<Text, Text>;
-    rejectPostByModclub : (postId: Text) -> async ();
-    unRejectPostByModclub : (postId: Text) -> async ();
-    storeAllSEO : () -> async Result.Result<(), Text>;
-    isBucketCanisterActivePublic : () -> async Bool;
-    save : (postModel : PostSaveModelBucket) -> async Result.Result<PostBucketType, Text>;
-    saveMultiple : (postModels : [PostSaveModelBucketMigration]) -> async [Result.Result<PostBucketType, Text>];
-    storeHandlesAndPrincipals : (handlesAndPrincipalIds: [(Text, Text)]) -> async Result.Result<Text, Text>;
-    getPostUrls : () -> async Result.Result<Text, Text>;
-    makeBucketCanisterNonActive : () -> async Result.Result<Bool, Text>;
-    updateHandle : (principalId: Text, newHandle: Text) -> async Result.Result<Text, Text>;
-    registerCanister : (id: Text) -> async Result.Result<(), Text>;
-    initializeCanister : (postIndexCai: Text, userCai: Text) -> async Result.Result<Text, Text>
-  }
 };

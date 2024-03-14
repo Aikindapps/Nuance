@@ -1,241 +1,141 @@
-.nft-modal-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding-bottom: 35px;
-  border-radius: 15px;
-
-  .nuance-nft-logo {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-
-  .text-wrapper {
-    width: 70%;
-    text-align: center;
-    margin-top: 30px;
-
-    
-
-    .nft-modal-text {
-      vertical-align: center;
-      font-family: Georgia, 'Times New Roman', Times, serif;
-      font-size: 18px;
-      color: #00113E;
-    }
-
-    .nft-modal-text-2 {
-
-      vertical-align: center;
-      font-family: 'Roboto';
-      font-size: 16px;
-      color: #19192E;
-    }
-  }
-
-  .text-wrapper-unsufficient-balance {
-    width: 70%;
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 15px;
-
-    .nft-modal-text {
-      vertical-align: center;
-      font-family: Georgia, 'Times New Roman', Times, serif;
-      font-size: 18px;
-      color: #AE0000;
-
-    }
-
-    .nft-modal-text-2 {
-
-      vertical-align: center;
-      font-family: 'Roboto';
-      font-size: 16px;
-      color: #19192E;
-    }
-  }
-
-  .text-wrapper-sale-info {
-    width: 70%;
-    text-align: left;
-    margin-top: 5px;
-
-    .nft-sale-text {
-      font-family: 'Roboto';
-      font-style: normal;
-      font-weight: 400;
-      font-size: 16px;
-      line-height: 24px;
-      color: #19192E;
-
-    }
-  }
-
-  .text-wrapper-congratulations {
-    width: 70%;
-    text-align: center;
-    margin-top: 5px;
-
-    .nft-congratulations-text {
-      font-family: 'Roboto';
-      font-style: normal;
-      font-weight: 400;
-      font-size: 16px;
-      line-height: 24px;
-      color: #19192E;
-      
-
-    }
-  }
-
-  .icp-balance-flex{
-    width: 30%;
+.buy-nft-modal {
+  width: 95%;
+  max-width: 728px;
+  background: white;
+  position: absolute;
+  left: 91px;
+  top: 289px;
+  z-index: 1;
+  box-shadow: 0px 2px 10px 5px rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  padding: 20px 100px 40px 100px;
+  font-family: Roboto;
+  .buy-nft-modal-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    .required{
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
+    width: 100%;
+    row-gap: 30px;
+    position: relative;
+    .buy-nft-modal-logo {
+      min-width: 110px;
+      max-width: 110px;
+      min-height: 110px;
+      max-height: 110px;
     }
-
-    .in-wallet{
+    .buy-nft-modal-article-info-wrapper {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: start;
       width: 100%;
-    }
-  }
-    .address-flex {
-      display: flex;
-      width: 75%;
-      justify-content: space-evenly;
-      margin-bottom: 30px;
-      margin-top: 10px;
-      .address {
+      row-gap: 5px;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      letter-spacing: 0em;
+      text-align: left;
+      .buy-nft-modal-article-info-title {
+        align-self: center;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        margin-bottom: 20px;
+        font-size: 18px;
+      }
+      .buy-nft-modal-article-info-centered {
+        text-align: center;
+      }
+      .buy-nft-modal-article-info-bold {
+        font-weight: bolder;
+      }
+      .buy-nft-modal-cost-wrapper {
+        width: 100%;
         display: flex;
-        flex-direction: column;
-        width: 45%;
-
-        .address-header {
-          font-family: 'Roboto';
-          font-style: normal;
-          font-weight: 700;
-          font-size: 12px;
-          color: #999999;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 20px;
+        font-weight: bolder;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #e6e6e6;
+      }
+      .buy-nft-modal-conditions-wrapper {
+        display: flex;
+        align-items: center;
+        column-gap: 10px;
+        .buy-nft-modal-conditions-underline {
+          cursor: pointer;
+          text-decoration: underline;
         }
-  
-        .address-container {
-          overflow: hidden;
-          white-space: nowrap;
-          border: 1px solid #B2B2B2;
-          border-radius: 5px;
+      }
+      .buy-nft-modal-article-required-balance-wrapper {
+        display: flex;
+        align-self: center;
+        flex-direction: column;
+        align-items: start;
+
+        .value-wrapper {
+          align-self: center;
+          align-items: center;
           display: flex;
+          column-gap: 40px;
           width: 100%;
-          .copy-icon{
-            width: 28px;
-          }
-          .copy-icon:hover{
-            cursor: pointer;
-          }
+          justify-content: space-between;
         }
       }
     }
-
-  .total-cost-flex {
-    display: flex;
-    width: 70%;
-    justify-content: space-between;
-    margin-top: 20px;
-    font-family: 'Roboto';
-    font-style: normal;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 24px;
-
-    color: #19192E;
-
-  }
-
-  .horizontal-divider {
-    border-bottom: 1px solid #d9d9d9;
-    width: 70%;
-  }
-
-  .NFT-terms-and-conditions {
-    display: flex;
-    align-items: baseline;
-    flex-direction: baseline;
-    margin-top: 10px;
-    width: 70%;
-  }
-
-  .NFT-terms-and-conditions-text {
-    margin-left: 10px;
-    color: #19192E;
-  }
-
-  .NFT-terms-and-conditions-checkbox {
-    margin-top: 10px;
-    display: flex;
-  }
-
-  .button-flex {
-    .how-it-works {
+    .buy-nft-modal-how-it-works {
       text-decoration: underline;
-      margin-bottom: 25px;
-    }
-
-    .how-it-works:hover {
       cursor: pointer;
     }
+    .buy-nft-modal-buttons-wrapper {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      column-gap: 15px;
+      justify-content: center;
+    }
+    .address-value-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: end;
+      column-gap: 10px;
+      overflow: hidden;
+      width: 50%;
+      padding: 5px;
+      padding-left: 15px;
+      padding-right: 15px;
+      border: 1px solid #B2B2B2;
+      border-radius: 6px;
+      cursor: pointer;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: end;
-    align-items: center;
-    height: 30%;
-    margin-top: 0;
-
-  }
-
-  .buttons-flex {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    position: absolute;
-    bottom: 10px;
-  }
-
-}
-
-
-@media only screen and (max-width: 768px){
-  .nft-modal-content{
-    .text-wrapper-unsufficient-balance{
-      .nft-modal-text-2{
-        font-size: 13px;
+      .copy-icon {
+        min-width: 15px;
+        max-width: 15px;
+        min-height: 15px;
+        max-height: 15px;
+      }
+      .address-value {
+        text-wrap: nowrap;
+        overflow: hidden;
       }
     }
-    .icp-balance-flex{
-      width: 70%;
-      font-size: 13px;
+    .button-attributes-cancel {
+      width: 120px;
+      right: -80px;
+      top: 0;
+      position: absolute;
     }
-    .address-flex{
-      .address{
-        .address-header{
-          font-size: 8px;
-        }
+  }
+}
+@media only screen and (max-width: 768px) {
+  .buy-nft-modal {
+    padding: 20px;
+    top: 120px;
+    left: 2.5%;
+    .buy-nft-modal-content {
+      .button-attributes-cancel {
+        width: 80px;
+        right: -10px;
+        top: -10px;
       }
     }
   }
-  
-}
-
-.how-it-works {
-  text-decoration: underline;
-  margin-bottom: 25px;
-  cursor: pointer;
 }

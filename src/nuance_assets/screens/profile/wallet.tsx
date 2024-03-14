@@ -121,6 +121,7 @@ const Wallet = () => {
   };
 
   const fetchAllActivities = async () => {
+    let userWallet = await getUserWallet();
     var [
       sellingActivites,
       premiumPostsActivities,
@@ -129,39 +130,25 @@ const Wallet = () => {
       nuaTransactions,
       ckBtcTransactions,
     ] = await Promise.all([
-      getSellingNfts(),
-      getOwnedNfts(),
+      getSellingNfts(userWallet.accountId),
+      getOwnedNfts(userWallet.accountId),
       getUserApplauds(),
       getUserIcpTransactions(),
       getUserNuaTransactions(),
       getUserCkbtcTransactions(),
     ]);
-    if (premiumPostsActivities) {
-      setDisplayingActivities(
-        [
-          ...sellingActivites,
-          ...premiumPostsActivities,
-          ...applauds,
-          ...icpTransactions,
-          ...nuaTransactions,
-          ...ckBtcTransactions,
-        ].sort((act_1, act_2) => {
-          return parseInt(act_2.date) - parseInt(act_1.date);
-        })
-      );
-    } else {
-      setDisplayingActivities(
-        [
-          ...sellingActivites,
-          ...applauds,
-          ...icpTransactions,
-          ...nuaTransactions,
-          ...ckBtcTransactions,
-        ].sort((act_1, act_2) => {
-          return parseInt(act_2.date) - parseInt(act_1.date);
-        })
-      );
-    }
+    setDisplayingActivities(
+      [
+        ...sellingActivites,
+        ...premiumPostsActivities,
+        ...applauds,
+        ...icpTransactions,
+        ...nuaTransactions,
+        ...ckBtcTransactions,
+      ].sort((act_1, act_2) => {
+        return parseInt(act_2.date) - parseInt(act_1.date);
+      })
+    );
   };
   const getStatsElement = () => {
     return (
@@ -367,7 +354,7 @@ const Wallet = () => {
                             });
                           }}
                           src={icons.TRANSFER_ICON}
-                        ></img>
+                        />
                       </div>
                     </div>
                     <div className='horizontal-divider' />

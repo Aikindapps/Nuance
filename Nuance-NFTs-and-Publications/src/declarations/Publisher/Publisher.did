@@ -12,21 +12,6 @@ type User =
    publicationsArray: vec PublicationObject;
  };
 type UpdateCallsAggregatedData = vec nat64;
-type TransferResponse = 
- variant {
-   err:
-    variant {
-      CannotNotify: AccountIdentifier__1;
-      InsufficientBalance;
-      InvalidToken: TokenIdentifier;
-      Other: text;
-      Rejected;
-      Unauthorized: AccountIdentifier__1;
-    };
-   ok: Balance;
- };
-type TokenIndex = nat32;
-type TokenIdentifier = text;
 type SocialLinksObject__1 = 
  record {
    socialChannels: vec text;
@@ -37,33 +22,15 @@ type SocialLinksObject =
    socialChannels: vec text;
    website: text;
  };
-type Result_9 = 
- variant {
-   err: text;
-   ok: GetPremiumArticleInfoReturn;
- };
-type Result_8 = 
- variant {
-   err: CommonError;
-   ok;
- };
-type Result_7 = 
- variant {
-   err: text;
-   ok: nat;
- };
 type Result_6 = 
  variant {
    err: text;
-   ok: record {
-         nat;
-         AccountIdentifier;
-       };
+   ok: vec text;
  };
 type Result_5 = 
  variant {
    err: text;
-   ok: AccountIdentifier;
+   ok: nat;
  };
 type Result_4 = 
  variant {
@@ -80,16 +47,6 @@ type Result_2 =
    err: text;
    ok: User;
  };
-type Result_11 = 
- variant {
-   err: text;
-   ok: CreateNftFromArticleResponse;
- };
-type Result_10 = 
- variant {
-   err: text;
-   ok: vec text;
- };
 type Result_1 = 
  variant {
    err: text;
@@ -104,38 +61,23 @@ type Publisher =
  service {
    acceptCycles: () -> ();
    addEditor: (text) -> (Result);
-   addNftCanister: (text) -> ();
    addPublicationPostCategory: (text, text) -> (Result_1);
    addWriter: (text) -> (Result);
    availableCycles: () -> (nat) query;
    collectCanisterMetrics: () -> ();
-   createNftCanister: (nat, AccountIdentifier) -> (Result_3);
-   createNftFromPremiumArticle: (text, nat, nat, text) -> (Result_11);
-   debugRemoveNftCanister: () -> ();
-   disperseIcpGainedFromPost: (text) -> (Result_3);
-   disperseIcpTimerMethod: () -> ();
-   getAccountIdByPostIdPublic: (text) -> (text) query;
-   getAdmins: () -> (Result_10) query;
+   getAdmins: () -> (Result_6) query;
    getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
    getCanisterVersion: () -> (text) query;
-   getCgUsers: () -> (Result_10) query;
+   getCgUsers: () -> (Result_6) query;
    getEditorAndWriterPrincipalIds: () -> (vec text, vec text) query;
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
-   getNftCanisterInformation: () -> (NftCanisterInformation) query;
    getPlatformOperators: () -> (List) query;
-   getPremiumArticleInfo: (text) -> (Result_9) query;
-   getPremiumArticleInformationsByWriterHandle: (text) ->
-    (vec GetPremiumArticleInfoReturn) query;
    getPublication: (text) -> (Result);
-   getPublicationPost: (text) -> (Result_1);
-   getPublicationPosts: (bool, bool, nat32, nat32) -> (vec Post);
    getPublicationQuery: (text) -> (Result) query;
-   getWritersDrafts: () -> (vec Post);
    idQuick: () -> (principal);
    initializeCanister: (text, text, text) -> (Result_3);
    isThereEnoughMemory: () -> (bool) query;
-   listAllTokens: (text) -> (vec Result_8);
    migrateEditorsWritersHandles: () -> (Result);
    registerAdmin: (text) -> (Result_4);
    registerCgUser: (text) -> (Result_4);
@@ -144,10 +86,7 @@ type Publisher =
    removeEditor: (text) -> (Result);
    removePublicationPostCategory: (text) -> (Result_1);
    removeWriter: (text) -> (Result);
-   setMaxMemorySize: (nat) -> (Result_7);
-   setNftCanisterRoyalty: (nat, AccountIdentifier) -> (Result_6);
-   setNuanceAddress: (AccountIdentifier) -> (Result_5);
-   setNuanceSharePercentage: (nat) -> (Result_3);
+   setMaxMemorySize: (nat) -> (Result_5);
    unregisterAdmin: (text) -> (Result_4);
    unregisterCgUser: (text) -> (Result_4);
    unregisterPlatformOperator: (text) -> (Result_4);
@@ -223,6 +162,7 @@ type Post =
    isPremium: bool;
    isPublication: bool;
    modified: text;
+   nftCanisterId: opt text;
    postId: text;
    publishedDate: text;
    subtitle: text;
@@ -239,14 +179,6 @@ type NumericEntity =
    last: nat64;
    max: nat64;
    min: nat64;
- };
-type NftCanisterInformation = 
- record {
-   canisterId: text;
-   marketplaceRoyaltyAddress: text;
-   marketplaceRoyaltyPercentage: text;
-   nuanceShareAddress: text;
-   nuanceSharePercentage: text;
  };
 type MetricsGranularity = 
  variant {
@@ -265,15 +197,6 @@ type HourlyMetricsData =
    canisterMemorySize: CanisterMemoryAggregatedData;
    timeMillis: int;
    updateCalls: UpdateCallsAggregatedData;
- };
-type GetPremiumArticleInfoReturn = 
- record {
-   nftCanisterId: text;
-   postId: text;
-   sellerAccount: text;
-   tokenIndexStart: text;
-   totalSupply: text;
-   writerHandle: text;
  };
 type GetMetricsParameters = 
  record {
@@ -294,16 +217,6 @@ type DailyMetricsData =
    timeMillis: int;
    updateCalls: nat64;
  };
-type CreateNftFromArticleResponse = 
- record {
-   tokenIndexes: vec TokenIndex;
-   transferResponses: vec TransferResponse;
- };
-type CommonError = 
- variant {
-   InvalidToken: TokenIdentifier;
-   Other: text;
- };
 type CanisterMetricsData = 
  variant {
    daily: vec DailyMetricsData;
@@ -313,7 +226,4 @@ type CanisterMetrics = record {data: CanisterMetricsData;};
 type CanisterMemoryAggregatedData = vec nat64;
 type CanisterHeapMemoryAggregatedData = vec nat64;
 type CanisterCyclesAggregatedData = vec nat64;
-type Balance = nat;
-type AccountIdentifier__1 = text;
-type AccountIdentifier = text;
 service : () -> Publisher

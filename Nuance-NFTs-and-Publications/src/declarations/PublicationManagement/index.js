@@ -40,4 +40,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const PublicationManagement = createActor(canisterId);
+export const PublicationManagement = canisterId ? createActor(canisterId) : undefined;

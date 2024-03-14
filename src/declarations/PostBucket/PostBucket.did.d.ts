@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export interface Applaud {
   'bucketCanisterId' : string,
@@ -50,33 +51,6 @@ export interface CommentsReturnType {
   'comments' : Array<Comment>,
 }
 export type List = [] | [[string, List]];
-export type Metadata = {
-    'fungible' : {
-      'decimals' : number,
-      'metadata' : [] | [MetadataContainer],
-      'name' : string,
-      'symbol' : string,
-    }
-  } |
-  {
-    'nonfungible' : {
-      'thumbnail' : string,
-      'asset' : string,
-      'metadata' : [] | [MetadataContainer],
-      'name' : string,
-    }
-  };
-export type MetadataContainer = { 'blob' : Uint8Array | number[] } |
-  { 'data' : Array<MetadataValue> } |
-  { 'json' : string };
-export type MetadataValue = [
-  string,
-  { 'nat' : bigint } |
-    { 'blob' : Uint8Array | number[] } |
-    { 'nat8' : number } |
-    { 'text' : string },
-];
-export interface NftCanisterEntry { 'handle' : string, 'canisterId' : string }
 export interface Post {
   'url' : string,
   'bucketCanisterId' : string,
@@ -107,7 +81,7 @@ export interface PostBucket {
   'checkTipping' : ActorMethod<[string], undefined>,
   'checkTippingByTokenSymbol' : ActorMethod<
     [string, string, string],
-    Result_11
+    Result_10
   >,
   'delete' : ActorMethod<[string], Result_4>,
   'deleteComment' : ActorMethod<[string], Result_5>,
@@ -121,8 +95,8 @@ export interface PostBucket {
   'getAdmins' : ActorMethod<[], Result_8>,
   'getAllApplauds' : ActorMethod<[], Array<Applaud>>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
-  'getAllSubmittedForReviews' : ActorMethod<[], Result_12>,
-  'getApplaudById' : ActorMethod<[string], Result_11>,
+  'getAllSubmittedForReviews' : ActorMethod<[], Result_11>,
+  'getApplaudById' : ActorMethod<[string], Result_10>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_8>,
@@ -132,9 +106,7 @@ export interface PostBucket {
   'getList' : ActorMethod<[Array<string>], Array<PostBucketType__1>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getMetadata' : ActorMethod<[string, bigint], Result_10>,
   'getMyApplauds' : ActorMethod<[], Array<Applaud>>,
-  'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPost' : ActorMethod<[string], Result_6>,
   'getPostApplauds' : ActorMethod<[string], Array<Applaud>>,
@@ -142,12 +114,10 @@ export interface PostBucket {
   'getPostCompositeQuery' : ActorMethod<[string], Result_6>,
   'getPostCoreCanisterId' : ActorMethod<[], string>,
   'getPostUrls' : ActorMethod<[], Result_2>,
-  'getPostWithPublicationControl' : ActorMethod<[string], Result_6>,
   'getPostsByPostIds' : ActorMethod<
     [Array<string>, boolean],
     Array<PostBucketType__1>
   >,
-  'getPremiumArticle' : ActorMethod<[string], Result_6>,
   'getPublicationPosts' : ActorMethod<
     [Array<string>, string],
     Array<PostBucketType__1>
@@ -174,16 +144,10 @@ export interface PostBucket {
   'initializeCanister' : ActorMethod<[string, string], Result_2>,
   'isBucketCanisterActivePublic' : ActorMethod<[], boolean>,
   'makeBucketCanisterNonActive' : ActorMethod<[], Result_7>,
-  'makePostPremium' : ActorMethod<[string], boolean>,
   'migratePostToPublication' : ActorMethod<[string, string, boolean], Result_1>,
   'registerAdmin' : ActorMethod<[string], Result_3>,
   'registerCanister' : ActorMethod<[string], Result_3>,
   'registerCgUser' : ActorMethod<[string], Result_3>,
-  'registerNftCanisterId' : ActorMethod<[string, string], Result_2>,
-  'registerNftCanisterIdAdminFunction' : ActorMethod<
-    [string, string],
-    Result_2
-  >,
   'registerPlatformOperator' : ActorMethod<[string], Result_3>,
   'reindex' : ActorMethod<[], Result_2>,
   'rejectPostByModclub' : ActorMethod<[string], undefined>,
@@ -194,7 +158,6 @@ export interface PostBucket {
   'save' : ActorMethod<[PostSaveModel], SaveResult>,
   'saveComment' : ActorMethod<[SaveCommentModel], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_4>,
-  'simulatePremiumArticle' : ActorMethod<[string, boolean], undefined>,
   'storeAllSEO' : ActorMethod<[], Result_3>,
   'storeHandlesAndPrincipals' : ActorMethod<
     [Array<[string, string]>],
@@ -222,6 +185,7 @@ export interface PostBucketType {
   'wordCount' : string,
   'isPremium' : boolean,
   'publishedDate' : string,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
   'category' : string,
   'handle' : string,
@@ -241,6 +205,7 @@ export interface PostBucketType__1 {
   'wordCount' : string,
   'isPremium' : boolean,
   'publishedDate' : string,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
   'category' : string,
   'handle' : string,
@@ -254,7 +219,9 @@ export interface PostSaveModel {
   'title' : string,
   'creator' : string,
   'content' : string,
-  'isPremium' : boolean,
+  'premium' : [] | [
+    { 'thumbnail' : string, 'icpPrice' : bigint, 'maxSupply' : bigint }
+  ],
   'isDraft' : boolean,
   'postOwnerPrincipalId' : string,
   'category' : string,
@@ -270,11 +237,9 @@ export type Result = { 'ok' : CommentsReturnType } |
   { 'err' : string };
 export type Result_1 = { 'ok' : Post } |
   { 'err' : string };
-export type Result_10 = { 'ok' : Metadata } |
+export type Result_10 = { 'ok' : Applaud } |
   { 'err' : string };
-export type Result_11 = { 'ok' : Applaud } |
-  { 'err' : string };
-export type Result_12 = { 'ok' : Array<[string, Array<string>]> } |
+export type Result_11 = { 'ok' : Array<[string, Array<string>]> } |
   { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };
@@ -303,3 +268,5 @@ export type SaveResult = { 'ok' : PostBucketType } |
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE extends PostBucket {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

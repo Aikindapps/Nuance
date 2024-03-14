@@ -60,7 +60,6 @@ actor PostCore {
   type TagModel = Types.TagModel;
   type PostTag = Types.PostTag;
   type PostTagModel = Types.PostTagModel;
-  type BucketCanisterInterface = Types.BucketCanisterInterface;
   type FrontendInterface = Types.FrontendInterface;
   type PostKeyProperties = Types.PostKeyProperties;
   type Post = Types.Post;
@@ -98,6 +97,7 @@ actor PostCore {
   stable var userPostsEntries : [(Text, List.List<Text>)] = [];
 
   stable var postIdsToBucketCanisterIdEntries : [(Text, Text)] = [];
+  stable var postIdsToNftCanisterIdEntries : [(Text, Text)] = [];
   stable var principalIdEntries : [(Text, Text)] = [];
   stable var createdEntries : [(Text, Int)] = [];
   stable var modifiedEntries : [(Text, Int)] = [];
@@ -150,6 +150,7 @@ actor PostCore {
   //post data
   //key: postId, value: corresponding value
   var postIdsToBucketCanisterIdsHashMap = HashMap.fromIter<Text, Text>(postIdsToBucketCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var postIdsToNftCanisterIdsHashMap = HashMap.fromIter<Text, Text>(postIdsToNftCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   var principalIdHashMap = HashMap.fromIter<Text, Text>(principalIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   var createdHashMap = HashMap.fromIter<Text, Int>(createdEntries.vals(), initCapacity, Text.equal, Text.hash);
   var modifiedHashMap = HashMap.fromIter<Text, Int>(modifiedEntries.vals(), initCapacity, Text.equal, Text.hash);
@@ -214,7 +215,7 @@ actor PostCore {
 
     for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
 
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
       let status = await IC.IC.canister_status({ canister_id = Principal.fromText(bucketCanisterId); });
       let controllers = status.settings.controllers;
       
@@ -260,7 +261,7 @@ actor PostCore {
     };
 
     if (activeBucketCanisterId != "") {
-      let activeBucketCanister = actor (activeBucketCanisterId) : BucketCanisterInterface;
+      let activeBucketCanister = CanisterDeclarations.getPostBucketCanister(activeBucketCanisterId);
 
       switch (await activeBucketCanister.makeBucketCanisterNonActive()) {
         case (#ok(val)) {};
@@ -380,6 +381,10 @@ actor PostCore {
 
   public shared query func getBucketCanisters() : async [(Text, Text)] {
     Iter.toArray(bucketCanisterIdsHashMap.entries());
+  };
+
+  public shared query func getAllNftCanisters() : async [(Text, Text)] {
+    Iter.toArray(postIdsToNftCanisterIdsHashMap.entries());
   };
 
   //#region Security Management
@@ -505,7 +510,7 @@ actor PostCore {
     };
 
     for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
 
       ignore await bucketActor.registerCanister(id);
     };
@@ -599,7 +604,7 @@ actor PostCore {
     };
     var result = Buffer.Buffer<Text>(0);
     for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
 
       switch (await bucketActor.getKinicList()) {
         case (#ok(list)) {
@@ -625,7 +630,7 @@ actor PostCore {
     var postUrls : Text = "";
 
     for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
       switch (await bucketActor.getPostUrls()) {
         case (#ok(urls)) {
           postUrls #= urls # "\n";
@@ -661,7 +666,7 @@ actor PostCore {
         //call the bucket canisters first
         //if all the bucket canisters works fine, change the internal state
         for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-          let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+          let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
           try {
             switch (await bucketActor.updateHandle(principalId, newHandle)) {
               case (#ok(urls)) {};
@@ -880,7 +885,7 @@ actor PostCore {
     };
     //call deleteUserPosts from each bucket canister
     for (bucketCanisterId in bucketCanisterIds.vals()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
       ignore await bucketActor.deleteUserPosts(principalId);
     };
 
@@ -907,7 +912,7 @@ actor PostCore {
     };
     switch (postIdsToBucketCanisterIdsHashMap.get(postId)) {
       case (?canisterId) {
-        let bucketActor = actor (canisterId) : BucketCanisterInterface;
+        let bucketActor = CanisterDeclarations.getPostBucketCanister(canisterId);
         switch (await bucketActor.get(postId)) {
           case (#ok(post)) {
             //Author can not delete a premium article but admin can delete.
@@ -1055,6 +1060,7 @@ actor PostCore {
 
 
   public shared ({ caller }) func save(postModel : PostSaveModel) : async Result.Result<Post, Text> {
+     Debug.print("PostCore save input: " # debug_show(postModel));
     if (isAnonymous(caller)) {
       return #err(Unauthorized);
     };
@@ -1158,7 +1164,7 @@ actor PostCore {
     let bucketCanisterId = if (isNew) { activeBucketCanisterId } else {
       U.safeGet(postIdsToBucketCanisterIdsHashMap, postIdTrimmed, activeBucketCanisterId);
     };
-    let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+    let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
     if (bucketCanisterId == "") {
       //there's no bucket canister id mapped to the given post id
       return #err(ArticleNotFound);
@@ -1168,6 +1174,24 @@ actor PostCore {
     //exclude the publication posts because the authorization is done above
     if (not isPublication and not isNew and not isAuthor(caller, postIdTrimmed)) {
       return #err(Unauthorized);
+    };
+
+    //if isPremium field is true make sure it's a publication post, caller is an editor and post is not draft
+    if(postModel.premium != null){
+      if(not isPublication){
+        return #err(Unauthorized)
+      }
+      else{
+        //isPremium and publication post
+        //check if caller is an editor
+        let publicationCanisterId = U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
+        if(not isEditor(publicationCanisterId, caller)){
+          return #err(Unauthorized)
+        }
+        else if(postModel.isDraft){
+          return #err("Premium articles can not be draft.");
+        };
+      };
     };
 
     // ensure the tags exist
@@ -1242,7 +1266,7 @@ actor PostCore {
       creator = postModel.creator;
       headerImage = postModel.headerImage;
       isDraft = postModel.isDraft;
-      isPremium = postModel.isPremium;
+      premium = postModel.premium;
       isPublication = isPublication;
       postId = postModel.postId;
       subtitle = postModel.subtitle;
@@ -1262,6 +1286,16 @@ actor PostCore {
         // if it's a publication post add this postId to the writer's posts if not already added
         if (postBucketReturn.isPublication and postModel.creator != "") {
           addPostIdToUser(postModel.creator, postBucketReturn.postId);
+        };
+
+        //if a premium post, store the nft canister id
+        switch(postBucketReturn.nftCanisterId) {
+          case(?cai) {
+            postIdsToNftCanisterIdsHashMap.put(postBucketReturn.postId, cai);
+          };
+          case(null) {
+            //do nothing
+          };
         };
         
         //store version
@@ -1308,6 +1342,7 @@ actor PostCore {
           headerImage = postBucketReturn.headerImage;
           isDraft = postBucketReturn.isDraft;
           isPremium = postBucketReturn.isPremium;
+          nftCanisterId = postBucketReturn.nftCanisterId;
           isPublication = postBucketReturn.isPublication;
           modified = postBucketReturn.modified;
           postId = postBucketReturn.postId;
@@ -1326,6 +1361,72 @@ actor PostCore {
       };
     };
 
+  };
+
+  public shared ({ caller }) func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) : async () {
+    if (isAnonymous(caller)) {
+      return;
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return;
+    };
+
+    switch (bucketCanisterIdsHashMap.get(Principal.toText(caller))) {
+      case (?value) {
+        //caller is a bucket canister
+        //continue
+      };
+      case (_) {
+        return;
+      };
+    };
+
+    var publicationPrincipalId = U.safeGet(handleReverseHashMap, publicationHandle, "");
+    let userPrincipalId = U.safeGet(handleReverseHashMap, userHandle, "");
+
+    //if the publication canister id is not stored in the bucket canister, fetch it from user canister and store it first.
+    if (publicationPrincipalId == "") {
+      let UserCanister = CanisterDeclarations.getUserCanister();
+      let userReturn = await UserCanister.getPrincipalByHandle(U.lowerCase(publicationHandle));
+      switch (userReturn) {
+        case (#ok(principal)) {
+          switch (principal) {
+            case (?value) {
+              publicationPrincipalId := value;
+              handleHashMap.put(publicationPrincipalId, publicationHandle);
+              handleReverseHashMap.put(publicationHandle, publicationPrincipalId);
+              lowercaseHandleHashMap.put(publicationPrincipalId, U.lowerCase(publicationHandle));
+              lowercaseHandleReverseHashMap.put(U.lowerCase(publicationHandle), publicationPrincipalId);
+            };
+            case (null) {
+              assert false;
+            };
+          };
+        };
+        case (_) {
+          assert false;
+        };
+      };
+    };
+
+    if (not Text.equal(publicationPrincipalId, "") and not Text.equal(userPrincipalId, "")) {
+      //change the principal-id of the post to publication principal-id
+      principalIdHashMap.put(postId, publicationPrincipalId);
+      //add postId to publication's posts
+      addPostIdToUser(publicationPrincipalId, postId);
+      if (isDraft) {
+        //ToDo: remove the post from latest posts if it's draft
+      } else {
+        let now = U.epochTime();
+        modifiedHashMap.put(postId, now);
+        isDraftHashMap.put(postId, isDraft);
+        if(isDraft){
+          removePostFromPopularityArrays(postId);
+        }
+      };
+
+    };
   };
 
   public type Validate = {
@@ -2107,71 +2208,6 @@ actor PostCore {
     };
   };
 
-  public shared ({ caller }) func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) : async () {
-    if (isAnonymous(caller)) {
-      return;
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return;
-    };
-
-    switch (bucketCanisterIdsHashMap.get(Principal.toText(caller))) {
-      case (?value) {
-        //caller is a bucket canister
-        //continue
-      };
-      case (_) {
-        return;
-      };
-    };
-
-    var publicationPrincipalId = U.safeGet(handleReverseHashMap, publicationHandle, "");
-    let userPrincipalId = U.safeGet(handleReverseHashMap, userHandle, "");
-
-    //if the publication canister id is not stored in the bucket canister, fetch it from user canister and store it first.
-    if (publicationPrincipalId == "") {
-      let UserCanister = CanisterDeclarations.getUserCanister();
-      let userReturn = await UserCanister.getPrincipalByHandle(U.lowerCase(publicationHandle));
-      switch (userReturn) {
-        case (#ok(principal)) {
-          switch (principal) {
-            case (?value) {
-              publicationPrincipalId := value;
-              handleHashMap.put(publicationPrincipalId, publicationHandle);
-              handleReverseHashMap.put(publicationHandle, publicationPrincipalId);
-              lowercaseHandleHashMap.put(publicationPrincipalId, U.lowerCase(publicationHandle));
-              lowercaseHandleReverseHashMap.put(U.lowerCase(publicationHandle), publicationPrincipalId);
-            };
-            case (null) {
-              assert false;
-            };
-          };
-        };
-        case (_) {
-          assert false;
-        };
-      };
-    };
-
-    if (not Text.equal(publicationPrincipalId, "") and not Text.equal(userPrincipalId, "")) {
-      //change the principal-id of the post to publication principal-id
-      principalIdHashMap.put(postId, publicationPrincipalId);
-      //add postId to publication's posts
-      addPostIdToUser(publicationPrincipalId, postId);
-      if (isDraft) {
-        //ToDo: remove the post from latest posts if it's draft
-      } else {
-        let now = U.epochTime();
-        modifiedHashMap.put(postId, now);
-        isDraftHashMap.put(postId, isDraft);
-        if(isDraft){
-          removePostFromPopularityArrays(postId);
-        }
-      };
-
-    };
-  };
 
   //isDraft management normally handled by bucket canisters. PostCore canister only holds the value if it's true
   //this method can only be called by the PostBucket canister
@@ -2314,7 +2350,7 @@ actor PostCore {
     var counter = 0;
     var errorCanisterIds = " ";
     for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
       switch (await bucketActor.reindex()) {
         case (#ok(c)) {
           counter += U.textToNat(c);
@@ -2641,22 +2677,7 @@ actor PostCore {
   //#SEO management
 
   public shared ({ caller }) func storeAllSEO() : async Result.Result<(), Text> {
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isAdmin(caller) and caller != idInternal() and not isPlatformOperator(caller)) {
-      return #err("Not authorized");
-    };
-
-    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
-      ignore await bucketActor.storeAllSEO();
-    };
-
-    ignore U.logMetrics("StoreAllSEO", Principal.toText(caller));
-
-    #ok();
+    #err("Deprecated func.")
   };
 
   private func idInternal() : Principal {
@@ -2714,7 +2735,7 @@ actor PostCore {
       return #err(Unauthorized);
     };
     for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
       //register nft canister to bucket canister
       ignore await bucketActor.registerNftCanisterId(canisterId, handle);
     };
@@ -2925,7 +2946,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
         let postIdWithVersion = getPostIdWithVersionId(postId, versionId);
         postModerationStatusMapV2.put(postIdWithVersion, status);
         let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
-        let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+        let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
         if (status == #rejected) {
           //inform the bucket canister that post was rejected
           await bucketActor.rejectPostByModclub(postId);
@@ -3018,7 +3039,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
         postModerationStatusMapV2.put(postStatus.sourceId, postStatus.status);
         let postId = getPostIdFromVersionId(postStatus.sourceId);
         let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
-        let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+        let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
         if (postStatus.status == #rejected) {
           //inform the bucket canister that post was rejected
           await bucketActor.rejectPostByModclub(postId);
@@ -3037,7 +3058,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
 
     let postId = getPostIdFromVersionId(sourceId);
     let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, postId, "");
-    let bucketActor = actor (bucketCanisterId) : BucketCanisterInterface;
+    let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
 
     switch (await bucketActor.get(postId)) {
       case (#ok(post)) {
@@ -4021,6 +4042,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
     _canistergeekMonitorUD := ?canistergeekMonitor.preupgrade();
     Debug.print("PostCore->preupgrade:Inside Canistergeek preupgrade method");
     postIdsToBucketCanisterIdEntries := Iter.toArray(postIdsToBucketCanisterIdsHashMap.entries());
+    postIdsToNftCanisterIdEntries := Iter.toArray(postIdsToNftCanisterIdsHashMap.entries());
     bucketCanisterIdsEntries := Iter.toArray(bucketCanisterIdsHashMap.entries());
     principalIdEntries := Iter.toArray(principalIdHashMap.entries());
     userPostsEntries := Iter.toArray(userPostsHashMap.entries());
@@ -4173,7 +4195,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
         Debug.print("PostCore -> Error while creating the bucket canister. (1)");
       };
     } else {
-      let bucketActor = actor (activeBucketCanisterId) : BucketCanisterInterface;
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(activeBucketCanisterId);
       if (not (await bucketActor.isBucketCanisterActivePublic())) {
         try {
           ignore await createNewBucketCanister();

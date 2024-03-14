@@ -42,11 +42,11 @@ import {
   idlFactory as ledgerFactory,
 } from './ledger-service';
 
-import { _SERVICE as ExtService } from './ext-service/ext_v2.did';
+import { _SERVICE as ExtService } from '../../../Nuance-NFTs-and-Publications/src/declarations/ext_v2/ext_v2.did';
 import {
   createActor as createExtActor,
   idlFactory as extFactory,
-} from './ext-service';
+} from '../../../Nuance-NFTs-and-Publications/src/declarations/ext_v2';
 
 import { _SERVICE as ICRC1Service } from './icrc1/icrc1.did';
 import {
@@ -61,14 +61,10 @@ import {
 } from './icp-index';
 
 import { _SERVICE as Icrc1ArchiveCanisterService } from './icrc1-archive/icrc1-archive.did';
-import {
-  createActor as createIcrc1ArchiveActor,
-} from './icrc1-archive';
+import { createActor as createIcrc1ArchiveActor } from './icrc1-archive';
 
 import { _SERVICE as Icrc1IndexCanisterService } from './icrc1-index/icrc1-index.did';
-import {
-  createActor as createIcrc1IndexActor,
-} from './icrc1-index';
+import { createActor as createIcrc1IndexActor } from './icrc1-index';
 
 import { _SERVICE as SonicService } from './sonic/Sonic.did';
 import {
@@ -96,8 +92,6 @@ import {
   createActor as createMetricsActor,
   idlFactory as metricsFactory,
 } from '../../declarations/Metrics';
-
-
 
 import { useAuthStore } from '../store';
 import { createAgent } from '@dfinity/utils';
@@ -232,7 +226,7 @@ export async function getPublisherActor(
   if (canisterId) {
     return createPublisherActor(canisterId as string, {
       agentOptions: {
-        identity : identity,
+        identity: identity,
         host: isLocal ? undefined : 'https://icp-api.io ',
       },
     });
@@ -372,7 +366,6 @@ export async function getIcrc1TokenActorAnonymous(
   });
 }
 
-
 //always uses anonymous identity
 //works only on mainnet
 export async function getSonicActor(): Promise<ActorSubclass<SonicService>> {
@@ -394,10 +387,12 @@ export async function getIcpIndexCanister(): Promise<IcpIndexCanisterService> {
       host: 'https://icp-api.io',
     },
   });
-};
+}
 
 //always mainnet
-export async function getIcrc1ArchiveCanister(canisterId: string): Promise<Icrc1ArchiveCanisterService> {
+export async function getIcrc1ArchiveCanister(
+  canisterId: string
+): Promise<Icrc1ArchiveCanisterService> {
   var identity = new AnonymousIdentity();
   return createIcrc1ArchiveActor(canisterId as string, {
     agentOptions: {
@@ -405,10 +400,12 @@ export async function getIcrc1ArchiveCanister(canisterId: string): Promise<Icrc1
       host: 'https://icp-api.io',
     },
   });
-};
+}
 
 //always mainnet
-export async function getIcrc1IndexCanister(canisterId: string): Promise<Icrc1IndexCanisterService> {
+export async function getIcrc1IndexCanister(
+  canisterId: string
+): Promise<Icrc1IndexCanisterService> {
   var identity = new AnonymousIdentity();
   return createIcrc1IndexActor(canisterId as string, {
     agentOptions: {
@@ -416,7 +413,7 @@ export async function getIcrc1IndexCanister(canisterId: string): Promise<Icrc1In
       host: 'https://icp-api.io',
     },
   });
-};
+}
 
 export async function getAllCanisterIds(): Promise<string[]> {
   var canisterIds = [

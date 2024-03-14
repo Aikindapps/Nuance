@@ -48,6 +48,7 @@ export const idlFactory = ({ IDL }) => {
     'publishedDate' : IDL.Text,
     'claps' : IDL.Text,
     'tags' : IDL.Vec(PostTagModel),
+    'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
     'category' : IDL.Text,
     'handle' : IDL.Text,
@@ -57,32 +58,7 @@ export const idlFactory = ({ IDL }) => {
     'postId' : IDL.Text,
   });
   const Result_1 = IDL.Variant({ 'ok' : Post, 'err' : IDL.Text });
-  const AccountIdentifier = IDL.Text;
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
-  const TokenIndex = IDL.Nat32;
-  const Balance = IDL.Nat;
-  const AccountIdentifier__1 = IDL.Text;
-  const TokenIdentifier = IDL.Text;
-  const TransferResponse = IDL.Variant({
-    'ok' : Balance,
-    'err' : IDL.Variant({
-      'CannotNotify' : AccountIdentifier__1,
-      'InsufficientBalance' : IDL.Null,
-      'InvalidToken' : TokenIdentifier,
-      'Rejected' : IDL.Null,
-      'Unauthorized' : AccountIdentifier__1,
-      'Other' : IDL.Text,
-    }),
-  });
-  const CreateNftFromArticleResponse = IDL.Record({
-    'tokenIndexes' : IDL.Vec(TokenIndex),
-    'transferResponses' : IDL.Vec(TransferResponse),
-  });
-  const Result_11 = IDL.Variant({
-    'ok' : CreateNftFromArticleResponse,
-    'err' : IDL.Text,
-  });
-  const Result_10 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const MetricsGranularity = IDL.Variant({
     'hourly' : IDL.Null,
     'daily' : IDL.Null,
@@ -122,38 +98,10 @@ export const idlFactory = ({ IDL }) => {
     'daily' : IDL.Vec(DailyMetricsData),
   });
   const CanisterMetrics = IDL.Record({ 'data' : CanisterMetricsData });
-  const NftCanisterInformation = IDL.Record({
-    'nuanceSharePercentage' : IDL.Text,
-    'nuanceShareAddress' : IDL.Text,
-    'marketplaceRoyaltyPercentage' : IDL.Text,
-    'marketplaceRoyaltyAddress' : IDL.Text,
-    'canisterId' : IDL.Text,
-  });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
-  const GetPremiumArticleInfoReturn = IDL.Record({
-    'writerHandle' : IDL.Text,
-    'totalSupply' : IDL.Text,
-    'nftCanisterId' : IDL.Text,
-    'tokenIndexStart' : IDL.Text,
-    'sellerAccount' : IDL.Text,
-    'postId' : IDL.Text,
-  });
-  const Result_9 = IDL.Variant({
-    'ok' : GetPremiumArticleInfoReturn,
-    'err' : IDL.Text,
-  });
-  const CommonError = IDL.Variant({
-    'InvalidToken' : TokenIdentifier,
-    'Other' : IDL.Text,
-  });
-  const Result_8 = IDL.Variant({ 'ok' : IDL.Null, 'err' : CommonError });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_4 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
-  const Result_7 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
-  const Result_6 = IDL.Variant({
-    'ok' : IDL.Tuple(IDL.Nat, AccountIdentifier),
-    'err' : IDL.Text,
-  });
-  const Result_5 = IDL.Variant({ 'ok' : AccountIdentifier, 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const PublicationCta__1 = IDL.Record({
     'icon' : IDL.Text,
     'link' : IDL.Text,
@@ -185,7 +133,6 @@ export const idlFactory = ({ IDL }) => {
   const Publisher = IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'addEditor' : IDL.Func([IDL.Text], [Result], []),
-    'addNftCanister' : IDL.Func([IDL.Text], [], []),
     'addPublicationPostCategory' : IDL.Func(
         [IDL.Text, IDL.Text],
         [Result_1],
@@ -194,28 +141,14 @@ export const idlFactory = ({ IDL }) => {
     'addWriter' : IDL.Func([IDL.Text], [Result], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'collectCanisterMetrics' : IDL.Func([], [], []),
-    'createNftCanister' : IDL.Func(
-        [IDL.Nat, AccountIdentifier],
-        [Result_3],
-        [],
-      ),
-    'createNftFromPremiumArticle' : IDL.Func(
-        [IDL.Text, IDL.Nat, IDL.Nat, IDL.Text],
-        [Result_11],
-        [],
-      ),
-    'debugRemoveNftCanister' : IDL.Func([], [], []),
-    'disperseIcpGainedFromPost' : IDL.Func([IDL.Text], [Result_3], []),
-    'disperseIcpTimerMethod' : IDL.Func([], [], []),
-    'getAccountIdByPostIdPublic' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
-    'getAdmins' : IDL.Func([], [Result_10], ['query']),
+    'getAdmins' : IDL.Func([], [Result_6], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
         [IDL.Opt(CanisterMetrics)],
         ['query'],
       ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
-    'getCgUsers' : IDL.Func([], [Result_10], ['query']),
+    'getCgUsers' : IDL.Func([], [Result_6], ['query']),
     'getEditorAndWriterPrincipalIds' : IDL.Func(
         [],
         [IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)],
@@ -223,27 +156,9 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
-    'getNftCanisterInformation' : IDL.Func(
-        [],
-        [NftCanisterInformation],
-        ['query'],
-      ),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
-    'getPremiumArticleInfo' : IDL.Func([IDL.Text], [Result_9], ['query']),
-    'getPremiumArticleInformationsByWriterHandle' : IDL.Func(
-        [IDL.Text],
-        [IDL.Vec(GetPremiumArticleInfoReturn)],
-        ['query'],
-      ),
     'getPublication' : IDL.Func([IDL.Text], [Result], []),
-    'getPublicationPost' : IDL.Func([IDL.Text], [Result_1], []),
-    'getPublicationPosts' : IDL.Func(
-        [IDL.Bool, IDL.Bool, IDL.Nat32, IDL.Nat32],
-        [IDL.Vec(Post)],
-        [],
-      ),
     'getPublicationQuery' : IDL.Func([IDL.Text], [Result], ['query']),
-    'getWritersDrafts' : IDL.Func([], [IDL.Vec(Post)], []),
     'idQuick' : IDL.Func([], [IDL.Principal], []),
     'initializeCanister' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
@@ -251,7 +166,6 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
-    'listAllTokens' : IDL.Func([IDL.Text], [IDL.Vec(Result_8)], []),
     'migrateEditorsWritersHandles' : IDL.Func([], [Result], []),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_4], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_4], []),
@@ -260,14 +174,7 @@ export const idlFactory = ({ IDL }) => {
     'removeEditor' : IDL.Func([IDL.Text], [Result], []),
     'removePublicationPostCategory' : IDL.Func([IDL.Text], [Result_1], []),
     'removeWriter' : IDL.Func([IDL.Text], [Result], []),
-    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_7], []),
-    'setNftCanisterRoyalty' : IDL.Func(
-        [IDL.Nat, AccountIdentifier],
-        [Result_6],
-        [],
-      ),
-    'setNuanceAddress' : IDL.Func([AccountIdentifier], [Result_5], []),
-    'setNuanceSharePercentage' : IDL.Func([IDL.Nat], [Result_3], []),
+    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_5], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result_4], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result_4], []),
     'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result_4], []),

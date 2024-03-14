@@ -2,14 +2,20 @@
   "canisters": {
     "PublicationManagement": {
       "main": "src/publication-management/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "kq23y-aiaaa-aaaaf-qajmq-cai"
     },
     "NftFactory": {
       "main": "src/nft-factory/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "kc4mb-myaaa-aaaaf-qajpq-cai"
     },
     "Publisher": {
       "main": "src/Publisher/main.mo",
+      "type": "motoko"
+    },
+    "ext_v2": {
+      "main": "src/ext_v2/v2.mo",
       "type": "motoko"
     }
   },

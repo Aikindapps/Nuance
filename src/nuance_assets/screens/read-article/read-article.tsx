@@ -51,12 +51,7 @@ const ReadArticle = () => {
   const [avatar, setAvatar] = useState('');
   const [bio, setBio] = useState('');
   const [socialUrls, setSocialUrls] = useState<string[]>([]);
-  const [premiumAvailableCount, setPremiumAvailableCount] = useState('');
-  const [premiumTotalSupply, setPremiumTotalSupply] = useState('');
-  const [premiumSalePrice, setPremiumSalePrice] = useState('');
 
-  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
-  const [premiumModalLoading, setPremiumModalLoading] = useState(true);
   // Publication Feature Context
   const publicationFeatureIsLive = useContext(Context).publicationFeature;
   const [publicationHandle, setPublicationHandle] = useState('');
@@ -82,7 +77,6 @@ const ReadArticle = () => {
     author,
     loadingError,
     clearWordCount,
-    getPremiumPost,
     getOwnedNfts,
     getPremiumPostError,
     ownedPremiumPosts,
@@ -103,7 +97,6 @@ const ReadArticle = () => {
     clearSearchBar: state.clearSearchBar,
     isTagScreen: state.isTagScreen,
     clearWordCount: state.clearWordCount,
-    getPremiumPost: state.getPremiumPost,
     getPremiumPostError: state.getPremiumPostError,
     ownedPremiumPosts: state.ownedPremiumPosts,
     getOwnedNfts: state.getOwnedNfts,
@@ -122,23 +115,13 @@ const ReadArticle = () => {
   }));
 
   const { getUser } = useUserStore((state) => ({ getUser: state.getUser }));
-  const {
-    getPublication,
-    publication,
-    clearAll,
-    getPremiumArticleInfo,
-    premiumArticleInfo,
-    getPremiumArticleInfoError,
-    clearPremiumArticleInfo,
-  } = usePublisherStore((state) => ({
-    getPublication: state.getPublication,
-    publication: state.publication,
-    clearAll: state.clearAll,
-    getPremiumArticleInfo: state.getPremiumArticleInfo,
-    premiumArticleInfo: state.premiumArticleInfo,
-    getPremiumArticleInfoError: state.getPremiumArticleInfoError,
-    clearPremiumArticleInfo: state.clearPremiumArticleInfo,
-  }));
+  const { getPublication, publication, clearAll } = usePublisherStore(
+    (state) => ({
+      getPublication: state.getPublication,
+      publication: state.publication,
+      clearAll: state.clearAll,
+    })
+  );
   const { redirect, redirectScreen } = useAuthStore((state) => ({
     redirect: state.redirect,
     redirectScreen: state.redirectScreen,
@@ -150,11 +133,7 @@ const ReadArticle = () => {
       }
       setLoading(true);
       const { postId, bucketCanisterId } = separateIds(id);
-      if (ownedPremiumPosts.includes(postId)) {
-        getPremiumPost(handle, postId, bucketCanisterId);
-      } else {
-        getPost(handle, postId, bucketCanisterId);
-      }
+      getPost(handle, postId, bucketCanisterId);
     }
   };
 
@@ -283,27 +262,6 @@ const ReadArticle = () => {
   useEffect(() => {
     if (post) {
       setLoading(false);
-      if (
-        post.isPremium &&
-        handle &&
-        id &&
-        !post.content.length &&
-        nftFeatureIsLive
-      ) {
-        setPremiumModalOpen(true);
-        //getPremiumPost(post.handle, post.postId);
-        getPremiumArticleInfo(post.postId, post.handle);
-      }
-      if (post.isPremium && post.content.length) {
-        setPremiumModalOpen(false);
-      }
-      if (
-        post.isPremium &&
-        post.content.length &&
-        !ownedPremiumPosts.includes(post.postId)
-      ) {
-        getOwnedNfts();
-      }
       if (post.creator) {
         handleWriterFields(post.creator);
       }
@@ -316,33 +274,19 @@ const ReadArticle = () => {
     }
   }, [post]);
 
-  useEffect(() => {
-    if (premiumArticleInfo && post?.postId === premiumArticleInfo.postId) {
-      setPremiumAvailableCount(premiumArticleInfo.available);
-      setPremiumTotalSupply(premiumArticleInfo.totalSupply);
-      setPremiumSalePrice(premiumArticleInfo.cheapestPrice);
-      setPremiumModalLoading(false);
-    }
-  }, [premiumArticleInfo]);
-
   const handleWriterFields = async (handle: string) => {
-    let response = await getUsersByHandlesReturnOnly([handle])
-    if(response){
+    let response = await getUsersByHandlesReturnOnly([handle]);
+    if (response) {
       let writer = response[0];
       setAvatar(writer.avatar);
       setBio(writer.bio);
-      if(writer.website === ''){
-        setSocialUrls(writer.socialChannelsUrls)
-      }
-      else{
-        setSocialUrls([
-          writer.website,
-          ...writer.socialChannelsUrls,
-        ]);
+      if (writer.website === '') {
+        setSocialUrls(writer.socialChannelsUrls);
+      } else {
+        setSocialUrls([writer.website, ...writer.socialChannelsUrls]);
       }
     }
-
-  }
+  };
 
   useEffect(
     (window.onresize = window.onload =
@@ -436,19 +380,17 @@ const ReadArticle = () => {
 
   const getSocialChannelUrls = () => {
     if (!post?.isPublication) {
-      if(author){
-        if(author.website !== ''){
-          return [author.website, ...author.socialChannels]
+      if (author) {
+        if (author.website !== '') {
+          return [author.website, ...author.socialChannels];
+        } else {
+          return author.socialChannels;
         }
-        else{
-          return author.socialChannels
-        }
+      } else {
+        return [];
       }
-      else{
-        return []
-      }
-    } else{
-      return socialUrls
+    } else {
+      return socialUrls;
     }
   };
 
@@ -463,8 +405,6 @@ const ReadArticle = () => {
       return '1';
     }
   };
-
- 
 
   //for customizing linkify npm package
   const componentDecorator = (href: any, text: any, key: any) => (
@@ -690,7 +630,7 @@ const ReadArticle = () => {
               <div
                 className='header-content-wrapper'
                 style={
-                  premiumModalOpen
+                  post.premiumArticleSaleInfo
                     ? { backgroundColor: 'rgba(67, 223, 186, 0.5)' }
                     : {}
                 }
@@ -704,21 +644,16 @@ const ReadArticle = () => {
                       : '',
                   }}
                 />
-                {premiumModalOpen ? (
+                {post.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
-                    availableCount={premiumAvailableCount}
-                    totalSupply={premiumTotalSupply}
-                    salePrice={(
-                      parseFloat(premiumSalePrice) / 100000000
-                    ).toString()}
-                    loading={premiumModalLoading}
                     post={post}
-                    saleInfo={premiumArticleInfo}
-                    user={user?.handle}
+                    refreshPost={async () => {
+                      load();
+                    }}
                   />
                 ) : null}
 
-                {premiumModalOpen ? (
+                {post.premiumArticleSaleInfo ? (
                   <div className='text text-not-allowed'>
                     {parse(premiumArticlePlaceHolder)}
                   </div>

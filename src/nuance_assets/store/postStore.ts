@@ -39,9 +39,7 @@ import {
   TransactionRange,
   Transfer,
 } from '../services/icrc1/icrc1.did';
-import {
-  Transaction as ArchiveTransaction
-} from '../services/icrc1-archive/icrc1-archive.did';
+import { Transaction as ArchiveTransaction } from '../services/icrc1-archive/icrc1-archive.did';
 import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
@@ -280,8 +278,6 @@ export interface PostStore {
   popularPostsThisMonth: PostType[] | undefined;
   publicationPost: PostType | undefined;
   getPublicationPostError: string | undefined;
-  postWithPublicationControl: PostType | undefined;
-  getPostWithPublicationControlError: string | undefined;
 
   postsByCategory: PostType[] | undefined;
   postsByCategoryTotalCount: Number;
@@ -304,7 +300,6 @@ export interface PostStore {
   totalNumberOfComments: number;
 
   savePost: (post: PostSaveModel) => Promise<PostType | undefined>;
-  makePostPremium: (postId: string) => Promise<void>;
   getSavedPost: (postId: string) => Promise<void>;
   getSavedPostReturnOnly: (postId: string) => Promise<PostType | undefined>;
   clearSavedPost: () => Promise<void>;
@@ -370,24 +365,7 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number
   ) => Promise<GetPopularReturnType>;
-  getPublicationPost: (
-    postId: string,
-    publicationHandle: string
-  ) => Promise<void>;
-  createNftFromPremiumArticle: (
-    post: PostType,
-    totalSuppy: bigint,
-    salePrice: bigint,
-    handle: string,
-    image: string
-  ) => Promise<PostType | undefined>;
   clerGetPublicationPostError: () => Promise<void>;
-  getPremiumPost: (
-    handle: string,
-    postId: string,
-    bucketCanisterId?: string
-  ) => Promise<void>;
-  getSavedPremiumPost: (postId: string) => Promise<void>;
   setSearchText: (searchText: string) => void;
   search: (
     phrase: string,
@@ -417,7 +395,6 @@ export interface PostStore {
   getTagsByUser: (userId: string) => Promise<void>;
   followTag: (tag: string) => Promise<void>;
   unfollowTag: (tag: string) => Promise<void>;
-  getOwnersOfPost: (postId: string) => Promise<void>;
   getOwnersOfPremiumArticleReturnOnly: (
     postId: string
   ) => Promise<PremiumArticleOwners | undefined>;
@@ -425,8 +402,8 @@ export interface PostStore {
     tokenId: string,
     price: bigint,
     canisterId: string,
-    buyerAccountId: string | undefined
-  ) => Promise<LockTokenReturn>;
+    buyerAccountId: string
+  ) => Promise<string | undefined>;
   getMyBalance: () => Promise<bigint | undefined>;
   transferIcp: (amount: bigint, receiver: string) => Promise<TransferResult>;
   transferICRC1Token: (
@@ -452,17 +429,20 @@ export interface PostStore {
   getUserCkbtcTransactions: () => Promise<TransactionListItem[]>;
   settleToken: (
     tokenId: string,
-    canisterId: string,
-    handle: string
-  ) => Promise<string>;
+    canisterId: string
+  ) => Promise<string | undefined>;
   migratePostToPublication: (
     postId: string,
     publicationHandle: string,
     isDraft: boolean
   ) => Promise<PostType | undefined>;
 
-  getOwnedNfts: () => Promise<PremiumPostActivityListItem[] | undefined>;
-  getSellingNfts: () => Promise<PremiumPostActivityListItem[]>;
+  getOwnedNfts: (
+    userAccountId: string
+  ) => Promise<PremiumPostActivityListItem[]>;
+  getSellingNfts: (
+    userAccountId: string
+  ) => Promise<PremiumPostActivityListItem[]>;
   transferNft: (
     tokenIdentifier: string,
     senderAccount: string,
@@ -513,8 +493,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   claps: undefined,
   ClearSearchBar: false,
   isTagScreen: false,
-  postWithPublicationControl: undefined,
-  getPostWithPublicationControlError: undefined,
 
   searchText: '',
   searchResults: undefined,
@@ -909,64 +887,20 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         let bucketActor = await getPostBucketActor(bucketCanisterId);
         const bucketReturn = await bucketActor.getPostCompositeQuery(postId);
         if (Err in bucketReturn) {
-          //bucket canister returned an error -> it may be a publication post or unauthorized call
-          //check if it's a publication post
-          const bucketPublicationReturn =
-            await bucketActor.getPostWithPublicationControl(postId);
-          if (Err in bucketPublicationReturn) {
-            toastError(bucketPublicationReturn.err);
-          } else {
-            //if here, it's a draft publication post and an editor wants to edit it
-            //just return the post
-            const savedPost = {
-              ...bucketPublicationReturn.ok,
-              ...coreReturn.ok,
-            } as PostType;
-            return savedPost;
-          }
+          handleError(bucketReturn.err);
         } else {
-          //if here, it's not a publication post -> check if the post is premium
-          //if it's not, just return the post
-          //if it's a premium post, fetch the full post by getPremiumArticle and then return the post
           let user = useUserStore.getState().user;
           let bucketResult = bucketReturn.ok;
-
           if (
             user?.handle === bucketResult.handle ||
             user?.handle === bucketResult.creator ||
             isUserEditor(bucketResult.handle, user)
           ) {
-            if (bucketResult.isPremium) {
-              let bucketPremiumReturn = await bucketActor.getPremiumArticle(
-                postId
-              );
-              if (Err in bucketPremiumReturn) {
-                //this will not happen unless the writer doesn't have the access lkey
-                toastError(bucketPremiumReturn.err);
-              } else {
-                //full post is fetched -> get the fontType of the publication and return the post
-                var fontType = '';
-                let publicationAsUser = await (
-                  await getUserActor()
-                ).getUsersByHandles([bucketPremiumReturn.ok.handle]);
-                if (publicationAsUser.length !== 0) {
-                  fontType = publicationAsUser[0].fontType;
-                }
-
-                const savedPost = {
-                  ...bucketPremiumReturn.ok,
-                  ...coreReturn.ok,
-                  fontType,
-                } as PostType;
-                return savedPost;
-              }
-            } else {
-              const savedPost = {
-                ...bucketResult,
-                ...coreReturn.ok,
-              } as PostType;
-              return savedPost;
-            }
+            const savedPost = {
+              ...bucketResult,
+              ...coreReturn.ok,
+            } as PostType;
+            return savedPost;
           }
         }
       }
@@ -974,53 +908,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       handleError(err, Unexpected);
     }
     return;
-  },
-
-  getSavedPremiumPost: async (postId: string): Promise<void> => {
-    try {
-      const coreActor = await getPostCoreActor();
-      const coreReturn = await coreActor.getPostKeyProperties(postId);
-      if (Err in coreReturn) {
-        set({ getSavedPostError: coreReturn.err });
-        toastError(coreReturn.err);
-      } else {
-        let bucketCanisterId = coreReturn.ok.bucketCanisterId;
-        let bucketActor = await getPostBucketActor(bucketCanisterId);
-        const bucketReturn = await bucketActor.getPremiumArticle(postId);
-        if (Err in bucketReturn) {
-          set({ getSavedPostError: bucketReturn.err });
-          toastError(bucketReturn.err);
-        } else {
-          const savedPost = {
-            ...bucketReturn.ok,
-            ...coreReturn.ok,
-          } as PostType;
-          set({ savedPost, getSavedPostError: undefined });
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  makePostPremium: async (postId: string): Promise<void> => {
-    try {
-      const coreActor = await getPostCoreActor();
-      const coreReturn = await coreActor.getPostKeyProperties(postId);
-      if (Err in coreReturn) {
-        set({ getSavedPostError: coreReturn.err });
-        toastError(coreReturn.err);
-      } else {
-        let bucketCanisterId = coreReturn.ok.bucketCanisterId;
-        let bucketActor = await getPostBucketActor(bucketCanisterId);
-        const bucketReturn = await bucketActor.makePostPremium(postId);
-        if (!bucketReturn) {
-          toastError('Failed to make post premium');
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
   },
 
   clearSavedPost: async (): Promise<void> => {
@@ -1031,71 +918,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     set({ getSavedPostError: undefined });
   },
 
-  getPublicationPost: async (
-    postId: string,
-    publicationHandle: string
-  ): Promise<void> => {
-    try {
-      const canisterId = await usePublisherStore
-        .getState()
-        .getCanisterIdByHandle(publicationHandle);
-      const result = await (
-        await getPublisherActor(canisterId)
-      ).getPublicationPost(postId);
-      if (Err in result) {
-        set({ getPublicationPostError: result.err });
-        toastError(result.err);
-      } else {
-        const publicationPost = result.ok as PostType;
-        set({ publicationPost, getPublicationPostError: undefined });
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
 
   clerGetPublicationPostError: async () => {
     set({ getPublicationPostError: undefined });
-  },
-
-  createNftFromPremiumArticle: async (
-    post: PostType,
-    totalSuppy: bigint,
-    salePrice: bigint,
-    handle: string,
-    image: string
-  ): Promise<PostType | undefined> => {
-    try {
-      if (!post.headerImage.length) {
-        toastError('NFT article can not be created without an header image!');
-        return;
-      }
-
-      const canisterId = await usePublisherStore
-        .getState()
-        .getCanisterIdByHandle(handle);
-      const result = await (
-        await getPublisherActor(canisterId)
-      ).createNftFromPremiumArticle(post.postId, totalSuppy, salePrice, image);
-      if (Err in result) {
-        toastError(result.err);
-      } else {
-        toast('Premium article is created successfully.', ToastType.Success);
-        //since createNftFromArticle is successful, we can query the post by get method in Post canister
-        let bucketCanisterId = post.bucketCanisterId;
-        let bucketActor = await getPostBucketActor(bucketCanisterId);
-        let coreActor = await getPostCoreActor();
-
-        let [coreReturn, bucketReturn] = await Promise.all([
-          coreActor.getPostKeyProperties(post.postId),
-          bucketActor.getPremiumArticle(post.postId),
-        ]);
-
-        await get().getOwnedNfts();
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
   },
 
   deletePost: async (postId: string): Promise<void> => {
@@ -1154,7 +979,38 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             if (author.handle !== post.handle) {
               set({ getPostError: `Article not found for @${handle}` });
             } else {
-              set({ post, author, getPostError: undefined });
+              if (
+                post.nftCanisterId?.length !== 0 &&
+                post.content.length === 0
+              ) {
+                //premium post and user is not authorized to see
+                //fetch the sale info and merge with post
+                let nftCanisterId = post.nftCanisterId?.[0] as string;
+                let extActor = await getExtActor(nftCanisterId);
+                let response = await extActor.getAvailableToken();
+                set({
+                  post: {
+                    ...post,
+                    premiumArticleSaleInfo: {
+                      tokenIndex:
+                        response.availableTokenIndex.length !== 0
+                          ? response.availableTokenIndex[0]
+                          : 0,
+                      totalSupply: Number(response.maxSupply),
+                      nftCanisterId,
+                      currentSupply: Number(response.currentSupply),
+                      price_e8s: Number(response.price),
+                      priceReadable: (
+                        Number(response.price) / Math.pow(10, 8)
+                      ).toFixed(4),
+                    },
+                  },
+                  author,
+                  getPostError: undefined,
+                });
+              } else {
+                set({ post, author, getPostError: undefined });
+              }
             }
             // fire and forget (increments view count for post)
             (await getPostCoreActor()).viewPost(postId);
@@ -1189,86 +1045,35 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           if (author.handle !== post.handle) {
             set({ getPostError: `Article not found for @${handle}` });
           } else {
-            set({ post, author, getPostError: undefined });
-          }
-          // fire and forget (increments view count for post)
-          (await getPostCoreActor()).viewPost(postId);
-          //fire and forget - updates the last interaction time of the user
-          (await getUserActor()).updateLastLogin();
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  getPremiumPost: async (
-    handle: string,
-    postId: string,
-    bucketCanisterId?: string
-  ): Promise<void> => {
-    try {
-      // parallel requests for author and posts
-      // fetch the post's author for the avatar
-      // also used to verify the author in the url
-      if (bucketCanisterId) {
-        let [authorResult, coreReturn, bucketReturn] = await Promise.all([
-          (await getUserActor()).getUserByHandle(handle.toLowerCase()),
-          (await getPostCoreActor()).getPostKeyProperties(postId),
-          (
-            await getPostBucketActor(bucketCanisterId)
-          ).getPremiumArticle(postId),
-        ]);
-        if (Err in authorResult) {
-          set({ getPostError: `User not found for @${handle}` });
-          toastError(authorResult.err);
-        } else if (Err in coreReturn) {
-          set({ getPostError: ArticleNotFound });
-          toastError(coreReturn.err);
-        } else {
-          if (Err in bucketReturn) {
-            set({ getPostError: bucketReturn.err });
-          } else {
-            const post = { ...bucketReturn.ok, ...coreReturn.ok } as PostType;
-            const author = authorResult.ok as User;
-            if (author.handle !== post.handle) {
-              set({ getPostError: `Article not found for @${handle}` });
+            if (post.nftCanisterId?.length !== 0 && post.content.length === 0) {
+              //premium post and user is not authorized to see
+              //fetch the sale info and merge with post
+              let nftCanisterId = post.nftCanisterId?.[0] as string;
+              let extActor = await getExtActor(nftCanisterId);
+              let response = await extActor.getAvailableToken();
+              set({
+                post: {
+                  ...post,
+                  premiumArticleSaleInfo: {
+                    tokenIndex:
+                      response.availableTokenIndex.length !== 0
+                        ? response.availableTokenIndex[0]
+                        : 0,
+                    totalSupply: Number(response.maxSupply),
+                    nftCanisterId,
+                    currentSupply: Number(response.currentSupply),
+                    price_e8s: Number(response.price),
+                    priceReadable: (
+                      Number(response.price) / Math.pow(10, 8)
+                    ).toFixed(4),
+                  },
+                },
+                author,
+                getPostError: undefined,
+              });
             } else {
               set({ post, author, getPostError: undefined });
             }
-            // fire and forget (increments view count for post)
-            (await getPostCoreActor()).viewPost(postId);
-            //fire and forget - updates the last interaction time of the user
-            (await getUserActor()).updateLastLogin();
-          }
-        }
-        return;
-      }
-
-      let [authorResult, coreReturn] = await Promise.all([
-        (await getUserActor()).getUserByHandle(handle.toLowerCase()),
-        (await getPostCoreActor()).getPostKeyProperties(postId),
-      ]);
-
-      if (Err in authorResult) {
-        set({ getPostError: `User not found for @${handle}` });
-        toastError(authorResult.err);
-      } else if (Err in coreReturn) {
-        set({ getPostError: ArticleNotFound });
-        toastError(coreReturn.err);
-      } else {
-        let bucketCanisterId = coreReturn.ok.bucketCanisterId;
-        let bucketActor = await getPostBucketActor(bucketCanisterId);
-        let postResult = await bucketActor.getPremiumArticle(postId);
-        if (Err in postResult) {
-          set({ getPostError: postResult.err });
-        } else {
-          const post = { ...postResult.ok, ...coreReturn.ok } as PostType;
-          const author = authorResult.ok as User;
-          if (author.handle !== post.handle) {
-            set({ getPostError: `Article not found for @${handle}` });
-          } else {
-            set({ post, author, getPostError: undefined });
           }
           // fire and forget (increments view count for post)
           (await getPostCoreActor()).viewPost(postId);
@@ -1886,455 +1691,216 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     postId: string
   ): Promise<PremiumArticleOwners | undefined> => {
     try {
-      const coreActor = await getPostCoreActor();
-      const result = await coreActor.getPostKeyProperties(postId);
-      if (Err in result) {
-        toastError(result.err);
-      } else {
-        let post = result.ok;
-        let publisherCanisterId = await usePublisherStore
-          .getState()
-          .getCanisterIdByHandle(post.handle);
-        let publisherActor = await getPublisherActor(publisherCanisterId);
-        let premiumArticleInformationResult =
-          await publisherActor.getPremiumArticleInfo(postId);
-        if (Err in premiumArticleInformationResult) {
-          toastError(premiumArticleInformationResult.err);
-        } else {
-          try {
-            let premiumArticleInformation = premiumArticleInformationResult.ok;
-            let sellerAccount = premiumArticleInformation.sellerAccount;
-            let extActor = await getExtActor(
-              premiumArticleInformation.nftCanisterId
-            );
-            let registry = await extActor.getRegistry();
-            let tokenIndexStart = parseInt(
-              premiumArticleInformation.tokenIndexStart
-            );
-            let tokenIndexEnd =
-              tokenIndexStart + parseInt(premiumArticleInformation.totalSupply);
-            let registry_filtered = registry.filter((registryElement) => {
-              return (
-                registryElement[0] >= tokenIndexStart &&
-                registryElement[0] < tokenIndexEnd &&
-                registryElement[1] !== sellerAccount
-              );
-            });
-            let account_ids = registry_filtered.map((registryElement) => {
-              return registryElement[1];
-            });
-            let userActor = await getUserActor();
-            let account_ids_to_handles =
-              await userActor.getHandlesByAccountIdentifiers(account_ids);
+      let post = await get().getSavedPostReturnOnly(postId);
+      if (post?.nftCanisterId) {
+        let nftCanisterId = post.nftCanisterId[0] as string;
+        let extActor = await getExtActor(nftCanisterId);
+        let saleInfo = await extActor.getAvailableToken();
 
-            var owners_list: PremiumArticleOwner[] = [];
-            var i = 0;
-            while (i < registry_filtered.length) {
-              let handle = account_ids_to_handles[i];
-              let account_id = registry_filtered[i][1];
-              let accessKeyIndex = (
-                registry_filtered[i][0] -
-                tokenIndexStart +
-                1
-              ).toString();
-              owners_list.push({
-                handle: handle,
-                accountId: account_id,
-                accessKeyIndex: accessKeyIndex,
-              });
-              i += 1;
-            }
-            let premiumArticleOwners: PremiumArticleOwners = {
-              postId: postId,
-              totalSupply: premiumArticleInformation.totalSupply,
-              available: (
-                parseInt(premiumArticleInformation.totalSupply) -
-                registry_filtered.length
-              ).toString(),
-              ownersList: owners_list,
-            };
-
-            return premiumArticleOwners;
-          } catch (err) {
-            handleError(err, Unexpected);
-          }
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-  getOwnersOfPost: async (postId: string): Promise<void> => {
-    try {
-      const coreActor = await getPostCoreActor();
-      const result = await coreActor.getPostKeyProperties(postId);
-      if (Err in result) {
-        toastError(result.err);
-      } else {
-        let post = result.ok;
-        let publisherCanisterId = await usePublisherStore
-          .getState()
-          .getCanisterIdByHandle(post.handle);
-        let publisherActor = await getPublisherActor(publisherCanisterId);
-        let premiumArticleInformationResult =
-          await publisherActor.getPremiumArticleInfo(postId);
-        if (Err in premiumArticleInformationResult) {
-          toastError(premiumArticleInformationResult.err);
-        } else {
-          try {
-            let premiumArticleInformation = premiumArticleInformationResult.ok;
-            let sellerAccount = premiumArticleInformation.sellerAccount;
-            let extActor = await getExtActor(
-              premiumArticleInformation.nftCanisterId
-            );
-            let registry = await extActor.getRegistry();
-            let tokenIndexStart = parseInt(
-              premiumArticleInformation.tokenIndexStart
-            );
-            let tokenIndexEnd =
-              tokenIndexStart + parseInt(premiumArticleInformation.totalSupply);
-            let registry_filtered = registry.filter((registryElement) => {
-              return (
-                registryElement[0] >= tokenIndexStart &&
-                registryElement[0] < tokenIndexEnd &&
-                registryElement[1] !== sellerAccount
-              );
-            });
-            let account_ids = registry_filtered.map((registryElement) => {
-              return registryElement[1];
-            });
-            let userActor = await getUserActor();
-            let account_ids_to_handles =
-              await userActor.getHandlesByAccountIdentifiers(account_ids);
-
-            var owners_list: PremiumArticleOwner[] = [];
-            var i = 0;
-            while (i < registry_filtered.length) {
-              let handle = account_ids_to_handles[i];
-              let account_id = registry_filtered[i][1];
-              let accessKeyIndex = (
-                registry_filtered[i][0] -
-                tokenIndexStart +
-                1
-              ).toString();
-              owners_list.push({
-                handle: handle,
-                accountId: account_id,
-                accessKeyIndex: accessKeyIndex,
-              });
-              i += 1;
-            }
-            let premiumArticleOwners: PremiumArticleOwners = {
-              postId: postId,
-              totalSupply: premiumArticleInformation.totalSupply,
-              available: (
-                parseInt(premiumArticleInformation.totalSupply) -
-                registry_filtered.length
-              ).toString(),
-              ownersList: owners_list,
-            };
-
-            set({ ownersOfPremiumArticle: premiumArticleOwners });
-          } catch (err) {
-            handleError(err, Unexpected);
-          }
-        }
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-  getSellingNfts: async (): Promise<PremiumPostActivityListItem[]> => {
-    const nftCanistersEntries = await (
-      await getPostCoreActor()
-    ).getNftCanisters();
-    set({ nftCanistersEntries: nftCanistersEntries });
-    let userActor = await getUserActor();
-
-    let userWallet = await useAuthStore.getState().getUserWallet();
-    let userHandle = useUserStore.getState().user?.handle || '';
-    let userPrincipal = userWallet.principal;
-    let userAccountId = userWallet.accountId;
-
-    let publicationCanisterIds = await userActor.getPrincipalsByHandles(
-      nftCanistersEntries.map((entry) => entry.handle)
-    );
-
-    let userSellingArticlesInformations = (
-      await Promise.all(
-        publicationCanisterIds.map(async (cai) => {
-          let publisherActor = await getPublisherActor(cai);
-          let informations =
-            await publisherActor.getPremiumArticleInformationsByWriterHandle(
-              userHandle
-            );
-
-          //fire and forget disperse icp methods
-          informations.forEach((information) => {
-            publisherActor.disperseIcpGainedFromPost(information.postId);
-          });
-          return informations;
-        })
-      )
-    ).flat();
-
-    let userControlledSellerAccounts = userSellingArticlesInformations.map(
-      (information) => {
-        return information.sellerAccount;
-      }
-    );
-
-    //get transactions of each NFT canister
-    let transactions = await Promise.all(
-      nftCanistersEntries.map(async (canisterEntry) => {
         return {
-          canisterId: canisterEntry.canisterId,
-          handle: canisterEntry.handle,
-          transactions: await (
-            await getExtActor(canisterEntry.canisterId)
-          ).transactions(),
+          postId,
+          totalSupply: Number(saleInfo.maxSupply).toString(),
+          available: Number(
+            saleInfo.maxSupply - saleInfo.currentSupply
+          ).toString(),
+          ownersList: [],
         };
-      })
-    );
-
-    //holds all the user transactions
-    //key: nft canister id, value: transaction
-    var userTransactions: Map<string, Transaction[]> = new Map();
-
-    transactions.forEach((canister_transactions) => {
-      let nft_canister_id = canister_transactions.canisterId;
-      canister_transactions.transactions.forEach((transaction) => {
-        if (userControlledSellerAccounts.includes(transaction.seller)) {
-          let existingTransactions = userTransactions.get(nft_canister_id);
-          if (existingTransactions) {
-            userTransactions.set(nft_canister_id, [
-              ...existingTransactions,
-              transaction,
-            ]);
-          } else {
-            userTransactions.set(nft_canister_id, [transaction]);
-          }
-        }
-      });
-    });
-    var postActivityListItems: PremiumPostActivityListItem[] = [];
-
-    //this user selling some articles
-    for (const entry of nftCanistersEntries) {
-      let canisterId = entry.canisterId;
-      let user_transactions = userTransactions.get(canisterId);
-      let sellingArticlesInformations = userSellingArticlesInformations.filter(
-        (information) => {
-          return information.nftCanisterId === canisterId;
-        }
-      );
-      if (user_transactions?.length) {
-        let coreActor = await getPostCoreActor();
-        var postIds = sellingArticlesInformations.map((inf) => {
-          return inf.postId;
-        });
-        let keyPropertiesReturn = await coreActor.getPostsByPostIds(postIds);
-        let postsReturn = await fetchPostsByBuckets(keyPropertiesReturn, false);
-        sellingArticlesInformations.forEach(async (information) => {
-          let currentPost = postsReturn.find((post) => {
-            return post.postId === information.postId;
-          });
-          let indexStart = parseInt(information.tokenIndexStart);
-
-          if (user_transactions) {
-            user_transactions.forEach((transaction) => {
-              if (transaction.seller === information.sellerAccount) {
-                postActivityListItems.push({
-                  postId: information.postId,
-                  title: currentPost?.title || '',
-                  url: currentPost?.url || '',
-                  writer: currentPost?.creator || '',
-                  accessKeyIndex: (transaction.token - indexStart).toString(),
-                  tokenIndex: transaction.token.toString(),
-                  ownedByUser: false,
-                  canisterId: canisterId,
-                  date: Math.round(
-                    Number(transaction.time) / 1000000
-                  ).toString(),
-                  totalSupply: information.totalSupply.toString(),
-                  activity: '+ ' + icpPriceToString(transaction.price) + ' ICP',
-                  userAccountId: userAccountId,
-                });
-              }
-            });
-          }
-        });
       }
+    } catch (err) {
+      handleError(err, Unexpected);
     }
-    return postActivityListItems;
   },
-  getOwnedNfts: async (): Promise<
-    PremiumPostActivityListItem[] | undefined
-  > => {
+  getSellingNfts: async (
+    userAccountId: string
+  ): Promise<PremiumPostActivityListItem[]> => {
     try {
-      const nftCanistersEntries = await (
-        await getPostCoreActor()
-      ).getNftCanisters();
-      set({ nftCanistersEntries: nftCanistersEntries });
-
-      let userWallet = await useAuthStore.getState().getUserWallet();
-      let userAccountId = userWallet.accountId;
-
-      //get user owned tokens from each NFT canister
-      let user_tokens = await Promise.all(
-        nftCanistersEntries.map(async (canisterEntry) => {
-          return {
-            canisterId: canisterEntry.canisterId,
-            handle: canisterEntry.handle,
-            ownedTokens: await (
-              await getExtActor(canisterEntry.canisterId)
-            ).tokens_ext_metadata(userAccountId),
-          };
-        })
+      let postCoreActor = await getPostCoreActor();
+      let [allOwnedPosts, allNftCanisters] = await Promise.all([
+        postCoreActor.getMyAllPosts(0, 100000), //arbitrary big number
+        postCoreActor.getAllNftCanisters(),
+      ]);
+      //if there is any premium article that the user has written, fetch the info
+      let allPremiumArticlesPostIds = allNftCanisters.map((entry) => entry[0]);
+      let allOwnedPremiumArticlesKeyProperties = allOwnedPosts.filter(
+        (postKeyProperty) =>
+          allPremiumArticlesPostIds.includes(postKeyProperty.postId)
       );
-      //holds the owned postIds
-      var ownedPostIds: string[] = [];
-      //holds the owned token indexes by canister ids of NFT canisters
-      //key: Nft canister id, value: [TokenIndex, Metadata]
-      var ownedTokens: Map<string, [number, Metadata, string][]> = new Map();
-
-      user_tokens.forEach((user_tokens_return) => {
-        if (!(Err in user_tokens_return.ownedTokens)) {
-          let owned_tokens = user_tokens_return.ownedTokens.ok;
-          let nft_canister_id = user_tokens_return.canisterId;
-          owned_tokens.forEach((token) => {
-            let existingIndexes = ownedTokens.get(
-              user_tokens_return.canisterId
-            );
-            if (existingIndexes) {
-              ownedTokens.set(nft_canister_id, [
-                ...existingIndexes,
-                [token[0], token[2], token[3]],
-              ]);
-            } else {
-              ownedTokens.set(nft_canister_id, [
-                [token[0], token[2], token[3]],
-              ]);
-            }
-            let metadata = token[2];
-            if ('nonfungible' in metadata) {
-              let postId = metadata.nonfungible.asset;
-              if (!ownedPostIds.includes(postId)) {
-                ownedPostIds.push(postId);
-              }
-            }
-          });
-        }
-      });
-
-      set({ ownedPremiumPosts: ownedPostIds });
-
-      //get transactions of each NFT canister
-      let transactions = await Promise.all(
-        nftCanistersEntries.map(async (canisterEntry) => {
-          return {
-            canisterId: canisterEntry.canisterId,
-            handle: canisterEntry.handle,
-            transactions: await (
-              await getExtActor(canisterEntry.canisterId)
-            ).transactions(),
-          };
-        })
-      );
-
-      //holds all the user transactions
-      //key: nft canister id, value: transaction
-      var userTransactions: Map<string, Transaction[]> = new Map();
-
-      transactions.forEach((canister_transactions) => {
-        let nft_canister_id = canister_transactions.canisterId;
-        canister_transactions.transactions.forEach((transaction) => {
-          if (
-            transaction.buyer === userAccountId ||
-            transaction.seller === userAccountId
-          ) {
-            let existingTransactions = userTransactions.get(nft_canister_id);
-            if (existingTransactions) {
-              userTransactions.set(nft_canister_id, [
-                ...existingTransactions,
-                transaction,
-              ]);
-            } else {
-              userTransactions.set(nft_canister_id, [transaction]);
-            }
-          }
+      let allOwnedPremiumArticlesPostIds =
+        allOwnedPremiumArticlesKeyProperties.map(
+          (keyProperty) => keyProperty.postId
+        );
+      let allOwnedPremiumArticlesNftCanisterIds =
+        allOwnedPremiumArticlesPostIds.map((ownedPremiumArticlePostId) => {
+          return (
+            allNftCanisters.find(([anyPremiumArticlePostId, nftCanisterId]) => {
+              return anyPremiumArticlePostId === ownedPremiumArticlePostId;
+            }) as [string, string]
+          )[1];
         });
+
+      //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
+      let transactionsPromises = [];
+      for (const nftCanisterId of allOwnedPremiumArticlesNftCanisterIds) {
+        let extActor = await getExtActor(nftCanisterId);
+        transactionsPromises.push(
+          extActor.marketplaceTransactionsAndTotalSupply()
+        );
+      }
+
+      let allOwnedPremiumArticlesTransactions = await Promise.all(
+        transactionsPromises
+      );
+
+      let allOwnedPremiumArticles = await fetchPostsByBuckets(
+        allOwnedPremiumArticlesKeyProperties,
+        false
+      );
+
+      //build the result by merging the articles and the nft canister stats
+      return allOwnedPremiumArticles.map((article, index) => {
+        return {
+          postId: article.postId,
+          title: article.title,
+          url: article.url,
+          writer: article.creator || article.handle,
+          tokenIndex: Number(
+            allOwnedPremiumArticlesTransactions[index].currentSupply
+          ).toString(),
+          accessKeyIndex: Number(
+            allOwnedPremiumArticlesTransactions[index].currentSupply
+          ).toString(),
+          ownedByUser: false,
+          canisterId:
+            article.nftCanisterId && article.nftCanisterId?.length !== 0
+              ? article.nftCanisterId?.[0]
+              : '',
+          date: article.created,
+          totalSupply: Number(
+            allOwnedPremiumArticlesTransactions[index].maxSupply
+          ).toString(),
+          activity:
+            '+' +
+            (
+              Number(
+                (allOwnedPremiumArticlesTransactions[index].currentSupply -
+                  BigInt(1) -
+                  allOwnedPremiumArticlesTransactions[index].initialSupply) *
+                  allOwnedPremiumArticlesTransactions[index].icpPrice
+              ) / Math.pow(10, 8)
+            ).toString() +
+            ' ICP',
+          userAccountId,
+          sellerAddresses:
+            allOwnedPremiumArticlesTransactions[index].tokenSenderAccounts,
+        };
       });
-
-      var postActivityListItems: PremiumPostActivityListItem[] = [];
-
-      //only reader
-      nftCanistersEntries.forEach((entry) => {
-        let owned_tokens = ownedTokens.get(entry.canisterId);
-        if (owned_tokens) {
-          owned_tokens.forEach((token) => {
-            let tokenId = token[2];
-            let tokenIndex = token[0];
-            let canisterId = entry.canisterId;
-            var [
-              postId,
-              accessKeyIndex,
-              date,
-              writer,
-              title,
-              totalSupply,
-              url,
-            ] = getFieldsFromMetadata(token[1]);
-            var activity = '';
-            let user_transactions = userTransactions.get(canisterId);
-            if (user_transactions?.length) {
-              //sort from newest to oldest
-              let user_transactions_newest = user_transactions.reverse();
-
-              var iter = 0;
-
-              while (iter < user_transactions_newest.length) {
-                let transaction = user_transactions_newest[iter];
-                if (
-                  transaction.token === tokenIndex &&
-                  transaction.buyer === userAccountId
-                ) {
-                  activity =
-                    '- ' + icpPriceToString(transaction.price) + ' ICP';
-                  date = Math.round(
-                    Number(transaction.time) / 1000000
-                  ).toString();
-                  break;
-                }
-                iter += 1;
-              }
-            }
-            if (activity === '') {
-              activity = 'Received';
-            }
-            postActivityListItems.push({
-              postId: postId,
-              title: title,
-              url: url,
-              writer: writer,
-              accessKeyIndex: accessKeyIndex,
-              tokenIndex: tokenIndex.toString(),
+    } catch (error) {
+      return [];
+    }
+  },
+  getOwnedNfts: async (
+    userAccountId: string
+  ): Promise<PremiumPostActivityListItem[]> => {
+    try {
+      let postCoreActor = await getPostCoreActor();
+      let [allOwnedPosts, allNftCanisters] = await Promise.all([
+        postCoreActor.getMyAllPosts(0, 100000), //arbitrary big number
+        postCoreActor.getAllNftCanisters(),
+      ]);
+      let promises = [];
+      for (const [postId, canisterId] of allNftCanisters) {
+        let extActor = await getExtActor(canisterId);
+        promises.push(extActor.tokens_ext(userAccountId));
+      }
+      let result: PremiumPostActivityListItem[] = [];
+      console.log('right before getting the responses');
+      let responses = await Promise.all(promises);
+      var index = 0;
+      for (const response of responses) {
+        if ('ok' in response) {
+          response.ok.forEach((owned_token) => {
+            result.push({
+              postId: allNftCanisters[index][0],
+              title: '', //will be populated later
+              url: '', //will be populated later
+              writer: '', //will be populated later
+              tokenIndex: owned_token[0].toString(),
+              accessKeyIndex: owned_token[0].toString(),
               ownedByUser: true,
-              canisterId: canisterId,
-              date: date,
-              totalSupply: totalSupply,
-              activity: activity,
-              userAccountId: userAccountId,
-              tokenIdentifier: tokenId,
+              canisterId: allNftCanisters[index][1],
+              date: '', //will be populated later
+              totalSupply: '', //will be populated later
+              activity: '', //will be populated later
+              userAccountId,
+              sellerAddresses: [],
             });
           });
         }
+        index += 1;
+      }
+      console.log('responses: ', responses);
+      //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
+      let transactionsPromises = [];
+      for (const item of result) {
+        let extActor = await getExtActor(item.canisterId);
+        transactionsPromises.push(
+          extActor.marketplaceTransactionsAndTotalSupply()
+        );
+      }
+      let transactionsResponses = await Promise.all(transactionsPromises);
+      //populate the date, total supply and activity fields
+      result = result.map((item, index) => {
+        let transactions = transactionsResponses[index].transactions;
+
+        let lastTransaction = transactions.reverse().find((transaction) => {
+          return (
+            transaction.buyer === userAccountId &&
+            transaction.token === parseInt(result[index].tokenIndex)
+          );
+        });
+
+        let postIfOwned = allOwnedPosts.find(
+          (post) => post.postId === item.postId
+        );
+
+        return {
+          ...item,
+          date: lastTransaction
+            ? Math.round(Number(lastTransaction.time) / 1000000).toString() //if found in transactions, use it
+            : postIfOwned
+            ? postIfOwned.created //if not found in transactions but the user is the creator, use the created date
+            : Date.now().toString(), //if there is no transaction found and the user is not the creator, use now
+          totalSupply: Number(
+            transactionsResponses[index].maxSupply
+          ).toString(),
+          activity: lastTransaction
+            ? `-${(Number(lastTransaction.price) / Math.pow(10, 8)).toFixed(
+                4
+              )} ICP` //if found in transactions, use the val
+            : postIfOwned
+            ? 'Minted' //if not found in transactions but the user is the creator, activity is a mint
+            : 'Received', //if not both, it's a transfer
+          sellerAddresses: transactionsResponses[index].tokenSenderAccounts,
+        };
       });
 
-      set({ premiumPostsActivities: postActivityListItems });
-      return postActivityListItems;
+      //now, populate the title, url and writer fields
+      let keyProperties = await postCoreActor.getPostsByPostIds(
+        result.map((item) => item.postId)
+      );
+      let posts = await fetchPostsByBuckets(keyProperties, false);
+      result = result.map((item, index) => {
+        return {
+          ...item,
+          title: posts[index].title,
+          url: posts[index].url,
+          writer: posts[index].creator || posts[index].handle,
+        };
+      });
+      return result;
     } catch (error) {
       console.log(error);
+      return [];
     }
   },
 
@@ -2370,74 +1936,25 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     tokenId: string,
     price: bigint,
     canisterId: string,
-    buyerAccountId: string | undefined
-  ): Promise<LockTokenReturn> => {
-    let authStore = useAuthStore?.getState();
-    let identity = await authStore.getIdentity();
-    let isLoggedIn = authStore.isLoggedIn;
-    if (isLoggedIn && identity) {
-      let ledgerActor = await getLedgerActor();
+    buyerAccountId: string
+  ): Promise<string | undefined> => {
+    try {
       let extActor = await getExtActor(canisterId);
-      let userAccountId: AccountIdentifier;
-      if (buyerAccountId) {
-        userAccountId = AccountIdentifier.fromHex(buyerAccountId);
-      } else {
-        userAccountId = AccountIdentifier.fromPrincipal({
-          principal: identity.getPrincipal(),
-          subAccount: undefined,
-        });
-      }
-
-      let balance = await ledgerActor.account_balance({
-        account: userAccountId.toNumbers(),
-      });
-
-      //check if the account id is anonymous
-      if (
-        userAccountId.toHex() ===
-        '1c7a48ba6a562aa9eaa2481a9049cdf0433b9738c992d698c31d8abf89cadc79'
-      ) {
-        return {
-          err: 'Please refresh the page and try again.',
-          balance: balance.e8s,
-        };
-      }
-      if (balance.e8s <= price) {
-        //balance is unsufficient
-        return {
-          err: 'Unsufficient balance',
-          balance: balance.e8s,
-        };
-      }
-      let sellerAccount = await extActor.lock(
+      let response = await extActor.lock(
         tokenId,
         price,
-        userAccountId.toHex(),
+        buyerAccountId,
         new Uint8Array()
       );
-      if (Err in sellerAccount) {
-        if ('InvalidToken' in sellerAccount.err) {
-          return {
-            balance: balance.e8s,
-            err: `Invalid token`,
-          };
-        } else {
-          return {
-            balance: balance.e8s,
-            err: sellerAccount.err.Other,
-          };
-        }
+      if ('err' in response) {
+        handleError(response.err.toString());
       } else {
-        return {
-          balance: balance.e8s,
-          sellerAccountId: sellerAccount.ok,
-        };
+        return response.ok;
       }
-    } else {
-      return {
-        err: 'login',
-      };
+    } catch (error) {
+      handleError(error);
     }
+    return;
   },
   getApplaudedHandles: async (
     postId: string,
@@ -2500,6 +2017,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         true
       );
       let userWallet = await useAuthStore.getState().getUserWallet();
+      if (userWallet.principal.length === 0) {
+        return [];
+      }
       let mergedApplaudsIncludingNull = applauds.map((applaud) => {
         let post: PostType | undefined = undefined;
         for (const p of posts) {
@@ -2543,6 +2063,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     try {
       let icpIndexCanister = await getIcpIndexCanister();
       let userWallet = await useAuthStore.getState().getUserWallet();
+      if (userWallet.principal.length === 0) {
+        return [];
+      }
       let response = await icpIndexCanister.get_account_identifier_transactions(
         {
           max_results: BigInt(100),
@@ -2594,16 +2117,22 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         true
       );
       let userWallet = await useAuthStore.getState().getUserWallet();
+      if (userWallet.principal.length === 0) {
+        return [];
+      }
       let nuaTransactionsLedgerResponse =
         await nuaLedgerCanister.get_transactions({
           start: BigInt(0),
           length: BigInt(100_000_000_000_000), //just an arbitrary big number to get all the info we need for ALL transactions
         });
-      var transactions : ArchiveTransaction[] = nuaTransactionsLedgerResponse.transactions;
+      var transactions: ArchiveTransaction[] =
+        nuaTransactionsLedgerResponse.transactions;
       //archive canister promises
       let promises = [];
       for (const archivedTransaction of nuaTransactionsLedgerResponse.archived_transactions) {
-        let archiveCanister = await getIcrc1ArchiveCanister(archivedTransaction.callback[0].toText());
+        let archiveCanister = await getIcrc1ArchiveCanister(
+          archivedTransaction.callback[0].toText()
+        );
         promises.push(
           archiveCanister.get_transactions({
             start: archivedTransaction.start,
@@ -2611,7 +2140,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           })
         );
       }
-      
+
       let archivedTransactionsResults = await Promise.all(promises);
       archivedTransactionsResults.forEach((archived) => {
         transactions = [...archived.transactions, ...transactions];
@@ -2651,6 +2180,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         ckBTC_INDEX_CANISTER_ID
       );
       let userWallet = await useAuthStore.getState().getUserWallet();
+      if (userWallet.principal.length === 0) {
+        return [];
+      }
       let indexCanisterTransactionsResponse =
         await ckBtcIndexCanister.get_account_transactions({
           max_results: BigInt(100_000), //max of 100_000 transactions :)
@@ -2670,10 +2202,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               return transaction.transaction.transfer.length !== 0;
             }
           );
-        let transfers = transactions
-          .map((t) => {
-            return t.transaction.transfer[0];
-          }) as Transfer[];
+        let transfers = transactions.map((t) => {
+          return t.transaction.transfer[0];
+        }) as Transfer[];
         return transfers.map((t, index) => {
           return {
             date: (
@@ -2763,7 +2294,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         amount: BigInt(1),
       });
       if ('ok' in result) {
-        await get().getOwnedNfts();
         return 'Success';
       } else {
         return 'Error';
@@ -2776,27 +2306,17 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
 
   settleToken: async (
     tokenId: string,
-    canisterId: string,
-    handle: string
-  ): Promise<string> => {
-    const publisherCanisterId = await usePublisherStore
-      .getState()
-      .getCanisterIdByHandle(handle);
-    let publisherActor = await getPublisherActor(publisherCanisterId);
-
+    canisterId: string
+  ): Promise<string | undefined> => {
     let extActor = await getExtActor(canisterId);
     let settleResult = await extActor.settle(tokenId);
 
     if (Err in settleResult) {
       toastError(settleResult.err);
-      return 'error';
     } else {
       //will remove this line after we go live on ic because toniq will handle this by calling external_heartbeat method
       extActor.heartbeat_disbursements().then(() => {
         console.log('disbursed');
-        publisherActor.disperseIcpTimerMethod().then(() => {
-          console.log('dispersed');
-        });
       });
       toast('Success!', ToastType.Success);
       return 'success';

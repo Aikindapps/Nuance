@@ -127,9 +127,13 @@ type PostSaveModel =
    handle: text;
    headerImage: text;
    isDraft: bool;
-   isPremium: bool;
    isPublication: bool;
    postId: text;
+   premium: opt record {
+                  icpPrice: nat;
+                  maxSupply: nat;
+                  thumbnail: text;
+                };
    subtitle: text;
    tagIds: vec text;
    title: text;
@@ -184,6 +188,7 @@ type Post =
    isPremium: bool;
    isPublication: bool;
    modified: text;
+   nftCanisterId: opt text;
    postId: text;
    publishedDate: text;
    subtitle: text;
@@ -263,6 +268,10 @@ service : {
   getActiveBucketCanisterId: () -> (Result_2);
   getAdmins: () -> (Result_7) query;
   getAllBuckets: () -> (Result_7);
+  getAllNftCanisters: () -> (vec record {
+                                   text;
+                                   text;
+                                 }) query;
   getAllStatusCount: () -> (Result_2);
   getAllTags: () -> (vec TagModel) query;
   getBucketCanisterIdsOfGivenHandles: (vec text) -> (vec text) query;
@@ -320,6 +329,7 @@ service : {
                                       }) query;
   getPublicationPosts: (nat32, nat32, text) -> (vec PostKeyProperties) query;
   getTagsByUser: (text) -> (vec PostTag) query;
+  getTotalAmountOfTipsReceived: () -> (nat) composite_query;
   getTotalArticleViews: () -> (nat) query;
   getTotalClaps: () -> (nat) query;
   getTotalPostCount: () -> (nat) query;

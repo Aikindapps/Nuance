@@ -12,6 +12,7 @@ export const idlFactory = ({ IDL }) => {
     'wordCount' : IDL.Text,
     'isPremium' : IDL.Bool,
     'publishedDate' : IDL.Text,
+    'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
     'category' : IDL.Text,
     'handle' : IDL.Text,
@@ -33,7 +34,7 @@ export const idlFactory = ({ IDL }) => {
     'numberOfApplauds' : IDL.Nat,
     'postId' : IDL.Text,
   });
-  const Result_11 = IDL.Variant({ 'ok' : Applaud, 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'ok' : Applaud, 'err' : IDL.Text });
   const Result_4 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   Comment.fill(
     IDL.Record({
@@ -77,42 +78,9 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_8 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
-  const Result_12 = IDL.Variant({
+  const Result_11 = IDL.Variant({
     'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
     'err' : IDL.Text,
-  });
-  const MetadataValue = IDL.Tuple(
-    IDL.Text,
-    IDL.Variant({
-      'nat' : IDL.Nat,
-      'blob' : IDL.Vec(IDL.Nat8),
-      'nat8' : IDL.Nat8,
-      'text' : IDL.Text,
-    }),
-  );
-  const MetadataContainer = IDL.Variant({
-    'blob' : IDL.Vec(IDL.Nat8),
-    'data' : IDL.Vec(MetadataValue),
-    'json' : IDL.Text,
-  });
-  const Metadata = IDL.Variant({
-    'fungible' : IDL.Record({
-      'decimals' : IDL.Nat8,
-      'metadata' : IDL.Opt(MetadataContainer),
-      'name' : IDL.Text,
-      'symbol' : IDL.Text,
-    }),
-    'nonfungible' : IDL.Record({
-      'thumbnail' : IDL.Text,
-      'asset' : IDL.Text,
-      'metadata' : IDL.Opt(MetadataContainer),
-      'name' : IDL.Text,
-    }),
-  });
-  const Result_10 = IDL.Variant({ 'ok' : Metadata, 'err' : IDL.Text });
-  const NftCanisterEntry = IDL.Record({
-    'handle' : IDL.Text,
-    'canisterId' : IDL.Text,
   });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
@@ -150,7 +118,13 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'creator' : IDL.Text,
     'content' : IDL.Text,
-    'isPremium' : IDL.Bool,
+    'premium' : IDL.Opt(
+      IDL.Record({
+        'thumbnail' : IDL.Text,
+        'icpPrice' : IDL.Nat,
+        'maxSupply' : IDL.Nat,
+      })
+    ),
     'isDraft' : IDL.Bool,
     'postOwnerPrincipalId' : IDL.Text,
     'category' : IDL.Text,
@@ -172,6 +146,7 @@ export const idlFactory = ({ IDL }) => {
     'wordCount' : IDL.Text,
     'isPremium' : IDL.Bool,
     'publishedDate' : IDL.Text,
+    'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
     'category' : IDL.Text,
     'handle' : IDL.Text,
@@ -196,7 +171,7 @@ export const idlFactory = ({ IDL }) => {
     'checkTipping' : IDL.Func([IDL.Text], [], []),
     'checkTippingByTokenSymbol' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
-        [Result_11],
+        [Result_10],
         [],
       ),
     'delete' : IDL.Func([IDL.Text], [Result_4], []),
@@ -215,8 +190,8 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
-    'getAllSubmittedForReviews' : IDL.Func([], [Result_12], []),
-    'getApplaudById' : IDL.Func([IDL.Text], [Result_11], ['query']),
+    'getAllSubmittedForReviews' : IDL.Func([], [Result_11], []),
+    'getApplaudById' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'getBucketCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_8], ['query']),
@@ -230,9 +205,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
-    'getMetadata' : IDL.Func([IDL.Text, IDL.Nat], [Result_10], ['query']),
     'getMyApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
-    'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPost' : IDL.Func([IDL.Text], [Result_6], ['query']),
     'getPostApplauds' : IDL.Func([IDL.Text], [IDL.Vec(Applaud)], ['query']),
@@ -244,13 +217,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getPostCoreCanisterId' : IDL.Func([], [IDL.Text], ['query']),
     'getPostUrls' : IDL.Func([], [Result_2], ['query']),
-    'getPostWithPublicationControl' : IDL.Func([IDL.Text], [Result_6], []),
     'getPostsByPostIds' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Bool],
         [IDL.Vec(PostBucketType__1)],
         ['query'],
       ),
-    'getPremiumArticle' : IDL.Func([IDL.Text], [Result_6], []),
     'getPublicationPosts' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Text],
         [IDL.Vec(PostBucketType__1)],
@@ -287,7 +258,6 @@ export const idlFactory = ({ IDL }) => {
     'initializeCanister' : IDL.Func([IDL.Text, IDL.Text], [Result_2], []),
     'isBucketCanisterActivePublic' : IDL.Func([], [IDL.Bool], ['query']),
     'makeBucketCanisterNonActive' : IDL.Func([], [Result_7], []),
-    'makePostPremium' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'migratePostToPublication' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Bool],
         [Result_1],
@@ -296,12 +266,6 @@ export const idlFactory = ({ IDL }) => {
     'registerAdmin' : IDL.Func([IDL.Text], [Result_3], []),
     'registerCanister' : IDL.Func([IDL.Text], [Result_3], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_3], []),
-    'registerNftCanisterId' : IDL.Func([IDL.Text, IDL.Text], [Result_2], []),
-    'registerNftCanisterIdAdminFunction' : IDL.Func(
-        [IDL.Text, IDL.Text],
-        [Result_2],
-        [],
-      ),
     'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_3], []),
     'reindex' : IDL.Func([], [Result_2], []),
     'rejectPostByModclub' : IDL.Func([IDL.Text], [], ['oneway']),
@@ -312,7 +276,6 @@ export const idlFactory = ({ IDL }) => {
     'save' : IDL.Func([PostSaveModel], [SaveResult], []),
     'saveComment' : IDL.Func([SaveCommentModel], [Result], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_4], []),
-    'simulatePremiumArticle' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'storeAllSEO' : IDL.Func([], [Result_3], []),
     'storeHandlesAndPrincipals' : IDL.Func(
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],

@@ -24,6 +24,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Option "mo:base/Option";
 import Float "mo:base/Float";
 import Blob "mo:base/Blob";
+import Time "mo:base/Time";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../shared/env";
@@ -129,8 +130,8 @@ actor class PostBucket() = this {
   stable var categoryEntries : [(Text, Text)] = [];
   stable var wordCountsEntries : [(Text, Nat)] = [];
   stable var isPremiumEntries : [(Text, Bool)] = [];
+  stable var nftCanisterIdEntries : [(Text, Text)] = [];
   stable var tagNamesEntries : [(Text, [Text])] = [];
-  stable var nftCanisterIds : [(Text, Text)] = [];
   stable var testEntries : [(Text, Text)] = [];
   stable var rejectedByModclubPostIdsEntries : [(Text, Text)] = [];
 
@@ -192,6 +193,7 @@ actor class PostBucket() = this {
   var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), initCapacity, Text.equal, Text.hash);
   var wordCountsHashmap = HashMap.fromIter<Text, Nat>(wordCountsEntries.vals(), initCapacity, Text.equal, Text.hash);
   var isPremiumHashMap = HashMap.fromIter<Text, Bool>(isPremiumEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var nftCanisterIdHashMap = HashMap.fromIter<Text, Text>(nftCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   var tagNamesHashMap = HashMap.fromIter<Text, [Text]>(tagNamesEntries.vals(), initCapacity, Text.equal, Text.hash);
   var rejectedByModclubPostIdsHashmap = HashMap.fromIter<Text, Text>(rejectedByModclubPostIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
 
@@ -244,9 +246,6 @@ actor class PostBucket() = this {
   //key: applaudId, value: date
   var applaudIdToDateHashMap = HashMap.fromIter<Text, Int>(applaudIdToDateEntries.vals(), initCapacity, Text.equal, Text.hash);
 
-  //key: pub-handle, value: nft canister id
-  var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIds.vals(), initCapacity, Text.equal, Text.hash);
-
   //SNS
   public type Validate = {
     #Ok : Text;
@@ -276,7 +275,6 @@ actor class PostBucket() = this {
     } catch (e) {
       return false;
     };
-
   };
 
   public shared ({ caller }) func initializeBucketCanister(adminsInitial : [Text], nuanceCanistersInitial : [Text], cgUsersInitial : [Text], nftCanistersInitial : [(Text, Text)], initPostCoreCanisterId : Text, initFrontendCanisterId : Text, initPostIndexCanisterId : Text, initUserCanisterId : Text) : async Result.Result<Text, Text> {
@@ -290,9 +288,6 @@ actor class PostBucket() = this {
       if (List.size(admins) == 0) {
         cgusers := List.fromArray(cgUsersInitial);
         nuanceCanisters := List.push(initPostCoreCanisterId, List.fromArray(nuanceCanistersInitial));
-        for (nftCanisterEntry in nftCanistersInitial.vals()) {
-          nftCanisterIdsHashmap.put(nftCanisterEntry.0, nftCanisterEntry.1);
-        };
         return #ok(Principal.toText(Principal.fromActor(this)));
       };
       return #err("Already initialized.");
@@ -597,16 +592,6 @@ actor class PostBucket() = this {
         lowercaseHandleReverseHashMap.put(U.lowerCase(newHandle), principalId);
         accountIdsToHandleHashMap.put(U.principalToAID(principalId), newHandle);
 
-        //check if there's any nft canister id linked to existing handle
-        //if there's, update the handle
-        switch (nftCanisterIdsHashmap.get(existingHandle)) {
-          case (?nftCanisterId) {
-            nftCanisterIdsHashmap.put(newHandle, nftCanisterId);
-            nftCanisterIdsHashmap.delete(existingHandle);
-          };
-          case (null) {};
-        };
-
         //check all the posts of the user
         //update the creator fields if the user is creator of the post
         switch (userPostsHashMap.get(principalId)) {
@@ -728,7 +713,8 @@ actor class PostBucket() = this {
       creator = U.safeGet(creatorHashMap, postId, "");
       isPublication = U.safeGet(isPublicationHashMap, postId, false);
       category = U.safeGet(categoryHashMap, postId, "");
-      isPremium = U.safeGet(isPremiumHashMap, postId, false);
+      isPremium = nftCanisterIdHashMap.get(postId) != null;
+      nftCanisterId = nftCanisterIdHashMap.get(postId);
       wordCount = Nat.toText(U.safeGet(wordCountsHashmap, postId, 0));
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
     };
@@ -772,7 +758,8 @@ actor class PostBucket() = this {
       creator = U.safeGet(creatorHashMap, postId, "");
       isPublication = U.safeGet(isPublicationHashMap, postId, false);
       category = U.safeGet(categoryHashMap, postId, "");
-      isPremium = U.safeGet(isPremiumHashMap, postId, false);
+      isPremium = nftCanisterIdHashMap.get(postId) != null;
+      nftCanisterId = nftCanisterIdHashMap.get(postId);
       wordCount = Nat.toText(U.safeGet(wordCountsHashmap, postId, 0));
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
     };
@@ -826,7 +813,6 @@ actor class PostBucket() = this {
     isDraftHashMap.put(postId, isDraft);
     modifiedHashMap.put(postId, now);
     isPublicationHashMap.put(postId, isPublication);
-    isPremiumHashMap.put(postId, isPremium);
     if (isNew) {
       createdHashMap.put(postId, now);
       creatorHashMap.put(postId, creatorHandle);
@@ -886,6 +872,7 @@ actor class PostBucket() = this {
         isPublication = post.isPublication;
         category = post.category;
         isPremium = post.isPremium;
+        nftCanisterId = post.nftCanisterId;
         wordCount = post.wordCount;
         bucketCanisterId = Principal.toText(Principal.fromActor(this));
       };
@@ -934,169 +921,49 @@ actor class PostBucket() = this {
 
     var post = buildPost(postId);
 
-    if (post.isPremium) {
-      post := {
-        postId = post.postId;
-        handle = post.handle;
-        url = post.url;
-        title = post.title;
-        subtitle = post.subtitle;
-        headerImage = post.headerImage;
-        content = "";
-        isDraft = post.isDraft;
-        created = post.created;
-        modified = post.modified;
-        publishedDate = post.publishedDate;
-        creator = post.creator;
-        isPublication = post.isPublication;
-        category = post.category;
-        isPremium = post.isPremium;
-        wordCount = post.wordCount;
-        bucketCanisterId = Principal.toText(Principal.fromActor(this));
-      };
-      #ok(post);
-    } else {
-      #ok(post);
-    };
-
-  };
-
-  //checks whether the caller owns the NFT, if the caller owns, returns the post with the content
-  public shared ({ caller }) func getPremiumArticle(postId : Text) : async Result.Result<PostBucketType, Text> {
-    Debug.print("PostBucket->GetPremiumArticle: " # postId);
-
-    //validate input
-    if (not U.isTextLengthValid(postId, 20)) {
-      return #err("Invalid postId");
-    };
-
-    //only the author can retrieve own drafts
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
-    if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    if (rejectedByModClub(postId)) {
-      return #err(RejectedByModerators);
-    };
-
-    if (principalIdHashMap.get(postId) == null) {
-      return #err(ArticleNotFound);
-    };
-
-    var post = buildPost(postId);
-
-    if (isAnonymous(caller) and post.isPremium) {
-      post := {
-        postId = post.postId;
-        handle = post.handle;
-        url = post.url;
-        title = post.title;
-        subtitle = post.subtitle;
-        headerImage = post.headerImage;
-        content = "";
-        isDraft = post.isDraft;
-        created = post.created;
-        modified = post.modified;
-        publishedDate = post.publishedDate;
-        creator = post.creator;
-        isPublication = post.isPublication;
-        category = post.category;
-        isPremium = post.isPremium;
-        wordCount = post.wordCount;
-        bucketCanisterId = Principal.toText(Principal.fromActor(this));
-      };
-      return #ok(post);
-    };
-
-    if (post.isPremium) {
-      let nftCanisterId = U.safeGet(nftCanisterIdsHashmap, post.handle, "");
-      if (nftCanisterId == "") {
-        return #err("Canister id of the NFT canister not found!");
-      };
-      let nftCanisterActor = actor (nftCanisterId) : actor {
-        getUserAllowedPostIds : (caller : Text) -> async [Text];
-      };
-      let userAllowedPostIds = await nftCanisterActor.getUserAllowedPostIds(Principal.toText(caller));
-      if (U.arrayContains(userAllowedPostIds, postId)) {
-        return #ok(post);
-      } else {
-        return #err(Unauthorized);
-      };
-    } else {
-      return #ok(post);
-    };
-
-  };
-  //editors can see the draft publication posts by calling this method
-  public shared ({ caller }) func getPostWithPublicationControl(postId : Text) : async Result.Result<PostBucketType, Text> {
-    Debug.print("PostBucket->getPostWithPublicationControl: " # postId);
-
-    //validate input
-    if (not U.isTextLengthValid(postId, 20)) {
-      return #err("Invalid postId");
-    };
-
-    //only the author can retrieve own drafts
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
-    if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller)) {
-
-      let authorPrincipalId = U.safeGet(principalIdHashMap, postId, "");
-      if (Text.notEqual(authorPrincipalId, "") and U.safeGet(isPublicationHashMap, postId, false)) {
-        let userPrincipalId = Principal.toText(caller);
-        let canisterId = authorPrincipalId;
-        let publicationHandle = U.safeGet(handleHashMap, canisterId, "");
-
-        var callerHandle = U.safeGet(handleHashMap, userPrincipalId, "");
-
-        if (Text.equal(callerHandle, "")) {
-          let UserCanister = CanisterDeclarations.getUserCanister();
-          var user : ?User = await UserCanister.getUserInternal(userPrincipalId);
-          switch (user) {
-            case (?user) {
-              callerHandle := user.handle;
-            };
-            case (null) {
-              return #err(Unauthorized);
-            };
+    switch(post.nftCanisterId) {
+      case(?nftCanisterId) {
+        //premium post
+        //check whether the caller ownd any nft in the canister
+        let extCanister = CanisterDeclarations.getExtCanister(nftCanisterId);
+        switch(await extCanister.tokens_ext(U.fromPrincipal(caller, null))) {
+          case(#ok(value)) {
+            //owns a token
+            //return the full post
+            return #ok(post)
           };
-        };
-
-        let publisherActor = actor (canisterId) : actor {
-          getPublicationQuery : (handle : Text) -> async Result.Result<Publication, Text>;
-        };
-
-        let publicationReturn = await publisherActor.getPublicationQuery(publicationHandle);
-
-        switch (publicationReturn) {
-          case (#ok(pub)) {
-            if (not U.arrayContains(pub.editors, U.lowerCase(callerHandle))) {
-              return #err(Unauthorized);
-            } else if (rejectedByModClub(postId)) {
-              return #err(RejectedByModerators);
-            } else {
-              return #ok(buildPost(postId));
+          case(#err(error)) {
+            //doesn't own any token in the canister
+            post := {
+              postId = post.postId;
+              handle = post.handle;
+              url = post.url;
+              title = post.title;
+              subtitle = post.subtitle;
+              headerImage = post.headerImage;
+              content = "";
+              isDraft = post.isDraft;
+              created = post.created;
+              modified = post.modified;
+              publishedDate = post.publishedDate;
+              creator = post.creator;
+              isPublication = post.isPublication;
+              category = post.category;
+              isPremium = post.isPremium;
+              nftCanisterId = post.nftCanisterId;
+              wordCount = post.wordCount;
+              bucketCanisterId = Principal.toText(Principal.fromActor(this));
             };
-
-          };
-          case (#err(error)) {
-            return #err(Unauthorized);
+            #ok(post);
           };
         };
       };
-      return #err(Unauthorized);
+      case(null) {
+        #ok(post);
+      };
     };
-
-    if (rejectedByModClub(postId)) {
-      return #err(RejectedByModerators);
-    };
-
-    if (principalIdHashMap.get(postId) == null) {
-      return #err(ArticleNotFound);
-    };
-
-    #ok(buildPost(postId));
   };
+
   //returns the post list items of given postIds
   public shared query func getList(postIds : [Text]) : async [PostBucketType] {
     Debug.print("PostBucket->getList: size=" # Nat.toText(postIds.size()));
@@ -1285,6 +1152,8 @@ actor class PostBucket() = this {
       wordCount = postBucketType.wordCount;
     });
   };
+
+
   //a private method that makes a draft post a publication post
   private func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) : async () {
     var publicationPrincipalId = U.safeGet(handleReverseHashMap, publicationHandle, "");
@@ -1334,10 +1203,12 @@ actor class PostBucket() = this {
     };
   };
 
+
   //save method can only be called from PostCore canister. Users will call the save method in PostCore and it'll do the rest.
   //Reject all the other callers if they're not admin or a nuance canister.
   //indexing, postVersion management and modclub verification will also be handled by PostCore canister.
   public shared (msg) func save(postModel : PostSaveModel) : async SaveResult {
+    Debug.print("PostBucket save input: " # debug_show(postModel));
     if (isAnonymous(msg.caller)) {
       return #err("Anonymous user cannot run this method");
     };
@@ -1382,12 +1253,12 @@ actor class PostBucket() = this {
       postId := postIdTrimmed;
     };
 
-    var isPremium : Bool = if (U.safeGet(isPremiumHashMap, postId, false)) {
+    var isPremiumAlready : Bool = if (U.safeGet(isPremiumHashMap, postId, false)) {
       true;
-    } else { false };
+    } else {false};
 
-    //if it's premium and not a new article, give an error if it's not a category change
-    if (not isNew and isPremium and not U.safeGet(isDraftHashMap, postId, true)) {
+    //if it's already a premium post and not a new article, give an error if it's not a category change
+    if (not isNew and isPremiumAlready and not U.safeGet(isDraftHashMap, postId, true)) {
       let category = U.safeGet(categoryHashMap, postId, "");
       if (postModel.category != category) {
         //assume that it's just a category change
@@ -1435,6 +1306,56 @@ actor class PostBucket() = this {
       };
     };
 
+    //if premium post, call NftFactory canister to create new EXT NFT canister and map the canister id to the post id.
+    switch(postModel.premium) {
+      case(?premiumData) {
+        let writerAddress = U.fromText(postModel.creator, null);
+        let initData : CanisterDeclarations.InitNftCanisterData = {
+          admins = [
+            Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER),
+            Principal.fromText(ENV.NFT_FACTORY_CANISTER_ID),
+            Principal.fromText(ENV.POST_CORE_CANISTER_ID),
+            Principal.fromActor(this)
+          ];
+          collectionName = postModel.title;
+          initialMintingAddresses = [writerAddress];
+          marketplaceOpen = Time.now();
+          metadata = #nonfungible({
+            asset = "nuance-article-" # postId;
+            thumbnail = "nuance-article-" # postId;
+            name = "nuance-article-" # postId;
+            metadata = null;
+          });
+          royalty = [
+            (ENV.SNS_GOVERNANCE_IC_ACCOUNT, 10_000),
+            (writerAddress, 5_000)
+          ];
+          thumbnail = premiumData.thumbnail;
+          maxSupply = premiumData.maxSupply;
+          icpPrice = premiumData.icpPrice;
+          postId = postId;
+          writerPrincipal = Principal.fromText(postModel.creator);
+        };
+        let nftFactoryCanister = CanisterDeclarations.getNftFactoryCanister();
+        switch(await nftFactoryCanister.createNftCanister(initData)) {
+          case(#ok(canisterId)) {
+            //put the canister id value to the hashmap
+            nftCanisterIdHashMap.put(postId, canisterId);
+            isPremiumHashMap.put(postId, true);
+          };
+          case(#err(error)) {
+            //nftFactory returned an error
+            //return the same error
+            return #err(error);
+          };
+        };
+      };
+      case(null) {
+        //not a premium post
+        //nothing to do
+      };
+    };
+
     addOrUpdatePost(
       isNew,
       postId,
@@ -1448,7 +1369,7 @@ actor class PostBucket() = this {
       postModel.creator,
       isPublication,
       postModel.category,
-      isPremium,
+      false,
     );
 
     // add this postId to the user's posts if not already added
@@ -1810,157 +1731,6 @@ actor class PostBucket() = this {
     };
 
     #ok(Nat.toText(count));
-  };
-
-  //#region NFT
-
-  public shared ({ caller }) func makePostPremium(postId : Text) : async Bool {
-    if (isAnonymous(caller)) {
-      return false;
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return false;
-    };
-
-    //validate input
-    if (not U.isTextLengthValid(postId, 20)) {
-      return false;
-    };
-
-    if (not isAuthor(caller, postId) or not isNuanceCanister(caller)) {
-      return false;
-    };
-    if (not U.safeGet(isPremiumHashMap, postId, true)) {
-      isPremiumHashMap.put(postId, true);
-      publishedDateHashMap.put(postId, U.epochTime());
-      return true;
-    };
-
-    return false;
-
-  };
-
-  public shared ({ caller }) func simulatePremiumArticle(postId : Text, isPremium : Bool) : async () {
-    if (isAnonymous(caller)) {
-      return ();
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return;
-    };
-
-    if (isAdmin(caller)) {
-      isPremiumHashMap.put(postId, isPremium);
-    };
-  };
-
-  public shared query ({ caller }) func getMetadata(postId : Text, totalSupply : Nat) : async Result.Result<Metadata, Text> {
-    if (not U.isTextLengthValid(postId, 20)) {
-      return #err("Invalid postId");
-    };
-    if (not U.isNatSizeValid(totalSupply, 1000000000)) {
-      return #err("Invalid totalSupply");
-    };
-
-    let principalId = U.safeGet(principalIdHashMap, postId, "");
-    if (principalId == "") {
-      return #err(ArticleNotFound);
-    };
-
-    let post = buildPost(postId);
-
-    if (post.isDraft and not isAuthor(caller, postId) and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    var metadataValuesBuffer = Buffer.Buffer<MetadataValue>(0);
-
-    let postIdMetadataValue : MetadataValue = ("Post id", #text(post.postId));
-    let headerImageMetadataValue : MetadataValue = ("Header image", #text(post.headerImage));
-    let titleMetadataValue : MetadataValue = ("Title", #text(post.title));
-    let introMetadataValue : MetadataValue = ("Intro", #text(post.subtitle));
-    let writerMetadataValue : MetadataValue = if (post.isPublication) {
-      ("Writer", #text(post.creator));
-    } else { ("Writer", #text(post.handle)) };
-    let handleMetadataValue : MetadataValue = ("Handle", #text(post.handle));
-    let totalSupplyMetadataValue : MetadataValue = ("Total supply", #text(Int.toText(totalSupply)));
-    let urlMetadataValue : MetadataValue = ("Url", #text(post.url));
-    let mintDateMetadataValue : MetadataValue = ("Date", #text(Int.toText(U.epochTime())));
-
-    metadataValuesBuffer.add(postIdMetadataValue);
-    metadataValuesBuffer.add(headerImageMetadataValue);
-    metadataValuesBuffer.add(titleMetadataValue);
-    metadataValuesBuffer.add(introMetadataValue);
-    metadataValuesBuffer.add(writerMetadataValue);
-    metadataValuesBuffer.add(handleMetadataValue);
-    metadataValuesBuffer.add(totalSupplyMetadataValue);
-    metadataValuesBuffer.add(urlMetadataValue);
-    metadataValuesBuffer.add(mintDateMetadataValue);
-
-    return #ok(
-      #nonfungible(
-        {
-          name = post.title;
-          asset = post.headerImage;
-          thumbnail = post.headerImage;
-          metadata = ? #data(Buffer.toArray(metadataValuesBuffer));
-        },
-
-      )
-    );
-  };
-
-  //NFT canister registration
-
-  //register nft canister id from publication canister
-  public shared ({ caller }) func registerNftCanisterIdAdminFunction(canisterId : Text, handle : Text) : async Result.Result<Text, Text> {
-    if (isAnonymous(caller)) {
-      return #err("Anonymous user cannot run this method");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    //validate input
-    let canisterIdToPrincipalType = Principal.fromText(canisterId);
-
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    nftCanisterIdsHashmap.put(handle, canisterId);
-    return #ok("success");
-  };
-
-  //when a new nft canister is created, PostCore canister registers the nft canister buy the publication handle to all the bucket canisters
-  public shared ({ caller }) func registerNftCanisterId(canisterId : Text, handle : Text) : async Result.Result<Text, Text> {
-    if (isAnonymous(caller)) {
-      return #err("Anonymous user cannot run this method");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    //validate input
-    let canisterIdToPrincipalType = Principal.fromText(canisterId);
-
-    if (not isNuanceCanister(caller) and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-    nftCanisterIdsHashmap.put(handle, canisterId);
-    return #ok(handle # " " # canisterId);
-  };
-
-  public shared query func getNftCanisters() : async [NftCanisterEntry] {
-    var existingCanistersList = List.nil<NftCanisterEntry>();
-
-    for (handle in nftCanisterIdsHashmap.keys()) {
-      let canister_id = U.safeGet(nftCanisterIdsHashmap, handle, "");
-      existingCanistersList := List.push<NftCanisterEntry>({ canisterId = canister_id; handle = handle }, existingCanistersList);
-    };
-    List.toArray(existingCanistersList);
   };
 
   //#region dump
@@ -3111,8 +2881,8 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     categoryEntries := Iter.toArray(categoryHashMap.entries());
     wordCountsEntries := Iter.toArray(wordCountsHashmap.entries());
     isPremiumEntries := Iter.toArray(isPremiumHashMap.entries());
+    nftCanisterIdEntries := Iter.toArray(nftCanisterIdHashMap.entries());
     tagNamesEntries := Iter.toArray(tagNamesHashMap.entries());
-    nftCanisterIds := Iter.toArray(nftCanisterIdsHashmap.entries());
     accountIdsToHandleEntries := Iter.toArray(accountIdsToHandleHashMap.entries());
     rejectedByModclubPostIdsEntries := Iter.toArray(rejectedByModclubPostIdsHashmap.entries());
     postIdToCommentIdsEntries := Iter.toArray(postIdToCommentIdsHashMap.entries());
@@ -3169,8 +2939,8 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     categoryEntries := [];
     wordCountsEntries := [];
     isPremiumEntries := [];
+    nftCanisterIdEntries := [];
     tagNamesEntries := [];
-    nftCanisterIds := [];
     accountIdsToHandleEntries := [];
     rejectedByModclubPostIdsEntries := [];
     isStoreSEOcalled := false;

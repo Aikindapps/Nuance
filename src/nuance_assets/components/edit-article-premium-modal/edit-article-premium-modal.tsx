@@ -20,9 +20,13 @@ import PremiumArticleThumbnail from '../../UI/premium-article-thumbnail/premium-
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import { Tooltip } from 'react-tooltip';
 export const EditArticlePremiumModal = (props: {
-  refreshPost: (post: PostType) => Promise<void>;
+  refreshPost: () => Promise<void>;
   post: PostType;
-  onSave: (isDraft: boolean) => Promise<PostType | undefined>;
+  onSave: (
+    maxSupply: bigint,
+    price: bigint,
+    thumbnail: string
+  ) => Promise<void>;
   numberOfEditors: number;
 }) => {
   const modalContext = useContext(ModalContext);
@@ -39,11 +43,6 @@ export const EditArticlePremiumModal = (props: {
 
   const [loading, setLoading] = useState(false);
 
-  //postStore
-  const { createNftFromPremiumArticle } = usePostStore((state) => ({
-    createNftFromPremiumArticle: state.createNftFromPremiumArticle,
-  }));
-
   useEffect(() => {
     if (modalContext?.modalType === 'Premium article') {
       loadHeaderImage();
@@ -59,38 +58,17 @@ export const EditArticlePremiumModal = (props: {
         inputAmount > props.numberOfEditors + 1
       );
     } catch (error) {
-      return false
+      return false;
     }
-    
   };
-  console.log(keyPrice)
   const onPremiumPublish = async () => {
     setLoading(true);
     if (validateNft()) {
       //modalContext?.closeModal();
       //save the post as draft first
-      let saveReturn = await props.onSave(true);
-      console.log('saveReturn: ', saveReturn)
-      console.log(saveReturn);
-      if (saveReturn) {
-        //save as draft is successful
-        let pubHandle = saveReturn.handle;
-        let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
-        let createNftReturn = await createNftFromPremiumArticle(
-          saveReturn,
-          BigInt(inputAmount),
-          salePrice,
-          pubHandle,
-          headerImageUsedInNft
-        );
-        console.log('createNftREturn: ', createNftReturn)
-
-        await props.refreshPost({
-          ...saveReturn,
-          isDraft: false,
-          isPremium: true,
-        });
-      }
+      let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
+      let saveReturn = await props.onSave(BigInt(inputAmount), salePrice, '');
+      await props.refreshPost();
     }
     setLoading(false);
     modalContext?.closeModal();
@@ -164,7 +142,10 @@ export const EditArticlePremiumModal = (props: {
         }
         className='close-modal-icon'
       />
-      <img className='nuance-logo-and-nft-icon' src={images.NUANCE_LOGO_AND_NFT_ICON}/>
+      <img
+        className='nuance-logo-and-nft-icon'
+        src={images.NUANCE_LOGO_AND_NFT_ICON}
+      />
       <p
         style={
           darkTheme
@@ -293,7 +274,12 @@ export const EditArticlePremiumModal = (props: {
             setTermsAccepted(!termsAccepted);
           }}
         >
-          <input className='terms-checkbox' type='checkbox' checked={termsAccepted} onChange={() => {}} />
+          <input
+            className='terms-checkbox'
+            type='checkbox'
+            checked={termsAccepted}
+            onChange={() => {}}
+          />
           <p
             className='terms-text'
             style={darkTheme ? { color: colors.darkModePrimaryTextColor } : {}}

@@ -2,41 +2,47 @@ import React, { useContext, useEffect, useState } from 'react';
 import Button from '../../UI/Button/Button';
 import { colors, icons, images } from '../../shared/constants';
 import { number, string } from 'prop-types';
-import { PostType, PremiumArticleSaleInformation } from '../../types/types';
+import {
+  PostType,
+  PremiumArticleSaleInformation,
+  UserWallet,
+} from '../../types/types';
 import './_premium-article-info.scss';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
 import { usePostStore } from '../../store/postStore';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usePublisherStore } from '../../store/publisherStore';
 import { useAuthStore } from '../../store/authStore';
-import {Context as ModalContext} from '../../contextes/ModalContext'
+import { Context as ModalContext } from '../../contextes/ModalContext';
 import { toast, toastError, ToastType } from '../../services/toastService';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { useUserStore } from '../../store';
+import { tokenIdentifier } from '../../shared/ext-utils';
+import { FaRegCopy } from 'react-icons/fa';
 
 type PremiumArticleInfoProps = {
-  availableCount: string;
-  totalSupply: string;
-  salePrice: string;
-  loading: boolean;
   post: PostType | undefined;
-  saleInfo: PremiumArticleSaleInformation | undefined;
-  user: string | undefined;
+  refreshPost: () => Promise<void>;
 };
 export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
   props
 ): JSX.Element => {
-  const [modalPage, setModalPage] = useState('locked');
-  const [checkboxError, setCheckBoxError] = useState(false);
   const [userAccepted, setUserAccepted] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [userBalance, setUserBalance] = useState(BigInt(0));
+  const [openingBuyScreen, setOpeningBuyScreen] = useState(false);
+  const [userBalance, setUserBalance] = useState(0);
+  const [userWallet, setUserWallet] = useState<UserWallet | undefined>(
+    undefined
+  );
+
+  const [marketplacePurchaseLoading, setMarketplacePurchaseLoading] =
+    useState(false);
+
   const navigate = useNavigate();
   const darkTheme = useTheme();
 
   const context = useContext(Context);
-  const modalContext = useContext(ModalContext)
+  const modalContext = useContext(ModalContext);
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -50,40 +56,18 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
       : colors.primaryTextColor,
   };
 
-  const getUserBalance = async () => {
+  const getUserWalletAndBalance = async () => {
     let userBalance = await getMyBalance();
-    await getUserWallet();
-    if (userBalance) {
-      setUserBalance(userBalance);
+    let userWallet = await getUserWallet();
+    if (userBalance !== undefined && userWallet.principal.length !== 0) {
+      return { userBalance, userWallet };
     }
-    setLoading(false);
   };
 
-  const { getPremiumArticleInfo } = usePublisherStore((state) => ({
-    getPremiumArticleInfo: state.getPremiumArticleInfo,
-  }));
-
-  const { getUserWallet, userWallet } = useAuthStore((state) => ({
+  const { getUserWallet, isLoggedIn } = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
-    userWallet: state.userWallet,
+    isLoggedIn: state.isLoggedIn,
   }));
-
-  const validateCheckBox = () => {
-    if (checkboxError) {
-      if (userAccepted) {
-        setCheckBoxError(false);
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      if (!userAccepted) {
-        setCheckBoxError(true);
-        return false;
-      }
-      return true;
-    }
-  };
 
   const { lockToken, transferIcp, settleToken, getOwnedNfts, getMyBalance } =
     usePostStore((state) => ({
@@ -97,618 +81,476 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
     user: state.user,
   }));
 
-  useEffect(() => {
-    getUserBalance();
-  }, []);
-  useEffect(() => {
-    getUserBalance();
-  }, [user]);
+  if (!props.post || !props.post.premiumArticleSaleInfo) {
+    return <div />;
+  }
+
+  type PremiumArticleModalPageType =
+    | 'locked'
+    | 'buy'
+    | 'unsufficient'
+    | 'congrats'
+    | 'sold out';
+  const [modalPage, setModalPage] = useState<PremiumArticleModalPageType>(
+    props.post.premiumArticleSaleInfo.totalSupply >
+      props.post.premiumArticleSaleInfo.currentSupply
+      ? 'locked'
+      : 'sold out'
+  );
+  const handleOpenBuyScreen = async () => {
+    setOpeningBuyScreen(true);
+    let walletAndBalance = await getUserWalletAndBalance();
+    if (walletAndBalance) {
+      setUserBalance(Number(walletAndBalance.userBalance));
+      setUserWallet(walletAndBalance.userWallet);
+      setModalPage('buy');
+      setUserAccepted(false);
+    }
+    setOpeningBuyScreen(false);
+  };
 
   const handleMarketplacePurchase = async () => {
-    if (props.saleInfo) {
-      let price = BigInt(props.saleInfo.cheapestPrice);
-      setLoading(true);
-      //control user balance
-      if (userBalance <= price) {
-        setModalPage('unsufficient');
-        setLoading(false);
-      } else {
-        console.log('lock token: ' + userWallet?.accountId);
-        let sellerAccountReturn = await lockToken(
-          props.saleInfo.cheapestTokenIdentifier,
-          price,
-          props.saleInfo.nftCanisterId,
-          userWallet?.accountId
+    setMarketplacePurchaseLoading(true);
+    let articleSaleInfo = props.post?.premiumArticleSaleInfo;
+    if (articleSaleInfo && userWallet) {
+      let lockResponse = await lockToken(
+        tokenIdentifier(
+          articleSaleInfo.nftCanisterId,
+          articleSaleInfo.tokenIndex
+        ),
+        BigInt(articleSaleInfo.price_e8s),
+        articleSaleInfo.nftCanisterId,
+        userWallet.accountId
+      );
+      if (lockResponse) {
+        //lock successful
+        //transfer the ICPs
+        let transferResponse = await transferIcp(
+          BigInt(articleSaleInfo.price_e8s),
+          lockResponse
         );
-        console.log(sellerAccountReturn);
-        if (sellerAccountReturn.err) {
-          switch (sellerAccountReturn.err) {
-            case 'Unsufficient balance':
-              setModalPage('unsufficient');
-              setLoading(false);
-              break;
-            case 'login':
-              setLoading(false);
-              navigate('/register');
-              break;
-            default:
-              if (props.post) {
-                await getPremiumArticleInfo(
-                  props.post?.postId,
-                  props.post?.handle
-                );
-              }
-              toastError(sellerAccountReturn.err);
-              setLoading(false);
-              break;
-          }
-        } else if (sellerAccountReturn.sellerAccountId) {
-          let transferReturn = await transferIcp(
-            BigInt(props.saleInfo.cheapestPrice),
-            sellerAccountReturn.sellerAccountId
+        if ('Ok' in transferResponse) {
+          let settleResponse = await settleToken(
+            tokenIdentifier(
+              articleSaleInfo.nftCanisterId,
+              articleSaleInfo.tokenIndex
+            ),
+            articleSaleInfo.nftCanisterId
           );
-
-          if ('Ok' in transferReturn && props.post) {
-            let settleResult = await settleToken(
-              props.saleInfo.cheapestTokenIdentifier,
-              props.saleInfo.nftCanisterId,
-              props.post?.handle
-            );
-            switch (settleResult) {
-              case 'success':
-                await getOwnedNfts();
-
-                setLoading(false);
-                setModalPage('congratulations');
-                break;
-              case 'error':
-                if (props.post) {
-                  await getPremiumArticleInfo(
-                    props.post?.postId,
-                    props.post?.handle
-                  );
-                }
-                setLoading(false);
-                break;
-            }
-          } else {
-            setLoading(false);
-            toastError('Unable to transfer the ICP');
+          if (settleResponse) {
+            setModalPage('congrats');
           }
+        } else {
+          toastError(transferResponse.Err);
         }
       }
     }
+    setMarketplacePurchaseLoading(false);
   };
-
-  if (loading || props.loading) {
-    return (
-      <div
-        className='nft-modal'
-        style={{
-          background: darkOptionsAndColors.background,
-          color: darkOptionsAndColors.color,
-        }}
-      >
-        <div className='nft-modal-content'>
-          <img
-            className='nuance-nft-logo'
-            src={
-              darkTheme
-                ? images.loaders.NUANCE_LOADER_DARK
-                : images.loaders.NUANCE_LOADER
-            }
-            style={{ position: 'absolute', top: '10px' }}
-          />
-        </div>
-      </div>
-    );
-  }
-  if (props.availableCount === '0') {
-    return (
-      <div className='nft-modal'>
-        <div
-          className='nft-modal-content'
-          style={{
-            background: darkOptionsAndColors.background,
-            color: darkOptionsAndColors.color,
-          }}
-        >
-          <img
-            className='nuance-nft-logo'
-            src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
-            style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
-          />
-          <div className='text-wrapper'>
-            <div
-              className='nft-modal-text'
-              style={{
-                background: darkOptionsAndColors.background,
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {`There is no NFT keys available for this article.`}
-            </div>
-          </div>
-          <div className='text-wrapper'>
-            <span
-              className='nft-modal-text-2'
-              style={{
-                background: darkOptionsAndColors.background,
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {`Sorry this NFT is sold out - it might be available on the secondary market on toniq in ${props.post?.handle} collection.`}
-            </span>
-          </div>
-          <div className='text-wrapper'>
-            <span onClick={()=>{
-              window.open(
-                `https://toniq.io/marketplace/nuance-` +
-                  props.post?.handle.toLowerCase(),
-                '_blank'
-              );
-            }} className='how-it-works'>
-              {'\n>See the collection in toniq'}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  if (modalPage === 'locked') {
-    return (
-      <div className='nft-modal'>
-        <div
-          className='nft-modal-content'
-          style={{
-            background: darkOptionsAndColors.background,
-            color: darkOptionsAndColors.color,
-          }}
-        >
-          <img
-            className='nuance-nft-logo'
-            src={images.NUANCE_LOGO_NFT}
-            style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
-          />
-          <div className='text-wrapper'>
-            <div
-              className='nft-modal-text'
-              style={{
-                background: darkOptionsAndColors.background,
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              This article is locked.
-            </div>
-            <div
-              className='nft-modal-text'
-              style={{
-                background: darkOptionsAndColors.background,
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {`There are ${props.availableCount} of ${props.totalSupply} NFT keys available.`}
-            </div>
-          </div>
-          <div className='text-wrapper'>
-            <span
-              className='nft-modal-text-2'
-              style={{
-                background: darkOptionsAndColors.background,
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {`This article can only be read when you own an NFT key. Use your wallet to purchase this key for `}
-            </span>
-            <span
-              style={{ fontWeight: 'bold', color: darkOptionsAndColors.color }}
-            >{`${
-              //parseFloat(premiumSalePrice) / 100000000
-              props.salePrice
-            } ICP.\n`}</span>
-          </div>
-          <div className='button-flex'>
-            <span onClick={(()=>{
-              window.open(
-                'https://wiki.nuance.xyz/nuance/how-do-premium-articles-work/article-nft-revenue-split',
-                '_blank'
-              );
-            })} className='how-it-works'>
-              {'\n> How does NFT access work?'}
-            </span>
-            <Button
-              disabled={false}
-              type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-              style={{ width: '170px', marginBottom: '20px' }}
-              onClick={() => {
-                if (props.user) {
-                  setModalPage('buy');
-                  setUserAccepted(false);
-                } else {
-                  modalContext?.openModal('Login')
-                }
-              }}
-            >
-              Buy the NFT key
-            </Button>{' '}
-          </div>
-        </div>
-      </div>
-    );
-  } else if (modalPage === 'buy') {
-    return (
-      <div className='nft-modal'>
-        <div
-          className='nft-modal-content'
-          style={{
-            background: darkOptionsAndColors.background,
-            color: darkOptionsAndColors.color,
-          }}
-        >
-          <img
-            className='nuance-nft-logo'
-            src={images.NUANCE_LOGO_NFT}
-            style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
-          />
-          <Button
-            disabled={false}
-            type='button'
-            styleType='secondary-NFT'
-            style={{
-              width: '120px',
-              marginLeft: '10px',
-              top: '20px',
-              right: '20px',
-              position: 'absolute',
-            }}
-            onClick={() => {
-              setModalPage('locked');
-            }}
-          >
-            Cancel
-          </Button>
-
-          <div className='text-wrapper'>
-            <div
-              className='nft-modal-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              You are buying:
-            </div>
-          </div>
-          <div className='text-wrapper-sale-info'>
-            <span
-              className='nft-sale-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {`1 NFT access key (out of ${props.totalSupply}) to the article:`}
-            </span>
-          </div>
-          <div className='text-wrapper-sale-info'>
-            <span
-              className='nft-sale-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >{`"${props.post?.title}"`}</span>
-          </div>
-          <div className='text-wrapper-sale-info'>
-            <span
-              className='nft-sale-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >{`by @`}</span>
-            <span
-              className='nft-sale-text'
-              style={{ fontWeight: 'bold', color: darkOptionsAndColors.color }}
-            >
-              {`${
-                props.post?.isPublication
-                  ? props.post?.creator
-                  : props.post?.handle
-              }`}
-            </span>
-          </div>
-          <div className='total-cost-flex'>
-            <div
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              Total Cost
-            </div>
-            <div
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {props.salePrice + ' ICP'}
-            </div>
-          </div>
-          <div className='horizontal-divider'></div>
-          <div
-            className='NFT-terms-and-conditions'
-            style={{
-              color: darkOptionsAndColors.color,
-            }}
-          >
-            <input
-              className='NFT-terms-and-conditions-checkbox'
-              type='checkbox'
-              id='terms'
-              name='terms'
-              value='terms'
-              onChange={() => {
-                setUserAccepted(!userAccepted);
-              }}
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
+  switch (modalPage) {
+    case 'locked':
+      return (
+        <div style={darkOptionsAndColors} className='buy-nft-modal'>
+          <div className='buy-nft-modal-content'>
+            <img
+              className='buy-nft-modal-logo'
+              src={images.NUANCE_LOGO_NFT}
+              style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
             />
-            <p
-              className='NFT-terms-and-conditions-text'
-              style={{
-                color: darkOptionsAndColors.color,
+            <div className='buy-nft-modal-article-info-wrapper'>
+              <div
+                className='buy-nft-modal-article-info-title'
+                style={{ marginBottom: '0' }}
+              >
+                This article is locked.
+              </div>
+              <div className='buy-nft-modal-article-info-title'>
+                {`There are ${
+                  props.post.premiumArticleSaleInfo.totalSupply -
+                  props.post.premiumArticleSaleInfo.currentSupply
+                } of ${
+                  props.post.premiumArticleSaleInfo.totalSupply
+                } NFT keys available.`}
+              </div>
+              <div className='buy-nft-modal-article-info-centered'>
+                This article can only be read when you own an NFT key. Use your
+                Nuance wallet to purchase this key for{' '}
+                <span style={{ fontWeight: 'bold' }}>
+                  {props.post.premiumArticleSaleInfo.priceReadable} ICP
+                </span>{' '}
+              </div>
+            </div>
+            <div
+              onClick={() => {
+                window.open(
+                  'https://wiki.nuance.xyz/nuance/how-do-premium-articles-work/article-nft-revenue-split',
+                  '_blank'
+                );
               }}
+              className='buy-nft-modal-how-it-works'
             >
-              I accept the{' '}
-              <span
+              {'> How does NFT access work?'}
+            </div>
+            <div className='buy-nft-modal-buttons-wrapper'>
+              <Button
+                loading={openingBuyScreen}
+                type='button'
+                styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
                 style={{
-                  textDecoration: 'underline',
-                  color: darkOptionsAndColors.color,
+                  width: '120px',
                 }}
                 onClick={() => {
-                  window.open(
-                    'https://wiki.nuance.xyz/nuance/terms-and-conditions',
-                    '_blank'
-                  );
+                  if (isLoggedIn) {
+                    handleOpenBuyScreen();
+                  } else {
+                    modalContext?.openModal('Login');
+                  }
                 }}
               >
-                terms and conditions
-              </span>
-              <div style={{ position: 'relative', top: '0px' }}>
-                {<RequiredFieldMessage hasError={checkboxError} />}
-              </div>
-            </p>
+                Buy now
+              </Button>
+            </div>
           </div>
-          <div className='buttons-flex'>
+        </div>
+      );
+    case 'buy':
+      return (
+        <div style={darkOptionsAndColors} className='buy-nft-modal'>
+          <div className='buy-nft-modal-content'>
             <Button
-              disabled={false}
               type='button'
-              styleType='secondary-NFT'
-              style={{ width: '120px', marginLeft: '5px', marginRight: '5px' }}
+              styleType='cancel'
               onClick={() => {
-                navigate('/my-profile/wallet');
-              }}
-            >
-              My Wallet
-            </Button>{' '}
-            <Button
-              disabled={false}
-              type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-              style={{ width: '120px', marginLeft: '5px', marginRight: '5px' }}
-              onClick={() => {
-                if (validateCheckBox()) {
-                  console.log('buy logic');
-                  handleMarketplacePurchase();
+                if (!marketplacePurchaseLoading) {
+                  setModalPage('locked');
                 }
-              }}
-            >
-              Buy now
-            </Button>{' '}
-          </div>
-        </div>
-      </div>
-    );
-  } else if (modalPage === 'congratulations') {
-    return (
-      <div className='nft-modal'>
-        <div
-          className='nft-modal-content'
-          style={{
-            background: darkOptionsAndColors.background,
-            color: darkOptionsAndColors.color,
-          }}
-        >
-          <img
-            className='nuance-nft-logo'
-            src={images.NUANCE_LOGO_NFT_PURCHASED}
-            style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
-          />
-          <div className='text-wrapper'>
-            <div
-              className='nft-modal-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              Congratulations!
-            </div>
-          </div>
-          <div className='text-wrapper-congratulations'>
-            <span
-              className='nft-congratulations-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >
-              {`You now have NFT access key #${
-                props.saleInfo &&
-                parseInt(props.saleInfo?.cheapesTokenAccesKeyIndex) + 1
-              } (out of ${props.saleInfo?.totalSupply}) to:`}
-            </span>
-          </div>
-          <div className='text-wrapper-congratulations'>
-            <span
-              className='nft-congratulations-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >{`"${props.post?.title}"`}</span>
-          </div>
-          <div className='text-wrapper-congratulations'>
-            <span
-              className='nft-congratulations-text'
-              style={{
-                color: darkOptionsAndColors.color,
-              }}
-            >{`by @`}</span>
-            <span
-              className='nft-congratulations-text'
-              style={{ fontWeight: 'bold', color: darkOptionsAndColors.color }}
-            >
-              {`${
-                props.post?.isPublication
-                  ? props.post?.creator
-                  : props.post?.handle
-              }`}
-            </span>
-          </div>
-          <div className='buttons-flex'>
-            <Button
-              disabled={false}
-              type='button'
-              styleType='secondary-NFT'
-              style={{ width: '120px', marginLeft: '5px', marginRight: '5px' }}
-              onClick={() => {
-                navigate('/my-profile/wallet');
-              }}
-            >
-              My Wallet
-            </Button>{' '}
-            <Button
-              disabled={false}
-              type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-              style={{ width: '120px', marginLeft: '5px', marginRight: '5px' }}
-              onClick={() => {
-                window.location.reload();
-              }}
-            >
-              Read article
-            </Button>{' '}
-          </div>
-        </div>
-      </div>
-    );
-  } else if (modalPage === 'unsufficient') {
-    return (
-      <div className='nft-modal'>
-        <div
-          className='nft-modal-content'
-          style={{
-            background: darkOptionsAndColors.background,
-            color: darkOptionsAndColors.color,
-          }}
-        >
-          <img
-            className='nuance-nft-logo'
-            src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
-          />
-          <div className='text-wrapper-unsufficient-balance'>
-            <div
-              className='nft-modal-text'
-              style={{ color: darkOptionsAndColors.color }}
-            >
-              Sorry, you do not have enough ICP in your wallet!
-            </div>
-          </div>
-          <div className='icp-balance-flex'>
-            <div className='required'>
-              <div style={{ color: darkOptionsAndColors.color }}>Required:</div>
-              <div style={{ color: darkOptionsAndColors.color }}>
-                {props.salePrice + '  ICP'}
-              </div>
-            </div>
-            <div className='in-wallet'>
-              <div style={{ color: darkOptionsAndColors.color }}>
-                In your wallet:
-              </div>
-              <div style={{ color: darkOptionsAndColors.color }}>
-                {Number((userBalance * BigInt(100)) / BigInt(100000000)) / 100 +
-                  '  ICP'}
-              </div>
-            </div>
-          </div>
-          <div className='text-wrapper-unsufficient-balance'>
-            <span
-              className='nft-modal-text-2'
-              style={{ color: darkOptionsAndColors.color }}
-            >
-              {`Please transfer more ICP tokens to your wallet and try again. Copy your principal or address to send ICP to your wallet.`}
-            </span>
-          </div>
-          <div className='address-flex'>
-            <div className='address'>
-              <div className='address-header'>YOUR PRINCIPAL ID</div>
-              <div className='address-container'>
-                <img
-                  className='copy-icon'
-                  src={icons.COPY_ICON}
-                  onClick={() => {
-                    if (userWallet) {
-                      navigator.clipboard.writeText(userWallet?.principal);
-                      toast('Copied to clipboard.', ToastType.Success);
-                    }
-                  }}
-                  style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
-                />
-                <div>{userWallet?.principal.slice(0, 25) + '...'}</div>
-              </div>
-            </div>
-            <div className='address'>
-              <div className='address-header'>YOUR ADDRESS</div>
-              <div className='address-container'>
-                <img
-                  className='copy-icon'
-                  src={icons.COPY_ICON}
-                  onClick={() => {
-                    if (userWallet) {
-                      navigator.clipboard.writeText(userWallet?.accountId);
-                      toast('Copied to clipboard.', ToastType.Success);
-                    }
-                  }}
-                  style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
-                />
-                <div>{userWallet?.accountId.slice(0, 25) + '...'}</div>
-              </div>
-            </div>
-          </div>
-          <div className='buttons-flex'>
-            <Button
-              disabled={false}
-              type='button'
-              styleType='secondary-NFT'
-              style={{ width: '120px', marginLeft: '5px', marginRight: '5px' }}
-              onClick={() => {
-                setUserAccepted(false);
-                setModalPage('locked');
               }}
             >
               Cancel
-            </Button>{' '}
-            <Button
-              disabled={false}
-              type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-              style={{ width: '120px', marginLeft: '5px', marginRight: '5px' }}
-              onClick={() => {
-                navigate('/my-profile/wallet');
-              }}
-            >
-              My Wallet
-            </Button>{' '}
+            </Button>
+            <img
+              className='buy-nft-modal-logo'
+              src={images.NUANCE_LOGO_NFT}
+              style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
+            />
+            <div className='buy-nft-modal-article-info-wrapper'>
+              <div className='buy-nft-modal-article-info-title'>
+                You are buying
+              </div>
+              <div className='buy-nft-modal-article-info'>{`1 NFT access key (out of ${props.post?.premiumArticleSaleInfo?.totalSupply}) to the article:`}</div>
+              <div className='buy-nft-modal-article-info'>{`"${props.post?.title}"`}</div>
+              <div className='buy-nft-modal-article-info'>
+                by @
+                <span className='buy-nft-modal-article-info-bold'>
+                  {props.post?.creator}
+                </span>
+              </div>
+              <div className='buy-nft-modal-cost-wrapper'>
+                <div>Total Cost</div>
+                <div>
+                  {props.post?.premiumArticleSaleInfo?.priceReadable + ' ICP'}
+                </div>
+              </div>
+              <div className='buy-nft-modal-conditions-wrapper'>
+                <input
+                  className='buy-nft-modal-checkbox'
+                  type='checkbox'
+                  id='terms'
+                  name='terms'
+                  value='terms'
+                  onChange={() => {
+                    setUserAccepted(!userAccepted);
+                  }}
+                  style={{
+                    color: darkOptionsAndColors.color,
+                  }}
+                />
+                <div>
+                  I accept the{' '}
+                  <span className='buy-nft-modal-conditions-underline'>
+                    terms and conditions
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className='buy-nft-modal-buttons-wrapper'>
+              <Button
+                type='button'
+                styleType='secondary-NFT'
+                style={{
+                  width: '120px',
+                }}
+                onClick={() => {
+                  if (!marketplacePurchaseLoading) {
+                    navigate('/my-profile/wallet');
+                  }
+                }}
+              >
+                My Wallet
+              </Button>
+              <Button
+                loading={marketplacePurchaseLoading}
+                type='button'
+                styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+                style={
+                  userAccepted
+                    ? {
+                        width: '120px',
+                      }
+                    : {
+                        width: '120px',
+                        background: '#B2B2B2',
+                        cursor: 'not-allowed',
+                      }
+                }
+                onClick={() => {
+                  if (
+                    userBalance >
+                      (props.post?.premiumArticleSaleInfo
+                        ?.price_e8s as number) &&
+                    !marketplacePurchaseLoading
+                  ) {
+                    handleMarketplacePurchase();
+                  } else if (!marketplacePurchaseLoading) {
+                    //unsufficient funds
+                    setModalPage('unsufficient');
+                  }
+                }}
+              >
+                Buy now
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    case 'unsufficient':
+      return (
+        <div style={darkOptionsAndColors} className='buy-nft-modal'>
+          <div className='buy-nft-modal-content'>
+            <img
+              className='buy-nft-modal-logo'
+              src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
+              style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
+            />
+            <div className='buy-nft-modal-article-info-wrapper'>
+              <div
+                style={{ color: '#AE0000' }}
+                className='buy-nft-modal-article-info-title'
+              >
+                Sorry, you do not have enough ICP in your wallet!
+              </div>
+              <div className='buy-nft-modal-article-required-balance-wrapper'>
+                <div className='value-wrapper'>
+                  <div className='buy-nft-modal-article-info'>Required:</div>
+                  <div className='buy-nft-modal-article-info'>
+                    {props.post.premiumArticleSaleInfo.priceReadable + ' ICP'}
+                  </div>
+                </div>
+                <div className='value-wrapper'>
+                  <div className='buy-nft-modal-article-info'>
+                    In your wallet:
+                  </div>
+                  <div className='buy-nft-modal-article-info'>
+                    {(userBalance / Math.pow(10, 8)).toFixed(4) + ' ICP'}
+                  </div>
+                </div>
+              </div>
+              <div className='buy-nft-modal-article-info-centered'>
+                Please transfer more ICP tokens to your wallet and try again.
+                Copy your address to send ICP to your wallet.
+              </div>
+            </div>
+            <div
+              onClick={() => {
+                if (userWallet) {
+                  navigator.clipboard.writeText(userWallet.accountId);
+                  toast('Copied to clipboard.', ToastType.Success);
+                }
+              }}
+              style={
+                darkTheme
+                  ? {
+                      borderColor: colors.darkerBorderColor,
+                    }
+                  : {}
+              }
+              className='address-value-wrapper'
+            >
+              <FaRegCopy
+                className='copy-icon'
+                style={
+                  darkTheme
+                    ? {
+                        color: colors.darkModePrimaryTextColor,
+                      }
+                    : {}
+                }
+              />
+              <p
+                className='address-value'
+                style={
+                  darkTheme
+                    ? {
+                        color: colors.darkSecondaryTextColor,
+                      }
+                    : {}
+                }
+              >
+                {userWallet?.accountId}
+              </p>
+            </div>
+            <div className='buy-nft-modal-buttons-wrapper'>
+              <Button
+                type='button'
+                styleType='secondary-NFT'
+                style={{
+                  width: '120px',
+                }}
+                onClick={() => {
+                  setModalPage('locked');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                loading={marketplacePurchaseLoading}
+                type='button'
+                styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+                style={{ width: '120px' }}
+                onClick={async () => {
+                  navigate('/my-profile/wallet');
+                }}
+              >
+                My Wallet
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    case 'congrats':
+      return (
+        <div style={darkOptionsAndColors} className='buy-nft-modal'>
+          <div className='buy-nft-modal-content'>
+            <img
+              className='buy-nft-modal-logo'
+              src={images.NUANCE_LOGO_NFT}
+              style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
+            />
+            <div className='buy-nft-modal-article-info-wrapper'>
+              <div className='buy-nft-modal-article-info-title'>
+                Congratulations!
+              </div>
+              <div
+                style={{ alignSelf: 'center' }}
+                className='buy-nft-modal-article-info'
+              >{`You now have NFT access key #${props.post.premiumArticleSaleInfo.tokenIndex} (out of ${props.post.premiumArticleSaleInfo.totalSupply}) to:`}</div>
+              <div
+                style={{ alignSelf: 'center' }}
+                className='buy-nft-modal-article-info'
+              >{`"${props.post?.title}"`}</div>
+              <div
+                style={{ alignSelf: 'center' }}
+                className='buy-nft-modal-article-info'
+              >
+                by @
+                <span className='buy-nft-modal-article-info-bold'>
+                  {props.post?.creator}
+                </span>
+              </div>
+            </div>
+            <div className='buy-nft-modal-buttons-wrapper'>
+              <Button
+                type='button'
+                styleType='secondary-NFT'
+                style={{
+                  width: '120px',
+                }}
+                onClick={() => {
+                  if (!marketplacePurchaseLoading) {
+                    navigate('/my-profile/wallet');
+                  }
+                }}
+              >
+                My Wallet
+              </Button>
+              <Button
+                loading={marketplacePurchaseLoading}
+                type='button'
+                styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+                style={{ width: '120px' }}
+                onClick={async () => {
+                  await props.refreshPost();
+                }}
+              >
+                Read Article
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    case 'sold out':
+      return (
+        <div style={darkOptionsAndColors} className='buy-nft-modal'>
+          <div className='buy-nft-modal-content'>
+            <img
+              className='buy-nft-modal-logo'
+              src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
+              style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
+            />
+            <div className='buy-nft-modal-article-info-wrapper'>
+              <div
+                style={{ color: '#AE0000' }}
+                className='buy-nft-modal-article-info-title'
+              >
+                Sorry, this article is sold out!
+              </div>
+              <div
+                style={{ alignSelf: 'center' }}
+                className='buy-nft-modal-article-info-centered'
+              >
+                It might be available on the secondary market on toniq{' '}
+                <span
+                  className='buy-nft-modal-how-it-works'
+                  onClick={() => {
+                    window.open(
+                      'https://toniq.io/marketplace/nuance-' +
+                        props.post?.postId,
+                      '_blank'
+                    );
+                  }}
+                >
+                  here
+                </span>
+                .
+              </div>
+            </div>
+            <div className='buy-nft-modal-buttons-wrapper'>
+              <Button
+                type='button'
+                styleType='secondary-NFT'
+                style={{
+                  width: '120px',
+                }}
+                onClick={() => {
+                  setModalPage('locked');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                loading={marketplacePurchaseLoading}
+                type='button'
+                styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+                style={{ width: '120px' }}
+                onClick={async () => {
+                  navigate('/my-profile/wallet');
+                }}
+              >
+                My Wallet
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
   }
-  return <div />;
 };

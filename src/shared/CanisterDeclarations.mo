@@ -1,5 +1,6 @@
 import Result "mo:base/Result";
 import List "mo:base/List";
+import Time "mo:base/Time";
 import ENV "env";
 module{
 
@@ -75,7 +76,7 @@ module{
     //****************POSTCORE CANISTER*****************
     public type PostSaveModel = {
         postId: Text;
-        handle: Text;
+        handle: Text; //useless for the regular posts, it's used to determine the publication handle
         title: Text;
         subtitle: Text;
         headerImage: Text;
@@ -85,7 +86,12 @@ module{
         creator: Text; //publication author
         isPublication: Bool;
         category: Text;
-        isPremium: Bool;
+        premium : ?{
+          //we  can extend this object with new fields to have more customization
+          thumbnail: Text;
+          maxSupply: Nat;
+          icpPrice: Nat;
+        };
     };
     public type Post = {
         postId: Text;
@@ -97,6 +103,7 @@ module{
         content: Text;
         isDraft: Bool;
         isPremium: Bool;
+        nftCanisterId: ?Text;
 
         // fields stored as Int, but returned to UI as Text
         created: Text; //determined at draft creation
@@ -159,6 +166,7 @@ module{
         incrementApplauds : (postId: Text, applauds: Nat) -> async ();
         isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         isEditorPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
+        getBucketCanisters : query () -> async [(Text, Text)];
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {
@@ -253,10 +261,24 @@ module{
     };
 
     //**********************NFTFACTORY CANISTER******************
+    public type InitNftCanisterData = {
+        royalty: [(Text, Nat64)];
+        collectionName: Text;
+        marketplaceOpen: Time.Time;
+        admins: [Principal];
+        thumbnail: Text;
+        metadata: Metadata;
+        initialMintingAddresses: [Text];
+        maxSupply: Nat;
+        icpPrice: Nat;
+        writerPrincipal: Principal;
+        postId: Text;
+    };
+
     public type NftFactoryCanisterInterface = actor{
         getWhitelistedPublishers : () -> async [(Text,Text)];
         whitelistPublication : (handle: Text, canisterId: Text) -> async Result.Result<(Text, Text), Text>;
-        createNftCanister : () -> async Result.Result<Text, Text>
+        createNftCanister : (initData: InitNftCanisterData) -> async Result.Result<Text, Text>;
     };
 
     public func getNftFactoryCanister() : NftFactoryCanisterInterface {
@@ -266,26 +288,28 @@ module{
 
     //**********************POSTBUCKET CANISTER****************
     public type PostBucketType = {
-        postId: Text;
-        handle: Text;
-        url: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        isPremium: Bool;
+        postId : Text;
+        handle : Text;
+        url : Text;
+        title : Text;
+        subtitle : Text;
+        headerImage : Text;
+        content : Text;
+        isDraft : Bool;
+        isPremium : Bool;
+        nftCanisterId: ?Text;
 
         // fields stored as Int, but returned to UI as Text
-        created: Text; //determined at draft creation
-        publishedDate: Text; //determined at publish
-        modified: Text; //determined at save
-        
+        created : Text; //determined at draft creation
+        publishedDate : Text; //determined at publish
+        modified : Text; //determined at save
+
         //publisher fields
-        creator: Text;
-        isPublication: Bool;
-        category: Text;
-        wordCount: Text;
+        creator : Text;
+        isPublication : Bool;
+        category : Text;
+        wordCount : Text;
+        bucketCanisterId : Text;
     };
 
     public type Metadata = {
@@ -331,6 +355,30 @@ module{
         receiver: Text; //Principal id of the receiver
     };
 
+    public type PostSaveModelBucket = {
+        postId : Text;
+        handle: Text; //useless for the regular posts, it's used to determine the publication handle
+        postOwnerPrincipalId: Text;
+        title : Text;
+        subtitle : Text;
+        headerImage : Text;
+        content : Text;
+        isDraft : Bool;
+        creator : Text; //publication author
+        isPublication : Bool;
+        category : Text;
+        premium : ?{
+        //we  can extend this object with new fields to have more customization
+            thumbnail: Text;
+            maxSupply: Nat;
+            icpPrice: Nat;
+        };
+        tagNames : [Text];
+        caller : Principal;
+    };
+
+    public type SaveResultBucket = Result.Result<PostBucketType, Text>;
+
     public type PostBucketCanisterInterface = actor {
         getPostsByPostIds : (postIds : [Text], includeDraft : Bool) -> async [PostBucketType];
         get : (postId : Text) -> async Result.Result<PostBucketType, Text>;
@@ -340,7 +388,20 @@ module{
         makePostPremium : (postId : Text) -> async Bool;
         getMetadata : (postId : Text, totalSupply : Nat) -> async Result.Result<Metadata, Text>;
         getAllSubmittedForReviews : () -> async Result.Result<[(Text, [Text])], Text>;
-        getAllApplauds : query () ->  async [Applaud]
+        getAllApplauds : query () ->  async [Applaud];
+        makeBucketCanisterNonActive : () -> async Result.Result<Bool, Text>;
+        registerCanister : (id : Text) -> async Result.Result<(), Text>;
+        getKinicList : query () -> async Result.Result<[Text], Text>;
+        isBucketCanisterActivePublic : query () -> async Bool;
+        rejectPostByModclub : (postId : Text) -> async ();
+        unRejectPostByModclub : (postId : Text) -> async ();
+        registerNftCanisterId : (canisterId : Text, handle : Text) -> async Result.Result<Text, Text>;
+        reindex : () -> async Result.Result<Text, Text>;
+        save : (postModel : PostSaveModelBucket) -> async SaveResultBucket;
+        getPostUrls : query () -> async Result.Result<Text, Text>;
+        updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
+        deleteUserPosts : (principalId : Text) -> async Result.Result<Nat, Text>;
+        delete : (postId : Text) -> async Result.Result<Nat, Text>
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {
@@ -513,4 +574,28 @@ module{
         let canister : ICRC1CanisterInterface = actor(canisterId);
         return canister;
     };
+
+    //_____________________EXT_CANISTER________________
+
+    public type TokenIndex = Nat32;
+    public type Listing = {
+        seller : Principal;
+        price : Nat64;
+        locked : ?Time;
+    };
+
+    public type CommonError = {
+        #InvalidToken: Text;
+        #Other : Text;
+    };
+
+    public type EXTCanisterInterface = actor {
+        tokens_ext : query (aid : Text) -> async Result.Result<[(TokenIndex, ?Listing, ?Blob)], CommonError>;
+    };
+    public func getExtCanister(canisterId: Text) : EXTCanisterInterface {
+        let canister : EXTCanisterInterface = actor(canisterId);
+        return canister;
+    };
+
+
 }

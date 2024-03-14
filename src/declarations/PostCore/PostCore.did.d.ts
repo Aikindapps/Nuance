@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export interface ContentResult {
   'status' : ContentStatus,
@@ -35,6 +36,7 @@ export interface Post {
   'publishedDate' : string,
   'claps' : string,
   'tags' : Array<PostTagModel>,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
   'category' : string,
   'handle' : string,
@@ -78,7 +80,9 @@ export interface PostSaveModel {
   'title' : string,
   'creator' : string,
   'content' : string,
-  'isPremium' : boolean,
+  'premium' : [] | [
+    { 'thumbnail' : string, 'icpPrice' : bigint, 'maxSupply' : bigint }
+  ],
   'isDraft' : boolean,
   'tagIds' : Array<string>,
   'category' : string,
@@ -176,6 +180,7 @@ export interface _SERVICE {
   'getActiveBucketCanisterId' : ActorMethod<[], Result_2>,
   'getAdmins' : ActorMethod<[], Result_7>,
   'getAllBuckets' : ActorMethod<[], Result_7>,
+  'getAllNftCanisters' : ActorMethod<[], Array<[string, string]>>,
   'getAllStatusCount' : ActorMethod<[], Result_2>,
   'getAllTags' : ActorMethod<[], Array<TagModel>>,
   'getBucketCanisterIdsOfGivenHandles' : ActorMethod<
@@ -248,6 +253,7 @@ export interface _SERVICE {
     Array<PostKeyProperties>
   >,
   'getTagsByUser' : ActorMethod<[string], Array<PostTag>>,
+  'getTotalAmountOfTipsReceived' : ActorMethod<[], bigint>,
   'getTotalArticleViews' : ActorMethod<[], bigint>,
   'getTotalClaps' : ActorMethod<[], bigint>,
   'getTotalPostCount' : ActorMethod<[], bigint>,
@@ -318,3 +324,5 @@ export interface _SERVICE {
   'verifyMigration' : ActorMethod<[], Result>,
   'viewPost' : ActorMethod<[string], undefined>,
 }
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

@@ -110,7 +110,13 @@ export const idlFactory = ({ IDL }) => {
     'title' : IDL.Text,
     'creator' : IDL.Text,
     'content' : IDL.Text,
-    'isPremium' : IDL.Bool,
+    'premium' : IDL.Opt(
+      IDL.Record({
+        'thumbnail' : IDL.Text,
+        'icpPrice' : IDL.Nat,
+        'maxSupply' : IDL.Nat,
+      })
+    ),
     'isDraft' : IDL.Bool,
     'tagIds' : IDL.Vec(IDL.Text),
     'category' : IDL.Text,
@@ -134,6 +140,7 @@ export const idlFactory = ({ IDL }) => {
     'publishedDate' : IDL.Text,
     'claps' : IDL.Text,
     'tags' : IDL.Vec(PostTagModel),
+    'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
     'category' : IDL.Text,
     'handle' : IDL.Text,
@@ -196,6 +203,11 @@ export const idlFactory = ({ IDL }) => {
     'getActiveBucketCanisterId' : IDL.Func([], [Result_2], []),
     'getAdmins' : IDL.Func([], [Result_7], ['query']),
     'getAllBuckets' : IDL.Func([], [Result_7], []),
+    'getAllNftCanisters' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+        ['query'],
+      ),
     'getAllStatusCount' : IDL.Func([], [Result_2], []),
     'getAllTags' : IDL.Func([], [IDL.Vec(TagModel)], ['query']),
     'getBucketCanisterIdsOfGivenHandles' : IDL.Func(
@@ -323,6 +335,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getTagsByUser' : IDL.Func([IDL.Text], [IDL.Vec(PostTag)], ['query']),
+    'getTotalAmountOfTipsReceived' : IDL.Func(
+        [],
+        [IDL.Nat],
+        ['composite_query'],
+      ),
     'getTotalArticleViews' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalClaps' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalPostCount' : IDL.Func([], [IDL.Nat], ['query']),
