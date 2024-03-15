@@ -1177,21 +1177,32 @@ actor PostCore {
     };
 
     //if isPremium field is true make sure it's a publication post, caller is an editor and post is not draft
-    if(postModel.premium != null){
-      if(not isPublication){
-        return #err(Unauthorized)
-      }
-      else{
-        //isPremium and publication post
-        //check if caller is an editor
-        let publicationCanisterId = U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
-        if(not isEditor(publicationCanisterId, caller)){
+    //also check if the max supply is enough to mint NFTs for all editors
+    switch(postModel.premium) {
+      case(?premiumInfo) {
+        if(not isPublication){
           return #err(Unauthorized)
         }
-        else if(postModel.isDraft){
-          return #err("Premium articles can not be draft.");
+        else{
+          //isPremium and publication post
+          //check if caller is an editor
+          let publicationCanisterId = U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
+          if(not isEditor(publicationCanisterId, caller)){
+            return #err(Unauthorized)
+          }
+          else if(postModel.isDraft){
+            return #err("Premium articles can not be draft.");
+          };
+
+          let numberOfEditors = U.safeGet(publicationEditorsHashmap, publicationCanisterId, []).size();
+          if(not (premiumInfo.maxSupply > numberOfEditors + 1)){
+            return #err("The number of NFTs are not enough for editors.")
+          };
         };
-      };
+        };
+        case(null) {
+          //nothing to check
+        };
     };
 
     // ensure the tags exist
@@ -1257,6 +1268,21 @@ actor PostCore {
       };
     };
     Debug.print("PostCore-> calling the bucket actor save method.");
+    //build the premium data passing to bucketActor
+    let premiumData = switch(postModel.premium) {
+      case(?data) {
+        let publicationCanisterId = U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
+        ?{
+          icpPrice = data.icpPrice;
+          maxSupply = data.maxSupply;
+          thumbnail = data.thumbnail;
+          editorPrincipals = U.safeGet(publicationEditorsHashmap, publicationCanisterId, []);
+        }
+      };
+      case(null) {
+        null
+      };
+    };
     let saveReturn = await bucketActor.save({
       caller = caller;
       handle = userHandle;
@@ -1266,7 +1292,7 @@ actor PostCore {
       creator = postModel.creator;
       headerImage = postModel.headerImage;
       isDraft = postModel.isDraft;
-      premium = postModel.premium;
+      premium = premiumData;
       isPublication = isPublication;
       postId = postModel.postId;
       subtitle = postModel.subtitle;

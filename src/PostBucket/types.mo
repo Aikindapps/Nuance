@@ -28,6 +28,7 @@ module {
       thumbnail: Text;
       maxSupply: Nat;
       icpPrice: Nat;
+      editorPrincipals: [Text]; //to populate the initalMintingAddresses field in NftFactory canister function
     };
     tagNames : [Text];
     caller : Principal;

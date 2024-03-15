@@ -13,10 +13,6 @@
     "Publisher": {
       "main": "src/Publisher/main.mo",
       "type": "motoko"
-    },
-    "ext_v2": {
-      "main": "src/ext_v2/v2.mo",
-      "type": "motoko"
     }
   },
   "defaults": {

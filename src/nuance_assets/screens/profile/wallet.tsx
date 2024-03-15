@@ -364,9 +364,13 @@ const Wallet = () => {
                 //check if the deposit/withdrawal is related to any applauding activity
                 //if it is, don't display it
                 let applauds: ApplaudListItem[] = [];
+                const nftActivities: PremiumPostActivityListItem[] = [];
                 for (const a of displayingActivities) {
                   if ('isSender' in a) {
                     applauds.push(a);
+                  }
+                  if ('tokenIndex' in a) {
+                    nftActivities.push(a);
                   }
                 }
                 if (modalContext) {
@@ -415,6 +419,17 @@ const Wallet = () => {
                     notIncludingSenders.push(applaud.bucketCanisterId);
                   }
                 }
+                for (const nftActivity of nftActivities) {
+                  notIncludingSenders = [
+                    ...notIncludingSenders,
+                    ...nftActivity.sellerAddresses,
+                  ];
+                  notIncludingReceivers = [
+                    ...notIncludingReceivers,
+                    ...nftActivity.sellerAddresses,
+                  ];
+                }
+
                 if (
                   notIncludingReceivers.includes(activity.receiver) ||
                   notIncludingSenders.includes(activity.sender)

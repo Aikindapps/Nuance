@@ -368,10 +368,11 @@ module{
         isPublication : Bool;
         category : Text;
         premium : ?{
-        //we  can extend this object with new fields to have more customization
+            //we  can extend this object with new fields to have more customization
             thumbnail: Text;
             maxSupply: Nat;
             icpPrice: Nat;
+            editorPrincipals: [Text]; //to populate the initalMintingAddresses field in NftFactory canister function
         };
         tagNames : [Text];
         caller : Principal;
@@ -591,6 +592,7 @@ module{
 
     public type EXTCanisterInterface = actor {
         tokens_ext : query (aid : Text) -> async Result.Result<[(TokenIndex, ?Listing, ?Blob)], CommonError>;
+        setConfigData : (initData: InitNftCanisterData) -> async Result.Result<(), Text>;
     };
     public func getExtCanister(canisterId: Text) : EXTCanisterInterface {
         let canister : EXTCanisterInterface = actor(canisterId);

@@ -918,7 +918,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     set({ getSavedPostError: undefined });
   },
 
-
   clerGetPublicationPostError: async () => {
     set({ getPublicationPostError: undefined });
   },
@@ -1757,43 +1756,52 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       );
 
       //build the result by merging the articles and the nft canister stats
-      return allOwnedPremiumArticles.map((article, index) => {
-        return {
-          postId: article.postId,
-          title: article.title,
-          url: article.url,
-          writer: article.creator || article.handle,
-          tokenIndex: Number(
-            allOwnedPremiumArticlesTransactions[index].currentSupply
-          ).toString(),
-          accessKeyIndex: Number(
-            allOwnedPremiumArticlesTransactions[index].currentSupply
-          ).toString(),
-          ownedByUser: false,
-          canisterId:
-            article.nftCanisterId && article.nftCanisterId?.length !== 0
-              ? article.nftCanisterId?.[0]
-              : '',
-          date: article.created,
-          totalSupply: Number(
-            allOwnedPremiumArticlesTransactions[index].maxSupply
-          ).toString(),
-          activity:
-            '+' +
-            (
-              Number(
-                (allOwnedPremiumArticlesTransactions[index].currentSupply -
-                  BigInt(1) -
-                  allOwnedPremiumArticlesTransactions[index].initialSupply) *
-                  allOwnedPremiumArticlesTransactions[index].icpPrice
-              ) / Math.pow(10, 8)
-            ).toString() +
-            ' ICP',
-          userAccountId,
-          sellerAddresses:
-            allOwnedPremiumArticlesTransactions[index].tokenSenderAccounts,
-        };
-      });
+      let resultBeforeFiltering = allOwnedPremiumArticles.map(
+        (article, index) => {
+          return {
+            postId: article.postId,
+            title: article.title,
+            url: article.url,
+            writer: article.creator || article.handle,
+            tokenIndex: Number(
+              allOwnedPremiumArticlesTransactions[index].currentSupply
+            ).toString(),
+            accessKeyIndex: Number(
+              allOwnedPremiumArticlesTransactions[index].currentSupply +
+                BigInt(1)
+            ).toString(),
+            ownedByUser: false,
+            canisterId:
+              article.nftCanisterId && article.nftCanisterId?.length !== 0
+                ? article.nftCanisterId?.[0]
+                : '',
+            date: article.created,
+            totalSupply: Number(
+              allOwnedPremiumArticlesTransactions[index].maxSupply
+            ).toString(),
+            activity:
+              '+' +
+              (
+                (Number(
+                  (allOwnedPremiumArticlesTransactions[index].currentSupply -
+                    BigInt(1) -
+                    allOwnedPremiumArticlesTransactions[index].initialSupply) *
+                    allOwnedPremiumArticlesTransactions[index].icpPrice
+                ) *
+                  0.89) /
+                Math.pow(10, 8)
+              ).toString() +
+              ' ICP',
+            userAccountId,
+            sellerAddresses:
+              allOwnedPremiumArticlesTransactions[index].tokenSenderAccounts,
+          };
+        }
+      );
+      //do not include the 0 sold articles
+      return resultBeforeFiltering.filter((activityElement)=>{
+        return activityElement.activity !== '+0 ICP'
+      })
     } catch (error) {
       return [];
     }
@@ -1825,7 +1833,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               url: '', //will be populated later
               writer: '', //will be populated later
               tokenIndex: owned_token[0].toString(),
-              accessKeyIndex: owned_token[0].toString(),
+              accessKeyIndex: (owned_token[0] + 1).toString(),
               ownedByUser: true,
               canisterId: allNftCanisters[index][1],
               date: '', //will be populated later

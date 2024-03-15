@@ -1310,6 +1310,13 @@ actor class PostBucket() = this {
     switch(postModel.premium) {
       case(?premiumData) {
         let writerAddress = U.fromText(postModel.creator, null);
+        var initialMintingAddresses = Buffer.Buffer<Text>(0);
+        initialMintingAddresses.add(writerAddress);
+        for(editorPrincipal in premiumData.editorPrincipals.vals()) {
+          if(editorPrincipal != postModel.creator){
+            initialMintingAddresses.add(U.fromText(editorPrincipal, null));
+          }
+        };
         let initData : CanisterDeclarations.InitNftCanisterData = {
           admins = [
             Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER),
@@ -1318,7 +1325,7 @@ actor class PostBucket() = this {
             Principal.fromActor(this)
           ];
           collectionName = postModel.title;
-          initialMintingAddresses = [writerAddress];
+          initialMintingAddresses = Buffer.toArray(initialMintingAddresses);
           marketplaceOpen = Time.now();
           metadata = #nonfungible({
             asset = "nuance-article-" # postId;
