@@ -1,13 +1,18 @@
 type Time = int;
-type Result_1 = 
+type Result_2 = 
  variant {
    err: text;
    ok: text;
  };
-type Result = 
+type Result_1 = 
  variant {
    err: text;
    ok: List;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
  };
 type MetadataValue = 
  record {
@@ -67,12 +72,13 @@ type InitNftCanisterData =
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
-  createNftCanister: (InitNftCanisterData) -> (Result_1);
-  getAdmins: () -> (Result) query;
+  createNftCanister: (InitNftCanisterData) -> (Result_2);
+  getAdmins: () -> (Result_1) query;
   getAllNftCanisterIds: () -> (vec record {
                                      text;
                                      text;
                                    }) query;
   getCanisterVersion: () -> (text) query;
   getPlatformOperators: () -> (List) query;
+  setExtCanisterConfigData: (text, InitNftCanisterData) -> (Result);
 }

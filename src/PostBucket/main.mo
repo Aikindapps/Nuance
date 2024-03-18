@@ -1390,6 +1390,195 @@ actor class PostBucket() = this {
     #ok(buildPost(postId));
   };
 
+  //premium articles migration functions
+  public shared query func getNotMigratedPremiumArticlePostIds() : async [Text] {
+    let resultBuffer = Buffer.Buffer<Text>(0);
+    for((premiumArticlePostId, isPremiumValue) in isPremiumHashMap.entries()){
+      if(isPremiumValue){
+       switch(nftCanisterIdHashMap.get(premiumArticlePostId)) {
+        case(?value) {
+          //already migrated or a new premium post
+          //nothing to do
+        };
+        case(null) {
+          //premium article but doesn't have any nft canister id associated
+          //not migrated yet
+          resultBuffer.add(premiumArticlePostId);
+        };
+       }; 
+      }
+    };
+    Buffer.toArray(resultBuffer)
+  };
+
+  public shared ({caller}) func migratePremiumArticleFromOldArch(postId: Text, price: ?Nat) : async Result.Result<Text, Text> {
+    if(not (isPlatformOperator(caller) or isAdmin(caller))){
+      return #err("Unauthorized.");
+    };
+    switch(isPremiumHashMap.get(postId)) {
+      case(?isPremiumValue) {
+        if(isPremiumValue){
+          //check if any nftCanisterId value exists for the given post
+          switch(nftCanisterIdHashMap.get(postId)) {
+            case(?cai) {
+              //already migrated
+              return #err("Already migrated.")
+            };
+            case(null) {
+              //not migrated yet
+              //migrate it
+              //get the publication canister id first
+              switch(principalIdHashMap.get(postId)) {
+                case(?publicationCanisterId) {
+                  //get the premium article information from the publication canister
+                  //the publication canisters shouldn't be upgraded before completing the migration of all premium articles
+                  type GetPremiumArticleInfoReturn = {
+                    totalSupply : Text;
+                    nftCanisterId : Text;
+                    postId : Text;
+                    tokenIndexStart : Text;
+                    sellerAccount : Text;
+                    writerHandle : Text;
+                  };
+                  type PublicationCanisterInterfaceOld = actor {
+                    getPremiumArticleInfo : query (postId : Text) -> async Result.Result<GetPremiumArticleInfoReturn, Text>;
+                  };
+                  let publicationCanister : PublicationCanisterInterfaceOld = actor(publicationCanisterId);
+                  switch(await publicationCanister.getPremiumArticleInfo(postId)) {
+                    case(#ok(premiumArticleInformation)) {
+                      let extCanister = CanisterDeclarations.getExtCanister(premiumArticleInformation.nftCanisterId);
+                      //set the thumbnail
+                      let thumbnailBlob = await extCanister.http_request_streaming_callback({
+                        content_encoding = "";
+                        index = 0;
+                        key = postId;
+                        sha256 = null;
+                      });
+                      let thumbnailText = switch(Text.decodeUtf8(thumbnailBlob.body)) {
+                        case(?value) {
+                          value;
+                        };
+                        case(null) {
+                          ""
+                        };
+                      };
+                      if(thumbnailText == ""){
+                        return #err("Thumbnail not found.")
+                      };
+                      //find the holders
+                      let registry = await extCanister.getRegistry();
+                      let initialMintingAddressesBuffer = Buffer.Buffer<Text>(0);
+                      let sellerAccount = premiumArticleInformation.sellerAccount;
+                      let tokenIndexStart = U.textToNat(premiumArticleInformation.tokenIndexStart);
+                      let tokenIndexEnd = tokenIndexStart + U.textToNat(premiumArticleInformation.totalSupply);
+                      for(registryEl in registry.vals()){
+                        let tokenIndex = Nat32.toNat(registryEl.0);
+                        if(tokenIndex >= tokenIndexStart and tokenIndex < tokenIndexEnd and registryEl.1 != sellerAccount){
+                          initialMintingAddressesBuffer.add(registryEl.1);
+                        };
+                      };
+                      //populate the initData
+                      //writer address & principal id
+                      let post = buildPost(postId);
+                      let writerHandle = post.creator;
+                      let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
+                      let writerAddress = U.fromText(writerPrincipalId, null);
+                      //find the selling price
+                      var icpPrice = 0;
+                      switch(await extCanister.tokens_ext(sellerAccount)) {
+                        case(#ok(ownedTokens)) {
+                          switch(ownedTokens[0].1) {
+                            case(?listingValue) {
+                              icpPrice := Nat64.toNat(listingValue.price);
+                            };
+                            case(null) {
+                              //not possible
+                              return #err("Not able to find the selling price from NFT canister. Please provide a selling price.");
+                            };
+                          };
+                        };
+                        case(#err(error)) {
+                          //not possible unless any article is sold out
+                          switch(price) {
+                            case(?givenPriceFromAnPlatformOperator) {
+                              icpPrice := givenPriceFromAnPlatformOperator;
+                            };
+                            case(null) {
+                              //article is sold out
+                              return #err("Article is sold out. Please provide a price in arguments")
+                            };
+                          };
+                        };
+                      };
+                      
+                      let initData : CanisterDeclarations.InitNftCanisterData = {
+                        admins = [
+                          Principal.fromText(ENV.SNS_GOVERNANCE_CANISTER),
+                          Principal.fromText(ENV.NFT_FACTORY_CANISTER_ID),
+                          Principal.fromText(ENV.POST_CORE_CANISTER_ID),
+                          Principal.fromActor(this)
+                        ];
+                        collectionName = post.title;
+                        initialMintingAddresses = Buffer.toArray(initialMintingAddressesBuffer);
+                        marketplaceOpen = Time.now();
+                        metadata = #nonfungible({
+                          asset = "nuance-article-" # postId;
+                          thumbnail = "nuance-article-" # postId;
+                          name = "nuance-article-" # postId;
+                          metadata = null;
+                        });
+                        royalty = [
+                          (ENV.SNS_GOVERNANCE_IC_ACCOUNT, 10_000),
+                          (writerAddress, 5_000)
+                        ];
+                        thumbnail = thumbnailText;
+                        maxSupply = U.textToNat(premiumArticleInformation.totalSupply);
+                        icpPrice = icpPrice;
+                        postId = postId;
+                        writerPrincipal = Principal.fromText(writerPrincipalId);
+                      };
+                      let nftFactoryCanister = CanisterDeclarations.getNftFactoryCanister();
+                      switch(await nftFactoryCanister.createNftCanister(initData)) {
+                        case(#ok(canisterId)) {
+                          //put the canister id value to the hashmap
+                          nftCanisterIdHashMap.put(postId, canisterId);
+                          isPremiumHashMap.put(postId, true);
+                          return #ok(canisterId);
+                        };
+                        case(#err(error)) {
+                          //nftFactory returned an error
+                          //return the same error
+                          return #err(error);
+                        };
+                      };
+                    };
+                    case(#err(error)) {
+                      //not possible
+                      return #err("Error from publication canister while calling getPremiumArticleInfo: " # error);
+                    };
+                  };
+                };
+                case(null) {
+                  //article doesn't exist
+                  //not possible to be here
+                  return #err("Article not found.")
+                };
+              };
+            };
+          };
+        }
+        else{
+          #err("Given post is not a premium article.")
+        }
+      };
+      case(null) {
+        //not a premium article
+        //return an error
+        #err("Given post is not a premium article.")
+      };
+    };
+  };
+
   //added the includeDraft method to allow users to get their draft articles by this method
   public shared query ({ caller }) func getUserPosts(handle : Text, includeDraft : Bool) : async [PostBucketType] {
     Debug.print("PostBucket->GetUserPosts: " # handle);

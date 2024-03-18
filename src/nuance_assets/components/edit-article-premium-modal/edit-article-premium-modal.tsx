@@ -64,10 +64,8 @@ export const EditArticlePremiumModal = (props: {
   const onPremiumPublish = async () => {
     setLoading(true);
     if (validateNft()) {
-      //modalContext?.closeModal();
-      //save the post as draft first
       let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
-      let saveReturn = await props.onSave(BigInt(inputAmount), salePrice, '');
+      await props.onSave(BigInt(inputAmount), salePrice, '');
       await props.refreshPost();
     }
     setLoading(false);

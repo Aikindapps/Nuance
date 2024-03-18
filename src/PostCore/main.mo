@@ -1389,6 +1389,42 @@ actor PostCore {
 
   };
 
+  //migration function for new nft canister architecture
+  public shared ({caller}) func migratePremiumArticleFromOldArch() : async Result.Result<PostKeyProperties, Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized)
+    };
+    //(postId, bucketCanisterId)
+    let allNotMigratedPostIds = Buffer.Buffer<(Text, Text)>(0);
+    for(bucketCanisterId in bucketCanisterIdsHashMap.keys()){
+      let bucketCanister = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+      let notMigratedPostIds = await bucketCanister.getNotMigratedPremiumArticlePostIds();
+      for(postId in notMigratedPostIds.vals()){
+        allNotMigratedPostIds.add((postId, bucketCanisterId));
+      }
+    };
+    if(allNotMigratedPostIds.size() == 0){
+      return #err("There is no remaining not migrated premium articles left. Congrats!");
+    };
+    //if here, there's still some posts to migrate
+    let migratingPostId = Buffer.toArray(allNotMigratedPostIds)[0].0;
+    let migratingPostBucketCanisterId = Buffer.toArray(allNotMigratedPostIds)[0].1;
+    let bucketCanister = CanisterDeclarations.getPostBucketCanister(migratingPostBucketCanisterId);
+    switch(await bucketCanister.migratePremiumArticleFromOldArch(migratingPostId, null)) {
+      case(#ok(nftCanisterId)) {
+        //successful migration
+        //put the canister id to postIdsToNftCanisterIdsHashMap
+        postIdsToNftCanisterIdsHashMap.put(migratingPostId, nftCanisterId);
+        return #ok(buildPostKeyProperties(migratingPostId));
+      };
+      case(#err(error)) {
+        //an error happened in bucket canister
+        //return the error
+        return #err(error);
+      };
+    };
+  };
+
   public shared ({ caller }) func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) : async () {
     if (isAnonymous(caller)) {
       return;

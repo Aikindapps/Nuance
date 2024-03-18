@@ -107,6 +107,7 @@ export interface PostBucket {
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMyApplauds' : ActorMethod<[], Array<Applaud>>,
+  'getNotMigratedPremiumArticlePostIds' : ActorMethod<[], Array<string>>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPost' : ActorMethod<[string], Result_6>,
   'getPostApplauds' : ActorMethod<[string], Array<Applaud>>,
@@ -145,6 +146,10 @@ export interface PostBucket {
   'isBucketCanisterActivePublic' : ActorMethod<[], boolean>,
   'makeBucketCanisterNonActive' : ActorMethod<[], Result_7>,
   'migratePostToPublication' : ActorMethod<[string, string, boolean], Result_1>,
+  'migratePremiumArticleFromOldArch' : ActorMethod<
+    [string, [] | [bigint]],
+    Result_2
+  >,
   'registerAdmin' : ActorMethod<[string], Result_3>,
   'registerCanister' : ActorMethod<[string], Result_3>,
   'registerCgUser' : ActorMethod<[string], Result_3>,
@@ -220,7 +225,12 @@ export interface PostSaveModel {
   'creator' : string,
   'content' : string,
   'premium' : [] | [
-    { 'thumbnail' : string, 'icpPrice' : bigint, 'maxSupply' : bigint }
+    {
+      'thumbnail' : string,
+      'icpPrice' : bigint,
+      'editorPrincipals' : Array<string>,
+      'maxSupply' : bigint,
+    }
   ],
   'isDraft' : boolean,
   'postOwnerPrincipalId' : string,

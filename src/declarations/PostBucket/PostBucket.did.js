@@ -122,6 +122,7 @@ export const idlFactory = ({ IDL }) => {
       IDL.Record({
         'thumbnail' : IDL.Text,
         'icpPrice' : IDL.Nat,
+        'editorPrincipals' : IDL.Vec(IDL.Text),
         'maxSupply' : IDL.Nat,
       })
     ),
@@ -206,6 +207,11 @@ export const idlFactory = ({ IDL }) => {
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMyApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
+    'getNotMigratedPremiumArticlePostIds' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPost' : IDL.Func([IDL.Text], [Result_6], ['query']),
     'getPostApplauds' : IDL.Func([IDL.Text], [IDL.Vec(Applaud)], ['query']),
@@ -261,6 +267,11 @@ export const idlFactory = ({ IDL }) => {
     'migratePostToPublication' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Bool],
         [Result_1],
+        [],
+      ),
+    'migratePremiumArticleFromOldArch' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Nat)],
+        [Result_2],
         [],
       ),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_3], []),

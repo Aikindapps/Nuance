@@ -402,7 +402,9 @@ module{
         getPostUrls : query () -> async Result.Result<Text, Text>;
         updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
         deleteUserPosts : (principalId : Text) -> async Result.Result<Nat, Text>;
-        delete : (postId : Text) -> async Result.Result<Nat, Text>
+        delete : (postId : Text) -> async Result.Result<Nat, Text>;
+        getNotMigratedPremiumArticlePostIds : query () -> async [Text];
+        migratePremiumArticleFromOldArch : query (postId: Text, price: ?Nat) -> async Result.Result<Text, Text>
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {
@@ -590,9 +592,23 @@ module{
         #Other : Text;
     };
 
+    public type HttpStreamingCallbackToken =  {
+        content_encoding: Text;
+        index: Nat;
+        key: Text;
+        sha256: ?Blob;
+    };
+
+    public type HttpStreamingCallbackResponse = {
+        body: Blob;
+        token: ?HttpStreamingCallbackToken;
+    };
+
     public type EXTCanisterInterface = actor {
         tokens_ext : query (aid : Text) -> async Result.Result<[(TokenIndex, ?Listing, ?Blob)], CommonError>;
         setConfigData : (initData: InitNftCanisterData) -> async Result.Result<(), Text>;
+        getRegistry : query () -> async [(TokenIndex, Text)];
+        http_request_streaming_callback : query (token : HttpStreamingCallbackToken) -> async HttpStreamingCallbackResponse;
     };
     public func getExtCanister(canisterId: Text) : EXTCanisterInterface {
         let canister : EXTCanisterInterface = actor(canisterId);

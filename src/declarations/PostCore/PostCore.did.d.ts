@@ -119,15 +119,15 @@ export type Result_3 = { 'ok' : bigint } |
   { 'err' : string };
 export type Result_4 = { 'ok' : Post } |
   { 'err' : string };
-export type Result_5 = {
+export type Result_5 = { 'ok' : PostKeyProperties } |
+  { 'err' : string };
+export type Result_6 = {
     'ok' : [Array<[string, Array<string>]>, Array<[string, Array<string>]>]
   } |
   { 'err' : string };
-export type Result_6 = { 'ok' : Uint8Array | number[] } |
+export type Result_7 = { 'ok' : Uint8Array | number[] } |
   { 'err' : string };
-export type Result_7 = { 'ok' : Array<string> } |
-  { 'err' : string };
-export type Result_8 = { 'ok' : PostKeyProperties } |
+export type Result_8 = { 'ok' : Array<string> } |
   { 'err' : string };
 export type Result_9 = { 'ok' : TagModel } |
   { 'err' : string };
@@ -162,14 +162,14 @@ export interface _SERVICE {
   'checkViewsLast24Hours' : ActorMethod<[], undefined>,
   'clapPost' : ActorMethod<[string], undefined>,
   'copyPublicationCanisters' : ActorMethod<[string], Result_10>,
-  'copyTrustedCanisters' : ActorMethod<[string], Result_7>,
+  'copyTrustedCanisters' : ActorMethod<[string], Result_8>,
   'createNewBucketCanister' : ActorMethod<[], Result_2>,
   'createTag' : ActorMethod<[string], Result_9>,
   'currentId' : ActorMethod<[], bigint>,
   'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'delete' : ActorMethod<[string], Result_3>,
-  'deletePostFromUserDebug' : ActorMethod<[string, string], Result_7>,
+  'deletePostFromUserDebug' : ActorMethod<[string, string], Result_8>,
   'deleteUserPosts' : ActorMethod<[string], Result_3>,
   'dumpIds' : ActorMethod<[], Result_1>,
   'dumpPosts' : ActorMethod<[], Result_1>,
@@ -178,8 +178,8 @@ export interface _SERVICE {
   'generateLatestPosts' : ActorMethod<[], undefined>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
   'getActiveBucketCanisterId' : ActorMethod<[], Result_2>,
-  'getAdmins' : ActorMethod<[], Result_7>,
-  'getAllBuckets' : ActorMethod<[], Result_7>,
+  'getAdmins' : ActorMethod<[], Result_8>,
+  'getAllBuckets' : ActorMethod<[], Result_8>,
   'getAllNftCanisters' : ActorMethod<[], Array<[string, string]>>,
   'getAllStatusCount' : ActorMethod<[], Result_2>,
   'getAllTags' : ActorMethod<[], Array<TagModel>>,
@@ -189,13 +189,13 @@ export interface _SERVICE {
   >,
   'getBucketCanisters' : ActorMethod<[], Array<[string, string]>>,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_7>,
+  'getCgUsers' : ActorMethod<[], Result_8>,
   'getFrontendCanisterId' : ActorMethod<[], Result_2>,
   'getHistoricalPublishedArticlesData' : ActorMethod<
     [],
     Array<[string, bigint]>
   >,
-  'getKinicList' : ActorMethod<[], Result_7>,
+  'getKinicList' : ActorMethod<[], Result_8>,
   'getLastWeekRejectedPostKeyProperties' : ActorMethod<
     [],
     Array<PostKeyProperties>
@@ -228,7 +228,7 @@ export interface _SERVICE {
   'getPopularThisMonth' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularThisWeek' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularToday' : ActorMethod<[number, number], GetPostsByFollowers>,
-  'getPostKeyProperties' : ActorMethod<[string], Result_8>,
+  'getPostKeyProperties' : ActorMethod<[string], Result_5>,
   'getPostUrls' : ActorMethod<[], Result_2>,
   'getPostViewsPerHourLast24Hours' : ActorMethod<
     [],
@@ -257,17 +257,17 @@ export interface _SERVICE {
   'getTotalArticleViews' : ActorMethod<[], bigint>,
   'getTotalClaps' : ActorMethod<[], bigint>,
   'getTotalPostCount' : ActorMethod<[], bigint>,
-  'getTrustedCanisters' : ActorMethod<[], Result_7>,
+  'getTrustedCanisters' : ActorMethod<[], Result_8>,
   'getUserDailyAllowedPostNumber' : ActorMethod<[], bigint>,
   'getUserPostCounts' : ActorMethod<[string], UserPostCounts>,
-  'getUserPostIds' : ActorMethod<[string], Result_7>,
+  'getUserPostIds' : ActorMethod<[string], Result_8>,
   'getUserPosts' : ActorMethod<[string], Array<PostKeyProperties>>,
   'getUsersPostCountsByHandles' : ActorMethod<
     [Array<string>],
     Array<UserPostCounts>
   >,
   'getViewsByRange' : ActorMethod<[RecallOptions], bigint>,
-  'getWasmChunks' : ActorMethod<[], Result_6>,
+  'getWasmChunks' : ActorMethod<[], Result_7>,
   'handleModclubMigration' : ActorMethod<[string], Result_2>,
   'idQuick' : ActorMethod<[], Principal>,
   'incrementApplauds' : ActorMethod<[string, bigint], undefined>,
@@ -281,9 +281,10 @@ export interface _SERVICE {
     [string, string, string, boolean],
     undefined
   >,
-  'migrateAllPublicationEditorsAndWriters' : ActorMethod<[], Result_5>,
+  'migrateAllPublicationEditorsAndWriters' : ActorMethod<[], Result_6>,
   'migrateAllSubmittedForReview' : ActorMethod<[], Result_3>,
   'migrateModclubInterface' : ActorMethod<[], Result_2>,
+  'migratePremiumArticleFromOldArch' : ActorMethod<[], Result_5>,
   'modClubCallback' : ActorMethod<[ContentResult], undefined>,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCanister' : ActorMethod<[string], Result_1>,

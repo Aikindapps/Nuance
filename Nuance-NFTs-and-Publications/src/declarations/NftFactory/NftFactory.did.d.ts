@@ -42,19 +42,25 @@ export type MetadataValue = [
     { 'nat8' : number } |
     { 'text' : string },
 ];
-export type Result = { 'ok' : List } |
+export type Result = { 'ok' : null } |
   { 'err' : string };
-export type Result_1 = { 'ok' : string } |
+export type Result_1 = { 'ok' : List } |
+  { 'err' : string };
+export type Result_2 = { 'ok' : string } |
   { 'err' : string };
 export type Time = bigint;
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
-  'createNftCanister' : ActorMethod<[InitNftCanisterData], Result_1>,
-  'getAdmins' : ActorMethod<[], Result>,
+  'createNftCanister' : ActorMethod<[InitNftCanisterData], Result_2>,
+  'getAdmins' : ActorMethod<[], Result_1>,
   'getAllNftCanisterIds' : ActorMethod<[], Array<[string, string]>>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getPlatformOperators' : ActorMethod<[], List>,
+  'setExtCanisterConfigData' : ActorMethod<
+    [string, InitNftCanisterData],
+    Result
+  >,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

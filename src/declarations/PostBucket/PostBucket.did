@@ -95,11 +95,14 @@ type PostSaveModel =
    isPublication: bool;
    postId: text;
    postOwnerPrincipalId: text;
-   premium: opt record {
-                  icpPrice: nat;
-                  maxSupply: nat;
-                  thumbnail: text;
-                };
+   premium:
+    opt
+     record {
+       editorPrincipals: vec text;
+       icpPrice: nat;
+       maxSupply: nat;
+       thumbnail: text;
+     };
    subtitle: text;
    tagNames: vec text;
    title: text;
@@ -181,6 +184,7 @@ type PostBucket =
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
    getMyApplauds: () -> (vec Applaud) query;
+   getNotMigratedPremiumArticlePostIds: () -> (vec text) query;
    getPlatformOperators: () -> (List) query;
    getPost: (text) -> (Result_6) query;
    getPostApplauds: (text) -> (vec Applaud) query;
@@ -206,6 +210,7 @@ type PostBucket =
    isBucketCanisterActivePublic: () -> (bool) query;
    makeBucketCanisterNonActive: () -> (Result_7);
    migratePostToPublication: (text, text, bool) -> (Result_1);
+   migratePremiumArticleFromOldArch: (text, opt nat) -> (Result_2);
    registerAdmin: (text) -> (Result_3);
    registerCanister: (text) -> (Result_3);
    registerCgUser: (text) -> (Result_3);
