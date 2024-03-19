@@ -15,7 +15,11 @@ jobs:
         run: npm install
 
       - name: Install dfx
-        uses: dfinity/setup-dfx@main
+        uses: |
+          dfinity/setup-dfx@main
+          dfxvm install 0.17.0
+          dfxvm default 0.17.0
+     
       - name: Confirm successful installation
         run: dfx --version
 
