@@ -1400,8 +1400,14 @@ actor class EXTNFT() = this {
         switch(md){
           case(#fungible _) HTTP_NOT_FOUND;
           case(#nonfungible nmd) {
-            if (nmd.asset == "") return HTTP_NOT_FOUND;
-            _ext_httpAsset(nmd.asset);
+            if (nmd.thumbnail == "") return HTTP_NOT_FOUND;
+            return {
+              status_code = 200;
+              headers = [("Content-Type", "image/svg+xml"), ("cache-control", "public, max-age=15552000")];
+              body = Text.encodeUtf8(thumbnail_svg);
+              streaming_strategy = null;
+              upgrade = false;
+            };
           };
         };
       };

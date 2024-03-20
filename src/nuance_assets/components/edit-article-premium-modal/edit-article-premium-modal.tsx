@@ -16,7 +16,7 @@ import { LuLoader2 } from 'react-icons/lu';
 import PremiumArticleThumbnail from '../../UI/premium-article-thumbnail/premium-article-thumbnail';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import { Tooltip } from 'react-tooltip';
-import { buildSvgForPremiumArticle } from 'src/nuance_assets/shared/utils';
+import { buildSvgForPremiumArticle } from '../../shared/utils';
 export const EditArticlePremiumModal = (props: {
   refreshPost: () => Promise<void>;
   post: PostType;
@@ -200,7 +200,7 @@ export const EditArticlePremiumModal = (props: {
                   props.numberOfEditors + 2
                 })`}
                 min={0}
-                max={7777}
+                max={100000}
                 step='1'
                 onChange={(e) => {
                   if (loading) {
@@ -246,7 +246,7 @@ export const EditArticlePremiumModal = (props: {
                 }
                 placeholder='Amount'
                 min={0}
-                max={100}
+                max={1000}
                 step='0.0001'
                 onChange={(e) => {
                   if (loading) {

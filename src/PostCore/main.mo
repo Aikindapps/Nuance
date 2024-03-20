@@ -1198,6 +1198,16 @@ actor PostCore {
           if(not (premiumInfo.maxSupply > numberOfEditors + 1)){
             return #err("The number of NFTs are not enough for editors.")
           };
+
+          //check the price
+          if(not (premiumInfo.icpPrice > 1000)){
+            return #err("Price is too low.");
+          };
+
+          //check the number of tokens
+          if(premiumInfo.maxSupply > 100_000){
+            return #err("Total supply is too much.")
+          };
         };
         };
         case(null) {
