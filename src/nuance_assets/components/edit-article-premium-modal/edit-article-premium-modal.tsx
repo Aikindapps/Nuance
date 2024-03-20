@@ -7,11 +7,8 @@ import { useTheme } from '../../contextes/ThemeContext';
 import './edit-article-premium-modal.scss';
 import { PostType } from '../../types/types';
 import {
-  useAuthStore,
-  usePostStore,
-  usePublisherStore,
   useUserStore,
-} from '../../store';
+} from '../../store/userStore';
 import { toastError } from '../../services/toastService';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -19,6 +16,7 @@ import { LuLoader2 } from 'react-icons/lu';
 import PremiumArticleThumbnail from '../../UI/premium-article-thumbnail/premium-article-thumbnail';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import { Tooltip } from 'react-tooltip';
+import { buildSvgForPremiumArticle } from 'src/nuance_assets/shared/utils';
 export const EditArticlePremiumModal = (props: {
   refreshPost: () => Promise<void>;
   post: PostType;
@@ -65,7 +63,14 @@ export const EditArticlePremiumModal = (props: {
     setLoading(true);
     if (validateNft()) {
       let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
-      await props.onSave(BigInt(inputAmount), salePrice, '');
+      await props.onSave(
+        BigInt(inputAmount),
+        salePrice,
+        buildSvgForPremiumArticle(
+          { ...props.post, headerImage: headerImageUsedInNft },
+          props.post.handle
+        )
+      );
       await props.refreshPost();
     }
     setLoading(false);

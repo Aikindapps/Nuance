@@ -10,7 +10,7 @@ import {
   getDecimalsByTokenSymbol,
   icons,
 } from './constants';
-import { PairInfo } from '../types/types';
+import { PairInfo, PostType } from '../types/types';
 
 export enum DateFormat {
   // Sep 16
@@ -390,13 +390,18 @@ export const getPriceBetweenTokens = (
   token0Symbol: SupportedTokenSymbol,
   token1Symbol: SupportedTokenSymbol,
   amount: number
-) : number => {
-  if(token0Symbol === token1Symbol){
-    return amount
+): number => {
+  if (token0Symbol === token1Symbol) {
+    return amount;
   }
-  if(token0Symbol !== 'ICP' && token1Symbol !== 'ICP'){
-    return getPriceBetweenTokens(tokenPairs, 'ICP', token1Symbol, getPriceBetweenTokens(tokenPairs, token0Symbol, 'ICP', amount))
-  }  
+  if (token0Symbol !== 'ICP' && token1Symbol !== 'ICP') {
+    return getPriceBetweenTokens(
+      tokenPairs,
+      'ICP',
+      token1Symbol,
+      getPriceBetweenTokens(tokenPairs, token0Symbol, 'ICP', amount)
+    );
+  }
 
   let token0 = '';
   let token1 = '';
@@ -450,20 +455,19 @@ export const getPriceBetweenTokens = (
       } else {
         reserveOut = Number(pool.reserve0);
       }
-      
+
       var amountInWithFee = Math.pow(10, getDecimalsByTokenSymbol('ICP')) * 997;
       var numerator = amountInWithFee * reserveOut;
       var denominator = reserveIn * 1000 + amountInWithFee;
       var amountOut = numerator / denominator;
 
       //amountOut means the ICP equivalance of the other token
-      if(token0Symbol === 'ICP'){
+      if (token0Symbol === 'ICP') {
         return (
           (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) *
           amountOut
         );
-      }
-      else{
+      } else {
         return (
           (amount / amountOut) *
           Math.pow(10, getDecimalsByTokenSymbol(token0Symbol))
@@ -479,9 +483,8 @@ export const getPriceBetweenTokens = (
   }
 };
 
-
 export const toBase256 = (num: number, digitCount: number) => {
-  var base256Array : number[] = [];
+  var base256Array: number[] = [];
   while (num > 0) {
     base256Array.unshift(num % 256);
     num = Math.floor(num / 256);
@@ -494,27 +497,29 @@ export const toBase256 = (num: number, digitCount: number) => {
   return base256Array;
 };
 
-export function truncateToDecimalPlace(num: number, decimalPlaces: number): string {
+export function truncateToDecimalPlace(
+  num: number,
+  decimalPlaces: number
+): string {
   const numStr = parseFloat(num.toString()).toFixed(decimalPlaces + 20);
 
   const dotIndex = numStr.indexOf('.');
 
   if (dotIndex === -1 || decimalPlaces < 0) {
-      return numStr;
+    return numStr;
   }
 
   const cutIndex = dotIndex + decimalPlaces + 1;
   return numStr.substring(0, cutIndex);
 }
 
-
 export const getIconForSocialChannel = (url: string, dark: boolean) => {
   let input = url;
-  if(input.startsWith('https://') || input.startsWith('http://')){
-      input = (new URL(input)).hostname;
+  if (input.startsWith('https://') || input.startsWith('http://')) {
+    input = new URL(input).hostname;
   }
   input = input.split('/')[0];
-  const psl = require('psl')
+  const psl = require('psl');
   const supportedChannels = [
     ['whatsapp', 'com'],
     ['youtube', 'com'],
@@ -533,12 +538,215 @@ export const getIconForSocialChannel = (url: string, dark: boolean) => {
     ['pinterest', 'com'],
     ['snapchat', 'com'],
     ['tiktok', 'com'],
-  ]
+  ];
   const path = '/assets/images/icons/social-channels/';
-  for(const supportedChannel of supportedChannels){
-    if(psl.parse(input).domain === supportedChannel[0] + '.' + supportedChannel[1]){
+  for (const supportedChannel of supportedChannels) {
+    if (
+      psl.parse(input).domain ===
+      supportedChannel[0] + '.' + supportedChannel[1]
+    ) {
       return path + supportedChannel[0] + '.svg';
     }
   }
   return dark ? icons.WEBSITE_ICON_DARK : icons.WEBSITE_ICON;
+};
+
+function getTitleTexts(post: PostType): string {
+  let title = post.title;
+  let resultArr = [];
+  if (title.length <= 35) {
+    resultArr = [title];
+  } else {
+    const words = title.split(' ');
+    let firstLine = '';
+    let secondLine = '';
+    let isFirstLineAllowed = true;
+    let isSecondLineAllowed = true;
+    for (const word of words) {
+      if (firstLine.length + word.length < 34 && isFirstLineAllowed) {
+        firstLine += ` ${word}`;
+      } else {
+        isFirstLineAllowed = false;
+        if (secondLine.length + word.length < 31 && isSecondLineAllowed) {
+          secondLine += ` ${word}`;
+        } else if (isSecondLineAllowed) {
+          secondLine += '...';
+          isSecondLineAllowed = false;
+        }
+      }
+    }
+    resultArr = [firstLine, secondLine];
+  }
+  let resultStr = '';
+  resultArr.forEach((item, index) => {
+    resultStr += `<text
+
+    opacity=".9"
+    x="80"
+    y="${380 + index * 35}"
+    font-size="28"
+    font-family="Georgia"
+    font-style="normal"
+    font-weight="400"
+    line-height="30px"
+    fill="#ffffff"
+  >
+    ${item}
+  </text>`;
+  });
+  return resultStr;
+}
+
+function getSubtitleTexts(post: PostType): string {
+  let subtitle = post.subtitle;
+  let resultArr = [];
+  if (subtitle.length <= 55) {
+    resultArr = [subtitle];
+  } else {
+    const words = subtitle.split(' ');
+    let firstLine = '',
+      secondLine = '',
+      thirdLine = '';
+    let isFirstLineAllowed = true,
+      isSecondLineAllowed = true,
+      isThirdLineAllowed = true;
+    for (const word of words) {
+      if (firstLine.length + word.length < 55 && isFirstLineAllowed) {
+        firstLine += ` ${word}`;
+      } else {
+        isFirstLineAllowed = false;
+        if (secondLine.length + word.length < 55 && isSecondLineAllowed) {
+          secondLine += ` ${word}`;
+        } else {
+          isSecondLineAllowed = false;
+          if (thirdLine.length + word.length < 52 && isThirdLineAllowed) {
+            thirdLine += ` ${word}`;
+          } else if (isThirdLineAllowed) {
+            thirdLine += '...';
+            isThirdLineAllowed = false;
+          }
+        }
+      }
+    }
+    resultArr = [firstLine, secondLine, thirdLine];
+  }
+  let resultStr = '';
+  resultArr.forEach((item, index) => {
+    resultStr += `<text
+    opacity=".9"
+    x="80"
+    y="${470 + index * 25}"
+    font-size="19.4"
+    font-family="Georgia"
+    font-style="normal"
+    font-weight="400"
+    line-height="28px"
+    fill="#B2B2B2"
+  >
+    ${item}
+  </text>`;
+  });
+  return resultStr;
+}
+
+export function buildSvgForPremiumArticle(post: PostType, handle: string) {
+  return `<svg width="659" height="709" viewBox="0 0 659 709" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="min-height:150px;max-width:250px;max-height:250px">
+  <path stroke="url(#a)" stroke-width="4" d="M537 590h120v117H537z"/>
+  <path stroke="url(#b)" stroke-width="4" d="M546 490h78v76h-78z"/>
+  <path stroke="url(#c)" stroke-width="4" d="M439 617h53v52h-53z"/>
+  <g filter="url(#d)">
+    <path d="m12.685 36.613 27.189-24.167a8 8 0 0 1 11.421.811L584.424 643.23c3.349 3.957 2.107 10.005-2.529 12.324l-39.206 19.602a8 8 0 0 1-3.578.845H18a8 8 0 0 1-8-8V42.593a8 8 0 0 1 2.685-5.98" fill="url(#e)"/>
+  </g>
+  <g filter="url(#f)">
+    <path fill="#fff" d="M54.828 14.71H589.78V645H54.828z"/>
+  </g>
+  <g filter="url(#g)">
+    <path fill="#fff" d="M50.414 10.297h534.952v630.29H50.414z"/>
+  </g>
+  <g filter="url(#h)">
+    <path fill="#151451" d="M46 5h534.952v630.29H46z"/>
+  </g>
+  <path d="M46 11a6 6 0 0 1 6-6h529v329H46z" fill="url(#i)"/>
+  <path fill="url(#j)" d="M571 288h10v140h-10z"/>
+  <path fill="#151451" d="M79 305.138h29.131v29.131H79z"/>
+  <path fill="#D9D9D9" d="M86.2 312.972h14.566v1.821H86.2zm0 5.462h14.566v1.821H86.2zm0 5.463h7.283v1.821H86.2z"/>
+  <path d="M581 635.405c-174.5 0-520.058.095-529.5.095-9.842 0-5 12.5 7.734 12.5H590" stroke="#151451"/>
+  <path fill="url(#k)" style="mix-blend-mode:multiply" d="M46 4h22v631H46z"/>
+  <path opacity=".4" d="M100 4h451l-58.71 308-47.463 249L100 633z" fill="url(#l)"/>
+  ${getTitleTexts(post)}
+  ${getSubtitleTexts(post)}
+  <text x="80" y="612" font-size="21.4" font-family="Arial" font-weight="700" fill="#fff">@${handle}</text>
+  <defs>
+    <linearGradient id="a" x1="597" y1="588" x2="597" y2="709" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#25F68D"/>
+      <stop offset="1" stop-color="#1BC0F2"/>
+    </linearGradient>
+    <linearGradient id="b" x1="585" y1="488" x2="585" y2="568" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#25F68D"/>
+      <stop offset="1" stop-color="#1BC0F2"/>
+    </linearGradient>
+    <linearGradient id="c" x1="465.5" y1="615" x2="465.5" y2="671" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#25F68D"/>
+      <stop offset="1" stop-color="#1BC0F2"/>
+    </linearGradient>
+    <linearGradient id="e" x1="409" y1="273" x2="105" y2="676" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9D9D9"/>
+      <stop offset="1" stop-color="#CDCDCD" stop-opacity=".24"/>
+    </linearGradient>
+    <linearGradient id="j" x1="576" y1="288" x2="576" y2="428" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#25F68D"/>
+      <stop offset="1" stop-color="#1BC0F2"/>
+    </linearGradient>
+    <linearGradient id="k" x1="68" y1="219" x2="38.667" y2="219" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9D9D9" stop-opacity="0"/>
+      <stop offset=".49" stop-color="#C6C6C6"/>
+      <stop offset="1" stop-color="#D9D9D9" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="l" x1="522.408" y1="-206.236" x2="54.907" y2="157.836" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset=".516" stop-color="#fff" stop-opacity=".672"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="d" x="0" y=".425" width="596.318" height="685.575" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="5" result="effect1_foregroundBlur_3082_8737"/>
+    </filter>
+    <filter id="f" x="51.297" y="14.71" width="542.014" height="637.352" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="3.531"/>
+      <feGaussianBlur stdDeviation="1.766"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_3082_8737"/>
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_3082_8737" result="shape"/>
+    </filter>
+    <filter id="g" x="46.883" y="10.297" width="542.014" height="637.352" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="3.531"/>
+      <feGaussianBlur stdDeviation="1.766"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_3082_8737"/>
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_3082_8737" result="shape"/>
+    </filter>
+    <filter id="h" x="42.469" y="5" width="542.014" height="637.352" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="3.531"/>
+      <feGaussianBlur stdDeviation="1.766"/>
+      <feComposite in2="hardAlpha" operator="out"/>
+      <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_3082_8737"/>
+      <feBlend in="SourceGraphic" in2="effect1_dropShadow_3082_8737" result="shape"/>
+    </filter>
+    <pattern id="i" patternContentUnits="objectBoundingBox" width="1" height="1">
+      <use xlink:href="#m" transform="matrix(.00192 0 0 .00312 -.086 0)"/>
+    </pattern>
+    <image id="m" width="612" height="321" xlink:href="${post.headerImage}"/>
+  </defs>
+</svg>
+`;
 }
