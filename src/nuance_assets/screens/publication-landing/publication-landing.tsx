@@ -446,9 +446,7 @@ function PublicationLanding() {
                 style={
                   !isSidebarToggled && screenWidth <= 1089
                     ? {
-                      marginRight: '180px',
-                      width: '150px',
-                      height: '47.5px',
+                      display: 'none',
                     }
                     : {
                       marginRight: '15px',
