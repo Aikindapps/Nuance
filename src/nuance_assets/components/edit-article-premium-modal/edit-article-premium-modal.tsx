@@ -6,9 +6,7 @@ import RequiredFieldMessage from '../required-field-message/required-field-messa
 import { useTheme } from '../../contextes/ThemeContext';
 import './edit-article-premium-modal.scss';
 import { PostType } from '../../types/types';
-import {
-  useUserStore,
-} from '../../store/userStore';
+import { useUserStore } from '../../store/userStore';
 import { toastError } from '../../services/toastService';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -53,7 +51,7 @@ export const EditArticlePremiumModal = (props: {
         headerImageUsedInNft !== '' &&
         termsAccepted &&
         parseFloat(keyPrice) > 0 &&
-        inputAmount > props.numberOfEditors + 1
+        inputAmount > props.numberOfEditors + 2
       );
     } catch (error) {
       return false;
@@ -68,7 +66,7 @@ export const EditArticlePremiumModal = (props: {
         salePrice,
         buildSvgForPremiumArticle(
           { ...props.post, headerImage: headerImageUsedInNft },
-          props.post.handle
+          props.post.creator || user?.handle || ''
         )
       );
       await props.refreshPost();
@@ -197,7 +195,7 @@ export const EditArticlePremiumModal = (props: {
                     : { cursor: loading ? 'not-allowed' : '' }
                 }
                 placeholder={`Fill in amount of keys (min. ${
-                  props.numberOfEditors + 2
+                  props.numberOfEditors + 3
                 })`}
                 min={0}
                 max={100000}
