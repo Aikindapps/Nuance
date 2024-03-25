@@ -12,6 +12,7 @@ type UserPostCounts =
  record {
    draftCount: text;
    handle: text;
+   premiumCount: text;
    publishedCount: text;
    submittedToReviewCount: text;
    totalPostCount: text;
@@ -373,6 +374,7 @@ service : {
   simulateModClub: (text, PostModerationStatusV2) -> ();
   sortPopularPosts: (PopularityType) -> ();
   storeAllSEO: () -> (Result_1);
+  tagMigrationBugFix: (text, text, nat) -> (Result_1);
   testInstructionSize: () -> (text);
   unfollowTag: (text) -> (Result_1);
   unregisterAdmin: (text) -> (Result_1);

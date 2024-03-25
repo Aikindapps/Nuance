@@ -167,6 +167,7 @@ module{
         isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         isEditorPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         getBucketCanisters : query () -> async [(Text, Text)];
+        getUserPostIds : query (userHandle : Text) -> async Result.Result<[Text], Text>
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {
@@ -404,7 +405,8 @@ module{
         deleteUserPosts : (principalId : Text) -> async Result.Result<Nat, Text>;
         delete : (postId : Text) -> async Result.Result<Nat, Text>;
         getNotMigratedPremiumArticlePostIds : query () -> async [Text];
-        migratePremiumArticleFromOldArch : query (postId: Text, price: ?Nat) -> async Result.Result<Text, Text>
+        migratePremiumArticleFromOldArch : query (postId: Text, price: ?Nat) -> async Result.Result<Text, Text>;
+        getPost : query (postId : Text) -> async Result.Result<PostBucketType, Text>
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {

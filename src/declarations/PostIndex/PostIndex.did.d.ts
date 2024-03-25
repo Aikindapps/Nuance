@@ -94,7 +94,7 @@ export interface _SERVICE {
   'registerPlatformOperator' : ActorMethod<[string], Result>,
   'search' : ActorMethod<[string, boolean, number, number], SearchResultData>,
   'searchWithinPublication' : ActorMethod<
-    [string, boolean, number, number, Array<string>],
+    [string, boolean, number, number, string],
     SearchResultData
   >,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuthStore } from '../../store';
+import { useAuthStore, useUserStore } from '../../store';
 import { icons, colors } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
 
@@ -26,6 +26,10 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
   };
+
+  const { user } = useUserStore((state) => ({
+    user: state.user,
+  }));
 
   const CloseMenu = () => {
     props.setShown(false);
@@ -109,7 +113,12 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
         style={
           props.shown
             ? {
-                height: 180,
+                height:
+                  (user
+                    ? 5 +
+                      user?.publicationsArray.filter((val) => val.isEditor)
+                        .length
+                    : 180) * 36,
                 boxShadow: '0px 2px 10px 5px rgba(117, 117, 117, 0.08)',
                 background: darkOptionsAndColors.background,
                 color: darkOptionsAndColors.color,
@@ -124,11 +133,26 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
           <Link to='/my-profile'>
             <li style={{ color: darkOptionsAndColors.color }}>My profile</li>
           </Link>
-          <Link to='/my-profile/articles'>
-            <li style={{ color: darkOptionsAndColors.color }}>
-              Personal articles
-            </li>
+          <Link to='/my-profile/wallet'>
+            <li style={{ color: darkOptionsAndColors.color }}>My wallet</li>
           </Link>
+          <Link to='/my-profile/articles'>
+            <li style={{ color: darkOptionsAndColors.color }}>My articles</li>
+          </Link>
+          {user?.publicationsArray
+            .filter((val) => val.isEditor)
+            .map((publication, index) => {
+              return (
+                <Link
+                  key={index}
+                  to={`/my-profile/publications/${publication.publicationName}`}
+                >
+                  <li style={{ color: darkOptionsAndColors.color }}>
+                    {publication.publicationName}
+                  </li>
+                </Link>
+              );
+            })}
           <Link to='/article/new'>
             <li style={{ color: darkOptionsAndColors.color }}>
               Create an article

@@ -202,6 +202,7 @@ module {
         draftCount: Text;
         submittedToReviewCount: Text;
         totalViewCount: Text;
+        premiumCount: Text;
         uniqueClaps: Text;
         uniqueReaderCount: Text;
     };

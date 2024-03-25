@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../../UI/Button/Button';
-import { PostType, UserType } from '../../types/types';
+import { PostType, PublicationType, UserType } from '../../types/types';
 import CardHorizontal from '../card-horizontal/card-horizontal';
 import Loader from '../../UI/loader/Loader';
 import { colors, images } from '../../shared/constants';
@@ -29,6 +29,8 @@ type EditorSearchListProps = {
   sortedByPublishedDate: boolean;
   handleSortByModifiedDate: Function;
   sortedByLastModifiedDate: boolean;
+  publication: PublicationType | undefined;
+  refreshPosts: (postId: string) => Promise<void>;
   dark?: boolean;
 };
 
@@ -126,6 +128,7 @@ const EditorSearchList: React.FC<EditorSearchListProps> = (
             >
               MODIFIED
             </p>
+            <p className='title-general title-keys-sold'>KEYS SOLD</p>
           </div>
           {props.posts.map((post: PostType) => (
             <CardEditorPublication
@@ -135,6 +138,8 @@ const EditorSearchList: React.FC<EditorSearchListProps> = (
               post={post}
               toggleHandler={props.toggleHandler}
               isLoading={false}
+              publication={props.publication}
+              refreshPosts={props.refreshPosts}
             />
           ))}
         </div>

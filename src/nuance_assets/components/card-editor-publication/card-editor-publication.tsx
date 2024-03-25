@@ -1,33 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { DateFormat, formatDate } from '../../shared/utils';
 import { images, icons, colors } from '../../shared/constants';
-import { propTypes } from 'react-bootstrap/esm/Image';
 import { CardEditorPublicationProps } from './types';
 import { Toggle } from '../../UI/toggle/toggle';
-import { Row, Col, Form } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faLock } from '@fortawesome/free-solid-svg-icons';
 import { PostType } from '../../../nuance_assets/types/types';
-import { usePostStore, usePublisherStore } from '../../../nuance_assets/store';
-import { icon } from '@fortawesome/fontawesome-svg-core';
-import { toastError } from '../../services/toastService';
+import {
+  usePostStore,
+  usePublisherStore,
+  useUserStore,
+} from '../../../nuance_assets/store';
+import { toast, toastError, ToastType } from '../../services/toastService';
 import { useTheme } from '../../contextes/ThemeContext';
 import './_card-editor-publication.scss';
 import Dropdown from '../../UI/dropdown/dropdown';
 import { Tooltip } from 'react-tooltip';
+import { MeatBallMenuGeneral } from '../../UI/meatball-menu-general/meatball-menu-general';
+import PremiumArticleSoldBar from '../../UI/premium-article-sold-bar/premium-article-sold-bar';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+
 const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   post,
   toggleHandler,
   categories,
   categoryChangeHandler,
+  publication,
+  refreshPosts,
 }) => {
   const [isToggled, setIsToggled] = useState(!post.isDraft);
   const [isLoading, setIsLoading] = useState(false);
   const [handleSelection, setHandleSelection] = useState(post.category);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isKebabMenuOpen, setIsKebabMenuOpen] = useState(false);
   const navigate = useNavigate();
   const darkTheme = useTheme();
+  const modalContext = useContext(ModalContext);
 
   const handleCategoryChange = async (post: PostType, e: string) => {
     setIsLoading(true);
@@ -59,8 +66,13 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
     filter: darkTheme ? 'contrast(.5)' : 'none',
   };
 
-  const { getApplaudedHandles } = usePostStore((state) => ({
+  const { getApplaudedHandles, savePost } = usePostStore((state) => ({
     getApplaudedHandles: state.getApplaudedHandles,
+    savePost: state.savePost,
+  }));
+
+  const { getPrincipalByHandle } = useUserStore((state) => ({
+    getPrincipalByHandle: state.getPrincipalByHandle,
   }));
 
   const [applaudedHandles, setApplaudedHandles] = useState<string[]>([]);
@@ -76,6 +88,16 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
     fetchApplaudedHandles();
   }, []);
 
+  const toastMessage = (isDraft: boolean) => {
+    if (isDraft) {
+      toast(`This article “${post.title}” is unpublished!`, ToastType.Success);
+    } else {
+      toast(
+        `This article “${post.title}” is now published!`,
+        ToastType.Success
+      );
+    }
+  };
 
   return (
     <div
@@ -86,11 +108,13 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             ? { filter: 'blur(3px)' }
             : {}
           : isLoading
-            ? {
-              filter: 'blur(3px) grayscale(1)',
-              zIndex: isDropdownOpen ? '3' : 'unset',
+          ? {
+              filter: 'blur(3px)',
+              zIndex: isDropdownOpen || isKebabMenuOpen ? '3' : 'unset',
             }
-            : { filter: 'grayscale(1)', zIndex: isDropdownOpen ? '3' : 'unset' }
+          : {
+              zIndex: isDropdownOpen || isKebabMenuOpen ? '3' : 'unset',
+            }
       }
     >
       <div className='field-published field-general'>
@@ -107,6 +131,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
                   setIsToggled(!isToggled);
                   setIsLoading(true);
                   await toggleHandler(post.postId, isToggled);
+                  await refreshPosts(post.postId);
+                  toastMessage(isToggled);
                   setIsLoading(false);
                 }
               }
@@ -114,13 +140,17 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           />
         )}
       </div>
-      <Link
-        className='field-article field-general'
-        to={'/article/edit/' + post.postId}
-      >
+      <Link className='field-article field-general' to={post.url}>
         <img
           className='article-image'
           src={post.headerImage || images.NUANCE_LOGO}
+          style={
+            !isToggled
+              ? {
+                  filter: 'grayscale(1)',
+                }
+              : {}
+          }
         />
         <p style={darkOptionsAndColors} className='article-title'>
           {post.title}
@@ -150,6 +180,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             }
           }}
           onIsOpenChanged={setIsDropdownOpen}
+          uniqueId={'publication-post-dropdown-menu-' + post.postId}
         />
       </div>
 
@@ -169,8 +200,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         style={
           darkTheme
             ? {
-              color: darkOptionsAndColors.secondaryColor,
-            }
+                color: darkOptionsAndColors.secondaryColor,
+              }
             : {}
         }
         className='field-published-date field-general'
@@ -182,8 +213,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         style={
           darkTheme
             ? {
-              color: darkOptionsAndColors.secondaryColor,
-            }
+                color: darkOptionsAndColors.secondaryColor,
+              }
             : {}
         }
         className='field-modified field-general'
@@ -191,6 +222,126 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         {formatDate(post.modified, DateFormat.WithYear) ||
           formatDate(post.created, DateFormat.WithYear)}
       </div>
+      <div className='field-keys-sold field-general'>
+        {post.premiumArticleSaleInfo && (
+          <PremiumArticleSoldBar
+            availableSupply={
+              post.premiumArticleSaleInfo.totalSupply -
+              post.premiumArticleSaleInfo.currentSupply
+            }
+            totalSupply={post.premiumArticleSaleInfo.totalSupply}
+            dark={darkTheme}
+          />
+        )}
+        <MeatBallMenuGeneral
+          items={
+            !isToggled
+              ? [
+                  {
+                    onClick: async () => {
+                      navigate('/article/edit/' + post.postId);
+                    },
+                    text: 'Edit',
+                    useDividerOnTop: false,
+                  },
+                  {
+                    onClick: async () => {
+                      setIsToggled(!isToggled);
+                      setIsLoading(true);
+                      await toggleHandler(post.postId, isToggled);
+                      await refreshPosts(post.postId);
+                      toastMessage(isToggled);
+                      setIsLoading(false);
+                    },
+                    text: 'Publish in publication',
+                    useDividerOnTop: false,
+                  },
+                  {
+                    onClick: async () => {
+                      if (post.headerImage === '') {
+                        toastError(
+                          'You need to add an header image before minting an NFT for an article.'
+                        );
+                        return;
+                      }
+                      modalContext?.openModal('Premium article', {
+                        premiumPostNumberOfEditors: publication?.editors.length,
+                        premiumPostData: post,
+                        premiumPostOnSave: async (
+                          maxSupply: bigint,
+                          icpPrice: bigint,
+                          thumbnail: string
+                        ) => {
+                          let creatorHandle = post.creator as string;
+                          let creatorPrincipal = await getPrincipalByHandle(
+                            creatorHandle
+                          );
+                          await savePost({
+                            ...post,
+                            premium: [
+                              {
+                                thumbnail: thumbnail,
+                                icpPrice: icpPrice,
+                                maxSupply: maxSupply,
+                              },
+                            ],
+                            tagIds: post.tags.map((val) => val.tagId),
+                            creator: creatorPrincipal as string,
+                            isPublication: true,
+                            isDraft: false,
+                          });
+                        },
+                        premiumPostRefreshPost: async () => {
+                          await refreshPosts(post.postId);
+                        },
+                      });
+                    },
+                    text: 'Mint article',
+                    useDividerOnTop: true,
+                    icon: icons.NFT_ICON,
+                  },
+                ]
+              : post.isPremium
+              ? [
+                  {
+                    onClick: async () => {
+                      navigate('/article/edit/' + post.postId);
+                    },
+                    text: 'See details',
+                    useDividerOnTop: false,
+                  },
+                ]
+              : [
+                  {
+                    onClick: async () => {
+                      navigate('/article/edit/' + post.postId);
+                    },
+                    text: 'Edit',
+                    useDividerOnTop: false,
+                  },
+                  {
+                    onClick: async () => {
+                      setIsToggled(!isToggled);
+                      setIsLoading(true);
+                      await toggleHandler(post.postId, isToggled);
+                      await refreshPosts(post.postId);
+                      toastMessage(isToggled);
+                      setIsLoading(false);
+                    },
+                    text: 'Unpublish from publication',
+                    useDividerOnTop: false,
+                  },
+                ]
+          }
+          uniqueId={post.postId + '-kebab-menu'}
+          isMenuOpen={isKebabMenuOpen}
+          setIsMenuOpen={(input: boolean) => {
+            setIsKebabMenuOpen(input);
+          }}
+          inActive={isLoading}
+        />
+      </div>
+
       <Tooltip
         clickable={true}
         className='tooltip-wrapper'

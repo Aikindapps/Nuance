@@ -1388,6 +1388,7 @@ const CreateEditArticle = () => {
                       LOCATION
                     </div>
                     <Dropdown
+                      uniqueId={'edit-article-location-dropdown-menu'}
                       style={{ height: '30px' }}
                       selectedTextStyle={{
                         fontWeight: '400',
@@ -1426,6 +1427,7 @@ const CreateEditArticle = () => {
                         CATEGORY
                       </div>
                       <Dropdown
+                        uniqueId={'edit-article-category-dropdown-menu'}
                         selected={'/' + selectedCategory}
                         style={{ height: '30px' }}
                         selectedTextStyle={{

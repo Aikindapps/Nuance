@@ -70,6 +70,7 @@ export const idlFactory = ({ IDL }) => {
     'uniqueReaderCount' : IDL.Text,
     'publishedCount' : IDL.Text,
     'handle' : IDL.Text,
+    'premiumCount' : IDL.Text,
     'submittedToReviewCount' : IDL.Text,
     'totalPostCount' : IDL.Text,
   });
@@ -407,6 +408,11 @@ export const idlFactory = ({ IDL }) => {
     'simulateModClub' : IDL.Func([IDL.Text, PostModerationStatusV2], [], []),
     'sortPopularPosts' : IDL.Func([PopularityType], [], []),
     'storeAllSEO' : IDL.Func([], [Result_1], []),
+    'tagMigrationBugFix' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Nat],
+        [Result_1],
+        [],
+      ),
     'testInstructionSize' : IDL.Func([], [IDL.Text], []),
     'unfollowTag' : IDL.Func([IDL.Text], [Result_1], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result_1], []),

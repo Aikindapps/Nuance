@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { images, icons, colors } from '../../shared/constants';
-import './_premium-article-owners.scss';
-import { PremiumArticleOwners as PremiumArticlesOwnersObject } from '../../types/types';
+import './_premium-article-sold-bar.scss';
 
-interface PremiumArticleOwnersProps {
-  owners: PremiumArticlesOwnersObject | undefined;
+interface PremiumArticleSoldBarProps {
+  availableSupply: number;
+  totalSupply: number;
   dark?: boolean;
 }
 
-const PremiumArticleOwners: React.FC<PremiumArticleOwnersProps> = ({
-  owners,
+const PremiumArticleSoldBar: React.FC<PremiumArticleSoldBarProps> = ({
+  availableSupply,
+  totalSupply,
   dark,
 }) => {
-  const sold = Number(owners?.totalSupply) - Number(owners?.available);
-  const soldBarWidth = 75;
-  const soldWidth = (sold / Number(owners?.totalSupply)) * soldBarWidth;
+  const sold = totalSupply - availableSupply;
+  const soldBarWidth = 48;
+  const soldWidth = (sold / totalSupply) * soldBarWidth;
   const remainingWidth = soldBarWidth - soldWidth;
   const navigate = useNavigate();
 
@@ -30,8 +31,11 @@ const PremiumArticleOwners: React.FC<PremiumArticleOwnersProps> = ({
   };
 
   return (
-    <div className='edit-article-premium-article-owners'>
-      <img className='premium-article-owners-nft-icon' src={icons.NFT_ICON} />
+    <div className='premium-article-sold-bar-wrapper'>
+      <div
+        style={dark ? { color: darkOptionsAndColors.secondaryColor } : {}}
+        className='sold-bar-text'
+      >{`${sold} OF ${totalSupply}`}</div>
       <div className='sold-bar'>
         <div
           className='sold-percentage-sold'
@@ -47,9 +51,8 @@ const PremiumArticleOwners: React.FC<PremiumArticleOwnersProps> = ({
           style={{ width: `${remainingWidth}px` }}
         />
       </div>
-      <div className='premium-article-owners-sold-text'>{`${sold} OF ${owners?.totalSupply} KEYS SOLD`}</div>
     </div>
   );
 };
 
-export default PremiumArticleOwners;
+export default PremiumArticleSoldBar;

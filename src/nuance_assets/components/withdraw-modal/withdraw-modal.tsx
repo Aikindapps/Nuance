@@ -21,7 +21,11 @@ import Button from '../../UI/Button/Button';
 import { Principal } from '@dfinity/principal';
 import RequiredFieldMessage from '../required-field-message/required-field-message';
 import { LuLoader2 } from 'react-icons/lu';
-import { getNuaEquivalance, getPriceBetweenTokens, truncateToDecimalPlace } from '../../shared/utils';
+import {
+  getNuaEquivalance,
+  getPriceBetweenTokens,
+  truncateToDecimalPlace,
+} from '../../shared/utils';
 
 export const WithdrawModal = () => {
   const modalContext = useContext(ModalContext);
@@ -149,7 +153,6 @@ export const WithdrawModal = () => {
     let balanceValidation = validateBalance();
     return termsAccepted && addressValidation && balanceValidation;
   };
-
 
   const { transferIcp, transferICRC1Token } = usePostStore((state) => ({
     transferIcp: state.transferIcp,
@@ -283,6 +286,7 @@ export const WithdrawModal = () => {
         <div className='select-currency-wrapper'>
           <p className='withdraw-modal-field-text'>SELECT THE CURRENCY</p>
           <Dropdown
+            uniqueId={'withdraw-modal-dropdown-menu'}
             items={tokenBalances.map((tokenBalance) => {
               return tokenBalance.token.symbol;
             })}
@@ -302,7 +306,7 @@ export const WithdrawModal = () => {
           <p className='withdraw-modal-field-text'>RECEIVER</p>
           <div className='input-wrapper'>
             <InputField2
-            classname='input-attributes2'
+              classname='input-attributes2'
               width='100%'
               height='28px'
               style={{

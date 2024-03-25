@@ -1899,6 +1899,7 @@ actor PostCore {
       var totalPostCount : Nat = 0;
       var draftCount : Nat = 0;
       var submittedToReviewCount : Nat = 0;
+      var premiumCount : Nat = 0;
       var publishedCount : Nat = 0;
       var totalViewCount : Nat = 0;
       var totalClapCount : Nat = 0;
@@ -1927,6 +1928,10 @@ actor PostCore {
               publishedCount += 1;
             };
 
+            if(postIdsToNftCanisterIdsHashMap.get(postId) != null){
+              premiumCount += 1;
+            };
+
             let postViewCount = U.safeGet(viewsHashMap, postId, 0);
             totalViewCount += postViewCount;
             let clapCount = U.safeGet(clapsHashMap, postId, 0);
@@ -1943,6 +1948,7 @@ actor PostCore {
         handle = U.safeGet(handleHashMap, principalId, "");
         totalPostCount = Nat.toText(totalPostCount);
         publishedCount = Nat.toText(publishedCount);
+        premiumCount = Nat.toText(premiumCount);
         draftCount = Nat.toText(draftCount);
         submittedToReviewCount = Nat.toText(submittedToReviewCount);
         totalViewCount = Nat.toText(totalViewCount);
@@ -1965,6 +1971,7 @@ actor PostCore {
     var totalPostCount : Nat = 0;
     var draftCount : Nat = 0;
     var submittedToReviewCount : Nat = 0;
+    var premiumCount : Nat = 0;
     var publishedCount : Nat = 0;
     var totalViewCount : Nat = 0;
     var totalClapCount : Nat = 0;
@@ -1993,6 +2000,11 @@ actor PostCore {
             publishedCount += 1;
           };
 
+          if(postIdsToNftCanisterIdsHashMap.get(postId) != null){
+            premiumCount += 1;
+          };
+          
+
           let postViewCount = U.safeGet(viewsHashMap, postId, 0);
           totalViewCount += postViewCount;
           let clapCount = U.safeGet(clapsHashMap, postId, 0);
@@ -2009,6 +2021,7 @@ actor PostCore {
       handle = U.safeGet(handleHashMap, principalId, "");
       totalPostCount = Nat.toText(totalPostCount);
       publishedCount = Nat.toText(publishedCount);
+      premiumCount = Nat.toText(premiumCount);
       draftCount = Nat.toText(draftCount);
       submittedToReviewCount = Nat.toText(submittedToReviewCount);
       totalViewCount = Nat.toText(totalViewCount);
@@ -3677,7 +3690,7 @@ public shared ({caller}) func tagMigrationBugFix(postId: Text, bucketCanister: T
   relationships.put(postId, Buffer.toArray(newRels));
 
   //update post index
-  let postBucket = actor (affectedBucketCanisterId) : BucketCanisterInterface;
+  let postBucket = CanisterDeclarations.getPostBucketCanister(affectedBucketCanisterId);
   let postBucketGet =  await postBucket.getPost(postId);
 
 switch (postBucketGet) {

@@ -1,9 +1,11 @@
-import { PostType } from '../../types/types';
+import { PostType, PublicationType } from '../../types/types';
 
 export interface CardEditorPublicationProps {
   post: PostType;
   toggleHandler: Function;
   isLoading: boolean;
-  categories: any;
+  categories: string[];
   categoryChangeHandler: Function;
+  publication: PublicationType | undefined;
+  refreshPosts: (postId: string) => Promise<void>
 }

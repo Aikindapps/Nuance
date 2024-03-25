@@ -47,6 +47,51 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   });
 };
 
+const mergePremiumArticleSaleInformation = async (
+  posts: PostType[]
+): Promise<PostType[]> => {
+  //populate the premiumArticleSAleInformation value if exists any
+  let postIdsAndNftCanisterIds = posts
+    .filter(
+      (post) =>
+        post.nftCanisterId !== undefined && post.nftCanisterId.length !== 0
+    )
+    .map((post) => [post.postId, post.nftCanisterId?.[0] as string]);
+
+  let promises = [];
+  for (const [postId, nftCanisterId] of postIdsAndNftCanisterIds) {
+    let extActor = await getExtActor(nftCanisterId);
+    promises.push(extActor.getAvailableToken());
+  }
+  let results = await Promise.all(promises);
+  return posts.map((post) => {
+    let premiumArticleInfoIfExists = results.filter(
+      (val) => val.postId === post.postId
+    );
+    return {
+      ...post,
+      premiumArticleSaleInfo:
+        premiumArticleInfoIfExists.length !== 0
+          ? {
+              tokenIndex:
+                premiumArticleInfoIfExists[0].availableTokenIndex.length !== 0
+                  ? premiumArticleInfoIfExists[0].availableTokenIndex[0]
+                  : 0,
+              totalSupply: Number(premiumArticleInfoIfExists[0].maxSupply),
+              nftCanisterId: post.nftCanisterId?.[0] as string,
+              currentSupply: Number(
+                premiumArticleInfoIfExists[0].currentSupply
+              ),
+              price_e8s: Number(premiumArticleInfoIfExists[0].price),
+              priceReadable: (
+                Number(premiumArticleInfoIfExists[0].price) / Math.pow(10, 8)
+              ).toFixed(4),
+            }
+          : undefined,
+    };
+  });
+};
+
 const handleError = (err: any, preText?: string) => {
   const errorType = getErrorType(err);
 
@@ -438,9 +483,25 @@ const createPublisherStore:
         publicationHandle
       );
       set({ publicationPosts });
-      const postsWithAvatars = await mergeAuthorAvatars(publicationPosts);
-      set({ publicationPosts: postsWithAvatars });
-      return postsWithAvatars.reverse();
+
+      const [postsWithAvatars, postsWithPremiumArticleInformation] =
+        await Promise.all([
+          mergeAuthorAvatars(publicationPosts),
+          mergePremiumArticleSaleInformation(publicationPosts),
+        ]);
+      let merged = publicationPosts.map((post, index) => {
+        return {
+          ...post,
+          avatar: postsWithAvatars[index].avatar,
+          premiumArticleSaleInfo:
+            postsWithPremiumArticleInformation[index].premiumArticleSaleInfo,
+        };
+      });
+      set({
+        publicationPosts: merged,
+      });
+
+      return merged.reverse();
     } catch (err: any) {
       console.log(err);
       return await get().getPublicationPosts(
@@ -452,7 +513,6 @@ const createPublisherStore:
       //handleError(err, Unexpected);
     }
   },
-
 
   clerGetPublicationPostError: async () => {
     set({ getPublicationPostError: undefined });

@@ -143,6 +143,7 @@ export interface UserPostCounts {
   'uniqueReaderCount' : string,
   'publishedCount' : string,
   'handle' : string,
+  'premiumCount' : string,
   'submittedToReviewCount' : string,
   'totalPostCount' : string,
 }
@@ -303,6 +304,7 @@ export interface _SERVICE {
   'simulateModClub' : ActorMethod<[string, PostModerationStatusV2], undefined>,
   'sortPopularPosts' : ActorMethod<[PopularityType], undefined>,
   'storeAllSEO' : ActorMethod<[], Result_1>,
+  'tagMigrationBugFix' : ActorMethod<[string, string, bigint], Result_1>,
   'testInstructionSize' : ActorMethod<[], string>,
   'unfollowTag' : ActorMethod<[string], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result_1>,

@@ -301,7 +301,10 @@ export interface PostStore {
 
   savePost: (post: PostSaveModel) => Promise<PostType | undefined>;
   getSavedPost: (postId: string) => Promise<void>;
-  getSavedPostReturnOnly: (postId: string) => Promise<PostType | undefined>;
+  getSavedPostReturnOnly: (
+    postId: string,
+    includePremiumInfo?: boolean
+  ) => Promise<PostType | undefined>;
   clearSavedPost: () => Promise<void>;
   clearSavedPostError: () => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
@@ -379,7 +382,7 @@ export interface PostStore {
     isTagSearch: boolean,
     indexFrom: number,
     indexTo: number,
-    searchingPostIds: Array<string>,
+    publicationHandle: string,
     user: UserType | undefined
   ) => Promise<void>;
   populateTags: (
@@ -875,7 +878,8 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
 
   getSavedPostReturnOnly: async (
-    postId: string
+    postId: string,
+    includePremiumInfo?: boolean
   ): Promise<PostType | undefined> => {
     try {
       const coreActor = await getPostCoreActor();
@@ -896,10 +900,35 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             user?.handle === bucketResult.creator ||
             isUserEditor(bucketResult.handle, user)
           ) {
-            const savedPost = {
+            let savedPost = {
               ...bucketResult,
               ...coreReturn.ok,
             } as PostType;
+            if (
+              includePremiumInfo &&
+              savedPost.nftCanisterId &&
+              savedPost.nftCanisterId.length !== 0
+            ) {
+              let nftCanisterId = savedPost.nftCanisterId[0];
+              let extActor = await getExtActor(nftCanisterId);
+              let response = await extActor.getAvailableToken();
+              savedPost = {
+                ...savedPost,
+                premiumArticleSaleInfo: {
+                  tokenIndex:
+                    response.availableTokenIndex.length !== 0
+                      ? response.availableTokenIndex[0]
+                      : 0,
+                  totalSupply: Number(response.maxSupply),
+                  nftCanisterId,
+                  currentSupply: Number(response.currentSupply),
+                  price_e8s: Number(response.price),
+                  priceReadable: (
+                    Number(response.price) / Math.pow(10, 8)
+                  ).toFixed(4),
+                },
+              };
+            }
             return savedPost;
           }
         }
@@ -1519,7 +1548,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     isTagSearch: boolean,
     indexFrom: number,
     indexTo: number,
-    searchingPostIds: Array<string>,
+    publicationHandle: string,
     user: UserType | undefined
   ): Promise<void> => {
     try {
@@ -1529,7 +1558,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         isTagSearch,
         indexFrom,
         indexTo,
-        searchingPostIds
+        publicationHandle
       );
       const postIds = results.postIds;
       if (postIds?.length) {
@@ -1799,9 +1828,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         }
       );
       //do not include the 0 sold articles
-      return resultBeforeFiltering.filter((activityElement)=>{
-        return activityElement.activity !== '+0 ICP'
-      })
+      return resultBeforeFiltering.filter((activityElement) => {
+        return activityElement.activity !== '+0 ICP';
+      });
     } catch (error) {
       return [];
     }

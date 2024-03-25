@@ -114,8 +114,8 @@ service : {
   registerCgUser: (text) -> (Result);
   registerPlatformOperator: (text) -> (Result);
   search: (text, bool, nat32, nat32) -> (SearchResultData) query;
-  searchWithinPublication: (text, bool, nat32, nat32, vec text) ->
-   (SearchResultData) query;
+  searchWithinPublication: (text, bool, nat32, nat32, text) ->
+   (SearchResultData) composite_query;
   setMaxMemorySize: (nat) -> (Result_1);
   unregisterAdmin: (text) -> (Result);
   unregisterCanister: (text) -> (Result);
