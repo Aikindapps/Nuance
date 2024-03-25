@@ -40,6 +40,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
     setIsLoading(true);
     setHandleSelection(e);
     await categoryChangeHandler(post, e);
+    await refreshPosts(post.postId);
     setIsLoading(false);
   };
   const getCategoriesWithNoCategory = () => {
