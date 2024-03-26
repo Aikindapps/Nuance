@@ -145,38 +145,8 @@ echo ""
 
 
 #region Create, Build and Deploy
-
-echo "Creating Nuance canisters that mirror production canister Ids...."
-PROD_CYCLES_DISPENSER_CANISTER_ID="$(grep -A2 '"CyclesDispenser"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create CyclesDispenser --specified-id "$PROD_CYCLES_DISPENSER_CANISTER_ID"
-PROD_FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID="$(grep -A2 '"FastBlocks_EmailOptIn"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create FastBlocks_EmailOptIn --specified-id "$PROD_FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID"
-PROD_KINIC_ENDPOINT_CANISTER_ID="$(grep -A2 '"KinicEndpoint"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create KinicEndpoint --specified-id "$PROD_KINIC_ENDPOINT_CANISTER_ID"
-PROD_POST_BUCKET_CANISTER_ID="$(grep -A2 '"PostBucket"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create PostBucket --specified-id "$PROD_POST_BUCKET_CANISTER_ID"
-PROD_POST_CORE_CANISTER_ID="$(grep -A2 '"PostCore"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create PostCore --specified-id "$PROD_POST_CORE_CANISTER_ID"
-PROD_POST_INDEX_CANISTER_ID="$(grep -A2 '"PostIndex"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create PostIndex --specified-id "$PROD_POST_INDEX_CANISTER_ID"
-PROD_STORAGE_CANISTER_ID="$(grep -A2 '"Storage"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create Storage --specified-id "$PROD_STORAGE_CANISTER_ID"
-PROD_USER_CANISTER_ID="$(grep -A2 '"User"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create User --specified-id "$PROD_USER_CANISTER_ID"
-PROD_NUANCE_ASSETS_CANISTER_ID="$(grep -A2 '"nuance_assets"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create nuance_assets --specified-id "$PROD_NUANCE_ASSETS_CANISTER_ID"
-PROD_METRICS_CANISTER_ID="$(grep -A2 '"Metrics"' $productionCanisterFilePath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create Metrics --specified-id "$PROD_METRICS_CANISTER_ID"
-
-dfx canister --network $network create --all
-echo ""
-
-echo "Building Nuance...."
-dfx build --all
-echo ""
-
-echo "$modeAction Nuance...."
-dfx canister --network $network install --all --mode $mode
+echo "Deploying all Nuance main canisters"
+dfx deploy --network $network
 echo ""
 
 #endregion

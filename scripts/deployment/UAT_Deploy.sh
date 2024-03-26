@@ -21,4 +21,6 @@ echo ""
 cd $PUBLICATIONS_REPO_PATH
 dfx generate
 dfx deploy --network $NETWORK -y
-node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
+
+echo "Publication Buckets excluded for this deployment"
+# node scripts/upgrade-publication-canisters.js  --multi --$NETWORK

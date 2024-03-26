@@ -2,53 +2,49 @@
   "canisters": {
     "CyclesDispenser": {
       "main": "src/CyclesDispenser/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "353ux-wqaaa-aaaaf-qakga-cai"
     },
     "FastBlocks_EmailOptIn": {
       "main": "src/FastBlocks_EmailOptIn/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "dgwwd-jaaaa-aaaaf-qai7a-cai"
     },
     "KinicEndpoint": {
-      "dependencies": [
-        "PostCore"
-      ],
+      "dependencies": ["PostCore"],
       "main": "src/KinicEndpoint/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "4m3sz-lqaaa-aaaaf-qagza-cai"
     },
     "PostBucket": {
       "main": "src/PostBucket/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "3uy7l-ayaaa-aaaaf-qakhq-cai"
     },
     "PostCore": {
       "main": "src/PostCore/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "322sd-3iaaa-aaaaf-qakgq-cai"
     },
     "PostIndex": {
       "main": "src/PostIndex/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "r5sjg-7iaaa-aaaaf-qaama-cai"
     },
     "Storage": {
       "main": "src/Storage/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "y2pkg-ciaaa-aaaaf-qagbq-cai"
     },
     "User": {
       "main": "src/User/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "rtqeo-eyaaa-aaaaf-qaana-cai"
     },
     "Metrics": {
       "main": "src/Metrics/main.mo",
-      "type": "motoko"
-    },
-    "nuance_assets": {
-      "frontend": {
-        "entrypoint": "dist/index.html"
-      },
-      "source": [
-        "dist/",
-        "src/well-known/",
-        "src/SEO/"
-      ],
-      "type": "assets"
+      "type": "motoko",
+      "specified_id": "xjlvo-hyaaa-aaaam-qbcga-cai"
     }
   },
   "defaults": {

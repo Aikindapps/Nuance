@@ -101,9 +101,9 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'searchWithinPublication' : IDL.Func(
-        [IDL.Text, IDL.Bool, IDL.Nat32, IDL.Nat32, IDL.Vec(IDL.Text)],
+        [IDL.Text, IDL.Bool, IDL.Nat32, IDL.Nat32, IDL.Text],
         [SearchResultData],
-        ['query'],
+        ['composite_query'],
       ),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result], []),

@@ -40,4 +40,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const KinicEndpoint = createActor(canisterId);
+export const KinicEndpoint = canisterId ? createActor(canisterId) : undefined;

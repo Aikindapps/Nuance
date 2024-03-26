@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../../UI/Button/Button';
-import { PostType, UserType } from '../../types/types';
+import { PostType, PublicationType, UserType } from '../../types/types';
 import CardHorizontal from '../card-horizontal/card-horizontal';
 import Loader from '../../UI/loader/Loader';
 import { colors, images } from '../../shared/constants';
@@ -24,6 +24,8 @@ type EditorArticleListProps = {
   sortedByPublishedDate: boolean;
   handleSortByModifiedDate: Function;
   sortedByLastModifiedDate: boolean;
+  publication: PublicationType | undefined;
+  refreshPosts: (postId: string) => Promise<void>;
   dark?: boolean;
 };
 
@@ -40,6 +42,8 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
   sortedByPublishedDate,
   handleSortByModifiedDate,
   sortedByLastModifiedDate,
+  refreshPosts,
+  publication,
   dark,
 }): JSX.Element => {
   const darkOptionsAndColors = {
@@ -75,6 +79,7 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
         >
           MODIFIED
         </p>
+        <p className='title-general title-keys-sold'>KEYS SOLD</p>
       </div>
       {!displayingPostsLoading ? (
         displayingPosts.map((post: PostType) => (
@@ -85,6 +90,8 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
             post={post}
             toggleHandler={toggleHandler}
             isLoading={false}
+            publication={publication}
+            refreshPosts={refreshPosts}
           />
         ))
       ) : (

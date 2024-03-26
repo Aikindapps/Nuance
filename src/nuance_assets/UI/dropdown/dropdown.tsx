@@ -6,6 +6,7 @@ import { colors } from '../../shared/constants';
 interface DropdownProps {
   items: string[];
   onSelect: (item: string) => void;
+  uniqueId: string;
   selected?: string;
   icons?: string[];
   style?: any;
@@ -13,7 +14,7 @@ interface DropdownProps {
   selectedTextStyle?: any;
   drodownItemsWrapperStyle?: any;
   arrowWidth?: number;
-  imageStyle?: any
+  imageStyle?: any;
   dropdownMenuItemStyle?: any;
   notActiveIfOnlyOneItem?: boolean;
   onIsOpenChanged?: (isOpen: boolean) => void;
@@ -24,6 +25,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   onSelect,
   selected,
   icons,
+  uniqueId,
   style,
   nonActive,
   selectedTextStyle,
@@ -32,7 +34,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   imageStyle,
   dropdownMenuItemStyle,
   notActiveIfOnlyOneItem,
-  onIsOpenChanged
+  onIsOpenChanged,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -41,25 +43,36 @@ const Dropdown: React.FC<DropdownProps> = ({
   const menuRef = useRef(null);
   const onlyOneItem = notActiveIfOnlyOneItem && items.length === 1;
 
-  /*const handleClickOutside = (event) => {
-    if (menuRef.current && !menuRef.current.contains(event.target)) {
-      setIsOpen(false);
-    }
-  };
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    const handleOutsideClick = (event: MouseEvent) => {
+      const dropdownMenuWrapper = document.getElementById(uniqueId);
+      const itemsWrapper = document.getElementById(
+        'dropdown-items-' + uniqueId
+      );
+      if (
+        dropdownMenuWrapper &&
+        !dropdownMenuWrapper.contains(event.target as Node) &&
+        itemsWrapper &&
+        !itemsWrapper.contains(event.target as Node) &&
+        isOpen
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, []);
-  */
+  }, [isOpen]);
 
   return (
     <div
       className={
         isOpen ? 'dropdown-menu-wrapper-active' : 'dropdown-menu-wrapper'
       }
+      id={uniqueId}
       ref={menuRef}
       style={{
         ...style,
@@ -120,6 +133,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       {!onlyOneItem && (
         <div
           className='dropdown-menu-items'
+          id={'dropdown-items-' + uniqueId}
           style={
             isOpen && !nonActive
               ? {

@@ -19,6 +19,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import CanisterDeclarations "../shared/CanisterDeclarations";
 
 actor PostIndex {
   let Unauthorized = "Unauthorized";
@@ -446,7 +447,7 @@ actor PostIndex {
     };
   };
 
-  public shared query ({ caller }) func searchWithinPublication(searchTerm : Text, isTagSearch : Bool, indexFrom : Nat32, indexTo : Nat32, searchingPostIds : [Text]) : async Types.SearchResultData {
+  public shared composite query ({ caller }) func searchWithinPublication(searchTerm : Text, isTagSearch : Bool, indexFrom : Nat32, indexTo : Nat32, publicationHandle : Text) : async Types.SearchResultData {
     Debug.print("PostIndex->search");
     Debug.print("searchTerm: " # searchTerm # ", isTagSearch: " # Bool.toText(isTagSearch) # ", indexFrom: " # Nat32.toText(indexFrom) # ", indexTo: " # Nat32.toText(indexTo));
     //validate input
@@ -474,61 +475,75 @@ actor PostIndex {
       keyWords := U.htmlToKeywords(searchTerm);
     };
 
-    for (word in Iter.fromArray(keyWords)) {
-      Debug.print("word: " # word);
-      let indexedPosts : [Text] = U.safeGet(hashMap, word, []);
-      for (postId in Iter.fromArray(indexedPosts)) {
-        Debug.print("  postId: " # postId);
-        if (U.arrayContains(searchingPostIds, postId)) {
-          results.put(postId, null);
+    //fetch the post ids in the given publication
+    let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+    switch(await postCoreCanister.getUserPostIds(U.lowerCase(publicationHandle))) {
+      case(#ok(publicationPostIds)) {
+        for (word in Iter.fromArray(keyWords)) {
+          Debug.print("word: " # word);
+          let indexedPosts : [Text] = U.safeGet(hashMap, word, []);
+          for (postId in Iter.fromArray(indexedPosts)) {
+            Debug.print("  postId: " # postId);
+            if (U.arrayContains(publicationPostIds, postId)) {
+              results.put(postId, null);
+            };
+
+          };
         };
 
+        let postIds = Iter.toArray(results.keys());
+
+        // select a "page" from the results (for paging search results in the UI)
+        var postIdsBuffer : Buffer.Buffer<Text> = Buffer.Buffer<Text>(10);
+
+        // prevent underflow error
+        let totalCount : Nat = postIds.size();
+        if (totalCount == 0) {
+          return {
+            totalCount = "0";
+            postIds = [];
+          };
+        };
+
+        let lastIndex : Nat = totalCount - 1;
+
+        let indexStart = Nat32.toNat(indexFrom);
+        if (indexStart > lastIndex) {
+          return {
+            totalCount = "0";
+            postIds = [];
+          };
+        };
+
+        var indexEnd = Nat32.toNat(indexTo);
+        if (indexEnd > lastIndex) {
+          indexEnd := lastIndex;
+        };
+
+
+        for (i in Iter.range(indexStart, indexEnd)) {
+          Debug.print("Buffer Post Added: " #postIds[i]);
+          postIdsBuffer.add(postIds[i]);
+        };
+
+        // return the total count and the post ids to use for the page
+        {
+          totalCount = Nat.toText(totalCount);
+          postIds = Buffer.toArray(postIdsBuffer);
+        };
+      };
+      case(#err(error)) {
+        //handle not found
+        //return an empty array
+        return {
+          totalCount = "0";
+          postIds = [];
+        };
       };
     };
+    
 
-    let postIds = Iter.toArray(results.keys());
-
-    // select a "page" from the results (for paging search results in the UI)
-    var postIdsBuffer : Buffer.Buffer<Text> = Buffer.Buffer<Text>(10);
-
-    // prevent underflow error
-    let totalCount : Nat = postIds.size();
-    if (totalCount == 0) {
-      return {
-        totalCount = "0";
-        postIds = [];
-      };
-    };
-
-    let lastIndex : Nat = totalCount - 1;
-
-    let indexStart = Nat32.toNat(indexFrom);
-    if (indexStart > lastIndex) {
-      return {
-        totalCount = "0";
-        postIds = [];
-      };
-    };
-
-    var indexEnd = Nat32.toNat(indexTo);
-    if (indexEnd > lastIndex) {
-      indexEnd := lastIndex;
-    };
-
-    Debug.print("Original search results count: " # Nat.toText(postIds.size()));
-
-    for (i in Iter.range(indexStart, indexEnd)) {
-      Debug.print("Buffer Post Added: " #postIds[i]);
-      postIdsBuffer.add(postIds[i]);
-    };
-
-    Debug.print("Paged search results count: " # Nat.toText(postIdsBuffer.size()));
-
-    // return the total count and the post ids to use for the page
-    {
-      totalCount = Nat.toText(totalCount);
-      postIds = Buffer.toArray(postIdsBuffer);
-    };
+    
   };
 
   //refactor this to just be search func that take in array of tags

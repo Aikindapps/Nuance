@@ -118,7 +118,7 @@ const fetchPostsByBuckets = async (
       return { ...keyProperties, ...bucketType } as PostType;
     } else {
       //should never happen
-      return { ...bucketType } as PostType;
+      return { ...bucketType, views: '0', tags: [], claps: '0' } as PostType;
     }
   });
 };
@@ -480,7 +480,7 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
     }
     let applaudsMetricsValues = Array.from(applaudsMap).map((value) => {
       return {
-        value: value[1],
+        value: parseInt((value[1] / Math.pow(10, 8)).toFixed(0)),
         name: `Total Applauds (${value[0]})`,
       };
     });
@@ -537,7 +537,7 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
       );
       let publishedPostsHistoricalData =
         await postCoreActor.getHistoricalPublishedArticlesData();
-  
+
       let allApplaudsData = (
         await Promise.all(
           get().postBucketCanisterIds.map(async (postBucketCanisterId) => {
@@ -547,13 +547,13 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
           })
         )
       ).flat(1);
-  
+
       return {
         posts: publishedPostsHistoricalData,
         applauds: allApplaudsData,
       };
     } catch (error) {
-      toastError(error)
+      toastError(error);
       return {
         posts: [],
         applauds: [],

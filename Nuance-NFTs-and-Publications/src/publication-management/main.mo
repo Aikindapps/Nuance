@@ -387,16 +387,6 @@ actor class Management() = this {
             case (#err(err)) {};
         };
 
-        //check nftFactory canister trusted canisters
-        let NftFactory = CanisterDeclarations.getNftFactoryCanister();
-        let whitelistedCanisterIds = List.map<(Text, Text), Text>(List.fromArray(await NftFactory.getWhitelistedPublishers()), func(val : (Text, Text)) : Text { val.1 });
-
-        for (publication in publicationCanisterIdsHashmap.entries()) {
-            if (not U.arrayContains(List.toArray(whitelistedCanisterIds), publication.1)) {
-                ignore await NftFactory.whitelistPublication(publication.0, publication.1);
-            };
-        };
-
     };
     private func isAdmin(caller : Principal) : Bool {
         var c = Principal.toText(caller);

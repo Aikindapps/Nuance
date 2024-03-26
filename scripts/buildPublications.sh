@@ -19,12 +19,6 @@ sudo rm -rf .dfx
 
 echo "Deploying the PublicationManagement and NftFactory canisters that mirror the production canisters"
 
-PROD_PUBLICATION_MANAGEMENT_CANISTER_ID="$(grep -A2 '"PublicationManagement"' $productionCanisterIdsPath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create PublicationManagement --specified-id "$PROD_PUBLICATION_MANAGEMENT_CANISTER_ID"
-
-PROD_NFT_FACTORY_CANISTER_ID="$(grep -A2 '"NftFactory"' $productionCanisterIdsPath | grep 'ic' | grep -o '[A-Za-z0-9\-]\{27\}')"
-dfx canister --network $network create NftFactory --specified-id "$PROD_NFT_FACTORY_CANISTER_ID"
-
 dfx deploy
 
 dfx ledger fabricate-cycles --all
@@ -58,28 +52,6 @@ echo "NftFactory Canister id: $nftFactoryCanisterId"
 echo ""
 
 echo ""
-echo "Registering admin to PublicationManagement canister"
-echo ""
-dfx canister --network $network call PublicationManagement registerAdmin '("'$principalId'")'
-echo ""
-echo "register Publication Management as admin to itself for publication batch upgrades"
-dfx canister --network $network call PublicationManagement registerAdmin '("'$publicationManagementCanisterId'")'
-
-
-echo ""
-echo "Registering admins to NftFactory canister"
-echo ""
-dfx canister --network $network call NftFactory registerAdmin '("'$principalId'")'
-dfx canister --network $network call NftFactory registerAdmin '("'$publicationManagementCanisterId'")'
-
-
-echo ""
-echo "Registering the PublicationManagement canister as an admin to User and PostCore canisters"
-echo ""
-dfx canister --network $network call $userCanisterId registerAdmin '("'$publicationManagementCanisterId'")'
-dfx canister --network $network call $postCoreCanisterId registerAdmin '("'$publicationManagementCanisterId'")'
-
-echo ""
 echo "Initializing the PublicationManagement canister"
 echo ""
 dfx canister --network $network call PublicationManagement initManagementCanister
@@ -96,7 +68,7 @@ echo "Publication canister id: $firstPublicationCanisterId"
 echo ""
 echo "Updating the details of the first publication"
 echo ""
-dfx canister --network $network call $firstPublicationCanisterId updatePublicationDetails '("Description of the awesome publication!", "Awesome publication", "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5187", vec {}, vec {}, vec {"Awesome-publication"}, "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5147", "Subtitle of this thing.", record {website=""; socialChannels=vec{""};}, "1688564984626")'
+dfx canister --network $network call $firstPublicationCanisterId updatePublicationDetails '("Description of the awesome publication!", "Awesome publication", "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5187", vec {}, vec {}, vec {}, "https://7vltd-byaaa-aaaaf-qagqq-cai.raw.ic0.app/storage?contentId=o4exa-u7zvc-6olu6-herh6-6v5i4-e5rp4-lvh7g-q64lt-3ivnf-drqdf-6qe-image-5147", "Subtitle of this thing.", record {website=""; socialChannels=vec{};}, "1688564984626")'
 
 
 echo ""
@@ -110,7 +82,6 @@ counter=0
     subtitle=Subtitle-$counter
     content=DevInstall-$counter-content-publication
     dfx canister call --network $network $postCoreCanisterId save '(record {
-        handle="Awesome-publication";
         postId=""; 
         title="'$title'"; 
         subtitle="'$subtitle'"; 
@@ -121,7 +92,8 @@ counter=0
         creator="'$principal'"; 
         isPublication=true; 
         category=""; 
-        isPremium=false
+        premium= null;
+        handle="Awesome-publication"
     })'
 
     counter=$((counter + 1))
@@ -129,39 +101,27 @@ counter=0
 
 
 echo ""
-echo "Creating first NFT canister"
-echo ""
-accountId=$(dfx ledger account-id)
-firstNftCanisterReturn=$(dfx canister --network $network call $firstPublicationCanisterId createNftCanister '(2000: nat, "'$accountId'")')
-firstNftCanisterId=$(echo "$firstNftCanisterReturn" | sed -n 's/.*canister id: \([^ ]*\).*/\1/p')
-echo "EXT NFT canister id: $firstNftCanisterId"
-
-
-
-
-echo ""
 echo "Create a premium article"
 echo ""
 userPrincipal=$(dfx identity get-principal)
 savePostReturn=$(dfx canister --network $network call $postCoreCanisterId save '(record {
-    handle="Awesome-publication";
     postId=""; 
-    title="Nft article"; 
-    subtitle="Nft article subtitle"; 
+    title="'$title'"; 
+    subtitle="'$subtitle'"; 
     headerImage=""; 
-    content="Nft article content"; 
-    isDraft=true; 
+    content="'$content'"; 
+    isDraft=false; 
     tagIds= vec{"1"; "5";}; 
     creator="'$principal'"; 
     isPublication=true; 
     category=""; 
-    isPremium=true
+    premium= opt record {thumbnail= ""; maxSupply = 20: nat; icpPrice= 100000000: nat;};
+    handle="Awesome-publication"
 })')
-nftArticlePostId=$(echo "$savePostReturn" | sed -n 's/.*4_258_176_091 = "\(.*\)";/\1/p')
-dfx canister --network $network call $firstPublicationCanisterId createNftFromPremiumArticle '("'$nftArticlePostId'", 50: nat, 10000000: nat, "")'
-
+echo $savePostReturn
 
 echo ""
 echo "Index the popular posts"
 echo ""
 dfx canister --network $network call $postCoreCanisterId indexPopular
+

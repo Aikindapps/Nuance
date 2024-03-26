@@ -23,7 +23,13 @@ module {
     creator : Text; //publication author
     isPublication : Bool;
     category : Text;
-    isPremium : Bool;
+    premium : ?{
+      //we  can extend this object with new fields to have more customization
+      thumbnail: Text;
+      maxSupply: Nat;
+      icpPrice: Nat;
+      editorPrincipals: [Text]; //to populate the initalMintingAddresses field in NftFactory canister function
+    };
     tagNames : [Text];
     caller : Principal;
   };
@@ -58,6 +64,7 @@ module {
     content : Text;
     isDraft : Bool;
     isPremium : Bool;
+    nftCanisterId: ?Text;
 
     // fields stored as Int, but returned to UI as Text
     created : Text; //determined at draft creation

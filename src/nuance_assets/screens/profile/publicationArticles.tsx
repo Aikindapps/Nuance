@@ -21,6 +21,7 @@ const PublicationArticles = () => {
   const [publicationHeaderImage, setPublicationHeaderImage] = useState<any>('');
   const [writersCount, setWritersCount] = useState<any>(0);
   const [articlesCount, setArticlesCount] = useState<any>(0);
+  const [premiumArticlesCount, setPremiumArticlesCount] = useState<any>(0);
   const [categoriesCount, setCategoriesCount] = useState<any>(0);
   const [followersCount, setFollowersCount] = useState<any>('0');
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
@@ -96,6 +97,7 @@ const PublicationArticles = () => {
     allTags,
     userPostIds,
     getUserPostIds,
+    getSavedPostReturnOnly,
   } = usePostStore((state) => ({
     searchText: state.searchText,
     setSearchText: state.setSearchText,
@@ -107,12 +109,17 @@ const PublicationArticles = () => {
     allTags: state.allTags,
     userPostIds: state.userPostIds,
     getUserPostIds: state.getUserPostIds,
+    getSavedPostReturnOnly: state.getSavedPostReturnOnly,
   }));
   const context = useContext(Context);
   const featureIsLive = context.publicationFeature;
 
   useEffect(() => {
     setArticlesCount(writerPostCounts?.totalPostCount);
+  }, [writerPostCounts]);
+
+  useEffect(() => {
+    setPremiumArticlesCount(writerPostCounts?.premiumCount);
   }, [writerPostCounts]);
 
   useEffect(() => {
@@ -154,6 +161,23 @@ const PublicationArticles = () => {
       window.location.pathname.lastIndexOf('/') + 1
     );
   };
+
+  useEffect(() => {
+    //handle the sorting
+    if (showSearchResults) {
+      if (sortedByPublishedDateSearchedPosts) {
+        handleSortByPublishedDateSearchedPosts();
+      } else {
+        handleSortByModifiedDateSearchedPosts();
+      }
+    } else {
+      if (sortedByPublishedDate) {
+        handleSortByPublishedDate();
+      } else {
+        handleSortByModifiedDate();
+      }
+    }
+  }, [loadingSearchResults, displayingPostsLoading]);
 
   useEffect(() => {
     setDisplayingPosts([]);
@@ -305,7 +329,7 @@ const PublicationArticles = () => {
   };
 
   const handleSearch = async (loadingMore: boolean) => {
-    if (loadingSearchResults) {
+    if (loadingSearchResults || !publication) {
       return;
     }
     if (!loadingMore) {
@@ -329,7 +353,7 @@ const PublicationArticles = () => {
           isTagSearch,
           searchLoadMoreCounter * 20,
           (searchLoadMoreCounter + 1) * 20,
-          publicationPostIds,
+          publication.publicationHandle,
           user
         );
         setSearchLoadMoreCounter(searchLoadMoreCounter + 1);
@@ -339,7 +363,7 @@ const PublicationArticles = () => {
           isTagSearch,
           0,
           20,
-          publicationPostIds,
+          publication.publicationHandle,
           user
         );
         setSearchLoadMoreCounter(1);
@@ -428,6 +452,26 @@ const PublicationArticles = () => {
       : colors.primaryTextColor,
   };
 
+  const refreshPost = async (postId: string) => {
+    setDisplayingPostsLoading(true);
+    setLoadingSearchResults(true);
+    let response = await getSavedPostReturnOnly(postId, true);
+    if (response) {
+      let refreshedPost = response;
+      setDisplayingPosts(
+        displayingPosts.map((displayingPost) => {
+          if (displayingPost.postId === refreshedPost.postId) {
+            return refreshedPost;
+          } else {
+            return displayingPost;
+          }
+        })
+      );
+    }
+    setLoadingSearchResults(false);
+    setDisplayingPostsLoading(false);
+  };
+
   return (
     <div className='wrapper'>
       <div
@@ -449,10 +493,7 @@ const PublicationArticles = () => {
         <div className='publication-info-wrapper'>
           <p className='display-name'>{publicationHandle}</p>
           <div className='publication-info-horizontal-flex'>
-            <img
-              className='header-image'
-              src={publicationHeaderImage}
-            />
+            <img className='header-image' src={publicationHeaderImage} />
             <div className='publication-info-vertical-flex'>
               <div className='name-edit-button'>
                 <div style={darkOptionsAndColors} className='name'>
@@ -504,14 +545,14 @@ const PublicationArticles = () => {
                   <p className='stat'>{articlesCount} articles</p>
                   <p className='stat'>{writersCount} writers</p>
                   <p className='stat'>{categoriesCount} categories</p>
+                  <p className='stat'>{followersCount} followers</p>
                   <p className='stat-without-border'>
-                    {followersCount} followers
+                    {premiumArticlesCount} NFTs
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
         </div>
         {showSearchResults ? (
           <EditorSearchList
@@ -533,6 +574,10 @@ const PublicationArticles = () => {
             sortedByPublishedDate={sortedByPublishedDateSearchedPosts}
             handleSortByModifiedDate={handleSortByModifiedDateSearchedPosts}
             handleSortByPublishedDate={handleSortByPublishedDateSearchedPosts}
+            publication={publication}
+            refreshPosts={async (postId: string) => {
+              await refreshPost(postId);
+            }}
           />
         ) : (
           <EditorArticleList
@@ -548,6 +593,10 @@ const PublicationArticles = () => {
             handleSortByPublishedDate={handleSortByPublishedDate}
             sortedByLastModifiedDate={sortedByLastModifiedDate}
             sortedByPublishedDate={sortedByPublishedDate}
+            publication={publication}
+            refreshPosts={async (postId: string) => {
+              await refreshPost(postId);
+            }}
           />
         )}
       </div>

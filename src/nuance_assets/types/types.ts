@@ -4,7 +4,7 @@ import { UserPostCounts } from '../services/actorService';
 
 export type SocialLinksObject = {
   website: string;
-  socialChannels: string[]
+  socialChannels: string[];
 };
 
 export type PublicationCta = {
@@ -31,7 +31,7 @@ export type PublicationType = {
   cta: PublicationCta;
   nftCanisterId: string;
   postCounts?: UserPostCounts;
-  userListItem?: UserListItem
+  userListItem?: UserListItem;
 };
 
 export type PublicationStylingObject = {
@@ -57,7 +57,7 @@ export type UserType = {
   followersArray: Array<string>;
   publicationsArray: Array<PublicationObject>;
   website: string;
-  socialChannels: Array<string>
+  socialChannels: Array<string>;
   nuaTokens: number;
   followersCount: number;
 };
@@ -93,6 +93,8 @@ export type PostType = {
   claps: string;
   category: string;
   isPremium: boolean;
+  nftCanisterId?: [] | [string];
+  premiumArticleSaleInfo?: PremiumArticleSaleInformation;
   bucketCanisterId: string;
   wordCount: string;
 
@@ -162,18 +164,16 @@ export type PremiumPostActivityListItem = {
   tokenIdentifier?: string;
   activity: string;
   userAccountId: string;
+  sellerAddresses: string[];
 };
 
 export type PremiumArticleSaleInformation = {
-  cheapestTokenIndex: string;
-  cheapesTokenAccesKeyIndex: string;
-  totalSupply: string;
-  available: string;
+  tokenIndex: number;
+  totalSupply: number;
+  currentSupply: number;
   nftCanisterId: string;
-  cheapestPrice: string;
-  cheapestTokenIdentifier: string;
-  postId: string;
-  soldOut: boolean;
+  priceReadable: string;
+  price_e8s: number;
 };
 
 export type PairInfo = {
@@ -205,4 +205,10 @@ export type TransactionListItem = {
   sender: string;
   isDeposit: boolean;
   amount: number;
-}
+};
+
+export type CreatePremiumArticleData = {
+  thumbnail: string;
+  icpPrice: bigint;
+  maxSupply: bigint;
+};

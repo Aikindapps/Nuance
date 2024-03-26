@@ -1,0 +1,28 @@
+@import '../../shared/styles/Colors';
+.premium-article-sold-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 4px;
+  .sold-bar-text {
+    font-family: Roboto;
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 16px;
+    text-align: left;
+    color: $tag-text-color;
+  }
+  .sold-bar {
+    display: flex;
+
+    .sold-percentage-remaining {
+      background-color: #43dfba;
+      height: 8px;
+    }
+
+    .sold-percentage-sold {
+      background-color: #151451;
+      height: 8px;
+    }
+  }
+}

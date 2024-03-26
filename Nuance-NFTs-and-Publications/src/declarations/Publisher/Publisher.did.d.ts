@@ -1,21 +1,13 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
-export type AccountIdentifier = string;
-export type AccountIdentifier__1 = string;
-export type Balance = bigint;
 export type CanisterCyclesAggregatedData = BigUint64Array | bigint[];
 export type CanisterHeapMemoryAggregatedData = BigUint64Array | bigint[];
 export type CanisterMemoryAggregatedData = BigUint64Array | bigint[];
 export interface CanisterMetrics { 'data' : CanisterMetricsData }
 export type CanisterMetricsData = { 'hourly' : Array<HourlyMetricsData> } |
   { 'daily' : Array<DailyMetricsData> };
-export type CommonError = { 'InvalidToken' : TokenIdentifier } |
-  { 'Other' : string };
-export interface CreateNftFromArticleResponse {
-  'tokenIndexes' : Uint32Array | number[],
-  'transferResponses' : Array<TransferResponse>,
-}
 export interface DailyMetricsData {
   'updateCalls' : bigint,
   'canisterHeapMemorySize' : NumericEntity,
@@ -29,14 +21,6 @@ export interface GetMetricsParameters {
   'granularity' : MetricsGranularity,
   'dateFromMillis' : bigint,
 }
-export interface GetPremiumArticleInfoReturn {
-  'writerHandle' : string,
-  'totalSupply' : string,
-  'nftCanisterId' : string,
-  'tokenIndexStart' : string,
-  'sellerAccount' : string,
-  'postId' : string,
-}
 export interface HourlyMetricsData {
   'updateCalls' : UpdateCallsAggregatedData,
   'canisterHeapMemorySize' : CanisterHeapMemoryAggregatedData,
@@ -47,13 +31,6 @@ export interface HourlyMetricsData {
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
-export interface NftCanisterInformation {
-  'nuanceSharePercentage' : string,
-  'nuanceShareAddress' : string,
-  'marketplaceRoyaltyPercentage' : string,
-  'marketplaceRoyaltyAddress' : string,
-  'canisterId' : string,
-}
 export interface NumericEntity {
   'avg' : bigint,
   'max' : bigint,
@@ -75,6 +52,7 @@ export interface Post {
   'publishedDate' : string,
   'claps' : string,
   'tags' : Array<PostTagModel>,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
   'category' : string,
   'handle' : string,
@@ -125,52 +103,29 @@ export interface PublicationStyling {
 export interface Publisher {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addEditor' : ActorMethod<[string], Result>,
-  'addNftCanister' : ActorMethod<[string], undefined>,
   'addPublicationPostCategory' : ActorMethod<[string, string], Result_1>,
   'addWriter' : ActorMethod<[string], Result>,
   'availableCycles' : ActorMethod<[], bigint>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
-  'createNftCanister' : ActorMethod<[bigint, AccountIdentifier], Result_3>,
-  'createNftFromPremiumArticle' : ActorMethod<
-    [string, bigint, bigint, string],
-    Result_11
-  >,
-  'debugRemoveNftCanister' : ActorMethod<[], undefined>,
-  'disperseIcpGainedFromPost' : ActorMethod<[string], Result_3>,
-  'disperseIcpTimerMethod' : ActorMethod<[], undefined>,
-  'getAccountIdByPostIdPublic' : ActorMethod<[string], string>,
-  'getAdmins' : ActorMethod<[], Result_10>,
+  'getAdmins' : ActorMethod<[], Result_6>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_10>,
+  'getCgUsers' : ActorMethod<[], Result_6>,
   'getEditorAndWriterPrincipalIds' : ActorMethod<
     [],
     [Array<string>, Array<string>]
   >,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getNftCanisterInformation' : ActorMethod<[], NftCanisterInformation>,
   'getPlatformOperators' : ActorMethod<[], List>,
-  'getPremiumArticleInfo' : ActorMethod<[string], Result_9>,
-  'getPremiumArticleInformationsByWriterHandle' : ActorMethod<
-    [string],
-    Array<GetPremiumArticleInfoReturn>
-  >,
   'getPublication' : ActorMethod<[string], Result>,
-  'getPublicationPost' : ActorMethod<[string], Result_1>,
-  'getPublicationPosts' : ActorMethod<
-    [boolean, boolean, number, number],
-    Array<Post>
-  >,
   'getPublicationQuery' : ActorMethod<[string], Result>,
-  'getWritersDrafts' : ActorMethod<[], Array<Post>>,
   'idQuick' : ActorMethod<[], Principal>,
   'initializeCanister' : ActorMethod<[string, string, string], Result_3>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
-  'listAllTokens' : ActorMethod<[string], Array<Result_8>>,
   'migrateEditorsWritersHandles' : ActorMethod<[], Result>,
   'registerAdmin' : ActorMethod<[string], Result_4>,
   'registerCgUser' : ActorMethod<[string], Result_4>,
@@ -179,10 +134,7 @@ export interface Publisher {
   'removeEditor' : ActorMethod<[string], Result>,
   'removePublicationPostCategory' : ActorMethod<[string], Result_1>,
   'removeWriter' : ActorMethod<[string], Result>,
-  'setMaxMemorySize' : ActorMethod<[bigint], Result_7>,
-  'setNftCanisterRoyalty' : ActorMethod<[bigint, AccountIdentifier], Result_6>,
-  'setNuanceAddress' : ActorMethod<[AccountIdentifier], Result_5>,
-  'setNuanceSharePercentage' : ActorMethod<[bigint], Result_3>,
+  'setMaxMemorySize' : ActorMethod<[bigint], Result_5>,
   'unregisterAdmin' : ActorMethod<[string], Result_4>,
   'unregisterCgUser' : ActorMethod<[string], Result_4>,
   'unregisterPlatformOperator' : ActorMethod<[string], Result_4>,
@@ -213,25 +165,15 @@ export type Result = { 'ok' : Publication } |
   { 'err' : string };
 export type Result_1 = { 'ok' : Post } |
   { 'err' : string };
-export type Result_10 = { 'ok' : Array<string> } |
-  { 'err' : string };
-export type Result_11 = { 'ok' : CreateNftFromArticleResponse } |
-  { 'err' : string };
 export type Result_2 = { 'ok' : User } |
   { 'err' : string };
 export type Result_3 = { 'ok' : string } |
   { 'err' : string };
 export type Result_4 = { 'ok' : null } |
   { 'err' : string };
-export type Result_5 = { 'ok' : AccountIdentifier } |
+export type Result_5 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_6 = { 'ok' : [bigint, AccountIdentifier] } |
-  { 'err' : string };
-export type Result_7 = { 'ok' : bigint } |
-  { 'err' : string };
-export type Result_8 = { 'ok' : null } |
-  { 'err' : CommonError };
-export type Result_9 = { 'ok' : GetPremiumArticleInfoReturn } |
+export type Result_6 = { 'ok' : Array<string> } |
   { 'err' : string };
 export interface SocialLinksObject {
   'socialChannels' : Array<string>,
@@ -241,17 +183,6 @@ export interface SocialLinksObject__1 {
   'socialChannels' : Array<string>,
   'website' : string,
 }
-export type TokenIdentifier = string;
-export type TokenIndex = number;
-export type TransferResponse = { 'ok' : Balance } |
-  {
-    'err' : { 'CannotNotify' : AccountIdentifier__1 } |
-      { 'InsufficientBalance' : null } |
-      { 'InvalidToken' : TokenIdentifier } |
-      { 'Rejected' : null } |
-      { 'Unauthorized' : AccountIdentifier__1 } |
-      { 'Other' : string }
-  };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
   'bio' : string,
@@ -266,3 +197,5 @@ export interface User {
   'avatar' : string,
 }
 export interface _SERVICE extends Publisher {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

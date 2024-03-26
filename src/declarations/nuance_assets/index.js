@@ -40,4 +40,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const nuance_assets = createActor(canisterId);
+export const nuance_assets = canisterId ? createActor(canisterId) : undefined;

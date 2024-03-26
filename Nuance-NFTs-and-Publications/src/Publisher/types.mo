@@ -6,7 +6,7 @@ import Text "mo:base/Text";
 import UserTypes "./types_user_canister";
 import PostCoreTypes "../../../src/PostCore/types";
 import Time "mo:base/Time";
-import ExtCore "../motoko/ext/Core";
+import ExtCore "../ext_v2/motoko/ext/Core";
 import Result "mo:base/Result";
 
 module {

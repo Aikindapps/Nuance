@@ -1,54 +1,84 @@
-type Result_4 = 
+type Time = int;
+type Result_2 = 
  variant {
    err: text;
    ok: text;
  };
-type Result_3 = 
+type Result_1 = 
  variant {
    err: text;
    ok: List;
  };
-type Result_2 = 
- variant {
-   err: text;
-   ok: nat;
- };
-type Result_1 = 
+type Result = 
  variant {
    err: text;
    ok;
  };
-type Result = 
+type MetadataValue = 
+ record {
+   text;
+   variant {
+     "blob": blob;
+     "nat": nat;
+     "nat8": nat8;
+     "text": text;
+   };
+ };
+type MetadataContainer = 
  variant {
-   err: text;
-   ok: record {
-         text;
-         text;
-       };
+   "blob": blob;
+   data: vec MetadataValue;
+   json: text;
+ };
+type Metadata = 
+ variant {
+   fungible:
+    record {
+      decimals: nat8;
+      metadata: opt MetadataContainer;
+      name: text;
+      symbol: text;
+    };
+   nonfungible:
+    record {
+      asset: text;
+      metadata: opt MetadataContainer;
+      name: text;
+      thumbnail: text;
+    };
  };
 type List = 
  opt record {
        text;
        List;
      };
+type InitNftCanisterData = 
+ record {
+   admins: vec principal;
+   collectionName: text;
+   icpPrice: nat;
+   initialMintingAddresses: vec text;
+   marketplaceOpen: Time;
+   maxSupply: nat;
+   metadata: Metadata;
+   postId: text;
+   royalty: vec record {
+                  text;
+                  nat64;
+                };
+   thumbnail: text;
+   writerPrincipal: principal;
+ };
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
-  createNftCanister: () -> (Result_4);
-  getAdmins: () -> (Result_3) query;
+  createNftCanister: (InitNftCanisterData) -> (Result_2);
+  getAdmins: () -> (Result_1) query;
+  getAllNftCanisterIds: () -> (vec record {
+                                     text;
+                                     text;
+                                   }) query;
   getCanisterVersion: () -> (text) query;
-  getMaxMemorySize: () -> (nat) query;
-  getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
-  getWhitelistedPublishers: () -> (vec record {
-                                         text;
-                                         text;
-                                       }) query;
-  isThereEnoughMemory: () -> (bool) query;
-  registerAdmin: (text) -> (Result_1);
-  registerPlatformOperator: (text) -> (Result_1);
-  setMaxMemorySize: (nat) -> (Result_2);
-  unregisterAdmin: (text) -> (Result_1);
-  unregisterPlatformOperator: (text) -> (Result_1);
-  whitelistPublication: (text, text) -> (Result);
+  setExtCanisterConfigData: (text, InitNftCanisterData) -> (Result);
 }

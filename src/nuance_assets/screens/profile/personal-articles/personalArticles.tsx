@@ -198,7 +198,7 @@ const PersonalArticles = () => {
         className='personal-articles-title-navigation-wrapper'
       >
         <p className='personal-articles-title'>
-          PERSONAL ARTICLES ({counts?.totalPostCount || 0})
+          MY ARTICLES ({counts?.totalPostCount || 0})
         </p>
         <div className='personal-articles-navigation-items-wrapper'>
           {pages.map((pageName)=>{

@@ -209,13 +209,24 @@ export const SearchResults = (props: {
             />
           </div>
           <Dropdown
+            uniqueId={'search-results-dropdown-menu'}
             items={['Relevance', 'Most recent']}
             onSelect={(item: string) => {
               setSortType(item as SortType);
             }}
-            style={{ width: '100px', height: '25px', position:'absolute', right:'0', bottom:'0' }}
+            style={{
+              width: '100px',
+              height: '25px',
+              position: 'absolute',
+              right: '0',
+              bottom: '0',
+            }}
             selectedTextStyle={{ fontSize: '12px', fontWeight: '400' }}
-            drodownItemsWrapperStyle={{ top: '28px', rowGap: 0, minWidth:'120px'}}
+            drodownItemsWrapperStyle={{
+              top: '28px',
+              rowGap: 0,
+              minWidth: '120px',
+            }}
             arrowWidth={12}
           />
         </div>

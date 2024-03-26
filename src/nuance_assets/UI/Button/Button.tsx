@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { hexShade, hexTint } from '../../shared/utils';
 import { colors } from '../../shared/constants';
+import { LuLoader2 } from 'react-icons/lu';
 
 type ButtonProps = {
   type?: String;
@@ -9,6 +10,7 @@ type ButtonProps = {
   style?: Object;
   onClick?: (event: any) => void;
   disabled?: boolean;
+  loading?: boolean;
   primaryColor?: string;
   dark?: boolean;
 };
@@ -23,6 +25,7 @@ const Button: React.FC<ButtonProps> = (props): JSX.Element => {
     style,
     onClick,
     primaryColor,
+    loading,
   } = props;
   const [displayingBorderColor, setDisplayingBorderColor] =
     useState(primaryColor);
@@ -50,6 +53,7 @@ const Button: React.FC<ButtonProps> = (props): JSX.Element => {
       >
         {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
         {children}
+        {loading && <LuLoader2 className='button-loader-icon' />}
       </button>
     );
   } else {
@@ -62,6 +66,7 @@ const Button: React.FC<ButtonProps> = (props): JSX.Element => {
       >
         {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
         {children}
+        {loading && <LuLoader2 className='button-loader-icon' />}
       </button>
     );
   }

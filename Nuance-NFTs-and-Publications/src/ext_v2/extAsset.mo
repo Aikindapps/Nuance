@@ -9,7 +9,7 @@ import Text "mo:base/Text";
 import Array "mo:base/Array";
 import Option "mo:base/Option";
 import Char "mo:base/Char";
-import ExtCore "../motoko/ext/Core";
+import ExtCore "motoko/ext/Core";
 
 shared(msg) actor class EXTAsset() = this {
   

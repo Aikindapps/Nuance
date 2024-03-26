@@ -322,6 +322,7 @@ export const ClapModal = (props: { post: PostType }) => {
           <div className='select-currency-wrapper'>
             <p className='clap-modal-field-text'>SELECT THE CURRENCY</p>
             <Dropdown
+            uniqueId={'clap-modal-dropdown-menu'}
               items={tokenBalances.map((tokenBalance) => {
                 return tokenBalance.token.symbol;
               })}

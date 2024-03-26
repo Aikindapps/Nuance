@@ -41,7 +41,7 @@ async function prompt(question) {
 
 async function cyclesDispenserAdd(canisterId, network, threshold, topUp) {
     console.log(`🔃 Adding the canister ${canisterId} ...`);
-    const command = `dfx canister --network ${network} call CyclesDispenser addCanister '(record{canisterId="${canisterId}";minimumThreshold=${threshold}; topUpAmount=${topUp}})'`;
+    const command = `dfx canister --network ${network} call CyclesDispenser addCanister '(record{canisterId="${canisterId}";minimumThreshold=${threshold}; topUpAmount=${topUp}; isStorageBucket=false;})'`;
     const { stdout: result } = await exec(command);
     console.log(result);
 }

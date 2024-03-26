@@ -46,6 +46,7 @@ export const icons = {
   THREE_DOTS: iconsPath + 'three-dots.svg',
   THREE_DOTS_BLUE: iconsPath + 'three-dots-blue.png',
   THREE_DOTS_WHITE: iconsPath + 'three-dots-white.svg',
+  THREE_DOTS_DARK: iconsPath + 'three-dots-dark.svg',
   COPY: iconsPath + 'copy.svg',
   COPY_BLUE: iconsPath + 'copy-blue.svg',
   USER: iconsPath + 'user.svg',

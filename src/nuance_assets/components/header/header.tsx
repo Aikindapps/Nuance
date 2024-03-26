@@ -57,12 +57,6 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     user: state.user,
   }));
 
-  useEffect(() => {
-    if(context.nftFeature){
-      getOwnedNfts();
-    }
-  }, [user]);
-
   useEffect(()=>{
     verifyBitfinityWallet();
   },[])

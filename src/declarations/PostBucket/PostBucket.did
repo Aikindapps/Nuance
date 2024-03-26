@@ -55,7 +55,7 @@ type Result_2 =
    err: text;
    ok: text;
  };
-type Result_12 = 
+type Result_11 = 
  variant {
    err: text;
    ok: vec record {
@@ -63,15 +63,10 @@ type Result_12 =
              vec text;
            };
  };
-type Result_11 = 
- variant {
-   err: text;
-   ok: Applaud;
- };
 type Result_10 = 
  variant {
    err: text;
-   ok: Metadata;
+   ok: Applaud;
  };
 type Result_1 = 
  variant {
@@ -97,10 +92,17 @@ type PostSaveModel =
    handle: text;
    headerImage: text;
    isDraft: bool;
-   isPremium: bool;
    isPublication: bool;
    postId: text;
    postOwnerPrincipalId: text;
+   premium:
+    opt
+     record {
+       editorPrincipals: vec text;
+       icpPrice: nat;
+       maxSupply: nat;
+       thumbnail: text;
+     };
    subtitle: text;
    tagNames: vec text;
    title: text;
@@ -118,6 +120,7 @@ type PostBucketType__1 =
    isPremium: bool;
    isPublication: bool;
    modified: text;
+   nftCanisterId: opt text;
    postId: text;
    publishedDate: text;
    subtitle: text;
@@ -138,6 +141,7 @@ type PostBucketType =
    isPremium: bool;
    isPublication: bool;
    modified: text;
+   nftCanisterId: opt text;
    postId: text;
    publishedDate: text;
    subtitle: text;
@@ -152,7 +156,7 @@ type PostBucket =
    availableCycles: () -> (nat) query;
    buildCommentUrl: (text) -> (text) query;
    checkTipping: (text) -> ();
-   checkTippingByTokenSymbol: (text, text, text) -> (Result_11);
+   checkTippingByTokenSymbol: (text, text, text) -> (Result_10);
    delete: (text) -> (Result_4);
    deleteComment: (text) -> (Result_5);
    deleteUserPosts: (text) -> (Result_4);
@@ -168,8 +172,8 @@ type PostBucket =
                                 text;
                                 text;
                               }) query;
-   getAllSubmittedForReviews: () -> (Result_12);
-   getApplaudById: (text) -> (Result_11) query;
+   getAllSubmittedForReviews: () -> (Result_11);
+   getApplaudById: (text) -> (Result_10) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
    getCgUsers: () -> (Result_8) query;
@@ -179,9 +183,8 @@ type PostBucket =
    getList: (vec text) -> (vec PostBucketType__1) query;
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
-   getMetadata: (text, nat) -> (Result_10) query;
    getMyApplauds: () -> (vec Applaud) query;
-   getNftCanisters: () -> (vec NftCanisterEntry) query;
+   getNotMigratedPremiumArticlePostIds: () -> (vec text) query;
    getPlatformOperators: () -> (List) query;
    getPost: (text) -> (Result_6) query;
    getPostApplauds: (text) -> (vec Applaud) query;
@@ -189,9 +192,7 @@ type PostBucket =
    getPostCompositeQuery: (text) -> (Result_6) composite_query;
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
-   getPostWithPublicationControl: (text) -> (Result_6);
    getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
-   getPremiumArticle: (text) -> (Result_6);
    getPublicationPosts: (vec text, text) ->
     (vec PostBucketType__1) composite_query;
    getReportedCommentIds: () -> (vec text);
@@ -208,13 +209,11 @@ type PostBucket =
    initializeCanister: (text, text) -> (Result_2);
    isBucketCanisterActivePublic: () -> (bool) query;
    makeBucketCanisterNonActive: () -> (Result_7);
-   makePostPremium: (text) -> (bool);
    migratePostToPublication: (text, text, bool) -> (Result_1);
+   migratePremiumArticleFromOldArch: (text, opt nat) -> (Result_2);
    registerAdmin: (text) -> (Result_3);
    registerCanister: (text) -> (Result_3);
    registerCgUser: (text) -> (Result_3);
-   registerNftCanisterId: (text, text) -> (Result_2);
-   registerNftCanisterIdAdminFunction: (text, text) -> (Result_2);
    registerPlatformOperator: (text) -> (Result_3);
    reindex: () -> (Result_2);
    rejectPostByModclub: (text) -> () oneway;
@@ -225,7 +224,6 @@ type PostBucket =
    save: (PostSaveModel) -> (SaveResult);
    saveComment: (SaveCommentModel) -> (Result);
    setMaxMemorySize: (nat) -> (Result_4);
-   simulatePremiumArticle: (text, bool) -> ();
    storeAllSEO: () -> (Result_3);
    storeHandlesAndPrincipals: (vec record {
                                      text;
@@ -264,44 +262,6 @@ type Post =
    url: text;
    views: text;
    wordCount: text;
- };
-type NftCanisterEntry = 
- record {
-   canisterId: text;
-   handle: text;
- };
-type MetadataValue = 
- record {
-   text;
-   variant {
-     "blob": blob;
-     "nat": nat;
-     "nat8": nat8;
-     "text": text;
-   };
- };
-type MetadataContainer = 
- variant {
-   "blob": blob;
-   data: vec MetadataValue;
-   json: text;
- };
-type Metadata = 
- variant {
-   fungible:
-    record {
-      decimals: nat8;
-      metadata: opt MetadataContainer;
-      name: text;
-      symbol: text;
-    };
-   nonfungible:
-    record {
-      asset: text;
-      metadata: opt MetadataContainer;
-      name: text;
-      thumbnail: text;
-    };
  };
 type List = 
  opt record {

@@ -171,7 +171,6 @@ function PublicationLanding() {
     }
   };
 
-
   useEffect(() => {
     window.scrollTo(0, 0);
     const handleName = getPublicationHandleFromUrl();
@@ -241,7 +240,7 @@ function PublicationLanding() {
     setInitialPostsLoading(true);
     setTimeout(() => {
       setInitialPostsLoading(false);
-    }, 5000)
+    }, 5000);
     let posts = await getPostsByFollowers([handle], 0, 7);
     if (posts?.length) {
       setDisplayingPosts(posts);
@@ -278,7 +277,7 @@ function PublicationLanding() {
   };
 
   const handleSearch = async (loadingMore: boolean) => {
-    if (loadingSearchResults) {
+    if (loadingSearchResults || !publication) {
       return;
     }
     if (!loadingMore) {
@@ -295,13 +294,14 @@ function PublicationLanding() {
       } else {
         setSearchedTag(undefined);
       }
+
       if (loadingMore) {
         searchWithinPublication(
           phrase,
           isTagSearch,
           searchLoadMoreCounter * 20,
           (searchLoadMoreCounter + 1) * 20,
-          publicationPostIds,
+          publication.publicationHandle,
           user
         );
         setSearchLoadMoreCounter(searchLoadMoreCounter + 1);
@@ -311,7 +311,7 @@ function PublicationLanding() {
           isTagSearch,
           0,
           20,
-          publicationPostIds,
+          publication.publicationHandle,
           user
         );
         setSearchLoadMoreCounter(1);
@@ -393,7 +393,7 @@ function PublicationLanding() {
   if (
     !publication?.publicationHandle ||
     publication.publicationHandle.toLowerCase() !==
-    getPublicationHandleFromUrl().toLowerCase()
+      getPublicationHandleFromUrl().toLowerCase()
   ) {
     return (
       <div style={{ background: darkOptionsAndColors.background }}>
@@ -446,13 +446,13 @@ function PublicationLanding() {
                 style={
                   !isSidebarToggled && screenWidth <= 1089
                     ? {
-                      display: 'none',
-                    }
+                        display: 'none',
+                      }
                     : {
-                      marginRight: '15px',
-                      width: '150px',
-                      height: '47.5px',
-                    }
+                        marginRight: '15px',
+                        width: '150px',
+                        height: '47.5px',
+                      }
                 }
                 className='brand-logo-left'
                 src={publication?.styling.logo}
@@ -551,7 +551,6 @@ function PublicationLanding() {
                   alt='publication-icon'
                   className='publication-header-icon'
                 />
-
               </span>
               <span className='at-handle'>@</span>
               {publication?.publicationHandle}
@@ -595,8 +594,8 @@ function PublicationLanding() {
             <Footer />
           </div>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
 

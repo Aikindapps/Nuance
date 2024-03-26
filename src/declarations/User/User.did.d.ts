@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export type AddPublicationReturn = { 'ok' : User__1 } |
   { 'err' : string };
@@ -211,3 +212,5 @@ export interface _SERVICE {
   >,
   'validate' : ActorMethod<[any], Validate>,
 }
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
