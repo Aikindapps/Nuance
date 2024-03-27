@@ -45,7 +45,10 @@ jobs:
       - name: Install dfx
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
-        run: dfx --version
+        run: |
+          dfxvm install 0.17.0
+          dfxvm default 0.17.0
+          dfx --version
 
       - name: Install Quill
         run: |
