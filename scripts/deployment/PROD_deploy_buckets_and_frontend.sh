@@ -12,7 +12,7 @@ echo ""
 
 dfx generate
 dfx build --all --network $NETWORK
-dfx deploy nuance_assets --network $NETWORK
+dfx deploy nuance_assets --network $NETWORK -y
 node scripts/upgrades/bucketCanisterUpgrade.js --multi --$NETWORK
 
 echo ""
