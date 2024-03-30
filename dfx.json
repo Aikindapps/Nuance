@@ -45,6 +45,13 @@
       "main": "src/Metrics/main.mo",
       "type": "motoko",
       "specified_id": "xjlvo-hyaaa-aaaam-qbcga-cai"
+    },
+    "nuance_assets": {
+      "frontend": {
+        "entrypoint": "dist/index.html"
+      },
+      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "type": "assets"
     }
   },
   "defaults": {
