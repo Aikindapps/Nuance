@@ -37,7 +37,7 @@ do
         creator=""; 
         isPublication=false; 
         category=""; 
-        isPremium=false;
+        premium=null;
         handle=""
     })'
 

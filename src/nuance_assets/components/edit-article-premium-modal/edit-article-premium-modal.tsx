@@ -6,12 +6,7 @@ import RequiredFieldMessage from '../required-field-message/required-field-messa
 import { useTheme } from '../../contextes/ThemeContext';
 import './edit-article-premium-modal.scss';
 import { PostType } from '../../types/types';
-import {
-  useAuthStore,
-  usePostStore,
-  usePublisherStore,
-  useUserStore,
-} from '../../store';
+import { useUserStore } from '../../store/userStore';
 import { toastError } from '../../services/toastService';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { IoCloseOutline } from 'react-icons/io5';
@@ -19,10 +14,15 @@ import { LuLoader2 } from 'react-icons/lu';
 import PremiumArticleThumbnail from '../../UI/premium-article-thumbnail/premium-article-thumbnail';
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import { Tooltip } from 'react-tooltip';
+import { buildSvgForPremiumArticle } from '../../shared/utils';
 export const EditArticlePremiumModal = (props: {
-  refreshPost: (post: PostType) => Promise<void>;
+  refreshPost: () => Promise<void>;
   post: PostType;
-  onSave: (isDraft: boolean) => Promise<PostType | undefined>;
+  onSave: (
+    maxSupply: bigint,
+    price: bigint,
+    thumbnail: string
+  ) => Promise<void>;
   numberOfEditors: number;
 }) => {
   const modalContext = useContext(ModalContext);
@@ -39,11 +39,6 @@ export const EditArticlePremiumModal = (props: {
 
   const [loading, setLoading] = useState(false);
 
-  //postStore
-  const { createNftFromPremiumArticle } = usePostStore((state) => ({
-    createNftFromPremiumArticle: state.createNftFromPremiumArticle,
-  }));
-
   useEffect(() => {
     if (modalContext?.modalType === 'Premium article') {
       loadHeaderImage();
@@ -56,41 +51,25 @@ export const EditArticlePremiumModal = (props: {
         headerImageUsedInNft !== '' &&
         termsAccepted &&
         parseFloat(keyPrice) > 0 &&
-        inputAmount > props.numberOfEditors + 1
+        inputAmount > props.numberOfEditors + 2
       );
     } catch (error) {
-      return false
+      return false;
     }
-    
   };
-  console.log(keyPrice)
   const onPremiumPublish = async () => {
     setLoading(true);
     if (validateNft()) {
-      //modalContext?.closeModal();
-      //save the post as draft first
-      let saveReturn = await props.onSave(true);
-      console.log('saveReturn: ', saveReturn)
-      console.log(saveReturn);
-      if (saveReturn) {
-        //save as draft is successful
-        let pubHandle = saveReturn.handle;
-        let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
-        let createNftReturn = await createNftFromPremiumArticle(
-          saveReturn,
-          BigInt(inputAmount),
-          salePrice,
-          pubHandle,
-          headerImageUsedInNft
-        );
-        console.log('createNftREturn: ', createNftReturn)
-
-        await props.refreshPost({
-          ...saveReturn,
-          isDraft: false,
-          isPremium: true,
-        });
-      }
+      let salePrice = BigInt(Math.round(Number(keyPrice) * 100000000));
+      await props.onSave(
+        BigInt(inputAmount),
+        salePrice,
+        buildSvgForPremiumArticle(
+          { ...props.post, headerImage: headerImageUsedInNft },
+          props.post.creator || user?.handle || ''
+        )
+      );
+      await props.refreshPost();
     }
     setLoading(false);
     modalContext?.closeModal();
@@ -164,7 +143,10 @@ export const EditArticlePremiumModal = (props: {
         }
         className='close-modal-icon'
       />
-      <img className='nuance-logo-and-nft-icon' src={images.NUANCE_LOGO_AND_NFT_ICON}/>
+      <img
+        className='nuance-logo-and-nft-icon'
+        src={images.NUANCE_LOGO_AND_NFT_ICON}
+      />
       <p
         style={
           darkTheme
@@ -213,10 +195,10 @@ export const EditArticlePremiumModal = (props: {
                     : { cursor: loading ? 'not-allowed' : '' }
                 }
                 placeholder={`Fill in amount of keys (min. ${
-                  props.numberOfEditors + 2
+                  props.numberOfEditors + 3
                 })`}
                 min={0}
-                max={7777}
+                max={100000}
                 step='1'
                 onChange={(e) => {
                   if (loading) {
@@ -262,7 +244,7 @@ export const EditArticlePremiumModal = (props: {
                 }
                 placeholder='Amount'
                 min={0}
-                max={100}
+                max={1000}
                 step='0.0001'
                 onChange={(e) => {
                   if (loading) {
@@ -293,7 +275,12 @@ export const EditArticlePremiumModal = (props: {
             setTermsAccepted(!termsAccepted);
           }}
         >
-          <input className='terms-checkbox' type='checkbox' checked={termsAccepted} onChange={() => {}} />
+          <input
+            className='terms-checkbox'
+            type='checkbox'
+            checked={termsAccepted}
+            onChange={() => {}}
+          />
           <p
             className='terms-text'
             style={darkTheme ? { color: colors.darkModePrimaryTextColor } : {}}

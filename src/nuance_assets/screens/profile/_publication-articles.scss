@@ -190,7 +190,9 @@
                         }
     
                         .avatar-stats-wrapper {
-    
+                            flex-direction: column;
+                            align-items: start;
+                            row-gap: 8px;
                             .avatar-handle {
                                 .avatar {
                                     min-width: 18px;
@@ -202,6 +204,11 @@
                                 .handle {
                                     font-size: 12px;
                                     line-height: 15px;
+                                }
+                            }
+                            .stats{
+                                .stat{
+                                    text-align: center;
                                 }
                             }
                         }

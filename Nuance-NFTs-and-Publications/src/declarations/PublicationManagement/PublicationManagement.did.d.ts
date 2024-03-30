@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export type Followers = [] | [[string, List]];
 export type List = [] | [[string, List]];
@@ -62,3 +63,5 @@ export interface User {
   'avatar' : string,
 }
 export interface _SERVICE extends Management {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

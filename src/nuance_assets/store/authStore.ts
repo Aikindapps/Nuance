@@ -16,14 +16,19 @@ import {
   getIcrc1TokenActorAnonymous,
   getSonicActor,
 } from '../services/actorService';
-import { SUPPORTED_CANISTER_IDS, SUPPORTED_TOKENS, TokenBalance } from '../shared/constants';
+import {
+  SUPPORTED_CANISTER_IDS,
+  SUPPORTED_TOKENS,
+  TokenBalance,
+} from '../shared/constants';
 import { PairInfoExt } from '../services/sonic/Sonic.did';
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
   window.location.origin.includes('127.0.0.1');
 // II
-const identityProvider: string =
-  isLocal? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' : 'https://identity.ic0.app/#authorize';
+const identityProvider: string = isLocal
+  ? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize'
+  : 'https://identity.ic0.app/#authorize';
 
 //NFID
 const APPLICATION_NAME = 'Nuance';
@@ -53,7 +58,6 @@ const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
 const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
 
-
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
 )
@@ -62,8 +66,6 @@ const derivationOrigin: string = window.location.origin.includes(
 
 // For login/logout across tabs
 export const authChannel = new BroadcastChannel('auth_channel');
-
-
 
 export interface AuthStore {
   readonly isInitialized: boolean;
@@ -108,9 +110,13 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   fetchTokenBalances: async (): Promise<void> => {
     let wallet = await get().getUserWallet();
 
+    if (wallet.principal.length === 0) {
+      return;
+    }
+
     let pid = wallet.principal;
     let tokenBalancesPromises = [];
-   
+
     for (const supportedToken of SUPPORTED_TOKENS) {
       //add the promise for token balance
       tokenBalancesPromises.push(
@@ -123,31 +129,35 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       );
     }
     let sonicTokenPairsPromises = [];
-    for(const supportedTokenCanisterId of SUPPORTED_CANISTER_IDS){
+    for (const supportedTokenCanisterId of SUPPORTED_CANISTER_IDS) {
       sonicTokenPairsPromises.push(
         (await getSonicActor()).getPair(
           Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
           Principal.fromText(supportedTokenCanisterId)
         )
       );
-    };
-    
+    }
+
     let [tokenBalancesResponses, sonicTokenPairsResponses] = await Promise.all([
       Promise.all(tokenBalancesPromises),
       Promise.all(sonicTokenPairsPromises),
     ]);
-    let tokenBalances: TokenBalance[] = tokenBalancesResponses.map((balance, index) => {
-      return {
-        balance: Number(balance),
-        token: SUPPORTED_TOKENS[index],
-      };
-    });
-    let sonicTokenPairsIncludingUndefined = sonicTokenPairsResponses.map((val)=>{
-      return val[0]
-    })
-    let sonicTokenPairs : PairInfo[] = [];
-    sonicTokenPairsIncludingUndefined.forEach((val)=>{
-      if(val){
+    let tokenBalances: TokenBalance[] = tokenBalancesResponses.map(
+      (balance, index) => {
+        return {
+          balance: Number(balance),
+          token: SUPPORTED_TOKENS[index],
+        };
+      }
+    );
+    let sonicTokenPairsIncludingUndefined = sonicTokenPairsResponses.map(
+      (val) => {
+        return val[0];
+      }
+    );
+    let sonicTokenPairs: PairInfo[] = [];
+    sonicTokenPairsIncludingUndefined.forEach((val) => {
+      if (val) {
         sonicTokenPairs.push({
           token0: val.token0,
           token1: val.token1,
@@ -156,7 +166,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           id: val.id,
         });
       }
-    })
+    });
 
     set({ tokenBalances, sonicTokenPairs });
   },
@@ -388,8 +398,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       Usergeek.setPrincipal(Principal.anonymous());
     } else if (loginMethod === 'bitfinity') {
       get().clearLoginMethod();
-    }
-    else if(loginMethod === 'NFID'){
+    } else if (loginMethod === 'NFID') {
       Usergeek.setPrincipal(Principal.anonymous());
       await authClient.logout();
     }
@@ -450,7 +459,11 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       });
       return { principal: principal.toText(), accountId: accountId };
     }
-    var identity = (await get().getIdentity()) || new AnonymousIdentity();
+    var identity = await get().getIdentity();
+
+    if (!identity) {
+      return { principal: '', accountId: '' };
+    }
 
     let userAccountId = AccountIdentifier.fromPrincipal({
       principal: identity.getPrincipal(),

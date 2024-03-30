@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { images, icons, colors } from '../../shared/constants';
 import './_premium-article-owners.scss';
-import { PremiumArticleOwners } from '../../types/types';
+import { PremiumArticleOwners as PremiumArticlesOwnersObject } from '../../types/types';
 
 interface PremiumArticleOwnersProps {
-  owners: PremiumArticleOwners | undefined;
+  owners: PremiumArticlesOwnersObject | undefined;
   dark?: boolean;
 }
 

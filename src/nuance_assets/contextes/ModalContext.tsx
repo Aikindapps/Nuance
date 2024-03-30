@@ -1,13 +1,23 @@
 import React, { useState, createContext, ReactNode, useEffect } from 'react';
 import { PostType, PremiumPostActivityListItem } from '../types/types';
-type ModalType = 'Login' | 'WithdrawToken' | 'WithdrawNft' | 'Deposit' | 'Clap' | 'Premium article';
+type ModalType =
+  | 'Login'
+  | 'WithdrawToken'
+  | 'WithdrawNft'
+  | 'Deposit'
+  | 'Clap'
+  | 'Premium article';
 type ModalData = {
   transferNftData?: PremiumPostActivityListItem;
   clappingPostData?: PostType;
   premiumPostData?: PostType;
   premiumPostNumberOfEditors?: number;
-  premiumPostOnSave?: (isDraft: boolean) => Promise<PostType | undefined>;
-  premiumPostRefreshPost?: (post: PostType) => Promise<void>;
+  premiumPostOnSave?: (
+    maxSupply: bigint,
+    price: bigint,
+    thumbnail: string
+  ) => Promise<void>;
+  premiumPostRefreshPost?: () => Promise<void>;
 };
 type FakeApplaud = {
   postId: string;
@@ -15,16 +25,21 @@ type FakeApplaud = {
   after: number;
   date: Date;
   bucketCanisterId: string;
-}
+};
 interface ContextType {
   isModalOpen: boolean;
   modalType: ModalType | undefined;
   openModal: (modalType: ModalType, data?: ModalData) => void;
   closeModal: () => void;
-  createFakeApplaud: (postId: string, before: number, after: number, bucketCanisterId: string) => void;
+  createFakeApplaud: (
+    postId: string,
+    before: number,
+    after: number,
+    bucketCanisterId: string
+  ) => void;
   getFakeApplaud: (postId: string, real: number) => FakeApplaud | undefined;
   getAllFakeApplauds: () => FakeApplaud[];
-  modalData: ModalData | undefined
+  modalData: ModalData | undefined;
 }
 
 const Context = createContext<ContextType | undefined>(undefined);
@@ -40,7 +55,7 @@ const ContextProvider = ({
   const [modalData, setModalData] = useState<ModalData | undefined>(undefined);
 
   //manage the fake effect of applaud (it takes about 15 seconds to complete the applaud for real.)
-  const [fakeApplauds, setFakeApplauds] = useState<FakeApplaud[]>([])
+  const [fakeApplauds, setFakeApplauds] = useState<FakeApplaud[]>([]);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -54,15 +69,15 @@ const ContextProvider = ({
   const openModal = (type: ModalType, data?: ModalData) => {
     setIsModalOpen(true);
     setModalType(type);
-    if(data){
-        setModalData(data);
+    if (data) {
+      setModalData(data);
     }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setModalType(undefined);
-    setModalData(undefined)
+    setModalData(undefined);
   };
 
   const createFakeApplaud = (
@@ -82,7 +97,7 @@ const ContextProvider = ({
               before,
               after: fakeApplaud.after + applauds,
               date: new Date(),
-              bucketCanisterId
+              bucketCanisterId,
             };
           } else {
             return fakeApplaud;
@@ -105,30 +120,28 @@ const ContextProvider = ({
   };
 
   const getFakeApplaud = (postId: string, real: number) => {
-    let allPostIds = fakeApplauds.map(val => val.postId);
-    if(allPostIds.includes(postId)){
-      let fakeApplaud = fakeApplauds.filter(v => v.postId === postId)[0];
-      if(fakeApplaud.after === real){
+    let allPostIds = fakeApplauds.map((val) => val.postId);
+    if (allPostIds.includes(postId)) {
+      let fakeApplaud = fakeApplauds.filter((v) => v.postId === postId)[0];
+      if (fakeApplaud.after === real) {
         //the after value is equal to real value
         //delete the fakeApplaud and return nothing
         setFakeApplauds(fakeApplauds.filter((v) => v.postId !== postId));
-        return undefined
-      }
-      else{
+        return undefined;
+      } else {
         //the after value in the fake applaud is not close enough to the real value
         //the applaud is still processing
         //return the fake applaud
-        return fakeApplaud
+        return fakeApplaud;
       }
-    }
-    else{
+    } else {
       //there is no fake applaud. return undefined
-      return undefined
+      return undefined;
     }
   };
   const getAllFakeApplauds = () => {
-    return fakeApplauds
-  }
+    return fakeApplauds;
+  };
 
   return (
     <Context.Provider
@@ -140,7 +153,7 @@ const ContextProvider = ({
         modalData,
         createFakeApplaud,
         getFakeApplaud,
-        getAllFakeApplauds
+        getAllFakeApplauds,
       }}
     >
       {children}

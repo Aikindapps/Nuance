@@ -92,6 +92,7 @@ export const DepositModal = () => {
       <div className='select-currency-wrapper'>
         <p className='deposit-modal-field-text'>SELECT CURRENCY TO DEPOSIT</p>
         <Dropdown
+        uniqueId={'deposit-modal-dropdown-menu'}
           items={tokenBalances.map((tokenBalance) => {
             return tokenBalance.token.symbol;
           })}

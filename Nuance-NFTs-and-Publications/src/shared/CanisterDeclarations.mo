@@ -69,10 +69,9 @@ module{
     };
 
 
-    //****************POSTCORE CANISTER*****************
     public type PostSaveModel = {
         postId: Text;
-        handle: Text;
+        handle: Text; //useless for the regular posts, it's used to determine the publication handle
         title: Text;
         subtitle: Text;
         headerImage: Text;
@@ -82,7 +81,12 @@ module{
         creator: Text; //publication author
         isPublication: Bool;
         category: Text;
-        isPremium: Bool;
+        premium : ?{
+          //we  can extend this object with new fields to have more customization
+          thumbnail: Text;
+          maxSupply: Nat;
+          icpPrice: Nat;
+        };
     };
     public type Post = {
         postId: Text;
@@ -247,26 +251,28 @@ module{
 
     //**********************POSTBUCKET CANISTER****************
     public type PostBucketType = {
-        postId: Text;
-        handle: Text;
-        url: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        isPremium: Bool;
+        postId : Text;
+    handle : Text;
+    url : Text;
+    title : Text;
+    subtitle : Text;
+    headerImage : Text;
+    content : Text;
+    isDraft : Bool;
+    isPremium : Bool;
+    nftCanisterId: ?Text;
 
-        // fields stored as Int, but returned to UI as Text
-        created: Text; //determined at draft creation
-        publishedDate: Text; //determined at publish
-        modified: Text; //determined at save
-        
-        //publisher fields
-        creator: Text;
-        isPublication: Bool;
-        category: Text;
-        wordCount: Text;
+    // fields stored as Int, but returned to UI as Text
+    created : Text; //determined at draft creation
+    publishedDate : Text; //determined at publish
+    modified : Text; //determined at save
+
+    //publisher fields
+    creator : Text;
+    isPublication : Bool;
+    category : Text;
+    wordCount : Text;
+    bucketCanisterId : Text;
     };
 
     public type Metadata = {

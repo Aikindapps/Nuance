@@ -8,4 +8,7 @@ module {
   public let STORAGE_VERSION = "Searchlight Sipper";
   public let CYCLESDISPENSER_VERSION = "Searchlight Sipper";
   public let METRICS_VERSION = "Searchlight Sipper";
+  public let PUBLICATIONMANAGEMENT_VERSION = "Searchlight Sipper";
+  public let PUBLICATION_VERSION = "Searchlight Sipper";
+  public let NFTFACTORY_VERSION = "Searchlight Sipper";
 };

@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export type CanisterCyclesAggregatedData = BigUint64Array | bigint[];
 export type CanisterHeapMemoryAggregatedData = BigUint64Array | bigint[];
@@ -93,7 +94,7 @@ export interface _SERVICE {
   'registerPlatformOperator' : ActorMethod<[string], Result>,
   'search' : ActorMethod<[string, boolean, number, number], SearchResultData>,
   'searchWithinPublication' : ActorMethod<
-    [string, boolean, number, number, Array<string>],
+    [string, boolean, number, number, string],
     SearchResultData
   >,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
@@ -103,3 +104,5 @@ export interface _SERVICE {
   'unregisterPlatformOperator' : ActorMethod<[string], Result>,
   'validate' : ActorMethod<[any], Validate>,
 }
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

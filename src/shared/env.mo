@@ -1,6 +1,7 @@
 import Principal "mo:base/Principal";
 import CanisterIds "canisterIds";
 module {
+  public let IS_LOCAL = false;
   public let USER_CANISTER_ID = CanisterIds.USER_CANISTER_ID;
   public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
   public let KINIC_ENDPOINT_CANISTER_ID = CanisterIds.KINIC_ENDPOINT_CANISTER_ID;
@@ -13,6 +14,7 @@ module {
   public let PUBLICATION_MANAGEMENT_CANISTER_ID = CanisterIds.PUBLICATION_MANAGEMENT_CANISTER_ID;
   public let NFT_FACTORY_CANISTER_ID = CanisterIds.NFT_FACTORY_CANISTER_ID;
   public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
+  public let SNS_GOVERNANCE_IC_ACCOUNT = "f77cc353c778b02ad26974891950e4cb3ae1203e5cd8218e1b99bfc4f316d897";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";
   public let PAUL_DASHBOARD_PRINCIPAL_ID = "wfcdk-bgpsf-gghqn-m5v6j-454p2-n4aco-e2fd3-lsg6u-g7nns-az2bm-pqe";
   public let MITCH_PRINCIPAL_ID = "3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe";
@@ -63,6 +65,7 @@ module {
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
     POST_CORE_CANISTER_ID,
+    NFT_FACTORY_CANISTER_ID
   ];
 
   public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ADMINS = [
@@ -127,6 +130,22 @@ module {
     CYCLES_DISPENSER_CANISTER_ID,
     PUBLICATION_MANAGEMENT_CANISTER_ID,
   ];
+
+  public let NFT_FACTORY_CANISTER_ADMINS = [
+    SNS_GOVERNANCE_CANISTER,
+    CYCLES_DISPENSER_CANISTER_ID,
+    PUBLICATION_MANAGEMENT_CANISTER_ID,
+  ];
+
+  public let EXT_NFT_CANISTER_ADMINS = [
+    SNS_GOVERNANCE_CANISTER,
+    NFT_FACTORY_CANISTER_ID,
+    POST_CORE_CANISTER_ID
+  ];
+
+  
+
+  
 
   //tipping feature variables
 

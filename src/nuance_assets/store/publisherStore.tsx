@@ -31,7 +31,7 @@ import { PostBucketType } from '../../../src/declarations/PostBucket/PostBucket.
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const ArticleNotFound = 'Article not found';
-const  user = useUserStore.getState().user;
+const user = useUserStore.getState().user;
 
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   const authorHandles = posts.map((p) => p.handle);
@@ -39,11 +39,56 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   const authors = await (await getUserActor()).getUsersByHandles(authorHandles);
 
   return posts.map((p) => {
-    const author = authors.find((a : any) => a.handle === p.handle);
+    const author = authors.find((a: any) => a.handle === p.handle);
     if (author) {
       return { ...p, avatar: author.avatar };
     }
     return p;
+  });
+};
+
+const mergePremiumArticleSaleInformation = async (
+  posts: PostType[]
+): Promise<PostType[]> => {
+  //populate the premiumArticleSAleInformation value if exists any
+  let postIdsAndNftCanisterIds = posts
+    .filter(
+      (post) =>
+        post.nftCanisterId !== undefined && post.nftCanisterId.length !== 0
+    )
+    .map((post) => [post.postId, post.nftCanisterId?.[0] as string]);
+
+  let promises = [];
+  for (const [postId, nftCanisterId] of postIdsAndNftCanisterIds) {
+    let extActor = await getExtActor(nftCanisterId);
+    promises.push(extActor.getAvailableToken());
+  }
+  let results = await Promise.all(promises);
+  return posts.map((post) => {
+    let premiumArticleInfoIfExists = results.filter(
+      (val) => val.postId === post.postId
+    );
+    return {
+      ...post,
+      premiumArticleSaleInfo:
+        premiumArticleInfoIfExists.length !== 0
+          ? {
+              tokenIndex:
+                premiumArticleInfoIfExists[0].availableTokenIndex.length !== 0
+                  ? premiumArticleInfoIfExists[0].availableTokenIndex[0]
+                  : 0,
+              totalSupply: Number(premiumArticleInfoIfExists[0].maxSupply),
+              nftCanisterId: post.nftCanisterId?.[0] as string,
+              currentSupply: Number(
+                premiumArticleInfoIfExists[0].currentSupply
+              ),
+              price_e8s: Number(premiumArticleInfoIfExists[0].price),
+              priceReadable: (
+                Number(premiumArticleInfoIfExists[0].price) / Math.pow(10, 8)
+              ).toFixed(4),
+            }
+          : undefined,
+    };
   });
 };
 
@@ -87,7 +132,7 @@ const fetchPostsByBuckets = async (
     let keyProperties = bucketsMap.get(bucketCanisterId);
     if (keyProperties) {
       let bucketActor = await getPostBucketActor(bucketCanisterId);
-      if(publicationHandle){
+      if (publicationHandle) {
         promises.push(
           bucketActor.getPublicationPosts(
             keyProperties.map((keyProperty) => {
@@ -96,8 +141,7 @@ const fetchPostsByBuckets = async (
             publicationHandle
           )
         );
-      }
-      else{
+      } else {
         promises.push(
           bucketActor.getPostsByPostIds(
             keyProperties.map((keyProperty) => {
@@ -107,7 +151,6 @@ const fetchPostsByBuckets = async (
           )
         );
       }
-      
     }
   }
 
@@ -168,8 +211,6 @@ export interface PublisherStore {
   publicationPost: PostType | undefined;
   getPublicationPostError: string | undefined;
   savePublicationPostError: string | undefined;
-  premiumArticleInfo: PremiumArticleSaleInformation | undefined;
-  getPremiumArticleInfoError: string | undefined;
   removePublicationPostCategory: (
     postId: string,
     publicationHandle: string
@@ -196,29 +237,17 @@ export interface PublisherStore {
     writerHandle: string,
     publicationHandle: string
   ) => Promise<void>;
-  savePublicationPost: (
-    post: PostSaveModel
-  ) => Promise<PostType | undefined>;
+  savePublicationPost: (post: PostSaveModel) => Promise<PostType | undefined>;
   getPublicationPosts: (
     indexFrom: number,
     indexTo: number,
     publicationHandle: string
   ) => Promise<PostType[] | undefined>;
   clearPublicationPosts: () => Promise<void>;
-  getPublicationPost: (
-    postId: string,
-    publicationHandle: string
-  ) => Promise<void>;
-  getPremiumArticleInfo: (
-    postId: string,
-    publicationHandle: string
-  ) => Promise<void>;
   clerGetPublicationPostError: () => Promise<void>;
   clearSavedPublicationPost: () => void;
   clearSavePublicationPostError: () => void;
-  clearPremiumArticleInfo: () => void;
   getCanisterIdByHandle: (handle: string) => Promise<string | undefined>;
-  getAllWriterDrafts: (userHandle: string) => Promise<PostType[]>;
   clearAll: () => void;
 }
 
@@ -241,8 +270,6 @@ const createPublisherStore:
   publicationPost: undefined,
   getPublicationPostError: undefined,
   savePublicationPostError: undefined,
-  premiumArticleInfo: undefined,
-  getPremiumArticleInfoError: undefined,
   allDrafts: undefined,
 
   getPublication: async (
@@ -282,7 +309,7 @@ const createPublisherStore:
     publicationHandle: string
   ): Promise<PublicationType | undefined> => {
     try {
-      console.log(publicationHandle, "-> PUB HANDLE")
+      console.log(publicationHandle, '-> PUB HANDLE');
       const canisterId = await get().getCanisterIdByHandle(publicationHandle);
 
       const result = await (
@@ -438,7 +465,6 @@ const createPublisherStore:
     }
   },
 
-
   getPublicationPosts: async (
     indexFrom: number,
     indexTo: number,
@@ -446,12 +472,36 @@ const createPublisherStore:
   ): Promise<PostType[] | undefined> => {
     try {
       let postCoreCanister = await getPostCoreActor();
-      let coreReturn = await postCoreCanister.getPublicationPosts(indexFrom, indexTo, publicationHandle);
-      const publicationPosts = await fetchPostsByBuckets(coreReturn, true, publicationHandle);
+      let coreReturn = await postCoreCanister.getPublicationPosts(
+        indexFrom,
+        indexTo,
+        publicationHandle
+      );
+      const publicationPosts = await fetchPostsByBuckets(
+        coreReturn,
+        true,
+        publicationHandle
+      );
       set({ publicationPosts });
-      const postsWithAvatars = await mergeAuthorAvatars(publicationPosts);
-      set({ publicationPosts: postsWithAvatars });
-      return postsWithAvatars.reverse();
+
+      const [postsWithAvatars, postsWithPremiumArticleInformation] =
+        await Promise.all([
+          mergeAuthorAvatars(publicationPosts),
+          mergePremiumArticleSaleInformation(publicationPosts),
+        ]);
+      let merged = publicationPosts.map((post, index) => {
+        return {
+          ...post,
+          avatar: postsWithAvatars[index].avatar,
+          premiumArticleSaleInfo:
+            postsWithPremiumArticleInformation[index].premiumArticleSaleInfo,
+        };
+      });
+      set({
+        publicationPosts: merged,
+      });
+
+      return merged.reverse();
     } catch (err: any) {
       console.log(err);
       return await get().getPublicationPosts(
@@ -461,27 +511,6 @@ const createPublisherStore:
       );
       //need to convert the call to query
       //handleError(err, Unexpected);
-    }
-  },
-
-  getPublicationPost: async (
-    postId: string,
-    publicationHandle: string
-  ): Promise<void> => {
-    try {
-      const canisterId = await get().getCanisterIdByHandle(publicationHandle);
-      const result = await (
-        await getPublisherActor(canisterId)
-      ).getPublicationPost(postId);
-      if (Err in result) {
-        set({ getPublicationPostError: result.err });
-        toastError(result.err);
-      } else {
-        const publicationPost = result.ok as PostType;
-        set({ publicationPost, getPublicationPostError: undefined });
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
     }
   },
 
@@ -556,14 +585,14 @@ const createPublisherStore:
   },
 
   savePublicationPost: async (
-    post: PostSaveModel,
+    post: PostSaveModel
   ): Promise<PostType | undefined> => {
     try {
       const creator = await useUserStore
         .getState()
         .getPrincipalByHandle(post.creator);
       const postCoreCanister = await getPostCoreActor();
-      console.log('TRYING TO SAVE PUBLICATION POST')
+      console.log('savePublicationPost: ', post);
       const result = await postCoreCanister.save({
         postId: post.postId,
         title: post.title,
@@ -575,8 +604,8 @@ const createPublisherStore:
         creator: creator || '',
         isPublication: post.isPublication,
         category: post.category,
-        isPremium: false,
-        handle: post.handle
+        premium: post.premium,
+        handle: post.handle,
       });
       if (Err in result) {
         set({ savePublicationPostError: result.err });
@@ -595,7 +624,7 @@ const createPublisherStore:
   ): Promise<string | undefined> => {
     const existing_canister_ids = get().publicationCanisterIds;
     var canisterId = '';
-    existing_canister_ids.forEach((el : any) => {
+    existing_canister_ids.forEach((el: any) => {
       if (el[0] === handle.toLowerCase()) {
         canisterId = el[1];
       }
@@ -618,116 +647,12 @@ const createPublisherStore:
     }
   },
 
-  getAllWriterDrafts: async (userHandle: string): Promise<PostType[]> => {
-    try {
-     
-      const userPublications = user?.publicationsArray || undefined;
-      let allDrafts: PostType[] = [];
-  
-      for (const publication of userPublications || []) {
-        const canisterId = await get().getCanisterIdByHandle(publication.publicationName);
-        
-        const drafts = await (
-          await getPublisherActor(canisterId)
-        ).getWritersDrafts(); 
-  
-        const userDrafts = drafts.filter((draft : PostType) => draft?.creator?.toLowerCase() === userHandle.toLowerCase());
-       
-        allDrafts = [...allDrafts, ...userDrafts];
-      }
-     
-      set({ allDrafts });
-      return allDrafts;
-    } catch (err) {
-      handleError(err, Unexpected);
-      console.log(err, "ERR")
-      return [];
-    }
-  },
-  
-
-  getPremiumArticleInfo: async (
-    postId: string,
-    publicationHandle: string
-  ): Promise<void> => {
-    try {
-      const canisterId = await get().getCanisterIdByHandle(publicationHandle);
-      const result = await (
-        await getPublisherActor(canisterId)
-      ).getPremiumArticleInfo(postId);
-      if (Err in result) {
-        set({ getPremiumArticleInfoError: result.err });
-        toastError(result.err);
-      } else {
-        let premiumArticleDetails = result.ok;
-        let extActor = await getExtActor(premiumArticleDetails.nftCanisterId);
-        let all_listings = await extActor.ext_marketplaceListings();
-        let tokenIndexStart = parseInt(premiumArticleDetails.tokenIndexStart);
-        let tokenIndexEnd =
-          tokenIndexStart + parseInt(premiumArticleDetails.totalSupply);
-        var current_post_listings: [number, Listing, Metadata][] = [];
-        all_listings.forEach((listing : any) => {
-          if (listing[0] >= tokenIndexStart && listing[0] < tokenIndexEnd) {
-            current_post_listings.push(listing);
-          }
-        });
-        current_post_listings.sort((listing_1, listing_2) => {
-          return Number(listing_1[1].price - listing_2[1].price);
-        });
-
-        if (!current_post_listings.length) {
-          set({
-            premiumArticleInfo: {
-              cheapesTokenAccesKeyIndex: '',
-              cheapestTokenIndex: '',
-              cheapestPrice: '',
-              cheapestTokenIdentifier: '',
-              nftCanisterId: premiumArticleDetails.nftCanisterId,
-              totalSupply: premiumArticleDetails.totalSupply,
-              available: '0',
-              postId: postId,
-              soldOut: true,
-            },
-          });
-        } else {
-          let cheapestListing = current_post_listings[0];
-          set({
-            premiumArticleInfo: {
-              cheapesTokenAccesKeyIndex: (
-                cheapestListing[0] - tokenIndexStart
-              ).toString(),
-              cheapestTokenIndex: cheapestListing[0].toString(),
-              cheapestPrice: cheapestListing[1].price.toString(),
-              cheapestTokenIdentifier: await extActor.indexToTokenId(
-                cheapestListing[0]
-              ),
-              nftCanisterId: premiumArticleDetails.nftCanisterId,
-              totalSupply: premiumArticleDetails.totalSupply,
-              available: current_post_listings.length.toString(),
-              postId: postId,
-              soldOut: false,
-            },
-          });
-        }
-      }
-    } catch (err: any) {
-      console.log(err);
-      handleError(err, Unexpected);
-    }
-  },
-
   clearSavedPublicationPost: (): void => {
     set({ savedPublicationPost: undefined });
   },
 
   clearSavePublicationPostError: (): void => {
     set({ savePublicationPostError: undefined });
-  },
-  clearPremiumArticleInfo: (): void => {
-    set({
-      premiumArticleInfo: undefined,
-      getPremiumArticleInfoError: undefined,
-    });
   },
 
   clearAll: (): void => {

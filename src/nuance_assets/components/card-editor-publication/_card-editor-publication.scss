@@ -124,7 +124,7 @@
   }
 
   .field-published-date {
-    width: 13.8%;
+    width: 15.8%;
     color: #666;
     font-family: Roboto;
     font-size: 12px;
@@ -135,13 +135,19 @@
 
   .field-modified {
     width: 13.8%;
-    width: 13.8%;
     color: #666;
     font-family: Roboto;
     font-size: 12px;
     font-style: normal;
     font-weight: 400;
     line-height: 16px;
+  }
+  .field-keys-sold {
+    width: 13.8%;
+    display: flex;
+    column-gap: 16px;
+    align-items: center;
+    justify-content: end;
   }
 
   .tooltip-wrapper {

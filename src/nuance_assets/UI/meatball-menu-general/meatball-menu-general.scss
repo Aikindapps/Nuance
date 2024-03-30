@@ -1,0 +1,81 @@
+@import '../../shared/styles/Colors';
+.meatball-menu-general-wrapper {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  .meatball-menu-general-icon-open {
+    padding: 4px;
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    background: $primary-color;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .meatball-menu-general-icon-closed {
+    padding: 4px;
+
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    cursor: pointer;
+  }
+  .meatball-menu-general-icon-dark-open {
+    padding: 4px;
+
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    background: $primary-background-color;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .meatball-menu-general-icon-dark-closed {
+    padding: 4px;
+
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    cursor: pointer;
+  }
+  .meatball-menu-general-items-wrapper {
+    width: 170px;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    row-gap: 8px;
+    position: relative;
+    right: 146px;
+    top: 4px;
+    padding: 8px;
+    border-radius: 2px;
+    box-shadow: rgba(117, 117, 117, 0.08) 0px 2px 10px 5px;
+    background: $primary-background-color;
+    z-index: 3;
+    .meatball-menu-general-item {
+      display: flex;
+      align-items: center;
+      column-gap: 8px;
+      font-family: Roboto;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 18px;
+      text-align: left;
+      width: 100%;
+      cursor: pointer;
+      &:hover{
+        font-weight: bold;
+      }
+      .kebeb-menu-item-icon {
+        min-width: 16px;
+        max-width: 16px;
+      }
+    }
+    .divider-on-top {
+    }
+  }
+}

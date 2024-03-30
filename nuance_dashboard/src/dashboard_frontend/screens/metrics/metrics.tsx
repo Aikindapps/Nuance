@@ -46,6 +46,16 @@ export const Metrics: React.FC = () => {
     return csvContent;
   };
 
+  function convertToCSV(data: any[]): string {
+    const header = Object.keys(data[0]).join(',');
+    const rows = data.map((obj) =>
+      Object.values(obj)
+        .map((val) => `"${val}"`)
+        .join(',')
+    );
+    return `${header}\n${rows.join('\n')}`;
+  }
+
   const downloadCSV = (csvContent: string, name: string) => {
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -94,7 +104,7 @@ export const Metrics: React.FC = () => {
         </div>
         <div className='metrics-box'>
           <div className='metrics-title-refresh-wrapper'>
-            <div className='metrics-title'>Metrics</div>
+            <div className='metrics-title'>Metrics Download</div>
             <IoIosRefresh
               onClick={async () => {
                 await loadData();
@@ -105,7 +115,16 @@ export const Metrics: React.FC = () => {
           <div className='metrics-values-wrapper'>
             <div className='metrics-value-wrapper'>
               <div className='name'>Applauds Historical Data</div>
-              <div onClick={() => {}} className='value underline'>
+              <div
+                onClick={() => {
+                  downloadCSV(
+                    convertToCSV(applaudsHistoricalData),
+                    'applauds_historical_data_' +
+                      new Date().toUTCString()
+                  );
+                }}
+                className='value underline'
+              >
                 {isLoading ? '-' : 'Download'}
               </div>
             </div>

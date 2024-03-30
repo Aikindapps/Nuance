@@ -77,7 +77,7 @@ export const LoginModal = () => {
           }}
         />
         <div className='toggle-text'>
-          {'Advanced options - Not for Nick :)'}
+          {'Advanced options - Especially for Nick :)'}
         </div>
       </div>
       {advancedLoginOptions && (
