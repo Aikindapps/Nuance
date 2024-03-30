@@ -51,7 +51,8 @@
         "entrypoint": "dist/index.html"
       },
       "source": ["dist/", "src/well-known/", "src/SEO/"],
-      "type": "assets"
+      "type": "assets",
+      "specified_id": "exwqn-uaaaa-aaaaf-qaeaa-cai"
     }
   },
   "defaults": {
