@@ -14,7 +14,7 @@ import {
 import { images, colors } from './shared/constants';
 import { authChannel } from './store/authStore';
 
-const HomePageGrid = lazy(() => import('./screens/home/homegrid'));
+const HomePageGrid = lazy(() => import('./screens/home/homepage'));
 const Metrics = lazy(() => import('./screens/metrics/metrics'));
 const TimedOut = lazy(() => import('./screens/timed-out/timedOut'));
 const LoginRegistration = lazy(

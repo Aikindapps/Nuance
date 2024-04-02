@@ -25,6 +25,15 @@ export const images = {
     imagesPath + 'nuance_unsufficient_balance.svg',
   NUANCE_LOGO_MASK_GROUP: imagesPath + 'backgrounds/mask-group.svg',
   NUANCE_LOGO_AND_NFT_ICON: imagesPath + 'nuance_logo_and_nft_icon.svg',
+  JOIN_THE_REVOLUTION_BACKGROUND:
+    imagesPath + 'join-the-revolution-background.png',
+  HOMEPAGE_LOGIN_OPTIONS_BACKGROUND:
+    imagesPath + 'homepage-login-options-background.svg',
+  WELCOME_TO_BLOGGING: imagesPath + 'welcome_to_blogging.png',
+  HIGH_TECH_IMAGE: imagesPath + 'high_tech_image.png',
+  MONETIZE_BACKGROUND: imagesPath + 'monetize_background.svg',
+  MONETIZE_IMAGE: imagesPath + 'monetize_image.png',
+  MONETIZE_MOBILE_IMAGE: imagesPath + 'monetize_mobile_image.svg'
 };
 
 export const icons = {

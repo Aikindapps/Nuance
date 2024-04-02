@@ -13,16 +13,17 @@ import { faEllipsis, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
 import { Context } from '../../contextes/Context';
 
 type HeaderProps = {
-  loggedIn: Boolean;
-  isArticlePage: Boolean;
+  loggedIn: boolean;
+  isArticlePage: boolean;
   ScreenWidth: number;
-  isReadArticlePage?: Boolean;
-  isMyProfilePage?: Boolean;
-  isPublicationPage: Boolean | undefined;
+  isReadArticlePage?: boolean;
+  isMyProfilePage?: boolean;
+  isPublicationPage?: boolean;
   category?: string;
   postTitle?: String;
   publication?: PublicationType | undefined;
-  isUserAdminScreen?: Boolean;
+  isUserAdminScreen?: boolean;
+  transparentBackground?: boolean;
 };
 
 const Header: React.FC<HeaderProps> = (props): JSX.Element => {
@@ -31,7 +32,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false);
   const darkTheme = useTheme();
   const toggleTheme = useThemeUpdate();
-  const context = useContext(Context)
+  const context = useContext(Context);
 
   const { clearSearchBar, isTagScreen, getOwnedNfts, nftCanisters } =
     usePostStore((state) => ({
@@ -41,10 +42,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-    const { verifyBitfinityWallet } =
-    useAuthStore((state) => ({
-      verifyBitfinityWallet: state.verifyBitfinityWallet
-    }));
+  const { verifyBitfinityWallet } = useAuthStore((state) => ({
+    verifyBitfinityWallet: state.verifyBitfinityWallet,
+  }));
 
   const clearSearch = () => {
     if (window.location.pathname === '/') {
@@ -57,9 +57,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     user: state.user,
   }));
 
-  useEffect(()=>{
+  useEffect(() => {
     verifyBitfinityWallet();
-  },[])
+  }, []);
 
   const getLogoOrBreadCrumb = () => {
     if (props.isPublicationPage) {
@@ -226,18 +226,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   };
 
   return (
-    <div
-      className='header-wrapper'
-      style={
-        props.isArticlePage
-          ? {
-              backgroundColor: darkTheme
-                ? colors.primaryBackgroundColor
-                : colors.primaryTextColor,
-            }
-          : { background: darkOptionsAndColors.background }
-      }
-    >
+    <div className='header-wrapper'>
       {modalOpen && (
         <SearchModal
           setOpenModal={setModalOpen}

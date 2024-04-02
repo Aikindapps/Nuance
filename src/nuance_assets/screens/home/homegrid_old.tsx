@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore, useUserStore, usePostStore } from '../../store';
 import { PostType } from '../../types/types';
 import { colors, icons, images } from '../../shared/constants';
-import { TagModel } from 'src/nuance_assets/services/actorService';
+import { TagModel } from '../../services/actorService';
 import { slice } from 'lodash';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
@@ -1151,8 +1151,8 @@ const HomePageGrid = () => {
                       <p className='mainTitle'>LATEST ARTICLES</p>
                       <div className='article-grid'>
                         {tab === 'popular' &&
-                          dropdownMenuOpen &&
-                          !modalContext?.isModalOpen ? (
+                        dropdownMenuOpen &&
+                        !modalContext?.isModalOpen ? (
                           <div
                             className='dropdown-wrapper active'
                             style={darkOptionsAndColors}
