@@ -1006,6 +1006,7 @@ const HomePageGrid = () => {
           ScreenWidth={screenWidth}
           isPublicationPage={false}
         />
+        {/* <button onClick={() => followTag("Art")}>Follow Tag</button> TEMP FIX FOR TESTING*/}
         {user ? '' : context.width < 768 ? <LoggedOutSidebar /> : null}
         <div onFocus={() => setIsBlur(true)} onBlur={() => setIsBlur(false)}>
           <SearchBar

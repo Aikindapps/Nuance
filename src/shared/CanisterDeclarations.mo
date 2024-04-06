@@ -54,6 +54,7 @@ module{
         handleClap : (postCaller: Text, handle : Text) -> ();
         getUserByPrincipalId : (userPrincipalId : Text) -> async Result.Result<User, Text>;
         getUsersByHandles : (handles : [Text]) -> async [UserListItem];
+        getUserFollowers : (handle : Text) -> async [UserListItem];
         getPrincipalByHandle(handle : Text) : async GetPrincipalByHandleReturn;
         registerUser : (handle : Text, displayName : Text, avatar : Text) -> async RegisterUserReturn;
         addPublication : (publication : PublicationObject, callerId : Text) -> async AddPublicationReturn;
@@ -167,7 +168,8 @@ module{
         isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         isEditorPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         getBucketCanisters : query () -> async [(Text, Text)];
-        getUserPostIds : query (userHandle : Text) -> async Result.Result<[Text], Text>
+        getUserPostIds : query (userHandle : Text) -> async Result.Result<[Text], Text>;
+        getTagFollowers : query (tagId : Text) -> async Result.Result<[Text], Text>
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {

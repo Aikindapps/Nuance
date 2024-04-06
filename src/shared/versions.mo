@@ -11,4 +11,5 @@ module {
   public let PUBLICATIONMANAGEMENT_VERSION = "Searchlight Sipper";
   public let PUBLICATION_VERSION = "Searchlight Sipper";
   public let NFTFACTORY_VERSION = "Searchlight Sipper";
+  public let NOTIFICATIONS_VERSION = "!Searchlight Sipper";
 };

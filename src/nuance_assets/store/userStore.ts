@@ -1,6 +1,6 @@
 import create, { GetState, SetState, StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { toastError } from '../services/toastService';
+import { toastError, toast, ToastType } from '../services/toastService';
 import { ErrorType, getErrorType } from '../services/errorService';
 import { useAuthStore } from './';
 import { UserType, UserListItem, PublicationType } from '../types/types';
@@ -12,6 +12,10 @@ import {
   getEmailOptInActor,
   getPostCoreActor,
   getPublisherActor,
+  getNotificationsActor,
+  Notifications,
+  NotificationType,
+  NotificationContent,
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
 
@@ -134,6 +138,8 @@ export interface UserStore {
   readonly searchUserResults: UserListItem[] | undefined;
   readonly searchPublicationResults: PublicationType[] | undefined;
   readonly myFollowers: UserListItem[] | undefined;
+  readonly notifications: Notifications[] | undefined;
+  readonly notificationCount: number;
 
   registerUser: (
     handle: string,
@@ -178,6 +184,11 @@ export interface UserStore {
   getPrincipalByHandle: (handle: string) => Promise<string | undefined>;
   createEmailOptInAddress: (emailAddress: string) => Promise<void>;
 
+  getUserNotifications: (from: number, to: number, isLoggedIn: boolean) => Promise<void>;
+  createNotification: (notificationType: NotificationType, notificationContent: NotificationContent) => Promise<void>;
+  markNotificationAsRead: (notificationId: [string]) => Promise<void>;
+  resetNotificationCount: () => void;
+
   clearAll: () => void;
 }
 
@@ -209,6 +220,8 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   searchUserResults: undefined,
   searchPublicationResults: undefined,
   myFollowers: undefined,
+  notifications: undefined,
+  notificationCount: 0,
 
   registerUser: async (
     handle: string,
@@ -591,6 +604,69 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       handleError(err, Unexpected);
     }
   },
+
+  //notifications
+  getUserNotifications: async (from: number, to: number, isLoggedIn: boolean): Promise<void> => {
+  if (isLoggedIn) {
+
+    set({ notificationCount: 0 });
+
+    try {
+      const result = await (await getNotificationsActor()).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        console.log('getUserNotifications:', result.ok);
+        set({ notifications: result.ok });
+        let toastArray = [];
+        for (let notification of result.ok) {
+          if (notification.read === false) {
+            set({ notificationCount: get().notificationCount + 1 });
+            toastArray.push(notification);
+          }
+        }
+        toast(JSON.stringify(toastArray), ToastType.Notification);
+         
+        
+      }
+    } catch (err) {
+      console.error('getUserNotifications:', err);
+    }
+  } 
+  },
+
+  createNotification: async (notificationType: NotificationType, notificationContent: NotificationContent): Promise<void> => {
+    try {
+      const result = await (await getNotificationsActor()).createNotification(notificationType, notificationContent);
+      if (Err in result) {
+       console.log('createNotification:', result.err);
+      } else {
+        console.log('createNotification:', result.ok);
+        }
+    } catch (err) {
+     console.log('createNotification:', err);
+    }
+  },
+
+  markNotificationAsRead: async (notificationId: [string]): Promise<void> => {
+    try {
+      const result = await (await getNotificationsActor()).markNotificationAsRead(notificationId);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        console.log('markNotificationAsRead:', result.ok);
+        }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  resetNotificationCount: (): void => {
+    set({ notificationCount: 0 });
+  },
+
+
+
 
   clearAll: (): void => {
     set({}, true);

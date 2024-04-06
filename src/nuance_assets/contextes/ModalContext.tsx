@@ -6,7 +6,10 @@ type ModalType =
   | 'WithdrawNft'
   | 'Deposit'
   | 'Clap'
-  | 'Premium article';
+  | 'Premium article'
+  | 'Notifications';
+
+
 type ModalData = {
   transferNftData?: PremiumPostActivityListItem;
   clappingPostData?: PostType;

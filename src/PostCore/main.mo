@@ -3628,95 +3628,30 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
     #ok();
   };
 
-public shared ({caller}) func tagMigrationBugFix(postId: Text, bucketCanister: Text, timeStamp: Nat ) : async Result.Result<(), Text> {
-
+public shared ({caller}) func getTagFollowers(tagId : Text) : async Result.Result<[Text], Text> {
   if (isAnonymous(caller)) {
     return #err("Cannot use this method anonymously.");
   };
-  
-  if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+
+  if (not isAdmin(caller)) {
     return #err(Unauthorized);
   };
 
-  
- 
-  let post = buildPostKeyProperties(postId);
-  let affectedBucketCanisterId = bucketCanister;
-  
-  if (post.bucketCanisterId != affectedBucketCanisterId) {
-    return #err("Post is not in the affected bucket canister for post ID: " # postId);
+  var followers : Buffer.Buffer<Text> = Buffer.Buffer<Text>(userTagRelationships.size());
+  for ((principalId, postTags) in userTagRelationships.entries()) {
+    for (postTag in Iter.fromArray(postTags)) {
+      if (postTag.tagId == tagId and postTag.isActive) {
+        followers.add(principalId);
+      };
+    };
   };
+
+  return #ok (Buffer.toArray(followers));
+};
+
 
   
     
-    //check if the post was modified after migration date
-    switch (Nat.fromText(post.modified)) {
-    case (?modifiedDate) if (modifiedDate > timeStamp) {
-      return #err("Post was modified after migration date for post ID: " # postId);
-    };
-    case null {
-      return #err("Post modified date is not valid for post ID: " # postId);
-    }; 
-  };
-
-  let rels = U.safeGet(relationships, postId, []);
-  let newRels = Buffer.Buffer<PostTag>(rels.size());
-
-  for (rel in Iter.fromArray(rels)) {
-
-    //when converting from text to nat, it could fail, so we need a switch statement
-    let tagNatOpt = Nat.fromText(rel.tagId); 
-
-    switch (tagNatOpt) {
-      case (?tagNat) {
-        let newTagId = Nat.toText(tagNat - 1); 
-        let newTag = 
-        newRels.add({
-          tagId = newTagId;
-          isActive = rel.isActive;
-          createdDate = rel.createdDate;
-          modifiedDate = rel.modifiedDate;
-        });
-      };
-      case null {
-        return #err("TagId is not valid for post ID: " # postId);
-      };
-    };
-  };
-
-  Debug.print("PostCore->tagMigrationBugFix->old rels: " # debug_show(rels));
-  Debug.print("PostCore->tagMigrationBugFix-> new rels: " # debug_show(Buffer.toArray(newRels)));
-
-  relationships.put(postId, Buffer.toArray(newRels));
-
-  //update post index
-  let postBucket = CanisterDeclarations.getPostBucketCanister(affectedBucketCanisterId);
-  let postBucketGet =  await postBucket.getPost(postId);
-
-switch (postBucketGet) {
-  case (#ok(postBucketReturn)) {
-        let handle = postBucketReturn.handle;
-        let prevTitle = postBucketReturn.title;
-        let prevSubtitle = postBucketReturn.subtitle;
-        let prevContent = postBucketReturn.content;
-        let previous = handle # " " # prevTitle # " " # prevSubtitle;
-        let current = handle # " " # postBucketReturn.title # " " # postBucketReturn.subtitle;
-        let prevTags = getTagNamesByPostId(postBucketReturn.postId);
-        let currentTags = getTagNamesByPostId(postBucketReturn.postId);
-        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
-        var indexResult = await PostIndexCanister.indexPost(postBucketReturn.postId, previous, current, prevTags, currentTags);
-
-        switch (indexResult) {
-          case (#ok(id)) {
-            return #ok();
-          };
-          case (#err(msg)) return #err("Post index failed for post ID: " # postId # ". Error Message: " # msg);
-        };
-  };
-    case (#err(msg)) return  #err("PostBucket failed to retrieve post ID: " # postId # ". Error Message: " # msg);
-
-};
-};
 
 
   //#region latest posts management

@@ -16,6 +16,7 @@ import PublisherTypes "../Publisher/types";
 import PostCoreTypes "../Publisher/types_post_core";
 import Result "mo:base/Result";
 import ENV "../shared/env";
+import NotificationTypes "../../../src/Notifications/types";
 
 module {
   type Post = PostCoreTypes.Post;
@@ -471,5 +472,19 @@ module {
   public func logMetrics(commandName : Text, operator : Text) : async Result.Result<(), Text> {
     await MetricsActor.logCommand(commandName, operator);
   };
+
+  //notification
+  let NotificationCanisterId : Text = ENV.NOTIFICATIONS_CANISTER_ID;
+  type NotificationType = NotificationTypes.NotificationType;
+  type NotificationContent = NotificationTypes.NotificationContent;
+
+  let NotificationActor = actor (NotificationCanisterId) : actor {
+    createNotification : (notificationType : NotificationType, content : NotificationContent) -> async Result.Result<(), Text>;
+  };
+
+  public func createNotification(notificationType : NotificationType, content : NotificationContent) : async Result.Result<(), Text> {
+    await NotificationActor.createNotification(notificationType, content);
+  };
+
 
 };

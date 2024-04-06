@@ -1379,6 +1379,28 @@ actor class PostBucket() = this {
       false,
     );
 
+    if (isNew) {
+
+
+      ignore await U.newArticle({
+        articleId = postId;
+        url = buildPostUrl(postId, postModel.handle, postModel.title);
+        articleTitle = postModel.title;
+        authorPrincipal = Principal.fromText(postModel.postOwnerPrincipalId);
+        authorHandle = postModel.handle;
+        comment = "";
+        isReply = false;
+        receiverPrincipal = Principal.fromText("2vxsx-fae");
+        receiverHandle = "";
+        senderPrincipal = Principal.fromText("2vxsx-fae");
+        senderHandle = "";
+        tags = postModel.tagNames;
+        tipAmount = "";
+        token = "";
+    })
+   
+    };
+
     // add this postId to the user's posts if not already added
     addPostIdToUser(postOwnerPrincipalId, postId);
 
@@ -2518,6 +2540,31 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
         //map the comment with the content
         commentIdToContentHashMap.put(validCommentId, content);
 
+        //send notification for new comments only
+    
+        if (not isEdit) {
+          //send notification for new comments only
+          let author = U.safeGet(principalIdHashMap, postId, "");
+        
+            ignore U.createNotification(#NewCommentOnFollowedArticle, {
+              articleId = postId;
+              url = buildPostUrl(postId, U.safeGet(handleHashMap, author, ""), U.safeGet(titleHashMap, postId, "")) # "?comment=" # validCommentId;
+              articleTitle = U.safeGet(titleHashMap, postId, "");
+              authorPrincipal = Principal.fromText(author);
+              authorHandle = U.safeGet(handleHashMap, author, "");
+              comment = content;
+              isReply = isReply;
+              receiverPrincipal = Principal.fromText(author);
+              receiverHandle = U.safeGet(handleHashMap, author, "");
+              senderPrincipal = caller;
+              senderHandle = U.safeGet(handleHashMap, userPrincipalId, "");
+              tags = [];
+              tipAmount = "";
+              token = "";
+            });
+        };
+
+
         let now = U.epochTime();
         if (isReply) {
           if (isEdit) {
@@ -3045,6 +3092,23 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       //if needed, we can create a function to get the info from the bucket canisters and refill the hashmap in the PostCore canister
       return #err("Incrementing the number of applauds failed.");
     };
+
+     ignore U.createNotification(#TipReceived, {
+      url = buildPostUrl(postId, receiverPrincipalId, U.safeGet(titleHashMap, postId, ""));
+      articleId = postId;
+      articleTitle = U.safeGet(titleHashMap, postId, "");
+      authorPrincipal = Principal.fromText(receiverPrincipalId);
+      authorHandle = U.safeGet(handleHashMap, receiverPrincipalId, "");
+      comment = "";
+      isReply = false;
+      receiverPrincipal = Principal.fromText(receiverPrincipalId);
+      receiverHandle = U.safeGet(handleHashMap, receiverPrincipalId, "");
+      senderPrincipal = Principal.fromText(sender);
+      senderHandle = U.safeGet(handleHashMap, sender, "");
+      tags = [];
+      tipAmount = Nat.toText(nuaEquivalent);
+      token = symbol;
+    });
 
     return #ok(buildApplaud(applaudId));
   };

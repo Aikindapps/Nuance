@@ -962,6 +962,24 @@ actor User {
     myFollowersHashMap.put(followingPrincipalId, Buffer.toArray(myFollowersBuffer));
 
     Debug.print("User->followAuthor:" # author);
+
+    ignore U.createNotification(#NewFollower, {
+      url = "";
+      articleId = "";
+      articleTitle = "";
+      authorPrincipal = Principal.fromText(followingPrincipalId);
+      authorHandle = author;
+      comment = "";
+      isReply = false;
+      receiverPrincipal = Principal.fromText(followingPrincipalId);
+      receiverHandle = author;
+      senderHandle = user.handle;
+      senderPrincipal = Principal.fromText(principalId);
+      tags = [];
+      tipAmount = "";
+      token = "";
+    });
+    
     #ok(buildUser(principalId));
   };
   //Should call by admin once in order to set the Followers counts. Temp function.
@@ -1087,17 +1105,42 @@ actor User {
     return "ok";
   };
 
-  public shared func getUserFollowers(handle : Text) : async [Text] {
-
+  public shared query func getUserFollowers(handle : Text) : async [UserListItem] {
+    Debug.print("Get User Followers => " # handle);
     //validate input
     if (not U.isTextLengthValid(handle, 64)) {
-      return ["Author Text length exceeded"];
+      return [];
     };
 
-    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
-    return U.safeGet(myFollowersHashMap, principalId, []);
+    var principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+    if (principalId == "") {
+      return [];
+    };
 
+    let followers = U.safeGet(myFollowersHashMap, principalId, []);
+    let users = Buffer.Buffer<UserListItem>(0);
+
+    for (followerHandle in followers.vals()) {
+      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(followerHandle), "");
+      if (principalId != "") {
+        let user : UserListItem = {
+          handle = U.safeGet(handleHashMap, principalId, "");
+          avatar = U.safeGet(avatarHashMap, principalId, "");
+          displayName = U.safeGet(displayNameHashMap, principalId, "");
+          fontType = U.safeGet(fontTypesHashmap, principalId, "");
+          bio = U.safeGet(bioHashMap, principalId, "");
+          principal = principalId;
+          website = U.safeGet(websiteHashMap, principalId, "");
+          socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
+          followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+        };
+        users.add(user);
+      };
+    };
+    Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
+    Buffer.toArray(users);
   };
+
 
   public shared query ({ caller }) func getMyFollowers(indexFrom : Nat32, indexTo : Nat32) : async Result.Result<[UserListItem], Text> {
     if (isAnonymous(caller)) {

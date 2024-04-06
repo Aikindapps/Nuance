@@ -93,6 +93,13 @@ import {
   idlFactory as metricsFactory,
 } from '../../declarations/Metrics';
 
+import {_SERVICE as NotificationsService} from '../../declarations/Notifications/Notifications.did';
+import {
+  canisterId as notificationsCanisterId,
+  createActor as createNotificationsActor,
+  idlFactory as notificationsFactory,
+} from '../../declarations/Notifications';
+
 import { useAuthStore } from '../store';
 import { createAgent } from '@dfinity/utils';
 import { Principal } from '@dfinity/principal';
@@ -117,6 +124,12 @@ export type {
 } from '../../declarations/PostCore/PostCore.did';
 export type { Content } from '../../declarations/Storage/Storage.did';
 export type { OperationLog } from '../../declarations/Metrics/Metrics.did';
+
+export type {
+  Notifications,
+  NotificationContent,
+  NotificationType,
+} from '../../declarations/Notifications/Notifications.did';
 
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
@@ -330,6 +343,22 @@ export async function getMetricsActor(): Promise<
     },
   });
 }
+
+export async function getNotificationsActor(): Promise<
+  ActorSubclass<NotificationsService>
+> {
+  var identity =
+    (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
+  return createNotificationsActor(notificationsCanisterId as string, {
+    agentOptions: {
+      identity,
+      host: isLocal ? undefined : 'https://icp-api.io ',
+    },
+  });
+}
+
+
+
 
 export async function getIcrc1Actor(
   canisterId: string

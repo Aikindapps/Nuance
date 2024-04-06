@@ -21,6 +21,7 @@ import SHA224 "./SHA224";
 import CRC32 "./CRC32";
 import Hex "./Hex";
 import ENV "../shared/env";
+import NotificationTypes "../Notifications/types";
 
 module {
 
@@ -466,6 +467,26 @@ module {
   public func logMetrics(commandName : Text, operator : Text) : async Result.Result<(), Text> {
     await MetricsActor.logCommand(commandName, operator);
   };
+
+  //notification
+  let NotificationCanisterId : Text = ENV.NOTIFICATIONS_CANISTER_ID;
+  type NotificationType = NotificationTypes.NotificationType;
+  type NotificationContent = NotificationTypes.NotificationContent;
+
+  let NotificationActor = actor (NotificationCanisterId) : actor {
+    createNotification : (notificationType : NotificationType, content : NotificationContent) -> async Result.Result<(), Text>;
+    newArticle : (content : NotificationContent) -> async Result.Result<(), Text>;
+  };
+
+  public func createNotification(notificationType : NotificationType, content : NotificationContent) : async Result.Result<(), Text> {
+    await NotificationActor.createNotification(notificationType, content);
+  };
+
+  public func newArticle(content : NotificationContent) : async Result.Result<(), Text> {
+    Debug.print("newArticle notification sent");
+    await NotificationActor.newArticle(content);
+  };
+
 
   public func natToSubAccount(n : Nat) : [Nat8] {
     let n_byte = func(i : Nat) : Nat8 {

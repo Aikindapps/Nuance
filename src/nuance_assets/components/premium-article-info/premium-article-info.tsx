@@ -20,6 +20,8 @@ import { Context } from '../../contextes/Context';
 import { useUserStore } from '../../store';
 import { tokenIdentifier } from '../../shared/ext-utils';
 import { FaRegCopy } from 'react-icons/fa';
+import { NotificationType } from '../../../declarations/Notifications/Notifications.did';
+import { Principal } from '@dfinity/principal';
 
 type PremiumArticleInfoProps = {
   post: PostType | undefined;
@@ -77,8 +79,9 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
       getOwnedNfts: state.getOwnedNfts,
       getMyBalance: state.getMyBalance,
     }));
-  const { user } = useUserStore((state) => ({
+  const { user, createNotification } = useUserStore((state) => ({
     user: state.user,
+    createNotification: state.createNotification,
   }));
 
   if (!props.post || !props.post.premiumArticleSaleInfo) {
@@ -139,6 +142,27 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           );
           if (settleResponse) {
             setModalPage('congrats');
+            //send notification 
+            if (user) {
+              //Can this be secure???
+              createNotification({ PremiumArticleSold: null }, {
+                url: props.post?.url || '',
+                senderPrincipal: Principal.fromText("2vxsx-fae"),
+                senderHandle: user.handle,
+                receiverPrincipal: Principal.fromText("2vxsx-fae"),
+                receiverHandle: props.post?.creator || props.post?.handle || '',
+                tags: [],
+                articleId: props.post?.postId || '',
+                articleTitle: props.post?.title || '',
+                authorPrincipal: Principal.fromText("2vxsx-fae"),
+                authorHandle: props.post?.creator || props.post?.handle || '',
+                comment: '',
+                isReply: false,
+                tipAmount: "0",
+                token: ''
+
+              });
+            }
           }
         } else {
           toastError(transferResponse.Err);
@@ -165,12 +189,10 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 This article is locked.
               </div>
               <div className='buy-nft-modal-article-info-title'>
-                {`There are ${
-                  props.post.premiumArticleSaleInfo.totalSupply -
+                {`There are ${props.post.premiumArticleSaleInfo.totalSupply -
                   props.post.premiumArticleSaleInfo.currentSupply
-                } of ${
-                  props.post.premiumArticleSaleInfo.totalSupply
-                } NFT keys available.`}
+                  } of ${props.post.premiumArticleSaleInfo.totalSupply
+                  } NFT keys available.`}
               </div>
               <div className='buy-nft-modal-article-info-centered'>
                 This article can only be read when you own an NFT key. Use your
@@ -295,19 +317,19 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 style={
                   userAccepted
                     ? {
-                        width: '120px',
-                      }
+                      width: '120px',
+                    }
                     : {
-                        width: '120px',
-                        background: '#B2B2B2',
-                        cursor: 'not-allowed',
-                      }
+                      width: '120px',
+                      background: '#B2B2B2',
+                      cursor: 'not-allowed',
+                    }
                 }
                 onClick={() => {
                   if (
                     userBalance >
-                      (props.post?.premiumArticleSaleInfo
-                        ?.price_e8s as number) &&
+                    (props.post?.premiumArticleSaleInfo
+                      ?.price_e8s as number) &&
                     !marketplacePurchaseLoading
                   ) {
                     handleMarketplacePurchase();
@@ -370,8 +392,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               style={
                 darkTheme
                   ? {
-                      borderColor: colors.darkerBorderColor,
-                    }
+                    borderColor: colors.darkerBorderColor,
+                  }
                   : {}
               }
               className='address-value-wrapper'
@@ -381,8 +403,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 style={
                   darkTheme
                     ? {
-                        color: colors.darkModePrimaryTextColor,
-                      }
+                      color: colors.darkModePrimaryTextColor,
+                    }
                     : {}
                 }
               />
@@ -391,8 +413,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 style={
                   darkTheme
                     ? {
-                        color: colors.darkSecondaryTextColor,
-                      }
+                      color: colors.darkSecondaryTextColor,
+                    }
                     : {}
                 }
               >
@@ -514,7 +536,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                   onClick={() => {
                     window.open(
                       'https://toniq.io/marketplace/nuance-' +
-                        props.post?.postId,
+                      props.post?.postId,
                       '_blank'
                     );
                   }}
