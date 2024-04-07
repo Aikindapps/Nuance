@@ -98,8 +98,8 @@ const Profile = () => {
         (loadMoreCounter - 1) * 20 + 20,
         19 + loadMoreCounter * 20
       );
-      if (posts?.length) {
-        setDisplayingPosts([...displayingPosts, ...posts]);
+      if (posts?.posts.length) {
+        setDisplayingPosts([...displayingPosts, ...posts.posts]);
       }
       setLoadMoreCounter(loadMoreCounter + 1);
     }
@@ -113,8 +113,8 @@ const Profile = () => {
       setLoading(false);
     }, 5000);
     let posts = await getPostsByFollowers([handle], 0, 19);
-    if (posts?.length) {
-      setDisplayingPosts(posts);
+    if (posts?.posts.length) {
+      setDisplayingPosts(posts.posts);
     }
     setLoading(false);
   };

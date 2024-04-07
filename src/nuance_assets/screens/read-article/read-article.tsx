@@ -179,9 +179,12 @@ const ReadArticle = () => {
   };
 
   const searchTag = (tag: string) => {
-    setSearchText('#' + tag);
-    clearSearchBar(false);
-    navigate('/', { replace: true });
+    //setSearchText('#' + tag);
+    //clearSearchBar(false);
+    navigate(
+      '/?tab=search&search=' + encodeURIComponent('#' + tag.toUpperCase()),
+      { replace: true }
+    );
   };
 
   //comment scrolling
@@ -730,6 +733,7 @@ const ReadArticle = () => {
                     {getSocialChannelUrls().map((url, index) => {
                       return (
                         <div
+                          key={index}
                           onClick={() => {
                             let urlWithProtocol =
                               url.startsWith('https://') ||

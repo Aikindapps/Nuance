@@ -213,6 +213,10 @@ export interface _SERVICE {
   'getMyAllPosts' : ActorMethod<[number, number], Array<PostKeyProperties>>,
   'getMyDailyPostsStatus' : ActorMethod<[], boolean>,
   'getMyDraftPosts' : ActorMethod<[number, number], Array<PostKeyProperties>>,
+  'getMyFollowingTagsPostKeyProperties' : ActorMethod<
+    [number, number],
+    GetPostsByFollowers
+  >,
   'getMyPublishedPosts' : ActorMethod<
     [number, number],
     Array<PostKeyProperties>

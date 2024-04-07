@@ -49,7 +49,7 @@ const PublishedArticles = () => {
     setLoadingMore(true);
     let posts = await getMyPublishedPosts(
       (loadMoreCounter - 1) * 20 + 20,
-      19 + loadMoreCounter * 20
+      20 + loadMoreCounter * 20
     );
     if (posts?.length) {
       setDisplayingPosts([...displayingPosts, ...posts]);
@@ -63,7 +63,7 @@ const PublishedArticles = () => {
     setTimeout(() => {
       setLoading(false);
     }, 5000);
-    let posts = await getMyPublishedPosts(0, 19);
+    let posts = await getMyPublishedPosts(0, 20);
     if (posts?.length) {
       setDisplayingPosts(posts);
     }

@@ -11,6 +11,8 @@ import CardPublishedArticles from '../card-published-articles/card-published-art
 import UserListElement from '../user-list-item/user-list-item';
 import { levenshteinDistance } from '../../store/userStore';
 import Dropdown from '../../UI/dropdown/dropdown';
+import { TagModel } from '../../../declarations/PostCore/PostCore.did';
+import { searchTextToTag } from '../../shared/utils';
 
 type Counts = {
   articlesCount: number;
@@ -26,6 +28,7 @@ export const SearchResults = (props: {
   publications: PublicationType[];
   users: UserListItem[];
   counts: Counts;
+  allTags: TagModel[];
 }) => {
   const darkTheme = useTheme();
 
@@ -33,6 +36,22 @@ export const SearchResults = (props: {
     useState<FilterType>('All');
 
   const [sortType, setSortType] = useState<SortType>('Relevance');
+
+  //postStore
+  const { followTag } = usePostStore((state) => ({
+    followTag: state.followTag,
+  }));
+
+  const isTagSearch = () => {
+    let phrase = props.term.trim();
+    // If search starts with #, it's a tag search like #sports
+    const tags = searchTextToTag(phrase, props.allTags);
+    let isTagSearch = tags.length > 0;
+    if (isTagSearch) {
+      //setSearchedTag(tags[0]);
+      return tags[0].id;
+    }
+  };
 
   const getDisplayingUiElement = (
     element: PostType | PublicationType | UserListItem,
@@ -172,7 +191,25 @@ export const SearchResults = (props: {
   return (
     <div className='search-results-wrapper'>
       <div className='search-results-info-wrapper'>
-        <div className='search-results-text'>{`Results for '${props.term}'`}</div>
+        {isTagSearch() ? (
+          <div className='search-results-text'>
+            Results for the tag {props.term}{' '}
+            <span
+              className='follow-the-tag'
+              onClick={() => {
+                let tagId = isTagSearch();
+                if (tagId) {
+                  followTag(tagId);
+                }
+              }}
+            >
+              Follow the tag
+            </span>
+          </div>
+        ) : (
+          <div className='search-results-text'>{`Results for '${props.term}'`}</div>
+        )}
+
         <div className='search-results-filter-sort-wrapper'>
           <div className='search-results-filter-elements'>
             <SelectionItem

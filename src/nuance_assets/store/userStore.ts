@@ -145,8 +145,8 @@ export interface UserStore {
   getAuthor: (handle: string) => Promise<UserType | undefined>;
   getAllUsersHandles: () => Promise<string[]>;
   getAllPublicationsHandles: () => Promise<[string, string][]>;
-  searchUsers: (input: string) => Promise<void>;
-  searchPublications: (input: string) => Promise<void>;
+  searchUsers: (input: string) => Promise<UserListItem[]>;
+  searchPublications: (input: string) => Promise<PublicationType[]>;
   getUserPostCounts: (handle: string) => Promise<UserPostCounts | undefined>;
   getWriterPostCounts: (handle: string) => Promise<void>;
   getUserFollowersCount: (handle: string) => Promise<void>;
@@ -445,14 +445,15 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return allPublicationsHandlesAndCanisterIds;
   },
 
-  searchUsers: async (input: string): Promise<void> => {
+  searchUsers: async (input: string): Promise<UserListItem[]> => {
     let allHandles = await get().getAllUsersHandles();
     let resultHandles = findSimilarHandles(input, allHandles);
     let users = await (await getUserActor()).getUsersByHandles(resultHandles);
     let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users);
     set({ searchUserResults: usersMerged });
+    return usersMerged;
   },
-  searchPublications: async (input: string): Promise<void> => {
+  searchPublications: async (input: string): Promise<PublicationType[]> => {
     let allPublications = await get().getAllPublicationsHandles();
     let handleToCanisterIdMap = new Map<string, string>();
     let handles: string[] = [];
@@ -483,6 +484,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         publications
       );
     set({ searchPublicationResults: mergedPublications });
+    return mergedPublications
   },
 
   updateBio: async (bio: string): Promise<void> => {

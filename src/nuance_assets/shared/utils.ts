@@ -11,6 +11,7 @@ import {
   icons,
 } from './constants';
 import { PairInfo, PostType } from '../types/types';
+import { TagModel } from '../services/actorService';
 
 export enum DateFormat {
   // Sep 16
@@ -750,3 +751,21 @@ export function buildSvgForPremiumArticle(post: PostType, handle: string) {
 </svg>
 `;
 }
+
+export const searchTextToTag = (s: string, allTags: TagModel[]) => {
+  const tagNames = [...s.matchAll(/#[^#]+/gm)].map((x) =>
+    x[0].trim().replace(/ +/g, ' ')
+  );
+  let validTagNames: TagModel[] = [];
+  for (const tagName of tagNames) {
+    if (tagName.startsWith('#') && tagName.length > 1) {
+      const found = allTags.find(
+        (t) => t.value.toUpperCase() === tagName.substring(1).toUpperCase()
+      );
+      if (found) {
+        validTagNames.push(found);
+      }
+    }
+  }
+  return validTagNames;
+};

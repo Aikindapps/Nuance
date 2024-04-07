@@ -1,12 +1,33 @@
 import React, { useState, useEffect, useContext, Suspense, lazy } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Header from '../../components/header/header';
 import './homepage.scss';
 import { images } from '../../shared/constants';
-import { useAuthStore, useUserStore } from '../../store';
+import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import Button from '../../UI/Button/Button';
+import { Tooltip } from 'react-tooltip';
+import { getIconForSocialChannel, searchTextToTag } from '../../shared/utils';
+import { useTheme } from '../../contextes/ThemeContext';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import SearchBar from '../../components/search-bar/search-bar';
+import queryString from 'query-string';
+import { PostType, PublicationType, UserListItem } from '../../types/types';
+import CardVertical from '../../components/card-vertical/card-vertical';
+import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
+import { TagModel } from '../../../declarations/PostCore/PostCore.did';
+import Loader from '../../UI/loader/Loader';
+import SearchResults from '../../components/search-results/search-results';
 
 const HomePage = () => {
+  //darkTheme
+  const darkTheme = useTheme();
+  //modal context
+  const modalContext = useContext(ModalContext);
+  //navigate
+  const navigate = useNavigate();
+  //location
+  const location = useLocation();
+
   const [screenWidth, setScreenWidth] = useState(0);
   useEffect(
     (window.onresize = window.onload =
@@ -16,19 +37,396 @@ const HomePage = () => {
     [screenWidth]
   );
 
-  //userStore
-  const { isLoggedIn } = useAuthStore((state) => ({
+  //authStore
+  const { isLoggedIn, login } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
+    login: state.login,
+  }));
+  //userStore
+  const { user, searchUsers, searchPublications } = useUserStore((state) => ({
+    user: state.user,
+    searchUsers: state.searchUsers,
+    searchPublications: state.searchPublications,
+  }));
+  //postStore
+  const {
+    getPostsByFollowers,
+    getFollowingTagsPosts,
+    getPopularPosts,
+    getPopularPostsToday,
+    getPopularPostsThisWeek,
+    getPopularPostsThisMonth,
+    getLatestPosts,
+    getAllTags,
+    search,
+  } = usePostStore((state) => ({
+    getPostsByFollowers: state.getPostsByFollowers,
+    getFollowingTagsPosts: state.getFollowingTagsPosts,
+    getPopularPosts: state.getPopularPosts,
+    getPopularPostsToday: state.getPopularPostsToday,
+    getPopularPostsThisWeek: state.getPopularPostsThisWeek,
+    getPopularPostsThisMonth: state.getPopularPostsThisMonth,
+    getLatestPosts: state.getLatestPosts,
+    getAllTags: state.getAllTags,
+    search: state.search,
   }));
 
   const [selectedTab, setSelectedTab] = useState(
     isLoggedIn ? 'Articles' : 'About'
   );
 
+  const onKeyDown = (e: any) => {
+    if (e.key === 'Enter') {
+      setIsBlur(false);
+      setTab('search');
+      setPage(0);
+      navigate(`?tab=search&search=${encodeURIComponent(searchText)}&page=0`, {
+        replace: true,
+      });
+      loadSearchResults(searchText);
+      //scrollToSearch();
+      //setLoadingSearchResults(true);
+      //handleSearch(false);
+    }
+  };
+
+  //url from state
+
+  useEffect(() => {
+    getStateFromUrl();
+  }, []);
+
+  const getStateFromUrl = () => {
+    const queryParams = queryString.parse(location.search);
+    console.log(location.search)
+    let navigationUrl = '';
+    if ('tab' in queryParams && typeof queryParams.tab === 'string') {
+      if (
+        queryParams.tab === 'writers' ||
+        queryParams.tab === 'topics' ||
+        queryParams.tab === 'popular' ||
+        queryParams.tab === 'new' ||
+        queryParams.tab === 'search'
+      ) {
+        setTab(queryParams.tab);
+        if (queryParams.tab !== 'popular') {
+          navigationUrl += '?tab=' + queryParams.tab;
+        }
+      }
+    }
+    let search_text: string | undefined = undefined;
+    if (
+      'search' in queryParams &&
+      typeof queryParams.search === 'string' &&
+      queryParams.tab === 'search'
+    ) {
+      console.log(queryParams)
+      
+      let decodedSearchText = decodeURIComponent(queryParams.search);
+      console.log(decodedSearchText)
+      setSearchText(decodedSearchText);
+      search_text = decodeURIComponent(queryParams.search);
+      if (queryParams.search.length !== 0) {
+        if (navigationUrl.length === 0) {
+          navigationUrl += '?search=' + queryParams.search;
+        } else {
+          navigationUrl += '&search=' + queryParams.search;
+        }
+      }
+    }
+    let page = 0;
+    if ('page' in queryParams && typeof queryParams.page === 'string') {
+      try {
+        setPage(parseInt(queryParams.page));
+        page = parseInt(queryParams.page);
+        if (parseInt(queryParams.page) !== 0) {
+          if (navigationUrl.length === 0) {
+            navigationUrl += '?page=' + parseInt(queryParams.page);
+          } else {
+            navigationUrl += '&page=' + parseInt(queryParams.page);
+          }
+        }
+      } catch (error) {}
+    }
+    loadWritersPosts(page, true);
+    loadFollowingTagsPosts(page, true);
+    loadPopularPostsToday(page, true);
+    loadPopularPostsThisWeek(page, true);
+    loadPopularPostsThisMonth(page, true);
+    loadPopularPostsEver(page, true);
+    loadLatestPosts(page, true);
+    if (search_text) {
+      loadSearchResults(search_text);
+    }
+    navigate('/' + navigationUrl, { replace: true });
+  };
+
+  //tabs
+  type TabType = 'writers' | 'topics' | 'popular' | 'new' | 'search';
+  const [tab, setTab] = useState<TabType>('popular');
+
+  //search
+  const [searchText, setSearchText] = useState('');
+  const [isBlur, setIsBlur] = useState(false);
+
+  //page
+  const [page, setPage] = useState(0);
+
+  //writers posts
+  const [writersPosts, setWritersPosts] = useState<PostType[]>([]);
+  const [writersPostCount, setWritersPostCount] = useState(0);
+  const loadWritersPosts = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getPostsByFollowers(
+      user?.followersArray || [],
+      start,
+      end
+    );
+    if (initial) {
+      setWritersPosts(posts);
+    } else {
+      setWritersPosts([...writersPosts, ...posts]);
+    }
+    setWritersPostCount(totalCount);
+  };
+
+  //following tags posts
+  const [followingTagsPosts, setFollowingTagsPosts] = useState<PostType[]>([]);
+  const [followingTagsPostsCount, setFollowingTagsPostsCount] = useState(0);
+  const loadFollowingTagsPosts = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getFollowingTagsPosts(start, end);
+    if (initial) {
+      setFollowingTagsPosts(posts);
+    } else {
+      setFollowingTagsPosts([...followingTagsPosts, ...posts]);
+    }
+
+    setFollowingTagsPostsCount(totalCount);
+  };
+
+  //POPULAR POSTS
+  type PopularFilterType = 'Today' | 'This week' | 'This month' | 'Ever';
+  const [popularFilter, setPopularFilter] =
+    useState<PopularFilterType>('This week');
+
+  //popular posts today
+  const [todayPosts, setTodayPosts] = useState<PostType[]>([]);
+  const [todayPostCount, setTodayPostCount] = useState(0);
+  const loadPopularPostsToday = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getPopularPostsToday(start, end);
+    if (initial) {
+      setTodayPosts(posts);
+    } else {
+      setTodayPosts([...todayPosts, ...posts]);
+    }
+
+    setTodayPostCount(totalCount);
+  };
+  //popular posts this week
+  const [thisWeekPosts, setThisWeekPosts] = useState<PostType[]>([]);
+  const [thisWeekPostCount, setThisWeekPostCount] = useState(0);
+  const loadPopularPostsThisWeek = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getPopularPostsThisWeek(start, end);
+    if (initial) {
+      setThisWeekPosts(posts);
+    } else {
+      setThisWeekPosts([...thisWeekPosts, ...posts]);
+    }
+
+    setThisWeekPostCount(totalCount);
+  };
+  //popular posts this month
+  const [thisMonthPosts, setThisMonthPosts] = useState<PostType[]>([]);
+  const [thisMonthPostsCount, setThisMonthPostCount] = useState(0);
+  const loadPopularPostsThisMonth = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getPopularPostsThisMonth(start, end);
+    if (initial) {
+      setThisMonthPosts(posts);
+    } else {
+      setThisMonthPosts([...thisMonthPosts, ...posts]);
+    }
+
+    setThisMonthPostCount(totalCount);
+  };
+  //popular posts ever
+  const [everPopularPosts, setEverPopularPosts] = useState<PostType[]>([]);
+  const [everPopularPostCount, setEverPopularPostCount] = useState(0);
+  const loadPopularPostsEver = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getPopularPosts(start, end);
+    if (initial) {
+      setEverPopularPosts(everPopularPosts);
+    } else {
+      setEverPopularPosts([...everPopularPosts, ...posts]);
+    }
+
+    setEverPopularPostCount(totalCount);
+  };
+
+  //latest posts
+  const [latestPosts, setLatestPosts] = useState<PostType[]>([]);
+  const [latestPostsPostCount, setLatestPostsPostCount] = useState(0);
+  const loadLatestPosts = async (page: number, initial: boolean) => {
+    const start = initial ? 0 : page * 15;
+    const end = (page + 1) * 15;
+    const { posts, totalCount } = await getLatestPosts(start, end);
+    if (initial) {
+      setLatestPosts(posts);
+    } else {
+      setLatestPosts([...latestPosts, ...posts]);
+    }
+
+    setLatestPostsPostCount(totalCount);
+  };
+
+  //load search results
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [allTags, setAllTags] = useState<TagModel[]>([]);
+  const [searchPostResults, setSearchPostResults] = useState<PostType[]>([]);
+  const [searchPostResultsTotalCount, setSearchPostResultsTotalCount] =
+    useState(0);
+  const [searchUserResults, setSearchUserResults] = useState<UserListItem[]>(
+    []
+  );
+  const [searchPublicationResults, setSearchPublicationResults] = useState<
+    PublicationType[]
+  >([]);
+  const loadSearchResults = async (searchText: string) => {
+    setSearchLoading(true);
+    let all_tags: TagModel[] = [];
+    //load the allTags only once
+    if (allTags.length === 0) {
+      all_tags = await getAllTags();
+      setAllTags(all_tags);
+    } else {
+      all_tags = allTags;
+    }
+    let phrase = searchText.trim();
+    // If search starts with #, it's a tag search like #sports
+    const tags = searchTextToTag(phrase, all_tags);
+    let isTagSearch = tags.length > 0;
+    if (isTagSearch) {
+      //setSearchedTag(tags[0]);
+      phrase = tags[0].value;
+    } else {
+      //setSearchedTag(undefined);
+    }
+    let [{ totalCount, posts }, publications, users] = await Promise.all([
+      search(phrase, isTagSearch, 0, 10000, user),
+      searchPublications(phrase),
+      searchUsers(phrase),
+    ]);
+    setSearchPostResults(posts);
+    setSearchPostResultsTotalCount(totalCount);
+    setSearchPublicationResults(publications);
+    setSearchUserResults(users);
+    setSearchLoading(false);
+  };
+
+  //load more
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
+
+  const loadMoreHandler = async () => {
+    setLoadMoreLoading(true);
+    switch (tab) {
+      case 'new':
+        await loadLatestPosts(page + 1, false);
+        break;
+      case 'popular':
+        switch (popularFilter) {
+          case 'Ever':
+            await loadPopularPostsEver(page + 1, false);
+            break;
+          case 'This month':
+            await loadPopularPostsThisMonth(page + 1, false);
+            break;
+          case 'This week':
+            await loadPopularPostsThisWeek(page + 1, false);
+            break;
+          case 'Today':
+            await loadPopularPostsToday(page + 1, false);
+            break;
+        }
+        break;
+      case 'search':
+        break;
+      case 'topics':
+        await loadFollowingTagsPosts(page, false);
+        break;
+      case 'writers':
+        await loadWritersPosts(page, false);
+        break;
+    }
+    setPage(page + 1);
+    const queryParams = queryString.parse(location.search);
+    queryParams.page = (page + 1).toString();
+    navigate(`?${queryString.stringify(queryParams)}`);
+    setLoadMoreLoading(false);
+  };
+
+  //displaying posts
+  const getDisplayingPosts = () => {
+    switch (tab) {
+      case 'new':
+        return latestPosts;
+      case 'popular':
+        switch (popularFilter) {
+          case 'Ever':
+            return everPopularPosts;
+          case 'This month':
+            return thisMonthPosts;
+          case 'This week':
+            return thisWeekPosts;
+          case 'Today':
+            return todayPosts;
+        }
+      case 'search':
+        return [];
+      case 'topics':
+        return followingTagsPosts;
+      case 'writers':
+        return writersPosts;
+    }
+  };
+
+  const getDisplayingPostsTotalCount = () => {
+    switch (tab) {
+      case 'new':
+        return latestPostsPostCount;
+      case 'popular':
+        switch (popularFilter) {
+          case 'Ever':
+            return everPopularPostCount;
+          case 'This month':
+            return thisMonthPostsCount;
+          case 'This week':
+            return thisWeekPostCount;
+          case 'Today':
+            return todayPostCount;
+        }
+      case 'search':
+        return 0;
+      case 'topics':
+        return followingTagsPostsCount;
+      case 'writers':
+        return writersPostCount;
+    }
+  };
+
   return (
     <div className='homepage'>
       <Header
-        loggedIn={false}
+        loggedIn={isLoggedIn}
         isArticlePage={false}
         ScreenWidth={screenWidth}
         isPublicationPage={false}
@@ -344,7 +742,287 @@ const HomePage = () => {
           <div className='end-colorful-divider'></div>
         </div>
       )}
-      {selectedTab === 'Articles' && <div></div>}
+
+      {selectedTab === 'Articles' && (
+        <div className='articles-section-wrapper'>
+          {isLoggedIn && user ? (
+            <div className='left'>
+              <div className='user-info'>
+                <img
+                  className='avatar'
+                  src={user.avatar || images.DEFAULT_AVATAR}
+                />
+                <div className='display-name'>{user.displayName}</div>
+                <Link to='/my-profile' className='handle'>
+                  @{user.handle}
+                </Link>
+              </div>
+              {(user.website.length !== 0 ||
+                user.socialChannels.length !== 0) && (
+                <div className='social-channels'>
+                  {[user.website, ...user.socialChannels].map((url, index) => {
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          let urlWithProtocol =
+                            url.startsWith('https://') ||
+                            url.startsWith('http://')
+                              ? url
+                              : 'https://' + url;
+                          window.open(urlWithProtocol, '_blank');
+                        }}
+                      >
+                        <Tooltip
+                          clickable={true}
+                          className='tooltip-wrapper'
+                          anchorSelect={'#my-social-channel-' + index}
+                          place='top'
+                          noArrow={true}
+                        >
+                          {url}
+                        </Tooltip>
+                        <img
+                          className='social-channel-icon'
+                          src={getIconForSocialChannel(url, darkTheme)}
+                          id={'my-social-channel-' + index}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className='articles'>
+                <Link
+                  to={'/my-profile/articles?page=published'}
+                >{`0 articles published`}</Link>
+                <div>|</div>
+                <Link
+                  to={'/my-profile/articles?page=draft'}
+                >{`0 articles in draft`}</Link>
+              </div>
+              <Button
+                styleType='secondary'
+                type='button'
+                style={{ width: '146px', margin: '0' }}
+                onClick={() => {
+                  navigate('/article/new');
+                }}
+              >
+                Create new article
+              </Button>
+            </div>
+          ) : (
+            <div className='left'>
+              <img className='blue-logo' src={images.NUANCE_LOGO_BLUE_TEXT} />
+              <div className='blogging-to-the-people'>
+                Blogging to the people!
+              </div>
+              <div className='content'>
+                <div>
+                  Nuance is a blockhain blog platform empowering writers all
+                  over the world.
+                </div>
+                <div>Become a writer and share your knowledge unlimited!</div>
+                <div>Login with:</div>
+              </div>
+              <div className='login-options'>
+                <div className='login-option-wrapper'>
+                  <Button
+                    styleType='primary-1'
+                    type='button'
+                    style={{ width: '176px', margin: '0' }}
+                    onClick={() => {
+                      login('ii');
+                    }}
+                  >
+                    Internet Identity
+                  </Button>
+                  <a
+                    className='login-info-text'
+                    href={'https://internetcomputer.org/internet-identity'}
+                    target='_blank'
+                  >
+                    You’re not hardcore unless you live hardcore
+                  </a>
+                </div>
+                <div className='login-option-wrapper'>
+                  <Button
+                    styleType='primary-1'
+                    type='button'
+                    style={{ width: '176px', margin: '0' }}
+                    onClick={() => {
+                      login('NFID');
+                    }}
+                  >
+                    Google
+                  </Button>
+                  <a
+                    className='login-info-text'
+                    href={'https://learn.nfid.one/'}
+                    target='_blank'
+                  >
+                    Enhanced with cryptography by NFID
+                  </a>
+                </div>
+                <div
+                  onClick={() => {
+                    modalContext?.openModal('Login');
+                  }}
+                  className='other-options'
+                >
+                  Other options?
+                </div>
+              </div>
+            </div>
+          )}
+          <div className='right'>
+            <div
+              className='searchbar-wrapper'
+              onFocus={() => setIsBlur(true)}
+              onBlur={() => setIsBlur(false)}
+            >
+              <SearchBar
+                value={searchText}
+                onKeyDown={onKeyDown}
+                onChange={(value) => setSearchText(value)}
+              />
+            </div>
+            <div
+              className='tabs-and-grid-wrapper'
+              style={isBlur ? { filter: 'blur(2px)' } : {}}
+            >
+              <div className='tabs'>
+                <div className='left-items'>
+                  {isLoggedIn && (
+                    <div
+                      onClick={() => {
+                        setTab('writers');
+                        setSearchText('');
+                        setPage(0);
+                        loadWritersPosts(0, true);
+                        navigate(`?tab=writers&page=0`, { replace: true });
+                      }}
+                      className={tab === 'writers' ? 'item-selected' : 'item'}
+                    >
+                      Writers
+                    </div>
+                  )}
+                  {isLoggedIn && (
+                    <div
+                      onClick={() => {
+                        setTab('topics');
+                        setSearchText('');
+                        setPage(0);
+                        loadFollowingTagsPosts(0, true);
+                        navigate(`?tab=topics&page=0`, { replace: true });
+                      }}
+                      className={tab === 'topics' ? 'item-selected' : 'item'}
+                    >
+                      Topics
+                    </div>
+                  )}
+                  <div
+                    onClick={() => {
+                      setTab('popular');
+                      setSearchText('');
+                      setPage(0);
+                      switch (popularFilter) {
+                        case 'Ever':
+                          loadPopularPostsEver(0, true);
+                          break;
+                        case 'This month':
+                          loadPopularPostsThisMonth(0, true);
+                          break;
+                        case 'This week':
+                          loadPopularPostsThisWeek(0, true);
+                          break;
+                        case 'Today':
+                          loadPopularPostsToday(0, true);
+                          break;
+                      }
+                      navigate(`?tab=popular&page=0`, { replace: true });
+                    }}
+                    className={tab === 'popular' ? 'item-selected' : 'item'}
+                  >
+                    Popular
+                  </div>
+                  <div
+                    onClick={() => {
+                      setTab('new');
+                      setSearchText('');
+                      setPage(0);
+                      loadLatestPosts(0, true);
+                      navigate(`?tab=new&page=0`, { replace: true });
+                    }}
+                    className={tab === 'new' ? 'item-selected' : 'item'}
+                  >
+                    New
+                  </div>
+                </div>
+                {tab === 'search' && (
+                  <div className='search-item'>Search Results</div>
+                )}
+              </div>
+              {tab !== 'search' && (
+                <div className='homepage-vertical-grid'>
+                  {getDisplayingPosts()
+                    .slice(0, 10)
+                    .map((post) => {
+                      return <CardVertical key={post.postId} post={post} />;
+                    })}
+                </div>
+              )}
+              {tab !== 'search' && (
+                <div className='homepage-horizontal-flex'>
+                  {getDisplayingPosts()
+                    .slice(10)
+                    .map((post) => {
+                      return (
+                        <CardPublishedArticles post={post} key={post.postId} />
+                      );
+                    })}
+                </div>
+              )}
+              {tab === 'search' &&
+                (searchLoading ? (
+                  <Loader />
+                ) : (
+                  <div className='search-results-wrapper'>
+                    <SearchResults
+                      term={searchText}
+                      articles={searchPostResults}
+                      publications={searchPublicationResults}
+                      users={searchUserResults}
+                      counts={{
+                        articlesCount: searchPostResults.length,
+                        publicationsCount: searchPublicationResults.length,
+                        usersCount: searchUserResults.length,
+                      }}
+                      allTags={allTags}
+                    />
+                  </div>
+                ))}
+              {getDisplayingPostsTotalCount() > getDisplayingPosts().length && (
+                <Button
+                  styleType='secondary'
+                  style={{
+                    width: '152px',
+                    marginBottom: '56px',
+                  }}
+                  onClick={() => {
+                    loadMoreHandler();
+                  }}
+                  icon={loadMoreLoading ? images.loaders.BUTTON_SPINNER : ''}
+                >
+                  <span>Load More</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

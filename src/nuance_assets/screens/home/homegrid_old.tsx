@@ -627,7 +627,7 @@ const HomePageGrid = () => {
     }
 
     let tags = await getMyTags();
-    let postsByTopic = (tags || []).map((tag: any) => {
+    let postsByTopic = (tags || []).map((tag) => {
       let modifiedTag = tag.tagName.toUpperCase();
       return `#${modifiedTag}`;
     });
@@ -1128,6 +1128,7 @@ const HomePageGrid = () => {
                             getUserSearchResultsWithoutPublications()?.length ||
                             0,
                         }}
+                        allTags={allTags || []}
                       />
 
                       {/*(loadedSearchResults?.length || 0) < searchTotalCount && 
