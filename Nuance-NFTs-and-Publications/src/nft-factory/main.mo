@@ -17,6 +17,10 @@ import U "../../../src/shared/utils";
 import ENV "../../../src/shared/env";
 import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import Buffer "mo:base/Buffer";
+import Nat64 "mo:base/Nat64";
+import Debug "mo:base/Debug";
+import Int "mo:base/Int";
+import Nat "mo:base/Nat";
 
 
 actor NftFactory {
@@ -146,6 +150,38 @@ actor NftFactory {
 
     public shared query func getCanisterVersion() : async Text {
         Versions.NFTFACTORY_VERSION;
+    };
+
+    stable var lastTimerCalled : Int = 0;
+    stable var cyclesBalanceWhenTimerIsCalledLastTime = 0;
+
+    public shared query func getLatestTimerCall() : async (Text, Text) {
+        (Int.toText(lastTimerCalled), Nat.toText(cyclesBalanceWhenTimerIsCalledLastTime));
+    };
+
+    public shared ({caller}) func runExtHeartbeats() : async () {
+        for((postId, canisterId) in List.toArray(allNuanceNftCanisterIds).vals()){
+            let ExtCanister = CanisterDeclarations.getExtCanister(canisterId);
+            ignore ExtCanister.heartbeat_external();
+        };
+    };
+
+    system func timer(setGlobalTimer : Nat64 -> ()) : async () {
+        
+        Debug.print("NftFactory -> timer");
+
+        try{
+            ignore runExtHeartbeats();
+        }
+        catch(error){};
+        
+        let now = Time.now();
+        lastTimerCalled := now;
+
+        cyclesBalanceWhenTimerIsCalledLastTime := Cycles.balance();
+
+        let next = Nat64.fromIntWrap(now) + 5_000_000_000;
+        setGlobalTimer(next); // absolute time in nanoseconds
     };
 
 };

@@ -613,6 +613,7 @@ module{
         setConfigData : (initData: InitNftCanisterData) -> async Result.Result<(), Text>;
         getRegistry : query () -> async [(TokenIndex, Text)];
         http_request_streaming_callback : query (token : HttpStreamingCallbackToken) -> async HttpStreamingCallbackResponse;
+        heartbeat_external : () -> async ();
     };
     public func getExtCanister(canisterId: Text) : EXTCanisterInterface {
         let canister : EXTCanisterInterface = actor(canisterId);

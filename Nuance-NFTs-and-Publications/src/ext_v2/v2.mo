@@ -39,6 +39,7 @@ import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import ENV "../../../src/shared/env";
 import U "../../../src/shared/utils";
 import Buffer "mo:base/Buffer";
+import Debug "mo:base/Debug";
 import AccountIdentifier "motoko/util/AccountIdentifier";
 
 
@@ -325,6 +326,12 @@ actor class EXTNFT() = this {
   private stable var token_sender_accounts : [Text] = [];
 
   var token_sender_accounts_buffer = Buffer.fromArray<Text>(token_sender_accounts);
+
+  //nuance notifications
+  //store the principal id of the buyer
+  private stable var notifications_queue_state : [Principal] = [];
+  var notifications : Queue.Queue<(Principal)> = Queue.fromArray(notifications_queue_state);
+
   
   private stable var config_canCreateAssetCanister : Bool  = true;
 
@@ -378,6 +385,7 @@ actor class EXTNFT() = this {
 
     //nuance addition
     token_sender_accounts := Buffer.toArray(token_sender_accounts_buffer);
+    notifications_queue_state := Queue.toArray(notifications);
     
   };
   system func postupgrade() {
@@ -392,8 +400,9 @@ actor class EXTNFT() = this {
     data_disbursementQueueState := [];
     data_capEventsQueueState := [];
 
-    //nuance addition
+    //nuance additions
     token_sender_accounts := [];
+    notifications_queue_state := [];
   };
   //Heartbeat: Removed for now
   // system func heartbeat() : async () {
@@ -406,8 +415,9 @@ actor class EXTNFT() = this {
       try{
         await heartbeat_paymentSettlements();
         await heartbeat_disbursements();
-        await heartbeat_capEvents();
+        //await heartbeat_capEvents();
         await heartbeat_assetCanisters();
+        await heartbeat_notifications();
       } catch(e){
         data_internalRunHeartbeat := false;
       };
@@ -721,6 +731,8 @@ actor class EXTNFT() = this {
                             _addDisbursement((token, AID.fromPrincipal(writer_principal_id, null), settlement.subaccount, rem));
                             //store the sender address into the buffer
                             token_sender_accounts_buffer.add(AID.fromPrincipal(Principal.fromActor(this), ?settlement.subaccount));
+                            //add the notification to the notifications queue
+                            addNotification(msg.caller);
                           }
                           else{
                             //regular sale
@@ -741,6 +753,7 @@ actor class EXTNFT() = this {
                           //nuance addition
                           //once any marketplace purchase happens, call the mint_and_list_next
                           let r = mint_and_list_next();
+
                           return #ok();
                         };
                         case (_) {};
@@ -2326,5 +2339,62 @@ actor class EXTNFT() = this {
       postId = postId;
       icpPrice = icp_price_e8s;
     }
+  };
+
+  private func addNotification(buyer: Principal) : () {
+    notifications := Queue.add(buyer, notifications);
+  };
+
+  public shared(msg) func heartbeat_notifications() : async () {
+    Debug.print("Sending notifications in the EXT canister for the article: " # postId # " -> heartbeat_notifications");
+    while(Queue.size(notifications) > 0){
+      var last = Queue.next(notifications);
+      switch(last.0){
+        case(?buyer) {
+          notifications := last.1;
+          try {
+            let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+            switch(await PostCoreCanister.getPostKeyProperties(postId)) {
+              case(#ok(keyProperties)) {
+                let PostBucketCanister = CanisterDeclarations.getPostBucketCanister(keyProperties.bucketCanisterId);
+                switch(await PostBucketCanister.getPost(postId)) {
+                  case(#ok(post)) {
+                    //if here, post fetched successfully
+                    //send the notification to Notifications canister
+                    let result = await U.createNotification(#PremiumArticleSold, {
+                      url = post.url;
+                      articleId = postId;
+                      articleTitle = post.title;
+                      authorPrincipal = writer_principal_id;
+                      authorHandle = "";
+                      comment = "";
+                      isReply = false;
+                      receiverPrincipal = writer_principal_id;
+                      receiverHandle = "";
+                      senderPrincipal = buyer;
+                      senderHandle = "";
+                      tags = [];
+                      tipAmount = "";
+                      token = "";
+                    });
+                  };
+                  case(#err(error)) {
+                    //not possible
+                    //nothing to do
+                  };
+                };
+              };
+              case(#err(error)) {
+                //not possible
+                //nothing to do
+              };
+            };
+          } catch (e) {
+            notifications := Queue.add(buyer, notifications);
+          };
+        };
+        case(_) {};
+      };
+    };
   };
 }
