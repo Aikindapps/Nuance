@@ -6,7 +6,7 @@ import Buffer "mo:base/Buffer";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 import HashMap "mo:base/HashMap";
-// import Map "mo:hashmap/Map"; stable hashmaps
+import Map "mo:hashmap/Map"; 
 import Nat "mo:base/Nat";
 import Nat32 "mo:base/Nat32";
 import Principal "mo:base/Principal";
@@ -214,7 +214,7 @@ actor Notifications {
 // #region Notifications
 
 // key: principalId, value: UserNotificationSettings
-var userNotificationSettings = HashMap.HashMap<Principal, UserNotificationSettings>(initCapacity, Principal.equal, Principal.hash);
+var userNotificationSettings = Map.new<Principal, UserNotificationSettings>();
 
 // notifications are direct or broadcast, both are stored in nested hashmaps, sorted by principalId
 
@@ -322,10 +322,55 @@ public shared ({caller}) func newArticle(notification: NotificationContent) : as
   return #ok();
 };  
 
+let { ihash; nhash; thash; phash; calcHash } = Map;
+//ex integration
+// type Account = {
+//     name : Text;
+//     cars : Map.Map<Text, Car>;
+// };
+
+// type Car = {
+//     model: Text
+// };
+
+// // Let's have nested HashMaps. Variable 'store' can be stable - no need to serialize/deserialize when upgrading
+// let store = Map.new<Principal, Account>(phash);
+
+// let p1 = Principal.fromText("aaaaa-aa");
+
+// let myAccount : Account = {
+//     name = "Peter";
+//     cars = Map.new<Text, Car>(thash);
+// };
+
+// // Adding cars to account
+// Map.set(myAccount.cars, thash, "kia-123", { model = "Kia Rio"});
+// Map.set(myAccount.cars, thash, "dmc-12", { model = "De Lorean"});
+
+// // Storing an account
+// Map.set(store, phash, p1, myAccount);
+
+// // Let's get it
+// switch(Map.get(store, phash, p1)) {
+//     case (?acc) {
+//         // found account
+//         log(acc.name);
+//         switch(Map.get(acc.cars, thash, "dmc-12")) {
+//             case (?car) {
+//                 //found car
+//                 log(car);
+//             };
+//             case (null) {
+//                 // not found
+//             };
+//         };
+//     };
+//     case (null) {
 
 //utility functions
 func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool {
-    let settings = userNotificationSettings.get(caller);
+
+    let settings = Map.get(userNotificationSettings, phash, caller);
     
      switch (settings) {
         case null {
@@ -518,7 +563,8 @@ public shared ({caller}) func updateUserNotificationSettings(notificationSetting
 
     canistergeekMonitor.collectMetrics();
 
-userNotificationSettings.put(caller, notificationSettings);
+   Map.set(userNotificationSettings, phash, caller, notificationSettings);
+
 return #ok();
 };
 
@@ -1195,7 +1241,6 @@ system func preupgrade() {
         userBroadcastNotificationsEntries := Array.append(userBroadcastNotificationsEntries, [(user, userEntries)]);
     };
 
-    userNotificationSettingsEntries := Iter.toArray(userNotificationSettings.entries());
     articleCommentersEntries := Iter.toArray(articleCommenters.entries());
 
 
@@ -1236,7 +1281,6 @@ system func preupgrade() {
     };
 
 
-      userNotificationSettings := HashMap.HashMap<Principal, UserNotificationSettings>(userNotificationSettingsEntries.size(),Principal.equal,Principal.hash);
       articleCommenters := HashMap.HashMap<Text, [Principal]>(articleCommentersEntries.size(),Text.equal,Text.hash);
 
       userNotificationSettingsEntries := [];
