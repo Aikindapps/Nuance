@@ -17,11 +17,13 @@ import Array "mo:base/Array";
 import List "mo:base/List";
 import Result "mo:base/Result";
 import Debug "mo:base/Debug";
+import Canister "mo:matchers/Canister";
 import SHA224 "./SHA224";
 import CRC32 "./CRC32";
 import Hex "./Hex";
 import ENV "../shared/env";
 import NotificationTypes "../Notifications/types";
+import CanisterDeclarations "CanisterDeclarations";
 
 module {
 
@@ -468,23 +470,22 @@ module {
     await MetricsActor.logCommand(commandName, operator);
   };
 
+  
+
   //notification
+  
   let NotificationCanisterId : Text = ENV.NOTIFICATIONS_CANISTER_ID;
   type NotificationType = NotificationTypes.NotificationType;
   type NotificationContent = NotificationTypes.NotificationContent;
-
-  let NotificationActor = actor (NotificationCanisterId) : actor {
-    createNotification : (notificationType : NotificationType, content : NotificationContent) -> async Result.Result<(), Text>;
-    newArticle : (content : NotificationContent) -> async Result.Result<(), Text>;
-  };
+  let NotificationActor = CanisterDeclarations.getNotificationCanister;
 
   public func createNotification(notificationType : NotificationType, content : NotificationContent) : async Result.Result<(), Text> {
-    await NotificationActor.createNotification(notificationType, content);
+    await NotificationActor().createNotification(notificationType, content);
   };
 
   public func newArticle(content : NotificationContent) : async Result.Result<(), Text> {
     Debug.print("newArticle notification sent");
-    await NotificationActor.newArticle(content);
+    await NotificationActor().newArticle(content);
   };
 
 

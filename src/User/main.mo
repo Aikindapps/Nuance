@@ -1112,7 +1112,7 @@ actor User {
       return [];
     };
 
-    var principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+    var principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(handle)), "");
     if (principalId == "") {
       return [];
     };
@@ -1121,7 +1121,7 @@ actor User {
     let users = Buffer.Buffer<UserListItem>(0);
 
     for (followerHandle in followers.vals()) {
-      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(followerHandle), "");
+      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(followerHandle)), "");
       if (principalId != "") {
         let user : UserListItem = {
           handle = U.safeGet(handleHashMap, principalId, "");

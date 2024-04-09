@@ -63,23 +63,23 @@
     }
 
     .triangle {
-      position: fixed;
+      position: absolute;
       width: 0;
       height: 0;
       border-left: 4px solid transparent; 
       border-right: 4px solid transparent; 
       border-bottom: 4px solid $primary-background-color; 
-      top: 48px; 
+      top: 33px; 
       margin-left: 6px;
       transform: rotate(180deg) ;
 
       @media only screen and (max-width: 768px) {
-        top: 40px;
+        top: 33px;
       }
     }
 
     .triangle-dark {
-      position: fixed;
+      position: absolute;
       width: 0;
       height: 0;
       border-left: 4px solid transparent; 
@@ -90,7 +90,7 @@
       transform: rotate(180deg) ; 
 
       @media only screen and (max-width: 768px) {
-        top: 40px;
+        top: 41px;
         
       }
     }
@@ -106,7 +106,7 @@
       font-weight: 900;
       margin-top: 13px;
       margin-left: -11px;
-      z-index: 11;
+      z-index: 0;
       }
       .notification-icon-wrapper {
         position: relative;  

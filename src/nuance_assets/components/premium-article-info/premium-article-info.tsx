@@ -142,27 +142,6 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           );
           if (settleResponse) {
             setModalPage('congrats');
-            //send notification 
-            if (user) {
-              //Can this be secure???
-              createNotification({ PremiumArticleSold: null }, {
-                url: props.post?.url || '',
-                senderPrincipal: Principal.fromText("2vxsx-fae"),
-                senderHandle: user.handle,
-                receiverPrincipal: Principal.fromText("2vxsx-fae"),
-                receiverHandle: props.post?.creator || props.post?.handle || '',
-                tags: [],
-                articleId: props.post?.postId || '',
-                articleTitle: props.post?.title || '',
-                authorPrincipal: Principal.fromText("2vxsx-fae"),
-                authorHandle: props.post?.creator || props.post?.handle || '',
-                comment: '',
-                isReply: false,
-                tipAmount: "0",
-                token: ''
-
-              });
-            }
           }
         } else {
           toastError(transferResponse.Err);

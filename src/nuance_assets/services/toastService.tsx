@@ -1,4 +1,4 @@
-import _toast from 'react-hot-toast';
+import _toast, { Toast } from 'react-hot-toast';
 import React, { useContext } from 'react';
 import { Toaster } from 'react-hot-toast';
 import '../components/notifications/_notifications.scss';
@@ -25,26 +25,11 @@ export const RenderToaster = () => {
   return (
     <Toaster
       position="bottom-center"
-      toastOptions={{
-        duration: 6000,
-        style: {
-          backgroundColor: '#000000',
-          color: '#ffffff',
-          borderRadius: '8px',
-        },
-        custom: {
-          duration: 6000,
-          style: {
-            backgroundColor: colors.primaryBackgroundColor,
-            color: colors.primaryTextColor,
-          },
-        },
-      }}
     />
   );
 };
 
-const CustomNotificationContent = ({ message }: { message: string }) => {
+const CustomNotificationContent = ({ message, toast }: { message: string, toast: Toast }) => {
 
   const darkTheme = useTheme();
 
@@ -81,14 +66,12 @@ const CustomNotificationContent = ({ message }: { message: string }) => {
   const notifications: Notifications[] = JSON.parse(message);
   //if notifications modal is open, don't show the toast
   const modalContext = useContext(Context);
-  if (modalContext?.isModalOpen && modalContext.modalType === 'Notifications') {
+  if (modalContext?.isSidebarOpen) {
     return null;
   } else {
     return (
 
-
       <div style={{
-        marginTop: '50px', // Add space from the top
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',
@@ -96,7 +79,7 @@ const CustomNotificationContent = ({ message }: { message: string }) => {
         {notifications.map((notification, index) => (
           <div key={index} className={`${darkTheme ? 'dark' : ''} notification-toast`}>
             <div>
-              <div className="notification-details">
+              <div className="notification-details" onClick={() => { _toast.dismiss(toast.id) }} >
                 <div className='notification-top-row'>
                   <div className='notification-icon'>
 
@@ -136,6 +119,12 @@ export const toast = (message: string, toastType: ToastType): void => {
           primary: colors.accentColor,
           secondary: colors.primaryTextColor,
         },
+        style: {
+          backgroundColor: '#000000',
+          color: '#ffffff',
+          borderRadius: '8px',
+        },
+
       };
       _toast.success(message, options);
       break;
@@ -145,6 +134,11 @@ export const toast = (message: string, toastType: ToastType): void => {
         iconTheme: {
           primary: colors.errorColor,
           secondary: colors.primaryTextColor,
+        },
+        style: {
+          backgroundColor: '#000000',
+          color: '#ffffff',
+          borderRadius: '8px',
         },
       };
       _toast.error(message, options);
@@ -156,16 +150,28 @@ export const toast = (message: string, toastType: ToastType): void => {
           primary: colors.accentColor,
           secondary: colors.primaryTextColor,
         },
+        style: {
+          backgroundColor: '#000000',
+          color: '#ffffff',
+          borderRadius: '8px',
+        },
       };
       _toast.loading(message, options);
       break;
     case ToastType.Notification:
       // Use the custom component for Notification type because the styling is complicated
-      _toast.custom((t) => (
-        <CustomNotificationContent message={message} />
+      _toast((t) => (
+        <CustomNotificationContent message={message} toast={t} />
       ), {
-        duration: 6000,
+        duration: 4000,
         position: 'top-right',
+        style: {
+          marginTop: '50px',
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          zIndex: 0
+        },
+
 
       }
       );

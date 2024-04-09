@@ -35,7 +35,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
 
   const isMyProfileScreen =
     window.location.pathname.includes('/my-profile') ||
-    window.location.pathname.includes('/article/new')
+    window.location.pathname.includes('/article/new') ||
+    window.location.pathname.includes('/article/edit')
+
 
 
 
@@ -53,6 +55,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const toggleNotificationsModal = () => {
     if (modalContext?.isModalOpen && modalContext.modalType === 'Notifications') {
       modalContext.closeModal();
+      markAllNotificationsAsRead();
     } else {
       modalContext?.openModal('Notifications');
     }
@@ -79,9 +82,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     }
   };
 
-  const { user, notificationCount } = useUserStore((state) => ({
+  const { user, unreadNotificationCount, markAllNotificationsAsRead } = useUserStore((state) => ({
     user: state.user,
-    notificationCount: state.notificationCount
+    unreadNotificationCount: state.unreadNotificationCount,
+    markAllNotificationsAsRead: state.markAllNotificationsAsRead
   }));
 
   useEffect(() => {
@@ -328,8 +332,8 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
                 onClick={toggleNotificationsModal}
               />
               <div className={triangleClass}></div>
-              {notificationCount > 0 ?
-                <span className="notification-count" onClick={toggleNotificationsModal}>{notificationCount}</span>
+              {unreadNotificationCount > 0 ?
+                <span className="notification-count" onClick={toggleNotificationsModal}>{unreadNotificationCount}</span>
                 : ''}
             </div>
             : ''

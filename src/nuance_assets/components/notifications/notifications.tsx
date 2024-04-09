@@ -1,15 +1,16 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useRef, useCallback } from 'react';
 import { useState } from 'react';
 import './_notifications.scss';
 import { useUserStore } from '../../store/userStore';
+import { useAuthStore } from '../../store/authStore';
 import { useTheme, useThemeUpdate } from '../../contextes/ThemeContext';
 import { Context } from '../../../nuance_assets/contextes/ModalContext';
 import { timeAgo } from '../../../nuance_assets/shared/utils';
 import { Notifications, NotificationContent, NotificationType } from '../../../../src/declarations/Notifications/Notifications.did';
 import { icons } from '../../shared/constants';
 import Toggle from '../../../nuance_assets/UI/toggle/toggle';
-import { String, get } from 'lodash';
 import { colors } from '../../shared/constants';
+import Button from '../../UI/Button/Button';
 
 
 type NotificationsSidebarProps = {
@@ -34,70 +35,142 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     const [newArticleByAuthor, setNewArticleByAuthor] = useState(true);
     const [newArticleOnTopic, setNewArticleOnTopic] = useState(true);
     const [newFollower, setNewFollower] = useState(true);
-
+    const [isSettingsSaving, setIsSettingsSaving] = useState(false);
 
     const saveNotificationSettings = () => {
+        setIsSettingsSaving(true);
         const settings = {
-            commentsReplies,
-            applauseForMe,
-            newArticleByAuthor,
-            newArticleOnTopic,
-            newFollower
+            newCommentOnMyArticle: commentsReplies,
+            newCommentOnFollowedArticle: commentsReplies,
+            newArticleByFollowedWriter: newArticleByAuthor,
+            newArticleByFollowedTag: newArticleOnTopic,
+            newFollower: newFollower,
+            tipReceived: applauseForMe,
+            premiumArticleSold: applauseForMe
         };
-        // Save settings logic here...
-        console.log('Settings saved:', settings);
+
+        try {
+            updateUserNotificationSettings(settings).then(() => {
+                setIsSettingsSaving(false);
+            });
+        }
+        catch (error) {
+            console.error('Error saving settings:', error);
+            setIsSettingsSaving(false);
+        }
     };
 
-    const { getUserNotifications, markNotificationAsRead, notifications, resetNotificationCount } = useUserStore((state) => ({
+    const { getUserNotifications,
+        markNotificationAsRead,
+        notifications,
+        resetUnreadNotificationCount,
+        unreadNotificationCount,
+        loadMoreNotifications,
+        totalNotificationCount,
+        markAllNotificationsAsRead,
+        updateUserNotificationSettings
+    } = useUserStore((state) => ({
         getUserNotifications: state.getUserNotifications,
         markNotificationAsRead: state.markNotificationAsRead,
+        markAllNotificationsAsRead: state.markAllNotificationsAsRead,
         notifications: state.notifications || [],
-        resetNotificationCount: state.resetNotificationCount,
+        unreadNotificationCount: state.unreadNotificationCount,
+        resetUnreadNotificationCount: state.resetUnreadNotificationCount,
+        loadMoreNotifications: state.loadMoreNotifications,
+        totalNotificationCount: state.totalNotificationCount,
+        updateUserNotificationSettings: state.updateUserNotificationSettings
+    }));
+
+    const { isLoggedIn } = useAuthStore((state) => ({
+        isLoggedIn: state.isLoggedIn,
     }));
 
     const [selectedNotificationId, setSelectedNotificationId] = useState<string | null>(null);
-    const [isSettingsSelected, setIsSettingsSelected] = useState(false);
     const [currentView, setCurrentView] = useState('notifications'); // 'notifications' or 'settings'
 
 
 
-    //modal context
-    const [isOpen, setIsOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const sidebarRef = useRef<HTMLDivElement>(null);
     const modalContext = useContext(Context);
 
-    const openSidebar = () => {
-        setIsOpen(true);
-        //set notification count to 0
-        resetNotificationCount();
-    };
+    // Load more notifications
+    const [currentFrom, setCurrentFrom] = useState(0);
+    const [currentTo, setCurrentTo] = useState(9);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-    const closeSidebar = () => {
-        setIsOpen(false);
-        //mark all notifications as read: TODO optimize to mark all as read at once
-        notifications.forEach((notification) => {
-            if (!notification.read) {
-                // markNotificationAsRead([notification.id])
-                //     .then(() => {
-                //         getUserNotifications(0, 100, true);
-                //         console.log(`Notification ${notification.id} marked as read`);
-                //     })
-                //     .catch((error) => {
-                //         console.error(`Error marking notification as read: ${error}`);
-                //     });
-                console.log(`Notification ${notification.id} marked as read`);
-                //need to figure out how to mark all notifications as read without 
-                //marking as read on render
-            }
-        });
-    };
+    const loadMore = () => {
+        if (!isLoadingMore) {
+            setIsLoadingMore(true);
 
-    useEffect(() => {
-        if (modalContext?.isModalOpen && modalContext.modalType === 'Notifications') {
-            openSidebar();
-        } else {
-            closeSidebar();
+            // Calculate new indices
+            const newFrom = currentTo + 1;
+            const newTo = currentTo + 10; // Load next 10 notifications
+
+            // Fetch more notifications
+            loadMoreNotifications(newFrom, newTo).then(() => {
+                // Update state based on successful fetch
+                setCurrentFrom(newFrom);
+                setCurrentTo(newTo);
+                setIsLoadingMore(false);
+            }).catch((error) => {
+                console.error("Error loading more notifications:", error);
+                setIsLoadingMore(false);
+            });
         }
-    }, [modalContext?.isModalOpen, modalContext?.modalType]);
+    };
+
+
+
+
+
+    if (isLoggedIn) {
+        useEffect(() => {
+            // Define a function that fetches notifications
+            const fetchNotifications = () => {
+                if (isLoggedIn && !isSidebarOpen && !modalContext?.isSidebarOpen) { // Ensure you only fetch if the user is logged in
+                    getUserNotifications(0, currentTo, isLoggedIn);
+                    console.log('Fetching notifications');
+
+                }
+            };
+
+
+            fetchNotifications();
+
+
+            const intervalId = setInterval(fetchNotifications, 30000);
+
+
+            return () => clearInterval(intervalId);
+        }, [isLoggedIn, isSidebarOpen, modalContext?.isSidebarOpen]);
+    };
+
+
+
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+
+        //toggle notification modal
+        if (modalContext?.isModalOpen && modalContext.modalType === 'Notifications') {
+            modalContext.closeModal();
+            //mark all notifications as read
+            markAllNotificationsAsRead();
+
+        } else {
+            modalContext?.openModal('Notifications');
+        }
+        setCurrentFrom(0);
+        setCurrentTo(9);
+    };
+
+    //when context changes, reset load more
+    useEffect(() => {
+        setCurrentFrom(0);
+        setCurrentTo(9);
+    }, [modalContext]);
+
 
 
     const handleSettingsClick = () => {
@@ -109,15 +182,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     };
 
 
-    const isLoggedIn = useUserStore((state) => state.user !== null);
 
-    //get user notifications
-    useEffect(() => {
-        getUserNotifications(0, 100, isLoggedIn);
-        console.log('getUserNotifications');
-        console.log(notifications);
-    }
-        , []);
+
 
     //mark notification as read
     const handleNotificationClick = (notification: Notifications) => {
@@ -126,7 +192,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         if (!notification.read) {
             markNotificationAsRead([notification.id])
                 .then(() => {
-                    getUserNotifications(0, 100, isLoggedIn);
+                    getUserNotifications(0, currentTo, isLoggedIn);
                     console.log(`Notification ${notification.id} marked as read`);
                 })
                 .catch((error) => {
@@ -162,7 +228,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
             case 'TipReceived':
                 return <span>Excellent! {handleUrl} has <b>applauded</b> +{notification.content.tipAmount} {notification.content.token} on "{articleUrl}"</span>;
             case 'PremiumArticleSold':
-                return <span>K-ching! {handleUrl} bought an <b>NFT access</b> key for your article "{articleUrl}"</span>;
+                return <span>K-ching! {notification.content.senderHandle != "" ? handleUrl : "Someone"} bought an <b>NFT access</b> key for your article "{articleUrl}"</span>;
             default:
                 return 'You have a new notification!';
         }
@@ -172,13 +238,13 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
 
 
     return (
-        <aside className={`notifications-sidebar ${isOpen ? 'open' : ''}`} style={darkTheme ? { background: darkOptionsAndColors.background } : {}}>
-            <div className='exit-icon' onClick={closeSidebar}>
+        <aside ref={sidebarRef} className={`notifications-sidebar ${modalContext?.isSidebarOpen ? 'open' : ''}`} style={darkTheme ? { background: darkOptionsAndColors.background } : {}}>
+            <div className='exit-icon' onClick={toggleSidebar}>
                 <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt="Close Notifications sidebar" />
             </div>
 
             <div className='notification-sidebar-header'>
-                <h2>NOTIFICATIONS ({notifications?.length} NEW)</h2>
+                <h2>NOTIFICATIONS ({unreadNotificationCount} NEW)</h2>
                 <div className="header-right">
                     <div className={`notification-bell ${currentView === 'notifications' ? 'selected' : ''}`} onClick={handleNotificationsClick}>
                         <img src={darkTheme ? icons.NOTIFICATION_BELL_DARK : icons.NOTIFICATION_BELL} alt="Notifications" />
@@ -215,9 +281,19 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
                             <Toggle toggled={newFollower} callBack={() => setNewFollower(!newFollower)} />
                         </div>
                     </div>
-                    <button className={`save-notification-settings ${darkTheme ? "dark" : ""}`} onClick={saveNotificationSettings}>
+                    <Button styleType={darkTheme ? "primary-blue-dark" : "primary-blue"}
+                        onClick={saveNotificationSettings}
+                        loading={isSettingsSaving}
+                        dark={darkTheme}
+                        style={{
+                            width: '272px',
+                            marginTop: '40px',
+                            display: 'flex',
+                            flexDirection: 'row-reverse',
+                        }}>
+
                         Save Notification settings
-                    </button>
+                    </Button>
                 </div>
 
 
@@ -238,11 +314,17 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
                             </div>
                         </li>
                     ))}
-                    <button className={`load-more ${darkTheme ? "dark" : ""}`}>Load more</button>
-                </ul>
-            )}
+                    {notifications.length < totalNotificationCount &&
+                        <Button styleType={"load-more"} onClick={loadMore} loading={isLoadingMore} primaryColor={colors.accentColor} dark={darkTheme} disabled={isLoadingMore}>
+                            Load More
+                        </Button>
+                    }
 
-        </aside>
+                </ul>
+            )
+            }
+
+        </aside >
     );
 };
 

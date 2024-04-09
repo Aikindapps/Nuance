@@ -39,6 +39,7 @@ import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import ENV "../../../src/shared/env";
 import U "../../../src/shared/utils";
 import Buffer "mo:base/Buffer";
+import Debug "mo:base/Debug";
 import AccountIdentifier "motoko/util/AccountIdentifier";
 
 
@@ -738,6 +739,25 @@ actor class EXTNFT() = this {
                           }]);
                           _tokenListing.delete(token);
                           _paymentSettlements.delete(paymentaddress);
+                          
+                          //send notification
+                          ignore U.createNotification(#PremiumArticleSold, {
+                            url = "";
+                            articleId = postId;
+                            articleTitle = "";
+                            authorPrincipal = writer_principal_id;
+                            authorHandle = "";
+                            comment = "";
+                            isReply = false;
+                            receiverPrincipal = writer_principal_id;
+                            receiverHandle = "";
+                            senderPrincipal = msg.caller;
+                            senderHandle = "";
+                            tags = [];
+                            tipAmount = "";
+                            token = "";
+                          });
+
                           //nuance addition
                           //once any marketplace purchase happens, call the mint_and_list_next
                           let r = mint_and_list_next();

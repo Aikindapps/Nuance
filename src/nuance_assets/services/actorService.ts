@@ -129,6 +129,7 @@ export type {
   Notifications,
   NotificationContent,
   NotificationType,
+  UserNotificationSettings
 } from '../../declarations/Notifications/Notifications.did';
 
 const isLocal: boolean =

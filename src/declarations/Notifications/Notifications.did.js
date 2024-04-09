@@ -100,7 +100,7 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : IDL.Text,
   });
   const Result_2 = IDL.Variant({
-    'ok' : IDL.Vec(Notifications),
+    'ok' : IDL.Tuple(IDL.Vec(Notifications), IDL.Nat),
     'err' : IDL.Text,
   });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });

@@ -94,7 +94,7 @@ export type Result = { 'ok' : null } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_2 = { 'ok' : Array<Notifications> } |
+export type Result_2 = { 'ok' : [Array<Notifications>, bigint] } |
   { 'err' : string };
 export type Result_3 = { 'ok' : Array<string> } |
   { 'err' : string };

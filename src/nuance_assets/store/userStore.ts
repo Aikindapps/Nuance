@@ -16,6 +16,7 @@ import {
   Notifications,
   NotificationType,
   NotificationContent,
+  UserNotificationSettings
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
 
@@ -139,7 +140,9 @@ export interface UserStore {
   readonly searchPublicationResults: PublicationType[] | undefined;
   readonly myFollowers: UserListItem[] | undefined;
   readonly notifications: Notifications[] | undefined;
-  readonly notificationCount: number;
+  readonly totalNotificationCount: number;
+  readonly unreadNotificationCount: number;
+  readonly notificationsToasted: string[];
 
   registerUser: (
     handle: string,
@@ -185,9 +188,12 @@ export interface UserStore {
   createEmailOptInAddress: (emailAddress: string) => Promise<void>;
 
   getUserNotifications: (from: number, to: number, isLoggedIn: boolean) => Promise<void>;
+  loadMoreNotifications: (from: number, to: number) => Promise<void>;
   createNotification: (notificationType: NotificationType, notificationContent: NotificationContent) => Promise<void>;
-  markNotificationAsRead: (notificationId: [string]) => Promise<void>;
-  resetNotificationCount: () => void;
+  markNotificationAsRead: (notificationId: string[]) => Promise<void>;
+  markAllNotificationsAsRead: () => void;
+  resetUnreadNotificationCount: () => void;
+  updateUserNotificationSettings: (notificationSettings: UserNotificationSettings) => Promise<void>;
 
   clearAll: () => void;
 }
@@ -221,7 +227,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   searchPublicationResults: undefined,
   myFollowers: undefined,
   notifications: undefined,
-  notificationCount: 0,
+  unreadNotificationCount: 0,
+  totalNotificationCount: 0,
+  notificationsToasted: [],
 
   registerUser: async (
     handle: string,
@@ -607,33 +615,57 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   //notifications
   getUserNotifications: async (from: number, to: number, isLoggedIn: boolean): Promise<void> => {
-  if (isLoggedIn) {
+    if (isLoggedIn) {
+     
+      try {
+        const result = await (await getNotificationsActor()).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
+        if (Err in result) {
+          toastError(result.err);
+        } else {
+          console.log('getUserNotifications:', result.ok[0]);
+          
+          set({ notifications: result.ok[0]})
+          set({ unreadNotificationCount: 0 });
+          set({ totalNotificationCount: Number(result.ok[1]) });
+          
+          var toToast = [];
 
-    set({ notificationCount: 0 });
+          for (let i = 0; i < result.ok[0].length; i++) {
+            if (result.ok[0][i].read === false) {
+              set((state) => ({ unreadNotificationCount: state.unreadNotificationCount + 1 }));
+              if (!get().notificationsToasted.includes(result.ok[0][i].id)) {
+              toToast.push(result.ok[0][i]);
+              set((state) => ({ notificationsToasted: [...state.notificationsToasted, result.ok[0][i].id] }));
+              }
+            }
+          }
+        }
 
+        toast(JSON.stringify(toToast), ToastType.Notification);
+        
+          
+      } catch (err) {
+        console.error('getUserNotifications:', err);
+      }
+    }
+  },
+
+  loadMoreNotifications: async (from: number, to: number): Promise<void> => {
     try {
       const result = await (await getNotificationsActor()).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
       if (Err in result) {
         toastError(result.err);
       } else {
-        console.log('getUserNotifications:', result.ok);
-        set({ notifications: result.ok });
-        let toastArray = [];
-        for (let notification of result.ok) {
-          if (notification.read === false) {
-            set({ notificationCount: get().notificationCount + 1 });
-            toastArray.push(notification);
-          }
-        }
-        toast(JSON.stringify(toastArray), ToastType.Notification);
-         
         
+        let notifications = get().notifications || [];
+        set({ notifications: [...notifications, ...result.ok[0] ]});
       }
     } catch (err) {
-      console.error('getUserNotifications:', err);
+      handleError(err, Unexpected);
     }
-  } 
   },
+
+
 
   createNotification: async (notificationType: NotificationType, notificationContent: NotificationContent): Promise<void> => {
     try {
@@ -648,7 +680,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  markNotificationAsRead: async (notificationId: [string]): Promise<void> => {
+  markNotificationAsRead: async (notificationId: string[]): Promise<void> => {
     try {
       const result = await (await getNotificationsActor()).markNotificationAsRead(notificationId);
       if (Err in result) {
@@ -661,10 +693,38 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  resetNotificationCount: (): void => {
-    set({ notificationCount: 0 });
+   markAllNotificationsAsRead: () => {
+    let notifications = get().notifications || [];
+    let notificationIds = notifications.filter((notification) => !notification.read).map((notification) => notification.id);
+    if (notificationIds.length > 0) {
+      set({ notifications: notifications.map((notification) => {
+        return {
+          ...notification,
+          read: true
+        }
+      })});
+      set({ unreadNotificationCount: 0 });
+      get().markNotificationAsRead(notificationIds);
+
+    };
+},
+
+  resetUnreadNotificationCount: (): void => {
+    set({ unreadNotificationCount: 0 });
   },
 
+  updateUserNotificationSettings: async (notificationSettings: UserNotificationSettings): Promise<void> => {
+    try {
+      const result = await (await getNotificationsActor()).updateUserNotificationSettings(notificationSettings);
+      if (Err in result) {
+        toastError(result.err);
+      } else {
+        console.log('updateUserNotificationSettings:', result.ok);
+        }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
 
 
 

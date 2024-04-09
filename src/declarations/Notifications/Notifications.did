@@ -17,7 +17,10 @@ type Result_3 =
 type Result_2 = 
  variant {
    err: text;
-   ok: vec Notifications;
+   ok: record {
+         vec Notifications;
+         nat;
+       };
  };
 type Result_1 = 
  variant {

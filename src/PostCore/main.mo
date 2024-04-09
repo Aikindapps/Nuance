@@ -3633,10 +3633,6 @@ public shared ({caller}) func getTagFollowers(tagId : Text) : async Result.Resul
     return #err("Cannot use this method anonymously.");
   };
 
-  if (not isAdmin(caller)) {
-    return #err(Unauthorized);
-  };
-
   var followers : Buffer.Buffer<Text> = Buffer.Buffer<Text>(userTagRelationships.size());
   for ((principalId, postTags) in userTagRelationships.entries()) {
     for (postTag in Iter.fromArray(postTags)) {

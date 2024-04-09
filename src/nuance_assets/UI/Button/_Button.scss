@@ -523,3 +523,106 @@ button[disabled]:hover {
     }
   }
 }
+
+
+.button-attributes-load-more {
+  background-color: #f0f0f0;
+  color: #999;
+  border-radius: 5px;
+  margin-top: 16px; 
+  padding: 10px 0;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: center; 
+
+  &:hover{
+  border: none;
+  background-color: darken(#f0f0f0, 10%);
+  }
+
+  &:disabled {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row-reverse;
+    background-color: #f0f0f0;
+    color: #999;
+    cursor: default;
+    border: none;
+   &:hover {
+    background-color: #f0f0f0;
+    color: #999;
+    cursor: default;
+    border: none;
+   }
+  }
+}
+
+.button-attributes-primary-blue {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  color: $primary-background-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.1s ease-in-out all;
+
+  &:hover {
+    background-color: $button-border-hover;
+  }
+
+  &:active {
+    background-color: $active-background-color;
+  }
+
+  &:disabled {
+    background-color: grey;
+    cursor: default;
+
+    &:hover {
+      color: $primary-background-color;
+      background-color: $primary-background-color;
+      cursor: default;
+    }
+  }
+  
+}
+
+.button-attributes-primary-blue-dark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  color: $primary-color;
+  border: none;
+  font-weight: 500;
+  background-color: white;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.1s ease-in-out all;
+
+  &:hover {
+    border: 1px solid $button-border-hover;
+  }
+  &:active {
+    background-color: white;
+  }
+
+  &:disabled {
+    background-color: grey;
+    cursor: default;
+
+    &:hover {
+      cursor: default;
+    }
+  }
+  
+}

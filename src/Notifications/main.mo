@@ -6,6 +6,7 @@ import Buffer "mo:base/Buffer";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 import HashMap "mo:base/HashMap";
+// import Map "mo:hashmap/Map"; stable hashmaps
 import Nat "mo:base/Nat";
 import Nat32 "mo:base/Nat32";
 import Principal "mo:base/Principal";
@@ -50,7 +51,6 @@ actor Notifications {
   stable var cgusers : List.List<Text> = List.nil<Text>();
 
   stable var index : [(Text, [Text])] = [];
-  var hashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
 
   stable var notificationId = 0;
 
@@ -216,21 +216,16 @@ actor Notifications {
 // key: principalId, value: UserNotificationSettings
 var userNotificationSettings = HashMap.HashMap<Principal, UserNotificationSettings>(initCapacity, Principal.equal, Principal.hash);
 
-
-
-
-
 // notifications are direct or broadcast, both are stored in nested hashmaps, sorted by principalId
 
 //Broadcasts will be added to seperate hashmaps for bulk distribution when we have a lot of users
 // but the notification itself will be added to userbroadcastNotifications hashmap directly for now. 
 
 //key: principalId, value: directnotifications hashmap per user (key: NotificationId, value: Notification)
-var userDirectNotifications = HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(initCapacity, Principal.equal, Principal.hash);
+ var userDirectNotifications = HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(initCapacity, Principal.equal, Principal.hash);
 
 //key principalId, value: broadcastNotifications hashmap per user (key: NotificationId, value: Notification)
-var userBroadcastNotifications = HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(initCapacity, Principal.equal, Principal.hash);
-
+ var userBroadcastNotifications = HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(initCapacity, Principal.equal, Principal.hash);
 
 //broadcasts
 // key: articleId, value: array of principalIds who've commented on the article. 
@@ -246,10 +241,9 @@ public shared ({caller}) func newArticle(notification: NotificationContent) : as
   
   // order of operations is followers of writer, then followers of tags
   // followers of writer will be checked against when adding to followers of tags to prevent duplicates
- 
   let author = notification.authorHandle;
   let userCanister = CanisterDeclarations.getUserCanister();
-  let followers = await userCanister.getUserFollowers(author);
+  let followers = await userCanister.getUserFollowers(U.lowerCase(author));
   let followersBuffer = Buffer.Buffer<Text>(0);
 
   for (f in Iter.fromArray(followers)) {
@@ -331,12 +325,12 @@ public shared ({caller}) func newArticle(notification: NotificationContent) : as
 
 //utility functions
 func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool {
-     
     let settings = userNotificationSettings.get(caller);
     
      switch (settings) {
         case null {
           return true;
+
         };
         case (?settings) {
      switch (n.notificationType) {
@@ -382,50 +376,74 @@ func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool 
 
 
 
-public shared query ({caller}) func getUserNotifications(from : Text, to : Text) : async Result.Result<[Notifications], Text> {
-
-
-  //TODO PAGINATE
+public shared query ({caller}) func getUserNotifications(from : Text, to : Text) : async Result.Result<([Notifications], Nat), Text> {
+    // Check for anonymous callers
     if (isAnonymous(caller)) {
         return #err("Cannot use this method anonymously.");
     };
 
-    
-    if (not isThereEnoughMemoryPrivate()) {
-        return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
+    // Collect metrics
     canistergeekMonitor.collectMetrics();
 
+    // Attempt to get user's direct and broadcast notifications
     let directNotifications = userDirectNotifications.get(caller);
     let broadcastNotifications = userBroadcastNotifications.get(caller);
+
+    // Initialize a buffer for notifications
     var notifications = Buffer.Buffer<Notifications>(0);
     
+    // Process direct notifications
     switch (directNotifications) {
         case null {};
         case (?directNotifications) {
             for (n in (directNotifications.vals())) {
                 if (filterForNotificationSettings(n, caller)) {
-                notifications.add(n);
+                    notifications.add(n);
                 };
             };
         };
     };
 
+    // Process broadcast notifications
     switch (broadcastNotifications) {
         case null {};
         case (?broadcastNotifications) {
             for (n in (broadcastNotifications.vals())) {
                 if (filterForNotificationSettings(n, caller)) {
-                notifications.add(n);
+                    notifications.add(n);
                 };  
             };
         };
-
     };
-   notifications.sort(sortNotificationsById);
-    return #ok(Array.reverse(Buffer.toArray(notifications)));
+
+    // Sort notifications by ID
+    notifications.sort(sortNotificationsById);
+    let allNotifications = Array.reverse(Buffer.toArray(notifications));
+
+    let fromIndex = U.textToNat(from);
+    let toIndex = U.textToNat(to);
+
+    var adjustedToIndex = toIndex;
+
+    if (toIndex < Array.size(allNotifications)) {
+        adjustedToIndex := toIndex + 1;
+        Debug.print("adjustedToIndex: " # Nat.toText(adjustedToIndex));
+    } else {
+        adjustedToIndex := Array.size(allNotifications);
+        Debug.print("adjustedToIndex: " # Nat.toText(adjustedToIndex));
+    };
+
+    let notificationsSlice = Iter.toArray(Array.slice(allNotifications, fromIndex, adjustedToIndex));
+
+
+    switch(notificationsSlice) {
+        case (notificationsSlice) {
+            return #ok((notificationsSlice, Array.size(allNotifications)));
+        };
+    };
 };
+
+
 
 //mark notification as read
 public shared ({caller}) func markNotificationAsRead( notificationIds : [Text]) : async Result.Result<(), Text> {
@@ -494,10 +512,6 @@ public shared ({caller}) func updateUserNotificationSettings(notificationSetting
         return #err("Cannot use this method anonymously.");
     };
 
-    if (not isCgUser(caller)) {
-        return #err(NotTrustedPrincipal);
-    };
-
     if (not isThereEnoughMemoryPrivate()) {
         return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
@@ -517,7 +531,42 @@ return #ok();
 
 //general utility to create a notification
 public shared ({caller}) func  createNotification(notificationType : NotificationType, content : NotificationContent) : async Result.Result<(), Text> {
-    //TODO: Caller must always be a nuance canister, may require deeper thought for buckets
+
+    let isNuanceCanister = func(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        U.arrayContains(ENV.NOTIFICATIONS_CANISTER_ADMINS, c);
+    };
+
+    let postBuckets = await CanisterDeclarations.getPostCoreCanister().getBucketCanisters();
+
+    let isPostBucket = func(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        for (bucket in Iter.fromArray(postBuckets)) {
+            if (bucket.0 == c) {
+                return true;
+            };
+        };
+        return false;
+    };
+
+    let nft = await CanisterDeclarations.getNftFactoryCanister().getAllNftCanisterIds();
+
+    let isNftCanister = func(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        for (canister in Iter.fromArray(nft)) {
+            if (canister.1 == c) {
+                return true;
+            };
+        };
+        return false;
+    };
+
+
+
+
+    if ( not isNuanceCanister(caller) and not isPostBucket(caller) and not isNftCanister(caller)) {
+        return #err("Cannot use this method anonymously.");
+    };
 
     if (isAnonymous(caller)) {
         return #err("Cannot use this method anonymously.");
@@ -630,38 +679,63 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
             };
         };
         case (#PremiumArticleSold) {
-            
-            var authorPrincipal = Principal.fromText("2vxsx-fae");
-            var senderPrincipal = Principal.fromText("2vxsx-fae");
-
-            func convertOptionalToText(optionalText : ?Text) : Text {  
-              switch (optionalText) {  
-                case (null) { "Default Text" };  // Provide a default Text value
-                case (?t) { t };  // If the value is not null, use it
-                }  
-              };
-
-            //get principals from handles for incomplete data
-            switch (await UserCanister.getPrincipalByHandle(notification.content.authorHandle)) {
-                case (#ok(principal)) {
+           
+          //generate handles for frontend
+            var authorHandle = "";
+            var senderHandle = "";
+            switch (await UserCanister.getUserByPrincipalId(Principal.toText(content.authorPrincipal))) {
+                case (#ok(user)) {
                  
-                    authorPrincipal := Principal.fromText(convertOptionalToText(principal));
+                    authorHandle := user.handle;
                   };
                 case (#err(err)) {
+                  Debug.print("createNotification: error: " # debug_show(err));
 
                     return #err(err);
                 };
             };
 
-            switch (await UserCanister.getPrincipalByHandle(notification.content.senderHandle)) {
-                case (#ok(principal)) {
-                    senderPrincipal := Principal.fromText(convertOptionalToText(principal));
-                };
-                case (#err(err)) {
+            //Comment when sender bug is solved in NFT canister
+            //Currently the NFT canister sends its own address as the senderPrincipal
+            // switch (await UserCanister.getUserByPrincipalId(Principal.toText(content.senderPrincipal))) {
+            //     case (#ok(user)) {
+            //         senderHandle := user.handle;
+            //       };
+            //     case (#err(err)) {
+            //       Debug.print("createNotification: error: " # debug_show(err));
 
-                    return #err(err);
+            //         return #err(err);
+            //     };
+            // };
+
+
+          //get article details
+            var url = "";
+            var articleTitle = "";
+            var tags = Buffer.Buffer<Text>(0);
+
+         let postCore = CanisterDeclarations.getPostCoreCanister();
+         switch(await postCore.getPostKeyProperties(content.articleId)) {
+            case(#ok(keyProperties)) {
+              let PostBucketCanister = CanisterDeclarations.getPostBucketCanister(keyProperties.bucketCanisterId);
+              switch(await PostBucketCanister.getPost(content.articleId)) {
+                case(#ok(post)) {
+                  
+                  url := post.url;
+                  articleTitle := post.title;
+                  for (tag in Iter.fromArray(keyProperties.tags)) {
+                    tags.add(tag.tagName);
+                  };
                 };
+                case(#err(error)) {
+                  //nothing to see here
+                };
+              };
             };
+            case(#err(error)) {
+              //nothing to see here
+            };
+          };
 
            
           
@@ -669,16 +743,16 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
                 id = Nat.toText(notificationId);
                 notificationType = notificationType;
                 content = {
-                    url = content.url;
-                    senderPrincipal = senderPrincipal;
-                    senderHandle = content.senderHandle;
-                    receiverPrincipal = authorPrincipal;
-                    receiverHandle = content.receiverHandle;
-                    tags = content.tags;
+                    url = url;
+                    senderPrincipal = content.senderPrincipal;
+                    senderHandle = senderHandle;
+                    receiverPrincipal = content.receiverPrincipal;
+                    receiverHandle = authorHandle;
+                    tags = Buffer.toArray(tags);
                     articleId = content.articleId;
-                    articleTitle = content.articleTitle;
-                    authorPrincipal = authorPrincipal;
-                    authorHandle = content.authorHandle;
+                    articleTitle = articleTitle;
+                    authorPrincipal = content.authorPrincipal;
+                    authorHandle = authorHandle;
                     comment = content.comment;
                     isReply = content.isReply;
                     tipAmount = content.tipAmount;
@@ -1096,16 +1170,76 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
 
 // #endregion
 
-  //Pre and post upgrades, currently here for future use if we need to store data.
-  system func preupgrade() {
-    _canistergeekMonitorUD := ?canistergeekMonitor.preupgrade();
-    index := Iter.toArray(hashMap.entries());
-  };
+private stable var userDirectNotificationsEntries : [(Principal, [(Text, Notifications)])] = [];
+private stable var userBroadcastNotificationsEntries : [(Principal, [(Text, Notifications)])] = [];
+private stable var userNotificationSettingsEntries : [(Principal, UserNotificationSettings)] = [];
+private stable var articleCommentersEntries : [(Text, [Principal])] = [];
 
-  system func postupgrade() {
-    canistergeekMonitor.postupgrade(_canistergeekMonitorUD);
-    hashMap := HashMap.fromIter(index.vals(), initCapacity, isEq, Text.hash);
-    _canistergeekMonitorUD := null;
-    index := [];
-  };
+
+system func preupgrade() {
+    userDirectNotificationsEntries := [];
+    for ((user, notifications) in userDirectNotifications.entries()) {
+        var userEntries : [(Text, Notifications)] = [];
+        for ((notifId, notif) in notifications.entries()) {
+            userEntries := Array.append(userEntries, [(notifId, notif)]);
+        };
+        userDirectNotificationsEntries := Array.append(userDirectNotificationsEntries, [(user, userEntries)]);
+    };
+    // Repeat for userBroadcastNotifications if needed
+    userBroadcastNotificationsEntries := [];
+    for ((user, notifications) in userBroadcastNotifications.entries()) {
+        var userEntries : [(Text, Notifications)] = [];
+        for ((notifId, notif) in notifications.entries()) {
+            userEntries := Array.append(userEntries, [(notifId, notif)]);
+        };
+        userBroadcastNotificationsEntries := Array.append(userBroadcastNotificationsEntries, [(user, userEntries)]);
+    };
+
+    userNotificationSettingsEntries := Iter.toArray(userNotificationSettings.entries());
+    articleCommentersEntries := Iter.toArray(articleCommenters.entries());
+
+
+
+
 };
+
+
+ system func postupgrade() {
+
+    userDirectNotifications := HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(
+        userDirectNotificationsEntries.size(), 
+        Principal.equal, 
+        Principal.hash
+    );
+
+    for ((user, notifEntries) in Iter.fromArray(userDirectNotificationsEntries)) {
+        let notifsHashMap = HashMap.HashMap<Text, Notifications>(notifEntries.size(), Text.equal, Text.hash);
+        for ((notifId, notif) in Iter.fromArray(notifEntries)) {
+            notifsHashMap.put(notifId, notif);
+        };
+        //top-level hashmap
+        userDirectNotifications.put(user, notifsHashMap);
+    };
+    userBroadcastNotifications := HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(
+        userBroadcastNotificationsEntries.size(), 
+        Principal.equal, 
+        Principal.hash
+    );
+
+    for ((user, notifEntries) in Iter.fromArray(userBroadcastNotificationsEntries)) {
+        let notifsHashMap = HashMap.HashMap<Text, Notifications>(notifEntries.size(), Text.equal, Text.hash);
+        for ((notifId, notif) in Iter.fromArray(notifEntries)) {
+            notifsHashMap.put(notifId, notif);
+        };
+        //top-level hashmap
+        userBroadcastNotifications.put(user, notifsHashMap);
+    };
+
+
+      userNotificationSettings := HashMap.HashMap<Principal, UserNotificationSettings>(userNotificationSettingsEntries.size(),Principal.equal,Principal.hash);
+      articleCommenters := HashMap.HashMap<Text, [Principal]>(articleCommentersEntries.size(),Text.equal,Text.hash);
+
+      userNotificationSettingsEntries := [];
+      articleCommentersEntries := [];
+};
+            };
