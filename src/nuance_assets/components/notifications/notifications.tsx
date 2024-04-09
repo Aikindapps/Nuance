@@ -35,6 +35,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     const [newArticleByAuthor, setNewArticleByAuthor] = useState(true);
     const [newArticleOnTopic, setNewArticleOnTopic] = useState(true);
     const [newFollower, setNewFollower] = useState(true);
+    const [premiumArticleSold, setPremiumArticleSold] = useState(true);
     const [isSettingsSaving, setIsSettingsSaving] = useState(false);
 
     const saveNotificationSettings = () => {
@@ -46,7 +47,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
             newArticleByFollowedTag: newArticleOnTopic,
             newFollower: newFollower,
             tipReceived: applauseForMe,
-            premiumArticleSold: applauseForMe
+            premiumArticleSold: premiumArticleSold,
         };
 
         try {
@@ -279,6 +280,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
                         <div className="toggle-row">
                             <label className={`${darkTheme ? "dark" : ""}`}>New follower</label>
                             <Toggle toggled={newFollower} callBack={() => setNewFollower(!newFollower)} />
+                        </div>
+                        <div className="toggle-row">
+                            <label className={`${darkTheme ? "dark" : ""}`}>Premium Article Sold</label>
+                            <Toggle toggled={premiumArticleSold} callBack={() => setPremiumArticleSold(!premiumArticleSold)} />
                         </div>
                     </div>
                     <Button styleType={darkTheme ? "primary-blue-dark" : "primary-blue"}

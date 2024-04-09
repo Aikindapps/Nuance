@@ -6,7 +6,7 @@ import Buffer "mo:base/Buffer";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 import HashMap "mo:base/HashMap";
-// import Map "mo:hashmap/Map"; stable hashmaps
+import Map "mo:hashmap/Map"; 
 import Nat "mo:base/Nat";
 import Nat32 "mo:base/Nat32";
 import Principal "mo:base/Principal";
@@ -54,6 +54,9 @@ actor Notifications {
 
   stable var notificationId = 0;
 
+public func testnewnotifications2() : async Result.Result<(), Text> {
+  return #err("????");
+};
 
   // admin and canister functions
   
@@ -214,22 +217,32 @@ actor Notifications {
 // #region Notifications
 
 // key: principalId, value: UserNotificationSettings
-var userNotificationSettings = HashMap.HashMap<Principal, UserNotificationSettings>(initCapacity, Principal.equal, Principal.hash);
+stable var userNotificationSettings = Map.new<Principal, UserNotificationSettings>();
 
 // notifications are direct or broadcast, both are stored in nested hashmaps, sorted by principalId
 
 //Broadcasts will be added to seperate hashmaps for bulk distribution when we have a lot of users
 // but the notification itself will be added to userbroadcastNotifications hashmap directly for now. 
 
+
 //key: principalId, value: directnotifications hashmap per user (key: NotificationId, value: Notification)
- var userDirectNotifications = HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(initCapacity, Principal.equal, Principal.hash);
+type DirectNotifications = {
+  notifications : Map.Map<Text, Notifications>;
+};
+
+ stable var userDirectNotifications = Map.new<Principal,DirectNotifications>();
+
 
 //key principalId, value: broadcastNotifications hashmap per user (key: NotificationId, value: Notification)
- var userBroadcastNotifications = HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(initCapacity, Principal.equal, Principal.hash);
+type BroadcastNotifications = {
+  notifications : Map.Map<Text, Notifications>;
+};
+
+stable var userBroadcastNotifications = Map.new<Principal, BroadcastNotifications>();
 
 //broadcasts
 // key: articleId, value: array of principalIds who've commented on the article. 
-var articleCommenters = HashMap.HashMap<Text, [Principal]>(initCapacity, Text.equal, Text.hash);
+stable var articleCommenters = Map.new<Text, [Principal]>();
 
 //writer and tag followers are derived from the user canister and postcore canister respectively
 //for single source of truth, we will not store them here. These notifications are also not time sensitive.
@@ -322,10 +335,13 @@ public shared ({caller}) func newArticle(notification: NotificationContent) : as
   return #ok();
 };  
 
+let { ihash; nhash; thash; phash; calcHash } = Map;
+
 
 //utility functions
 func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool {
-    let settings = userNotificationSettings.get(caller);
+
+    let settings = Map.get(userNotificationSettings, phash, caller);
     
      switch (settings) {
         case null {
@@ -386,8 +402,8 @@ public shared query ({caller}) func getUserNotifications(from : Text, to : Text)
     canistergeekMonitor.collectMetrics();
 
     // Attempt to get user's direct and broadcast notifications
-    let directNotifications = userDirectNotifications.get(caller);
-    let broadcastNotifications = userBroadcastNotifications.get(caller);
+    let directNotifications = Map.get(userDirectNotifications, phash, caller);
+    let broadcastNotifications = Map.get(userBroadcastNotifications, phash, caller);
 
     // Initialize a buffer for notifications
     var notifications = Buffer.Buffer<Notifications>(0);
@@ -396,7 +412,7 @@ public shared query ({caller}) func getUserNotifications(from : Text, to : Text)
     switch (directNotifications) {
         case null {};
         case (?directNotifications) {
-            for (n in (directNotifications.vals())) {
+            for (n in (Map.vals(directNotifications.notifications))) {
                 if (filterForNotificationSettings(n, caller)) {
                     notifications.add(n);
                 };
@@ -408,7 +424,7 @@ public shared query ({caller}) func getUserNotifications(from : Text, to : Text)
     switch (broadcastNotifications) {
         case null {};
         case (?broadcastNotifications) {
-            for (n in (broadcastNotifications.vals())) {
+            for (n in (Map.vals(broadcastNotifications.notifications))) {
                 if (filterForNotificationSettings(n, caller)) {
                     notifications.add(n);
                 };  
@@ -458,11 +474,12 @@ public shared ({caller}) func markNotificationAsRead( notificationIds : [Text]) 
 
 
   for (notificationId in Iter.fromArray(notificationIds)) {
-    let directNotifications = userDirectNotifications.get(caller);
+    let directNotifications = Map.get(userDirectNotifications, phash, caller);
     switch (directNotifications) {
         case null {};
         case (?directNotifications) {
-            switch (directNotifications.remove(notificationId)) {
+         
+            switch (Map.remove(directNotifications.notifications, thash, notificationId)) {
                 case null {};
                 case (?notification) {
                   var n = notification;
@@ -474,17 +491,17 @@ public shared ({caller}) func markNotificationAsRead( notificationIds : [Text]) 
                     read = true;
                   };
 
-                  directNotifications.put(notificationId, n);
+                  Map.set(directNotifications.notifications, thash, notificationId, n);
                 };
             };
         };
     };
 
-    let broadcastNotifications = userBroadcastNotifications.get(caller);
+    let broadcastNotifications = Map.get(userBroadcastNotifications, phash, caller);
     switch (broadcastNotifications) {
         case null {};
         case (?broadcastNotifications) {
-            switch (broadcastNotifications.remove(notificationId)) {
+            switch (Map.remove(broadcastNotifications.notifications, thash, notificationId)) {
                 case null {};
                 case (?notification) {
                   var n = notification;
@@ -496,7 +513,7 @@ public shared ({caller}) func markNotificationAsRead( notificationIds : [Text]) 
                     read = true;
                   };
 
-                  broadcastNotifications.put(notificationId, n);
+                  Map.set(broadcastNotifications.notifications, thash, notificationId, n);
                 };
             };
         };
@@ -518,7 +535,8 @@ public shared ({caller}) func updateUserNotificationSettings(notificationSetting
 
     canistergeekMonitor.collectMetrics();
 
-userNotificationSettings.put(caller, notificationSettings);
+   Map.set(userNotificationSettings, phash, caller, notificationSettings);
+
 return #ok();
 };
 
@@ -853,16 +871,15 @@ func createDirectNotificationInternal(notification : Notifications) : async Resu
 
 func updateUserDirectNotification(receiver : Principal, notification : Notifications) : async Result.Result<(), Text> {
     
-        let directNotifications = userDirectNotifications.get(receiver);
+        let directNotifications = Map.get(userDirectNotifications, phash, receiver);
         switch (directNotifications) {
             case null {
-                let newDirectNotificationHashmap = HashMap.HashMap<Text, Notifications>(initCapacity, Text.equal, Text.hash);
-                newDirectNotificationHashmap.put(Nat.toText(notificationId), notification);
-                userDirectNotifications.put(receiver, newDirectNotificationHashmap);
-
+                let newDirectNotificationHashmap = Map.new<Text, Notifications>();
+                Map.set(newDirectNotificationHashmap, thash, Nat.toText(notificationId), notification);
+                Map.set(userDirectNotifications, phash, receiver, {notifications = newDirectNotificationHashmap}); 
             };
             case (?directNotifications) {
-                directNotifications.put(Nat.toText(notificationId), notification);
+               Map.set(directNotifications.notifications, thash, Nat.toText(notificationId), notification);
             };
         };
 
@@ -881,15 +898,15 @@ func updateUserDirectNotification(receiver : Principal, notification : Notificat
 ////////////////////////broadcast notifications////////////////////////////////////
 
 func updateUserBroadcastNotification(receiver : Principal, notification : Notifications) : async Result.Result<(), Text> {
-    let broadcastNotifications = userBroadcastNotifications.get(receiver);
+    let broadcastNotifications = Map.get(userBroadcastNotifications, phash, receiver);
     switch (broadcastNotifications) {
         case null {
-            let newBroadcastNotificationHashmap = HashMap.HashMap<Text, Notifications>(initCapacity, Text.equal, Text.hash);
-            newBroadcastNotificationHashmap.put(Nat.toText(notificationId), notification);
-            userBroadcastNotifications.put(receiver, newBroadcastNotificationHashmap);
+            let newBroadcastNotificationHashmap = Map.new<Text, Notifications>();
+            Map.set(newBroadcastNotificationHashmap, thash, Nat.toText(notificationId), notification);
+            Map.set(userBroadcastNotifications, phash, receiver, {notifications = newBroadcastNotificationHashmap});
         };
         case (?broadcastNotifications) {
-            broadcastNotifications.put(Nat.toText(notificationId), notification);
+            Map.set(broadcastNotifications.notifications, thash, Nat.toText(notificationId), notification);
         };
     };
     #ok();
@@ -903,11 +920,11 @@ func addBroadcast (notification : Notifications) : async Result.Result<(), Text>
     let articleId = notification.content.articleId;
     let sender = notification.content.senderPrincipal;
     let author = notification.content.authorPrincipal;
-    let commenters = articleCommenters.get(articleId);
+    let commenters = Map.get(articleCommenters, thash, articleId);
     switch (commenters) {
         case null {
           if (sender != author) {
-            articleCommenters.put(articleId, [sender]);
+            Map.set(articleCommenters, thash, articleId, [sender]);
            };
         };
         case (?commenters) {
@@ -921,7 +938,7 @@ func addBroadcast (notification : Notifications) : async Result.Result<(), Text>
               };
             };
             commentersBuffer.add(sender);
-            articleCommenters.put(articleId, Buffer.toArray(commentersBuffer));
+            Map.set(articleCommenters, thash, articleId, Buffer.toArray(commentersBuffer));
         };
     };
      return #ok();
@@ -1015,7 +1032,7 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
   switch (notification.notificationType) {
     case (#NewCommentOnFollowedArticle) {
   let articleId = notification.content.articleId;
-  let commenters = articleCommenters.get(articleId);
+  let commenters = Map.get(articleCommenters, thash, articleId);
   switch (commenters) {
       case null {};
       case (?commenters) {
@@ -1169,77 +1186,10 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
 
 
 // #endregion
+system func preupgrade() {};
+system func postupgrade() {};
+            
+            
+            
+  };
 
-private stable var userDirectNotificationsEntries : [(Principal, [(Text, Notifications)])] = [];
-private stable var userBroadcastNotificationsEntries : [(Principal, [(Text, Notifications)])] = [];
-private stable var userNotificationSettingsEntries : [(Principal, UserNotificationSettings)] = [];
-private stable var articleCommentersEntries : [(Text, [Principal])] = [];
-
-
-system func preupgrade() {
-    userDirectNotificationsEntries := [];
-    for ((user, notifications) in userDirectNotifications.entries()) {
-        var userEntries : [(Text, Notifications)] = [];
-        for ((notifId, notif) in notifications.entries()) {
-            userEntries := Array.append(userEntries, [(notifId, notif)]);
-        };
-        userDirectNotificationsEntries := Array.append(userDirectNotificationsEntries, [(user, userEntries)]);
-    };
-    // Repeat for userBroadcastNotifications if needed
-    userBroadcastNotificationsEntries := [];
-    for ((user, notifications) in userBroadcastNotifications.entries()) {
-        var userEntries : [(Text, Notifications)] = [];
-        for ((notifId, notif) in notifications.entries()) {
-            userEntries := Array.append(userEntries, [(notifId, notif)]);
-        };
-        userBroadcastNotificationsEntries := Array.append(userBroadcastNotificationsEntries, [(user, userEntries)]);
-    };
-
-    userNotificationSettingsEntries := Iter.toArray(userNotificationSettings.entries());
-    articleCommentersEntries := Iter.toArray(articleCommenters.entries());
-
-
-
-
-};
-
-
- system func postupgrade() {
-
-    userDirectNotifications := HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(
-        userDirectNotificationsEntries.size(), 
-        Principal.equal, 
-        Principal.hash
-    );
-
-    for ((user, notifEntries) in Iter.fromArray(userDirectNotificationsEntries)) {
-        let notifsHashMap = HashMap.HashMap<Text, Notifications>(notifEntries.size(), Text.equal, Text.hash);
-        for ((notifId, notif) in Iter.fromArray(notifEntries)) {
-            notifsHashMap.put(notifId, notif);
-        };
-        //top-level hashmap
-        userDirectNotifications.put(user, notifsHashMap);
-    };
-    userBroadcastNotifications := HashMap.HashMap<Principal, HashMap.HashMap<Text, Notifications>>(
-        userBroadcastNotificationsEntries.size(), 
-        Principal.equal, 
-        Principal.hash
-    );
-
-    for ((user, notifEntries) in Iter.fromArray(userBroadcastNotificationsEntries)) {
-        let notifsHashMap = HashMap.HashMap<Text, Notifications>(notifEntries.size(), Text.equal, Text.hash);
-        for ((notifId, notif) in Iter.fromArray(notifEntries)) {
-            notifsHashMap.put(notifId, notif);
-        };
-        //top-level hashmap
-        userBroadcastNotifications.put(user, notifsHashMap);
-    };
-
-
-      userNotificationSettings := HashMap.HashMap<Principal, UserNotificationSettings>(userNotificationSettingsEntries.size(),Principal.equal,Principal.hash);
-      articleCommenters := HashMap.HashMap<Text, [Principal]>(articleCommentersEntries.size(),Text.equal,Text.hash);
-
-      userNotificationSettingsEntries := [];
-      articleCommentersEntries := [];
-};
-            };
