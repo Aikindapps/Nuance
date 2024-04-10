@@ -136,9 +136,7 @@ jobs:
         run: |
           POSTS_RAW=$(dfx canister call --network ic PostCore getTotalPostCount -qq)
           echo "DEBUG: Raw total posts output: $POSTS_RAW"
-      
-         
-          POSTS=$(echo "$POSTS_RAW" | grep -oP '(?<=\()\d{1,3}(?:_\d{3})*(?=\s*: nat\)')
+          POSTS=$(echo "$POSTS_RAW" | grep -oP '(?<=\()\d+(_\d+)?(?=\s*: nat\))')
       
           echo "POSTS=$POSTS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
