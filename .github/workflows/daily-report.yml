@@ -122,12 +122,26 @@ jobs:
         run: node .github/workflows/utils/parseProposals.js proposals_output.txt
         id: parse_proposals
 
+      - name: Get Total Tips
+        run: |
+          TIPS_RAW=$(dfx canister call --network ic PostCore getTotalAmountOfTipsReceived -qq)
+          TIPS=$(echo $TIPS_RAW | grep -oP '(?<=\()\d+(?=\s*: nat\))')
+          echo "TOTAL_TIPS=$TIPS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
+      - name: Get Total Posts
+        run: |
+          POSTS_RAW=$(dfx canister call --network ic PostCore getTotalPostCount -qq)
+          POSTS=$(echo $POSTS_RAW | grep -oP '(?<=\()\d+(?=\s*: nat\))')
+          echo "TOTAL_POSTS=$POSTS" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
+
       - name: Notify Slack
         run: |
           SLACK_WEBHOOK_URL="https://hooks.slack.com/services/${{ secrets.DAILY_REPORT_BOT_WEBHOOK }}"
 
           # Constructing the message
-          MESSAGE="*Daily Report*\n\n*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\nTotal Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n${{ env.ACTIVE_USERS }}"
+          MESSAGE="*Daily Report*\n\n*Cycles Dispenser Status*\n${{ env.CYCLES_BALANCE }}\n\n*SNS Canister Cycles*\n${{ env.SNS_CYCLES }}\n\n*Metrics*\n*Post Metrics (past 24 hrs)*\n${{ env.METRICS }}\n\n*Post Views (past 24 hrs)*\nTotal Views: ${{ env.POST_VIEWS }}\n\n*Number of Registered Users*\n${{ env.REGISTERED_USERS }}\n\n*Number of Active Users*\n${{ env.ACTIVE_USERS }}\n\n*Total amount of tips received by all authors*\n${{ env.TOTAL_TIPS }} \n\n*Total Post Count of all authors*\n${{ env.TOTAL_POSTS }}"
 
           FAMILIAR_COUNT=${{env.FAMILIAR_COUNT}}
           UNFAMILIAR_COUNT=${{env.UNFAMILIAR_COUNT}}
