@@ -134,11 +134,11 @@ jobs:
 
       - name: Get Total Posts
         run: |
-         
           POSTS_RAW=$(dfx canister call --network ic PostCore getTotalPostCount -qq)
-          POSTS=$(echo $POSTS_RAW | grep -oP '(?<=\()\d{1,3}(?:_\d{3})*(?=\s*: nat\)')
+          POSTS=$(echo "$POSTS_RAW" | grep -oP "(?<=\()\d{1,3}(?:_\d{3})*(?=\s*: nat\)")
           echo "TOTAL_POSTS=$POSTS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
+
 
 
       - name: Notify Slack
