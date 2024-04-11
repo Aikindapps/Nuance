@@ -6,7 +6,10 @@ type ModalType =
   | 'WithdrawNft'
   | 'Deposit'
   | 'Clap'
-  | 'Premium article';
+  | 'Premium article'
+  | 'Notifications';
+
+
 type ModalData = {
   transferNftData?: PremiumPostActivityListItem;
   clappingPostData?: PostType;
@@ -28,6 +31,7 @@ type FakeApplaud = {
 };
 interface ContextType {
   isModalOpen: boolean;
+  isSidebarOpen: boolean;
   modalType: ModalType | undefined;
   openModal: (modalType: ModalType, data?: ModalData) => void;
   closeModal: () => void;
@@ -51,6 +55,7 @@ const ContextProvider = ({
   children,
 }: ContextProviderProps): React.ReactElement => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType | undefined>(undefined);
   const [modalData, setModalData] = useState<ModalData | undefined>(undefined);
 
@@ -67,10 +72,15 @@ const ContextProvider = ({
   }, [isModalOpen]);
 
   const openModal = (type: ModalType, data?: ModalData) => {
+    console.log('openModal type:', type);
     setIsModalOpen(true);
     setModalType(type);
     if (data) {
       setModalData(data);
+    }
+
+    if (type === 'Notifications') {
+      setIsSidebarOpen(true);
     }
   };
 
@@ -78,6 +88,10 @@ const ContextProvider = ({
     setIsModalOpen(false);
     setModalType(undefined);
     setModalData(undefined);
+
+    if (modalType === 'Notifications') {
+      setIsSidebarOpen(false);
+    }
   };
 
   const createFakeApplaud = (
@@ -147,6 +161,7 @@ const ContextProvider = ({
     <Context.Provider
       value={{
         isModalOpen,
+        isSidebarOpen,
         modalType,
         openModal,
         closeModal,

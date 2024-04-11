@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext, Suspense, lazy } from 'react';
 import { usePostStore } from './store';
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { Toaster } from 'react-hot-toast';
+import { RenderToaster } from './services/toastService'
 import Loader from './UI/loader/Loader';
 import { useAuthStore } from './store';
 import { useIdleTimer } from 'react-idle-timer';
@@ -52,6 +52,7 @@ import { Context } from './contextes/Context';
 import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';
 import { ModalsWrapper } from './components/modals-wrapper/modals-wrapper';
+import NotificationsSidebar from './components/notifications/notifications';
 
 const Routes = () => {
   return useRoutes([
@@ -225,15 +226,9 @@ function App() {
             <Routes />
           </Suspense>
         </Router>
-        <Toaster
-          position='bottom-center'
-          toastOptions={{
-            style: {
-              backgroundColor: '#000000',
-              color: '#ffffff',
-            },
-          }}
-        />
+        <NotificationsSidebar />
+        <RenderToaster />
+
         <ModalsWrapper />
       </div>
 

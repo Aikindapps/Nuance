@@ -49,6 +49,35 @@ export const formatDate = (
   }
 };
 
+export const timeAgo = (datePast: Date) => {
+  const dateNow = new Date();
+  const seconds = Math.floor((dateNow.getTime() - datePast.getTime()) / 1000);
+  
+  const pluralize = (count: number, noun: string) => count === 1 ? noun : `${noun}s`;
+
+  let interval = seconds / 31536000;
+  if (interval > 1) {
+    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'year')} ago`;
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'month')} ago`;
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'day')} ago`;
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'hour')} ago`;
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'minute')} ago`;
+  }
+  return `${Math.floor(seconds)} ${pluralize(Math.floor(seconds), 'second')} ago`;
+};
+
 export const arraysEqual = <T>(a: T[], b: T[]) => {
   if (a === b) return true;
   if (a == null || b == null) return false;

@@ -90,6 +90,12 @@ export const icons = {
   WEBSITE_ICON: iconsPath + 'website.svg',
   WEBSITE_ICON_DARK: iconsPath + 'website_dark.svg',
   CLOSE_BUTTON: iconsPath + 'close-button.svg',
+  NOTIFICATION_BELL: iconsPath + 'notification-bell.svg',
+  NOTIFICATION_BELL_DARK: iconsPath + 'notification-bell-dark.svg',
+  SETTINGS: iconsPath + 'settings.svg',
+  SETTINGS_DARK: iconsPath + 'settings-dark.svg',
+  EXIT_NOTIFICATIONS: iconsPath + 'exit-notifications.svg',
+  EXIT_NOTIFICATIONS_DARK: iconsPath + 'exit-notifications-dark.svg',
 };
 
 export const colors = {

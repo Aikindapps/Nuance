@@ -2,6 +2,7 @@ import Result "mo:base/Result";
 import List "mo:base/List";
 import Time "mo:base/Time";
 import ENV "env";
+import NotificationTypes "../Notifications/types";
 module{
 
 
@@ -54,6 +55,7 @@ module{
         handleClap : (postCaller: Text, handle : Text) -> ();
         getUserByPrincipalId : (userPrincipalId : Text) -> async Result.Result<User, Text>;
         getUsersByHandles : (handles : [Text]) -> async [UserListItem];
+        getUserFollowers : (handle : Text) -> async [UserListItem];
         getPrincipalByHandle(handle : Text) : async GetPrincipalByHandleReturn;
         registerUser : (handle : Text, displayName : Text, avatar : Text) -> async RegisterUserReturn;
         addPublication : (publication : PublicationObject, callerId : Text) -> async AddPublicationReturn;
@@ -167,7 +169,8 @@ module{
         isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         isEditorPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         getBucketCanisters : query () -> async [(Text, Text)];
-        getUserPostIds : query (userHandle : Text) -> async Result.Result<[Text], Text>
+        getUserPostIds : query (userHandle : Text) -> async Result.Result<[Text], Text>;
+        getTagFollowers : query (tagId : Text) -> async Result.Result<[Text], Text>
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {
@@ -280,6 +283,7 @@ module{
         getWhitelistedPublishers : () -> async [(Text,Text)];
         whitelistPublication : (handle: Text, canisterId: Text) -> async Result.Result<(Text, Text), Text>;
         createNftCanister : (initData: InitNftCanisterData) -> async Result.Result<Text, Text>;
+        getAllNftCanisterIds : () -> async [(Text, Text)];
     };
 
     public func getNftFactoryCanister() : NftFactoryCanisterInterface {
@@ -618,4 +622,32 @@ module{
     };
 
 
+    ////////////////////////___NOTIFICATION$__CANISTER___////////////////////////
+
+    // let NotificationCanisterId : Text = ENV.NOTIFICATIONS_CANISTER_ID;
+    // type NotificationType = NotificationTypes.NotificationType;
+    // type NotificationContent = NotificationTypes.NotificationContent;
+
+    // let NotificationActor = actor (NotificationCanisterId) : actor {
+    // createNotification : (notificationType : NotificationType, content : NotificationContent) -> async Result.Result<(), Text>;
+    // newArticle : (content : NotificationContent) -> async Result.Result<(), Text>;
+
+  
+//   public type PublicationCanisterInterface = actor {
+//         getEditorAndWriterPrincipalIds : query () -> async ([Text], [Text]);
+//     };
+
+//     public func getPublicationCanister(canisterId: Text) : PublicationCanisterInterface {
+//         let canister : PublicationCanisterInterface = actor(canisterId);
+//         return canister;
+//     };
+
+    public type NotificationCanisterInterface = actor {
+        createNotification : (notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
+        newArticle : (content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
+    };
+    public func getNotificationCanister() : NotificationCanisterInterface {
+        let canister : NotificationCanisterInterface = actor(ENV.NOTIFICATIONS_CANISTER_ID);
+        return canister;
+    };
 }
