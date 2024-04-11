@@ -277,7 +277,7 @@ const PublicationArticles = () => {
       displayingPosts.length === 0 ? loadMoreCounter - 1 : loadMoreCounter;
     let posts = await getPublicationPosts(
       (counter - 1) * 20 + 20,
-      19 + counter * 20,
+      20 + counter * 20,
       publicationHandle
     );
     if (posts?.length) {
@@ -290,7 +290,7 @@ const PublicationArticles = () => {
   const loadInitial = async (handle: string) => {
     setDisplayingPostsLoading(true);
     context.setProfileSidebarDisallowed(true);
-    let posts = await getPublicationPosts(0, 19, handle);
+    let posts = await getPublicationPosts(0, 20, handle);
     if (posts?.length) {
       setDisplayingPosts(posts);
     }
@@ -473,10 +473,9 @@ const PublicationArticles = () => {
   };
 
   return (
-    <div className='wrapper'>
+    <div className='wrapper' style={{ rowGap: '50px' }}>
       <div
         className='publication-article-list-searchbar'
-        style={{ marginTop: '-50px' }}
         onFocus={() => setIsBlur(true)}
         onBlur={() => setIsBlur(false)}
       >

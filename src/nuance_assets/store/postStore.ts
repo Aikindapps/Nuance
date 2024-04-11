@@ -335,13 +335,19 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number
   ) => Promise<PostType[] | undefined>;
-  getLatestPosts: (indexFrom: number, indexTo: number) => Promise<void>;
+  getLatestPosts: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<{
+    posts: PostType[];
+    totalCount: number;
+  }>;
   getMoreLatestPosts: (indexFrom: number, indexTo: number) => Promise<void>;
   getPostsByFollowers: (
     followers: Array<string>,
     indexFrom: number,
     indexTo: number
-  ) => Promise<PostType[] | undefined>;
+  ) => Promise<{ posts: PostType[]; totalCount: number }>;
   getPostsByCategory: (
     handle: string,
     category: string,
@@ -376,7 +382,7 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number,
     user: UserType | undefined
-  ) => Promise<void>;
+  ) => Promise<{ totalCount: number; posts: PostType[] }>;
   searchWithinPublication: (
     phrase: string,
     isTagSearch: boolean,
@@ -390,10 +396,17 @@ export interface PostStore {
     indexFrom: number,
     indexTo: number
   ) => Promise<void>;
+  getFollowingTagsPosts: (
+    indexStart: number,
+    indexEnd: number
+  ) => Promise<{
+    posts: PostType[];
+    totalCount: number;
+  }>;
   clearSearch: () => void;
   getWordCount: (postId: string) => Promise<void>;
   clearWordCount: () => void;
-  getAllTags: () => Promise<void>;
+  getAllTags: () => Promise<TagModel[]>;
   getMyTags: () => Promise<PostTagModel[] | undefined>;
   getTagsByUser: (userId: string) => Promise<void>;
   followTag: (tag: string) => Promise<void>;
@@ -1198,7 +1211,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     followers: Array<string>,
     indexFrom: number,
     indexTo: number
-  ): Promise<PostType[] | undefined> => {
+  ): Promise<{ posts: PostType[]; totalCount: number }> => {
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getPostsByFollowers(
@@ -1218,10 +1231,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           postsByFollowers: postsWithAvatars,
           postTotalCount: Number(totalCount) || 0,
         });
-        return postsWithAvatars;
+        return { posts: postsWithAvatars, totalCount: parseInt(totalCount) };
       }
+      return { posts: [], totalCount: 0 };
     } catch (err) {
       handleError(err, Unexpected);
+      return { posts: [], totalCount: 0 };
     }
   },
 
@@ -1426,23 +1441,30 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
-  getLatestPosts: async (indexFrom, indexTo): Promise<void> => {
+  getLatestPosts: async (
+    indexFrom,
+    indexTo
+  ): Promise<{
+    posts: PostType[];
+    totalCount: number;
+  }> => {
     try {
       const coreActor = await getPostCoreActor();
       const keyProperties = await coreActor.getLatestPosts(indexFrom, indexTo);
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
       const totalCount = keyProperties.totalCount;
-
       if (posts?.length) {
         const postsWithAvatars = await mergeAuthorAvatars(posts);
         set({
           latestPosts: postsWithAvatars,
           postTotalCount: Number(totalCount) || 0,
         });
+        return { posts: postsWithAvatars, totalCount: Number(totalCount) || 0 };
       }
     } catch (err) {
       handleError(err, Unexpected);
     }
+    return { posts: [], totalCount: 0 };
   },
 
   //get more latest posts similar to load more search results
@@ -1478,7 +1500,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     indexFrom: number,
     indexTo: number,
     user: UserType | undefined
-  ): Promise<void> => {
+  ): Promise<{ totalCount: number; posts: PostType[] }> => {
     try {
       const actor = await getPostIndexActor();
       const results = await actor.search(
@@ -1530,7 +1552,10 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             searchTotalCount: Number(results.totalCount || 0) - draftCounter,
             searchResults: postsWithAvatars,
           });
-          return;
+          return {
+            totalCount: Number(results.totalCount || 0) - draftCounter,
+            posts: postsWithAvatars,
+          };
         }
       }
 
@@ -1541,6 +1566,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     } catch (err) {
       handleError(err, Unexpected);
     }
+    return { totalCount: 0, posts: [] };
   },
 
   searchWithinPublication: async (
@@ -1647,20 +1673,44 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
 
+  getFollowingTagsPosts: async (
+    indexStart: number,
+    indexEnd: number
+  ): Promise<{
+    posts: PostType[];
+    totalCount: number;
+  }> => {
+    try {
+      let postCoreActor = await getPostCoreActor();
+      let postCoreResponse =
+        await postCoreActor.getMyFollowingTagsPostKeyProperties(
+          indexStart,
+          indexEnd
+        );
+      let posts = await fetchPostsByBuckets(postCoreResponse.posts, false);
+      const totalCount = postCoreResponse.totalCount;
+      const postsWithAvatars = await mergeAuthorAvatars(posts);
+      return { posts: postsWithAvatars, totalCount: parseInt(totalCount) };
+    } catch (error) {
+      handleError(error);
+    }
+    return { posts: [], totalCount: 0 };
+  },
+
   clearSearch: (): void => {
     set({ searchText: '', searchResults: undefined });
   },
 
-  getAllTags: async (): Promise<void> => {
+  getAllTags: async (): Promise<TagModel[]> => {
     try {
-      if (!(get().allTags || []).length) {
-        const allTags = await (await getPostCoreActor()).getAllTags();
-        allTags.sort((a, b) => a.value.localeCompare(b.value));
-        set({ allTags });
-      }
+      const allTags = await (await getPostCoreActor()).getAllTags();
+      allTags.sort((a, b) => a.value.localeCompare(b.value));
+      set({ allTags });
+      return allTags;
     } catch (err) {
       handleError(err, Unexpected);
     }
+    return [];
   },
 
   getMyTags: async (): Promise<PostTagModel[] | undefined> => {

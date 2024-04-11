@@ -10,25 +10,27 @@ import { trim_category_name } from '../../shared/utils';
 import { useTheme, useThemeUpdate } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import "./_header.scss";
 
 type HeaderProps = {
-  loggedIn: Boolean;
-  isArticlePage: Boolean;
+  loggedIn: boolean;
+  isArticlePage: boolean;
   ScreenWidth: number;
-  isReadArticlePage?: Boolean;
-  isMyProfilePage?: Boolean;
-  isPublicationPage: Boolean | undefined;
+  isReadArticlePage?: boolean;
+  isMyProfilePage?: boolean;
+  isPublicationPage?: boolean;
   category?: string;
   postTitle?: String;
   publication?: PublicationType | undefined;
-  isUserAdminScreen?: Boolean;
+  isUserAdminScreen?: boolean;
+  transparentBackground?: boolean;
 };
 
 const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [shownProfile, setShownProfile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const darkTheme = useTheme();
+  const darkTheme = window.location.pathname !== '/' && useTheme();
   const toggleTheme = useThemeUpdate();
   const context = useContext(Context)
   const modalContext = useContext(ModalContext);
@@ -44,7 +46,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const NotificationsModalOpen = modalContext?.isModalOpen && modalContext.modalType === 'Notifications';
   const isAdminScreenDarkMode = isMyProfileScreen ? !darkTheme : darkTheme
   const finalIsDarkMode = NotificationsModalOpen ? !isAdminScreenDarkMode : isAdminScreenDarkMode;
-  const themeClass = finalIsDarkMode ? 'notification-dark' : 'notification';
+  const themeClass = finalIsDarkMode ? 'notification-bell-header-dark' : 'notification-bell-header';
   const iconSrc = finalIsDarkMode ? icons.NOTIFICATION_BELL_DARK : icons.NOTIFICATION_BELL;
   const backgroundColorStyle = finalIsDarkMode
     ? { backgroundColor: colors.darkModePrimaryBackgroundColor }
@@ -259,7 +261,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     <div
       className='header-wrapper'
       style={
-        props.isArticlePage
+        props.isUserAdminScreen
           ? {
             backgroundColor: darkTheme
               ? colors.primaryBackgroundColor

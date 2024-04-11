@@ -1692,12 +1692,13 @@ actor PostCore {
       return [];
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
 
     for (i in Iter.range(indexStart, indexEnd)) {
+      Debug.print(debug_show(i));
       let postListItem = buildPostKeyProperties(postIds[i]);
       postsBuffer.add(postListItem);
     };
@@ -1732,7 +1733,7 @@ actor PostCore {
       return [];
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -1781,7 +1782,7 @@ actor PostCore {
       return [];
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -1830,7 +1831,7 @@ actor PostCore {
       return [];
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -1878,7 +1879,7 @@ actor PostCore {
       return [];
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -2047,7 +2048,7 @@ actor PostCore {
 
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -2103,7 +2104,7 @@ actor PostCore {
 
     var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(10);
     let indexStart = Nat32.toNat(indexFrom);
-    let indexEnd = Nat32.toNat(indexTo);
+    let indexEnd = Nat32.toNat(indexTo) - 1;
 
     for (i in Iter.range(indexStart, indexEnd)) {
       let post = buildPostKeyProperties(Nat.toText(i));
@@ -2176,7 +2177,7 @@ actor PostCore {
         };
       };
 
-      var indexEnd = Nat32.toNat(indexTo);
+      var indexEnd = Nat32.toNat(indexTo) - 1;
       if (indexEnd > lastIndex) {
         indexEnd := lastIndex;
       };
@@ -2246,7 +2247,7 @@ actor PostCore {
         };
       };
 
-      var indexEnd = Nat32.toNat(indexTo);
+      var indexEnd = Nat32.toNat(indexTo) - 1;
       if (indexEnd > lastIndex) {
         indexEnd := lastIndex;
       };
@@ -2622,7 +2623,7 @@ actor PostCore {
 
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -2662,7 +2663,7 @@ actor PostCore {
 
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -2702,7 +2703,7 @@ actor PostCore {
 
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -2742,7 +2743,7 @@ actor PostCore {
 
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };
@@ -3486,6 +3487,56 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
         [];
       };
     };
+  };
+
+  private func getTagsByPrincipal(userPrincipalId : Text) : [PostTagModel] {
+    var postTags = userTagRelationships.get(userPrincipalId);
+    switch (postTags) {
+      case (?postTags) {
+        var activePostTags = Array.filter<PostTag>(postTags, func isEq(x : PostTag) : Bool { x.isActive == true });
+
+        Array.map<PostTag, PostTagModel>(
+          activePostTags,
+          func(postTag) {
+            switch (tagsHashMap.get(postTag.tagId)) {
+              case (null)({
+                tagId = postTag.tagId;
+                tagName = ""; //should never happen
+              });
+              case (?tag)({
+                tagId = postTag.tagId;
+                tagName = tag.value;
+              });
+            };
+          },
+        );
+      };
+      case (null) {
+        [];
+      };
+    };
+  };
+
+  public shared composite query ({caller}) func getMyFollowingTagsPostKeyProperties(indexFrom: Nat32, indexTo: Nat32) : async GetPostsByFollowers {
+    let userPrincipalId = Principal.toText(caller);
+    let userTags = getTagsByPrincipal(userPrincipalId);
+    let formattedTagNames = Array.map<PostTagModel, Text>(
+      userTags,
+      func(userTag) {
+        "#" # U.upperCase(userTag.tagName);
+      },
+    );
+    let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
+    let postIndexCanisterResponse = await PostIndexCanister.populateTags(formattedTagNames, indexFrom, indexTo);
+    let postIds = postIndexCanisterResponse.postIds;
+    let postsBuffer = Buffer.Buffer<PostKeyProperties>(0);
+    for(postId in postIds.vals()){
+      postsBuffer.add(buildPostKeyProperties(postId));
+    };
+    return {
+      posts = Buffer.toArray(postsBuffer);
+      totalCount = postIndexCanisterResponse.totalCount;
+    }
   };
 
   public shared ({ caller }) func followTag(tagId : Text) : async Result.Result<(), Text> {

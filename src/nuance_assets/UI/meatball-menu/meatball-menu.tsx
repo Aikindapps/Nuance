@@ -77,11 +77,14 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
       <FontAwesomeIcon
         icon={faEllipsis}
         style={{
-          color: props.isUserAdminScreen
-            ? darkTheme
+          color:
+            window.location.pathname === '/'
               ? colors.primaryTextColor
-              : colors.darkModePrimaryTextColor
-            : darkOptionsAndColors.color,
+              : props.isUserAdminScreen
+              ? darkTheme
+                ? colors.primaryTextColor
+                : colors.darkModePrimaryTextColor
+              : darkOptionsAndColors.color,
         }}
         onClick={() => {
           props.setShown(!props.shown);
@@ -95,13 +98,13 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
         style={
           props.shown
             ? {
-              height: isLoggedIn ? '250px' : '290px',
-              boxShadow: '0px 2px 10px 5px rgba(117, 117, 117, 0.08)',
-              color: darkTheme
-                ? colors.primaryBackgroundColor
-                : colors.primaryTextColor,
-              backgroundColor: darkTheme ? colors.primaryTextColor : '',
-            }
+                height: isLoggedIn ? '250px' : '290px',
+                boxShadow: '0px 2px 10px 5px rgba(117, 117, 117, 0.08)',
+                color: darkTheme
+                  ? colors.primaryBackgroundColor
+                  : colors.primaryTextColor,
+                backgroundColor: darkTheme ? colors.primaryTextColor : '',
+              }
             : { display: 'none' }
         }
       >

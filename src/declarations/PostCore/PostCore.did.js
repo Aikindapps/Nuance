@@ -264,6 +264,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getMyFollowingTagsPostKeyProperties' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [GetPostsByFollowers],
+        ['composite_query'],
+      ),
     'getMyPublishedPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [IDL.Vec(PostKeyProperties)],

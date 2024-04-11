@@ -55,6 +55,7 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
       ? colors.darkSecondaryTextColor
       : colors.primaryTextColor,
   };
+  console.log(displayingPosts, articlesCount);
   return (
     <div className='editor-article-list-wrapper'>
       <div className='titles'>
@@ -107,6 +108,18 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
           <Loader />
         </div>
       )}
+      {articlesCount > displayingPosts.length ? (
+        <div className='load-more-container'>
+          <Button
+            styleType='secondary'
+            style={{ width: '152px' }}
+            onClick={() => handleLoadMore()}
+            icon={loadingMore ? images.loaders.BUTTON_SPINNER : ''}
+          >
+            <span>Load More</span>
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };

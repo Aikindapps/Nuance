@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { CSSProperties, useEffect, useRef, useState } from 'react';
 import './dropdown.scss';
 import { SlArrowDown } from 'react-icons/sl';
 import { useTheme } from '../../contextes/ThemeContext';
@@ -9,7 +9,7 @@ interface DropdownProps {
   uniqueId: string;
   selected?: string;
   icons?: string[];
-  style?: any;
+  style?: CSSProperties;
   nonActive?: boolean;
   selectedTextStyle?: any;
   drodownItemsWrapperStyle?: any;

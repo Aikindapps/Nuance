@@ -31,30 +31,30 @@ const PersonalArticles = () => {
   }));
 
   const getInitialPage = () => {
-    if(window.location.href.includes('?page=all')){
-      return 'All'
+    if (window.location.href.includes('?page=all')) {
+      return 'All';
+    } else if (window.location.href.includes('?page=draft')) {
+      return 'Drafts';
+    } else if (window.location.href.includes('?page=submitted')) {
+      return 'Submitted for review';
+    } else if (window.location.href.includes('?page=published')) {
+      return 'Published';
     }
-    else if(window.location.href.includes('?page=draft')){
-      return 'Drafts'
-    }
-    else if(window.location.href.includes('?page=submitted')){
-      return 'Submitted for review'
-    }
-    else if(window.location.href.includes('?page=published')) {
-      return 'Published'
-    }
-    return 'All'
-  }
+    return 'All';
+  };
 
   type Page = 'All' | 'Drafts' | 'Published' | 'Submitted for review';
-  const pages : Page [] = ['All', 'Drafts', 'Submitted for review', 'Published']
+  const pages: Page[] = ['All', 'Drafts', 'Submitted for review', 'Published'];
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreCounterAll, setLoadMoreCounterAll] = useState(1);
   const [loadMoreCounterDraft, setLoadMoreCounterDraft] = useState(1);
-  const [loadMoreCounterSubmittedToReview, setLoadMoreCounterSubmittedToReview] = useState(1);
+  const [
+    loadMoreCounterSubmittedToReview,
+    setLoadMoreCounterSubmittedToReview,
+  ] = useState(1);
   const [loadMoreCounterPublished, setLoadMoreCounterPublished] = useState(1);
   const [allPosts, setAllPosts] = useState<PostType[]>([]);
   const [draftPosts, setDraftPosts] = useState<PostType[]>([]);
@@ -89,7 +89,7 @@ const PersonalArticles = () => {
       case 'All':
         let postsAll = await getMyAllPosts(
           (loadMoreCounterAll - 1) * 20 + 20,
-          19 + loadMoreCounterAll * 20
+          20 + loadMoreCounterAll * 20
         );
         if (postsAll) {
           setAllPosts([...allPosts, ...postsAll]);
@@ -99,7 +99,7 @@ const PersonalArticles = () => {
       case 'Published':
         let postsPublished = await getMyPublishedPosts(
           (loadMoreCounterPublished - 1) * 20 + 20,
-          19 + loadMoreCounterPublished * 20
+          20 + loadMoreCounterPublished * 20
         );
         if (postsPublished) {
           setPublishedPosts([...publishedPosts, ...postsPublished]);
@@ -109,7 +109,7 @@ const PersonalArticles = () => {
       case 'Drafts':
         let postsDraft = await getMyDraftPosts(
           (loadMoreCounterDraft - 1) * 20 + 20,
-          19 + loadMoreCounterDraft * 20
+          20 + loadMoreCounterDraft * 20
         );
         if (postsDraft) {
           setDraftPosts([...draftPosts, ...postsDraft]);
@@ -117,17 +117,22 @@ const PersonalArticles = () => {
         setLoadMoreCounterDraft(loadMoreCounterDraft + 1);
         break;
       case 'Submitted for review':
-        let postsSubmittedToReview = await getMyAllPosts(
+        let postsSubmittedToReview = await getMySubmittedForReviewPosts(
           (loadMoreCounterSubmittedToReview - 1) * 20 + 20,
-          19 + loadMoreCounterSubmittedToReview * 20
+          20 + loadMoreCounterSubmittedToReview * 20
         );
         if (postsSubmittedToReview) {
-          setSubmittedToReviewPosts([...submittedToReviewPosts, ...postsSubmittedToReview]);
+          setSubmittedToReviewPosts([
+            ...submittedToReviewPosts,
+            ...postsSubmittedToReview,
+          ]);
         }
-        setLoadMoreCounterSubmittedToReview(loadMoreCounterSubmittedToReview + 1);
+        setLoadMoreCounterSubmittedToReview(
+          loadMoreCounterSubmittedToReview + 1
+        );
         break;
     }
-    
+
     setLoadingMore(false);
   };
 
@@ -135,11 +140,12 @@ const PersonalArticles = () => {
     setLoading(true);
     const [allPosts, draftPosts, submittedToReviewPosts, publishedPosts] =
       await Promise.all([
-        getMyAllPosts(0, 19),
-        getMyDraftPosts(0, 19),
-        getMySubmittedForReviewPosts(0, 19),
-        getMyPublishedPosts(0, 19),
+        getMyAllPosts(0, 20),
+        getMyDraftPosts(0, 20),
+        getMySubmittedForReviewPosts(0, 20),
+        getMyPublishedPosts(0, 20),
       ]);
+
     if (allPosts) {
       setAllPosts(allPosts);
     }
@@ -158,32 +164,35 @@ const PersonalArticles = () => {
   const getDisplayingPosts = () => {
     switch (page) {
       case 'All':
-        return allPosts
+        return allPosts;
       case 'Drafts':
-        return draftPosts
+        return draftPosts;
       case 'Published':
-        return publishedPosts
+        return publishedPosts;
       case 'Submitted for review':
         return submittedToReviewPosts;
     }
-  }
+  };
   //console.log(counts)
   //console.log(allPosts)
   const displayLoadMore = () => {
-    if(counts && !loading){
+    if (counts && !loading) {
       switch (page) {
         case 'All':
-          return parseInt(counts.totalPostCount) > allPosts.length
+          return parseInt(counts.totalPostCount) > allPosts.length;
         case 'Drafts':
-          return parseInt(counts.draftCount) > draftPosts.length
+          return parseInt(counts.draftCount) > draftPosts.length;
         case 'Published':
-          return parseInt(counts.publishedCount) > publishedPosts.length
+          return parseInt(counts.publishedCount) > publishedPosts.length;
         case 'Submitted for review':
-          return parseInt(counts.submittedToReviewCount) > submittedToReviewPosts.length
+          return (
+            parseInt(counts.submittedToReviewCount) >
+            submittedToReviewPosts.length
+          );
       }
     }
     return false;
-  }
+  };
 
   return (
     <div className='personal-articles-wrapper'>
@@ -201,9 +210,10 @@ const PersonalArticles = () => {
           MY ARTICLES ({counts?.totalPostCount || 0})
         </p>
         <div className='personal-articles-navigation-items-wrapper'>
-          {pages.map((pageName)=>{
+          {pages.map((pageName, index) => {
             return (
               <div
+                key={index}
                 className={
                   page === pageName
                     ? 'personal-articles-navigation-item selected'
@@ -266,7 +276,7 @@ const PersonalArticles = () => {
           </div>
         ) : (
           getDisplayingPosts().map((post, index) => {
-            return <CardDraftArticles post={post} key={index} />;
+            return <CardDraftArticles post={post} key={post.postId} />;
           })
         )}
         {displayLoadMore() && (

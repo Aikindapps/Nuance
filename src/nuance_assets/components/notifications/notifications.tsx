@@ -61,7 +61,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         }
     };
 
-    const { getUserNotifications,
+    const { user,
+        getUserNotifications,
         markNotificationAsRead,
         notifications,
         resetUnreadNotificationCount,
@@ -71,6 +72,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         markAllNotificationsAsRead,
         updateUserNotificationSettings
     } = useUserStore((state) => ({
+        user: state.user,
         getUserNotifications: state.getUserNotifications,
         markNotificationAsRead: state.markNotificationAsRead,
         markAllNotificationsAsRead: state.markAllNotificationsAsRead,
@@ -127,9 +129,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
 
     if (isLoggedIn) {
         useEffect(() => {
-            // Define a function that fetches notifications
+
             const fetchNotifications = () => {
-                if (isLoggedIn && !isSidebarOpen && !modalContext?.isSidebarOpen) { // Ensure you only fetch if the user is logged in
+                if (isLoggedIn && !isSidebarOpen && !modalContext?.isSidebarOpen && user) {
                     getUserNotifications(0, currentTo, isLoggedIn);
                     console.log('Fetching notifications');
 

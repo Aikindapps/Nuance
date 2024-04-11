@@ -78,7 +78,7 @@ const Profile = () => {
       setLoading(true);
       let [authorResponse, posts, userPostCounts] = await Promise.all([
         getAuthor(handle),
-        getPostsByFollowers([handle], 0, 19),
+        getPostsByFollowers([handle], 0, 20),
         getUserPostCounts(handle),
       ]);
       //if author exists, set the value
@@ -86,9 +86,8 @@ const Profile = () => {
         setAuthor(authorResponse);
       }
       //if there's any post, set the displaying posts
-      console.log('posts here: ', posts);
       if (posts) {
-        setDisplayingPosts(posts);
+        setDisplayingPosts(posts.posts);
       }
 
       //set the user post counts
@@ -106,10 +105,10 @@ const Profile = () => {
       let posts = await getPostsByFollowers(
         [handle],
         (loadMoreCounter - 1) * 20 + 20,
-        19 + loadMoreCounter * 20
+        20 + loadMoreCounter * 20
       );
-      if (posts?.length) {
-        setDisplayingPosts([...displayingPosts, ...posts]);
+      if (posts?.posts.length) {
+        setDisplayingPosts([...displayingPosts, ...posts.posts]);
       }
       setLoadMoreCounter(loadMoreCounter + 1);
     }
@@ -285,13 +284,18 @@ const Profile = () => {
                     );
                   })}
                 </div>
-                <p className='description' style={
+                <p
+                  className='description'
+                  style={
                     darkTheme
                       ? {
                           color: darkOptionsAndColors.secondaryColor,
                         }
                       : {}
-                  }>{author?.bio}</p>
+                  }
+                >
+                  {author?.bio}
+                </p>
 
                 <FollowAuthor
                   AuthorHandle={author?.handle || ''}

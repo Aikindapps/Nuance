@@ -6,6 +6,8 @@
   justify-content: space-between;
   height: 64px;
   width: 100%;
+  background: transparent;
+  z-index: 1;
 
   .icon {
     cursor: pointer;
@@ -47,19 +49,21 @@
       z-index: 10;
     }
 
-    .notification{
+    .notification-bell-header{
       position: relative;
       padding: 5px 8px;
       border-radius: 2px;
       background: $primary-background-color;
       box-shadow: none;
+
     }
 
-    .notification-dark{
+    .notification-bell-header-dark{
       padding: 5px 8px;
       background-color: $dark-primary-background-color;
       color: $dark-primary-text-color;
       border-radius: 2px;
+      
     }
 
     .triangle {
