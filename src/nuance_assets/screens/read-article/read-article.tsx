@@ -181,10 +181,7 @@ const ReadArticle = () => {
   const searchTag = (tag: string) => {
     //setSearchText('#' + tag);
     //clearSearchBar(false);
-    navigate(
-      '/?tab=search&search=' + encodeURIComponent('#' + tag.toUpperCase()),
-      { replace: true }
-    );
+    navigate('/?tab=search&tag=' + encodeURIComponent(tag.toUpperCase()));
   };
 
   //comment scrolling

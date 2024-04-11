@@ -93,39 +93,52 @@
           min-height: 307px;
           max-height: 307px;
           background-image: url('../../assets/assets/images/homepage-login-options-background.svg');
-        }
-        .buttons-wrapper-only-mobile {
-          min-height: 99px;
-          max-height: 99px;
-          width: 399px;
-          display: none;
-          align-items: end;
-          column-gap: 5px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
           justify-content: center;
-          .button {
-            padding-left: 23px;
-            width: 40%;
-            height: 97px;
-            display: flex;
-            align-items: center;
-            justify-content: start;
-            cursor: pointer;
-            background: $primary-color;
-            color: $primary-background-color;
+          row-gap: 16px;
+          .title {
             font-family: Roboto;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 900;
+            font-size: 12px;
+            font-weight: 700;
             line-height: 40px;
-            border: 1px solid transparent;
-          }
-          .selected {
-            background: $primary-background-color;
+            text-align: center;
             color: $primary-color;
+          }
+          .other-options {
+            font-family: Roboto;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 26px;
+            text-align: center;
+            color: $primary-background-color;
+            cursor: pointer;
+            text-decoration: underline;
+          }
+          .login-option-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            .login-info-text {
+              font-family: Roboto;
+              font-size: 12px;
+              font-style: normal;
+              font-weight: 400;
+              line-height: 28px;
+              text-decoration-line: underline;
+              max-width: 266px;
+              text-decoration: underline;
+              cursor: pointer;
+              color: $lighter-content-text-color;
+            }
           }
         }
       }
     }
+  }
+  .join-revolution-mobile {
+    display: none;
   }
 
   .about-nuance-wrapper {
@@ -230,10 +243,10 @@
           justify-content: center;
           text-align: center;
           font-family: Roboto;
-          font-size: 18px;
+          font-size: 19px;
           font-style: normal;
           font-weight: 700;
-          line-height: 40px; /* 222.222% */
+          line-height: 25px; /* 222.222% */
           text-transform: uppercase;
           color: $lighter-text-color;
           margin-bottom: 4px;
@@ -299,7 +312,7 @@
       }
       .features-content-wrapper {
         display: flex;
-        align-items: center;
+        align-items: start;
         justify-content: center;
         width: 100%;
         column-gap: 102px;
@@ -456,7 +469,7 @@
     .start-a-movement {
       margin-top: 247px;
       display: flex;
-      align-items: end;
+      align-items: center;
       justify-content: space-between;
       width: 90%;
       max-width: 928px;
@@ -649,6 +662,10 @@
         }
       }
     }
+    .left-mobile {
+      display: none;
+      transition: 0.2s ease-in-out all;
+    }
     .right {
       padding-left: 98px;
       width: calc(100% - 99px);
@@ -657,6 +674,13 @@
       display: flex;
       flex-direction: column;
       position: relative;
+      min-height: 100vh;
+      .mask-group {
+        width: 157px;
+        position: absolute;
+        left: -157px;
+        top: 320px;
+      }
       .searchbar-wrapper {
         position: absolute;
         top: -100px;
@@ -668,6 +692,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        position: relative;
         .tabs {
           display: flex;
           align-items: center;
@@ -694,7 +719,7 @@
               &:hover {
                 border-right: 1px solid $light-border-color;
                 border-left: 1px solid $light-border-color;
-                color: $accent-color;
+                color: $accent-color !important;
                 text-decoration: underline;
               }
             }
@@ -704,7 +729,7 @@
               font-style: normal;
               font-weight: 700;
               line-height: normal;
-              color: $accent-color;
+              color: $accent-color !important;
               cursor: pointer;
               padding-top: 12px;
               padding-bottom: 12px;
@@ -746,7 +771,7 @@
           width: 100%;
           row-gap: 56px;
         }
-        .search-results-wrapper{
+        .search-results-wrapper {
           margin-top: 24px;
         }
       }
@@ -811,59 +836,150 @@
         }
       }
     }
+    .articles-section-wrapper {
+      .left {
+        min-width: 312px;
+        max-width: 312px;
+      }
+      .right {
+        padding-left: 40px;
+        .searchbar-wrapper {
+          left: 40px;
+        }
+        .tabs-and-grid-wrapper {
+          .homepage-vertical-grid {
+            grid-template-columns: repeat(auto-fill, calc(50% - 15px));
+            row-gap: 30px;
+            column-gap: 30px;
+            margin-top: 60px;
+          }
+          .homepage-horizontal-flex {
+            row-gap: 30px;
+            margin-top: 30px;
+          }
+        }
+      }
+    }
   }
 }
 @media only screen and (max-width: 768px) {
   .homepage {
     .join-revolution {
+      display: none;
+    }
+    .join-revolution-mobile {
+      display: flex;
+      flex-direction: column;
+      background-image: url('../../assets/assets/images/join-the-revolution-background.png');
+      background-position: right;
+      width: 100%;
+      align-items: center;
       margin-top: -50px;
-      min-height: 675px;
-      max-height: 675px;
-      .join-revolution-container {
+      row-gap: 24px;
+      .nuance-logo-blue-text {
+        width: 190px;
+        height: 190px;
+        display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: start;
+        justify-content: end;
+        background: linear-gradient(180deg, #ffffff, transparent);
+        .image-container {
+          width: 145px;
+        }
+      }
+      .login-options-mobile-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         row-gap: 12px;
-        height: 675px;
-        .left {
-          .nuance-logo-blue-text {
-            min-width: 145px;
-            max-width: 145px;
-            min-height: 125px;
-            max-height: 125px;
-            padding-left: 22px;
-            padding-right: 22px;
-            padding-bottom: 32px;
-            padding-top: 25px;
-            background: linear-gradient(
-              180deg,
-              #ffffff 0%,
-              rgba(217, 217, 217, 0) 100%
-            );
-            .image-container {
-              width: 100%;
-            }
+
+        .title {
+          font-family: Roboto;
+          font-size: 32px;
+          font-weight: 900;
+          line-height: 40px;
+          text-align: center;
+          color: $primary-color;
+          max-width: 290px;
+        }
+        .login-options {
+          min-width: 290px;
+          max-width: 337px;
+          min-height: 280px;
+          max-height: 307px;
+          background-image: url('../../assets/assets/images/homepage-login-options-background.svg');
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          row-gap: 16px;
+          .title {
+            font-family: Roboto;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 40px;
+            text-align: center;
+            color: $primary-color;
           }
-          .buttons-wrapper {
-            display: none;
+          .other-options {
+            font-family: Roboto;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 26px;
+            text-align: center;
+            color: $primary-background-color;
+            cursor: pointer;
+            text-decoration: underline;
+          }
+          .login-option-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            .login-info-text {
+              font-family: Roboto;
+              font-size: 12px;
+              font-style: normal;
+              font-weight: 400;
+              line-height: 28px;
+              text-decoration-line: underline;
+              max-width: 266px;
+              text-decoration: underline;
+              cursor: pointer;
+              color: $lighter-content-text-color;
+            }
           }
         }
-        .right {
-          .title {
-            text-align: center;
-            font-family: Roboto;
-            font-size: 32px;
-            font-style: normal;
-            font-weight: 900;
-            line-height: 40px;
-          }
-          .buttons-wrapper-only-mobile {
-            display: flex;
-            .button {
-              height: 72px;
-              align-items: end;
-            }
-          }
+      }
+      .buttons-wrapper {
+        min-height: 99px;
+        max-height: 99px;
+        max-width: 376px;
+        width: 90%;
+        display: flex;
+        align-items: end;
+        column-gap: 5px;
+        .button {
+          width: 100%;
+          padding-left: 23px;
+          width: calc(100% - 23px);
+          height: 80px;
+          display: flex;
+          align-items: end;
+          justify-content: start;
+          cursor: pointer;
+          background: $primary-color;
+          color: $primary-background-color;
+          font-family: Roboto;
+          font-size: 16px;
+          font-style: normal;
+          font-weight: 900;
+          line-height: 40px;
+          border: 1px solid transparent;
+        }
+        .selected {
+          background: $primary-background-color;
+          color: $primary-color;
         }
       }
     }
@@ -943,7 +1059,6 @@
         }
         .features-content-wrapper {
           flex-direction: column;
-          align-items: start;
           .features-left {
             padding-bottom: 25px;
             max-width: unset;
@@ -982,6 +1097,236 @@
             min-width: 112px;
             max-width: 112px;
             height: 58px;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 20px;
+          }
+        }
+      }
+    }
+    .articles-section-wrapper {
+      justify-content: start;
+      margin-top: 100px;
+      .left {
+        display: none;
+      }
+      .left-mobile {
+        min-width: 20px;
+        max-width: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        row-gap: 18px;
+        position: relative;
+        .user-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          row-gap: 12px;
+          margin-top: 113px;
+          .avatar {
+            min-width: 62px;
+            max-width: 62px;
+            min-height: 62px;
+            max-height: 62px;
+            border-radius: 50%;
+            background: #999;
+          }
+          .display-name {
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 28px;
+            color: $lighter-text-color;
+          }
+          .handle {
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 18px;
+            color: $primary-color;
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+        .social-channels {
+          display: flex;
+          align-items: center;
+          column-gap: 4px;
+          .social-channel-icon {
+            cursor: pointer;
+            min-width: 18px;
+            max-width: 18px;
+            min-height: 18px;
+            max-height: 18px;
+          }
+        }
+        .articles {
+          text-align: center;
+          font-family: Roboto;
+          font-size: 10px;
+          font-style: normal;
+          font-weight: 600;
+          line-height: 20px;
+          color: $primary-color;
+          display: flex;
+          align-items: center;
+          column-gap: 4px;
+        }
+        .blue-logo {
+          min-width: 148px;
+          max-width: 148px;
+          min-height: 128px;
+          max-height: 128px;
+          width: 174px;
+          height: 120px;
+        }
+        .blogging-to-the-people {
+          text-align: center;
+          font-family: Roboto;
+          font-size: 20px;
+          font-style: normal;
+          font-weight: 300;
+          line-height: 30px;
+          color: $lighter-text-color;
+          width: 174px;
+        }
+        .content {
+          text-align: center;
+          font-family: Roboto;
+          font-size: 12px;
+          font-style: normal;
+          font-weight: 400;
+          line-height: 16px;
+          width: 174px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          row-gap: 8px;
+        }
+        .login-options {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          row-gap: 8px;
+          .login-option-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            .login-info-text {
+              font-family: Roboto;
+              font-size: 10px;
+              font-style: normal;
+              font-weight: 400;
+              line-height: 18px;
+              text-decoration-line: underline;
+              max-width: 174px;
+              text-decoration: underline;
+              text-align: center;
+              cursor: pointer;
+              color: $lighter-content-text-color;
+            }
+          }
+          .other-options {
+            text-align: center;
+            font-family: Roboto;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 28px; /* 162.5% */
+            text-decoration-line: underline;
+            color: $primary-color;
+            cursor: pointer;
+          }
+        }
+        .menu-button {
+          width: 12px;
+          height: 12px;
+          cursor: pointer;
+          position: absolute;
+          right: 4px;
+          top: 0;
+          .burger-menu-icon {
+            width: 12px;
+            height: 10px;
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+          }
+
+          .burger-menu-icon span {
+            background-color: $primary-color;
+            position: absolute;
+            height: 1px;
+            width: 100%;
+            transition: all 0.2s ease-in-out;
+          }
+
+          .burger-menu-icon span:nth-child(1) {
+            top: 0px;
+          }
+
+          .burger-menu-icon span:nth-child(2) {
+            top: 4px;
+          }
+
+          .burger-menu-icon span:nth-child(3) {
+            top: 8px;
+          }
+
+          .burger-menu-icon.active span:nth-child(1) {
+            top: 4px;
+            transform: rotate(45deg);
+          }
+
+          .burger-menu-icon.active span:nth-child(2) {
+            opacity: 0;
+          }
+
+          .burger-menu-icon.active span:nth-child(3) {
+            top: 4px;
+            transform: rotate(-45deg);
+          }
+        }
+      }
+      .right {
+        padding-left: 20px;
+        width: 100%;
+        .searchbar-wrapper {
+          left: 20px;
+        }
+        .tabs-and-grid-wrapper {
+          .homepage-vertical-grid {
+            grid-template-columns: repeat(auto-fill, 100%);
+            row-gap: 30px;
+            column-gap: 30px;
+            margin-top: 60px;
+          }
+          .homepage-horizontal-flex {
+            row-gap: 30px;
+            margin-top: 30px;
+          }
+          .tabs {
+            flex-wrap: wrap;
+            .left-items {
+              .item {
+                padding: 12px;
+                font-size: 10px;
+              }
+              .item-selected {
+                padding: 12px;
+                font-size: 10px;
+              }
+            }
+            .search-item {
+              padding: 12px;
+              font-size: 10px;
+            }
           }
         }
       }

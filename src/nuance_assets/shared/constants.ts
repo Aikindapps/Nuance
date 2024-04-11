@@ -33,7 +33,8 @@ export const images = {
   HIGH_TECH_IMAGE: imagesPath + 'high_tech_image.png',
   MONETIZE_BACKGROUND: imagesPath + 'monetize_background.svg',
   MONETIZE_IMAGE: imagesPath + 'monetize_image.png',
-  MONETIZE_MOBILE_IMAGE: imagesPath + 'monetize_mobile_image.svg'
+  MONETIZE_MOBILE_IMAGE: imagesPath + 'monetize_mobile_image.svg',
+  START_ON_CHAIN_IMAGE: imagesPath + 'start-on-chain.png',
 };
 
 export const icons = {

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useUserStore } from '../../store';
+import { useAuthStore, usePostStore, useUserStore } from '../../store';
 import { PostType, PublicationType, UserListItem } from '../../types/types';
-import { icons, colors } from '../../shared/constants';
-import { usePostStore } from '../../store';
+import { icons, colors, images } from '../../shared/constants';
 import './_search-results.scss';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../../contextes/ThemeContext';
@@ -13,6 +12,7 @@ import { levenshteinDistance } from '../../store/userStore';
 import Dropdown from '../../UI/dropdown/dropdown';
 import { TagModel } from '../../../declarations/PostCore/PostCore.did';
 import { searchTextToTag } from '../../shared/utils';
+import Loader from '../../UI/loader/Loader';
 
 type Counts = {
   articlesCount: number;
@@ -37,21 +37,34 @@ export const SearchResults = (props: {
 
   const [sortType, setSortType] = useState<SortType>('Relevance');
 
+  //userStore
+  const { isLoggedIn } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+  }));
+
   //postStore
-  const { followTag } = usePostStore((state) => ({
+  const { followTag, myTags, unfollowTag } = usePostStore((state) => ({
     followTag: state.followTag,
+    myTags: state.myTags,
+    unfollowTag: state.unfollowTag,
   }));
 
   const isTagSearch = () => {
+    if(!props.term.startsWith('#')){
+      return false
+    }
     let phrase = props.term.trim();
+
     // If search starts with #, it's a tag search like #sports
-    const tags = searchTextToTag(phrase, props.allTags);
+    const tags = searchTextToTag('#' + phrase, props.allTags);
     let isTagSearch = tags.length > 0;
     if (isTagSearch) {
       //setSearchedTag(tags[0]);
       return tags[0].id;
     }
   };
+
+  const [followTagLoading, setFollowTagLoading] = useState(false);
 
   const getDisplayingUiElement = (
     element: PostType | PublicationType | UserListItem,
@@ -194,17 +207,52 @@ export const SearchResults = (props: {
         {isTagSearch() ? (
           <div className='search-results-text'>
             Results for the tag {props.term}{' '}
-            <span
-              className='follow-the-tag'
-              onClick={() => {
-                let tagId = isTagSearch();
-                if (tagId) {
-                  followTag(tagId);
-                }
-              }}
-            >
-              Follow the tag
-            </span>
+            {isLoggedIn &&
+              (myTags
+                ?.map((tag) => tag.tagId)
+                .includes(isTagSearch() as string) ? (
+                <span
+                  className='follow-the-tag'
+                  onClick={async () => {
+                    setFollowTagLoading(true);
+                    let tagId = isTagSearch();
+                    if (tagId) {
+                      await unfollowTag(tagId);
+                    }
+                    setFollowTagLoading(false);
+                  }}
+                  style={followTagLoading ? { cursor: 'not-allowed' } : {}}
+                >
+                  {followTagLoading && (
+                    <img
+                      className='spinner'
+                      src={images.loaders.NUANCE_LOADER}
+                    />
+                  )}
+                  Unollow the tag
+                </span>
+              ) : (
+                <span
+                  className='follow-the-tag'
+                  onClick={async () => {
+                    setFollowTagLoading(true);
+                    let tagId = isTagSearch();
+                    if (tagId) {
+                      await followTag(tagId);
+                    }
+                    setFollowTagLoading(false);
+                  }}
+                  style={followTagLoading ? { cursor: 'not-allowed' } : {}}
+                >
+                  {followTagLoading && (
+                    <img
+                      className='spinner'
+                      src={images.loaders.NUANCE_LOADER}
+                    />
+                  )}
+                  Follow the tag
+                </span>
+              ))}
           </div>
         ) : (
           <div className='search-results-text'>{`Results for '${props.term}'`}</div>

@@ -18,6 +18,8 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
   const ref = React.createRef<HTMLDivElement>();
 
   const darkTheme = useTheme();
+  const darkThemeHomepage = useTheme() && window.location.pathname !== '/';
+
   const darkOptionsAndColors = {
     background: darkTheme
       ? colors.darkModePrimaryBackgroundColor
@@ -39,16 +41,16 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
 
   useEffect(() => {
     if (props.isUserAdminScreen && props.shown) {
-      setProfilePic(darkTheme ? icons.USER_BLUE : icons.USER_BLUE);
+      setProfilePic(darkThemeHomepage ? icons.USER_WHITE_DARK : icons.USER_BLUE);
     }
     if (props.isUserAdminScreen && !props.shown) {
-      setProfilePic(darkTheme ? icons.USER : icons.USER_BLUE);
+      setProfilePic(darkThemeHomepage ? icons.USER : icons.USER_BLUE);
     }
     if (!props.isUserAdminScreen && props.shown) {
-      setProfilePic(darkTheme ? icons.USER_BLUE : icons.USER_BLUE);
+      setProfilePic(darkThemeHomepage ? icons.USER_WHITE_DARK : icons.USER_BLUE);
     }
     if (!props.isUserAdminScreen && !props.shown) {
-      setProfilePic(darkTheme ? icons.USER_BLUE : icons.USER);
+      setProfilePic(darkThemeHomepage ? icons.USER_WHITE_DARK : icons.USER);
     }
   }, [props.shown, props.isUserAdminScreen, darkTheme]);
 

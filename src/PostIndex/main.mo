@@ -596,7 +596,7 @@ actor PostIndex {
       };
     };
 
-    var indexEnd = Nat32.toNat(indexTo);
+    var indexEnd = Nat32.toNat(indexTo) - 1;
     if (indexEnd > lastIndex) {
       indexEnd := lastIndex;
     };

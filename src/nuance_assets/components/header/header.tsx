@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [shownProfile, setShownProfile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const darkTheme = useTheme();
+  const darkTheme = window.location.pathname !== '/' && useTheme();
   const toggleTheme = useThemeUpdate();
   const context = useContext(Context);
 
