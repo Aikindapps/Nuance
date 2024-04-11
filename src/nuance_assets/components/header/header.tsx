@@ -226,7 +226,18 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   };
 
   return (
-    <div className='header-wrapper'>
+    <div
+      className='header-wrapper'
+      style={
+        props.isUserAdminScreen
+          ? {
+              background: darkTheme
+                ? colors.primaryBackgroundColor
+                : colors.primaryTextColor,
+            }
+          : {}
+      }
+    >
       {modalOpen && (
         <SearchModal
           setOpenModal={setModalOpen}
