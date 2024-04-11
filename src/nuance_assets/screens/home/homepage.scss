@@ -1063,9 +1063,11 @@
           .features-left {
             padding-bottom: 25px;
             max-width: unset;
+            min-width: unset;
           }
           .features-right {
             max-width: unset;
+            min-width: unset;
           }
         }
       }
