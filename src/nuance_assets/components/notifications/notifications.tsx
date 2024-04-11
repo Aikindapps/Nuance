@@ -127,32 +127,32 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
 
 
 
-    if (isLoggedIn) {
-        useEffect(() => {
 
-            const fetchNotifications = () => {
-                if (isLoggedIn && !isSidebarOpen && !modalContext?.isSidebarOpen && user) {
-                    getUserNotifications(0, currentTo, isLoggedIn);
-                    console.log('Fetching notifications');
+    useEffect(() => {
 
-                }
-            };
+        const fetchNotifications = () => {
+            if (isLoggedIn && !isSidebarOpen && !modalContext?.isSidebarOpen && user) {
+                getUserNotifications(0, currentTo, isLoggedIn);
+                console.log('Fetching notifications');
 
-
-            fetchNotifications();
+            }
+        };
 
 
-            const intervalId = setInterval(fetchNotifications, 30000);
+        fetchNotifications();
 
 
-            return () => clearInterval(intervalId);
-        }, [isLoggedIn, isSidebarOpen, modalContext?.isSidebarOpen]);
-    };
+        const intervalId = setInterval(fetchNotifications, 30000);
+
+
+        return () => clearInterval(intervalId);
+    }, [isLoggedIn, isSidebarOpen, modalContext?.isSidebarOpen, user]);
 
 
 
 
     const toggleSidebar = () => {
+
         setIsSidebarOpen(!isSidebarOpen);
 
         //toggle notification modal

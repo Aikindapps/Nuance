@@ -84,9 +84,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     }
   };
 
-  const { user, unreadNotificationCount, markAllNotificationsAsRead } = useUserStore((state) => ({
+  const { user, unreadNotificationCount, markAllNotificationsAsRead, resetUnreadNotificationCount } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
+    resetUnreadNotificationCount: state.resetUnreadNotificationCount,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead
   }));
 
