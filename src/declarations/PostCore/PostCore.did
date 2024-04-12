@@ -298,6 +298,8 @@ service : {
   getMyAllPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMyDailyPostsStatus: () -> (bool) query;
   getMyDraftPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
+  getMyFollowingTagsPostKeyProperties: (nat32, nat32) ->
+   (GetPostsByFollowers) composite_query;
   getMyPublishedPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMySubmittedToReviewPosts: (nat32, nat32) ->
    (vec PostKeyProperties) query;

@@ -16,10 +16,9 @@ jobs:
 
       - name: Install dfx
         uses: dfinity/setup-dfx@main
-         
-     
+
       - name: Confirm successful installation
-        run: | 
+        run: |
           dfx --version
           dfxvm install 0.17.0
           dfxvm default 0.17.0
@@ -75,6 +74,7 @@ jobs:
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
             "Metrics": { "ic": "'"$METRICS"'" }
+            "Notifications": { "ic": "'"$NOTIFICATIONS"'" },
           }' > canister_ids.json
           echo '{
             "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
@@ -108,6 +108,7 @@ jobs:
             public let NFT_FACTORY_CANISTER_ID = "'"$NFTFACTORY"'";
             public let PUBLICATION_MANAGEMENT_CANISTER_ID = "'"$PUBLICATIONMANAGEMENT"'";
             public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
+            public let NOTIFICATIONS_CANISTER_ID = "'"$NOTIFICATIONS"'";
           };' > src/shared/canisterIds.mo
 
         env:
@@ -124,6 +125,7 @@ jobs:
           NFTFACTORY: ${{ secrets.UAT_NFTFACTORY }}
           PUBLICATIONMANAGEMENT: ${{ secrets.UAT_PUBLICATIONMANAGEMENT }}
           PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
+          NOTIFICATIONS: ${{ secrets.UAT_NOTIFICATIONS }}
 
       - name: Generate canister_ids.json in for NFTs and Publications
         run: |

@@ -189,12 +189,18 @@ module{
         oldTags: [Text]; 
         newTags: [Text];
     };
+    public type SearchResultData = {
+        totalCount: Text;
+        postIds: [Text];
+    };
+
     public type PostIndexCanisterInterface = actor{
         indexPost : (postId : Text, oldHtml : Text, newHtml : Text, oldTags: [Text], newTags: [Text]) -> async IndexPostResult;
         indexPosts : (indexPostModels: [IndexPostModel]) -> async [IndexPostResult];
         clearIndex : () -> async ClearIndexResult;
         registerAdmin : (id : Text) -> async Result.Result<(), Text>;
-        registerCanister : (id : Text) -> async Result.Result<(), Text>
+        registerCanister : (id : Text) -> async Result.Result<(), Text>;
+        populateTags : query (tags : [Text], indexFrom : Nat32, indexTo : Nat32) -> async SearchResultData;
     };
 
     public func getPostIndexCanister() : PostIndexCanisterInterface {

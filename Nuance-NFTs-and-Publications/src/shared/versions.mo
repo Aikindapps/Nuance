@@ -1,5 +1,5 @@
 module{
-    public let PUBLICATIONMANAGEMENT_VERSION = "Premium Tequila";
-    public let PUBLICATION_VERSION = "Premium Tequila";
-    public let NFTFACTORY_VERSION = "Premium Tequila";
+    public let PUBLICATIONMANAGEMENT_VERSION = "Vesper";
+    public let PUBLICATION_VERSION = "Vesper";
+    public let NFTFACTORY_VERSION = "Vesper";
 }

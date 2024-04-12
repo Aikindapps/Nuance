@@ -179,9 +179,9 @@ const ReadArticle = () => {
   };
 
   const searchTag = (tag: string) => {
-    setSearchText('#' + tag);
-    clearSearchBar(false);
-    navigate('/', { replace: true });
+    //setSearchText('#' + tag);
+    //clearSearchBar(false);
+    navigate('/?tab=search&tag=' + encodeURIComponent(tag.toUpperCase()));
   };
 
   //comment scrolling
@@ -730,6 +730,7 @@ const ReadArticle = () => {
                     {getSocialChannelUrls().map((url, index) => {
                       return (
                         <div
+                          key={index}
                           onClick={() => {
                             let urlWithProtocol =
                               url.startsWith('https://') ||

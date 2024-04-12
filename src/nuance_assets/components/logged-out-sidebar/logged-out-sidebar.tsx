@@ -6,9 +6,11 @@ import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 type LoggedOutSidebarProps = {
-  style?: any
+  style?: any;
 };
-const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (props): JSX.Element => {
+const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
+  props
+): JSX.Element => {
   //redirecting to register pages is handled in the HomeGrid component.
   const login = useAuthStore((state) => state.login);
   const context = useContext(Context);
@@ -49,6 +51,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (props): JSX.Element =
       {!(isArticleScreen || modalContext?.isModalOpen) && (
         <div className='logged-out-sidebar-nuance-info'>
           <img
+            className='nuance-logo-blue'
             src={images.NUANCE_LOGO_BLUE_TEXT}
             style={{
               filter: darkOptionsAndColors.filter,

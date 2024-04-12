@@ -224,11 +224,13 @@ function PublicationLanding() {
 
   const loadMoreHandler = async () => {
     setLoadingMore(true);
-    let posts = await getPostsByFollowers(
-      [publicationHandle],
-      (loadMoreCounter - 1) * 8 + 8,
-      7 + loadMoreCounter * 8
-    );
+    let posts = (
+      await getPostsByFollowers(
+        [publicationHandle],
+        (loadMoreCounter - 1) * 8 + 8,
+        8 + loadMoreCounter * 8
+      )
+    ).posts;
     if (posts?.length) {
       setDisplayingPosts([...displayingPosts, ...posts]);
     }
@@ -241,7 +243,7 @@ function PublicationLanding() {
     setTimeout(() => {
       setInitialPostsLoading(false);
     }, 5000);
-    let posts = await getPostsByFollowers([handle], 0, 7);
+    let posts = (await getPostsByFollowers([handle], 0, 8)).posts;
     if (posts?.length) {
       setDisplayingPosts(posts);
     }
@@ -430,6 +432,7 @@ function PublicationLanding() {
           onKeyDown={onKeyDown}
           onChange={(value) => setSearchText(value)}
           color={publication?.styling.primaryColor}
+          style={{ margin: '20px auto 50px auto' }}
         />
       </div>
       <div

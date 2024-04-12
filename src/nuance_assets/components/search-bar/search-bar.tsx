@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler } from 'react';
+import React, { CSSProperties, KeyboardEventHandler } from 'react';
 import { useTheme } from '../../contextes/ThemeContext';
 import { colors, icons } from '../../shared/constants';
 
@@ -9,6 +9,7 @@ type SearchProps = {
   onKeyDown?: (e: any) => void;
   onSelect?: (e: any) => void;
   color?: string;
+  style?: CSSProperties;
 };
 
 // const changeUnderlineColor = () => {
@@ -22,6 +23,7 @@ const SearchBar: React.FC<SearchProps> = ({
   onKeyDown,
   onChange,
   color,
+  style,
   // onSelect,
 }) => {
   const darkTheme = useTheme();
@@ -35,7 +37,7 @@ const SearchBar: React.FC<SearchProps> = ({
   };
 
   return (
-    <div id='search-container' style={darkOptionsAndColors}>
+    <div id='search-container' style={{ ...darkOptionsAndColors, ...style }}>
       <input
         style={
           color

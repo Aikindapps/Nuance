@@ -86,7 +86,7 @@ function SearchModal({ setOpenModal, screenWidth }: any) {
         </div>
 
         <p>SEARCH</p>
-        <SearchBar onKeyDown={onKeyDown}></SearchBar>
+        <SearchBar style={{ margin: 'auto' }} onKeyDown={onKeyDown}></SearchBar>
 
         <div className='posts'>
           {(() => {

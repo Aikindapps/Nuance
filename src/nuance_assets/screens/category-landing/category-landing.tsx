@@ -190,7 +190,7 @@ function CategoryLanding() {
       publicationHandle,
       categoryName,
       (loadMoreCounter - 1) * 8 + 8,
-      7 + loadMoreCounter * 8
+      8 + loadMoreCounter * 8
     );
     if (posts?.length) {
       setDisplayingPosts([...displayingPosts, ...posts]);
@@ -204,7 +204,7 @@ function CategoryLanding() {
     setTimeout(() => {
       setPostsLoading(false);
     }, 5000);
-    let posts = await getPostsByCategory(handle, category, 0, 7);
+    let posts = await getPostsByCategory(handle, category, 0, 8);
     if (posts?.length) {
       setDisplayingPosts(posts);
     }

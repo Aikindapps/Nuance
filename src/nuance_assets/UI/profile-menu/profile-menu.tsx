@@ -18,6 +18,8 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
   const ref = React.createRef<HTMLDivElement>();
 
   const darkTheme = useTheme();
+  const darkThemeHomepage = useTheme() && window.location.pathname !== '/';
+
   const darkOptionsAndColors = {
     background: darkTheme
       ? colors.darkModePrimaryBackgroundColor
@@ -39,27 +41,37 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
 
   useEffect(() => {
     if (props.isUserAdminScreen && props.shown) {
-      setProfilePic(darkTheme ? icons.USER_BLUE : icons.USER_BLUE);
+      setProfilePic(
+        darkThemeHomepage ? icons.USER_WHITE_DARK : icons.USER_BLUE
+      );
     }
     if (props.isUserAdminScreen && !props.shown) {
-      setProfilePic(darkTheme ? icons.USER : icons.USER_BLUE);
+      setProfilePic(darkThemeHomepage ? icons.USER : icons.USER_BLUE);
     }
     if (!props.isUserAdminScreen && props.shown) {
-      setProfilePic(darkTheme ? icons.USER_BLUE : icons.USER_BLUE);
+      setProfilePic(
+        darkThemeHomepage ? icons.USER_WHITE_DARK : icons.USER_BLUE
+      );
     }
     if (!props.isUserAdminScreen && !props.shown) {
-      setProfilePic(darkTheme ? icons.USER_BLUE : icons.USER);
+      setProfilePic(darkThemeHomepage ? icons.USER_WHITE_DARK : icons.USER);
     }
   }, [props.shown, props.isUserAdminScreen, darkTheme]);
 
-  const MouseOver = () => {
-    setProfilePic(icons.USER_HOVER);
-  };
-  const MouseDown = () => {
-    setProfilePic(icons.USER_DOWN);
-  };
-  const MouseLeave = () => {
-    setProfilePic(icons.USER);
+  const getUserIcon = () => {
+    if (props.isUserAdminScreen) {
+      if (darkThemeHomepage) {
+        return icons.USER;
+      } else {
+        return icons.USER_WHITE_DARK;
+      }
+    } else {
+      if (darkThemeHomepage) {
+        return icons.USER_WHITE_DARK;
+      } else {
+        return icons.USER;
+      }
+    }
   };
 
   const onLogOut = () => {
@@ -100,7 +112,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
           props.setShownMeatball(false);
         }}
         // style={{ backgroundColor: props.shown ? '#F5F5F5' : 'transparent' }}
-        src={ProfilePic}
+        src={getUserIcon()}
         alt=''
         // onMouseOver={MouseOver}
         // onMouseDown={MouseDown}

@@ -19,6 +19,7 @@ import {
   UserNotificationSettings
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
+import { reset } from 'yargs';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -154,8 +155,8 @@ export interface UserStore {
   getAuthor: (handle: string) => Promise<UserType | undefined>;
   getAllUsersHandles: () => Promise<string[]>;
   getAllPublicationsHandles: () => Promise<[string, string][]>;
-  searchUsers: (input: string) => Promise<void>;
-  searchPublications: (input: string) => Promise<void>;
+  searchUsers: (input: string) => Promise<UserListItem[]>;
+  searchPublications: (input: string) => Promise<PublicationType[]>;
   getUserPostCounts: (handle: string) => Promise<UserPostCounts | undefined>;
   getWriterPostCounts: (handle: string) => Promise<void>;
   getUserFollowersCount: (handle: string) => Promise<void>;
@@ -466,14 +467,15 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return allPublicationsHandlesAndCanisterIds;
   },
 
-  searchUsers: async (input: string): Promise<void> => {
+  searchUsers: async (input: string): Promise<UserListItem[]> => {
     let allHandles = await get().getAllUsersHandles();
     let resultHandles = findSimilarHandles(input, allHandles);
     let users = await (await getUserActor()).getUsersByHandles(resultHandles);
     let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users);
     set({ searchUserResults: usersMerged });
+    return usersMerged;
   },
-  searchPublications: async (input: string): Promise<void> => {
+  searchPublications: async (input: string): Promise<PublicationType[]> => {
     let allPublications = await get().getAllPublicationsHandles();
     let handleToCanisterIdMap = new Map<string, string>();
     let handles: string[] = [];
@@ -504,6 +506,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         publications
       );
     set({ searchPublicationResults: mergedPublications });
+    return mergedPublications
   },
 
   updateBio: async (bio: string): Promise<void> => {
@@ -619,6 +622,8 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
      
       try {
         const result = await (await getNotificationsActor()).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
+        var toToast = [];
+
         if (Err in result) {
           toastError(result.err);
         } else {
@@ -628,7 +633,6 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           set({ unreadNotificationCount: 0 });
           set({ totalNotificationCount: Number(result.ok[1]) });
           
-          var toToast = [];
 
           for (let i = 0; i < result.ok[0].length; i++) {
             if (result.ok[0][i].read === false) {
@@ -640,8 +644,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
             }
           }
         }
-
+        
+        if (toToast?.length > 0) {
         toast(JSON.stringify(toToast), ToastType.Notification);
+        };
         
           
       } catch (err) {
@@ -693,7 +699,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-   markAllNotificationsAsRead: () => {
+   markAllNotificationsAsRead: async () => {
     let notifications = get().notifications || [];
     let notificationIds = notifications.filter((notification) => !notification.read).map((notification) => notification.id);
     if (notificationIds.length > 0) {
@@ -704,9 +710,18 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         }
       })});
       set({ unreadNotificationCount: 0 });
-      get().markNotificationAsRead(notificationIds);
-
-    };
+      try {
+        const result = await (await getNotificationsActor()).markNotificationAsRead(notificationIds);
+        if (Err in result) {
+         console.error('markAllNotificationsAsRead:', result.err);
+        } else {
+          set({ unreadNotificationCount: 0 });
+          }
+      } catch (err) {
+       console.error('markAllNotificationsAsRead:', err);
+      }
+    }
+      
 },
 
   resetUnreadNotificationCount: (): void => {

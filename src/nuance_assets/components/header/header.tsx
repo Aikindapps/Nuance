@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import MeatBallMenu from '../../UI/meatball-menu/meatball-menu';
 import ProfileMenu from '../../UI/profile-menu/profile-menu';
 import SearchModal from '../search-modal/search-modal';
@@ -10,57 +10,135 @@ import { trim_category_name } from '../../shared/utils';
 import { useTheme, useThemeUpdate } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import { IoMdNotificationsOutline } from 'react-icons/io';
+import { GoTriangleDown } from 'react-icons/go';
+
+import './_header.scss';
+import { get } from 'lodash';
 
 type HeaderProps = {
-  loggedIn: Boolean;
-  isArticlePage: Boolean;
+  loggedIn: boolean;
+  isArticlePage: boolean;
   ScreenWidth: number;
-  isReadArticlePage?: Boolean;
-  isMyProfilePage?: Boolean;
-  isPublicationPage: Boolean | undefined;
+  isReadArticlePage?: boolean;
+  isMyProfilePage?: boolean;
+  isPublicationPage?: boolean;
   category?: string;
   postTitle?: String;
   publication?: PublicationType | undefined;
-  isUserAdminScreen?: Boolean;
+  isUserAdminScreen?: boolean;
+  transparentBackground?: boolean;
 };
 
 const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [shownProfile, setShownProfile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const darkTheme = useTheme();
+  const darkTheme = window.location.pathname !== '/' && useTheme();
   const toggleTheme = useThemeUpdate();
-  const context = useContext(Context)
+  const context = useContext(Context);
   const modalContext = useContext(ModalContext);
+  const location = useLocation();
 
-  const isMyProfileScreen =
-    window.location.pathname.includes('/my-profile') ||
-    window.location.pathname.includes('/article/new') ||
-    window.location.pathname.includes('/article/edit')
+  const NotificationsModalOpen =
+    modalContext?.isModalOpen && modalContext.modalType === 'Notifications';
+  const getNotificationIconStyle = () => {
+    if (NotificationsModalOpen) {
+      if (darkTheme) {
+        if (props.isUserAdminScreen) {
+          return {
+            background: colors.primaryTextColor,
+            color: colors.primaryBackgroundColor,
+            padding: '2px',
+          };
+        } else {
+          return {
+            background: colors.primaryBackgroundColor,
+            color: colors.primaryTextColor,
+            padding: '2px',
+          };
+        }
+      } else {
+        if (props.isUserAdminScreen) {
+          return {
+            background: colors.primaryBackgroundColor,
+            color: colors.primaryTextColor,
+            padding: '2px',
+          };
+        } else {
+          return {
+            background: colors.primaryTextColor,
+            color: colors.primaryBackgroundColor,
+            padding: '2px',
+          };
+        }
+      }
+    } else {
+      if (darkTheme) {
+        if (props.isUserAdminScreen) {
+          return {
+            background: 'transparent',
+            color: colors.primaryTextColor,
+          };
+        } else {
+          return {
+            background: 'transparent',
+            color: colors.primaryBackgroundColor,
+          };
+        }
+      } else {
+        if (props.isUserAdminScreen) {
+          return {
+            background: 'transparent',
+            color: colors.primaryBackgroundColor,
+          };
+        } else {
+          return {
+            background: 'transparent',
+            color: colors.primaryTextColor,
+          };
+        }
+      }
+    }
+  };
 
-
-
-
-  const NotificationsModalOpen = modalContext?.isModalOpen && modalContext.modalType === 'Notifications';
-  const isAdminScreenDarkMode = isMyProfileScreen ? !darkTheme : darkTheme
-  const finalIsDarkMode = NotificationsModalOpen ? !isAdminScreenDarkMode : isAdminScreenDarkMode;
-  const themeClass = finalIsDarkMode ? 'notification-dark' : 'notification';
-  const iconSrc = finalIsDarkMode ? icons.NOTIFICATION_BELL_DARK : icons.NOTIFICATION_BELL;
-  const backgroundColorStyle = finalIsDarkMode
-    ? { backgroundColor: colors.darkModePrimaryBackgroundColor }
-    : { backgroundColor: colors.primaryBackgroundColor };
-  const triangleClass = finalIsDarkMode ? "triangle-dark" : "triangle";
-
+  const getNotificationIconTriangleStyle = () => {
+    if (NotificationsModalOpen) {
+      if (darkTheme) {
+        if (props.isUserAdminScreen) {
+          return {
+            color: colors.primaryTextColor,
+          };
+        } else {
+          return {
+            color: colors.primaryBackgroundColor,
+          };
+        }
+      } else {
+        if (props.isUserAdminScreen) {
+          return {
+            color: colors.primaryBackgroundColor,
+          };
+        } else {
+          return {
+            color: colors.primaryTextColor,
+          };
+        }
+      }
+    }
+  };
 
   const toggleNotificationsModal = () => {
-    if (modalContext?.isModalOpen && modalContext.modalType === 'Notifications') {
+    if (
+      modalContext?.isModalOpen &&
+      modalContext.modalType === 'Notifications'
+    ) {
       modalContext.closeModal();
       markAllNotificationsAsRead();
     } else {
       modalContext?.openModal('Notifications');
     }
   };
-
 
   const { clearSearchBar, isTagScreen, getOwnedNfts, nftCanisters } =
     usePostStore((state) => ({
@@ -70,10 +148,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-  const { verifyBitfinityWallet } =
-    useAuthStore((state) => ({
-      verifyBitfinityWallet: state.verifyBitfinityWallet
-    }));
+  const { verifyBitfinityWallet } = useAuthStore((state) => ({
+    verifyBitfinityWallet: state.verifyBitfinityWallet,
+  }));
 
   const clearSearch = () => {
     if (window.location.pathname === '/') {
@@ -82,15 +159,21 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     }
   };
 
-  const { user, unreadNotificationCount, markAllNotificationsAsRead } = useUserStore((state) => ({
+  const {
+    user,
+    unreadNotificationCount,
+    markAllNotificationsAsRead,
+    resetUnreadNotificationCount,
+  } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
-    markAllNotificationsAsRead: state.markAllNotificationsAsRead
+    resetUnreadNotificationCount: state.resetUnreadNotificationCount,
+    markAllNotificationsAsRead: state.markAllNotificationsAsRead,
   }));
 
   useEffect(() => {
     verifyBitfinityWallet();
-  }, [])
+  }, []);
 
   const getLogoOrBreadCrumb = () => {
     if (props.isPublicationPage) {
@@ -259,13 +342,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     <div
       className='header-wrapper'
       style={
-        props.isArticlePage
+        props.isUserAdminScreen
           ? {
             backgroundColor: darkTheme
               ? colors.primaryBackgroundColor
               : colors.primaryTextColor,
           }
-          : { background: darkOptionsAndColors.background }
+          : {}
       }
     >
       {modalOpen && (
@@ -322,26 +405,35 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
           ''
         )}
 
-        {
-          props.loggedIn && user ?
-            <div className={themeClass}>
-              <img
-                src={iconSrc}
-                className='notification-header-icon'
-                style={backgroundColorStyle}
-                onClick={toggleNotificationsModal}
+        {props.loggedIn && user && (
+          <div
+            className='notification-icon-wrapper'
+            style={getNotificationIconStyle()}
+            onClick={toggleNotificationsModal}
+          >
+            <IoMdNotificationsOutline
+              style={getNotificationIconStyle()}
+              className='notification-header-icon'
+            />
+
+            {NotificationsModalOpen && (
+              <GoTriangleDown
+                style={getNotificationIconTriangleStyle()}
+                className='triangle'
               />
-              <div className={triangleClass}></div>
-              {unreadNotificationCount > 0 ?
-                <span className="notification-count" onClick={toggleNotificationsModal}>{unreadNotificationCount}</span>
-                : ''}
-            </div>
-            : ''
-        }
-
-
-
-
+            )}
+            {unreadNotificationCount > 0 ? (
+              <span
+                className='notification-count'
+                onClick={toggleNotificationsModal}
+              >
+                {unreadNotificationCount}
+              </span>
+            ) : (
+              ''
+            )}
+          </div>
+        )}
 
         {props.loggedIn && user ? (
           <ProfileMenu

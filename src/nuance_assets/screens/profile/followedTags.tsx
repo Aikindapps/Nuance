@@ -28,7 +28,7 @@ const FollowedTags = () => {
   const searchTag = (tag: string) => {
     setSearchText('#' + tag);
     clearSearchBar(false);
-    navigate('/', { replace: true });
+    navigate('/?tab=search&tag=' + tag.toUpperCase());
   };
 
   const deleteValue = (tagId: string) => {
