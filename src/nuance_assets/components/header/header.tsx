@@ -48,11 +48,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
           return {
             background: colors.primaryTextColor,
             color: colors.primaryBackgroundColor,
+            padding: '2px',
           };
         } else {
           return {
             background: colors.primaryBackgroundColor,
             color: colors.primaryTextColor,
+            padding: '2px',
           };
         }
       } else {
@@ -60,11 +62,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
           return {
             background: colors.primaryBackgroundColor,
             color: colors.primaryTextColor,
+            padding: '2px',
           };
         } else {
           return {
             background: colors.primaryTextColor,
             color: colors.primaryBackgroundColor,
+            padding: '2px',
           };
         }
       }

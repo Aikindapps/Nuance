@@ -58,12 +58,13 @@
         color: $primary-text-color;
         cursor: pointer;
         border-radius: 2px;
+        transition: ease-in-out 0.1s all;
       }
       .triangle {
         position: absolute;
         width: 12px;
         height: 12px;
-        top: 28px;
+        top: 20px;
       }
 
       .notification-count {
