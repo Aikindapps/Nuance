@@ -12,11 +12,11 @@
   .icon {
     cursor: pointer;
   }
-  .brand-logo{
+  .brand-logo {
     width: 110px;
     object-fit: contain;
   }
-  .breadcrumb-flex{
+  .breadcrumb-flex {
     display: flex;
     flex-direction: row;
     height: 64px;
@@ -45,83 +45,45 @@
     .header-icon2 {
       margin-right: 12px;
     }
-    .notification-header-icon{
-      z-index: 10;
-    }
-
-    .notification-bell-header{
+    .notification-icon-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      row-gap: 2px;
       position: relative;
-      padding: 5px 8px;
-      border-radius: 2px;
-      background: $primary-background-color;
-      cursor: pointer;
+      .notification-header-icon {
+        z-index: 10;
+        width: 25px;
+        height: 25px;
+        color: $primary-text-color;
+        cursor: pointer;
+        border-radius: 2px;
+      }
+      .triangle {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        top: 28px;
+      }
 
-    }
-
-    .notification-bell-header-dark{
-      padding: 5px 8px;
-      background-color: $dark-primary-background-color;
-      color: $dark-primary-text-color;
-      border-radius: 2px;
-      cursor: pointer;
-      
-    }
-
-    .triangle {
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent; 
-      border-right: 4px solid transparent; 
-      border-bottom: 4px solid $primary-background-color; 
-      top: 33px; 
-      margin-left: 6px;
-      transform: rotate(180deg) ;
-
-      @media only screen and (max-width: 768px) {
-        top: 33px;
+      .notification-count {
+        background-color: #cc4747;
+        color: white;
+        border-radius: 50%;
+        padding: 0px 3px;
+        font-size: 8px;
+        font-weight: 900;
+        margin-top: 13px;
+        margin-left: -11px;
+        z-index: 0;
+        width: 12px;
+        height: 12px;
+        text-align: center;
+        align-self: end;
+        z-index: 11;
+        position: absolute;
       }
     }
-
-    .triangle-dark {
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent; 
-      border-right: 4px solid transparent; 
-      border-bottom: 4px solid $dark-primary-background-color; 
-      top: 48px; 
-      margin-left: 6px;
-      transform: rotate(180deg) ; 
-
-      @media only screen and (max-width: 768px) {
-        top: 41px;
-        
-      }
-    }
-    
-
-    .notification-count {
-      position: absolute;
-      background-color: #cc4747;
-      color: white;
-      border-radius: 100%;
-      padding: 0px 3px;
-      font-size: 8px;
-      font-weight: 900;
-      margin-top: 13px;
-      margin-left: -11px;
-      z-index: 0;
-      }
-      .notification-icon-wrapper {
-        position: relative;  
-        border-radius: 50%; 
-        width: 40px; 
-        height: 40px; 
-        display: flex; 
-        align-items: center;
-        justify-content: center;
-      }
   }
 }
 
@@ -129,25 +91,25 @@
   margin-right: 10px;
 }
 
-.breadcrumb-arrow{
-    width: 15px;
-    height: 15px;
-    left: 71.14px;
-    top: 22.52px;
-    border-right: 1px solid #B2B2B2;
-    border-bottom: 1px solid #B2B2B2;
-    margin-right: 20px;
-    transform: rotate(-51.34deg);
-    margin-left: 15px;
+.breadcrumb-arrow {
+  width: 15px;
+  height: 15px;
+  left: 71.14px;
+  top: 22.52px;
+  border-right: 1px solid #b2b2b2;
+  border-bottom: 1px solid #b2b2b2;
+  margin-right: 20px;
+  transform: rotate(-51.34deg);
+  margin-left: 15px;
 }
 
-.breadcrumb-arrow-mobile{
+.breadcrumb-arrow-mobile {
   width: 10px;
   height: 10px;
   left: 71.14px;
   top: 22.52px;
-  border-right: 1px solid #B2B2B2;
-  border-bottom: 1px solid #B2B2B2;
+  border-right: 1px solid #b2b2b2;
+  border-bottom: 1px solid #b2b2b2;
   margin-right: 10px;
   transform: rotate(-51.34deg);
   margin-left: 10px;
@@ -156,13 +118,13 @@
 .dark-mode-toggle {
   margin-right: 10px;
   padding: 10px;
-  border-right: #B2B2B2 1px solid;
+  border-right: #b2b2b2 1px solid;
 }
 
 .dark-mode-icon {
   width: 25px;
 }
-.dark-mode-icon:hover{
+.dark-mode-icon:hover {
   cursor: pointer;
 }
 
@@ -175,7 +137,7 @@
       height: 40px;
       width: 40px;
     }
-    .brand-logo{
+    .brand-logo {
       width: 75px;
       object-fit: contain;
     }
