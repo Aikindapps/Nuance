@@ -73,8 +73,8 @@ jobs:
             "nuance_assets": { "ic": "'"$NUANCE_ASSETS"'" },
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
-            "Metrics": { "ic": "'"$METRICS"'" }
-            "Notifications": { "ic": "'"$NOTIFICATIONS"'" },
+            "Metrics": { "ic": "'"$METRICS"'" },
+            "Notifications": { "ic": "'"$NOTIFICATIONS"'" }
           }' > canister_ids.json
           echo '{
             "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
