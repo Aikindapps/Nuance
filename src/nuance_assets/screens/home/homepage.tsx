@@ -790,6 +790,9 @@ const HomePage = () => {
                     : { width: '224px' }
                 }
                 styleType='primary-1'
+                onClick={() => {
+                  login('NFID');
+                }}
               >
                 Login with Google
               </Button>
@@ -806,6 +809,9 @@ const HomePage = () => {
                     : { width: '224px' }
                 }
                 styleType='primary-1'
+                onClick={() => {
+                  login('ii');
+                }}
               >
                 Login with Internet Identity
               </Button>
@@ -876,6 +882,9 @@ const HomePage = () => {
                     : { width: '224px' }
                 }
                 styleType='primary-1'
+                onClick={() => {
+                  login('NFID');
+                }}
               >
                 Login with Google
               </Button>
@@ -892,6 +901,9 @@ const HomePage = () => {
                     : { width: '224px' }
                 }
                 styleType='primary-1'
+                onClick={() => {
+                  login('ii');
+                }}
               >
                 Login with Internet Identity
               </Button>
@@ -976,6 +988,9 @@ const HomePage = () => {
                     : { width: '224px' }
                 }
                 styleType='primary-1'
+                onClick={() => {
+                  login('NFID');
+                }}
               >
                 Login with Google
               </Button>
@@ -992,6 +1007,9 @@ const HomePage = () => {
                     : { width: '224px' }
                 }
                 styleType='primary-1'
+                onClick={() => {
+                  login('ii');
+                }}
               >
                 Login with Internet Identity
               </Button>
@@ -1081,6 +1099,9 @@ const HomePage = () => {
                       : { width: '224px' }
                   }
                   styleType='primary-1'
+                  onClick={() => {
+                    login('NFID');
+                  }}
                 >
                   Login with Google
                 </Button>
@@ -1097,6 +1118,9 @@ const HomePage = () => {
                       : { width: '224px' }
                   }
                   styleType='primary-1'
+                  onClick={() => {
+                    login('ii');
+                  }}
                 >
                   Login with Internet Identity
                 </Button>
