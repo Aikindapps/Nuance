@@ -795,7 +795,7 @@ actor class PostBucket() = this {
     isPublication : Bool,
     category : Text,
     isPremium : Bool,
-  ) : () {
+  ) : (firstPublish: Bool) {
 
     // posts are not saved as single objects
     // the fields are fragmented across multiple hashtables (1 per field)
@@ -803,6 +803,8 @@ actor class PostBucket() = this {
     let creatorHandle = U.safeGet(handleHashMap, creator, "");
     Debug.print("PostBucket-addOrUpdatePostCreator: " # creatorHandle);
     Debug.print("PostBucket-addOrUpdatePostPrincipalID: " # creator);
+
+    var firstPublish = false;
 
     let now = U.epochTime();
     principalIdHashMap.put(postId, principalId);
@@ -820,6 +822,7 @@ actor class PostBucket() = this {
     let post = buildPost(postId);
     if (isDraft == false and post.publishedDate == "0") {
       publishedDateHashMap.put(postId, now);
+      firstPublish := true;
     };
 
     addOrUpdatePostCategory(postId, category);
@@ -827,6 +830,8 @@ actor class PostBucket() = this {
 
     let wordCount = U.calculate_total_word_count(content);
     wordCountsHashmap.put(postId, wordCount);
+
+    return (firstPublish);
   };
 
   private func addOrUpdatePostCategory(postId : Text, category : Text) : () {
@@ -1363,7 +1368,9 @@ actor class PostBucket() = this {
       };
     };
 
-    addOrUpdatePost(
+    var isFirstPublish = false;
+
+switch(addOrUpdatePost(
       isNew,
       postId,
       postOwnerPrincipalId,
@@ -1377,10 +1384,14 @@ actor class PostBucket() = this {
       isPublication,
       postModel.category,
       false,
-    );
+    )) {
+      case (firstPublish){
+        isFirstPublish := firstPublish;
+      };
+      
+      };
 
-    if (isNew) {
-
+    if (isFirstPublish) {
 
       ignore await U.newArticle({
         articleId = postId;
@@ -1398,7 +1409,7 @@ actor class PostBucket() = this {
         tipAmount = "";
         token = "";
     })
-   
+
     };
 
     // add this postId to the user's posts if not already added
@@ -3106,7 +3117,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       senderPrincipal = Principal.fromText(sender);
       senderHandle = U.safeGet(handleHashMap, sender, "");
       tags = [];
-      tipAmount = Nat.toText(nuaEquivalent);
+      tipAmount = Nat.toText(balance / 100000000);
       token = symbol;
     });
 

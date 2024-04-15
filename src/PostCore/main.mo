@@ -3679,10 +3679,19 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
     #ok();
   };
 
-public shared ({caller}) func getTagFollowers(tagId : Text) : async Result.Result<[Text], Text> {
+public shared ({caller}) func getTagFollowers(tagName : Text) : async Result.Result<[Text], Text> {
   if (isAnonymous(caller)) {
     return #err("Cannot use this method anonymously.");
   };
+
+  //convert tag name to tag id
+  var tagId = "";
+  for ((key, tag) in tagsHashMap.entries()) {
+    if (U.lowerCase(tag.value) == U.lowerCase(tagName)) {
+      tagId := tag.id;
+    };
+  };
+
 
   var followers : Buffer.Buffer<Text> = Buffer.Buffer<Text>(userTagRelationships.size());
   for ((principalId, postTags) in userTagRelationships.entries()) {
