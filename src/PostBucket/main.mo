@@ -3117,7 +3117,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       senderPrincipal = Principal.fromText(sender);
       senderHandle = U.safeGet(handleHashMap, sender, "");
       tags = [];
-      tipAmount = Nat.toText(balance);
+      tipAmount = Nat.toText(balance / 100000000);
       token = symbol;
     });
 
