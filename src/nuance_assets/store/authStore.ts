@@ -56,7 +56,7 @@ var authClient: AuthClient;
 //check derivation origin is PROD or UAT
 const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+const NuancePROD = 'https://equ7v-uaaaa-aaaam-qbbcq-cai.ic0.app';
 
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
