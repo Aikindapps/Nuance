@@ -93,7 +93,8 @@ jobs:
             "nuance_assets": { "ic": "'"$NUANCE_ASSETS"'" },
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
-            "Metrics": { "ic": "'"$METRICS"'" }
+            "Metrics": { "ic": "'"$METRICS"'" },
+            "Notifcations": { "ic": "'"$NOTIFICATIONS"'" },
           }' > canister_ids.json
 
           echo '{
@@ -129,6 +130,7 @@ jobs:
             public let NFT_FACTORY_CANISTER_ID = "'"$NFTFACTORY"'";
             public let PUBLICATION_MANAGEMENT_CANISTER_ID = "'"$PUBLICATIONMANAGEMENT"'";
             public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
+            public let NOTIFICATION_CANISTER_ID = "'"$NOTIFICATIONS"'";
           };' > src/shared/canisterIds.mo
 
         env:
@@ -150,6 +152,7 @@ jobs:
           NFTFACTORY: ${{ secrets.SNS_UAT_NFTFACTORY }}
           PUBLICATIONMANAGEMENT: ${{ secrets.SNS_UAT_PUBLICATIONMANAGEMENT }}
           PUBLISHER: ${{ secrets.SNS_UAT_PUBLISHER }}
+          NOTIFICATIONS: ${{ secrets.SNS_UAT_NOTIFICATIONS }}
 
       - name: Deploy SNS UAT --network ic
         run: bash ./scripts/deployment/SNS_UAT_Deploy.sh
