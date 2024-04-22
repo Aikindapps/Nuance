@@ -95,6 +95,7 @@ jobs:
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
             "Metrics": { "ic": "'"$METRICS"'" },
             "Notifcations": { "ic": "'"$NOTIFICATIONS"'" }
+
           }' > canister_ids.json
 
           echo '{
