@@ -130,7 +130,7 @@ jobs:
             public let NFT_FACTORY_CANISTER_ID = "'"$NFTFACTORY"'";
             public let PUBLICATION_MANAGEMENT_CANISTER_ID = "'"$PUBLICATIONMANAGEMENT"'";
             public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
-            public let NOTIFICATION_CANISTER_ID = "'"$NOTIFICATIONS"'";
+            public let NOTIFICATIONS_CANISTER_ID = "'"$NOTIFICATIONS"'";
           };' > src/shared/canisterIds.mo
 
         env:
