@@ -25,4 +25,4 @@ dfx generate
 dfx build --all --network $NETWORK
 
 echo "Publication Buckets excluded for this deployment"
-# node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
+node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
