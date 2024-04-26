@@ -10,16 +10,9 @@ import { useTheme } from '../../contextes/ThemeContext';
 
 function SearchModal({ setOpenModal, screenWidth }: any) {
   const navigate = useNavigate();
-  const user = useUserStore((state) => state.user);
 
   const [posts, setPosts] = useState<PostType[] | null | undefined>([]);
   const [filterData, setFilterData] = useState<string>('');
-
-  const { clearSearchBar, isTagScreen } = usePostStore((state) => ({
-    clearSearchBar: state.clearSearchBar,
-    isTagScreen: state.isTagScreen,
-  }));
-  const setSearchText = usePostStore((state) => state.setSearchText);
 
   useEffect(() => {
     let posts: PostType[] = []; //getLatestPosts();
@@ -39,11 +32,9 @@ function SearchModal({ setOpenModal, screenWidth }: any) {
 
   const onKeyDown = (e: any) => {
     if (e.key === 'Enter') {
-      console.log(e.target.value);
-      setFilterData(e.target.value);
-      setSearchText(e.target.value);
-      clearSearchBar(false);
-      navigate('/', { replace: true });
+      navigate(
+        `/?tab=search&phrase=${encodeURIComponent(e.target.value)}&page=0`
+      );
     }
   };
 

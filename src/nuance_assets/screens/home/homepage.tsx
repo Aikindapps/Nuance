@@ -593,9 +593,7 @@ const HomePage = () => {
           </div>
           {!isLoggedIn && (
             <div className='right'>
-              <div className='title'>
-                Join the on-chain blogging revolution!
-              </div>
+              <div className='title'>Join the web3 revolution</div>
               <div className='login-options'>
                 <div className='title'>Login with:</div>
                 <div className='login-option-wrapper'>
@@ -655,7 +653,7 @@ const HomePage = () => {
         </div>
         {!isLoggedIn && (
           <div className='login-options-mobile-wrapper'>
-            <div className='title'>Join the on-chain blogging revolution!</div>
+            <div className='title'>Join the web3 revolution</div>
             <div className='login-options'>
               <div className='title'>Login with:</div>
               <div className='login-option-wrapper'>
@@ -772,7 +770,7 @@ const HomePage = () => {
                 This includes anonymity, self-sovereignty, censorship
                 resistance, community governance, and tokenization. Ensuring a
                 decentralized and secure environment for writers and readers
-                alike. alike.
+                alike.
               </span>
             </div>
           </div>
