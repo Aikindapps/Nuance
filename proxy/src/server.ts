@@ -50,7 +50,7 @@ function isCrawler(userAgent = '') {
 }
 
 const reservedPaths = new Set([
-    '', 'metrics', 'timed-out', 'register', 'article', 'publication', 'my-profile', 'favicon.ico', 'api', 'assets', 'user', 'sitemap.xml'
+    '', 'metrics', 'timed-out', 'register', 'article', 'publication', 'my-profile', 'favicon.ico', 'api', 'assets', 'user', 'sitemap.xml', 'images'
   ]);
   
 
