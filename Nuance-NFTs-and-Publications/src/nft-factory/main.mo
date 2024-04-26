@@ -91,6 +91,16 @@ actor NftFactory {
         
     };
 
+    public shared ({caller}) func stop_canister(canisterId: Text) : async Result.Result<(), Text> {
+        if(not isPlatformOperator(caller)){
+            return #err("Unauthorized.")
+        };
+        
+        return #ok(await ic.stop_canister({
+            canister_id=Principal.fromText(canisterId)
+        }));
+    };
+
     public shared ({caller}) func setExtCanisterConfigData(canisterId: Text, configData: InitNftCanisterData) : async Result.Result<(), Text> {
         if(isAdmin(caller) or isPlatformOperator(caller)){
             let nftCanister = CanisterDeclarations.getExtCanister(canisterId);
