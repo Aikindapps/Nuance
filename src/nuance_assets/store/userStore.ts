@@ -19,7 +19,6 @@ import {
   UserNotificationSettings
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
-import { reset } from 'yargs';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -276,7 +275,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         });
         return user;
       }
-    } catch (err) {
+    } catch (err : any) {
+      //check if the error contains 403 () by parsing the error message
+      console.log(err)
+      if (err.message.includes('403') && err.message.includes('EcdsaP256 signature')) {
+        //should be a rare event, but when this happens we need to clear local stores. 
+        console.log("Removed local state to resync browser window, please relogin.");
+        //clear all
+        useUserStore.getState().clearAll();
+      
+      }
       handleError(err, Unexpected);
     }
   },
