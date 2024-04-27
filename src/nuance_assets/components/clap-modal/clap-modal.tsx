@@ -39,6 +39,9 @@ export const ClapModal = (props: { post: PostType }) => {
   //page 0 -> input page
   //page 1 -> congratulations page
   const [page, setPage] = useState(0)
+  const [nuaConversionPrice, setNuaConversionPrice] = useState('0 NUA');
+  const [icpConversionPrice, setIcpConversionPrice] = useState('0 ICP');
+  const [ckBTCConversionPrice, setCkBTCConversionPrice] = useState('0 ckBTC');
 
   const getSelectedCurrencyBalance = () => {
     var selectedCurrencyAndBalance: TokenBalance = {
@@ -53,6 +56,25 @@ export const ClapModal = (props: { post: PostType }) => {
     return selectedCurrencyAndBalance;
   };
 
+  function updateConversionPrice(tokenSymbol: SupportedTokenSymbol, conversionSetter: Function) {
+    const pricePerUnit = getPriceBetweenTokens(
+      sonicTokenPairs,
+      selectedCurrency,
+      tokenSymbol,
+      inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+    ) / Math.pow(10, getDecimalsByTokenSymbol(tokenSymbol));
+
+    const formattedPrice = truncateToDecimalPlace(pricePerUnit, 4) + ` ${tokenSymbol}`;
+    conversionSetter(formattedPrice);
+  }
+
+  useEffect(() => {
+    updateConversionPrice('NUA', setNuaConversionPrice);
+    updateConversionPrice('ICP', setIcpConversionPrice);
+    updateConversionPrice('ckBTC', setCkBTCConversionPrice);
+  }, [selectedCurrency, inputAmount, sonicTokenPairs]);
+
+
   const getMaxAmountToApplaud = () => {
     let activeBalance = getSelectedCurrencyBalance();
     let availableBalance = activeBalance.balance - activeBalance.token.fee;
@@ -64,7 +86,7 @@ export const ClapModal = (props: { post: PostType }) => {
     let maxAmountOfApplauds = Math.floor(
       nuaEquivalance / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
     );
-    if(maxAmountOfApplauds === -1){
+    if (maxAmountOfApplauds === -1) {
       return 0;
     }
     return maxAmountOfApplauds >= 10000 ? 10000 : maxAmountOfApplauds;
@@ -109,7 +131,7 @@ export const ClapModal = (props: { post: PostType }) => {
         //just close the modal for now
         setPage(1);
       }
-      else{
+      else {
         console.log(transfer_response.Err);
       }
       //fire and forget
@@ -125,7 +147,7 @@ export const ClapModal = (props: { post: PostType }) => {
     fetchTokenBalances();
     setLoading(false);
   };
-  if(page === 0){
+  if (page === 0) {
     return (
       <div
         className='clap-modal'
@@ -143,8 +165,8 @@ export const ClapModal = (props: { post: PostType }) => {
           style={
             loading
               ? {
-                  cursor: 'not-allowed',
-                }
+                cursor: 'not-allowed',
+              }
               : {}
           }
           className='close-modal-icon'
@@ -153,8 +175,8 @@ export const ClapModal = (props: { post: PostType }) => {
           style={
             darkTheme
               ? {
-                  color: colors.darkModePrimaryTextColor,
-                }
+                color: colors.darkModePrimaryTextColor,
+              }
               : {}
           }
           className='modal-title'
@@ -165,8 +187,8 @@ export const ClapModal = (props: { post: PostType }) => {
           style={
             darkTheme
               ? {
-                  color: colors.darkSecondaryTextColor,
-                }
+                color: colors.darkSecondaryTextColor,
+              }
               : {}
           }
           className='information-text'
@@ -174,7 +196,7 @@ export const ClapModal = (props: { post: PostType }) => {
           By applauding this article, you are tipping the writer with a fragment
           of your wallet. One clap is the equivalent of one Nuance Tokens (NUA).
           <br />
-          <span onClick={()=>{
+          <span onClick={() => {
             window.open(
               'https://wiki.nuance.xyz/nuance/how-to-tip-applaud-a-writer',
               '_blank'
@@ -198,7 +220,7 @@ export const ClapModal = (props: { post: PostType }) => {
                   <p className='count'>
                     {truncateToDecimalPlace(
                       tokenBalance.balance /
-                        Math.pow(10, tokenBalance.token.decimals),
+                      Math.pow(10, tokenBalance.token.decimals),
                       4
                     )}
                   </p>
@@ -215,8 +237,8 @@ export const ClapModal = (props: { post: PostType }) => {
               style={
                 inputAmount > getMaxAmountToApplaud() && inputAmount !== 0
                   ? {
-                      marginBottom: '-12px',
-                    }
+                    marginBottom: '-12px',
+                  }
                   : {}
               }
               className='amount-input-wrapper'
@@ -228,9 +250,9 @@ export const ClapModal = (props: { post: PostType }) => {
                   style={
                     darkTheme
                       ? {
-                          color: colors.darkModePrimaryTextColor,
-                          cursor: loading ? 'not-allowed' : '',
-                        }
+                        color: colors.darkModePrimaryTextColor,
+                        cursor: loading ? 'not-allowed' : '',
+                      }
                       : { cursor: loading ? 'not-allowed' : '' }
                   }
                   placeholder='Amount'
@@ -259,8 +281,8 @@ export const ClapModal = (props: { post: PostType }) => {
                   style={
                     darkTheme
                       ? {
-                          color: colors.darkModePrimaryTextColor,
-                        }
+                        color: colors.darkModePrimaryTextColor,
+                      }
                       : {}
                   }
                   onClick={() => {
@@ -273,42 +295,15 @@ export const ClapModal = (props: { post: PostType }) => {
               <div className='amount-input-conversion-wrapper'>
                 <div>=</div>
                 <div>
-                  {truncateToDecimalPlace(
-                    getPriceBetweenTokens(
-                      sonicTokenPairs,
-                      'NUA',
-                      'NUA',
-                      inputAmount *
-                        Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                    ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
-                    4
-                  ) + ' NUA'}
+                  {nuaConversionPrice}
                 </div>
                 <div>|</div>
                 <div>
-                  {truncateToDecimalPlace(
-                    getPriceBetweenTokens(
-                      sonicTokenPairs,
-                      'NUA',
-                      'ICP',
-                      inputAmount *
-                        Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                    ) / Math.pow(10, getDecimalsByTokenSymbol('ICP')),
-                    4
-                  ) + ' ICP'}
+                  {icpConversionPrice}
                 </div>
                 <div>|</div>
                 <div>
-                  {truncateToDecimalPlace(
-                    getPriceBetweenTokens(
-                      sonicTokenPairs,
-                      'NUA',
-                      'ckBTC',
-                      inputAmount *
-                        Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                    ) / Math.pow(10, getDecimalsByTokenSymbol('ckBTC')),
-                    4
-                  ) + ' ckBTC'}
+                  {ckBTCConversionPrice}
                 </div>
               </div>
             </div>
@@ -322,7 +317,7 @@ export const ClapModal = (props: { post: PostType }) => {
           <div className='select-currency-wrapper'>
             <p className='clap-modal-field-text'>SELECT THE CURRENCY</p>
             <Dropdown
-            uniqueId={'clap-modal-dropdown-menu'}
+              uniqueId={'clap-modal-dropdown-menu'}
               items={tokenBalances.map((tokenBalance) => {
                 return tokenBalance.token.symbol;
               })}
@@ -348,7 +343,7 @@ export const ClapModal = (props: { post: PostType }) => {
             <input
               type='checkbox'
               checked={termsAccepted}
-              onChange={() => {}}
+              onChange={() => { }}
             />
             <p
               className='terms-text'
@@ -373,8 +368,8 @@ export const ClapModal = (props: { post: PostType }) => {
               style={
                 loading
                   ? {
-                      cursor: 'not-allowed',
-                    }
+                    cursor: 'not-allowed',
+                  }
                   : {}
               }
             >
@@ -385,10 +380,10 @@ export const ClapModal = (props: { post: PostType }) => {
               style={
                 !validateApplaud()
                   ? {
-                      cursor: 'not-allowed',
-                      background: 'gray',
-                      borderColor: 'gray',
-                    }
+                    cursor: 'not-allowed',
+                    background: 'gray',
+                    borderColor: 'gray',
+                  }
                   : {}
               }
               type='button'
@@ -409,7 +404,7 @@ export const ClapModal = (props: { post: PostType }) => {
       </div>
     );
   }
-  else{
+  else {
     return (
       <div
         className='clap-modal'
@@ -433,8 +428,8 @@ export const ClapModal = (props: { post: PostType }) => {
           style={
             loading
               ? {
-                  cursor: 'not-allowed',
-                }
+                cursor: 'not-allowed',
+              }
               : {}
           }
           className='close-modal-icon'
@@ -443,8 +438,8 @@ export const ClapModal = (props: { post: PostType }) => {
           style={
             darkTheme
               ? {
-                  color: colors.darkModePrimaryTextColor,
-                }
+                color: colors.darkModePrimaryTextColor,
+              }
               : {}
           }
           className='modal-title'
@@ -455,8 +450,8 @@ export const ClapModal = (props: { post: PostType }) => {
           style={
             darkTheme
               ? {
-                  color: colors.darkSecondaryTextColor,
-                }
+                color: colors.darkSecondaryTextColor,
+              }
               : {}
           }
           className='information-text'
@@ -481,7 +476,7 @@ export const ClapModal = (props: { post: PostType }) => {
             Close
           </Button>
           <Button
-            styleType={ darkTheme ? 'withdraw-dark' : 'withdraw'}
+            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
             type='button'
             onClick={() => {
               window.location.href = '/my-profile/wallet'
@@ -493,5 +488,5 @@ export const ClapModal = (props: { post: PostType }) => {
       </div>
     );
   }
-  
+
 };
