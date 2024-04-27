@@ -114,7 +114,6 @@ const ReadArticle = () => {
     usersByHandles: state.usersByHandles,
   }));
 
-  const { getUser } = useUserStore((state) => ({ getUser: state.getUser }));
   const { getPublication, publication, clearAll } = usePublisherStore(
     (state) => ({
       getPublication: state.getPublication,
@@ -148,26 +147,6 @@ const ReadArticle = () => {
     let bucketCanisterId = parts.slice(1).join('-');
     // Return the IDs in an object
     return { postId, bucketCanisterId };
-  };
-  const getLeftStyle = () => {
-    if (context.width <= 768) {
-      if (isToggled) {
-        return { width: 'max-content', minWidth: 'unset' };
-      } else {
-        return {
-          width: '30px',
-          paddingRight: '25px',
-          maxWidth: '30px',
-          minWidth: 'unset',
-        };
-      }
-    } else {
-      return {
-        width: '30px',
-        paddingRight: '25px',
-        maxWidth: '30px',
-      };
-    }
   };
 
   const postId = separateIds(id as string).postId;
@@ -486,7 +465,7 @@ const ReadArticle = () => {
       />
 
       <div className='page'>
-        <div className='left' style={getLeftStyle()}>
+        <div className={isToggled ? 'left left-toggled' : 'left'}>
           <p className='date'>
             {formatDate(post?.publishedDate) || formatDate(post?.created)}{' '}
           </p>
