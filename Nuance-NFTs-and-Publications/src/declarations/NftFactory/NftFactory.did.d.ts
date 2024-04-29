@@ -61,6 +61,7 @@ export interface _SERVICE {
     [string, InitNftCanisterData],
     Result
   >,
+  'stop_canister' : ActorMethod<[string], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];

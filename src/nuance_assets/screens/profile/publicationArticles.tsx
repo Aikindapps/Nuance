@@ -57,7 +57,6 @@ const PublicationArticles = () => {
     publication,
     getPublication,
     getPublicationPosts,
-    savePublicationPost,
     removePublicationPostCategory,
     addPublicationPostCategory,
     updatePublicationPostDraft,
@@ -65,7 +64,6 @@ const PublicationArticles = () => {
     publication: state.publication,
     getPublication: state.getPublication,
     getPublicationPosts: state.getPublicationPosts,
-    savePublicationPost: state.savePublicationPost,
     removePublicationPostCategory: state.removePublicationPostCategory,
     addPublicationPostCategory: state.addPublicationPostCategory,
     updatePublicationPostDraft: state.updatePublicationPostDraft,
@@ -194,7 +192,9 @@ const PublicationArticles = () => {
   }, [window.location.pathname]);
 
   const toggleHandler = async (postId: string, isDraft: boolean) => {
+    console.log('before update')
     await updatePublicationPostDraft(postId, isDraft, publicationHandle);
+    console.log('after update')
   };
   const categoryChangeHandler = async (
     post: PostType,
@@ -456,6 +456,7 @@ const PublicationArticles = () => {
     setDisplayingPostsLoading(true);
     setLoadingSearchResults(true);
     let response = await getSavedPostReturnOnly(postId, true);
+    console.log('refreshing post response: ', response);
     if (response) {
       let refreshedPost = response;
       setDisplayingPosts(

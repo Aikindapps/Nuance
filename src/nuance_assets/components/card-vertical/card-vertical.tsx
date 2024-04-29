@@ -62,9 +62,9 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
                 {post.isPublication ? (
                   <Link
                     style={{ color: darkOptionsAndColors.secondaryColor }}
-                    to={`/user/${post.creator}`}
+                    to={`/user/${post.creatorHandle}`}
                   >
-                    @{post.creator}
+                    @{post.creatorHandle}
                   </Link>
                 ) : (
                   <Link

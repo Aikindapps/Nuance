@@ -23,6 +23,7 @@ import Time "mo:base/Time";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import CanisterDeclarations "../shared/CanisterDeclarations";
 
 actor User {
   let Unauthorized = "Unauthorized";
@@ -100,11 +101,6 @@ actor User {
   var fontTypesHashmap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   var myFollowersHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
   var lastLoginsHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
-
-  //nft canister ids mapped to publication handles (this can extend to regular user handles when we have nft feature for regular users too)
-
-  stable var nftCanisterIds : [(Text, Text)] = [];
-  var nftCanisterIdsHashmap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
 
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
@@ -279,6 +275,28 @@ actor User {
 
   //#region User Management
 
+  private func buildHandlesFromPrincipalIdsArray(principals: [Text]) : [Text] {
+    let result = Buffer.Buffer<Text>(0);
+    for(principal in principals.vals()){
+      let handle = U.safeGet(handleHashMap, principal, "");
+      if(handle != ""){
+        result.add(handle);
+      };
+    };
+    Buffer.toArray(result)
+  };
+
+  private func buildHandlesFromPrincipalIdsList(principals: List.List<Text>) : List.List<Text> {
+    var result = List.nil<Text>();
+    for(principal in List.toIter(principals)){
+      let handle = U.safeGet(handleHashMap, principal, "");
+      if(handle != ""){
+        result := List.push<Text>(principal, result);
+      };
+    };
+    result
+  };
+
   private func getNullUser(principalId : Text) : User {
     {
       principalId = "";
@@ -288,6 +306,7 @@ actor User {
       bio = "";
       accountCreated = "0";
       followers = List.nil();
+      followersPrincipals = List.nil();
       followersArray = [];
       publicationsArray = [];
       website = "";
@@ -301,7 +320,9 @@ actor User {
   private func buildUser(userPrincipalId : Text) : User {
     var user : User = getNullUser(userPrincipalId);
     var principalId = U.safeGet(principalIdHashMap, userPrincipalId, "");
-
+    let followersPrincipalsList = U.safeGet(followersHashMap, principalId, List.nil());
+    let followersPrincipalsArray = U.safeGet(followersArrayHashMap, principalId, []);
+    
     if (principalId != "") {
       user := {
         handle = U.safeGet(handleHashMap, principalId, "");
@@ -309,8 +330,9 @@ actor User {
         avatar = U.safeGet(avatarHashMap, principalId, "");
         bio = U.safeGet(bioHashMap, principalId, "");
         accountCreated = U.safeGet(accountCreatedHashMap, principalId, "");
-        followers = U.safeGet(followersHashMap, principalId, List.nil());
-        followersArray = U.safeGet(followersArrayHashMap, principalId, []);
+        followers = buildHandlesFromPrincipalIdsList(followersPrincipalsList);
+        followersPrincipals = followersPrincipalsList;
+        followersArray = buildHandlesFromPrincipalIdsArray(followersPrincipalsArray);
         publicationsArray = U.safeGet(publicationsArrayHashMap, principalId, []);
         website = U.safeGet(websiteHashMap, principalId, "");
         socialChannels = U.safeGet(socialChannelsHashMap, principalId, []);
@@ -461,6 +483,7 @@ actor User {
       bio = "";
       accountCreated = Int.toText(U.epochTime());
       followers = List.nil();
+      followersPrincipals = List.nil();
       followersArray = [];
       publicationsArray = [];
       website = "";
@@ -537,9 +560,7 @@ actor User {
       return #err(HandleExists);
     };
 
-    let PostCoreCanister = actor (postCoreCanisterId) : actor {
-      updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
-    };
+    let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
 
     switch (handleReverseHashMap.get(existingHandle)) {
       case (?principalId) {
@@ -561,56 +582,6 @@ actor User {
         lowercaseHandleReverseHashMap.delete(U.lowerCase(existingHandle));
         lowercaseHandleReverseHashMap.put(U.lowerCase(handleTrimmed), principalId);
         accountIdsToHandleHashMap.put(accountId, handleTrimmed);
-
-        //update the arrays related to followers
-
-        //update the following handles list of the followers
-        let followersHandlesArray = U.safeGet(myFollowersHashMap, principalId, []);
-        for (followerHandle in followersHandlesArray.vals()) {
-          let followerPrincipalId = U.safeGet(handleReverseHashMap, followerHandle, "");
-          if (followerPrincipalId != "") {
-            //this array includes the old handle of the user -> update it
-            let oldFollowingArray = U.safeGet(followersArrayHashMap, followerPrincipalId, []);
-            var newFollowingBuffer = Buffer.Buffer<Text>(0);
-            for (handle in oldFollowingArray.vals()) {
-              if (handle == existingHandle) {
-                newFollowingBuffer.add(handleTrimmed);
-              } else {
-                newFollowingBuffer.add(handle);
-              };
-            };
-            followersArrayHashMap.put(followerPrincipalId, Buffer.toArray(newFollowingBuffer));
-
-            let oldFollowingList = U.safeGet(followersHashMap, followerPrincipalId, List.nil<Text>());
-            var newFollowingList = List.nil<Text>();
-            for (handle in List.toIter(oldFollowingList)) {
-              if (handle == existingHandle) {
-                newFollowingList := List.push(handleTrimmed, newFollowingList);
-              } else {
-                newFollowingList := List.push(handle, newFollowingList);
-              };
-            };
-            followersHashMap.put(followerPrincipalId, newFollowingList);
-
-          };
-        };
-
-        //update the followers handles list of the following users
-        let followingHandlesArray = U.safeGet(followersArrayHashMap, principalId, []);
-        for (followingHandle in followingHandlesArray.vals()) {
-          let followingUserPrincipalId = U.safeGet(handleReverseHashMap, followingHandle, "");
-          //contains the old handle of the user
-          let oldFollowersArray = U.safeGet(myFollowersHashMap, followingUserPrincipalId, []);
-          let newFollowersBuffer = Buffer.Buffer<Text>(0);
-          for (handle in oldFollowersArray.vals()) {
-            if (handle == existingHandle) {
-              newFollowersBuffer.add(handleTrimmed);
-            } else {
-              newFollowersBuffer.add(handle);
-            };
-          };
-          myFollowersHashMap.put(followingUserPrincipalId, Buffer.toArray(newFollowersBuffer));
-        };
 
         //if the argument is given, it's a publication handle change
         //loop through all the editors and writers and update the publicationObject arrays of each user
@@ -649,15 +620,6 @@ actor User {
                 publicationsArrayHashMap.put(principal, Buffer.toArray(userPublicationsBuffer));
               };
 
-            };
-            //check if there's any nft canister linked to the publication
-            //if there's, update the handle
-            switch (nftCanisterIdsHashmap.get(existingHandle)) {
-              case (?nftCanisterId) {
-                nftCanisterIdsHashmap.put(handleTrimmed, nftCanisterId);
-                nftCanisterIdsHashmap.delete(existingHandle);
-              };
-              case (null) {};
             };
 
           };
@@ -929,13 +891,18 @@ actor User {
       return #err(UserNotFound);
     };
 
+    //check if the following handle exists
+    let followingPrincipalId = U.safeGet(handleReverseHashMap, author, "");
+    if(followingPrincipalId == ""){
+      return #err(UserNotFound)
+    };
+
     var user = buildUser(principalId);
-    var followers = user.followers;
-    var newFollowers = List.push(author, followers);
+    var followersPrincipals = user.followersPrincipals;
+    var newFollowers = List.push(followingPrincipalId, followersPrincipals);
 
     let followersArray = List.toArray(newFollowers);
 
-    let followingPrincipalId = U.safeGet(handleReverseHashMap, author, "");
     let followersCountOld = U.safeGet(followersCountsHashMap, followingPrincipalId, "0");
     let followersCount = Nat.toText(Nat.add(U.textToNat(followersCountOld), 1));
     Debug.print("old " # followersCountOld);
@@ -957,7 +924,7 @@ actor User {
       };
     };
     if (null == Array.find<Text>(Buffer.toArray(myFollowersBuffer), func(p) { U.lowerCase(p) == U.lowerCase(user.handle) })) {
-      myFollowersBuffer.add(user.handle);
+      myFollowersBuffer.add(principalId);
     };
     myFollowersHashMap.put(followingPrincipalId, Buffer.toArray(myFollowersBuffer));
 
@@ -981,38 +948,6 @@ actor User {
     });
     
     #ok(buildUser(principalId));
-  };
-  //Should call by admin once in order to set the Followers counts. Temp function.
-  public shared ({ caller }) func setFollowersCount() : async GetHandleByPrincipalReturn {
-    Debug.print("Set Followers Count");
-    if (isAnonymous(caller)) {
-      return #err("Anonymous cannot call this method");
-    };
-
-    if (not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    //assigning all the values 0 before adding up.
-    for (userPrincipal in followersCountsHashMap.keys()) {
-      followersCountsHashMap.put(userPrincipal, "0");
-    };
-
-    for (principalId in followersArrayHashMap.keys()) {
-      let followingArray = U.safeGet(followersArrayHashMap, principalId, []);
-
-      for (followingHandle in followingArray.vals()) {
-        let followingPrincipalId = U.safeGet(handleReverseHashMap, followingHandle, "");
-        let followersCountOld = U.safeGet(followersCountsHashMap, followingPrincipalId, "0");
-        let followersCount = Nat.toText(Nat.add(U.textToNat(followersCountOld), 1));
-        followersCountsHashMap.put(followingPrincipalId, followersCount);
-      };
-    };
-    return #ok(?"ok");
   };
 
   public shared query func getFollowersCount(handle : Text) : async Text {
@@ -1054,56 +989,6 @@ actor User {
     return b;
   };
 
-  public shared ({ caller }) func initFollowers(startIndex : Nat, endIndex : Nat) : async Text {
-    if (isAnonymous(caller)) {
-      return ("Anonymous cannot call this method");
-    };
-
-    if (not isAdmin(caller)) {
-      return "Must be admin to call this function";
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return "Canister reached the maximum memory threshold. Please try again later.";
-    };
-
-    let userKeys = Iter.toArray(followersArrayHashMap.keys());
-    let totalUsers = Array.size(userKeys);
-
-    if (startIndex >= totalUsers) {
-      return "Start index is out of bounds";
-    };
-
-    let actualEndIndex = min(endIndex, totalUsers);
-
-    let chunk = Array.subArray<Text>(userKeys, startIndex, actualEndIndex - startIndex); // use subArray for slice
-
-    for (userPrincipalId in Iter.fromArray(chunk)) {
-
-      let user = buildUser(userPrincipalId);
-      let followedAuthorsArray = user.followersArray;
-
-      for (authorHandle in followedAuthorsArray.vals()) {
-        let authorPrincipalId = U.safeGet(handleReverseHashMap, authorHandle, "");
-        let existingAuthorFollowers = U.safeGet(myFollowersHashMap, authorPrincipalId, []);
-
-        let followersBuffer = Buffer.Buffer<Text>(0);
-        for (authorFollower in existingAuthorFollowers.vals()) {
-          if (null == Array.find<Text>(Buffer.toArray(followersBuffer), func(p) { U.lowerCase(p) == U.lowerCase(authorFollower) })) {
-            followersBuffer.add(authorFollower);
-          };
-        };
-
-        if (null == Array.find<Text>(Buffer.toArray(followersBuffer), func(p) { U.lowerCase(p) == U.lowerCase(user.handle) })) {
-          followersBuffer.add(user.handle);
-        };
-
-        myFollowersHashMap.put(authorPrincipalId, Buffer.toArray(followersBuffer));
-      };
-    };
-
-    return "ok";
-  };
 
   public shared query func getUserFollowers(handle : Text) : async [UserListItem] {
     Debug.print("Get User Followers => " # handle);
@@ -1120,29 +1005,26 @@ actor User {
     let followers = U.safeGet(myFollowersHashMap, principalId, []);
     let users = Buffer.Buffer<UserListItem>(0);
 
-    for (followerHandle in followers.vals()) {
-      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(followerHandle)), "");
-      if (principalId != "") {
-        let user : UserListItem = {
-          handle = U.safeGet(handleHashMap, principalId, "");
-          avatar = U.safeGet(avatarHashMap, principalId, "");
-          displayName = U.safeGet(displayNameHashMap, principalId, "");
-          fontType = U.safeGet(fontTypesHashmap, principalId, "");
-          bio = U.safeGet(bioHashMap, principalId, "");
-          principal = principalId;
-          website = U.safeGet(websiteHashMap, principalId, "");
-          socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
-          followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
-        };
-        users.add(user);
+    for (followerPrincipalId in followers.vals()) {
+      let user : UserListItem = {
+        handle = U.safeGet(handleHashMap, followerPrincipalId, "");
+        avatar = U.safeGet(avatarHashMap, followerPrincipalId, "");
+        displayName = U.safeGet(displayNameHashMap, followerPrincipalId, "");
+        fontType = U.safeGet(fontTypesHashmap, followerPrincipalId, "");
+        bio = U.safeGet(bioHashMap, followerPrincipalId, "");
+        principal = followerPrincipalId;
+        website = U.safeGet(websiteHashMap, followerPrincipalId, "");
+        socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
+        followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
       };
+      users.add(user);
     };
     Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
     Buffer.toArray(users);
   };
 
 
-  public shared query ({ caller }) func getMyFollowers(indexFrom : Nat32, indexTo : Nat32) : async Result.Result<[UserListItem], Text> {
+  public shared query ({ caller }) func getMyFollowers() : async Result.Result<[UserListItem], Text> {
     if (isAnonymous(caller)) {
       return #err(Unauthorized);
     };
@@ -1152,40 +1034,25 @@ actor User {
       return #err("User not found");
     };
 
-    let handles = U.safeGet(myFollowersHashMap, userPrincipalId, []);
+    let followers = U.safeGet(myFollowersHashMap, userPrincipalId, []);
+    let users = Buffer.Buffer<UserListItem>(0);
 
-    let size = Nat32.fromNat(handles.size());
-
-    if (indexFrom > size or indexFrom > indexTo) {
-      return #ok([]);
-    };
-
-    var start = indexFrom;
-    let end = if (indexTo > size) { size } else { indexTo };
-
-    var users = Buffer.Buffer<UserListItem>(0);
-
-    while (start < end) {
-      let handle = handles[Nat32.toNat(start)];
-      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
-      if (principalId != "") {
-        let user : UserListItem = {
-          handle = U.safeGet(handleHashMap, principalId, "");
-          avatar = U.safeGet(avatarHashMap, principalId, "");
-          displayName = U.safeGet(displayNameHashMap, principalId, "");
-          fontType = U.safeGet(fontTypesHashmap, principalId, "");
-          bio = U.safeGet(bioHashMap, principalId, "");
-          principal = principalId;
-          website = U.safeGet(websiteHashMap, principalId, "");
-          socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
-          followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
-        };
-        users.add(user);
+    for (followerPrincipalId in followers.vals()) {
+      let user : UserListItem = {
+        handle = U.safeGet(handleHashMap, followerPrincipalId, "");
+        avatar = U.safeGet(avatarHashMap, followerPrincipalId, "");
+        displayName = U.safeGet(displayNameHashMap, followerPrincipalId, "");
+        fontType = U.safeGet(fontTypesHashmap, followerPrincipalId, "");
+        bio = U.safeGet(bioHashMap, followerPrincipalId, "");
+        principal = followerPrincipalId;
+        website = U.safeGet(websiteHashMap, followerPrincipalId, "");
+        socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
+        followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
       };
-      start += 1;
+      users.add(user);
     };
-
-    #ok(Buffer.toArray(users));
+    Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
+    #ok(Buffer.toArray(users))
 
   };
 
@@ -1313,6 +1180,87 @@ actor User {
     #ok(buildUser(principalId));
   };
 
+  public shared ({caller}) func migrateFollowersHashmapsFromHandlesToPrincipalIds() : async Result.Result<(Nat, Nat), Text>{
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized)
+    };
+    
+    var success = 0;
+    var notFound = 0;
+
+    for((principalId, handles) in followersHashMap.entries()){
+      var principalIdsList = List.nil<Text>();
+      for(handle in List.toIter(handles)){
+        let principal = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(handle), "");
+        if(principal == ""){
+          //principal not found, smth is wrong
+          notFound += 1;
+        }
+        else{
+          success += 1;
+          principalIdsList := List.push<Text>(principal, principalIdsList);
+        }
+      };
+      followersHashMap.delete(principalId);
+      followersHashMap.put(principalId, principalIdsList);
+    };
+
+    for((principalId, handles) in followersArrayHashMap.entries()){
+      var principalIdsBuffer = Buffer.Buffer<Text>(0);
+      for(handle in handles.vals()){
+        let principal = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(handle), "");
+        if(principal == ""){
+          //principal not found, smth is wrong
+          notFound += 1;
+        }
+        else{
+          success += 1;
+          principalIdsBuffer.add(principal)
+        }
+      };
+      followersArrayHashMap.delete(principalId);
+      followersArrayHashMap.put(principalId, Buffer.toArray(principalIdsBuffer));
+    };
+
+    for((principalId, handles) in myFollowersHashMap.entries()){
+      var principalIdsBuffer = Buffer.Buffer<Text>(0);
+      for(handle in handles.vals()){
+        let principal = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(handle), "");
+        if(principal == ""){
+          //principal not found, smth is wrong
+          notFound += 1;
+        }
+        else{
+          success += 1;
+          principalIdsBuffer.add(principal)
+        }
+      };
+      myFollowersHashMap.delete(principalId);
+      myFollowersHashMap.put(principalId, Buffer.toArray(principalIdsBuffer));
+    };
+
+    for((principalId, publicationObjects) in publicationsArrayHashMap.entries()){
+      //make sure that all the publicationObjects are using the correct handle
+      //if not, just remove them
+      let publicationObjectsBuffer = Buffer.Buffer<PublicationObject>(0);
+      for(publicationObject in publicationObjects.vals()){
+        let publicationHandle = publicationObject.publicationName;
+        let publicationCanisterId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(publicationHandle), "");
+        if(publicationCanisterId == ""){
+          //canister id not found with the given handle
+          //remove the publication object
+          //don't add it to the buffer
+        }
+        else{
+          publicationObjectsBuffer.add(publicationObject);
+        }
+      };
+      publicationsArrayHashMap.put(principalId, Buffer.toArray(publicationObjectsBuffer));
+    };
+
+    #ok(success, notFound)
+  };
+
   public shared ({ caller }) func unfollowAuthor(author : Text) : async Result.Result<User, Text> {
     canistergeekMonitor.collectMetrics();
 
@@ -1329,13 +1277,19 @@ actor User {
     if (principalIdHashMap.get(principalId) == null) {
       return #err(UserNotFound);
     };
+    //get the principal id of the following author
+    let followingPrincipalId = U.safeGet(handleReverseHashMap, author, "");
+    if(followingPrincipalId == ""){
+      return #err(UserNotFound);
+    };
+    
 
     var user = buildUser(principalId);
-    var followers = user.followers;
-    let filteredFollowers = List.filter<Text>(followers, func(val : Text) : Bool { val != author });
+    var followersPrincipals = user.followersPrincipals;
+    let filteredFollowers = List.filter<Text>(followersPrincipals, func(val : Text) : Bool { val != followingPrincipalId });
     let followersArray = List.toArray(filteredFollowers);
 
-    let followingPrincipalId = U.safeGet(handleReverseHashMap, author, "");
+    //following author followers count
     let followersCountOld = U.safeGet(followersCountsHashMap, followingPrincipalId, "0");
     let followersCount = Nat.toText(Nat.sub(U.textToNat(followersCountOld), 1));
     Debug.print("old " # followersCountOld);
@@ -1348,7 +1302,7 @@ actor User {
 
     //remove from myFollowers array
     var myFollowers = U.safeGet(myFollowersHashMap, followingPrincipalId, []);
-    let filteredArray = Array.filter<Text>(myFollowers, func(val : Text) : Bool { val != user.handle });
+    let filteredArray = Array.filter<Text>(myFollowers, func(val : Text) : Bool { val != principalId });
     myFollowersHashMap.put(followingPrincipalId, filteredArray);
 
     #ok(buildUser(principalId));
@@ -1573,6 +1527,33 @@ actor User {
     #ok(buildUser(principalId));
   };
 
+  public shared query func getUserListItemByHandle(handle : Text) : async Result.Result<UserListItem, Text> {
+    //validate input
+    if (not U.isTextLengthValid(handle, 64)) {
+      return #err("Invalid handle length");
+    };
+
+    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+
+    if (principalId == "") {
+      return #err(UserNotFound);
+    };
+
+    let user : UserListItem = {
+      handle = U.safeGet(handleHashMap, principalId, "");
+      avatar = U.safeGet(avatarHashMap, principalId, "");
+      displayName = U.safeGet(displayNameHashMap, principalId, "");
+      fontType = U.safeGet(fontTypesHashmap, principalId, "");
+      bio = U.safeGet(bioHashMap, principalId, "");
+      principal = principalId;
+      website = U.safeGet(websiteHashMap, principalId, "");
+      socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
+      followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+    };
+
+    #ok(user);
+  };
+
   public shared query func getUsersByHandles(handles : [Text]) : async [UserListItem] {
 
     var users : List.List<UserListItem> = List.nil<UserListItem>();
@@ -1597,6 +1578,30 @@ actor User {
         };
         users := List.push<UserListItem>(user, users);
       };
+    };
+
+    List.toArray(users);
+  };
+
+  public shared query func getUsersByPrincipals(principals : [Text]) : async [UserListItem] {
+    var users : List.List<UserListItem> = List.nil<UserListItem>();
+    for (principalId in principals.vals()) {
+      //validate input
+      if (not U.isTextLengthValid(principalId, 128)) {
+        return [];
+      };
+      let user : UserListItem = {
+        handle = U.safeGet(handleHashMap, principalId, "");
+        avatar = U.safeGet(avatarHashMap, principalId, "");
+        displayName = U.safeGet(displayNameHashMap, principalId, "");
+        fontType = U.safeGet(fontTypesHashmap, principalId, "");
+        bio = U.safeGet(bioHashMap, principalId, "");
+        principal = principalId;
+        website = U.safeGet(websiteHashMap, principalId, "");
+        socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
+        followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+      };
+      users := List.push<UserListItem>(user, users);
     };
 
     List.toArray(users);
@@ -1690,46 +1695,6 @@ actor User {
   // };
 
   //#endregion
-
-  //NFT canister registration
-
-  //register nft canister id
-  public shared ({ caller }) func registerNftCanisterId(canisterId : Text) : async Result.Result<Text, Text> {
-    if (isAnonymous(caller)) {
-      return #err("Anonymous cannot call this method");
-    };
-
-    if (not isNuanceCanister(caller) and not isAdmin(caller)) {
-      return #err(Unauthorized);
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    let callerPrincipal = Principal.toText(caller);
-    let handle = handleHashMap.get(callerPrincipal);
-    switch (handle) {
-      case (?handle) {
-        nftCanisterIdsHashmap.put(handle, canisterId);
-        #ok(canisterId);
-
-      };
-      case (null) {
-        return #err(UserNotFound);
-      };
-    };
-  };
-
-  public shared query func getNftCanisters() : async [NftCanisterEntry] {
-    var existingCanistersList = List.nil<NftCanisterEntry>();
-
-    for (handle in nftCanisterIdsHashmap.keys()) {
-      let canister_id = U.safeGet(nftCanisterIdsHashmap, handle, "");
-      existingCanistersList := List.push<NftCanisterEntry>({ canisterId = canister_id; handle = handle }, existingCanistersList);
-    };
-    List.toArray(existingCanistersList);
-  };
 
   public shared ({ caller }) func generateAccountIds() : async () {
     if (isAnonymous(caller)) {
@@ -1867,7 +1832,6 @@ actor User {
     socialChannels := Iter.toArray(socialChannelsHashMap.entries());
     nuaTokens := Iter.toArray(nuaTokensHashMap.entries());
     fontTypes := Iter.toArray(fontTypesHashmap.entries());
-    nftCanisterIds := Iter.toArray(nftCanisterIdsHashmap.entries());
     accountIdsToHandleEntries := Iter.toArray(accountIdsToHandleHashMap.entries());
     myFollowers := Iter.toArray(myFollowersHashMap.entries());
     lastLogins := Iter.toArray(lastLoginsHashMap.entries())
@@ -1896,7 +1860,6 @@ actor User {
     socialChannelsHashMap := HashMap.fromIter(socialChannels.vals(), initCapacity, isEq, Text.hash);
     nuaTokensHashMap := HashMap.fromIter(nuaTokens.vals(), initCapacity, isEq, Text.hash);
     fontTypesHashmap := HashMap.fromIter(fontTypes.vals(), initCapacity, isEq, Text.hash);
-    nftCanisterIdsHashmap := HashMap.fromIter(nftCanisterIds.vals(), initCapacity, isEq, Text.hash);
     accountIdsToHandleHashMap := HashMap.fromIter(accountIdsToHandleEntries.vals(), initCapacity, isEq, Text.hash);
     myFollowersHashMap := HashMap.fromIter(myFollowers.vals(), initCapacity, isEq, Text.hash);
     lastLoginsHashMap := HashMap.fromIter(lastLogins.vals(), initCapacity, isEq, Text.hash);
@@ -1912,7 +1875,6 @@ actor User {
     publicationsArray := [];
     nuaTokens := [];
     fontTypes := [];
-    nftCanisterIds := [];
     accountIdsToHandleEntries := [];
     lastLogins := [];
   };

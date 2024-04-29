@@ -39,7 +39,6 @@ export const idlFactory = ({ IDL }) => {
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
     'created' : IDL.Text,
-    'creator' : IDL.Text,
     'modified' : IDL.Text,
     'content' : IDL.Text,
     'views' : IDL.Text,
@@ -50,8 +49,10 @@ export const idlFactory = ({ IDL }) => {
     'tags' : IDL.Vec(PostTagModel),
     'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -116,16 +117,20 @@ export const idlFactory = ({ IDL }) => {
     'isEditor' : IDL.Bool,
     'publicationName' : IDL.Text,
   });
+  const FollowersPrincipals = IDL.Opt(IDL.Tuple(IDL.Text, List));
   const Followers = IDL.Opt(IDL.Tuple(IDL.Text, List));
   const User = IDL.Record({
     'bio' : IDL.Text,
+    'socialChannels' : IDL.Vec(IDL.Text),
     'followersArray' : IDL.Vec(IDL.Text),
     'displayName' : IDL.Text,
     'followersCount' : IDL.Nat32,
     'nuaTokens' : IDL.Float64,
     'accountCreated' : IDL.Text,
     'publicationsArray' : IDL.Vec(PublicationObject),
+    'website' : IDL.Text,
     'handle' : IDL.Text,
+    'followersPrincipals' : FollowersPrincipals,
     'followers' : Followers,
     'avatar' : IDL.Text,
   });

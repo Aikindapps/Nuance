@@ -6,7 +6,6 @@ export const idlFactory = ({ IDL }) => {
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
     'created' : IDL.Text,
-    'creator' : IDL.Text,
     'modified' : IDL.Text,
     'content' : IDL.Text,
     'wordCount' : IDL.Text,
@@ -14,8 +13,10 @@ export const idlFactory = ({ IDL }) => {
     'publishedDate' : IDL.Text,
     'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -78,10 +79,6 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_8 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
-  const Result_11 = IDL.Variant({
-    'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
-    'err' : IDL.Text,
-  });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_9 = IDL.Variant({
@@ -95,7 +92,6 @@ export const idlFactory = ({ IDL }) => {
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
     'created' : IDL.Text,
-    'creator' : IDL.Text,
     'modified' : IDL.Text,
     'content' : IDL.Text,
     'views' : IDL.Text,
@@ -105,8 +101,10 @@ export const idlFactory = ({ IDL }) => {
     'claps' : IDL.Text,
     'tags' : IDL.Vec(PostTagModel),
     'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -116,7 +114,6 @@ export const idlFactory = ({ IDL }) => {
   const PostSaveModel = IDL.Record({
     'tagNames' : IDL.Vec(IDL.Text),
     'title' : IDL.Text,
-    'creator' : IDL.Text,
     'content' : IDL.Text,
     'premium' : IDL.Opt(
       IDL.Record({
@@ -131,6 +128,7 @@ export const idlFactory = ({ IDL }) => {
     'category' : IDL.Text,
     'caller' : IDL.Principal,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -141,7 +139,6 @@ export const idlFactory = ({ IDL }) => {
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
     'created' : IDL.Text,
-    'creator' : IDL.Text,
     'modified' : IDL.Text,
     'content' : IDL.Text,
     'wordCount' : IDL.Text,
@@ -149,8 +146,10 @@ export const idlFactory = ({ IDL }) => {
     'publishedDate' : IDL.Text,
     'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -182,7 +181,6 @@ export const idlFactory = ({ IDL }) => {
     'dumpIds' : IDL.Func([], [Result_3], []),
     'dumpPosts' : IDL.Func([], [Result_3], []),
     'dumpUserIds' : IDL.Func([], [Result_3], []),
-    'generateContent' : IDL.Func([IDL.Text], [IDL.Text], []),
     'generatePublishedDates' : IDL.Func([], [], []),
     'getAdmins' : IDL.Func([], [Result_8], ['query']),
     'getAllApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
@@ -191,7 +189,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
-    'getAllSubmittedForReviews' : IDL.Func([], [Result_11], []),
     'getApplaudById' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'getBucketCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
@@ -287,7 +284,6 @@ export const idlFactory = ({ IDL }) => {
     'save' : IDL.Func([PostSaveModel], [SaveResult], []),
     'saveComment' : IDL.Func([SaveCommentModel], [Result], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_4], []),
-    'storeAllSEO' : IDL.Func([], [Result_3], []),
     'storeHandlesAndPrincipals' : IDL.Func(
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         [Result_2],

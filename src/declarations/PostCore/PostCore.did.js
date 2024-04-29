@@ -51,10 +51,6 @@ export const idlFactory = ({ IDL }) => {
     'tagId' : IDL.Text,
     'tagName' : IDL.Text,
   });
-  const NftCanisterEntry = IDL.Record({
-    'handle' : IDL.Text,
-    'canisterId' : IDL.Text,
-  });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_5 = IDL.Variant({ 'ok' : PostKeyProperties, 'err' : IDL.Text });
   const PostTag = IDL.Record({
@@ -109,7 +105,6 @@ export const idlFactory = ({ IDL }) => {
   });
   const PostSaveModel = IDL.Record({
     'title' : IDL.Text,
-    'creator' : IDL.Text,
     'content' : IDL.Text,
     'premium' : IDL.Opt(
       IDL.Record({
@@ -122,6 +117,7 @@ export const idlFactory = ({ IDL }) => {
     'tagIds' : IDL.Vec(IDL.Text),
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -132,7 +128,6 @@ export const idlFactory = ({ IDL }) => {
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
     'created' : IDL.Text,
-    'creator' : IDL.Text,
     'modified' : IDL.Text,
     'content' : IDL.Text,
     'views' : IDL.Text,
@@ -143,8 +138,10 @@ export const idlFactory = ({ IDL }) => {
     'tags' : IDL.Vec(PostTagModel),
     'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -281,7 +278,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMyTags' : IDL.Func([], [IDL.Vec(PostTagModel__1)], ['query']),
     'getNextPostId' : IDL.Func([], [Result_2], []),
-    'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPopular' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
@@ -340,6 +336,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getTagFollowers' : IDL.Func([IDL.Text], [Result_8], []),
     'getTagsByUser' : IDL.Func([IDL.Text], [IDL.Vec(PostTag)], ['query']),
     'getTotalAmountOfTipsReceived' : IDL.Func(
         [],
@@ -392,14 +389,12 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'migrateAllPublicationEditorsAndWriters' : IDL.Func([], [Result_6], []),
-    'migrateAllSubmittedForReview' : IDL.Func([], [Result_3], []),
     'migrateModclubInterface' : IDL.Func([], [Result_2], []),
     'migratePremiumArticleFromOldArch' : IDL.Func([], [Result_5], []),
     'modClubCallback' : IDL.Func([ContentResult], [], ['oneway']),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCanister' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_1], []),
-    'registerNftCanisterId' : IDL.Func([IDL.Text, IDL.Text], [Result_2], []),
     'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
     'registerPublisher' : IDL.Func([], [], []),
     'reindex' : IDL.Func([], [Result_2], []),
@@ -413,11 +408,6 @@ export const idlFactory = ({ IDL }) => {
     'simulateModClub' : IDL.Func([IDL.Text, PostModerationStatusV2], [], []),
     'sortPopularPosts' : IDL.Func([PopularityType], [], []),
     'storeAllSEO' : IDL.Func([], [Result_1], []),
-    'tagMigrationBugFix' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Nat],
-        [Result_1],
-        [],
-      ),
     'testInstructionSize' : IDL.Func([], [IDL.Text], []),
     'unfollowTag' : IDL.Func([IDL.Text], [Result_1], []),
     'unregisterAdmin' : IDL.Func([IDL.Text], [Result_1], []),

@@ -16,7 +16,7 @@ import {
   Notifications,
   NotificationType,
   NotificationContent,
-  UserNotificationSettings
+  UserNotificationSettings,
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
 
@@ -183,17 +183,29 @@ export interface UserStore {
   getUsersByHandlesReturnOnly: (
     handles: Array<string>
   ) => Promise<UserListItem[] | undefined>;
-  getMyFollowers: (indexStart: number, indexEnd: number) => Promise<void>;
+  getMyFollowers: (
+    indexStart: number,
+    indexEnd: number
+  ) => Promise<UserListItem[]>;
   getPrincipalByHandle: (handle: string) => Promise<string | undefined>;
   createEmailOptInAddress: (emailAddress: string) => Promise<void>;
 
-  getUserNotifications: (from: number, to: number, isLoggedIn: boolean) => Promise<void>;
+  getUserNotifications: (
+    from: number,
+    to: number,
+    isLoggedIn: boolean
+  ) => Promise<void>;
   loadMoreNotifications: (from: number, to: number) => Promise<void>;
-  createNotification: (notificationType: NotificationType, notificationContent: NotificationContent) => Promise<void>;
+  createNotification: (
+    notificationType: NotificationType,
+    notificationContent: NotificationContent
+  ) => Promise<void>;
   markNotificationAsRead: (notificationId: string[]) => Promise<void>;
   markAllNotificationsAsRead: () => void;
   resetUnreadNotificationCount: () => void;
-  updateUserNotificationSettings: (notificationSettings: UserNotificationSettings) => Promise<void>;
+  updateUserNotificationSettings: (
+    notificationSettings: UserNotificationSettings
+  ) => Promise<void>;
 
   clearAll: () => void;
 }
@@ -275,15 +287,19 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         });
         return user;
       }
-    } catch (err : any) {
+    } catch (err: any) {
       //check if the error contains 403 () by parsing the error message
-      console.log(err)
-      if (err.message.includes('403') && err.message.includes('EcdsaP256 signature')) {
-        //should be a rare event, but when this happens we need to clear local stores. 
-        console.log("Removed local state to resync browser window, please relogin.");
+      console.log(err);
+      if (
+        err.message.includes('403') &&
+        err.message.includes('EcdsaP256 signature')
+      ) {
+        //should be a rare event, but when this happens we need to clear local stores.
+        console.log(
+          'Removed local state to resync browser window, please relogin.'
+        );
         //clear all
         useUserStore.getState().clearAll();
-      
       }
       handleError(err, Unexpected);
     }
@@ -416,32 +432,19 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   getMyFollowers: async (
     indexStart: number,
     indexEnd: number
-  ): Promise<void> => {
+  ): Promise<UserListItem[]> => {
     try {
-      let result = await (
-        await getUserActor()
-      ).getMyFollowers(indexStart, indexEnd);
+      let result = await (await getUserActor()).getMyFollowers();
+
       if (Err in result) {
         toastError(result.err);
+        return [];
       } else {
-        let followers = result.ok;
-        let existingFollowers = get().myFollowers;
-
-        if (existingFollowers && indexStart !== 0) {
-          let merged = existingFollowers;
-          followers.forEach((user) => {
-            merged.push(user);
-          });
-          let myFollowers = merged.filter(
-            (v, i, a) => a.findIndex((t) => t.handle === v.handle) === i
-          );
-          set({ myFollowers: myFollowers });
-        } else {
-          set({ myFollowers: followers });
-        }
+        return result.ok;
       }
     } catch (err) {
       handleError(err, Unexpected);
+      return [];
     }
   },
 
@@ -514,7 +517,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         publications
       );
     set({ searchPublicationResults: mergedPublications });
-    return mergedPublications
+    return mergedPublications;
   },
 
   updateBio: async (bio: string): Promise<void> => {
@@ -625,39 +628,48 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   //notifications
-  getUserNotifications: async (from: number, to: number, isLoggedIn: boolean): Promise<void> => {
+  getUserNotifications: async (
+    from: number,
+    to: number,
+    isLoggedIn: boolean
+  ): Promise<void> => {
     if (isLoggedIn) {
-     
       try {
-        const result = await (await getNotificationsActor()).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
+        const result = await (
+          await getNotificationsActor()
+        ).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
         var toToast = [];
 
         if (Err in result) {
           toastError(result.err);
         } else {
           console.log('getUserNotifications:', result.ok[0]);
-          
-          set({ notifications: result.ok[0]})
+
+          set({ notifications: result.ok[0] });
           set({ unreadNotificationCount: 0 });
           set({ totalNotificationCount: Number(result.ok[1]) });
-          
 
           for (let i = 0; i < result.ok[0].length; i++) {
             if (result.ok[0][i].read === false) {
-              set((state) => ({ unreadNotificationCount: state.unreadNotificationCount + 1 }));
+              set((state) => ({
+                unreadNotificationCount: state.unreadNotificationCount + 1,
+              }));
               if (!get().notificationsToasted.includes(result.ok[0][i].id)) {
-              toToast.push(result.ok[0][i]);
-              set((state) => ({ notificationsToasted: [...state.notificationsToasted, result.ok[0][i].id] }));
+                toToast.push(result.ok[0][i]);
+                set((state) => ({
+                  notificationsToasted: [
+                    ...state.notificationsToasted,
+                    result.ok[0][i].id,
+                  ],
+                }));
               }
             }
           }
         }
-        
+
         if (toToast?.length > 0) {
-        toast(JSON.stringify(toToast), ToastType.Notification);
-        };
-        
-          
+          toast(JSON.stringify(toToast), ToastType.Notification);
+        }
       } catch (err) {
         console.error('getUserNotifications:', err);
       }
@@ -666,90 +678,103 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   loadMoreNotifications: async (from: number, to: number): Promise<void> => {
     try {
-      const result = await (await getNotificationsActor()).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
+      const result = await (
+        await getNotificationsActor()
+      ).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
       if (Err in result) {
         toastError(result.err);
       } else {
-        
         let notifications = get().notifications || [];
-        set({ notifications: [...notifications, ...result.ok[0] ]});
+        set({ notifications: [...notifications, ...result.ok[0]] });
       }
     } catch (err) {
       handleError(err, Unexpected);
     }
   },
 
-
-
-  createNotification: async (notificationType: NotificationType, notificationContent: NotificationContent): Promise<void> => {
+  createNotification: async (
+    notificationType: NotificationType,
+    notificationContent: NotificationContent
+  ): Promise<void> => {
     try {
-      const result = await (await getNotificationsActor()).createNotification(notificationType, notificationContent);
+      const result = await (
+        await getNotificationsActor()
+      ).createNotification(notificationType, notificationContent);
       if (Err in result) {
-       console.log('createNotification:', result.err);
+        console.log('createNotification:', result.err);
       } else {
         console.log('createNotification:', result.ok);
-        }
+      }
     } catch (err) {
-     console.log('createNotification:', err);
+      console.log('createNotification:', err);
     }
   },
 
   markNotificationAsRead: async (notificationId: string[]): Promise<void> => {
     try {
-      const result = await (await getNotificationsActor()).markNotificationAsRead(notificationId);
+      const result = await (
+        await getNotificationsActor()
+      ).markNotificationAsRead(notificationId);
       if (Err in result) {
         toastError(result.err);
       } else {
         console.log('markNotificationAsRead:', result.ok);
-        }
+      }
     } catch (err) {
       handleError(err, Unexpected);
     }
   },
 
-   markAllNotificationsAsRead: async () => {
+  markAllNotificationsAsRead: async () => {
     let notifications = get().notifications || [];
-    let notificationIds = notifications.filter((notification) => !notification.read).map((notification) => notification.id);
+    let notificationIds = notifications
+      .filter((notification) => !notification.read)
+      .map((notification) => notification.id);
     if (notificationIds.length > 0) {
-      set({ notifications: notifications.map((notification) => {
-        return {
-          ...notification,
-          read: true
-        }
-      })});
+      set({
+        notifications: notifications.map((notification) => {
+          return {
+            ...notification,
+            read: true,
+          };
+        }),
+      });
       set({ unreadNotificationCount: 0 });
       try {
-        const result = await (await getNotificationsActor()).markNotificationAsRead(notificationIds);
+        const result = await (
+          await getNotificationsActor()
+        ).markNotificationAsRead(notificationIds);
         if (Err in result) {
-         console.error('markAllNotificationsAsRead:', result.err);
+          console.error('markAllNotificationsAsRead:', result.err);
         } else {
           set({ unreadNotificationCount: 0 });
-          }
+        }
       } catch (err) {
-       console.error('markAllNotificationsAsRead:', err);
+        console.error('markAllNotificationsAsRead:', err);
       }
     }
-      
-},
+  },
 
   resetUnreadNotificationCount: (): void => {
     set({ unreadNotificationCount: 0 });
   },
 
-  updateUserNotificationSettings: async (notificationSettings: UserNotificationSettings): Promise<void> => {
+  updateUserNotificationSettings: async (
+    notificationSettings: UserNotificationSettings
+  ): Promise<void> => {
     try {
-      const result = await (await getNotificationsActor()).updateUserNotificationSettings(notificationSettings);
+      const result = await (
+        await getNotificationsActor()
+      ).updateUserNotificationSettings(notificationSettings);
       if (Err in result) {
         toastError(result.err);
       } else {
         console.log('updateUserNotificationSettings:', result.ok);
-        }
+      }
     } catch (err) {
       handleError(err, Unexpected);
     }
   },
-
-
 
   clearAll: (): void => {
     set({}, true);

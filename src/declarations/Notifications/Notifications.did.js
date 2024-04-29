@@ -143,6 +143,7 @@ export const idlFactory = ({ IDL }) => {
     'newArticle' : IDL.Func([NotificationContent], [Result], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),
+    'testnewnotifications2' : IDL.Func([], [Result], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result], []),
     'updateUserNotificationSettings' : IDL.Func(
         [UserNotificationSettings],

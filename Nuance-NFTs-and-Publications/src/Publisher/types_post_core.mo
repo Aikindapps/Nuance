@@ -20,7 +20,7 @@ module {
         content: Text;
         isDraft: Bool;
         tagIds: [Text];
-        creator: Text; //publication author
+        creatorHandle: Text; //publication author
         isPublication: Bool;
         category: Text;
         premium : ?{
@@ -40,7 +40,7 @@ module {
       headerImage : Text;
       content : Text;
       isDraft : Bool;
-      creator : Text; //publication author
+      creatorHandle : Text; //publication author
       isPublication : Bool;
       category : Text;
       premium : ?{
@@ -76,7 +76,8 @@ module {
         tags: [PostTagModel];
 
         //publisher fields
-        creator: Text;
+        creatorHandle: Text;
+        creatorPrincipal: Text;
         isPublication: Bool;
         category: Text;
 
@@ -102,7 +103,8 @@ module {
       modified : Text; //determined at save
 
       //publisher fields
-      creator : Text;
+      creatorHandle: Text;
+      creatorPrincipal: Text;
       isPublication : Bool;
       category : Text;
       wordCount : Text;

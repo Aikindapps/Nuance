@@ -15,7 +15,7 @@ import Buffer "mo:base/Buffer";
 import U "../shared/utils";
 import Char "mo:base/Char";
 import Prim "mo:prim";
-import CanisterDeclarations "../shared/CanisterDeclarations";
+import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import Debug "mo:base/Debug";
@@ -261,6 +261,36 @@ actor class Management() = this {
     public shared query func getAllPublisherIds() : async [Text] {
         Iter.toArray(publicationCanisterIdsHashmap.vals());
     };
+
+    public shared ({caller}) func refreshEditorsWritersHandles() : async Result.Result<([Text], [Text]), Text> {
+        if(not isPlatformOperator(caller)){
+            return #err("Unauthorized")
+        };
+
+        let successfulPublishers = Buffer.Buffer<Text>(0);
+        let failedPublishers = Buffer.Buffer<Text>(0);
+
+        for(cai in publicationCanisterIdsHashmap.vals()){
+            let PublisherCanister = CanisterDeclarations.getPublicationCanister(cai);
+            try{
+                let result = await PublisherCanister.refreshEditorsWritersHandles();
+                switch(result) {
+                    case(#ok(value)) {
+                        successfulPublishers.add(cai);
+                    };
+                    case(#err(error)) {
+                        failedPublishers.add(cai);
+                    };
+                };
+            }
+            catch(e){
+                failedPublishers.add(cai);
+            };
+        };
+
+        #ok(Buffer.toArray(successfulPublishers), Buffer.toArray(failedPublishers))
+    };
+
     //upgrade publication canisters
     //holds wasm for upgrade
     private stable var wasmChunks : Blob = Blob.fromArray([]);

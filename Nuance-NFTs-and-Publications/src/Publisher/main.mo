@@ -34,7 +34,7 @@ import Hex "../ext_v2/motoko/util/Hex";
 import Nat8 "mo:base/Nat8";
 import Float "mo:base/Float";
 import Prim "mo:prim";
-import CanisterDeclarations "../shared/CanisterDeclarations";
+import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../../../src/shared/env";
 
@@ -1017,9 +1017,6 @@ actor class Publisher() = this {
             }
         };
         writersHandlesHashmap.put(canisterId, updatedWriterHandles.toArray())
-
-
-
     };
 
     public shared ({ caller }) func updatePublicationHandle(newHandle : Text) : async Result.Result<User, Text> {
@@ -1473,7 +1470,8 @@ actor class Publisher() = this {
                             claps = keyProperties.claps;
                             content = postBucketType.content;
                             created = postBucketType.created;
-                            creator = postBucketType.creator;
+                            creatorHandle = postBucketType.creatorHandle;
+                            creatorPrincipal = postBucketType.creatorPrincipal;
                             handle = postBucketType.handle;
                             headerImage = postBucketType.headerImage;
                             isDraft = postBucketType.isDraft;
@@ -1540,7 +1538,8 @@ actor class Publisher() = this {
                             claps = keyProperties.claps;
                             content = postBucketType.content;
                             created = postBucketType.created;
-                            creator = postBucketType.creator;
+                            creatorHandle = postBucketType.creatorHandle;
+                            creatorPrincipal = postBucketType.creatorPrincipal;
                             handle = postBucketType.handle;
                             headerImage = postBucketType.headerImage;
                             isDraft = postBucketType.isDraft;
@@ -1600,7 +1599,8 @@ actor class Publisher() = this {
                             claps = keyProperties.claps;
                             content = postBucketType.content;
                             created = postBucketType.created;
-                            creator = postBucketType.creator;
+                            creatorHandle = postBucketType.creatorHandle;
+                            creatorPrincipal = postBucketType.creatorPrincipal;
                             handle = postBucketType.handle;
                             headerImage = postBucketType.headerImage;
                             isDraft = postBucketType.isDraft;
@@ -1628,59 +1628,31 @@ actor class Publisher() = this {
             };
         };
     };
-    //we can remove this method because it was a migration function
-    public shared ({ caller }) func migrateEditorsWritersHandles() : async Result.Result<Publication, Text> {
 
-        if (isAnonymous(caller)) {
-            return #err("Cannot use this method anonymously.");
-        };
-
-        let canisterId = Principal.toText(idInternal());
-
-        if (not isEditor(caller, canisterId) and not isAdmin(caller)) {
+    //migration function to resolve the changed handles issue
+    public shared ({caller}) func refreshEditorsWritersHandles() : async Result.Result<(), Text> {
+        if(not isAdmin(caller) and not isPlatformOperator(caller)){
             return #err(Unauthorized);
         };
-
-        if (not isThereEnoughMemoryPrivate()) {
-            return #err("Canister reached the maximum memory threshold. Please try again later.");
-        };
-
-        var editorsPrincipalIdsList : List<Text> = List.fromArray<Text>(U.safeGet(editorsHashMap, canisterId, []));
-        var writersPrincipalIdsList : List<Text> = List.fromArray<Text>(U.safeGet(writersHashMap, canisterId, []));
-
-        var editorsHandlesList : List<Text> = List.nil<Text>();
-        var writersHandlesList : List<Text> = List.nil<Text>();
-
+        let canisterId = Principal.toText(idInternal());
+        let editorsPrincipalIds = U.safeGet(editorsHashMap, canisterId, []);
+        let writersPrincipalIds = U.safeGet(writersHashMap, canisterId, []);
         let UserCanister = CanisterDeclarations.getUserCanister();
-        for (editorPrincipalId in Iter.fromList(editorsPrincipalIdsList)) {
-            var editorHandle = await UserCanister.getHandleByPrincipal(editorPrincipalId);
-            switch (editorHandle) {
-                case (#ok(?handle)) {
-                    editorsHandlesList := List.push<Text>(handle, editorsHandlesList);
-                };
-                case (#ok(null)) { Debug.print(UserNotFound) };
-                case (#err(err)) { Debug.print(err) };
-            };
+        let editorsUserListItems = await UserCanister.getUsersByPrincipals(editorsPrincipalIds);
+        let writersUserListItems = await UserCanister.getUsersByPrincipals(writersPrincipalIds);
 
+        let editorsHandles = Buffer.Buffer<Text>(0);
+        let writersHandles = Buffer.Buffer<Text>(0);
+        for(editorListItem in editorsUserListItems.vals()){
+            editorsHandles.add(editorListItem.handle);
         };
-
-        for (writerPrincipalId in Iter.fromList(writersPrincipalIdsList)) {
-            var writerHandle = await UserCanister.getHandleByPrincipal(writerPrincipalId);
-            switch (writerHandle) {
-                case (#ok(?handle)) {
-                    writersHandlesList := List.push<Text>(handle, writersHandlesList);
-                };
-                case (#ok(null)) { Debug.print(UserNotFound) };
-                case (#err(err)) { Debug.print(err) };
-            };
-
+        for(writerListItem in writersUserListItems.vals()){
+            writersHandles.add(writerListItem.handle);
         };
-
-        editorsHandlesHashmap.put(canisterId, List.toArray(editorsHandlesList));
-        writersHandlesHashmap.put(canisterId, List.toArray(writersHandlesList));
-
-        #ok(getPublicationInternal(canisterId));
-    };
+        editorsHandlesHashmap.put(canisterId, Buffer.toArray(editorsHandles));
+        writersHandlesHashmap.put(canisterId, Buffer.toArray(writersHandles));
+        #ok()
+    };    
     
 
     //#end Publisher function region

@@ -7,25 +7,24 @@ import { useNavigate } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
 import { useTheme } from '../../contextes/ThemeContext';
 import Button from '../../UI/Button/Button';
+import { UserListItem } from 'src/nuance_assets/types/types';
 
 const Followers = () => {
   // This component is a child of profileSidebar
 
   usePostStore((state) => state);
   const darkTheme = useTheme();
-  const [page, setPage] = useState(0)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const [page, setPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [myFollowers, setMyFollowers] = useState<UserListItem[]>([]);
 
-  const { user, getAuthor, author, getMyFollowers, myFollowers } = useUserStore(
-    (state) => ({
-      user: state.user,
-      getAuthor: state.getAuthor,
-      author: state.author,
-      getUsersByHandles: state.getUsersByHandlesReturnOnly,
-      getMyFollowers: state.getMyFollowers,
-      myFollowers: state.myFollowers,
-    })
-  );
+  const { user, getAuthor, author, getMyFollowers } = useUserStore((state) => ({
+    user: state.user,
+    getAuthor: state.getAuthor,
+    author: state.author,
+    getUsersByHandles: state.getUsersByHandlesReturnOnly,
+    getMyFollowers: state.getMyFollowers,
+  }));
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
@@ -49,22 +48,9 @@ const Followers = () => {
   };
 
   const getFollowers = async () => {
-    if (!myFollowers) {
-      await getMyFollowers(0, 20);
-    }
-
+    let followers = await getMyFollowers(0, 20);
+    setMyFollowers(followers);
   };
-
-  const handleClickMore = async () => {
-    setLoadingMore(true)
-    await getMyFollowers((page + 1) * 20, (page + 2) * 20)
-    setPage(page + 1)
-    setLoadingMore(false);
-  }
-
-  useEffect(() => {
-    getFollowers();
-  }, []);
 
   useEffect(() => {
     getFollowers();
@@ -138,18 +124,6 @@ const Followers = () => {
                 </div>
               );
             })}
-            {user && user?.followersCount > myFollowers.length && (
-              <div className='load-more-container'>
-                <Button
-                  styleType='secondary'
-                  style={{ width: '152px' }}
-                  onClick={handleClickMore}
-                  icon={loadingMore ? images.loaders.BUTTON_SPINNER : ''}
-                >
-                  <span>Load More</span>
-                </Button>
-              </div>
-            )}
           </div>
         )}
       </div>

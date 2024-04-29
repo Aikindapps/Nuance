@@ -17,7 +17,6 @@ export interface GetPostsByFollowers {
   'posts' : Array<PostKeyProperties__1>,
 }
 export type List = [] | [[string, List]];
-export interface NftCanisterEntry { 'handle' : string, 'canisterId' : string }
 export type PopularityType = { 'month' : null } |
   { 'today' : null } |
   { 'ever' : null } |
@@ -27,7 +26,6 @@ export interface Post {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'views' : string,
@@ -38,8 +36,10 @@ export interface Post {
   'tags' : Array<PostTagModel>,
   'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -78,7 +78,6 @@ export type PostModerationStatusV2 = { 'new' : null } |
   { 'rejected' : null };
 export interface PostSaveModel {
   'title' : string,
-  'creator' : string,
   'content' : string,
   'premium' : [] | [
     { 'thumbnail' : string, 'icpPrice' : bigint, 'maxSupply' : bigint }
@@ -87,6 +86,7 @@ export interface PostSaveModel {
   'tagIds' : Array<string>,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -227,7 +227,6 @@ export interface _SERVICE {
   >,
   'getMyTags' : ActorMethod<[], Array<PostTagModel__1>>,
   'getNextPostId' : ActorMethod<[], Result_2>,
-  'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPopular' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularThisMonth' : ActorMethod<[number, number], GetPostsByFollowers>,
@@ -257,6 +256,7 @@ export interface _SERVICE {
     [number, number, string],
     Array<PostKeyProperties>
   >,
+  'getTagFollowers' : ActorMethod<[string], Result_8>,
   'getTagsByUser' : ActorMethod<[string], Array<PostTag>>,
   'getTotalAmountOfTipsReceived' : ActorMethod<[], bigint>,
   'getTotalArticleViews' : ActorMethod<[], bigint>,
@@ -287,14 +287,12 @@ export interface _SERVICE {
     undefined
   >,
   'migrateAllPublicationEditorsAndWriters' : ActorMethod<[], Result_6>,
-  'migrateAllSubmittedForReview' : ActorMethod<[], Result_3>,
   'migrateModclubInterface' : ActorMethod<[], Result_2>,
   'migratePremiumArticleFromOldArch' : ActorMethod<[], Result_5>,
   'modClubCallback' : ActorMethod<[ContentResult], undefined>,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCanister' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,
-  'registerNftCanisterId' : ActorMethod<[string, string], Result_2>,
   'registerPlatformOperator' : ActorMethod<[string], Result_1>,
   'registerPublisher' : ActorMethod<[], undefined>,
   'reindex' : ActorMethod<[], Result_2>,
@@ -308,7 +306,6 @@ export interface _SERVICE {
   'simulateModClub' : ActorMethod<[string, PostModerationStatusV2], undefined>,
   'sortPopularPosts' : ActorMethod<[PopularityType], undefined>,
   'storeAllSEO' : ActorMethod<[], Result_1>,
-  'tagMigrationBugFix' : ActorMethod<[string, string, bigint], Result_1>,
   'testInstructionSize' : ActorMethod<[], string>,
   'unfollowTag' : ActorMethod<[string], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result_1>,

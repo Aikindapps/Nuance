@@ -66,7 +66,7 @@ export const EditArticlePremiumModal = (props: {
         salePrice,
         buildSvgForPremiumArticle(
           { ...props.post, headerImage: headerImageUsedInNft },
-          props.post.creator || user?.handle || ''
+          props.post.creatorHandle || user?.handle || ''
         )
       );
       await props.refreshPost();
@@ -175,7 +175,7 @@ export const EditArticlePremiumModal = (props: {
       {user && headerImageUsedInNft && (
         <PremiumArticleThumbnail
           post={{ ...props.post, headerImage: headerImageUsedInNft }}
-          handle={props.post.creator || user.handle}
+          handle={props.post.creatorHandle || user.handle}
         />
       )}
       <div className='selection-input-wrapper'>

@@ -81,4 +81,5 @@ service : {
   getCanisterVersion: () -> (text) query;
   getPlatformOperators: () -> (List) query;
   setExtCanisterConfigData: (text, InitNftCanisterData) -> (Result);
+  stop_canister: (text) -> (Result);
 }

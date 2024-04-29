@@ -16,6 +16,7 @@ export interface DailyMetricsData {
   'timeMillis' : bigint,
 }
 export type Followers = [] | [[string, List]];
+export type FollowersPrincipals = [] | [[string, List]];
 export interface GetMetricsParameters {
   'dateToMillis' : bigint,
   'granularity' : MetricsGranularity,
@@ -43,7 +44,6 @@ export interface Post {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'views' : string,
@@ -54,8 +54,10 @@ export interface Post {
   'tags' : Array<PostTagModel>,
   'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -186,13 +188,16 @@ export interface SocialLinksObject__1 {
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
   'bio' : string,
+  'socialChannels' : Array<string>,
   'followersArray' : Array<string>,
   'displayName' : string,
   'followersCount' : number,
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'website' : string,
   'handle' : string,
+  'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
 }

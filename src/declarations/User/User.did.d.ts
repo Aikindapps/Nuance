@@ -24,6 +24,7 @@ export interface Date {
   'year' : bigint,
 }
 export type Followers = [] | [[string, List]];
+export type FollowersPrincipals = [] | [[string, List]];
 export type GetHandleByPrincipalReturn = { 'ok' : [] | [string] } |
   { 'err' : string };
 export interface GetMetricsParameters {
@@ -43,7 +44,6 @@ export interface HourlyMetricsData {
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
-export interface NftCanisterEntry { 'handle' : string, 'canisterId' : string }
 export type NuaBalanceResult = { 'ok' : string } |
   { 'err' : string };
 export interface NumericEntity {
@@ -71,13 +71,17 @@ export type Result_1 = { 'ok' : null } |
   { 'err' : string };
 export type Result_2 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_3 = { 'ok' : string } |
+export type Result_3 = { 'ok' : [bigint, bigint] } |
   { 'err' : string };
-export type Result_4 = { 'ok' : Array<string> } |
+export type Result_4 = { 'ok' : UserListItem } |
   { 'err' : string };
-export type Result_5 = { 'ok' : Array<UserListItem> } |
+export type Result_5 = { 'ok' : Array<string> } |
   { 'err' : string };
-export type Result_6 = { 'ok' : Array<User> } |
+export type Result_6 = { 'ok' : Array<UserListItem> } |
+  { 'err' : string };
+export type Result_7 = { 'ok' : Array<User> } |
+  { 'err' : string };
+export type Result_8 = { 'ok' : string } |
   { 'err' : string };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
@@ -91,6 +95,7 @@ export interface User {
   'publicationsArray' : Array<PublicationObject>,
   'website' : string,
   'handle' : string,
+  'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
 }
@@ -116,6 +121,7 @@ export interface User__1 {
   'publicationsArray' : Array<PublicationObject>,
   'website' : string,
   'handle' : string,
+  'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
 }
@@ -128,7 +134,7 @@ export interface _SERVICE {
     [PublicationObject__1, string],
     AddPublicationReturn
   >,
-  'adminAirDrop' : ActorMethod<[number], Result_3>,
+  'adminAirDrop' : ActorMethod<[number], Result_8>,
   'availableCycles' : ActorMethod<[], bigint>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
@@ -138,14 +144,14 @@ export interface _SERVICE {
   'generateAccountIds' : ActorMethod<[], undefined>,
   'generateLowercaseHandles' : ActorMethod<[], [string, Array<string>]>,
   'getActiveUsersByRange' : ActorMethod<[Date], bigint>,
-  'getAdmins' : ActorMethod<[], Result_4>,
+  'getAdmins' : ActorMethod<[], Result_5>,
   'getAllHandles' : ActorMethod<[], Array<string>>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_4>,
+  'getCgUsers' : ActorMethod<[], Result_5>,
   'getDailyMaxRegistration' : ActorMethod<[], bigint>,
   'getFollowersCount' : ActorMethod<[string], string>,
   'getHandleByPrincipal' : ActorMethod<[string], GetHandleByPrincipalReturn>,
@@ -156,30 +162,32 @@ export interface _SERVICE {
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_6>,
-  'getMyFollowers' : ActorMethod<[number, number], Result_5>,
-  'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
+  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_7>,
+  'getMyFollowers' : ActorMethod<[], Result_6>,
   'getNuaBalance' : ActorMethod<[string], NuaBalanceResult>,
   'getNumberOfAllRegisteredUsers' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPrincipalByHandle' : ActorMethod<[string], GetPrincipalByHandleReturn>,
   'getPrincipalsByHandles' : ActorMethod<[Array<string>], Array<string>>,
   'getRegistrationNumberLastDay' : ActorMethod<[], bigint>,
-  'getTrustedCanisters' : ActorMethod<[], Result_4>,
+  'getTrustedCanisters' : ActorMethod<[], Result_5>,
   'getUser' : ActorMethod<[], Result>,
   'getUserByHandle' : ActorMethod<[string], Result>,
   'getUserByPrincipalId' : ActorMethod<[string], Result>,
-  'getUserFollowers' : ActorMethod<[string], Array<string>>,
+  'getUserFollowers' : ActorMethod<[string], Array<UserListItem>>,
   'getUserInternal' : ActorMethod<[string], [] | [User]>,
+  'getUserListItemByHandle' : ActorMethod<[string], Result_4>,
   'getUsersByHandles' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'handleClap' : ActorMethod<[string, string], undefined>,
-  'initFollowers' : ActorMethod<[bigint, bigint], string>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
+  'migrateFollowersHashmapsFromHandlesToPrincipalIds' : ActorMethod<
+    [],
+    Result_3
+  >,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCanister' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,
-  'registerNftCanisterId' : ActorMethod<[string], Result_3>,
   'registerPlatformOperator' : ActorMethod<[string], Result_1>,
   'registerUser' : ActorMethod<[string, string, string], RegisterUserReturn>,
   'removePublication' : ActorMethod<
@@ -187,7 +195,6 @@ export interface _SERVICE {
     RemovePublicationReturn
   >,
   'setDailyMaxRegistration' : ActorMethod<[bigint], Result_2>,
-  'setFollowersCount' : ActorMethod<[], GetHandleByPrincipalReturn>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_2>,
   'spendNuaBalance' : ActorMethod<[string], undefined>,
   'testInstructionSize' : ActorMethod<[], string>,

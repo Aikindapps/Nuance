@@ -10,6 +10,7 @@ module {
     
     public type UserId = Principal;
     public type Followers = List.List<Text>;
+    public type FollowersPrincipals = List.List<Text>;
     public type RegisterUserReturn = Result.Result<User, Text>;
     public type AddPublicationReturn = Result.Result<User, Text>;
     public type RemovePublicationReturn = Result.Result<User, Text>;
@@ -22,6 +23,7 @@ module {
         bio: Text;
         accountCreated: Text;
         followers: Followers;
+        followersPrincipals: FollowersPrincipals;
         followersArray: [Text];
         publicationsArray: [PublicationObject];
         website: Text;
