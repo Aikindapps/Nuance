@@ -168,10 +168,12 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 This article is locked.
               </div>
               <div className='buy-nft-modal-article-info-title'>
-                {`There are ${props.post.premiumArticleSaleInfo.totalSupply -
+                {`There are ${
+                  props.post.premiumArticleSaleInfo.totalSupply -
                   props.post.premiumArticleSaleInfo.currentSupply
-                  } of ${props.post.premiumArticleSaleInfo.totalSupply
-                  } NFT keys available.`}
+                } of ${
+                  props.post.premiumArticleSaleInfo.totalSupply
+                } NFT keys available.`}
               </div>
               <div className='buy-nft-modal-article-info-centered'>
                 This article can only be read when you own an NFT key. Use your
@@ -243,7 +245,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               <div className='buy-nft-modal-article-info'>
                 by @
                 <span className='buy-nft-modal-article-info-bold'>
-                  {props.post?.creator}
+                  {props.post?.creatorHandle}
                 </span>
               </div>
               <div className='buy-nft-modal-cost-wrapper'>
@@ -296,19 +298,19 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 style={
                   userAccepted
                     ? {
-                      width: '120px',
-                    }
+                        width: '120px',
+                      }
                     : {
-                      width: '120px',
-                      background: '#B2B2B2',
-                      cursor: 'not-allowed',
-                    }
+                        width: '120px',
+                        background: '#B2B2B2',
+                        cursor: 'not-allowed',
+                      }
                 }
                 onClick={() => {
                   if (
                     userBalance >
-                    (props.post?.premiumArticleSaleInfo
-                      ?.price_e8s as number) &&
+                      (props.post?.premiumArticleSaleInfo
+                        ?.price_e8s as number) &&
                     !marketplacePurchaseLoading
                   ) {
                     handleMarketplacePurchase();
@@ -371,8 +373,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               style={
                 darkTheme
                   ? {
-                    borderColor: colors.darkerBorderColor,
-                  }
+                      borderColor: colors.darkerBorderColor,
+                    }
                   : {}
               }
               className='address-value-wrapper'
@@ -382,8 +384,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 style={
                   darkTheme
                     ? {
-                      color: colors.darkModePrimaryTextColor,
-                    }
+                        color: colors.darkModePrimaryTextColor,
+                      }
                     : {}
                 }
               />
@@ -392,8 +394,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                 style={
                   darkTheme
                     ? {
-                      color: colors.darkSecondaryTextColor,
-                    }
+                        color: colors.darkSecondaryTextColor,
+                      }
                     : {}
                 }
               >
@@ -455,7 +457,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               >
                 by @
                 <span className='buy-nft-modal-article-info-bold'>
-                  {props.post?.creator}
+                  {props.post?.creatorHandle}
                 </span>
               </div>
             </div>
@@ -515,7 +517,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
                   onClick={() => {
                     window.open(
                       'https://toniq.io/marketplace/nuance-' +
-                      props.post?.postId,
+                        props.post?.postId,
                       '_blank'
                     );
                   }}

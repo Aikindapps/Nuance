@@ -180,6 +180,8 @@ const CreateEditArticle = () => {
       bucketCanisterId: '',
       wordCount: '',
       isPublication: false,
+      creatorHandle: '',
+      creatorPrincipal: '',
     };
     return post;
   };
@@ -495,7 +497,7 @@ const CreateEditArticle = () => {
 
           let savePublicationResult = await savePublicationPost({
             title: savingPost.title,
-            creator: savingPost.creator || user?.handle || '',
+            creatorHandle: savingPost.creatorHandle || user?.handle || '',
             content: contentWithUrls || postHtml,
             premium: premium ? [premium] : [],
             isDraft: isDraft,
@@ -541,7 +543,7 @@ const CreateEditArticle = () => {
           //just a regular post edit -> call savePost
           let saveResult = await savePost({
             title: savingPost.title,
-            creator: savingPost.creator || '',
+            creatorHandle: savingPost.creatorHandle || '',
             content: contentWithUrls || postHtml,
             premium: premium ? [premium] : [],
             isDraft: isDraft,
@@ -571,7 +573,7 @@ const CreateEditArticle = () => {
         //create a publication post
         let savePublicationResult = await savePublicationPost({
           title: savingPost.title,
-          creator: user?.handle || '',
+          creatorHandle: user?.handle || '',
           content: contentWithUrls || postHtml,
           premium: premium ? [premium] : [],
           isDraft: isDraft,
@@ -600,7 +602,7 @@ const CreateEditArticle = () => {
         //just a regular post edit -> call savePost
         let saveResult = await savePost({
           title: savingPost.title,
-          creator: '',
+          creatorHandle: '',
           content: contentWithUrls || postHtml,
           premium: premium ? [premium] : [],
           isDraft: isDraft,

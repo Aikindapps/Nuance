@@ -12,6 +12,7 @@ type User__1 =
    followers: Followers;
    followersArray: vec text;
    followersCount: nat32;
+   followersPrincipals: FollowersPrincipals;
    handle: text;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
@@ -39,6 +40,7 @@ type User =
    followers: Followers;
    followersArray: vec text;
    followersCount: nat32;
+   followersPrincipals: FollowersPrincipals;
    handle: text;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
@@ -46,25 +48,38 @@ type User =
    website: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
-type Result_6 = 
+type Result_8 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_7 = 
  variant {
    err: text;
    ok: vec User;
  };
-type Result_5 = 
+type Result_6 = 
  variant {
    err: text;
    ok: vec UserListItem;
  };
-type Result_4 = 
+type Result_5 = 
  variant {
    err: text;
    ok: vec text;
  };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: UserListItem;
+ };
 type Result_3 = 
  variant {
    err: text;
-   ok: text;
+   ok: record {
+         nat;
+         nat;
+       };
  };
 type Result_2 = 
  variant {
@@ -114,11 +129,6 @@ type NuaBalanceResult =
    err: text;
    ok: text;
  };
-type NftCanisterEntry = 
- record {
-   canisterId: text;
-   handle: text;
- };
 type MetricsGranularity = 
  variant {
    daily;
@@ -153,6 +163,11 @@ type GetHandleByPrincipalReturn =
    err: text;
    ok: opt text;
  };
+type FollowersPrincipals = 
+ opt record {
+       text;
+       List;
+     };
 type Followers = 
  opt record {
        text;
@@ -191,7 +206,7 @@ service : {
   acceptCycles: () -> ();
   addNuaBalance: (text) -> () oneway;
   addPublication: (PublicationObject__1, text) -> (AddPublicationReturn);
-  adminAirDrop: (float64) -> (Result_3);
+  adminAirDrop: (float64) -> (Result_8);
   availableCycles: () -> (nat) query;
   clearAllMyFollowers: () -> (text);
   collectCanisterMetrics: () -> ();
@@ -201,11 +216,11 @@ service : {
   generateAccountIds: () -> ();
   generateLowercaseHandles: () -> (text, vec text);
   getActiveUsersByRange: (Date) -> (nat) query;
-  getAdmins: () -> (Result_4) query;
+  getAdmins: () -> (Result_5) query;
   getAllHandles: () -> (vec text) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
-  getCgUsers: () -> (Result_4) query;
+  getCgUsers: () -> (Result_5) query;
   getDailyMaxRegistration: () -> (nat) query;
   getFollowersCount: (text) -> (text) query;
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
@@ -213,36 +228,34 @@ service : {
   getHandlesByPrincipals: (vec text) -> (vec text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getMultipleUsersByPrincipalId: (vec text) -> (Result_6) query;
-  getMyFollowers: (nat32, nat32) -> (Result_5) query;
-  getNftCanisters: () -> (vec NftCanisterEntry) query;
+  getMultipleUsersByPrincipalId: (vec text) -> (Result_7) query;
+  getMyFollowers: () -> (Result_6) query;
   getNuaBalance: (text) -> (NuaBalanceResult) query;
   getNumberOfAllRegisteredUsers: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
   getPrincipalByHandle: (text) -> (GetPrincipalByHandleReturn) query;
   getPrincipalsByHandles: (vec text) -> (vec text) query;
   getRegistrationNumberLastDay: () -> (nat) query;
-  getTrustedCanisters: () -> (Result_4) query;
+  getTrustedCanisters: () -> (Result_5) query;
   getUser: () -> (Result) query;
   getUserByHandle: (text) -> (Result) query;
   getUserByPrincipalId: (text) -> (Result) query;
-  getUserFollowers: (text) -> (vec text);
+  getUserFollowers: (text) -> (vec UserListItem) query;
   getUserInternal: (text) -> (opt User) query;
+  getUserListItemByHandle: (text) -> (Result_4) query;
   getUsersByHandles: (vec text) -> (vec UserListItem) query;
   handleClap: (text, text) -> () oneway;
-  initFollowers: (nat, nat) -> (text);
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
+  migrateFollowersHashmapsFromHandlesToPrincipalIds: () -> (Result_3);
   registerAdmin: (text) -> (Result_1);
   registerCanister: (text) -> (Result_1);
   registerCgUser: (text) -> (Result_1);
-  registerNftCanisterId: (text) -> (Result_3);
   registerPlatformOperator: (text) -> (Result_1);
   registerUser: (text, text, text) -> (RegisterUserReturn);
   removePublication: (PublicationObject__1, text) ->
    (RemovePublicationReturn);
   setDailyMaxRegistration: (nat) -> (Result_2);
-  setFollowersCount: () -> (GetHandleByPrincipalReturn);
   setMaxMemorySize: (nat) -> (Result_2);
   spendNuaBalance: (text) -> () oneway;
   testInstructionSize: () -> (text);

@@ -45,9 +45,9 @@ const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
                 {post.isPublication ? (
                   <Link
                     style={{ color: darkOptionsAndColors.color }}
-                    to={`/user/${post.creator}`}
+                    to={`/user/${post.creatorHandle}`}
                   >
-                    @{post.creator}
+                    @{post.creatorHandle}
                   </Link>
                 ) : (
                   <Link

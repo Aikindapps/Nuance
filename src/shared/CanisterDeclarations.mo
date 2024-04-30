@@ -14,6 +14,7 @@ module{
         bio: Text;
         accountCreated: Text;
         followers: Followers;
+        followersPrincipals: FollowersPrincipals;
         followersArray: [Text];
         publicationsArray: [PublicationObject];
         website: Text;
@@ -28,6 +29,7 @@ module{
     };
 
     public type Followers = List.List<Text>;
+    public type FollowersPrincipals = List.List<Text>;
 
     public type NuaBalanceResult = Result.Result<Text,Text>;
 
@@ -51,6 +53,8 @@ module{
 
     public type UserCanisterInterface = actor{
         getUserInternal : (userPrincipalId: Text) -> async ?User;
+        getUserByHandle : query (handle : Text) -> async Result.Result<User, Text>;
+        getUserListItemByHandle : query (handle : Text) -> async Result.Result<UserListItem, Text>;
         getNuaBalance : (principalId: Text) -> async NuaBalanceResult;
         handleClap : (postCaller: Text, handle : Text) -> ();
         getUserByPrincipalId : (userPrincipalId : Text) -> async Result.Result<User, Text>;
@@ -65,8 +69,10 @@ module{
         updateBio : (bio : Text) -> async Result.Result<User, Text>;
         updateFontType : (fontType : Text) -> async Result.Result<User, Text>;
         getHandleByPrincipal : (principal : Text) -> async GetHandleByPrincipalReturn;
-        registerNftCanisterId : (canisterId : Text) -> async Result.Result<Text, Text>;
         updateHandle : (existingHandle : Text, newHandle : Text, postCanisterId : Text, publicationWritersEditorsPrincipals : ?[Text]) -> async Result.Result<User, Text>;
+        registerCanister : (id : Text) -> async Result.Result<(), Text>;
+        getTrustedCanisters : () -> async Result.Result<[Text], Text>;
+        getUsersByPrincipals : query (principals : [Text]) -> async [UserListItem]
     };
 
     public func getUserCanister() : UserCanisterInterface {
@@ -85,7 +91,7 @@ module{
         content: Text;
         isDraft: Bool;
         tagIds: [Text];
-        creator: Text; //publication author
+        creatorHandle: Text; //publication author
         isPublication: Bool;
         category: Text;
         premium : ?{
@@ -117,7 +123,8 @@ module{
         tags: [PostTagModel];
 
         //publisher fields
-        creator: Text;
+        creatorHandle: Text;
+        creatorPrincipal: Text;
         isPublication: Bool;
         category: Text;
 
@@ -159,7 +166,6 @@ module{
             indexTo : Nat32,
         ) -> async [PostKeyProperties];
         getPostKeyProperties : (postId : Text) -> async Result.Result<PostKeyProperties, Text>;
-        registerNftCanisterId : (canisterId : Text, handle : Text) -> async Result.Result<Text, Text>;
         addCanisterToCyclesDispenser : (canisterId : Text, minimumThreshold : Nat, topUpAmount : Nat) -> async Result.Result<(), Text>;
         updatePostDraft : (postId : Text, isDraft : Bool, time : Int, writerPrincipalId : Text) -> async PostKeyProperties;
         makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) -> async ();
@@ -170,7 +176,12 @@ module{
         isEditorPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
         getBucketCanisters : query () -> async [(Text, Text)];
         getUserPostIds : query (userHandle : Text) -> async Result.Result<[Text], Text>;
-        getTagFollowers : query (tagId : Text) -> async Result.Result<[Text], Text>
+        getTagFollowers : query (tagId : Text) -> async Result.Result<[Text], Text>;
+        updatePublicationEditorsAndWriters : (publicationHandle: Text, editorPrincipalIds: [Text], writerPrincipalIds: [Text]) -> async Result.Result<(), Text>;
+        updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
+        registerCanister : (id : Text) -> async Result.Result<(), Text>;
+        getTrustedCanisters : () -> async Result.Result<[Text], Text>;
+
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {
@@ -316,7 +327,8 @@ module{
         modified : Text; //determined at save
 
         //publisher fields
-        creator : Text;
+        creatorPrincipal : Text;
+        creatorHandle: Text;
         isPublication : Bool;
         category : Text;
         wordCount : Text;
@@ -375,7 +387,7 @@ module{
         headerImage : Text;
         content : Text;
         isDraft : Bool;
-        creator : Text; //publication author
+        creatorHandle : Text; //publication author
         isPublication : Bool;
         category : Text;
         premium : ?{
@@ -399,7 +411,6 @@ module{
         updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<PostBucketType, Text>;
         makePostPremium : (postId : Text) -> async Bool;
         getMetadata : (postId : Text, totalSupply : Nat) -> async Result.Result<Metadata, Text>;
-        getAllSubmittedForReviews : () -> async Result.Result<[(Text, [Text])], Text>;
         getAllApplauds : query () ->  async [Applaud];
         makeBucketCanisterNonActive : () -> async Result.Result<Bool, Text>;
         registerCanister : (id : Text) -> async Result.Result<(), Text>;
@@ -407,7 +418,6 @@ module{
         isBucketCanisterActivePublic : query () -> async Bool;
         rejectPostByModclub : (postId : Text) -> async ();
         unRejectPostByModclub : (postId : Text) -> async ();
-        registerNftCanisterId : (canisterId : Text, handle : Text) -> async Result.Result<Text, Text>;
         reindex : () -> async Result.Result<Text, Text>;
         save : (postModel : PostSaveModelBucket) -> async SaveResultBucket;
         getPostUrls : query () -> async Result.Result<Text, Text>;
@@ -426,6 +436,7 @@ module{
     //##########################___PUBLICATION_CANISTER___############################
     public type PublicationCanisterInterface = actor {
         getEditorAndWriterPrincipalIds : query () -> async ([Text], [Text]);
+        refreshEditorsWritersHandles : () -> async Result.Result<(), Text>
     };
 
     public func getPublicationCanister(canisterId: Text) : PublicationCanisterInterface {

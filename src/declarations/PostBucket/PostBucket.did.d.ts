@@ -56,7 +56,6 @@ export interface Post {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'views' : string,
@@ -66,8 +65,10 @@ export interface Post {
   'claps' : string,
   'tags' : Array<PostTagModel>,
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -90,12 +91,10 @@ export interface PostBucket {
   'dumpIds' : ActorMethod<[], Result_3>,
   'dumpPosts' : ActorMethod<[], Result_3>,
   'dumpUserIds' : ActorMethod<[], Result_3>,
-  'generateContent' : ActorMethod<[string], string>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
   'getAdmins' : ActorMethod<[], Result_8>,
   'getAllApplauds' : ActorMethod<[], Array<Applaud>>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
-  'getAllSubmittedForReviews' : ActorMethod<[], Result_11>,
   'getApplaudById' : ActorMethod<[string], Result_10>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
   'getCanisterVersion' : ActorMethod<[], string>,
@@ -163,7 +162,6 @@ export interface PostBucket {
   'save' : ActorMethod<[PostSaveModel], SaveResult>,
   'saveComment' : ActorMethod<[SaveCommentModel], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_4>,
-  'storeAllSEO' : ActorMethod<[], Result_3>,
   'storeHandlesAndPrincipals' : ActorMethod<
     [Array<[string, string]>],
     Result_2
@@ -184,7 +182,6 @@ export interface PostBucketType {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'wordCount' : string,
@@ -192,8 +189,10 @@ export interface PostBucketType {
   'publishedDate' : string,
   'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -204,7 +203,6 @@ export interface PostBucketType__1 {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'wordCount' : string,
@@ -212,8 +210,10 @@ export interface PostBucketType__1 {
   'publishedDate' : string,
   'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -222,7 +222,6 @@ export interface PostBucketType__1 {
 export interface PostSaveModel {
   'tagNames' : Array<string>,
   'title' : string,
-  'creator' : string,
   'content' : string,
   'premium' : [] | [
     {
@@ -237,6 +236,7 @@ export interface PostSaveModel {
   'category' : string,
   'caller' : Principal,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
   'subtitle' : string,
   'isPublication' : boolean,
@@ -248,8 +248,6 @@ export type Result = { 'ok' : CommentsReturnType } |
 export type Result_1 = { 'ok' : Post } |
   { 'err' : string };
 export type Result_10 = { 'ok' : Applaud } |
-  { 'err' : string };
-export type Result_11 = { 'ok' : Array<[string, Array<string>]> } |
   { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };

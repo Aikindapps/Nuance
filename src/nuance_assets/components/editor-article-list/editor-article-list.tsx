@@ -55,7 +55,6 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
       ? colors.darkSecondaryTextColor
       : colors.primaryTextColor,
   };
-  console.log(displayingPosts, articlesCount);
   return (
     <div className='editor-article-list-wrapper'>
       <div className='titles'>

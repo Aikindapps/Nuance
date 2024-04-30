@@ -55,14 +55,6 @@ type Result_2 =
    err: text;
    ok: text;
  };
-type Result_11 = 
- variant {
-   err: text;
-   ok: vec record {
-             text;
-             vec text;
-           };
- };
 type Result_10 = 
  variant {
    err: text;
@@ -88,7 +80,7 @@ type PostSaveModel =
    caller: principal;
    category: text;
    content: text;
-   creator: text;
+   creatorHandle: text;
    handle: text;
    headerImage: text;
    isDraft: bool;
@@ -113,7 +105,8 @@ type PostBucketType__1 =
    category: text;
    content: text;
    created: text;
-   creator: text;
+   creatorHandle: text;
+   creatorPrincipal: text;
    handle: text;
    headerImage: text;
    isDraft: bool;
@@ -134,7 +127,8 @@ type PostBucketType =
    category: text;
    content: text;
    created: text;
-   creator: text;
+   creatorHandle: text;
+   creatorPrincipal: text;
    handle: text;
    headerImage: text;
    isDraft: bool;
@@ -164,7 +158,6 @@ type PostBucket =
    dumpIds: () -> (Result_3);
    dumpPosts: () -> (Result_3);
    dumpUserIds: () -> (Result_3);
-   generateContent: (text) -> (text);
    generatePublishedDates: () -> ();
    getAdmins: () -> (Result_8) query;
    getAllApplauds: () -> (vec Applaud) query;
@@ -172,7 +165,6 @@ type PostBucket =
                                 text;
                                 text;
                               }) query;
-   getAllSubmittedForReviews: () -> (Result_11);
    getApplaudById: (text) -> (Result_10) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
@@ -224,7 +216,6 @@ type PostBucket =
    save: (PostSaveModel) -> (SaveResult);
    saveComment: (SaveCommentModel) -> (Result);
    setMaxMemorySize: (nat) -> (Result_4);
-   storeAllSEO: () -> (Result_3);
    storeHandlesAndPrincipals: (vec record {
                                      text;
                                      text;
@@ -247,7 +238,8 @@ type Post =
    claps: text;
    content: text;
    created: text;
-   creator: text;
+   creatorHandle: text;
+   creatorPrincipal: text;
    handle: text;
    headerImage: text;
    isDraft: bool;

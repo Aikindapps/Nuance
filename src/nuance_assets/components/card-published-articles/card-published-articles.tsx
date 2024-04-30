@@ -53,11 +53,11 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
               style={dark ? { color: '#999' } : {}}
               to={
                 post.isPublication
-                  ? '/user/' + post.creator
+                  ? '/user/' + post.creatorHandle
                   : '/user/' + post.handle
               }
             >
-              @{post.isPublication ? post.creator : post.handle}
+              @{post.isPublication ? post.creatorHandle : post.handle}
             </Link>
           </div>
           <div className='card-published-articles-actions-right'>

@@ -570,9 +570,11 @@ const createPublisherStore:
   ): Promise<void> => {
     try {
       const canisterId = await get().getCanisterIdByHandle(publicationHandle);
+      console.log('before getting the result')
       const result = await (
         await getPublisherActor(canisterId)
       ).updatePublicationPostDraft(postId, isDraft);
+      console.log('result: ', result)
       if (Err in result) {
         set({ savePublicationPostError: result.err });
         toastError(result.err);
@@ -581,6 +583,7 @@ const createPublisherStore:
       }
     } catch (err: any) {
       handleError(err, Unexpected);
+      console.log('updatePublicationPostDraft error')
     }
   },
 
@@ -588,11 +591,7 @@ const createPublisherStore:
     post: PostSaveModel
   ): Promise<PostType | undefined> => {
     try {
-      const creator = await useUserStore
-        .getState()
-        .getPrincipalByHandle(post.creator);
       const postCoreCanister = await getPostCoreActor();
-      console.log('savePublicationPost: ', post);
       const result = await postCoreCanister.save({
         postId: post.postId,
         title: post.title,
@@ -601,7 +600,7 @@ const createPublisherStore:
         content: post.content,
         isDraft: post.isDraft,
         tagIds: post.tagIds,
-        creator: creator || '',
+        creatorHandle: post.creatorHandle,
         isPublication: post.isPublication,
         category: post.category,
         premium: post.premium,

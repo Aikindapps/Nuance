@@ -132,6 +132,7 @@ export interface _SERVICE {
   'newArticle' : ActorMethod<[NotificationContent], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
+  'testnewnotifications2' : ActorMethod<[], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
   'updateUserNotificationSettings' : ActorMethod<
     [UserNotificationSettings],

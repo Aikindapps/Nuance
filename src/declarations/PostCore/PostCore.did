@@ -124,7 +124,7 @@ type PostSaveModel =
  record {
    category: text;
    content: text;
-   creator: text;
+   creatorHandle: text;
    handle: text;
    headerImage: text;
    isDraft: bool;
@@ -182,7 +182,8 @@ type Post =
    claps: text;
    content: text;
    created: text;
-   creator: text;
+   creatorHandle: text;
+   creatorPrincipal: text;
    handle: text;
    headerImage: text;
    isDraft: bool;
@@ -205,11 +206,6 @@ type PopularityType =
    month;
    today;
    week;
- };
-type NftCanisterEntry = 
- record {
-   canisterId: text;
-   handle: text;
  };
 type List = 
  opt record {
@@ -305,7 +301,6 @@ service : {
    (vec PostKeyProperties) query;
   getMyTags: () -> (vec PostTagModel__1) query;
   getNextPostId: () -> (Result_2);
-  getNftCanisters: () -> (vec NftCanisterEntry) query;
   getPlatformOperators: () -> (List) query;
   getPopular: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularThisMonth: (nat32, nat32) -> (GetPostsByFollowers) query;
@@ -331,6 +326,7 @@ service : {
                                         text;
                                       }) query;
   getPublicationPosts: (nat32, nat32, text) -> (vec PostKeyProperties) query;
+  getTagFollowers: (text) -> (Result_8);
   getTagsByUser: (text) -> (vec PostTag) query;
   getTotalAmountOfTipsReceived: () -> (nat) composite_query;
   getTotalArticleViews: () -> (nat) query;
@@ -355,14 +351,12 @@ service : {
   isWriterPublic: (text, principal) -> (bool) query;
   makePostPublication: (text, text, text, bool) -> ();
   migrateAllPublicationEditorsAndWriters: () -> (Result_6);
-  migrateAllSubmittedForReview: () -> (Result_3);
   migrateModclubInterface: () -> (Result_2);
   migratePremiumArticleFromOldArch: () -> (Result_5);
   modClubCallback: (ContentResult) -> () oneway;
   registerAdmin: (text) -> (Result_1);
   registerCanister: (text) -> (Result_1);
   registerCgUser: (text) -> (Result_1);
-  registerNftCanisterId: (text, text) -> (Result_2);
   registerPlatformOperator: (text) -> (Result_1);
   registerPublisher: () -> ();
   reindex: () -> (Result_2);
@@ -376,7 +370,6 @@ service : {
   simulateModClub: (text, PostModerationStatusV2) -> ();
   sortPopularPosts: (PopularityType) -> ();
   storeAllSEO: () -> (Result_1);
-  tagMigrationBugFix: (text, text, nat) -> (Result_1);
   testInstructionSize: () -> (text);
   unfollowTag: (text) -> (Result_1);
   unregisterAdmin: (text) -> (Result_1);

@@ -158,11 +158,11 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         </p>
       </Link>
       <Link
-        to={'/user/' + post.creator || post.handle}
+        to={'/user/' + post.creatorHandle || post.handle}
         className='field-writer field-general'
         style={darkOptionsAndColors}
       >
-        @{post.creator || post.handle}
+        @{post.creatorHandle || post.handle}
       </Link>
       <div className='field-category field-general'>
         <Dropdown
@@ -273,10 +273,6 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
                           icpPrice: bigint,
                           thumbnail: string
                         ) => {
-                          let creatorHandle = post.creator as string;
-                          let creatorPrincipal = await getPrincipalByHandle(
-                            creatorHandle
-                          );
                           await savePost({
                             ...post,
                             premium: [
@@ -287,7 +283,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
                               },
                             ],
                             tagIds: post.tags.map((val) => val.tagId),
-                            creator: creatorPrincipal as string,
+                            creatorHandle: post.creatorHandle,
                             isPublication: true,
                             isDraft: false,
                           });

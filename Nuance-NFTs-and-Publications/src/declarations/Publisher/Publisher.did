@@ -7,9 +7,12 @@ type User =
    followers: Followers;
    followersArray: vec text;
    followersCount: nat32;
+   followersPrincipals: FollowersPrincipals;
    handle: text;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
+   socialChannels: vec text;
+   website: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
 type SocialLinksObject__1 = 
@@ -155,7 +158,8 @@ type Post =
    claps: text;
    content: text;
    created: text;
-   creator: text;
+   creatorHandle: text;
+   creatorPrincipal: text;
    handle: text;
    headerImage: text;
    isDraft: bool;
@@ -204,6 +208,11 @@ type GetMetricsParameters =
    dateToMillis: nat;
    granularity: MetricsGranularity;
  };
+type FollowersPrincipals = 
+ opt record {
+       text;
+       List;
+     };
 type Followers = 
  opt record {
        text;

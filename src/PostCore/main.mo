@@ -125,8 +125,6 @@ actor PostCore {
   stable var popularitySortedArrayThisWeek : [(Text, Nat)] = [];
   stable var popularitySortedArrayThisMonth : [(Text, Nat)] = [];
 
-  //nft canister registration
-  stable var nftCanisterIdsEntries : [(Text, Text)] = [];
   //publication canisters entries
   stable var publicationCanisterIdsEntries : [(Text, Text)] = [];
 
@@ -172,9 +170,6 @@ actor PostCore {
   var popularityTodayHashMap = HashMap.fromIter<Text, Nat>(popularityToday.vals(), initCapacity, Text.equal, Text.hash);
   var popularityThisWeekHashMap = HashMap.fromIter<Text, Nat>(popularityThisWeek.vals(), initCapacity, Text.equal, Text.hash);
   var popularityThisMonthHashMap = HashMap.fromIter<Text, Nat>(popularityThisMonth.vals(), initCapacity, Text.equal, Text.hash);
-
-  //key: pub-handle, value: nft canister id
-  var nftCanisterIdsHashmap = HashMap.fromIter<Text, Text>(nftCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
 
   //key: pub-handle, value: publication canister id
   var publicationCanisterIdsHashmap = HashMap.fromIter<Text, Text>(publicationCanisterIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
@@ -317,7 +312,7 @@ actor PostCore {
         Debug.print("update settings error");
       };
 
-      switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), Iter.toArray(nftCanisterIdsHashmap.entries()), Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
+      switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), [], Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
         case (#ok(cai)) {
           activeBucketCanisterId := canisterId;
           bucketCanisterIdsHashMap.put(canisterId, Nat.toText(postId + 1));
@@ -694,16 +689,6 @@ actor PostCore {
         lowercaseHandleReverseHashMap.delete(U.lowerCase(existingHandle));
         lowercaseHandleReverseHashMap.put(U.lowerCase(newHandle), principalId);
 
-        //check if there's any nft canister id linked to existing handle
-        //if there's, update the handle
-        switch (nftCanisterIdsHashmap.get(existingHandle)) {
-          case (?nftCanisterId) {
-            nftCanisterIdsHashmap.put(newHandle, nftCanisterId);
-            nftCanisterIdsHashmap.delete(existingHandle);
-          };
-          case (null) {};
-        };
-
         //if it's a publication, update the publicationCanisterIdsHashmap
         switch (publicationCanisterIdsHashmap.get(existingHandle)) {
           case (?publicationCanisterId) {
@@ -990,32 +975,6 @@ actor PostCore {
     };
   };
 
-  //add all the submitted for review to work with new design
-  public shared ({caller}) func migrateAllSubmittedForReview() : async Result.Result<Nat, Text>{
-    if(not isPlatformOperator(caller)){
-      return #err(Unauthorized);
-    };
-    var counter = 0;
-    for(bucketCanisterId in bucketCanisterIdsHashMap.keys()){
-      let bucketCanister = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
-      let allSubmittedForReviews = await bucketCanister.getAllSubmittedForReviews();
-      switch(allSubmittedForReviews) {
-        case(#ok(submittedForReviews)) {
-          for((principalId, postIds) in submittedForReviews.vals()){
-            //for each principal id, map the post Id with the user 
-            for(postId in postIds.vals()){
-              counter += 1;
-              addPostIdToUser(principalId, postId);
-            };
-          };
-        };
-        case(#err(err)) {
-          return #err(err)
-        };
-      };
-    };
-    #ok(counter)
-  };
 
   //it will be called just once by platform operators
   //calling more than one doesn't harm
@@ -1071,7 +1030,7 @@ actor PostCore {
     if (not U.isTextLengthValid(postModel.content, 300000)) {
       return #err("Your content is unusually large, please contact support to post");
     };
-    if (not U.isTextLengthValid(postModel.creator, 64)) {
+    if (not U.isTextLengthValid(postModel.creatorHandle, 64)) {
       return #err("Invalid creator");
     };
     if (not U.isTextLengthValid(postModel.headerImage, 1000)) {
@@ -1123,6 +1082,8 @@ actor PostCore {
     };
 
     //authorization for publication posts
+    var creatorHandle = postModel.creatorHandle;
+    var creatorPrincipal = U.safeGet(handleReverseHashMap, creatorHandle, "");
     if(isPublication){
       let publicationCanisterId = U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
       if(isNew and postModel.isDraft){
@@ -1138,10 +1099,25 @@ actor PostCore {
           return #err(Unauthorized)
         }
       };
-
       //check if the given creator is a writer or editor in the publication (caller is authorized but is creator still a writer or editor?)
-      //here only if a publication post
-      if(isNew and not(isEditor(publicationCanisterId, Principal.fromText(postModel.creator)) or isWriter(publicationCanisterId, Principal.fromText(postModel.creator)))){
+      if (creatorPrincipal == "") {
+        let UserCanister = CanisterDeclarations.getUserCanister();
+        var user = await UserCanister.getUserListItemByHandle(U.lowerCase(creatorHandle));
+        switch (user) {
+          case (#err(err)) {
+            return #err("Cross canister user not found");
+          };
+          case (#ok(value)) {
+            creatorHandle := value.handle;
+            creatorPrincipal := value.principal;
+            handleHashMap.put(value.principal, value.handle);
+            handleReverseHashMap.put(value.handle, value.principal);
+            lowercaseHandleHashMap.put(value.principal, U.lowerCase(value.handle));
+            lowercaseHandleReverseHashMap.put(U.lowerCase(value.handle), value.principal);
+          };
+        };
+      };
+      if(isNew and not(isEditor(publicationCanisterId, Principal.fromText(creatorPrincipal)) or isWriter(publicationCanisterId, Principal.fromText(creatorPrincipal)))){
         //post is new but the creator is not an editor or writer anymore
         return #err("Creator is not a writer or editor of the publication!");
       };
@@ -1149,7 +1125,7 @@ actor PostCore {
 
     //if not isNew and isPublication, check if the old creator value and the new creator value matches
     if((not isNew) and isPublication){
-      let creatorPostIds = U.safeGet(userPostsHashMap, postModel.creator, List.nil<Text>());
+      let creatorPostIds = U.safeGet(userPostsHashMap, creatorPrincipal, List.nil<Text>());
       if(not U.arrayContains(List.toArray(creatorPostIds), postModel.postId)){
         return #err("The writer value doesn't match!")
       };
@@ -1259,24 +1235,7 @@ actor PostCore {
         };
       };
     };
-    //check if the given creator is valid - only for publication posts
-    var creatorHandle = U.safeGet(handleHashMap, postModel.creator, "");
-    if (creatorHandle == "" and isPublication) {
-      let UserCanister = CanisterDeclarations.getUserCanister();
-      var user = await UserCanister.getUserInternal(postModel.creator);
-      switch (user) {
-        case (null) {
-          return #err("Cross canister user not found");
-        };
-        case (?value) {
-          creatorHandle := value.handle;
-          handleHashMap.put(postModel.creator, value.handle);
-          handleReverseHashMap.put(value.handle, postModel.creator);
-          lowercaseHandleHashMap.put(postModel.creator, U.lowerCase(value.handle));
-          lowercaseHandleReverseHashMap.put(U.lowerCase(value.handle), postModel.creator);
-        };
-      };
-    };
+
     Debug.print("PostCore-> calling the bucket actor save method.");
     //build the premium data passing to bucketActor
     let premiumData = switch(postModel.premium) {
@@ -1299,7 +1258,7 @@ actor PostCore {
       postOwnerPrincipalId = postOwnerPrincipalId;
       category = postModel.category;
       content = postModel.content;
-      creator = postModel.creator;
+      creatorHandle = postModel.creatorHandle;
       headerImage = postModel.headerImage;
       isDraft = postModel.isDraft;
       premium = premiumData;
@@ -1320,8 +1279,8 @@ actor PostCore {
         addPostIdToUser(postOwnerPrincipalId, postBucketReturn.postId);
 
         // if it's a publication post add this postId to the writer's posts if not already added
-        if (postBucketReturn.isPublication and postModel.creator != "") {
-          addPostIdToUser(postModel.creator, postBucketReturn.postId);
+        if (postBucketReturn.isPublication and creatorPrincipal != "") {
+          addPostIdToUser(creatorPrincipal, postBucketReturn.postId);
         };
 
         //if a premium post, store the nft canister id
@@ -1373,7 +1332,8 @@ actor PostCore {
           claps = keyProperties.claps;
           content = postBucketReturn.content;
           created = postBucketReturn.created;
-          creator = postBucketReturn.creator;
+          creatorHandle = postBucketReturn.creatorHandle;
+          creatorPrincipal = postBucketReturn.creatorPrincipal;
           handle = postBucketReturn.handle;
           headerImage = postBucketReturn.headerImage;
           isDraft = postBucketReturn.isDraft;
@@ -1513,6 +1473,20 @@ actor PostCore {
 
       return #Err("Cannot use this method anonymously.");
     };
+  };
+
+  public shared ({caller}) func addPostIdToUserDebug(principalId: Text, postId: Text) : async Result.Result<(), Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized)
+    };
+    #ok(addPostIdToUser(principalId, postId))
+  };
+
+  public shared ({caller}) func removePostIdToUserDebug(principalId: Text, postId: Text) : async Result.Result<(), Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized)
+    };
+    #ok(removePostIdFromUser(principalId, postId))
   };
 
   private func addPostIdToUser(principalId: Text, postId: Text) : () {
@@ -2364,20 +2338,6 @@ actor PostCore {
     };
   };
 
-  private func copyNftCanisters(canisterId : Text) : async () {
-
-    let canister = actor (canisterId) : actor {
-      getNftCanisters : () -> async [NftCanisterEntry];
-    };
-
-    let nftCanisters = await canister.getNftCanisters();
-
-    for (entry in nftCanisters.vals()) {
-      ignore await registerNftCanisterId(entry.canisterId, entry.handle);
-    };
-
-  };
-
 
   public shared ({ caller }) func handleModclubMigration(postCanisterId : Text) : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
@@ -2805,39 +2765,6 @@ actor PostCore {
     return userDailyAllowedPostNumber > getUserPostsCountLastDay(principalId);
   };
 
-  //#Nft canister registration
-  //call registerNftCanisterId method from each bucket canister and update the local state
-  public shared ({ caller }) func registerNftCanisterId(canisterId : Text, handle : Text) : async Result.Result<Text, Text> {
-
-    if (isAnonymous(caller)) {
-      return #err("Cannot use this method anonymously.");
-    };
-
-    if (not isThereEnoughMemoryPrivate()) {
-      return #err("Canister reached the maximum memory threshold. Please try again later.");
-    };
-
-    if (not isNuanceCanister(caller) and not isAdmin(caller) and not Principal.equal(Principal.fromActor(PostCore), caller)) {
-      return #err(Unauthorized);
-    };
-    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
-      //register nft canister to bucket canister
-      ignore await bucketActor.registerNftCanisterId(canisterId, handle);
-    };
-    nftCanisterIdsHashmap.put(handle, canisterId);
-    return #ok(handle # " " # canisterId);
-  };
-
-  public shared query func getNftCanisters() : async [NftCanisterEntry] {
-    var existingCanistersList = List.nil<NftCanisterEntry>();
-
-    for (handle in nftCanisterIdsHashmap.keys()) {
-      let canister_id = U.safeGet(nftCanisterIdsHashmap, handle, "");
-      existingCanistersList := List.push<NftCanisterEntry>({ canisterId = canister_id; handle = handle }, existingCanistersList);
-    };
-    List.toArray(existingCanistersList);
-  };
 
   public shared query func getPublicationCanisters() : async [(Text, Text)] {
     Iter.toArray(publicationCanisterIdsHashmap.entries());
@@ -4238,7 +4165,6 @@ public shared ({caller}) func getTagFollowers(tagName : Text) : async Result.Res
     popularityThisWeek := Iter.toArray(popularityThisWeekHashMap.entries());
     popularityThisMonth := Iter.toArray(popularityThisMonthHashMap.entries());
 
-    nftCanisterIdsEntries := Iter.toArray(nftCanisterIdsHashmap.entries());
     publicationCanisterIdsEntries := Iter.toArray(publicationCanisterIdsHashmap.entries());
 
     publicationEditorsEntries := Iter.toArray(publicationEditorsHashmap.entries());
@@ -4284,7 +4210,6 @@ public shared ({caller}) func getTagFollowers(tagName : Text) : async Result.Res
     popularityThisMonth := [];
     isStoreSEOcalled := false;
 
-    nftCanisterIdsEntries := [];
     publicationCanisterIdsEntries := [];
 
     publicationEditorsEntries := [];

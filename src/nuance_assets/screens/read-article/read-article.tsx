@@ -262,8 +262,8 @@ const ReadArticle = () => {
   useEffect(() => {
     if (post) {
       setLoading(false);
-      if (post.creator) {
-        handleWriterFields(post.creator);
+      if (post.creatorHandle) {
+        handleWriterFields(post.creatorHandle);
       }
       if (
         post.isPublication &&
@@ -520,12 +520,12 @@ const ReadArticle = () => {
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
                   to={`/user/${
-                    post.isPublication ? post.creator : author.handle
+                    post.isPublication ? post.creatorHandle : author.handle
                   }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
-                  @{post.isPublication ? post.creator : author.handle}
+                  @{post.isPublication ? post.creatorHandle : author.handle}
                 </Link>
               </div>
             )}
@@ -719,12 +719,12 @@ const ReadArticle = () => {
                   />
                   <Link
                     to={`/user/${
-                      post.isPublication ? post.creator : author.handle
+                      post.isPublication ? post.creatorHandle : author.handle
                     }`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
-                    @{post.isPublication ? post.creator : author.handle}
+                    @{post.isPublication ? post.creatorHandle : author.handle}
                   </Link>
                   <div className='social-channels'>
                     {getSocialChannelUrls().map((url, index) => {

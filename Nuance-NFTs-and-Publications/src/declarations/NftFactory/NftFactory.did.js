@@ -63,6 +63,7 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         [],
       ),
+    'stop_canister' : IDL.Func([IDL.Text], [Result], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

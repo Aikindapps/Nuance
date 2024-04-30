@@ -74,8 +74,8 @@ type GetPopularReturnType = { posts: PostType[]; totalCount: number };
 // fetch and merge author avatars into a list of posts
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   var authorHandles = posts.map((p) => {
-    if (p.creator) {
-      return p.creator.toLowerCase();
+    if (p.creatorHandle) {
+      return p.creatorHandle.toLowerCase();
     } else {
       return p.handle.toLowerCase();
     }
@@ -92,7 +92,7 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   return posts.map((p) => {
     const author = authors.find((a) => {
       if (p.isPublication) {
-        return a.handle.toLowerCase() === p.creator?.toLowerCase();
+        return a.handle.toLowerCase() === p.creatorHandle.toLowerCase();
       } else {
         return a.handle.toLowerCase() === p.handle.toLowerCase();
       }
@@ -910,7 +910,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           let bucketResult = bucketReturn.ok;
           if (
             user?.handle === bucketResult.handle ||
-            user?.handle === bucketResult.creator ||
+            user?.handle === bucketResult.creatorHandle ||
             isUserEditor(bucketResult.handle, user)
           ) {
             let savedPost = {
@@ -948,6 +948,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       }
     } catch (err) {
       handleError(err, Unexpected);
+      handleError("getSavedPostReturnOnly", Unexpected);
     }
     return;
   },
@@ -1841,7 +1842,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             postId: article.postId,
             title: article.title,
             url: article.url,
-            writer: article.creator || article.handle,
+            writer: article.creatorHandle || article.handle,
             tokenIndex: Number(
               allOwnedPremiumArticlesTransactions[index].currentSupply
             ).toString(),
@@ -1981,7 +1982,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           ...item,
           title: posts[index].title,
           url: posts[index].url,
-          writer: posts[index].creator || posts[index].handle,
+          writer: posts[index].creatorHandle || posts[index].handle,
         };
       });
       return result;
@@ -2123,7 +2124,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             postId: applaud.postId,
             url: post.url,
             handle: post.isPublication
-              ? post.creator || post.handle
+              ? post.creatorHandle || post.handle
               : post.handle,
             tokenAmount: Number(applaud.tokenAmount),
             applaudId: applaud.applaudId,

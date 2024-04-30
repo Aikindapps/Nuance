@@ -26,7 +26,6 @@ const ProfileSidebar = () => {
   const [shown, setShown] = useState(screenWidth > 1089);
   const ToggleMenu = () => {
     if (screenWidth < 1089) {
-
       setShown(!shown);
       shown && setShown(!shown);
     }
@@ -39,9 +38,8 @@ const ProfileSidebar = () => {
     }
   };
 
-
   //NFT feature toggle
-  const context = useContext(Context)
+  const context = useContext(Context);
   const nftFeatureIsLive = context.nftFeature;
   const location = useLocation();
   const darkTheme = useTheme();
@@ -56,10 +54,7 @@ const ProfileSidebar = () => {
       clearAuthor: state.clearAuthor,
     }));
 
-  const {
-    getMyTags,
-    myTags
-  } = usePostStore((state) => ({
+  const { getMyTags, myTags } = usePostStore((state) => ({
     getMyTags: state.getMyTags,
     myTags: state.myTags,
   }));
@@ -109,7 +104,6 @@ const ProfileSidebar = () => {
       : icons.THREE_DOTS,
   };
 
-
   return (
     <div
       className='profile-wrapper'
@@ -127,19 +121,19 @@ const ProfileSidebar = () => {
         isUserAdminScreen={true}
       />
       <div className='container'>
-
         <div
           style={
             location.pathname.includes('publications') &&
-              screenWidth > 451 &&
-              screenWidth < 1089 &&
-              shown
+            screenWidth > 451 &&
+            screenWidth < 1089 &&
+            shown
               ? {}
               : (location.pathname.includes('published') ||
-                location.pathname.includes('draft')) &&
+                  location.pathname.includes('draft')) &&
                 screenWidth < 1089 &&
                 shown
-                ? {} : {}
+              ? {}
+              : {}
           }
           className={`sidebar ${!shown ? 'not-toggled' : ''}`}
         >
@@ -155,7 +149,6 @@ const ProfileSidebar = () => {
                 }
                 alt='sidebar-button'
               />
-
             )}
             {
               <div
@@ -165,15 +158,14 @@ const ProfileSidebar = () => {
                   shown && !location.pathname.includes('publications')
                     ? { width: 200 }
                     : shown
-                      ? { width: 200 }
-                      : { width: 0 }
+                    ? { width: 200 }
+                    : { width: 0 }
                 }
-
               >
-
-                <div style={shown || screenWidth > 1089 ? {} : { display: 'none' }}>
+                <div
+                  style={shown || screenWidth > 1089 ? {} : { display: 'none' }}
+                >
                   <div className='sidebar-dropdown'>
-
                     <Link
                       style={{
                         color:
@@ -181,8 +173,9 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${location.pathname === '/my-profile' && 'active'
-                        }`}
+                      className={`route ${
+                        location.pathname === '/my-profile' && 'active'
+                      }`}
                       to='/my-profile'
                     >
                       My Profile
@@ -194,20 +187,19 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${location.pathname === '/my-profile/articles' && 'active'
-                        }`}
+                      className={`route ${
+                        location.pathname === '/my-profile/articles' && 'active'
+                      }`}
                       to='/my-profile/articles'
                     >
                       My Articles ({counts?.totalPostCount || 0})
                     </Link>
 
-
                     <Activity
                       dark={darkTheme}
                       followedTopicsCount={myTags?.length || 0}
-                      followingCount={user?.followers.length || 0}
+                      followingCount={user?.followersArray.length || 0}
                       followersCount={user?.followersCount || 0}
-
                     />
 
                     {userPublications.length !== 0 ? (
@@ -224,8 +216,9 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${location.pathname === '/my-profile/wallet' && 'active'
-                        }`}
+                      className={`route ${
+                        location.pathname === '/my-profile/wallet' && 'active'
+                      }`}
                       to='/my-profile/wallet'
                     >
                       My Wallet

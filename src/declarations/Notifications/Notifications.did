@@ -161,6 +161,7 @@ service : {
   newArticle: (NotificationContent) -> (Result);
   registerCgUser: (text) -> (Result);
   setMaxMemorySize: (nat) -> (Result_1);
+  testnewnotifications2: () -> (Result);
   unregisterCgUser: (text) -> (Result);
   updateUserNotificationSettings: (UserNotificationSettings) -> (Result);
 }

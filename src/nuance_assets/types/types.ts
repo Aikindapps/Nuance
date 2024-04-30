@@ -101,7 +101,8 @@ export type PostType = {
   // populated for post lists after calling
   // getUsersByHandles in User canister
   avatar?: string;
-  creator?: string;
+  creatorHandle: string;
+  creatorPrincipal: string;
   isPublication?: boolean;
   displayName?: string;
   fontType?: string;

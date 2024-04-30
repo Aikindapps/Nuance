@@ -93,7 +93,7 @@ import {
   idlFactory as metricsFactory,
 } from '../../declarations/Metrics';
 
-import {_SERVICE as NotificationsService} from '../../declarations/Notifications/Notifications.did';
+import { _SERVICE as NotificationsService } from '../../declarations/Notifications/Notifications.did';
 import {
   canisterId as notificationsCanisterId,
   createActor as createNotificationsActor,
@@ -129,7 +129,7 @@ export type {
   Notifications,
   NotificationContent,
   NotificationType,
-  UserNotificationSettings
+  UserNotificationSettings,
 } from '../../declarations/Notifications/Notifications.did';
 
 const isLocal: boolean =
@@ -358,9 +358,6 @@ export async function getNotificationsActor(): Promise<
   });
 }
 
-
-
-
 export async function getIcrc1Actor(
   canisterId: string
 ): Promise<ActorSubclass<ICRC1Service>> {
@@ -455,24 +452,16 @@ export async function getAllCanisterIds(): Promise<string[]> {
     'ryjl3-tyaaa-aaaaa-aaaba-cai',
   ];
   let postActor = await getPostCoreActor();
-  let [trustedCanistersPost, nftCanisters, bucketCanisters] = await Promise.all(
-    [
-      postActor.getTrustedCanisters(),
-      postActor.getNftCanisters(),
-      postActor.getBucketCanisters(),
-    ]
-  );
+  let [trustedCanistersPost, bucketCanisters] = await Promise.all([
+    postActor.getTrustedCanisters(),
+    postActor.getBucketCanisters(),
+  ]);
   if ('err' in trustedCanistersPost) {
     return canisterIds;
   } else {
     trustedCanistersPost.ok.forEach((canisterId) => {
       if (!canisterIds.includes(canisterId)) {
         canisterIds.push(canisterId);
-      }
-    });
-    nftCanisters.forEach((nftCanisterEntry) => {
-      if (!canisterIds.includes(nftCanisterEntry.canisterId)) {
-        canisterIds.push(nftCanisterEntry.canisterId);
       }
     });
     bucketCanisters.forEach((bucketCanisterEntry) => {
