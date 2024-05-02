@@ -3,7 +3,7 @@
 # remove --insecure-local-dev from all commands for mainnet, also be sure to remove ic_url
 
 # uncomment to run on mainnet
-NETWORK="--network ic"
+NETWORK=""
 
 # uncomment to run on local
 #NETWORK="--insecure-local-dev"
@@ -16,9 +16,9 @@ vote_ids="f2088bbe57e45bf1b40e4ad8fd0c31c3fb8deac021fb10810ca1bbc2ecbfd343, d9ab
 IFS=',' read -r -a vote_ids_array <<< "$vote_ids"
 
 # If the network is not 'ic' then set the IC_URL
-if [[ $NETWORK != "--network ic" ]]; then
-    export IC_URL="http://localhost:8080/"
-fi
+# if [[ $NETWORK != "--network ic" ]]; then
+#     export IC_URL="http://localhost:8080/"
+# fi
 
 # the type you want to follow
 type="all" # [possible values: all, motion, manage-nervous-system-parameters, upgrade-sns-controlled-canister, add-generic-nervous-system-function, remove-generic-nervous-system-function, upgrade-sns-to-next-version, manage-sns-metadata, transfer-sns-treasury-funds, register-dapp-canisters, deregister-dapp-canisters]
