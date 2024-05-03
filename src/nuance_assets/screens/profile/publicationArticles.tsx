@@ -216,11 +216,11 @@ const PublicationArticles = () => {
       if (sortedByPublishedDate) {
         setSortedByPublishedDate(false);
         setSortedByLastModifiedDate(false);
-        return parseInt(post_1.created) - parseInt(post_2.created);
+        return parseInt(post_2.created) - parseInt(post_1.created);
       }
       setSortedByPublishedDate(true);
       setSortedByLastModifiedDate(false);
-      return parseInt(post_2.created) - parseInt(post_1.created);
+      return parseInt(post_1.created) - parseInt(post_2.created);
     });
     if (sorted.length && getPublicationHandleFromUrl() === sorted[0].handle) {
       setDisplayingPosts([...sorted]);
@@ -232,11 +232,11 @@ const PublicationArticles = () => {
       if (sortedByLastModifiedDate) {
         setSortedByPublishedDate(false);
         setSortedByLastModifiedDate(false);
-        return parseInt(post_1.modified) - parseInt(post_2.modified);
+        return parseInt(post_2.modified) - parseInt(post_1.modified);
       }
       setSortedByPublishedDate(false);
       setSortedByLastModifiedDate(true);
-      return parseInt(post_2.modified) - parseInt(post_1.modified);
+      return parseInt(post_1.modified) - parseInt(post_2.modified);
     });
     if (sorted.length && getPublicationHandleFromUrl() === sorted[0].handle) {
       setDisplayingPosts([...sorted]);
@@ -456,7 +456,6 @@ const PublicationArticles = () => {
     setDisplayingPostsLoading(true);
     setLoadingSearchResults(true);
     let response = await getSavedPostReturnOnly(postId, true);
-    console.log('refreshing post response: ', response);
     if (response) {
       let refreshedPost = response;
       setDisplayingPosts(
