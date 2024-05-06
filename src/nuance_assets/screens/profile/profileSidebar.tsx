@@ -66,6 +66,8 @@ const ProfileSidebar = () => {
       setUserPublications(
         user.publicationsArray.filter((publication) => publication.isEditor)
       );
+    } else {
+      navigate('/');
     }
   }, [user]);
 
