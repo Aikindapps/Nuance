@@ -65,8 +65,14 @@
         flex-wrap: wrap;
         gap: 10px;
         margin-top: 10px;
-        color: $border-tags2;
+        color: #303E84;
         margin-left: 44px;
+
+        &.dark {
+            color: $dark-primary-text-color;
+            border-bottom: none;
+            
+        }
 
         button {
             display: flex;
@@ -75,24 +81,40 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: $border-tags2;
+            color: #303E84;
             transition: color 0.3s;
             font-size: 12px;
 
+            &.dark {
+                color: $border-tags2;
+            }
+            &.voted{
+                background: rgba(27, 193, 240, 0.2);
+                border-radius: 100px;
+            }
+
+            &.active {
+                background: rgba(27, 193, 240, 0.2);
+                border-radius: 100px;
+            }
 
             &.edit {
                 color: $edit-comment-highlight;
             }
 
+            @media (hover: hover) {
             &:hover {
-                color: darken($border-tags2, 10%);
-                background: rgba(0, 0, 0, 0.08);
+                background: rgba(27, 193, 240, 0.2);
                 border-radius: 100px;
 
+                &.voted{
+                    background: #43DFBA33;
+                }
                 &.edit {
                     color: $edit-comment-highlight;
                 }
             }
+        }
 
             .icon {
                 width: 16px;
@@ -101,19 +123,48 @@
             }
 
             .comment-text {
+                color: #19192E;
+
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 18px;
             }
 
+            .comment-control-text{
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 18px;
+                color: #303E84;
+                border-bottom: none;
+
+                &.dark {
+                    color: $border-tags2;
+                }
+                &.edit {
+                    color: $edit-comment-highlight;
+                }
+
+            }
+
             @media (max-width: 1089px) {
-                padding: 0px;
+                padding: 2px;
 
                 .comment-text {
                     display: none; // Hide the text span
                 }
-
-
+                .comment-control-text {
+                    display: none; 
+                }
+               
+                  
+                    
+                      &.voted{
+                        border-radius: 2px;
+                      }
+                     &.active{
+                        border-radius: 2px;
+                        background: rgba(27, 193, 240, 0.2);
+                     }
             }
         }
     }

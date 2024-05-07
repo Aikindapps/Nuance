@@ -32,6 +32,7 @@ const Comments: React.FC<CommentProps> = ({
   let identity = useAuthStore(state => state.userWallet?.principal.toString()) || '';
   let censoredComment = <em> This comment was removed due to <a href="https://wiki.nuance.xyz/nuance/content-rules" target="_blank">content rules</a>. Please play nice. </em>;
   const [showReplyBox, setShowReplyBox] = useState(false);
+  const [replyActive, setReplyActive] = useState(false);
   const [replyToCommentId, setReplyToCommentId] = useState<string | undefined>();
   const [repliesVisible, setRepliesVisible] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -127,6 +128,8 @@ const Comments: React.FC<CommentProps> = ({
     }
     setReplyToCommentId(comment.commentId);
     setShowReplyBox(!showReplyBox);
+    setReplyActive(!replyActive);
+    console.log('replyActive' + replyActive);
   };
 
   const handleEdit = () => {
@@ -142,6 +145,7 @@ const Comments: React.FC<CommentProps> = ({
   const handleSaveReply = async () => {
 
     setShowReplyBox(false);
+    setReplyActive(false);
   };
 
   const handleShare = async () => {
@@ -244,7 +248,7 @@ const Comments: React.FC<CommentProps> = ({
           <>
             <p className='content'>{comment.isCensored ? censoredComment : comment.content}</p>
             {comment.creator !== 'TEMP' && (
-              <div className='actions'>
+              <div className={darkTheme ? 'actions dark' : 'actions'}>
                 {loggedInUser === comment.handle && (
                   <button
                     className='edit'
@@ -256,49 +260,49 @@ const Comments: React.FC<CommentProps> = ({
                       alt='Edit'
                       src={icons.EDIT_COMMENT}
                     />
-                    <span className='comment-text'>Edit</span>
+                    <span className={darkTheme ? 'comment-control-text dark edit' : "comment-control-text edit"}>Edit</span>
                   </button>
                 )}
                 <button
-                  className='thumbs-up'
+                  className={darkTheme ? `thumbs-up ${voting.upVoted && "voted"} dark` : `thumbs-up  ${voting.upVoted && "voted"}`}
                   onClick={() => handleVote('up')}
                   aria-label='Thumbs up'
                 >
                   <img
                     className='icon'
                     alt='Thumbs up'
-                    src={icons.THUMBS_UP}
+                    src={darkTheme ? icons.THUMBS_UP_DARK : icons.THUMBS_UP}
                   />
-                  <span className='comment-text'>Thumbs up</span>
+                  <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Thumbs up</span>
                   {upVotesCount > 0 && `(${upVotesCount})`}
                 </button>
                 <button
-                  className='thumbs-down'
+                  className={darkTheme ? `thumbs-down ${voting.downVoted && "voted"} dark` : `thumbs-down ${voting.downVoted && "voted"}`}
                   onClick={() => handleVote('down')}
                   aria-label='Thumbs down'
                 >
                   <img
                     className='icon'
                     alt='Thumbs down'
-                    src={icons.THUMBS_DOWN}
+                    src={darkTheme ? icons.THUMBS_DOWN_DARK : icons.THUMBS_DOWN}
                   />
-                  <span className='comment-text'>Thumbs down</span>
+                  <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Thumbs down</span>
                   {downVotesCount > 0 && `(${downVotesCount})`}
                 </button>
 
-                <button className='reply-btn' onClick={handleReplyClick}>
-                  <img className='icon' alt='reply' src={icons.REPLY} />
-                  <span className='comment-text'>Reply</span>
+                <button className={`reply-btn ${replyActive ? 'active' : ''}`} onClick={handleReplyClick}>
+                  <img className='icon' alt='reply' src={darkTheme ? icons.REPLY_DARK : icons.REPLY} />
+                  <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Reply</span>
                 </button>
                 <button className="share" onClick={handleShare}>
-                  <img className='icon' alt='share' src={icons.SHARE} />
-                  <span className='comment-text'>Share</span>
+                  <img className='icon' alt='share' src={darkTheme ? icons.SHARE_DARK : icons.SHARE} />
+                  <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Share</span>
                 </button>
 
                 {loggedInUser !== comment.handle &&
                   <button className='report' onClick={() => handleReport(comment.isCensored)}>
-                    <img className='icon' alt='report' src={icons.REPORT} />
-                    <span className='comment-text'>Report</span>
+                    <img className='icon' alt='report' src={darkTheme ? icons.REPORT_DARK : icons.REPORT} />
+                    <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Report</span>
                   </button>
                 }
 
