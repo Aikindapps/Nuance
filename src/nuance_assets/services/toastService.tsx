@@ -29,6 +29,46 @@ export const RenderToaster = () => {
   );
 };
 
+
+
+const BlockingToastContent = ({ closeToast }: { closeToast: () => void }) => (
+  <div style={{
+    backgroundColor: '#000000',
+    color: '#ffffff',
+    borderRadius: '8px',
+    padding: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+
+  }}>
+    <div>
+      <p style={{ color: '#ffffff' }}>We recommend disabling the "Experimental Third-Party Storage Partitioning" feature in Chrome if you want to use Stoic wallet to log in to Nuance.</p>
+      <p style={{ color: '#ffffff' }}>Please type <strong><code style={{ color: "gray" }}>chrome://flags/#third-party-storage-partitioning</code></strong> in your address bar to disable the setting.</p>
+      <p style={{ color: '#ffffff' }}>Need more info? Visit Stoic on <a href="https://twitter.com/StoicWalletApp/status/1706317772194517482?t=bmdQiD3lp5jmjdy2OuTqsA&s=19" target="_blank" style={{ color: '#007BFF' }}>X (Twitter)</a> for more details.</p>
+    </div>
+    <button onClick={closeToast} style={{ marginTop: '10px', padding: '10px 20px', border: 'none', borderRadius: '5px' }}>
+      Dismiss
+    </button>
+  </div>
+);
+
+export const showBlockingToast = (message: any, resolve: any) => {
+  _toast.custom((t) => (
+    <BlockingToastContent
+      closeToast={() => {
+        _toast.dismiss(t.id);
+        resolve();  // Resolving the promise when the toast is dismissed
+      }}
+    />
+  ), {
+    duration: Infinity, // Stay until dismissed
+    position: 'bottom-center',
+    style: { width: 'auto' }
+  });
+};
+
+
 const CustomNotificationContent = ({ message, toast }: { message: string, toast: Toast }) => {
 
   const darkTheme = useTheme();

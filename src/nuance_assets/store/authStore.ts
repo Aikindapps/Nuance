@@ -5,7 +5,7 @@ import { Principal } from '@dfinity/principal';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { Usergeek } from 'usergeek-ic-js';
 import { AnonymousIdentity, Identity } from '@dfinity/agent';
-import { toastError } from '../services/toastService';
+import { ToastType, toast, toastError, showBlockingToast } from '../services/toastService';
 import { useUserStore, usePostStore } from './';
 import { StoicIdentity } from 'ic-stoic-identity';
 import { PairInfo, UserWallet } from '../types/types';
@@ -57,6 +57,33 @@ var authClient: AuthClient;
 const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
 const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+
+declare global {
+  interface Navigator {
+      brave: {
+          isBrave: () => Promise<boolean>;
+      }
+  }
+}
+async function detectBrave() {
+  if (navigator.brave){
+  const isBrave = await navigator.brave.isBrave();
+  return isBrave;
+  } else {
+    return false;
+  }
+}
+
+async function isChrome() {
+  var userAgent = navigator.userAgent;
+  let isBrave = await detectBrave();
+
+  // Basic check for Chrome in userAgent
+  var isChromeUA = userAgent.includes('Chrome') && !userAgent.includes('Edg') && !isBrave;
+  var hasChromeFeatures = 'chrome' in window;
+  
+  return isChromeUA && hasChromeFeatures;
+}
 
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
@@ -216,7 +243,10 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               'Must enable all cookies for Stoic wallet to work with Brave browser'
             )
           : console.log('Not a brave browser');
+        
+        await isChrome() ? await new Promise((resolve) => showBlockingToast( '', resolve)) : console.log('Not a chrome browser');  
         window.location.href = '/register';
+
       } else {
         //user fetched successfully, get the token balances
         await get().fetchTokenBalances();
