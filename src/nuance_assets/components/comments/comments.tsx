@@ -271,7 +271,7 @@ const Comments: React.FC<CommentProps> = ({
                   <img
                     className='icon'
                     alt='Thumbs up'
-                    src={icons.THUMBS_UP}
+                    src={darkTheme ? icons.THUMBS_UP_DARK : icons.THUMBS_UP}
                   />
                   <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Thumbs up</span>
                   {upVotesCount > 0 && `(${upVotesCount})`}
@@ -284,24 +284,24 @@ const Comments: React.FC<CommentProps> = ({
                   <img
                     className='icon'
                     alt='Thumbs down'
-                    src={icons.THUMBS_DOWN}
+                    src={darkTheme ? icons.THUMBS_DOWN_DARK : icons.THUMBS_DOWN}
                   />
                   <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Thumbs down</span>
                   {downVotesCount > 0 && `(${downVotesCount})`}
                 </button>
 
                 <button className={`reply-btn ${replyActive ? 'active' : ''}`} onClick={handleReplyClick}>
-                  <img className='icon' alt='reply' src={icons.REPLY} />
+                  <img className='icon' alt='reply' src={darkTheme ? icons.REPLY_DARK : icons.REPLY} />
                   <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Reply</span>
                 </button>
                 <button className="share" onClick={handleShare}>
-                  <img className='icon' alt='share' src={icons.SHARE} />
+                  <img className='icon' alt='share' src={darkTheme ? icons.SHARE_DARK : icons.SHARE} />
                   <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Share</span>
                 </button>
 
                 {loggedInUser !== comment.handle &&
                   <button className='report' onClick={() => handleReport(comment.isCensored)}>
-                    <img className='icon' alt='report' src={icons.REPORT} />
+                    <img className='icon' alt='report' src={darkTheme ? icons.REPORT_DARK : icons.REPORT} />
                     <span className={darkTheme ? 'comment-control-text dark' : "comment-control-text"}>Report</span>
                   </button>
                 }
