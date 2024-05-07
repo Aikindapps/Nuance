@@ -148,8 +148,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-  const { verifyBitfinityWallet } = useAuthStore((state) => ({
+  const { verifyBitfinityWallet, updateLastLogin } = useAuthStore((state) => ({
     verifyBitfinityWallet: state.verifyBitfinityWallet,
+    updateLastLogin: state.updateLastLogin,
   }));
 
   const clearSearch = () => {
@@ -173,6 +174,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
 
   useEffect(() => {
     verifyBitfinityWallet();
+    updateLastLogin();
   }, []);
 
   const getLogoOrBreadCrumb = () => {
@@ -208,7 +210,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
             ) : null}
 
             {props.publication?.styling.logo.length &&
-              props.postTitle?.length ? (
+            props.postTitle?.length ? (
               <div className='breadcrumb-flex'>
                 <div className='breadcrumb-arrow-mobile' />
                 <div
@@ -260,13 +262,14 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
             ) : null}
 
             {props.publication?.styling.logo.length &&
-              props.category?.length &&
-              props.category ? (
+            props.category?.length &&
+            props.category ? (
               <div className='breadcrumb-flex'>
                 <div className='breadcrumb-arrow' />
                 <Link
-                  to={`/publication/${props.publication?.publicationHandle
-                    }/${trim_category_name(props.category)}`}
+                  to={`/publication/${
+                    props.publication?.publicationHandle
+                  }/${trim_category_name(props.category)}`}
                 >
                   <div
                     className='category-element'
@@ -278,7 +281,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
               </div>
             ) : null}
             {props.publication?.styling.logo.length &&
-              props.postTitle?.length ? (
+            props.postTitle?.length ? (
               <div className='breadcrumb-flex'>
                 <div className='breadcrumb-arrow' />
                 <div className='category-element'>...</div>
@@ -319,20 +322,20 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       darkTheme && !props.isUserAdminScreen
         ? colors.darkModePrimaryBackgroundColor
         : props.isUserAdminScreen
-          ? darkTheme
-            ? colors.primaryBackgroundColor
-            : colors.darkModePrimaryBackgroundColor
-          : darkTheme
-            ? colors.darkModePrimaryBackgroundColor
-            : colors.primaryBackgroundColor,
+        ? darkTheme
+          ? colors.primaryBackgroundColor
+          : colors.darkModePrimaryBackgroundColor
+        : darkTheme
+        ? colors.darkModePrimaryBackgroundColor
+        : colors.primaryBackgroundColor,
     color:
       darkTheme && !props.isUserAdminScreen
         ? colors.darkModePrimaryTextColor
         : props.isUserAdminScreen
-          ? darkTheme
-            ? colors.darkModePrimaryTextColor
-            : colors.primaryTextColor
-          : colors.primaryTextColor,
+        ? darkTheme
+          ? colors.darkModePrimaryTextColor
+          : colors.primaryTextColor
+        : colors.primaryTextColor,
     secondaryColor: darkTheme
       ? colors.darkSecondaryTextColor
       : colors.primaryTextColor,
@@ -344,10 +347,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       style={
         props.isUserAdminScreen
           ? {
-            backgroundColor: darkTheme
-              ? colors.primaryBackgroundColor
-              : colors.primaryTextColor,
-          }
+              backgroundColor: darkTheme
+                ? colors.primaryBackgroundColor
+                : colors.primaryTextColor,
+            }
           : {}
       }
     >
@@ -359,6 +362,15 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       )}
       {getLogoOrBreadCrumb()}
       <div className='right-icons'>
+        {location.pathname === '/' && (
+          <a
+            className='about-nuance-text'
+            target='_blank'
+            href='https://wiki.nuance.xyz/'
+          >
+            About Nuance
+          </a>
+        )}
         {props.isArticlePage && props.ScreenWidth < 768 ? (
           <>
             <img
@@ -383,12 +395,12 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
               darkTheme && !props.isUserAdminScreen
                 ? icons.DARK_MODE_TOGGLE_WHITE
                 : darkTheme
-                  ? props.isUserAdminScreen
-                    ? icons.DARK_MODE_TOGGLE
-                    : icons.DARK_MODE_TOGGLE_WHITE
-                  : props.isUserAdminScreen
-                    ? icons.DARK_MODE_TOGGLE_WHITE
-                    : icons.DARK_MODE_TOGGLE
+                ? props.isUserAdminScreen
+                  ? icons.DARK_MODE_TOGGLE
+                  : icons.DARK_MODE_TOGGLE_WHITE
+                : props.isUserAdminScreen
+                ? icons.DARK_MODE_TOGGLE_WHITE
+                : icons.DARK_MODE_TOGGLE
             }
           />
         </div>

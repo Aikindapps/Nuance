@@ -15,6 +15,7 @@ import {
   getIcrc1Actor,
   getIcrc1TokenActorAnonymous,
   getSonicActor,
+  getUserActor,
 } from '../services/actorService';
 import {
   SUPPORTED_CANISTER_IDS,
@@ -81,6 +82,7 @@ export interface AuthStore {
   getIdentity: () => Promise<Identity | undefined>;
   getUserWallet: () => Promise<UserWallet>;
   redirect: (url: string) => void;
+  updateLastLogin: () => Promise<void>;
   verifyBitfinityWallet: () => Promise<void>;
   fetchTokenBalances: () => Promise<void>;
   clearAll: () => void;
@@ -171,6 +173,12 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     set({ tokenBalances, sonicTokenPairs });
   },
 
+  updateLastLogin: async (): Promise<void> => {
+    try {
+      (await getUserActor()).updateLastLogin();
+    } catch (error) {}
+  },
+
   verifyBitfinityWallet: async (): Promise<void> => {
     let window_any = window as any;
     try {
@@ -229,54 +237,34 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       } catch (err) {}
       set({ loginMethod: 'ii' });
       if (!(await authClient?.isAuthenticated())) {
-        if (fakeProvider) {
-          // for local development, the identity can be generated
-          // bypassing the Internet Identity login workflow
-          console.log('creating fake provider');
-          authClient = await AuthClient.create({
-            identity: Ed25519KeyIdentity.generate(),
-            idleOptions: {
-              disableIdle: true,
-              disableDefaultIdleCallback: true,
-            },
-          });
-          set({ isLoggedIn: true });
-          await useUserStore.getState().getUser();
-        } else {
-          await authClient.login(<AuthClientLoginOptions>{
-            onSuccess: async () => {
-              console.log('Logged in: ' + new Date());
-              set({ isLoggedIn: true });
-              authChannel.postMessage({ type: 'login', date: new Date() });
-              Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
-              Usergeek.trackSession();
-              Usergeek.flush();
+        await authClient.login(<AuthClientLoginOptions>{
+          onSuccess: async () => {
+            console.log('Logged in: ' + new Date());
+            set({ isLoggedIn: true });
+            authChannel.postMessage({ type: 'login', date: new Date() });
+            Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
+            Usergeek.trackSession();
+            Usergeek.flush();
 
-              await useUserStore.getState().getUser();
-              if (useUserStore.getState().user === undefined) {
-                window.location.href = '/register';
-              } else {
-                //user fetched successfully, get the token balances
-                await get().fetchTokenBalances();
-              }
-              /*
-              else {
-                window.location.href = useAuthStore.getState().redirectScreen;
-              }
-              */
-            },
-            onError: (error) => {
-              set({ isLoggedIn: false, registrationError: error });
-              toastError(error);
-              if (useUserStore.getState().user === undefined) {
-                window.location.href = '/register';
-              }
-            },
-            identityProvider,
-            maxTimeToLive: sessionTimeout,
-            derivationOrigin: isLocal ? undefined : derivationOrigin,
-          });
-        }
+            await useUserStore.getState().getUser();
+            if (useUserStore.getState().user === undefined) {
+              window.location.href = '/register';
+            } else {
+              //user fetched successfully, get the token balances
+              await get().fetchTokenBalances();
+            }
+          },
+          onError: (error) => {
+            set({ isLoggedIn: false, registrationError: error });
+            toastError(error);
+            if (useUserStore.getState().user === undefined) {
+              window.location.href = '/register';
+            }
+          },
+          identityProvider,
+          maxTimeToLive: sessionTimeout,
+          derivationOrigin: isLocal ? undefined : derivationOrigin,
+        });
       } else {
         set({ isLoggedIn: true });
         await useUserStore.getState().getUser();

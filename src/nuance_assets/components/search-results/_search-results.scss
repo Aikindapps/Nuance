@@ -27,7 +27,7 @@
         &:hover {
           text-decoration: underline;
         }
-        .spinner{
+        .spinner {
           max-height: 12px;
           margin-right: 2px;
         }
@@ -52,29 +52,16 @@
   }
 }
 
-@media only screen and (max-width: 940px) {
-  .search-results-wrapper
-    .search-results-info-wrapper
-    .search-results-filter-sort-wrapper
-    .search-results-filter-elements {
-    width: calc(98% - 110px);
-  }
-}
-
-@media only screen and (max-width: 400px) {
-  .search-results-wrapper
-    .search-results-info-wrapper
-    .search-results-filter-sort-wrapper
-    .search-results-filter-elements {
-    width: 98%;
-  }
-}
-
-@media only screen and (max-width: 320px) {
-  .search-results-wrapper
-    .search-results-info-wrapper
-    .search-results-filter-sort-wrapper
-    .search-results-filter-elements {
-    width: calc(98% - 110px);
+@media only screen and (max-width: 768px) {
+  .search-results-wrapper {
+    row-gap: 0;
+    margin-top: 12px;
+    .search-results-info-wrapper {
+      .search-results-filter-sort-wrapper {
+        flex-direction: column;
+        align-items: start;
+        row-gap: 12px;
+      }
+    }
   }
 }

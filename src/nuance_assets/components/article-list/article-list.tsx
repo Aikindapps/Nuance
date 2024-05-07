@@ -45,7 +45,12 @@ const ArticleList: React.FC<ArticleListProps> = (props): JSX.Element => {
 
   return (
     <div className='article-list'>
-      <p className='mainTitle'>{props.categoryName.toUpperCase()}</p>
+      <p
+        className='article-list-title-publication-landing'
+        style={{ marginLeft: '5%' }}
+      >
+        {props.categoryName.toUpperCase()}
+      </p>
       {props.loading && (
         <div
           style={{ display: 'flex', width: '100%', justifyContent: 'center' }}

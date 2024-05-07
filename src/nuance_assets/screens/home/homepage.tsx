@@ -139,6 +139,11 @@ const HomePage = () => {
       navigate(`?tab=search&phrase=${encodeURIComponent(searchText)}&page=0`, {
         replace: true,
       });
+      window.scrollTo({
+        top: 615,
+        left: 0,
+        behavior: 'smooth',
+      });
       loadSearchResults(searchText);
       //scrollToSearch();
       //setLoadingSearchResults(true);
@@ -229,6 +234,13 @@ const HomePage = () => {
     }
     if (search_tag) {
       loadSearchResults(search_tag);
+    }
+    if (search_text || search_tag) {
+      window.scrollTo({
+        top: 615,
+        left: 0,
+        behavior: 'smooth',
+      });
     }
     navigate('/' + navigationUrl, { replace: true });
   };
@@ -604,25 +616,6 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
-                    }}
-                  >
-                    Internet Identity
-                  </Button>
-                  <a
-                    className='login-info-text'
-                    href={'https://internetcomputer.org/internet-identity'}
-                    target='_blank'
-                  >
-                    You’re not hardcore unless you live hardcore
-                  </a>
-                </div>
-                <div className='login-option-wrapper'>
-                  <Button
-                    styleType='primary-1'
-                    type='button'
-                    style={{ width: '176px', margin: '0' }}
-                    onClick={() => {
                       login('NFID');
                     }}
                   >
@@ -636,6 +629,26 @@ const HomePage = () => {
                     Enhanced with cryptography by NFID
                   </a>
                 </div>
+                <div className='login-option-wrapper'>
+                  <Button
+                    styleType='primary-1'
+                    type='button'
+                    style={{ width: '176px', margin: '0' }}
+                    onClick={() => {
+                      login('ii');
+                    }}
+                  >
+                    Internet Identity
+                  </Button>
+                  <a
+                    className='login-info-text'
+                    href={'https://internetcomputer.org/internet-identity'}
+                    target='_blank'
+                  >
+                    You’re not hardcore unless you live hardcore
+                  </a>
+                </div>
+
                 <div
                   onClick={() => {
                     modalContext?.openModal('Login');
@@ -664,25 +677,6 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    login('ii');
-                  }}
-                >
-                  Internet Identity
-                </Button>
-                <a
-                  className='login-info-text'
-                  href={'https://internetcomputer.org/internet-identity'}
-                  target='_blank'
-                >
-                  You’re not hardcore unless you live hardcore
-                </a>
-              </div>
-              <div className='login-option-wrapper'>
-                <Button
-                  styleType='primary-1'
-                  type='button'
-                  style={{ width: '176px', margin: '0' }}
-                  onClick={() => {
                     login('NFID');
                   }}
                 >
@@ -696,6 +690,26 @@ const HomePage = () => {
                   Enhanced with cryptography by NFID
                 </a>
               </div>
+              <div className='login-option-wrapper'>
+                <Button
+                  styleType='primary-1'
+                  type='button'
+                  style={{ width: '176px', margin: '0' }}
+                  onClick={() => {
+                    login('ii');
+                  }}
+                >
+                  Internet Identity
+                </Button>
+                <a
+                  className='login-info-text'
+                  href={'https://internetcomputer.org/internet-identity'}
+                  target='_blank'
+                >
+                  You’re not hardcore unless you live hardcore
+                </a>
+              </div>
+
               <div
                 onClick={() => {
                   modalContext?.openModal('Login');
@@ -1083,6 +1097,32 @@ const HomePage = () => {
               <li>Subscriptions</li>
             </div>
           </div>
+
+          <div className='start-a-movement'>
+            <div className='left'>
+              <div
+                className='title'
+                style={darkTheme ? { color: darkOptionsAndColors.color } : {}}
+              >
+                Start building your web3 audience today!
+              </div>
+              <div className='content'>
+                <span>
+                  Nuance provides a publication feature that enables projects
+                  and writers to have their own branding, a landing page, and
+                  writer management features, allowing teams to establish their
+                  own unique presence and identity on the platform.
+                </span>
+                <span>
+                  Log in with Google or Internet Identity (or Stoic or
+                  Bitfinity) and Join Nuance today to experience the future of
+                  online blogging. Where creators are empowered, content is
+                  secure, and communities thrive.
+                </span>
+              </div>
+            </div>
+            <img className='right-image' src={images.START_ON_CHAIN_IMAGE} />
+          </div>
           {!isLoggedIn && (
             <div className='start-writing'>
               <div className='title'>Start writing now!</div>
@@ -1149,31 +1189,6 @@ const HomePage = () => {
               </Button>
             </div>
           )}
-          <div className='start-a-movement'>
-            <div className='left'>
-              <div
-                className='title'
-                style={darkTheme ? { color: darkOptionsAndColors.color } : {}}
-              >
-                Start building your web3 audience today!
-              </div>
-              <div className='content'>
-                <span>
-                  Nuance provides a publication feature that enables projects
-                  and writers to have their own branding, a landing page, and
-                  writer management features, allowing teams to establish their
-                  own unique presence and identity on the platform.
-                </span>
-                <span>
-                  Log in with Google or Internet Identity (or Stoic or
-                  Bitfinity) and Join Nuance today to experience the future of
-                  online blogging. Where creators are empowered, content is
-                  secure, and communities thrive.
-                </span>
-              </div>
-            </div>
-            <img className='right-image' src={images.START_ON_CHAIN_IMAGE} />
-          </div>
           <div className='end-colorful-divider'></div>
         </div>
       )}

@@ -39,6 +39,19 @@
     align-items: center;
     margin: 0 5px 0 0;
 
+    .about-nuance-text {
+      font-family: Roboto;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 40px;
+      text-align: left;
+      color: #4c4c52;
+      margin-right: 10px;
+      &:hover {
+        color: $primary-text-color;
+      }
+    }
+
     .header-icon1 {
       margin-right: 22px;
     }

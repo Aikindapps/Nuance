@@ -24,7 +24,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Lato&family=Montserrat:wght@500&family=Open+Sans:wght@600&family=Poppins:wght@300&family=Xanh+Mono&display=swap');
 //Fragment Mono, Roboto, Lato, Montserrat, Open Sans, Poppins, Xanh Mono
 
-
 @import './components/tags/tags';
 @import './components/follow-author/follow-author';
 @import './components/text-editor/text-editor';
@@ -60,10 +59,6 @@
 
 //theme colors, (must be set before importing bootstrap)
 
-
-
-
-
 * {
   font-family: 'Roboto';
 }
@@ -71,7 +66,6 @@
 :root {
   --nua-blue: $primary-color;
   --dark-primary-background-color: rgb(21, 20, 81);
-
 }
 
 body {
@@ -88,4 +82,32 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.desktop-only-flex {
+  display: flex !important;
+}
+.desktop-only-block {
+  display: block !important;
+}
+.mobile-only-flex {
+  display: none !important;
+}
+.mobile-only-block {
+  display: none !important;
+}
+
+@media only screen and (max-width: 768px) {
+  .desktop-only-flex {
+    display: none !important;
+  }
+  .desktop-only-block {
+    display: none !important;
+  }
+  .mobile-only-flex {
+    display: flex !important;
+  }
+  .mobile-only-block {
+    display: block !important;
+  }
 }
