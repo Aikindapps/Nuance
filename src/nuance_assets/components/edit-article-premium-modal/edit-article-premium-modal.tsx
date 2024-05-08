@@ -50,7 +50,7 @@ export const EditArticlePremiumModal = (props: {
       return (
         headerImageUsedInNft !== '' &&
         termsAccepted &&
-        parseFloat(keyPrice) > 0 &&
+        parseFloat(keyPrice) * Math.pow(10, 8) >= 100000 &&
         inputAmount > props.numberOfEditors + 2
       );
     } catch (error) {
@@ -245,7 +245,7 @@ export const EditArticlePremiumModal = (props: {
                 placeholder='Amount'
                 min={0}
                 max={1000}
-                step='0.0001'
+                step='0.001'
                 onChange={(e) => {
                   if (loading) {
                     return;
