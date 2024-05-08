@@ -30,7 +30,16 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
   const darkTheme = useTheme();
 
   return (
-    <div className='article-list'>
+    <div
+      className='article-list'
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        rowGap: '12px',
+        paddingLeft: '20px',
+        paddingTop: '12px',
+      }}
+    >
       <div className='search-results-nav-items-wrapper'>
         <div className='search-results-nav-item-selected'>SEARCH RESULTS</div>
         <span>|</span>
@@ -43,7 +52,7 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
           LATEST ARTICLES
         </div>
       </div>
-      <div className='search-summary'>
+      <div className='search-summary' style={{ marginLeft: '0' }}>
         <div className='search-count'>
           <span className='pipe'>|</span>
           Found {props.totalCount}
@@ -83,7 +92,7 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
       {props.loading ? (
         <Loader />
       ) : (
-        <div className='article-grid-horizontal'>
+        <div className='article-grid-horizontal' style={{ marginLeft: '0' }}>
           {props.posts.map((post: PostType) => (
             <CardHorizontal post={post} key={post.postId} />
           ))}

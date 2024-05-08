@@ -1050,11 +1050,24 @@ actor PostCore {
       return #err("Invalid post title");
     };
 
+    //check the price if premium
+    switch(postModel.premium) {
+      case(?premiumValue) {
+        if(premiumValue.icpPrice < 100_000){
+          return #err("Sale price too low.");
+        };
+      };
+      case(null) {
+        //nothing to check
+      };
+    };
+
     for (tagId in Iter.fromArray(postModel.tagIds)) {
       if (not U.isTextLengthValid(tagId, 50)) {
         return #err("Invalid tagId");
       };
     };
+    
 
     if (not isThereEnoughMemoryPrivate()) {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
