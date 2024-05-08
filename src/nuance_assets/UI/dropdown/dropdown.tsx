@@ -18,6 +18,7 @@ interface DropdownProps {
   dropdownMenuItemStyle?: any;
   notActiveIfOnlyOneItem?: boolean;
   onIsOpenChanged?: (isOpen: boolean) => void;
+  className?: string;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -35,6 +36,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   dropdownMenuItemStyle,
   notActiveIfOnlyOneItem,
   onIsOpenChanged,
+  className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -69,9 +71,9 @@ const Dropdown: React.FC<DropdownProps> = ({
 
   return (
     <div
-      className={
+      className={`${
         isOpen ? 'dropdown-menu-wrapper-active' : 'dropdown-menu-wrapper'
-      }
+      } ${className ? className : ''}`}
       id={uniqueId}
       ref={menuRef}
       style={{

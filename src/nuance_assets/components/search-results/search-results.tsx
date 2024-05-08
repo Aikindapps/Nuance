@@ -50,8 +50,8 @@ export const SearchResults = (props: {
   }));
 
   const isTagSearch = () => {
-    if(!props.term.startsWith('#')){
-      return false
+    if (!props.term.startsWith('#')) {
+      return false;
     }
     let phrase = props.term.trim();
 
@@ -294,19 +294,40 @@ export const SearchResults = (props: {
             />
           </div>
           <Dropdown
+            className='desktop-only-flex'
             uniqueId={'search-results-dropdown-menu'}
+            style={{
+              alignSelf: 'end',
+              width: '120px',
+              height: '27px',
+              top: '0',
+              position: 'absolute',
+              right: '0',
+            }}
+            selectedTextStyle={{ fontSize: '14px', fontWeight: '400' }}
             items={['Relevance', 'Most recent']}
             onSelect={(item: string) => {
               setSortType(item as SortType);
             }}
-            style={{
-              width: '100px',
-              height: '25px',
-              position: 'absolute',
-              right: '0',
-              bottom: '0',
+            drodownItemsWrapperStyle={{
+              top: '28px',
+              rowGap: 0,
+              minWidth: '120px',
             }}
-            selectedTextStyle={{ fontSize: '12px', fontWeight: '400' }}
+            arrowWidth={12}
+          />
+          <Dropdown
+            className='mobile-only-flex'
+            uniqueId={'search-results-dropdown-menu-mobile'}
+            style={{
+              width: '120px',
+              height: '27px',
+            }}
+            selectedTextStyle={{ fontSize: '14px', fontWeight: '400' }}
+            items={['Relevance', 'Most recent']}
+            onSelect={(item: string) => {
+              setSortType(item as SortType);
+            }}
             drodownItemsWrapperStyle={{
               top: '28px',
               rowGap: 0,

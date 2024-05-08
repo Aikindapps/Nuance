@@ -31,35 +31,16 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
 
   return (
     <div className='article-list'>
-      <div className='rowContainer'>
-        {props.searchedTag ? (
-          <div
-            className='button-attributes-primary-3'
-            style={{
-              minWidth: '75px',
-              cursor: 'default',
-              padding: '0 15px',
-            }}
-          >
-            {props.lastSearchPhrase}
-          </div>
-        ) : (
-          <Link
-            to={'/publication/' + props.publicationHandle}
-            className='link1'
-          >
-            SEARCH RESULTS
-          </Link>
-        )}
-        <span className='span'> | </span>
-        <div className='sec'>
-          <Link
-            to={'/publication/' + props.publicationHandle}
-            className='link2'
-            onClick={() => props.setShowResults()}
-          >
-            LATEST ARTICLES
-          </Link>
+      <div className='search-results-nav-items-wrapper'>
+        <div className='search-results-nav-item-selected'>SEARCH RESULTS</div>
+        <span>|</span>
+        <div
+          className='search-results-nav-item'
+          onClick={() => {
+            props.setShowResults();
+          }}
+        >
+          LATEST ARTICLES
         </div>
       </div>
       <div className='search-summary'>
@@ -108,7 +89,7 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
           ))}
         </div>
       )}
-      {props.totalCount > props.posts.length ? (
+      {Number(props.totalCount) > props.posts.length ? (
         <div className='load-more-container'>
           <Button
             styleType='secondary'

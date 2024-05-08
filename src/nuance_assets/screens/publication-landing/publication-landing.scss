@@ -1,3 +1,4 @@
+@import '../../shared/styles/Colors';
 .publication-landing-wrapper {
   display: flex;
   justify-content: center;
@@ -13,13 +14,13 @@
       .link-report {
         margin-right: -30%;
       }
-      .brand-logo-left{
+      .brand-logo-left {
         width: 180px;
         height: 57px;
         margin-top: 0;
         margin-bottom: 0;
         object-fit: contain;
-      };
+      }
     }
     .left-sidebar {
       display: flex;
@@ -36,22 +37,27 @@
     padding: 0.1px;
   }
 
-  .publication-landing-cta{
+  .publication-landing-cta {
     max-width: 825px;
-    
-
   }
 
   .right {
-  width: 76%;
+    width: 76%;
     max-width: 980px;
-    
+
     .article-list {
       border-left: 1px solid #c4c4c4;
       position: relative;
       .mainTitle {
         padding-top: 100px;
         margin-left: 5%;
+        font-family: Roboto, sans-serif;
+        color: #687487;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .article-list-title-publication-landing {
+        padding-top: 40px;
         font-family: Roboto, sans-serif;
         color: #687487;
         font-size: 12px;
@@ -74,24 +80,27 @@
       right: 0;
       bottom: 0;
       background: linear-gradient(
-        0deg, 
-        rgba(0, 0, 0, 0.80) 0%, 
-        rgba(0, 0, 0, 0.00) 100%
+        0deg,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0) 100%
       );
-      pointer-events: none; 
+      pointer-events: none;
     }
-  
+
     .header-img {
       width: 100%;
       max-height: 480px;
-      min-height:408px;
+      min-height: 408px;
       object-fit: cover;
     }
 
-    .nuance-publication, .publication-name, .publication-subtitle, .publication-handle {
+    .nuance-publication,
+    .publication-name,
+    .publication-subtitle,
+    .publication-handle {
       position: absolute;
-      left: 5%; 
-      z-index: 2; 
+      left: 5%;
+      z-index: 2;
     }
 
     .nuance-publication {
@@ -104,7 +113,7 @@
       font-weight: 700;
       line-height: 24px;
     }
-  
+
     .publication-name {
       position: absolute;
       bottom: 141px;
@@ -113,19 +122,18 @@
       font-size: clamp(50px, 7vw, 70px);
       font-style: normal;
       font-weight: 300;
-      line-height: 6vh; 
+      line-height: 6vh;
       font-family: Roboto;
       margin: 0px -5px;
       text-align: left;
-     
     }
-  
+
     .publication-subtitle {
       position: absolute;
       bottom: 94px;
       left: 7vw;
       text-align: left;
-  
+
       color: #d9d9d9;
       font-size: clamp(12px, 1.8vw, 18px);
       font-style: normal;
@@ -135,7 +143,7 @@
       line-height: 2.6vh;
       font-family: Roboto;
     }
-  
+
     .publication-handle {
       position: absolute;
       bottom: 36px;
@@ -148,10 +156,9 @@
       font-family: Roboto;
       margin-left: -5px;
 
-      .at-handle{
+      .at-handle {
         padding-left: 11px;
       }
-      
     }
   }
 
@@ -161,9 +168,6 @@
     margin-left: -13px;
     margin-top: 18px;
   }
-  
-
- 
 
   .article-grid-large {
     margin-left: 0;
@@ -188,7 +192,6 @@
 
 .meatball-menu {
   z-index: 4;
-  
 }
 
 .publication-name-icon-flex {
@@ -204,112 +207,127 @@
   border-radius: 10%;
 }
 
-.blurred{
+.blurred {
   filter: blur(5px);
 }
 
-.rowContainer{
+.rowContainer {
   margin-top: 2%;
   margin-left: 3%;
 }
 
-.search-summary{
+.search-results-nav-items-wrapper {
+  display: flex;
+  align-items: center;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #999999;
+  color: #999999;
+  column-gap: 12px;
+  font-family: 'Roboto';
+  .search-results-nav-item {
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .search-results-nav-item-selected {
+    font-weight: bold;
+    font-size: 14px;
+    color: $accent-color;
+    cursor: pointer;
+  }
+}
+
+.search-summary {
   margin-left: 3%;
 }
 
-.divider{
+.divider {
   padding-left: 0;
 }
 
-
-
 @media only screen and (max-width: 1089px) {
   .publication-landing-wrapper {
-    .left{
+    .left {
       width: 20px;
-      .left-content{
+      .left-content {
         margin-top: 0;
-        .brand-logo-left{
+        .brand-logo-left {
           margin-bottom: 20px;
         }
-        .left-sidebar{
+        .left-sidebar {
           visibility: hidden;
         }
-        .link-report{
+        .link-report {
           margin-right: 25px;
         }
       }
-      .drop-down-content{
+      .drop-down-content {
         visibility: hidden;
       }
     }
-    .scrolled{
+    .scrolled {
       width: max-content;
-      .left-content{
-        .left-sidebar{
+      .left-content {
+        .left-sidebar {
           visibility: visible;
         }
-        .link-report{
+        .link-report {
           margin-right: -60%;
         }
       }
-      .drop-down-content{
+      .drop-down-content {
         visibility: visible;
       }
-      .categories-header{
+      .categories-header {
         margin-left: -0.6rem;
       }
     }
 
-    .publication-landing-cta{
+    .publication-landing-cta {
       max-width: 825px;
       padding: 0px 20px;
-  
     }
-    .right{
+    .right {
       width: 100%;
 
-      .article-list{
-        .article-grid-large{
-          .card-wrapper-large{
-            .publisher{
+      .article-list {
+        .article-grid-large {
+          .card-wrapper-large {
+            .publisher {
               padding: 0px 20px 10px 20px;
             }
-            .article-text{
+            .article-text {
               padding: 0px 20px 10px 20px;
             }
           }
         }
-        .article-grid{
-       padding: 0px 10px;
+        .article-grid {
+          padding: 0px 10px;
         }
-        .mainTitle{
+        .mainTitle {
           padding-top: 20px;
         }
       }
     }
-    
   }
 }
 
 @media only screen and (max-width: 557px) {
   .publication-landing-wrapper {
-    .scrolled{
-      .left-content{
-        .link-report{
+    .scrolled {
+      .left-content {
+        .link-report {
           margin-right: -75%;
         }
       }
-      .drop-down-content{
+      .drop-down-content {
         visibility: visible;
       }
-      
     }
-    
   }
-  .right{
-    .header-image-container{
-      .header-img{
+  .right {
+    .header-image-container {
+      .header-img {
         height: 200px;
         object-fit: cover;
       }
@@ -318,63 +336,59 @@
 }
 @media only screen and (max-width: 432px) {
   .publication-landing-wrapper {
-    .category-left-scrolled{
+    .category-left-scrolled {
       margin-left: 12vw;
     }
   }
 }
 @media only screen and (max-width: 408px) {
   .publication-landing-wrapper {
-    .scrolled{
+    .scrolled {
       margin-left: 10vw;
     }
-    .category-left-scrolled{
+    .category-left-scrolled {
       margin-left: 16vw;
     }
   }
 }
 @media only screen and (max-width: 371px) {
   .publication-landing-wrapper {
-    .scrolled{
+    .scrolled {
       margin-left: 20vw;
     }
-    .category-left-scrolled{
+    .category-left-scrolled {
       margin-left: 24vw;
     }
-    
   }
 }
 @media only screen and (max-width: 351px) {
   .publication-landing-wrapper {
-    .category-left-scrolled{
+    .category-left-scrolled {
       margin-left: 90px;
     }
-    
   }
 }
 
 @media only screen and (max-width: 338px) {
   .publication-landing-wrapper {
-    .scrolled{
+    .scrolled {
       margin-left: 25vw;
     }
-    .category-left-scrolled{
+    .category-left-scrolled {
       margin-left: 140px;
     }
   }
 }
 @media only screen and (max-width: 316px) {
   .publication-landing-wrapper {
-    .scrolled{
+    .scrolled {
       margin-left: 45vw;
     }
-    .category-left-scrolled{
+    .category-left-scrolled {
       margin-left: 180px;
     }
-    
   }
 }
-
 
 @media only screen and (max-width: 768px) {
   .publication-landing-wrapper {
@@ -382,24 +396,20 @@
     .right {
       .latestArticles {
         width: 100%;
-       
-         
-         
 
-        
-          .article-grid-large{
-            margin-left: 0;
-            margin-right: 0;
+        .article-grid-large {
+          margin-left: 0;
+          margin-right: 0;
+        }
+        .card-wrapper-large {
+          .publisher {
+            padding: 0px 20px 10px 20px;
           }
-            .card-wrapper-large{
-              .publisher{
-                padding: 0px 20px 10px 20px;
-              }
-              .article-text{
-                padding: 0px 20px 10px 20px;
-              }
-            }
-          
+          .article-text {
+            padding: 0px 20px 10px 20px;
+          }
+        }
+
         .article-grid {
           margin-left: 3rem;
           margin-top: 1rem;
