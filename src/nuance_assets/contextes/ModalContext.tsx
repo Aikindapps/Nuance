@@ -7,7 +7,8 @@ type ModalType =
   | 'Deposit'
   | 'Clap'
   | 'Premium article'
-  | 'Notifications';
+  | 'Notifications'
+  | 'Subscription';
 
 
 type ModalData = {

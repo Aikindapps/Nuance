@@ -1,0 +1,260 @@
+
+.subscription-card-wrapper {
+    padding: 1px; 
+    background: linear-gradient(to top, #1BC0F2, #25F68D);
+    border-radius: 8px;  
+    overflow: hidden; 
+    display: inline-block; 
+    margin: 0px 25px;
+   
+}
+
+.modal-top-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-height: 60px;
+  }
+.subscription-header{
+    color:#151451;
+    text-align: center;
+    font-family: Roboto;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 28px;
+    
+}
+
+.profile-image{
+    height: 62px;
+    width: 62px;
+    border-radius: 100px;
+    margin-top: 27px;
+    margin-bottom: 13px;
+}
+
+.subscribee-info{
+    position: relative; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+.subscription-modal-content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.subscription-options {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+@media (max-width: 1080px) {
+    .subscription-options {
+        flex-direction: row; 
+        overflow-x: auto;
+        white-space: nowrap; 
+        -webkit-overflow-scrolling: touch;
+        width:90%;
+    }
+
+    .option-wrapper {
+        display: inline-block; 
+        white-space: normal;
+    }
+}
+
+.subscription-card {
+    background: #fff; 
+    border-radius: 8px;  
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    padding: 20px;
+    width: 100%; 
+    position: relative; 
+    overflow: hidden;  
+    text-align: center;
+}
+
+.option-wrapper {
+    background: linear-gradient(to bottom, #25F68D, #1BC0F2);
+    border-radius: 8px;
+    padding: 1px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+    margin: 0px 8px;
+}
+
+.option-wrapper.selected {
+    box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.25);
+}
+
+.option {
+    background: white;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.option-title{
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 32px 16px;
+    gap: 8px;
+
+}
+
+.option-details{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90px;
+    gap: 8px;
+}
+
+.subscription-radio-wrapper{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    input{
+        cursor: pointer;
+    }
+}
+.subscription-conversions{
+    background: #F2F2F2;
+    color: #666666;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+    
+    p{
+    font-family: Roboto;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+}
+
+.star-icon {
+    width: 24px;
+height: 24px;
+}
+
+.subscription-exit-icon{
+    margin: 24px;
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    cursor: pointer;
+}
+
+.nuance-logo-subscription{
+    margin: 15px 34px;
+    width: 64px;
+    height: 64px;
+}
+
+.subscription-publication-icon{
+    position: absolute;
+    right: 0;  
+    bottom: 0; 
+    height: 16px;
+    width: 16px;
+    right: 43px;
+    bottom: 50px;
+
+    @media (max-width: 1080px) {
+       
+    }
+}
+
+.handle{
+    font-family: Roboto;
+font-size: 16px;
+font-style: normal;
+font-weight: 400;
+line-height: 24px;
+margin-bottom: 8px;
+}
+
+.subscription-info{
+    width: 402px;
+    height: 144px;
+    text-align: center;
+    color: #151451;
+    margin-bottom: 21px;
+}
+
+.option-label{
+    color: #151451;
+    margin-top: 20px;
+}
+
+.subscription-terms{
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    cursor: pointer;
+
+    input{
+        cursor: pointer;
+    }
+}
+
+.subscription-modal-footer{
+    margin-top: 8px;
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border:none;
+    gap: 8px;
+}
+.subscription-buttons{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 40px;
+}
+
+//success
+.subscription-success-content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 40px 0px;
+}
+
+.subscription-success-info{
+    line-height:30px;
+}
+
+.success-icon{
+    margin-left: 25px;
+    margin-top: 32px;
+}

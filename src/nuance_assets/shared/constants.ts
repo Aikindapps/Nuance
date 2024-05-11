@@ -73,6 +73,8 @@ export const icons = {
   CLAP_WHITE: iconsPath + 'clap-white.svg',
   CLAP_BLUE: iconsPath + 'clap-blue.png',
   PUBLICATION_ICON: iconsPath + 'publication-icon.svg',
+  GRADIENT_PUBLICATION_SUCCESS_ICON: iconsPath + 'gradient-publication-icon.svg',
+  SUCCESS_STAR: iconsPath + 'success-star.svg',
   EMAIL_OPT_IN: iconsPath + 'email-opt-in.png',
   EMAIL_OPT_IN_SUCCESS: iconsPath + 'email-opt-in-success.png',
   NFT_LOCK_ICON: iconsPath + 'NFT-Lock-Icon.svg',
@@ -109,6 +111,9 @@ export const icons = {
   NOTIFICATION_BELL_DARK: iconsPath + 'notification-bell-dark.svg',
   SETTINGS: iconsPath + 'settings.svg',
   SETTINGS_DARK: iconsPath + 'settings-dark.svg',
+  SUBSCRIPTION_STAR_ICON: iconsPath + 'subscription-star-icon.svg',
+  GRADIENT_STAR: iconsPath + 'gradient-star.svg',
+  NO_FILL_STAR: iconsPath + 'no-fill-star.svg',
   EXIT_NOTIFICATIONS: iconsPath + 'exit-notifications.svg',
   EXIT_NOTIFICATIONS_DARK: iconsPath + 'exit-notifications-dark.svg',
 };

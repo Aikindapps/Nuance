@@ -1,0 +1,47 @@
+.subscription-card-wrapper {
+    padding: 1px; 
+    background: linear-gradient(to top, #1BC0F2, #25F68D);
+    border-radius: 5px; 
+    overflow: hidden; 
+    display: inline-block; 
+    margin: 0px 25px;
+
+    .subscription-card {
+        background: #fff; 
+        border-radius: 5px; 
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 32px;
+        padding: 20px;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        width: 100%; 
+        position: relative; 
+        background: white; 
+        overflow: hidden; 
+        text-align: center;
+    }
+}
+
+.badge {
+    position: absolute;
+    top: -17px;
+    left: -41px;
+    background-color: #FFA500;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    transform: rotate(-45deg);
+    transform-origin: top right;
+    width: 84px;
+}
+
+
+.star-icon-cta {
+width: 48px;
+height: 48px;
+}
+

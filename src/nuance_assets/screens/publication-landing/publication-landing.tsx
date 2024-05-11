@@ -26,6 +26,9 @@ import SearchList from '../../components/search-list/search-list';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Helmet } from 'react-helmet';
+import SubscriptionCta from '../../components/subscription-cta/subscription-cta';
+import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
+import { Context as ModalContext } from '../../contextes/ModalContext';
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -42,6 +45,8 @@ function PublicationLanding() {
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
   };
+
+  const modalContext = useContext(ModalContext);
 
   const { isLoggedIn, redirect, redirectScreen } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
@@ -337,6 +342,10 @@ function PublicationLanding() {
     setShowSearchResults(false);
   };
 
+  const handleSubscriptionComplete = () => {
+    setSidebarToggle(false);
+  };
+
   const handleFollowClicked = () => {
     // prevent clicks while button spinner is visible
     if (updatingFollow) {
@@ -395,7 +404,7 @@ function PublicationLanding() {
   if (
     !publication?.publicationHandle ||
     publication.publicationHandle.toLowerCase() !==
-      getPublicationHandleFromUrl().toLowerCase()
+    getPublicationHandleFromUrl().toLowerCase()
   ) {
     return (
       <div style={{ background: darkOptionsAndColors.background }}>
@@ -449,13 +458,13 @@ function PublicationLanding() {
                 style={
                   !isSidebarToggled && screenWidth <= 1089
                     ? {
-                        display: 'none',
-                      }
+                      display: 'none',
+                    }
                     : {
-                        marginRight: '15px',
-                        width: '150px',
-                        height: '47.5px',
-                      }
+                      marginRight: '15px',
+                      width: '150px',
+                      height: '47.5px',
+                    }
                 }
                 className='brand-logo-left'
                 src={publication?.styling.logo}
@@ -522,6 +531,10 @@ function PublicationLanding() {
                 />
               </div>
 
+              <div className='Subscription-container'>
+                <SubscriptionCta />
+              </div>
+
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
                 {/* Change to FB handle when FB publication is established */}
                 {screenWidth > 1089 && publicationHandle == 'FastBlocks' ? (
@@ -535,6 +548,15 @@ function PublicationLanding() {
           </div>
         </div>
         <div className='right'>
+          {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
+
+            <SubscriptionModal
+              handle={publication?.publicationHandle}
+              profileImage={publication?.avatar}
+              isPublication={true}
+              onSubscriptionComplete={() => { handleSubscriptionComplete() }}
+            />
+          )}
           <div className='header-image-container'>
             <img src={`${publication?.headerImage}`} className='header-img' />
 

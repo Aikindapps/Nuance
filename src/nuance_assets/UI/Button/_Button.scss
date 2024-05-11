@@ -35,6 +35,42 @@
   }
 }
 
+//primary 2 is primary 1 with a gray disabled state
+.button-attributes-primary-2 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  color: $primary-background-color;
+  border: none;
+  font-weight: 500;
+  background-color: $primary-color;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.1s ease-in-out all;
+
+  &:hover {
+    background-color: $button-border-hover;
+  }
+
+  &:active {
+    background-color: $active-background-color;
+  }
+
+  &:disabled {
+    background-color: $medium-border-color;
+    color: $disabled-button-text;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: $medium-border-color;
+      color: $disabled-button-text;
+      cursor: not-allowed;
+    }
+  }
+}
+
 .button-attributes-comment-button {
   display: flex;
   justify-content: center;
