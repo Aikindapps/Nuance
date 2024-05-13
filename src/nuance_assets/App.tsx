@@ -53,6 +53,7 @@ import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';
 import { ModalsWrapper } from './components/modals-wrapper/modals-wrapper';
 import NotificationsSidebar from './components/notifications/notifications';
+import Subscriptions from './screens/profile/subscriptions';
 
 const Routes = () => {
   return useRoutes([
@@ -86,6 +87,7 @@ const Routes = () => {
         { path: 'followers', element: <Followers /> },
         { path: 'wallet', element: <Wallet /> },
         { path: 'publications/:handle', element: <PublicationArticles /> },
+        { path: 'subscriptions', element: <Subscriptions /> },
       ],
     },
   ]);

@@ -22,6 +22,10 @@ const Activity: React.FC<ActivityLinkProps> = ({
 
     const activityRoutes = [
         {
+            title: 'Subscriptions (0)',
+            goto: '/my-profile/subscriptions',
+        },
+        {
             title: `Followed Topics (${followedTopicsCount})`,
             goto: '/my-profile/topics',
         },
