@@ -948,7 +948,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       }
     } catch (err) {
       handleError(err, Unexpected);
-      handleError("getSavedPostReturnOnly", Unexpected);
     }
     return;
   },

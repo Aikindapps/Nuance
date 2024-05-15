@@ -192,9 +192,9 @@ const PublicationArticles = () => {
   }, [window.location.pathname]);
 
   const toggleHandler = async (postId: string, isDraft: boolean) => {
-    console.log('before update')
+    console.log('before update');
     await updatePublicationPostDraft(postId, isDraft, publicationHandle);
-    console.log('after update')
+    console.log('after update');
   };
   const categoryChangeHandler = async (
     post: PostType,
