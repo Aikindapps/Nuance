@@ -1742,6 +1742,10 @@ switch(addOrUpdatePost(
     };
   };
 
+  public shared query func getUserPostIds(principalId: Text) : async [Text] {
+    List.toArray(U.safeGet(userPostsHashMap, principalId, List.nil<Text>()));
+  };
+
   //added the includeDraft method to allow users to get their draft articles by this method
   public shared query ({ caller }) func getUserPosts(handle : Text, includeDraft : Bool) : async [PostBucketType] {
     Debug.print("PostBucket->GetUserPosts: " # handle);

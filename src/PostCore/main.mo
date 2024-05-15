@@ -975,6 +975,22 @@ actor PostCore {
     };
   };
 
+  //refreshes the postIds of the user by getting the list from the PostBucket canister
+  public shared ({caller}) func refreshUserPostIds(userPrincipalId: Text) : async Result.Result<Nat, Text>{
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized)
+    };
+    var counter = 0;
+    for(bucketCanisterId in bucketCanisterIdsHashMap.keys()){
+      let PostBucketCanister = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+      let postIds = await PostBucketCanister.getUserPostIds(userPrincipalId);
+      for(postId in postIds.vals()){
+        addPostIdToUser(userPrincipalId, postId);
+        counter += 1;
+      };
+    };
+    #ok(counter)
+  };
 
   //it will be called just once by platform operators
   //calling more than one doesn't harm
