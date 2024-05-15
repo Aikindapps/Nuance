@@ -426,7 +426,8 @@ module{
         delete : (postId : Text) -> async Result.Result<Nat, Text>;
         getNotMigratedPremiumArticlePostIds : query () -> async [Text];
         migratePremiumArticleFromOldArch : query (postId: Text, price: ?Nat) -> async Result.Result<Text, Text>;
-        getPost : query (postId : Text) -> async Result.Result<PostBucketType, Text>
+        getPost : query (postId : Text) -> async Result.Result<PostBucketType, Text>;
+        getUserPostIds : query (principalId: Text) -> async [Text];
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {
