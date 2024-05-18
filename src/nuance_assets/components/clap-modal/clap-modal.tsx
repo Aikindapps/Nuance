@@ -59,7 +59,7 @@ export const ClapModal = (props: { post: PostType }) => {
   function updateConversionPrice(tokenSymbol: SupportedTokenSymbol, conversionSetter: Function) {
     const pricePerUnit = getPriceBetweenTokens(
       sonicTokenPairs,
-      selectedCurrency,
+      "NUA",
       tokenSymbol,
       inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
     ) / Math.pow(10, getDecimalsByTokenSymbol(tokenSymbol));
