@@ -53,6 +53,11 @@
       "type": "motoko",
       "specified_id": "55qxh-qqaaa-aaaap-qhfia-cai"
     },
+    "Subscription": {
+      "main": "src/Subscription/main.mo",
+      "type": "motoko",
+      "specified_id": "cbopz-duaaa-aaaaa-qaaka-cai"
+    },
     "nuance_assets": {
       "frontend": {
         "entrypoint": "dist/index.html"

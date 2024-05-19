@@ -100,6 +100,7 @@ module{
           maxSupply: Nat;
           icpPrice: Nat;
         };
+        isMembersOnly: Bool;
     };
     public type Post = {
         postId: Text;
@@ -111,6 +112,7 @@ module{
         content: Text;
         isDraft: Bool;
         isPremium: Bool;
+        isMembersOnly: Bool;
         nftCanisterId: ?Text;
 
         // fields stored as Int, but returned to UI as Text
@@ -312,6 +314,7 @@ module{
     public type PostBucketType = {
         postId : Text;
         handle : Text;
+        postOwnerPrincipal: Text; //principal id of the publication if a publicaiton post
         url : Text;
         title : Text;
         subtitle : Text;
@@ -333,6 +336,7 @@ module{
         category : Text;
         wordCount : Text;
         bucketCanisterId : Text;
+        isMembersOnly: Bool;
     };
 
     public type Metadata = {
@@ -397,6 +401,7 @@ module{
             icpPrice: Nat;
             editorPrincipals: [Text]; //to populate the initalMintingAddresses field in NftFactory canister function
         };
+        isMembersOnly: Bool;
         tagNames : [Text];
         caller : Principal;
     };
@@ -433,6 +438,19 @@ module{
         let canister : PostBucketCanisterInterface = actor(canisterId);
         return canister;
     };
+
+    //#########################__SUBSCRIPTION__CANISTER__#############################
+
+    public type SubscriptionCanisterInterface = actor {
+        isReaderSubscriber : query (writerPrincipalId: Text, readerPrincipalId: Text) -> async Bool;
+        isWriterActivatedSubscription : query (writerPrincipalId: Text) -> async Bool
+    };
+
+    public func getSubscriptionCanister() : SubscriptionCanisterInterface {
+        let canister : SubscriptionCanisterInterface = actor(ENV.SUBSCRIPTION_CANISTER_ID);
+        return canister;
+    };
+
     //##########################___PUBLICATION_CANISTER___############################
     public type PublicationCanisterInterface = actor {
         getEditorAndWriterPrincipalIds : query () -> async ([Text], [Text]);

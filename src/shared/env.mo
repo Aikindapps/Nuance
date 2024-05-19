@@ -14,6 +14,7 @@ module {
   public let PUBLICATION_MANAGEMENT_CANISTER_ID = CanisterIds.PUBLICATION_MANAGEMENT_CANISTER_ID;
   public let NFT_FACTORY_CANISTER_ID = CanisterIds.NFT_FACTORY_CANISTER_ID;
   public let NOTIFICATIONS_CANISTER_ID = CanisterIds.NOTIFICATIONS_CANISTER_ID;
+  public let SUBSCRIPTION_CANISTER_ID = CanisterIds.SUBSCRIPTION_CANISTER_ID;
   public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
   public let SNS_GOVERNANCE_IC_ACCOUNT = "f77cc353c778b02ad26974891950e4cb3ae1203e5cd8218e1b99bfc4f316d897";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";

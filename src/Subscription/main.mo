@@ -128,6 +128,24 @@ actor Subscription {
 
     //#region - public query functions
 
+    //enables PostBucket canister to determine if the reader is an active subscriber of the writer
+    public shared query func isReaderSubscriber(writerPrincipalId: Text, readerPrincipalId: Text) : async Bool {
+        let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
+        let readerSubscriptionEvents = readerDetails.readerSubscriptions;
+        let now = Time.now();
+        for(subscriptionEvent in readerSubscriptionEvents.vals()){
+            if(writerPrincipalId == subscriptionEvent.writerPrincipalId and now < subscriptionEvent.endTime){
+                return true;
+            };
+        };
+        false
+    };
+
+    //enables PostBucket canister to determine if the reader is an active subscriber of the writer
+    public shared query func isWriterActivatedSubscription(writerPrincipalId: Text) : async Bool {
+        Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
+    };
+
     //a function to query the subscription details and the history of the writer
     //should be called by the writer
     public shared query ({caller}) func getWriterSubscriptionDetails() : async Result.Result<WriterSubscriptionDetails, Text> {
@@ -185,10 +203,28 @@ actor Subscription {
         //if here, caller is a Nuance user
 
 
-        //check if the input is valid
-        //if all the fee fields are empty, return an error
+        //if all the fee fields are empty, remove the subscription option from the writer
         if(subscriptionDetails.weeklyFee == null and subscriptionDetails.monthlyFee == null and subscriptionDetails.annuallyFee == null and subscriptionDetails.lifeTimeFee == null){
-            return #err("Invalid input. Please provide at least 1 fee.")
+            switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId)) {
+                case(?isActive) {
+                    //the writer exists as a subscription enabled writer
+                    //update the internal state
+                    //set the isActive status to false
+                    Map.set(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId, false);
+                    //delete all the fields except the subscription event ids
+                    Map.delete(writerPrincipalIdToWeeklySubscriptionFee, thash, callerPrincipalId);
+                    Map.delete(writerPrincipalIdToMonthlySubscriptionFee, thash, callerPrincipalId);
+                    Map.delete(writerPrincipalIdToAnnuallySubscriptionFee, thash, callerPrincipalId);
+                    Map.delete(writerPrincipalIdToLifeTimeSubscriptionFee, thash, callerPrincipalId);
+                    Map.delete(writerPrincipalIdToPaymentReceiverAddress, thash, callerPrincipalId);
+                    return #ok(buildWriterSubscriptionDetails(callerPrincipalId))
+                };
+                case(null) {
+                    //the writer doesn't have any existing configuration
+                    //do nothing and return the WriterSubscriptionDetailsObject
+                    return #ok(buildWriterSubscriptionDetails(callerPrincipalId));
+                };
+            };
         };
 
         //if here, input is valid
@@ -253,34 +289,6 @@ actor Subscription {
             };
         };
 
-        #ok(buildWriterSubscriptionDetails(callerPrincipalId))
-    };
-    //used when the writers wants to remove the subscription option in their accounts
-    public shared ({caller}) func removeSubscriptionOptionsAsWriter() : async Result.Result<WriterSubscriptionDetails, Text> {
-        let callerPrincipalId = Principal.toText(caller);
-
-        switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId)) {
-            case(?isActive) {
-                //the writer exists as a subscription enabled writer
-                if(not isActive){
-                    return #err("Already removed the subscription option.")
-                }
-            };
-            case(null) {
-                //the writer doesn't have any existing configuration
-                //return an error
-                return #err("Nothing to remove!");
-            };
-        };
-
-        //set the isActive status to false
-        Map.set(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId, false);
-        //delete all the fields except the subscription event ids
-        Map.delete(writerPrincipalIdToWeeklySubscriptionFee, thash, callerPrincipalId);
-        Map.delete(writerPrincipalIdToMonthlySubscriptionFee, thash, callerPrincipalId);
-        Map.delete(writerPrincipalIdToAnnuallySubscriptionFee, thash, callerPrincipalId);
-        Map.delete(writerPrincipalIdToLifeTimeSubscriptionFee, thash, callerPrincipalId);
-        Map.delete(writerPrincipalIdToPaymentReceiverAddress, thash, callerPrincipalId);
         #ok(buildWriterSubscriptionDetails(callerPrincipalId))
     };
 

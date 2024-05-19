@@ -181,12 +181,12 @@ export const SUPPORTED_CANISTER_IDS = [
 
 export const SUPPORTED_TOKENS: SupportedToken[] = [
   {
-    canisterId: isLocal ? ICP_CANISTER_ID : NUA_CANISTER_ID,
+    canisterId: NUA_CANISTER_ID,
     logo: images.NUANCE_LOGO,
     decimals: 8,
     name: 'Nuance',
     symbol: 'NUA',
-    fee: isLocal ? 10000 : 100000,
+    fee: 100000,
   },
   {
     canisterId: ICP_CANISTER_ID,

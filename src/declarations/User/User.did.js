@@ -217,6 +217,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(UserListItem)],
         ['query'],
       ),
+    'getUsersByPrincipals' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(UserListItem)],
+        ['query'],
+      ),
     'handleClap' : IDL.Func([IDL.Text, IDL.Text], [], ['oneway']),
     'isRegistrationOpen' : IDL.Func([], [IDL.Bool], ['query']),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),

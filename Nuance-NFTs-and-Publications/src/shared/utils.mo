@@ -13,13 +13,13 @@ import Nat32 "mo:base/Nat32";
 import Blob "mo:base/Blob";
 import Array "mo:base/Array";
 import PublisherTypes "../Publisher/types";
-import PostCoreTypes "../Publisher/types_post_core";
 import Result "mo:base/Result";
 import ENV "../shared/env";
 import NotificationTypes "../../../src/Notifications/types";
+import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 
 module {
-  type Post = PostCoreTypes.Post;
+  type Post = CanisterDeclarations.Post;
   type MetadataContainer = PublisherTypes.MetadataContainer;
   type MetadataValue = PublisherTypes.MetadataValue;
 

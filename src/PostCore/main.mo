@@ -61,10 +61,10 @@ actor PostCore {
   type PostTag = Types.PostTag;
   type PostTagModel = Types.PostTagModel;
   type FrontendInterface = Types.FrontendInterface;
-  type PostKeyProperties = Types.PostKeyProperties;
-  type Post = Types.Post;
-  type PostBucketType = Types.PostBucketType;
-  type PostSaveModel = Types.PostSaveModel;
+  type PostKeyProperties = CanisterDeclarations.PostKeyProperties;
+  type Post = CanisterDeclarations.Post;
+  type PostBucketType = CanisterDeclarations.PostBucketType;
+  type PostSaveModel = CanisterDeclarations.PostSaveModel;
   type UserPostCounts = Types.UserPostCounts;
   type GetPostsByFollowers = Types.GetPostsByFollowers;
   type NftCanisterEntry = Types.NftCanisterEntry;
@@ -1066,8 +1066,7 @@ actor PostCore {
       if (not U.isTextLengthValid(tagId, 50)) {
         return #err("Invalid tagId");
       };
-    };
-    
+    };    
 
     if (not isThereEnoughMemoryPrivate()) {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
@@ -1148,7 +1147,17 @@ actor PostCore {
     let postOwnerPrincipalId = if(isPublication){
       U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
     }else{callerPrincipalId};
-    
+
+    //if isMembersOnly field is true, check if the owner of the post has the subscription feature enabled
+    if(postModel.isMembersOnly){
+      let SubscriptionCanister = CanisterDeclarations.getSubscriptionCanister();
+      let isSubscriptionActive = await SubscriptionCanister.isWriterActivatedSubscription(postOwnerPrincipalId);
+      if(not isSubscriptionActive){
+        //subscription feature has not been enabled by the writer yet
+        //return an error
+        return #err("Subscription option is not available!");
+      }
+    };
 
     let bucketCanisterId = if (isNew) { activeBucketCanisterId } else {
       U.safeGet(postIdsToBucketCanisterIdsHashMap, postIdTrimmed, activeBucketCanisterId);
@@ -1275,6 +1284,7 @@ actor PostCore {
       headerImage = postModel.headerImage;
       isDraft = postModel.isDraft;
       premium = premiumData;
+      isMembersOnly = postModel.isMembersOnly;
       isPublication = isPublication;
       postId = postModel.postId;
       subtitle = postModel.subtitle;
@@ -1351,6 +1361,7 @@ actor PostCore {
           headerImage = postBucketReturn.headerImage;
           isDraft = postBucketReturn.isDraft;
           isPremium = postBucketReturn.isPremium;
+          isMembersOnly = postBucketReturn.isMembersOnly;
           nftCanisterId = postBucketReturn.nftCanisterId;
           isPublication = postBucketReturn.isPublication;
           modified = postBucketReturn.modified;

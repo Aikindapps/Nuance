@@ -178,6 +178,7 @@ export interface _SERVICE {
   'getUserInternal' : ActorMethod<[string], [] | [User]>,
   'getUserListItemByHandle' : ActorMethod<[string], Result_4>,
   'getUsersByHandles' : ActorMethod<[Array<string>], Array<UserListItem>>,
+  'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'handleClap' : ActorMethod<[string, string], undefined>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
