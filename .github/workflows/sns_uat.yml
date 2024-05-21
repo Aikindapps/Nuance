@@ -83,6 +83,7 @@ jobs:
           cat << EOF > ./src/well-known/.well-known/ic-domains 
           nuancedevs.xyz
           www.nuancedevs.xyz
+          EOF
 
       - name: Generate canister_ids.json and canisterIds.mo
         run: |
