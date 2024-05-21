@@ -101,7 +101,7 @@ jobs:
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
             "Metrics": { "ic": "'"$METRICS"'" },
-            "Notifcations": { "ic": "'"$NOTIFICATIONS"'" }
+            "Notifications": { "ic": "'"$NOTIFICATIONS"'" }
 
           }' > canister_ids.json
 
