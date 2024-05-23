@@ -1,12 +1,12 @@
-import { Post } from '../../declarations/PostBucket/PostBucket.did.js';
+import { Post, PostBucketType, PostBucketType__1 } from '../../declarations/PostBucket/PostBucket.did';
 import { URL } from 'url';
 
 
-export function buildPostSEO(post: Post, handle: string, canonicalUrl: string, tags: string[] = []) {
-    const userUrl = new URL(`/user/${post.creator || handle}`, canonicalUrl).href;
+export function buildPostSEO(post: PostBucketType__1, handle: string, canonicalUrl: string, tags: string[] = []) {
+    const userUrl = new URL(`/user/${post.creatorHandle || handle}`, canonicalUrl).href;
    
     const staticKeywords = ['nuance'];
-    let dynamicKeywords = [post.handle, ...tags, post.creator != "" ? post.creator : null ].filter(Boolean);
+    let dynamicKeywords = [post.handle, ...tags, post.creatorHandle != "" ? post.creatorHandle : null ].filter(Boolean);
     const allKeywords = [...staticKeywords, ...dynamicKeywords].join(', ');
 
     return `
@@ -43,7 +43,7 @@ export function buildPostSEO(post: Post, handle: string, canonicalUrl: string, t
             <main>${post.content}</main>
             <section id="author-info">
                     <h2>About the Author</h2>
-                    <p>${post.creator || post.handle}</p>
+                    <p>${post.creatorHandle || post.handle}</p>
                     <p>More about the author: <a href="${userUrl}">${userUrl}</a></p>
             <footer>
                 Published on: ${new Date(Number(post.publishedDate)).toLocaleDateString()}

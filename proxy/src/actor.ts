@@ -2,8 +2,8 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { idlFactory as postCoreFactory } from '../declarations/PostCore/index.js';
 import { idlFactory as postBucketFactory } from '../declarations/PostBucket/index.js';
 import { idlFactory as userFactory } from '../declarations/User/index.js';
-import { Post } from '../declarations/PostBucket/PostBucket.did.js';
-import { PostKeyProperties } from '../declarations/PostCore/PostCore.did.js';
+import { Post } from '../declarations/PostBucket/PostBucket.did';
+import { PostKeyProperties } from '../declarations/PostCore/PostCore.did';
 
 
 // Replace these with actual canister IDs

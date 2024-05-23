@@ -1,25 +1,34 @@
 export const idlFactory = ({ IDL }) => {
   const List = IDL.Rec();
-  const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
-  const Result_9 = IDL.Variant({
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({
     'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
     'err' : IDL.Text,
   });
-  const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_8 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const TagModel = IDL.Record({
     'id' : IDL.Text,
     'value' : IDL.Text,
     'createdDate' : IDL.Text,
   });
-  const Result_8 = IDL.Variant({ 'ok' : TagModel, 'err' : IDL.Text });
-  const PostModerationStatus = IDL.Variant({
-    'approved' : IDL.Null,
-    'rejected' : IDL.Null,
-    'reviewRequired' : IDL.Null,
-  });
-  const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const Result_9 = IDL.Variant({ 'ok' : TagModel, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const PostTagModel = IDL.Record({ 'tagId' : IDL.Text, 'tagName' : IDL.Text });
+  const PostKeyProperties = IDL.Record({
+    'bucketCanisterId' : IDL.Text,
+    'created' : IDL.Text,
+    'principal' : IDL.Text,
+    'modified' : IDL.Text,
+    'views' : IDL.Text,
+    'publishedDate' : IDL.Text,
+    'claps' : IDL.Text,
+    'tags' : IDL.Vec(PostTagModel),
+    'isDraft' : IDL.Bool,
+    'category' : IDL.Text,
+    'handle' : IDL.Text,
+    'postId' : IDL.Text,
+  });
   const PostKeyProperties__1 = IDL.Record({
     'bucketCanisterId' : IDL.Text,
     'created' : IDL.Text,
@@ -38,31 +47,12 @@ export const idlFactory = ({ IDL }) => {
     'totalCount' : IDL.Text,
     'posts' : IDL.Vec(PostKeyProperties__1),
   });
-  const PostKeyProperties = IDL.Record({
-    'bucketCanisterId' : IDL.Text,
-    'created' : IDL.Text,
-    'principal' : IDL.Text,
-    'modified' : IDL.Text,
-    'views' : IDL.Text,
-    'publishedDate' : IDL.Text,
-    'claps' : IDL.Text,
-    'tags' : IDL.Vec(PostTagModel),
-    'isDraft' : IDL.Bool,
-    'category' : IDL.Text,
-    'handle' : IDL.Text,
-    'postId' : IDL.Text,
-  });
   const PostTagModel__1 = IDL.Record({
     'tagId' : IDL.Text,
     'tagName' : IDL.Text,
   });
-  const NftCanisterEntry = IDL.Record({
-    'handle' : IDL.Text,
-    'canisterId' : IDL.Text,
-  });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_5 = IDL.Variant({ 'ok' : PostKeyProperties, 'err' : IDL.Text });
-  const Rule = IDL.Record({ 'id' : IDL.Text, 'description' : IDL.Text });
   const PostTag = IDL.Record({
     'tagId' : IDL.Text,
     'createdDate' : IDL.Int,
@@ -76,6 +66,8 @@ export const idlFactory = ({ IDL }) => {
     'uniqueReaderCount' : IDL.Text,
     'publishedCount' : IDL.Text,
     'handle' : IDL.Text,
+    'premiumCount' : IDL.Text,
+    'submittedToReviewCount' : IDL.Text,
     'totalPostCount' : IDL.Text,
   });
   const RecallOptions = IDL.Variant({
@@ -87,25 +79,45 @@ export const idlFactory = ({ IDL }) => {
     'ninetydays' : IDL.Null,
     'thisMonth' : IDL.Null,
   });
-  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
-  const Result_4 = IDL.Variant({ 'ok' : IDL.Vec(Result_5), 'err' : IDL.Text });
+  const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({
+    'ok' : IDL.Tuple(
+      IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
+      IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
+    ),
+    'err' : IDL.Text,
+  });
   const ContentStatus = IDL.Variant({
+    'new' : IDL.Null,
     'approved' : IDL.Null,
     'rejected' : IDL.Null,
-    'reviewRequired' : IDL.Null,
+  });
+  const ViolatedRules = IDL.Record({
+    'id' : IDL.Text,
+    'rejectionCount' : IDL.Nat,
   });
   const ContentResult = IDL.Record({
     'status' : ContentStatus,
+    'approvedCount' : IDL.Nat,
     'sourceId' : IDL.Text,
+    'violatedRules' : IDL.Vec(ViolatedRules),
+    'rejectedCount' : IDL.Nat,
   });
   const PostSaveModel = IDL.Record({
     'title' : IDL.Text,
-    'creator' : IDL.Text,
     'content' : IDL.Text,
-    'isPremium' : IDL.Bool,
+    'premium' : IDL.Opt(
+      IDL.Record({
+        'thumbnail' : IDL.Text,
+        'icpPrice' : IDL.Nat,
+        'maxSupply' : IDL.Nat,
+      })
+    ),
     'isDraft' : IDL.Bool,
     'tagIds' : IDL.Vec(IDL.Text),
     'category' : IDL.Text,
+    'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
@@ -116,7 +128,6 @@ export const idlFactory = ({ IDL }) => {
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
     'created' : IDL.Text,
-    'creator' : IDL.Text,
     'modified' : IDL.Text,
     'content' : IDL.Text,
     'views' : IDL.Text,
@@ -125,15 +136,23 @@ export const idlFactory = ({ IDL }) => {
     'publishedDate' : IDL.Text,
     'claps' : IDL.Text,
     'tags' : IDL.Vec(PostTagModel),
+    'nftCanisterId' : IDL.Opt(IDL.Text),
     'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
     'category' : IDL.Text,
     'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
   });
-  const Result_3 = IDL.Variant({ 'ok' : Post, 'err' : IDL.Text });
+  const Result_4 = IDL.Variant({ 'ok' : Post, 'err' : IDL.Text });
+  const PostModerationStatusV2 = IDL.Variant({
+    'new' : IDL.Null,
+    'approved' : IDL.Null,
+    'rejected' : IDL.Null,
+  });
   const PopularityType = IDL.Variant({
     'month' : IDL.Null,
     'today' : IDL.Null,
@@ -141,23 +160,25 @@ export const idlFactory = ({ IDL }) => {
     'week' : IDL.Null,
   });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
+  const Result = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'addCanisterToCyclesDispenser' : IDL.Func(
         [IDL.Text, IDL.Nat, IDL.Nat],
-        [Result],
+        [Result_1],
         [],
       ),
     'addNewRules' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
     'addPostCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Int], [], []),
-    'addWasmChunk' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result], []),
+    'addPostIdToUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
+    'addWasmChunk' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'checkViewsLast24Hours' : IDL.Func([], [], []),
     'clapPost' : IDL.Func([IDL.Text], [], ['oneway']),
-    'copyPublicationCanisters' : IDL.Func([IDL.Text], [Result_9], []),
-    'copyTrustedCanisters' : IDL.Func([IDL.Text], [Result_7], []),
-    'createNewBucketCanister' : IDL.Func([], [Result_1], []),
-    'createTag' : IDL.Func([IDL.Text], [Result_8], []),
+    'copyPublicationCanisters' : IDL.Func([IDL.Text], [Result_10], []),
+    'copyTrustedCanisters' : IDL.Func([IDL.Text], [Result_8], []),
+    'createNewBucketCanister' : IDL.Func([], [Result_2], []),
+    'createTag' : IDL.Func([IDL.Text], [Result_9], []),
     'currentId' : IDL.Func([], [IDL.Nat], ['query']),
     'debugApplaudsHashMap' : IDL.Func(
         [],
@@ -169,26 +190,24 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         ['query'],
       ),
-    'debugGetModeration' : IDL.Func(
-        [],
-        [
-          IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
-          IDL.Vec(IDL.Tuple(IDL.Text, PostModerationStatus)),
-        ],
-        ['query'],
-      ),
-    'delete' : IDL.Func([IDL.Text], [Result_2], []),
-    'deletePostFromUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_7], []),
-    'deleteUserPosts' : IDL.Func([IDL.Text], [Result_2], []),
-    'dumpIds' : IDL.Func([], [Result], []),
-    'dumpPosts' : IDL.Func([], [Result], []),
-    'dumpUserIds' : IDL.Func([], [Result], []),
-    'followTag' : IDL.Func([IDL.Text], [Result], []),
+    'delete' : IDL.Func([IDL.Text], [Result_3], []),
+    'deletePostFromUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_8], []),
+    'deleteUserPosts' : IDL.Func([IDL.Text], [Result_3], []),
+    'dumpIds' : IDL.Func([], [Result_1], []),
+    'dumpPosts' : IDL.Func([], [Result_1], []),
+    'dumpUserIds' : IDL.Func([], [Result_1], []),
+    'followTag' : IDL.Func([IDL.Text], [Result_1], []),
     'generateLatestPosts' : IDL.Func([], [], []),
     'generatePublishedDates' : IDL.Func([], [], []),
-    'getActiveBucketCanisterId' : IDL.Func([], [Result_1], []),
-    'getAdmins' : IDL.Func([], [Result_7], ['query']),
-    'getAllBuckets' : IDL.Func([], [Result_7], []),
+    'getActiveBucketCanisterId' : IDL.Func([], [Result_2], []),
+    'getAdmins' : IDL.Func([], [Result_8], ['query']),
+    'getAllBuckets' : IDL.Func([], [Result_8], []),
+    'getAllNftCanisters' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+        ['query'],
+      ),
+    'getAllStatusCount' : IDL.Func([], [Result_2], []),
     'getAllTags' : IDL.Func([], [IDL.Vec(TagModel)], ['query']),
     'getBucketCanisterIdsOfGivenHandles' : IDL.Func(
         [IDL.Vec(IDL.Text)],
@@ -201,9 +220,19 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
-    'getCgUsers' : IDL.Func([], [Result_7], ['query']),
-    'getFrontendCanisterId' : IDL.Func([], [Result_1], ['query']),
-    'getKinicList' : IDL.Func([], [Result_7], []),
+    'getCgUsers' : IDL.Func([], [Result_8], ['query']),
+    'getFrontendCanisterId' : IDL.Func([], [Result_2], ['query']),
+    'getHistoricalPublishedArticlesData' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Int))],
+        ['query'],
+      ),
+    'getKinicList' : IDL.Func([], [Result_8], []),
+    'getLastWeekRejectedPostKeyProperties' : IDL.Func(
+        [],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
     'getLatestPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [GetPostsByFollowers],
@@ -222,15 +251,34 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getMyAllPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
     'getMyDailyPostsStatus' : IDL.Func([], [IDL.Bool], ['query']),
-    'getMyPosts' : IDL.Func(
-        [IDL.Bool, IDL.Bool, IDL.Nat32, IDL.Nat32],
+    'getMyDraftPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
+    'getMyFollowingTagsPostKeyProperties' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [GetPostsByFollowers],
+        ['composite_query'],
+      ),
+    'getMyPublishedPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
+    'getMySubmittedToReviewPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
     'getMyTags' : IDL.Func([], [IDL.Vec(PostTagModel__1)], ['query']),
-    'getNextPostId' : IDL.Func([], [Result_1], []),
-    'getNftCanisters' : IDL.Func([], [IDL.Vec(NftCanisterEntry)], ['query']),
+    'getNextPostId' : IDL.Func([], [Result_2], []),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPopular' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
@@ -253,7 +301,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPostKeyProperties' : IDL.Func([IDL.Text], [Result_5], ['query']),
-    'getPostUrls' : IDL.Func([], [Result_1], []),
+    'getPostUrls' : IDL.Func([], [Result_2], []),
     'getPostViewsPerHourLast24Hours' : IDL.Func(
         [],
         [IDL.Nat, IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Nat))],
@@ -284,77 +332,111 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
-    'getRegisteredRules' : IDL.Func([], [IDL.Vec(Rule)], []),
+    'getPublicationPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32, IDL.Text],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
+    'getTagFollowers' : IDL.Func([IDL.Text], [Result_8], []),
     'getTagsByUser' : IDL.Func([IDL.Text], [IDL.Vec(PostTag)], ['query']),
+    'getTotalAmountOfTipsReceived' : IDL.Func(
+        [],
+        [IDL.Nat],
+        ['composite_query'],
+      ),
     'getTotalArticleViews' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalClaps' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalPostCount' : IDL.Func([], [IDL.Nat], ['query']),
-    'getTrustedCanisters' : IDL.Func([], [Result_7], ['query']),
+    'getTrustedCanisters' : IDL.Func([], [Result_8], ['query']),
     'getUserDailyAllowedPostNumber' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserPostCounts' : IDL.Func([IDL.Text], [UserPostCounts], ['query']),
-    'getUserPostIds' : IDL.Func([IDL.Text], [Result_7], ['query']),
+    'getUserPostIds' : IDL.Func([IDL.Text], [Result_8], ['query']),
     'getUserPosts' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getUsersPostCountsByHandles' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(UserPostCounts)],
+        ['query'],
+      ),
     'getViewsByRange' : IDL.Func([RecallOptions], [IDL.Int], []),
-    'getWasmChunks' : IDL.Func([], [Result_6], []),
-    'handleModclubMigration' : IDL.Func([IDL.Text], [Result_1], []),
+    'getWasmChunks' : IDL.Func([], [Result_7], []),
+    'handleModclubMigration' : IDL.Func([IDL.Text], [Result_2], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
     'incrementApplauds' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'indexPopular' : IDL.Func([], [], []),
     'initializeCanister' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
-        [Result_1],
+        [Result_2],
         [],
       ),
-    'initializePostCoreCanister' : IDL.Func([], [Result_1], []),
+    'initializePostCoreCanister' : IDL.Func([], [Result_2], []),
+    'isEditorPublic' : IDL.Func(
+        [IDL.Text, IDL.Principal],
+        [IDL.Bool],
+        ['query'],
+      ),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
+    'isWriterPublic' : IDL.Func(
+        [IDL.Text, IDL.Principal],
+        [IDL.Bool],
+        ['query'],
+      ),
     'makePostPublication' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
         [],
         [],
       ),
-    'migratePostsFromOldPostCanister' : IDL.Func(
-        [IDL.Text, IDL.Nat, IDL.Nat],
-        [Result_4],
-        [],
-      ),
+    'migrateAllPublicationEditorsAndWriters' : IDL.Func([], [Result_6], []),
+    'migrateModclubInterface' : IDL.Func([], [Result_2], []),
+    'migratePremiumArticleFromOldArch' : IDL.Func([], [Result_5], []),
     'modClubCallback' : IDL.Func([ContentResult], [], ['oneway']),
-    'modClubCallbackDebug' : IDL.Func([ContentResult], [IDL.Text], []),
-    'registerAdmin' : IDL.Func([IDL.Text], [Result], []),
-    'registerCanister' : IDL.Func([IDL.Text], [Result], []),
-    'registerCgUser' : IDL.Func([IDL.Text], [Result], []),
-    'registerNftCanisterId' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
-    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
+    'refreshUserPostIds' : IDL.Func([IDL.Text], [Result_3], []),
+    'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
+    'registerCanister' : IDL.Func([IDL.Text], [Result_1], []),
+    'registerCgUser' : IDL.Func([IDL.Text], [Result_1], []),
+    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
     'registerPublisher' : IDL.Func([], [], []),
-    'reindex' : IDL.Func([], [Result_1], []),
-    'removeExistingRules' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
+    'reindex' : IDL.Func([], [Result_2], []),
+    'removePostFromPopularityArrays' : IDL.Func([IDL.Text], [], ['oneway']),
+    'removePostIdToUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
     'resetWasmChunks' : IDL.Func([], [], ['oneway']),
-    'save' : IDL.Func([PostSaveModel], [Result_3], []),
-    'setFrontendCanisterId' : IDL.Func([IDL.Text], [Result_1], []),
-    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_2], []),
+    'save' : IDL.Func([PostSaveModel], [Result_4], []),
+    'setFrontendCanisterId' : IDL.Func([IDL.Text], [Result_2], []),
+    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_3], []),
     'setUpModClub' : IDL.Func([IDL.Text], [], ['oneway']),
-    'setUserDailyAllowedPostNumber' : IDL.Func([IDL.Nat], [Result_2], []),
-    'simulateModClub' : IDL.Func([IDL.Text, PostModerationStatus], [], []),
+    'setUserDailyAllowedPostNumber' : IDL.Func([IDL.Nat], [Result_3], []),
+    'simulateModClub' : IDL.Func([IDL.Text, PostModerationStatusV2], [], []),
     'sortPopularPosts' : IDL.Func([PopularityType], [], []),
-    'storeAllSEO' : IDL.Func([], [Result], []),
+    'storeAllSEO' : IDL.Func([], [Result_1], []),
     'testInstructionSize' : IDL.Func([], [IDL.Text], []),
-    'unfollowTag' : IDL.Func([IDL.Text], [Result], []),
-    'unregisterAdmin' : IDL.Func([IDL.Text], [Result], []),
-    'unregisterCanister' : IDL.Func([IDL.Text], [Result], []),
-    'unregisterCgUser' : IDL.Func([IDL.Text], [Result], []),
-    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result], []),
-    'updateHandle' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
+    'unfollowTag' : IDL.Func([IDL.Text], [Result_1], []),
+    'unregisterAdmin' : IDL.Func([IDL.Text], [Result_1], []),
+    'unregisterCanister' : IDL.Func([IDL.Text], [Result_1], []),
+    'unregisterCgUser' : IDL.Func([IDL.Text], [Result_1], []),
+    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
+    'updateHandle' : IDL.Func([IDL.Text, IDL.Text], [Result_2], []),
     'updatePostDraft' : IDL.Func(
         [IDL.Text, IDL.Bool, IDL.Int, IDL.Text],
         [PostKeyProperties],
         [],
       ),
-    'upgradeAllBuckets' : IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [Result], []),
-    'upgradeBucket' : IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [Result], []),
+    'updatePublicationEditorsAndWriters' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)],
+        [Result_1],
+        [],
+      ),
+    'updateSettingsForAllBucketCanisters' : IDL.Func([], [Result_2], []),
+    'upgradeAllBuckets' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Nat8)],
+        [Result_1],
+        [],
+      ),
+    'upgradeBucket' : IDL.Func([IDL.Text, IDL.Vec(IDL.Nat8)], [Result_1], []),
     'validate' : IDL.Func([IDL.Reserved], [Validate], []),
+    'verifyMigration' : IDL.Func([], [Result], ['query']),
     'viewPost' : IDL.Func([IDL.Text], [], ['oneway']),
   });
 };
