@@ -242,7 +242,8 @@ stable var articleCommenters = Map.new<Text, [Principal]>();
 //for single source of truth, we will not store them here. These notifications are also not time sensitive.
 
 
-//events
+///////////////////////////////////////////events///////////////////////////////////////////
+
 //events are singular actions that trigger multiple notifications, ex. an article creates multiple notifications for followers of the writer and tags
 public shared ({caller}) func newArticle(notification: NotificationContent) : async Result.Result<(), Text> {
   
@@ -329,6 +330,87 @@ public shared ({caller}) func newArticle(notification: NotificationContent) : as
   return #ok();
 };  
 
+//subnscriptions
+public shared ({caller}) func newSubscription(notification: NotificationContent) : async Result.Result<(), Text> {
+  let authorReceiver = notification.authorPrincipal; //author
+  let readerReceiver = notification.receiverPrincipal; //reader
+
+  let authorNotification = {
+      id = Nat.toText(notificationId);
+      notificationType = #AuthorGainsNewSubscriber;
+      content = notification;
+      timestamp = Int.toText(Time.now());
+      read = false;
+  };
+
+  let readerNotification = {
+      id = Nat.toText(notificationId);
+      notificationType = #YouSubscribedToAuthor;
+      content = notification;
+      timestamp = Int.toText(Time.now());
+      read = false;
+  };
+  switch (updateUserDirectNotification(authorReceiver, authorNotification)) {
+      case (#err(err)) {
+          return #err(err);
+      };
+      case (#ok()) {
+  notificationId += 1;
+  };
+  };
+
+  switch (updateUserDirectNotification(readerReceiver, readerNotification)) {
+      case (#err(err)) {
+          return #err(err);
+      };
+      case (#ok()) {
+  notificationId += 1;  
+  };
+  };
+
+  
+  #ok();
+};
+
+public shared ({caller}) func expiredSubscription(notification: NotificationContent) : async Result.Result<(), Text> {
+  let authorReceiver = notification.authorPrincipal; //author
+  let readerReceiver = notification.receiverPrincipal; //reader
+  let AuthorNotification = {
+      id = Nat.toText(notificationId);
+      notificationType = #AuthorLosesSubscriber;
+      content = notification;
+      timestamp = Int.toText(Time.now());
+      read = false;
+  };
+
+  let ReaderNotification = {
+      id = Nat.toText(notificationId);
+      notificationType = #YouUnsubscribedFromAuthor;
+      content = notification;
+      timestamp = Int.toText(Time.now());
+      read = false;
+  };
+
+  switch (updateUserDirectNotification(authorReceiver, AuthorNotification)) {
+      case (#err(err)) {
+          return #err(err);
+      };
+      case (#ok()) {
+  notificationId += 1;
+  };
+  };
+
+  switch (updateUserDirectNotification(readerReceiver, ReaderNotification)) {
+      case (#err(err)) {
+          return #err(err);
+      };
+      case (#ok()) {
+  notificationId += 1;
+  };
+  };
+  #ok();
+};
+
 let { ihash; nhash; thash; phash; calcHash } = Map;
 
 
@@ -364,6 +446,18 @@ func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool 
         };
         case (#PremiumArticleSold) {
           return settings.premiumArticleSold;
+        };
+        case (#AuthorGainsNewSubscriber) {
+          return settings.authorGainsNewSubscriber;
+        };
+        case (#YouSubscribedToAuthor) {
+          return settings.youSubscribedToAuthor;
+        };
+        case (#AuthorLosesSubscriber) {
+          return settings.authorLosesSubscriber;
+        };
+        case (#YouUnsubscribedFromAuthor) {
+          return settings.youUnsubscribedFromAuthor;
         };
       };
       return false;
@@ -831,6 +925,53 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
                 };
             };
         };
+
+        case (#AuthorGainsNewSubscriber) {
+            switch (createDirectNotificationInternal(notification)) {
+                case (#ok()) {
+                    return #ok();
+                };
+                case (#err(err)) {
+
+                    return #err(err);
+                };
+            };
+        };
+        case (#YouSubscribedToAuthor) {
+            switch (createDirectNotificationInternal(notification)) {
+                case (#ok()) {
+                    return #ok();
+                };
+                case (#err(err)) {
+
+                    return #err(err);
+                };
+            };
+        };
+
+        case (#AuthorLosesSubscriber) {
+            switch (createDirectNotificationInternal(notification)) {
+                case (#ok()) {
+                    return #ok();
+                };
+                case (#err(err)) {
+
+                    return #err(err);
+                };
+            };
+        };
+
+        case (#YouUnsubscribedFromAuthor) {
+            switch (createDirectNotificationInternal(notification)) {
+                case (#ok()) {
+                    return #ok();
+                };
+                case (#err(err)) {
+
+                    return #err(err);
+                };
+            };
+        };
     };
 
     #ok();
@@ -1019,6 +1160,19 @@ func addBroadcast (notification : Notifications) : async Result.Result<(), Text>
   case (#NewCommentOnMyArticle) {
     return #err("Broadcast notifications for comments on my article are not supported");
   };
+
+  case (#AuthorGainsNewSubscriber) {
+    return #err("Broadcast notifications for new subscribers are not supported");
+  };
+  case (#YouSubscribedToAuthor) {
+    return #err("Broadcast notifications for new subscriptions are not supported");
+  };
+  case (#AuthorLosesSubscriber) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
+  case (#YouUnsubscribedFromAuthor) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
   };
 };
 
@@ -1170,6 +1324,18 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
   case (#NewCommentOnMyArticle) {
     return #err("Broadcast notifications for comments on my article are not supported");
 
+  };
+  case (#AuthorGainsNewSubscriber) {
+    return #err("Broadcast notifications for new subscribers are not supported");
+  };
+  case (#YouSubscribedToAuthor) {
+    return #err("Broadcast notifications for new subscriptions are not supported");
+  };
+  case (#AuthorLosesSubscriber) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
+  case (#YouUnsubscribedFromAuthor) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
   };
   };
 };
