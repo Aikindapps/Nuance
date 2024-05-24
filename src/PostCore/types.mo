@@ -17,6 +17,7 @@ module {
         totalPostCount: Text;
         publishedCount: Text;
         draftCount: Text;
+        plannedCount: Text;
         submittedToReviewCount: Text;
         totalViewCount: Text;
         premiumCount: Text;

@@ -101,6 +101,7 @@ module{
           icpPrice: Nat;
         };
         isMembersOnly: Bool;
+        scheduledPublishedDate: ?Int;
     };
     public type Post = {
         postId: Text;
@@ -404,6 +405,7 @@ module{
         isMembersOnly: Bool;
         tagNames : [Text];
         caller : Principal;
+        scheduledPublishedDate: ?Int;
     };
 
     public type SaveResultBucket = Result.Result<PostBucketType, Text>;

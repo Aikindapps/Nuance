@@ -16,6 +16,7 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
+import Text "mo:base/Text";
 
 actor Subscription {
     let { ihash; nhash; thash; phash; calcHash } = Map;
@@ -40,6 +41,7 @@ actor Subscription {
     type ReaderSubscriptionDetails = {
         readerPrincipalId: Text;
         readerSubscriptions: [SubscriptionEvent];
+        readerNotStoppedSubscriptionsWriterPrincipalIds: [Text];
     };
     //used as argument in updateSubscriptionDetails function
     type UpdateSubscriptionDetailsModel = {
@@ -94,6 +96,10 @@ actor Subscription {
 
     //key: reader principal id, value: array of subscription events of the reader
     stable var readerPrincipalIdToSubscriptionEventIds = Map.new<Text, [Text]>();
+    //key: reader principal id, value: array of writer principal ids that reader has an active subscription
+    //user may want to stop the subscription by deleting the writer principal id from here
+    //the writer principal id is deleted automatically right after user has been notified
+    stable var readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds = Map.new<Text, [Text]>();
 
     //key: subscription event id, value: the principal id of the writer of the subscription event
     stable var subscriptionEventIdToWriterPrincipalId = Map.new<Text, Text>();
@@ -340,6 +346,17 @@ actor Subscription {
             };
         };
 
+        //check if the caller already have an active subscription to the writer
+        let readerDetails = buildReaderSubscriptionDetails(callerPrincipalId);
+        let readerSubscriptionEvents = readerDetails.readerSubscriptions;
+        let now = Time.now();
+        for(subscriptionEvent in readerSubscriptionEvents.vals()){
+            if(writerPrincipalId == subscriptionEvent.writerPrincipalId and now < subscriptionEvent.endTime){
+                return #err("Reader already have an active subscription to the writer.");
+            };
+        };
+
+
         //if here, both caller and the writer is valid
         //create the payment request
         #ok(putPaymentRequest(writerPrincipalId, callerPrincipalId, timeInterval));
@@ -384,6 +401,60 @@ actor Subscription {
                 //return the error
                 return #err("There is no active payment request with the given id.");
             };
+        };
+    };
+
+    //the reader can always call this function to get the notifications for the expired subscriptions
+    public shared ({caller}) func checkMyExpiredSubscriptionsNotifications() : async () {
+        let readerPrincipalId = Principal.toText(caller);
+        let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
+        let now = Time.now();
+        let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
+        for(writerPrincipalId in writerPrincipalIds.vals()){
+            var subscriptionEvent : ?SubscriptionEvent = null;
+            for(readerSubscriptionEvent in readerDetails.readerSubscriptions.vals()){
+                if(readerSubscriptionEvent.writerPrincipalId == writerPrincipalId and now > readerSubscriptionEvent.endTime){
+                    //the subscription has not been expired yet
+                    //store the active subscription event to the local var to use the info when sending the notification
+                    subscriptionEvent := ?readerSubscriptionEvent;
+                };
+            };
+
+            //if the subscription has expired, remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
+            //also send the notification
+            switch(subscriptionEvent) {
+                case(?event) {
+                    //ToDo: Implement a new function named createNotifications in Notifications canister to be able to send more than one notification
+                    //with a single call to the canister. Add all the notifications to a local notifications array and then send them all to the Notifications
+                    //canister 
+                    //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
+                    let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                        writerPrincipalId != principalId
+                    });
+                    Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                };
+                case(null) {
+                    //subscription to writer has not been expired yet
+                    //nothing to do
+                };
+            };
+        };
+    };
+
+    //stop the existing subscription
+    public shared ({caller}) func stopSubscription(writerPrincipalId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
+        let readerPrincipalId = Principal.toText(caller);
+        let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
+
+        if(U.arrayContainsGeneric(writerPrincipalIds, writerPrincipalId, Text.equal)){
+            let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                writerPrincipalId != principalId
+            });
+            Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+            return #ok(buildReaderSubscriptionDetails(readerPrincipalId));
+        }
+        else{
+            return #err("Reader doesn't have any active subscription to the given writer!")
         };
     };
 
@@ -482,6 +553,12 @@ actor Subscription {
         readerExistingSubscriptionEventIdsBuffer.add(subscriptionEventId);
         Map.set(readerPrincipalIdToSubscriptionEventIds, thash, paymentRequest.readerPrincipalId, Buffer.toArray(readerExistingSubscriptionEventIdsBuffer));
 
+        //add the writer principal id to reader's subscribed principal ids
+        let readerExistingSubscribedPrincipalIdsArray = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, paymentRequest.readerPrincipalId), []);
+        let readerExistingSubscribedPrincipalIdsBuffer = Buffer.fromArray<Text>(readerExistingSubscribedPrincipalIdsArray);
+        readerExistingSubscribedPrincipalIdsBuffer.add(paymentRequest.writerPrincipalId);
+        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, paymentRequest.readerPrincipalId, Buffer.toArray(readerExistingSubscribedPrincipalIdsBuffer));
+
         //map the data to subscription event id
         Map.set(subscriptionEventIdToWriterPrincipalId, thash, subscriptionEventId, paymentRequest.writerPrincipalId);
         Map.set(subscriptionEventIdToReaderPrincipalId, thash, subscriptionEventId, paymentRequest.readerPrincipalId);
@@ -502,6 +579,8 @@ actor Subscription {
             (ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID, ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT), Nat32.fromNat(nuanceDaoShareNat))
         ];
         Map.set(pendingTokenDisbursements, thash, subscriptionEventId, disbursements);
+
+        //add the notifications
     };
 
     private func getSubscriptionEndTimeByTimeInterval(now: Int, timeInterval: SubscriptionTimeInterval) : Int {
@@ -617,6 +696,8 @@ actor Subscription {
             //all the disbursements were successful
             //delete the value with the eventId
             Map.delete(pendingTokenDisbursements, thash, eventId);
+            //ToDo: send the notifications to both writer and the reader
+
         }
         else{
             //the size is not equal to 0
@@ -662,6 +743,7 @@ actor Subscription {
             readerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
                 buildSubscriptionEvent(subscriptionEventId)
             });
+            readerNotStoppedSubscriptionsWriterPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []);
         }
     };
 
@@ -723,6 +805,44 @@ actor Subscription {
         };
     };
 
+    public shared func expiredNotificationsHeartbeatExternal() : async () {
+        let now = Time.now();
+        for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
+            let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
+            for(writerPrincipalId in writerPrincipalIds.vals()){
+                var subscriptionEvent : ?SubscriptionEvent = null;
+                for(readerSubscriptionEvent in readerDetails.readerSubscriptions.vals()){
+                    if(readerSubscriptionEvent.writerPrincipalId == writerPrincipalId and now > readerSubscriptionEvent.endTime){
+                        //the subscription has not been expired yet
+                        //store the active subscription event to the local var to use the info when sending the notification
+                        subscriptionEvent := ?readerSubscriptionEvent;
+                    };
+                };
+
+                //if the subscription has expired, remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
+                //also send the notification
+                switch(subscriptionEvent) {
+                    case(?event) {
+                        //ToDo: Implement a new function named createNotifications in Notifications canister to be able to send more than one notification
+                        //with a single call to the canister. Add all the notifications to a local notifications array and then send them all to the Notifications
+                        //canister
+                        
+                        //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
+                        let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                            writerPrincipalId != principalId
+                        });
+                        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                    };
+                    case(null) {
+                        //subscription to writer has not been expired yet
+                        //nothing to do
+                    };
+                };
+            };
+        };
+        //ToDo: Send all the notifications to the Notifications canister
+    };
+ 
     public shared func disperseTokensForSuccessfulSubscription(eventId: Text) : async Result.Result<(), Text> {
         switch(Map.get(pendingTokenDisbursements, thash, eventId)) {
             case(?disbursement) {
@@ -750,6 +870,11 @@ actor Subscription {
 
         try {
             ignore pendingTokensHeartbeatExternal();
+        } catch (e) {
+        };
+
+        try {
+            ignore expiredNotificationsHeartbeatExternal();
         } catch (e) {
         };
 

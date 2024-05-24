@@ -811,7 +811,8 @@ actor class PostBucket() = this {
     creatorPrincipal : Text,
     isPublication : Bool,
     category : Text,
-    isMembersOnly: Bool
+    isMembersOnly: Bool,
+    scheduledPublishedDate: ?Int
   ) : (firstPublish: Bool) {
 
     // posts are not saved as single objects
@@ -836,9 +837,25 @@ actor class PostBucket() = this {
       }
     };
     let post = buildPost(postId);
-    if (isDraft == false and post.publishedDate == "0") {
-      publishedDateHashMap.put(postId, now);
-      firstPublish := true;
+
+    if(isDraft){
+      publishedDateHashMap.delete(postId);
+    }
+    else {
+      switch(scheduledPublishedDate) {
+        case(?scheduledPublishedDate) {
+          publishedDateHashMap.put(postId, scheduledPublishedDate);
+        };
+        case(null) {
+          if(post.publishedDate == "0"){
+            publishedDateHashMap.put(postId, now);
+          }
+        };
+      };
+      
+      if(post.publishedDate == "0"){
+        firstPublish := true;
+      }
     };
 
     addOrUpdatePostCategory(postId, category);
@@ -868,7 +885,7 @@ actor class PostBucket() = this {
     Debug.print("PostBucket->Get: " # postId);
 
     //only the author can retrieve own drafts
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let isDraft = isDraftOrFutureArticle(postId);
     if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller) and not isNuanceCanister(caller)) {
       return #err(Unauthorized);
     };
@@ -917,9 +934,8 @@ actor class PostBucket() = this {
   //only returns the post stored in this bucket
   public shared composite query ({ caller }) func getPostCompositeQuery(postId : Text) : async Result.Result<PostBucketType, Text> {
     Debug.print("PostBucket->getPostCompositeQuery: " # postId);
-
     //only the author can retrieve own drafts
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let isDraft = isDraftOrFutureArticle(postId);
     if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller) and not isNuanceCanister(caller)) {
       if(U.safeGet(isPublicationHashMap, postId, false)){
         //publication post
@@ -1268,14 +1284,12 @@ actor class PostBucket() = this {
       creatorHashMap.put(postId, userPrincipalId);
       //add postId to publication's posts
       addPostIdToUser(publicationPrincipalId, postId);
+      isDraftHashMap.put(postId, isDraft);
       if (isDraft) {
-       
-      } else {
-        let now = U.epochTime();
-        modifiedHashMap.put(postId, now);
-        isDraftHashMap.put(postId, isDraft);
+        publishedDateHashMap.delete(postId);
       };
-
+      let now = U.epochTime();
+      modifiedHashMap.put(postId, now);
     };
   };
 
@@ -1457,7 +1471,8 @@ actor class PostBucket() = this {
       creatorPrincipal,
       isPublication,
       postModel.category,
-      postModel.isMembersOnly
+      postModel.isMembersOnly,
+      postModel.scheduledPublishedDate
     )) {
       case (firstPublish){
         isFirstPublish := firstPublish;
@@ -1756,7 +1771,7 @@ actor class PostBucket() = this {
       List.iterate(
         userPostIds,
         func(postId : Text) : () {
-          let isDraft = U.safeGet(isDraftHashMap, postId, true);
+          let isDraft = isDraftOrFutureArticle(postId);
 
           if (not isDraft and not rejectedByModClub(postId)) {
             let postListItem = buildPostListItem(postId);
@@ -1816,7 +1831,7 @@ actor class PostBucket() = this {
     List.iterate(
       givenPostIds,
       func(postId : Text) : () {
-        let isDraft = U.safeGet(isDraftHashMap, postId, true);
+        let isDraft = isDraftOrFutureArticle(postId);
         let authorPrincipalId = U.safeGet(principalIdHashMap, postId, "");
         //only for publication posts
         let callerPostIds = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
@@ -1959,6 +1974,9 @@ actor class PostBucket() = this {
     let now = U.epochTime();
     modifiedHashMap.put(postId, now);
     isDraftHashMap.put(postId, isDraft);
+    if(isDraft){
+      publishedDateHashMap.delete(postId);
+    };
     let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     let writerHandle = updatingPost.creatorHandle;
     let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
@@ -2111,6 +2129,13 @@ actor class PostBucket() = this {
         return false;
       };
     };
+  };
+  //returns true if the post is draft or it's a scheduled post which was scheduled for future
+  private func isDraftOrFutureArticle(postId: Text) : Bool {
+    let now = U.epochTime();
+    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
+    publishedDate > now or isDraft
   };
 
   //returns all the rejected postIds
@@ -2526,7 +2551,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
         };
 
         //verify draft
-        if (post.isDraft) {
+        if (isDraftOrFutureArticle(post.postId)) {
           return #err(Unauthorized);
         };
 
