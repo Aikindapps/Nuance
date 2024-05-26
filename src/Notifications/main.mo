@@ -350,24 +350,10 @@ public shared ({caller}) func newSubscription(notification: NotificationContent)
       timestamp = Int.toText(Time.now());
       read = false;
   };
-  switch (updateUserDirectNotification(authorReceiver, authorNotification)) {
-      case (#err(err)) {
-          return #err(err);
-      };
-      case (#ok()) {
+  updateUserDirectNotification(authorReceiver, authorNotification);
   notificationId += 1;
-  };
-  };
-
-  switch (updateUserDirectNotification(readerReceiver, readerNotification)) {
-      case (#err(err)) {
-          return #err(err);
-      };
-      case (#ok()) {
-  notificationId += 1;  
-  };
-  };
-
+  updateUserDirectNotification(readerReceiver, readerNotification);
+  notificationId += 1;
   
   #ok();
 };
@@ -390,24 +376,11 @@ public shared ({caller}) func expiredSubscription(notification: NotificationCont
       timestamp = Int.toText(Time.now());
       read = false;
   };
-
-  switch (updateUserDirectNotification(authorReceiver, AuthorNotification)) {
-      case (#err(err)) {
-          return #err(err);
-      };
-      case (#ok()) {
+  updateUserDirectNotification(authorReceiver, AuthorNotification);
   notificationId += 1;
-  };
-  };
 
-  switch (updateUserDirectNotification(readerReceiver, ReaderNotification)) {
-      case (#err(err)) {
-          return #err(err);
-      };
-      case (#ok()) {
+  updateUserDirectNotification(readerReceiver, ReaderNotification);
   notificationId += 1;
-  };
-  };
   #ok();
 };
 
@@ -667,10 +640,7 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
         return false;
     };
 
-
-
-
-    if ( not isNuanceCanister(caller) and not isPostBucket(caller) and not isNftCanister(caller)) {
+    if (not isNuanceCanister(caller) and not isPostBucket(caller) and not isNftCanister(caller)) {
         return #err("Cannot use this method anonymously.");
     };
 
@@ -747,42 +717,16 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
         case (#NewCommentOnMyArticle) {
             //shouldn't happen because it is handled in comment broadcast
             //direct
-            switch(createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-                    return #err(err);
-                };
-                
-            };
-
+            createDirectNotificationInternal(notification);
         };
 
         case (#NewFollower) {
             //direct
-            switch(createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-                    return #err(err);
-                };
-                
-            };
+            createDirectNotificationInternal(notification);
         };
         case (#TipReceived) {
             //direct
-            switch(createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-
-                    return #err(err);
-                };
-                
-            };
+            createDirectNotificationInternal(notification);
         };
         case (#PremiumArticleSold) {
            
@@ -843,8 +787,6 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
             };
           };
 
-           
-          
             notification := {
                 id = Nat.toText(notificationId);
                 notificationType = notificationType;
@@ -869,17 +811,7 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
             };
 
 
-            
-            switch(createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-
-                    return #err(err);
-                };
-                
-            };
+            createDirectNotificationInternal(notification);
         };
         case (#NewCommentOnFollowedArticle) {
         
@@ -927,50 +859,18 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
         };
 
         case (#AuthorGainsNewSubscriber) {
-            switch (createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-
-                    return #err(err);
-                };
-            };
+          createDirectNotificationInternal(notification);
         };
         case (#YouSubscribedToAuthor) {
-            switch (createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-
-                    return #err(err);
-                };
-            };
+          createDirectNotificationInternal(notification);
         };
 
         case (#AuthorLosesSubscriber) {
-            switch (createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-
-                    return #err(err);
-                };
-            };
+          createDirectNotificationInternal(notification);
         };
 
         case (#YouUnsubscribedFromAuthor) {
-            switch (createDirectNotificationInternal(notification)) {
-                case (#ok()) {
-                    return #ok();
-                };
-                case (#err(err)) {
-
-                    return #err(err);
-                };
-            };
+          createDirectNotificationInternal(notification);
         };
     };
 
@@ -979,6 +879,62 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
 
 
 
+//it can only be called by Subscription canister for now
+public shared ({caller}) func  createNotifications(input: [(NotificationType, NotificationContent)]) : async Result.Result<(), Text> {
+  if(not Text.equal(ENV.SUBSCRIPTION_CANISTER_ID, Principal.toText(caller))){
+    return #err("Unauthorized");
+  };
+
+  for(notificationInput in input.vals()){
+    createNotificationInternal(notificationInput.0, notificationInput.1)
+  };
+
+  #ok()
+};
+
+
+private func createNotificationInternal(notificationType: NotificationType, content: NotificationContent) : () {
+  var notification = {
+        id = Nat.toText(notificationId);
+        notificationType = notificationType;
+        content = {
+            url = content.url;
+            senderPrincipal = content.senderPrincipal;
+            senderHandle = content.senderHandle;
+            receiverPrincipal = content.receiverPrincipal;
+            receiverHandle = content.receiverHandle;
+            tags = content.tags;
+            articleId = content.articleId;
+            articleTitle = content.articleTitle;
+            authorPrincipal = content.authorPrincipal;
+            authorHandle = content.authorHandle;
+            comment = content.comment;
+            isReply = content.isReply;
+            tipAmount = content.tipAmount;
+            token = content.token;
+        };
+        timestamp = Int.toText(Time.now());
+        read = false;
+    };
+
+    switch (notificationType) {
+        case (#AuthorGainsNewSubscriber) {
+          createDirectNotificationInternal(notification);
+        };
+        case (#YouSubscribedToAuthor) {
+          createDirectNotificationInternal(notification);
+        };
+
+        case (#AuthorLosesSubscriber) {
+          createDirectNotificationInternal(notification);
+        };
+
+        case (#YouUnsubscribedFromAuthor) {
+          createDirectNotificationInternal(notification);
+        };
+        case (_) {};
+    };
+};
 
 
 
@@ -986,25 +942,12 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
 
 
 ////////////////////////direct notifications////////////////////////////////////
-func createDirectNotificationInternal(notification : Notifications) : Result.Result<(), Text> {
-  
+func createDirectNotificationInternal(notification : Notifications) : () {
     let receiver = notification.content.receiverPrincipal;
-
-        switch (updateUserDirectNotification(receiver, notification)) {
-            case (#err(err)) {
-                return #err(err);
-                
-            };
-            case (#ok()) {
-               notificationId += 1;
-                return #ok();
-            };
-        };
-       
-      
+    updateUserDirectNotification(receiver, notification);    
 };
 
-func updateUserDirectNotification(receiver : Principal, notification : Notifications) : Result.Result<(), Text> {
+func updateUserDirectNotification(receiver : Principal, notification : Notifications) : () {
     
         let directNotifications = Map.get(userDirectNotifications, phash, receiver);
         switch (directNotifications) {
@@ -1017,8 +960,6 @@ func updateUserDirectNotification(receiver : Principal, notification : Notificat
                Map.set(directNotifications.notifications, thash, Nat.toText(notificationId), notification);
             };
         };
-
-#ok();
 };
 
 
@@ -1231,14 +1172,7 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
                 timestamp = Int.toText(Time.now());
                 read = false;
             };
-            switch (createDirectNotificationInternal(newNotification)) {
-                case (#err(err)) {
-                    return #err(err);
-                };
-                case (#ok()) {
-                    notificationId += 1;
-                };
-            };
+            createDirectNotificationInternal(newNotification);
             };
     };
 
