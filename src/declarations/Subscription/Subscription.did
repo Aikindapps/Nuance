@@ -1,0 +1,92 @@
+type WriterSubscriptionDetails = 
+ record {
+   annuallyFee: opt nat32;
+   isSubscriptionActive: bool;
+   lifeTimeFee: opt nat32;
+   monthlyFee: opt nat32;
+   weeklyFee: opt nat32;
+   writerPrincipalId: text;
+   writerSubscriptions: vec SubscriptionEvent;
+ };
+type UpdateSubscriptionDetailsModel = 
+ record {
+   annuallyFee: opt nat32;
+   lifeTimeFee: opt nat32;
+   monthlyFee: opt nat32;
+   publicationInformation: opt record {
+                                 principal;
+                                 text;
+                               };
+   weeklyFee: opt nat32;
+ };
+type SubscriptionTimeInterval = 
+ variant {
+   Annually;
+   LifeTime;
+   Monthly;
+   Weekly;
+ };
+type SubscriptionEvent = 
+ record {
+   endTime: int;
+   paymentFee: nat32;
+   readerPrincipalId: text;
+   startTime: int;
+   subscriptionEventId: text;
+   subscriptionTimeInterval: SubscriptionTimeInterval;
+   writerPrincipalId: text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: PaymentRequest;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: ReaderSubscriptionDetails;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: WriterSubscriptionDetails;
+ };
+type ReaderSubscriptionDetails = 
+ record {
+   readerNotStoppedSubscriptionsWriters: vec WriterSubscriptionDetails;
+   readerPrincipalId: text;
+   readerSubscriptions: vec SubscriptionEvent;
+ };
+type PaymentRequest = 
+ record {
+   expirationDate: int;
+   paymentFee: nat32;
+   readerPrincipalId: text;
+   subaccount: blob;
+   subscriptionEventId: text;
+   subscriptionTimeInterval: SubscriptionTimeInterval;
+   writerPrincipalId: text;
+ };
+service : {
+  checkMyExpiredSubscriptionsNotifications: () -> ();
+  completeSubscriptionEvent: (text) -> (Result_1);
+  createPaymentRequestAsReader: (text, SubscriptionTimeInterval, nat32) ->
+   (Result_3);
+  disperseTokensForSuccessfulSubscription: (text) -> (Result_2);
+  expiredNotificationsHeartbeatExternal: () -> ();
+  getLatestTimerCall: () -> (text, text) query;
+  getReaderSubscriptionDetails: () -> (Result_1) query;
+  getWriterSubscriptionDetails: (opt text) -> (Result) composite_query;
+  getWriterSubscriptionDetailsByPrincipalId: (text) -> (Result) query;
+  isReaderSubscriber: (text, text) -> (bool) query;
+  isWriterActivatedSubscription: (text) -> (bool) query;
+  pendingStuckTokensHeartbeatExternal: () -> ();
+  pendingTokensHeartbeatExternal: () -> ();
+  stopSubscription: (text) -> (Result_1);
+  updateSubscriptionDetails: (UpdateSubscriptionDetailsModel) -> (Result);
+}

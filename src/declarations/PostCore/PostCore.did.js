@@ -61,6 +61,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const UserPostCounts = IDL.Record({
     'totalViewCount' : IDL.Text,
+    'plannedCount' : IDL.Text,
     'uniqueClaps' : IDL.Text,
     'draftCount' : IDL.Text,
     'uniqueReaderCount' : IDL.Text,
@@ -119,6 +120,8 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
+    'scheduledPublishedDate' : IDL.Opt(IDL.Int),
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
@@ -143,6 +146,7 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,

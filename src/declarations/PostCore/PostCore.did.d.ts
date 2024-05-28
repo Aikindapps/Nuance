@@ -41,6 +41,7 @@ export interface Post {
   'handle' : string,
   'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -88,6 +89,8 @@ export interface PostSaveModel {
   'handle' : string,
   'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
+  'scheduledPublishedDate' : [] | [bigint],
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -138,6 +141,7 @@ export interface TagModel {
 }
 export interface UserPostCounts {
   'totalViewCount' : string,
+  'plannedCount' : string,
   'uniqueClaps' : string,
   'draftCount' : string,
   'uniqueReaderCount' : string,

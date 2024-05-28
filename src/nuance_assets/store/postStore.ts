@@ -224,13 +224,8 @@ const fetchPostsByBuckets = async (
   let resultsArray = (await Promise.all(promises)).flat(1);
 
   return resultsArray.map((bucketType) => {
-    let keyProperties = postIdToKeyPropertiesMap.get(bucketType.postId);
-    if (keyProperties) {
-      return { ...keyProperties, ...bucketType } as PostType;
-    } else {
-      //should never happen
-      return { ...bucketType } as PostType;
-    }
+    let keyProperties = postIdToKeyPropertiesMap.get(bucketType.postId) as PostKeyProperties;
+    return { ...keyProperties, ...bucketType } as PostType;
   });
 };
 

@@ -41,11 +41,11 @@ actor Subscription {
     type ReaderSubscriptionDetails = {
         readerPrincipalId: Text;
         readerSubscriptions: [SubscriptionEvent];
-        readerNotStoppedSubscriptionsWriterPrincipalIds: [Text];
+        readerNotStoppedSubscriptionsWriters: [WriterSubscriptionDetails];
     };
     //used as argument in updateSubscriptionDetails function
     type UpdateSubscriptionDetailsModel = {
-        paymentReceiverAddress: ?Principal;
+        publicationInformation: ?(paymentReveiverAddress: Principal, publicationCanisterId: Text);
         weeklyFee: ?Nat32;
         monthlyFee: ?Nat32;
         annuallyFee: ?Nat32;
@@ -138,7 +138,7 @@ actor Subscription {
     public shared query func isReaderSubscriber(writerPrincipalId: Text, readerPrincipalId: Text) : async Bool {
         let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
         let readerSubscriptionEvents = readerDetails.readerSubscriptions;
-        let now = Time.now();
+        let now = U.epochTime();
         for(subscriptionEvent in readerSubscriptionEvents.vals()){
             if(writerPrincipalId == subscriptionEvent.writerPrincipalId and now < subscriptionEvent.endTime){
                 return true;
@@ -153,15 +153,43 @@ actor Subscription {
     };
 
     //a function to query the subscription details and the history of the writer
-    //should be called by the writer
-    public shared query ({caller}) func getWriterSubscriptionDetails() : async Result.Result<WriterSubscriptionDetails, Text> {
-        let principal = Principal.toText(caller);
-        switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-            case(?value) {
-                return #ok(buildWriterSubscriptionDetails(principal))
+    //should be called by the writer or editor
+    //a regular writer should not provide any argument
+    //an editor should provide the publicationCanisterId as the argument
+    public shared composite query ({caller}) func getWriterSubscriptionDetails(publicationPrincipalId: ?Text) : async Result.Result<WriterSubscriptionDetails, Text> {
+        switch(publicationPrincipalId) {
+            case(?publicationCanisterId) {
+                let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+                if(not (await PostCoreCanister.isEditorPublic(publicationCanisterId, caller))){
+                    //not authorized to get the subscription details of the publication (including the subscription history)
+                    return #err("Unauthorized.");
+                }
+                else{
+                    //caller is the editor of the given publication
+                    //if there exists any subscription detail, return the object
+                    switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, publicationCanisterId)) {
+                        case(?value) {
+                            return #ok(buildWriterSubscriptionDetails(publicationCanisterId))
+                        };
+                        case(null) {
+                            return #err("No subscription record found.")
+                        };
+                    };
+                }
+
             };
             case(null) {
-                return #err("No subscription record found.")
+                //the argument is null
+                //if there exists any subscription detail for the writer, return it
+                let principal = Principal.toText(caller);
+                switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
+                    case(?value) {
+                        return #ok(buildWriterSubscriptionDetails(principal))
+                    };
+                    case(null) {
+                        return #err("No subscription record found.")
+                    };
+                };
             };
         };
     };
@@ -197,38 +225,63 @@ actor Subscription {
     //a function that allows writers to update their subscription details
     public shared ({caller}) func updateSubscriptionDetails(subscriptionDetails: UpdateSubscriptionDetailsModel) : async Result.Result<WriterSubscriptionDetails, Text> {
         let callerPrincipalId = Principal.toText(caller);
-        //check if the caller is a Nuance user first
-        let UserCanister = CanisterDeclarations.getUserCanister();
-        switch(await UserCanister.getUserByPrincipalId(callerPrincipalId)) {
-            case(#ok(value)) {};
-            case(#err(error)) {
-                //caller doesn't exist in User canister
-                return #err("No Nuance account found!")
+        var writerPrincipalId = callerPrincipalId;
+        var paymentReceiverPrincipalId = caller;
+
+        switch(subscriptionDetails.publicationInformation) {
+            case(?publicationInformation) {
+                //publication related info provided
+                //check if the caller is an editor
+                let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+                if(not (await PostCoreCanister.isEditorPublic(publicationInformation.1, caller))){
+                    //caller is not an editor
+                    //return an error
+                    return #err("Unauthorized.");
+                }
+                else{
+                    //caller is an editor
+                    //update the writerPrincipalId value
+                    writerPrincipalId := publicationInformation.1;
+                    paymentReceiverPrincipalId := publicationInformation.0;
+                }
+            };
+            case(null) {
+                //publication related info not provided
+                //a regular user called this method for his/her own account
+                //check if the caller is a Nuance user
+                let UserCanister = CanisterDeclarations.getUserCanister();
+                switch(await UserCanister.getUserByPrincipalId(callerPrincipalId)) {
+                    case(#ok(value)) {};
+                    case(#err(error)) {
+                        //caller doesn't exist in User canister
+                        return #err("No Nuance account found!")
+                    };
+                };
             };
         };
-        //if here, caller is a Nuance user
-
+        
+        //if here, caller is a Nuance user or an editor if it's a publication subscription
 
         //if all the fee fields are empty, remove the subscription option from the writer
         if(subscriptionDetails.weeklyFee == null and subscriptionDetails.monthlyFee == null and subscriptionDetails.annuallyFee == null and subscriptionDetails.lifeTimeFee == null){
-            switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId)) {
+            switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId)) {
                 case(?isActive) {
                     //the writer exists as a subscription enabled writer
                     //update the internal state
                     //set the isActive status to false
-                    Map.set(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId, false);
+                    Map.set(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId, false);
                     //delete all the fields except the subscription event ids
-                    Map.delete(writerPrincipalIdToWeeklySubscriptionFee, thash, callerPrincipalId);
-                    Map.delete(writerPrincipalIdToMonthlySubscriptionFee, thash, callerPrincipalId);
-                    Map.delete(writerPrincipalIdToAnnuallySubscriptionFee, thash, callerPrincipalId);
-                    Map.delete(writerPrincipalIdToLifeTimeSubscriptionFee, thash, callerPrincipalId);
-                    Map.delete(writerPrincipalIdToPaymentReceiverAddress, thash, callerPrincipalId);
-                    return #ok(buildWriterSubscriptionDetails(callerPrincipalId))
+                    Map.delete(writerPrincipalIdToWeeklySubscriptionFee, thash, writerPrincipalId);
+                    Map.delete(writerPrincipalIdToMonthlySubscriptionFee, thash, writerPrincipalId);
+                    Map.delete(writerPrincipalIdToAnnuallySubscriptionFee, thash, writerPrincipalId);
+                    Map.delete(writerPrincipalIdToLifeTimeSubscriptionFee, thash, writerPrincipalId);
+                    Map.delete(writerPrincipalIdToPaymentReceiverAddress, thash, writerPrincipalId);
+                    return #ok(buildWriterSubscriptionDetails(writerPrincipalId))
                 };
                 case(null) {
                     //the writer doesn't have any existing configuration
                     //do nothing and return the WriterSubscriptionDetailsObject
-                    return #ok(buildWriterSubscriptionDetails(callerPrincipalId));
+                    return #ok(buildWriterSubscriptionDetails(writerPrincipalId));
                 };
             };
         };
@@ -236,12 +289,12 @@ actor Subscription {
         //if here, input is valid
         //update the hashmaps
         //activate the subscription
-        Map.set(writerPrincipalIdToIsSubscriptionActive, thash, callerPrincipalId, true);
+        Map.set(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId, true);
 
         //set the weekly fee if provided
         switch(subscriptionDetails.weeklyFee) {
             case(?weeklyFee) {
-                Map.set(writerPrincipalIdToWeeklySubscriptionFee, thash, callerPrincipalId, weeklyFee);
+                Map.set(writerPrincipalIdToWeeklySubscriptionFee, thash, writerPrincipalId, weeklyFee);
             };
             case(null) {
                 //weekly fee has not been provided
@@ -252,7 +305,7 @@ actor Subscription {
         //set the monthly fee if provided
         switch(subscriptionDetails.monthlyFee) {
             case(?monthlyFee) {
-                Map.set(writerPrincipalIdToMonthlySubscriptionFee, thash, callerPrincipalId, monthlyFee);
+                Map.set(writerPrincipalIdToMonthlySubscriptionFee, thash, writerPrincipalId, monthlyFee);
             };
             case(null) {
                 //monthly fee has not been provided
@@ -263,7 +316,7 @@ actor Subscription {
         //set the annually fee if provided
         switch(subscriptionDetails.annuallyFee) {
             case(?annuallyFee) {
-                Map.set(writerPrincipalIdToAnnuallySubscriptionFee, thash, callerPrincipalId, annuallyFee);
+                Map.set(writerPrincipalIdToAnnuallySubscriptionFee, thash, writerPrincipalId, annuallyFee);
             };
             case(null) {
                 //annually fee has not been provided
@@ -274,34 +327,23 @@ actor Subscription {
         //set the lifetime fee if provided
         switch(subscriptionDetails.lifeTimeFee) {
             case(?lifeTimeFee) {
-                Map.set(writerPrincipalIdToLifeTimeSubscriptionFee, thash, callerPrincipalId, lifeTimeFee);
+                Map.set(writerPrincipalIdToLifeTimeSubscriptionFee, thash, writerPrincipalId, lifeTimeFee);
             };
             case(null) {
                 //lifetime fee has not been provided
                 //do nothing
             };
         };
-
-        //if provided, use the given payment receiver address
-        //if not, use the user principal id
-        switch(subscriptionDetails.paymentReceiverAddress) {
-            case(?receiverPrincipalId) {
-                Map.set(writerPrincipalIdToPaymentReceiverAddress, thash, callerPrincipalId, receiverPrincipalId);
-            };
-            case(null) {
-                //payment receiver addres has not been provided
-                //use the user principal id
-                Map.set(writerPrincipalIdToPaymentReceiverAddress, thash, callerPrincipalId, caller);
-            };
-        };
-
-        #ok(buildWriterSubscriptionDetails(callerPrincipalId))
+        //set the payment receiver principal id
+        Map.set(writerPrincipalIdToPaymentReceiverAddress, thash, writerPrincipalId, paymentReceiverPrincipalId);
+    
+        #ok(buildWriterSubscriptionDetails(writerPrincipalId))
     };
 
     //reader calls this method with the principal id of the writer and the time interval
     //if the request is valid, it returns the PaymentRequest object
     //reader then uses this object to send the funds and complete the payment
-    public shared ({caller}) func createPaymentRequestAsReader(writerPrincipalId: Text, timeInterval: SubscriptionTimeInterval) : async Result.Result<PaymentRequest, Text> {
+    public shared ({caller}) func createPaymentRequestAsReader(writerPrincipalId: Text, timeInterval: SubscriptionTimeInterval, amount: Nat32) : async Result.Result<PaymentRequest, Text> {
         //before any payment request creation, make sure there is no expired request
         deleteExpiredPaymentRequests();
 
@@ -314,23 +356,51 @@ actor Subscription {
         else{
             switch(timeInterval) {
                 case(#Weekly) {
-                    if(writerSubscriptionDetails.weeklyFee == null){
-                        return #err("Invalid time interval!");
+                    switch(writerSubscriptionDetails.weeklyFee) {
+                        case(?fee) {
+                            if(fee != amount){
+                                return #err("Invalid fee!");
+                            }
+                        };
+                        case(null) {
+                            return #err("Invalid time interval!");
+                        };
                     };
                 };
                 case(#Monthly) {
-                    if(writerSubscriptionDetails.monthlyFee == null){
-                        return #err("Invalid time interval!");
+                    switch(writerSubscriptionDetails.monthlyFee) {
+                        case(?fee) {
+                            if(fee != amount){
+                                return #err("Invalid fee!");
+                            }
+                        };
+                        case(null) {
+                            return #err("Invalid time interval!");
+                        };
                     };
                 };
                 case(#Annually){
-                    if(writerSubscriptionDetails.annuallyFee == null){
-                        return #err("Invalid time interval!");
+                    switch(writerSubscriptionDetails.annuallyFee) {
+                        case(?fee) {
+                            if(fee != amount){
+                                return #err("Invalid fee!");
+                            }
+                        };
+                        case(null) {
+                            return #err("Invalid time interval!");
+                        };
                     };
                 };
                 case(#LifeTime){
-                    if(writerSubscriptionDetails.lifeTimeFee == null){
-                        return #err("Invalid time interval!");
+                    switch(writerSubscriptionDetails.lifeTimeFee) {
+                        case(?fee) {
+                            if(fee != amount){
+                                return #err("Invalid fee!");
+                            }
+                        };
+                        case(null) {
+                            return #err("Invalid time interval!");
+                        };
                     };
                 };
             };
@@ -349,7 +419,7 @@ actor Subscription {
         //check if the caller already have an active subscription to the writer
         let readerDetails = buildReaderSubscriptionDetails(callerPrincipalId);
         let readerSubscriptionEvents = readerDetails.readerSubscriptions;
-        let now = Time.now();
+        let now = U.epochTime();
         for(subscriptionEvent in readerSubscriptionEvents.vals()){
             if(writerPrincipalId == subscriptionEvent.writerPrincipalId and now < subscriptionEvent.endTime){
                 return #err("Reader already have an active subscription to the writer.");
@@ -408,7 +478,7 @@ actor Subscription {
     public shared ({caller}) func checkMyExpiredSubscriptionsNotifications() : async () {
         let readerPrincipalId = Principal.toText(caller);
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
-        let now = Time.now();
+        let now = U.epochTime();
         let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
         for(writerPrincipalId in writerPrincipalIds.vals()){
             var subscriptionEvent : ?SubscriptionEvent = null;
@@ -463,8 +533,8 @@ actor Subscription {
 
     //create a new payment request and fill the corresponding hashmaps
     private func putPaymentRequest(writerPrincipalId: Text, readerPrincipalId: Text, timeInterval: SubscriptionTimeInterval) : PaymentRequest {
-        let MINUTE = 60000000000;
-        let now = Time.now();
+        let MINUTE = 60000;
+        let now = U.epochTime();
         //any payment request is only
         let expriationDate = now + MINUTE;
         let writerDetails = buildWriterSubscriptionDetails(writerPrincipalId);
@@ -501,7 +571,7 @@ actor Subscription {
     //deletes the expired payment requests
     //adds an entry to pendingStuckTokenDisbursements array in case the reader has sent the tokens but didn't complete the subscription
     private func deleteExpiredPaymentRequests() : () {
-        let now = Time.now();
+        let now = U.epochTime();
         for((eventId, expirationDate) in Map.entries(subscriptionEventIdToPaymentRequestExpireTime)){
             if(expirationDate < now){
                 deleteExpiredPaymentRequest(eventId);
@@ -539,8 +609,8 @@ actor Subscription {
     //also adds the token disbursements to the pendingTokenDisbursements map
     private func completePaymentRequest(paymentRequest: PaymentRequest) : () {
         let subscriptionEventId = paymentRequest.subscriptionEventId;
-        let MINUTE = 60000000000;
-        let now = Time.now();
+        let MINUTE = 60000;
+        let now = U.epochTime();
         //add the subscription event id to writer's subscription event ids array
         let writerExistingSubscriptionEventIdsArray = Option.get(Map.get(writerPrincipalIdToSubscriptionEventIds, thash, paymentRequest.writerPrincipalId), []);
         let writerExistingSubscriptionEventIdsBuffer = Buffer.fromArray<Text>(writerExistingSubscriptionEventIdsArray);
@@ -584,7 +654,7 @@ actor Subscription {
     };
 
     private func getSubscriptionEndTimeByTimeInterval(now: Int, timeInterval: SubscriptionTimeInterval) : Int {
-        let MINUTE = 60000000000;
+        let MINUTE = 60000;
 
         switch(timeInterval) {
             case(#Weekly) {
@@ -743,7 +813,10 @@ actor Subscription {
             readerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
                 buildSubscriptionEvent(subscriptionEventId)
             });
-            readerNotStoppedSubscriptionsWriterPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []);
+            //readerNotStoppedSubscriptionsWriters = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []);
+            readerNotStoppedSubscriptionsWriters = Array.map<Text, WriterSubscriptionDetails>(Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []), func(writerPrincipalId : Text) : WriterSubscriptionDetails {
+                buildWriterSubscriptionDetailsLighter(writerPrincipalId)
+            });
         }
     };
 
@@ -806,7 +879,7 @@ actor Subscription {
     };
 
     public shared func expiredNotificationsHeartbeatExternal() : async () {
-        let now = Time.now();
+        let now = U.epochTime();
         for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
             let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
             for(writerPrincipalId in writerPrincipalIds.vals()){
@@ -878,7 +951,7 @@ actor Subscription {
         } catch (e) {
         };
 
-        let now = Time.now();
+        let now = U.epochTime();
         lastTimerCalled := now;
 
         cyclesBalanceWhenTimerIsCalledLastTime := Cycles.balance();

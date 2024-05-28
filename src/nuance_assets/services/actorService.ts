@@ -28,6 +28,13 @@ import {
   idlFactory as postIndexFactory,
 } from '../../declarations/PostIndex';
 
+import { _SERVICE as SubscriptionService } from '../../declarations/Subscription/Subscription.did';
+import {
+  canisterId as subscriptionCanisterId,
+  createActor as createSubscriptionActor,
+  idlFactory as subscriptionFactory,
+} from '../../declarations/Subscription';
+
 import { _SERVICE as PublisherService } from '../../../Nuance-NFTs-and-Publications/src/declarations/Publisher/Publisher.did';
 import {
   canisterId as publisher0CanisterId,
@@ -132,6 +139,8 @@ export type {
   UserNotificationSettings,
 } from '../../declarations/Notifications/Notifications.did';
 
+export const SUBSCRIPTION_CANISTER_ID = subscriptionCanisterId;
+
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
   window.location.origin.includes('127.0.0.1');
@@ -216,6 +225,28 @@ export async function getPostIndexActor(): Promise<
   var identity =
     (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
   return createPostIndexActor(postIndexCanisterId as string, {
+    agentOptions: {
+      identity,
+      host: isLocal ? undefined : 'https://icp-api.io ',
+    },
+  });
+}
+
+export async function getSubscriptionActor(): Promise<
+  ActorSubclass<SubscriptionService>
+> {
+  let loginMethod = useAuthStore.getState().loginMethod;
+  if (loginMethod === 'bitfinity') {
+    let window_any = window as any;
+    return await window_any.ic.bitfinityWallet.createActor({
+      canisterId: subscriptionCanisterId,
+      interfaceFactory: subscriptionFactory,
+      host: isLocal ? 'http://localhost:8081' : undefined,
+    });
+  }
+  var identity =
+    (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
+  return createSubscriptionActor(subscriptionCanisterId as string, {
     agentOptions: {
       identity,
       host: isLocal ? undefined : 'https://icp-api.io ',
@@ -449,6 +480,7 @@ export async function getAllCanisterIds(): Promise<string[]> {
     postIndexCanisterId,
     emailOptInCanisterId,
     storageCanisterId,
+    subscriptionCanisterId,
     'ryjl3-tyaaa-aaaaa-aaaba-cai',
   ];
   let postActor = await getPostCoreActor();
