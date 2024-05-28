@@ -481,34 +481,50 @@ actor Subscription {
         let now = U.epochTime();
         let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
         for(writerPrincipalId in writerPrincipalIds.vals()){
-            var subscriptionEvent : ?SubscriptionEvent = null;
+            var latestSubscriptionEvent : ?SubscriptionEvent = null;
+            //find the latest subscription event to the writer
             for(readerSubscriptionEvent in readerDetails.readerSubscriptions.vals()){
-                if(readerSubscriptionEvent.writerPrincipalId == writerPrincipalId and now > readerSubscriptionEvent.endTime){
-                    //the subscription has not been expired yet
-                    //store the active subscription event to the local var to use the info when sending the notification
-                    subscriptionEvent := ?readerSubscriptionEvent;
+                if(readerSubscriptionEvent.writerPrincipalId == writerPrincipalId){
+                    switch(latestSubscriptionEvent) {
+                        case(?currentLatestSubscriptionEvent) {
+                            if(currentLatestSubscriptionEvent.endTime < readerSubscriptionEvent.endTime){
+                                latestSubscriptionEvent := ?readerSubscriptionEvent;
+                            }
+                        };
+                        case(null) {
+                            latestSubscriptionEvent := ?readerSubscriptionEvent;
+                        };
+                    };
                 };
             };
 
             //if the subscription has expired, remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
             //also send the notification
-            switch(subscriptionEvent) {
+            switch(latestSubscriptionEvent) {
                 case(?event) {
-                    //ToDo: Implement a new function named createNotifications in Notifications canister to be able to send more than one notification
-                    //with a single call to the canister. Add all the notifications to a local notifications array and then send them all to the Notifications
-                    //canister 
-                    //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
-                    let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
-                        writerPrincipalId != principalId
-                    });
-                    Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                    if(event.endTime < now){
+                        //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
+                        //canister 
+
+                        //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
+                        let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                            writerPrincipalId != principalId
+                        });
+                        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                    }
+                    else{
+                        //the subscription has not been expired yet
+                        //nothing to do
+                    };
+                    
                 };
                 case(null) {
-                    //subscription to writer has not been expired yet
+                    //not possible to be here
                     //nothing to do
                 };
             };
         };
+        //ToDo: Send all the notifications to the Notifications canister with a single call here
     };
 
     //stop the existing subscription
@@ -766,7 +782,7 @@ actor Subscription {
             //all the disbursements were successful
             //delete the value with the eventId
             Map.delete(pendingTokenDisbursements, thash, eventId);
-            //ToDo: send the notifications to both writer and the reader
+            //ToDo: send the new subscription notifications to both writer and the reader
 
         }
         else{
@@ -883,31 +899,45 @@ actor Subscription {
         for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
             let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
             for(writerPrincipalId in writerPrincipalIds.vals()){
-                var subscriptionEvent : ?SubscriptionEvent = null;
+                var latestSubscriptionEvent : ?SubscriptionEvent = null;
+                //find the latest subscription event to the writer
                 for(readerSubscriptionEvent in readerDetails.readerSubscriptions.vals()){
-                    if(readerSubscriptionEvent.writerPrincipalId == writerPrincipalId and now > readerSubscriptionEvent.endTime){
-                        //the subscription has not been expired yet
-                        //store the active subscription event to the local var to use the info when sending the notification
-                        subscriptionEvent := ?readerSubscriptionEvent;
+                    if(readerSubscriptionEvent.writerPrincipalId == writerPrincipalId){
+                        switch(latestSubscriptionEvent) {
+                            case(?currentLatestSubscriptionEvent) {
+                                if(currentLatestSubscriptionEvent.endTime < readerSubscriptionEvent.endTime){
+                                    latestSubscriptionEvent := ?readerSubscriptionEvent;
+                                }
+                            };
+                            case(null) {
+                                latestSubscriptionEvent := ?readerSubscriptionEvent;
+                            };
+                        };
                     };
                 };
 
                 //if the subscription has expired, remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
                 //also send the notification
-                switch(subscriptionEvent) {
+                switch(latestSubscriptionEvent) {
                     case(?event) {
-                        //ToDo: Implement a new function named createNotifications in Notifications canister to be able to send more than one notification
-                        //with a single call to the canister. Add all the notifications to a local notifications array and then send them all to the Notifications
-                        //canister
-                        
-                        //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
-                        let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
-                            writerPrincipalId != principalId
-                        });
-                        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                        if(event.endTime < now){
+                            //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
+                            //canister 
+
+                            //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
+                            let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                                writerPrincipalId != principalId
+                            });
+                            Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                        }
+                        else{
+                            //the subscription has not been expired yet
+                            //nothing to do
+                        };
+                    
                     };
                     case(null) {
-                        //subscription to writer has not been expired yet
+                        //not possible to be here
                         //nothing to do
                     };
                 };
