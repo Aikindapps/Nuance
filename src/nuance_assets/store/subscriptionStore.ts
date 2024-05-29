@@ -5,6 +5,7 @@ import {
   getUserActor,
   getIcrc1Actor,
   SUBSCRIPTION_CANISTER_ID,
+  getPostCoreActor,
 } from '../services/actorService';
 import { UserListItem } from '../types/types';
 import {
@@ -14,7 +15,7 @@ import {
 } from '../../declarations/Subscription/Subscription.did';
 import { Principal } from '@dfinity/principal';
 import { toastError } from '../services/toastService';
-import { ErrorType, getErrorType } from '../services/errorService';
+import { getErrorType } from '../services/errorService';
 import { NUA_CANISTER_ID } from '../shared/constants';
 
 type SubscribedWriterItem = {
@@ -23,6 +24,8 @@ type SubscribedWriterItem = {
   period: string;
   feePerPeriod: number;
   totalFees: number;
+  isPublication: boolean;
+  isSubscriptionActive: boolean;
 };
 
 type ExpiredSubscriptionItem = {
@@ -32,6 +35,291 @@ type ExpiredSubscriptionItem = {
   period: string;
   feePerPeriod: number;
   totalFees: number;
+  isPublication: boolean;
+  isSubscriptionActive: boolean;
+};
+
+type ReaderSubscriptionDetailsConverted = {
+  activeSubscriptions: SubscribedWriterItem[];
+  expiredSubscriptions: ExpiredSubscriptionItem[];
+};
+
+type SubscribedReaderItem = {
+  userListItem: UserListItem;
+  subscriptionStartDate: number;
+  period: string;
+  feePerPeriod: number;
+  totalFees: number;
+};
+
+type WriterSubscriptionDetailsConverted = {
+  subscribedReaders: SubscribedReaderItem[];
+  numberOfSubscribersHistoricalData: [number, number][];
+  subscribersCount: number;
+  totalNuaEarned: number;
+  lastWeekNewSubscribers: number;
+  writerPaymentInfo: WriterSubscriptionDetails;
+};
+
+export const getPeriodBySubscriptionTimeInterval = (
+  timeInterval: SubscriptionTimeInterval
+) => {
+  if ('LifeTime' in timeInterval) {
+    return 'Life time';
+  } else if ('Weekly' in timeInterval) {
+    return 'Week';
+  } else if ('Monthly' in timeInterval) {
+    return 'Month';
+  } else {
+    return 'Annual';
+  }
+};
+
+const convertReaderSubscriptionDetails = async (
+  details: ReaderSubscriptionDetails
+): Promise<ReaderSubscriptionDetailsConverted> => {
+  let userActor = await getUserActor();
+  let postCoreActor = await getPostCoreActor();
+  //firstly, fetch all the user list items from the user canister
+  let userListItemsMap = new Map<string, UserListItem>();
+  let allPrincipalIdsIncludingDuplicates = details.readerSubscriptions.map(
+    (event) => event.writerPrincipalId
+  );
+  let allPrincipalIds = [...new Set(allPrincipalIdsIncludingDuplicates)];
+  let [allUserListItems, allPublications] = await Promise.all([
+    userActor.getUsersByPrincipals(allPrincipalIds),
+    postCoreActor.getPublicationCanisters(),
+  ]);
+  //put all the user list items mapped to the principal ids
+  for (const userListItem of allUserListItems) {
+    userListItemsMap.set(userListItem.principal, userListItem);
+  }
+  //active
+  let activeSubscriptionsWriterPrincipalIds =
+    details.readerNotStoppedSubscriptionsWriters.map(
+      (val) => val.writerPrincipalId
+    );
+  //key: writer principal id, value: SubscribedWriterItem
+  let activeSubscriptionItemsMap = new Map<string, SubscribedWriterItem>();
+  let expiredSubscriptionItemsArray: ExpiredSubscriptionItem[] = [];
+  for (const subscriptionEvent of details.readerSubscriptions) {
+    if (
+      activeSubscriptionsWriterPrincipalIds.includes(
+        subscriptionEvent.writerPrincipalId
+      )
+    ) {
+      //the reader is still a subscriber
+      let subscribedWriterItem = activeSubscriptionItemsMap.get(
+        subscriptionEvent.writerPrincipalId
+      );
+      //the UserListItem of the writer
+      let writerUserListItem = userListItemsMap.get(
+        subscriptionEvent.writerPrincipalId
+      ) as UserListItem;
+      if (subscribedWriterItem) {
+        //the item is already in the map
+        //update the values if needed
+        if (
+          subscriptionEvent.startTime >
+          subscribedWriterItem.subscriptionStartDate
+        ) {
+          //this event is more recent
+          //update the related values
+          subscribedWriterItem = {
+            ...subscribedWriterItem,
+            feePerPeriod: subscriptionEvent.paymentFee,
+            period: getPeriodBySubscriptionTimeInterval(
+              subscriptionEvent.subscriptionTimeInterval
+            ),
+            subscriptionStartDate: Number(subscriptionEvent.startTime),
+            totalFees:
+              subscribedWriterItem.totalFees + subscriptionEvent.paymentFee,
+          };
+        } else {
+          //this is an older event, just update the totalFees
+          subscribedWriterItem.totalFees =
+            subscribedWriterItem.totalFees + subscriptionEvent.paymentFee;
+        }
+
+        activeSubscriptionItemsMap.set(
+          subscriptionEvent.writerPrincipalId,
+          subscribedWriterItem
+        );
+      } else {
+        //the item is not in the list yet, build the SubscribedWriterItem and put it into the map
+        activeSubscriptionItemsMap.set(subscriptionEvent.writerPrincipalId, {
+          userListItem: writerUserListItem,
+          subscriptionStartDate: Number(subscriptionEvent.startTime),
+          period: getPeriodBySubscriptionTimeInterval(
+            subscriptionEvent.subscriptionTimeInterval
+          ),
+          feePerPeriod: subscriptionEvent.paymentFee,
+          totalFees: subscriptionEvent.paymentFee,
+          isPublication: allPublications
+            .map((val) => val[1])
+            .includes(subscriptionEvent.writerPrincipalId),
+          isSubscriptionActive: subscriptionEvent.isWriterSubscriptionActive,
+        });
+      }
+    } else {
+      //expired subscription
+      //calculate the total fee
+      var totalFee = 0;
+      details.readerSubscriptions.forEach((event) => {
+        if (event.writerPrincipalId === subscriptionEvent.writerPrincipalId) {
+          totalFee += event.paymentFee;
+        }
+      });
+      //push the value to expiredSubscriptionItemsArray
+      let writerUserListItem = userListItemsMap.get(
+        subscriptionEvent.writerPrincipalId
+      ) as UserListItem;
+      expiredSubscriptionItemsArray.push({
+        userListItem: writerUserListItem,
+        subscriptionStartDate: Number(subscriptionEvent.startTime),
+        subscriptionEndDate: Number(subscriptionEvent.endTime),
+        period: getPeriodBySubscriptionTimeInterval(
+          subscriptionEvent.subscriptionTimeInterval
+        ),
+        feePerPeriod: subscriptionEvent.paymentFee,
+        totalFees: totalFee,
+        isPublication: allPublications
+          .map((val) => val[1])
+          .includes(subscriptionEvent.writerPrincipalId),
+        isSubscriptionActive: subscriptionEvent.isWriterSubscriptionActive,
+      });
+    }
+  }
+  //return the ReaderSubscriptionDetailsConverted object
+  return {
+    activeSubscriptions: Array.from(activeSubscriptionItemsMap.values()),
+    expiredSubscriptions: expiredSubscriptionItemsArray,
+  };
+};
+
+const convertWriterSubscriptionDetails = async (
+  details: WriterSubscriptionDetails
+): Promise<WriterSubscriptionDetailsConverted> => {
+  let userActor = await getUserActor();
+  let now = new Date().getTime();
+  let activeSubscribersPrincipalIds = details.writerSubscriptions
+    .filter((event) => {
+      return event.endTime > now;
+    })
+    .map((event) => event.readerPrincipalId);
+  let subscribedUserListItems = await userActor.getUsersByPrincipals(
+    activeSubscribersPrincipalIds
+  );
+  //key: reader principal id, value: UserListItem
+  let subscribedUserListItemsMap = new Map<string, UserListItem>();
+  subscribedUserListItems.forEach((userListItem) => {
+    subscribedUserListItemsMap.set(userListItem.principal, userListItem);
+  });
+
+  let subscribedReaderListItemsMap = new Map<string, SubscribedReaderItem>();
+
+  for (const subscriptionEvent of details.writerSubscriptions) {
+    //update the subscribedReaderListItemsMap if the event is done by an active subscriber
+    if (
+      activeSubscribersPrincipalIds.includes(
+        subscriptionEvent.readerPrincipalId
+      )
+    ) {
+      //user has an active subscription
+
+      //get the user list item
+      let readerUserListItem = subscribedUserListItemsMap.get(
+        subscriptionEvent.readerPrincipalId
+      ) as UserListItem;
+      //get the existing ReaderListItem if there's any
+      let subscribedReaderListItem = subscribedReaderListItemsMap.get(
+        subscriptionEvent.readerPrincipalId
+      );
+
+      if (subscribedReaderListItem) {
+        //reader already has an entry in the map
+        //update the values
+        if (
+          Number(subscriptionEvent.startTime) >
+          subscribedReaderListItem.subscriptionStartDate
+        ) {
+          //newer event
+          subscribedReaderListItem = {
+            ...subscribedReaderListItem,
+            subscriptionStartDate: Number(subscriptionEvent.startTime),
+            period: getPeriodBySubscriptionTimeInterval(
+              subscriptionEvent.subscriptionTimeInterval
+            ),
+            feePerPeriod: subscriptionEvent.paymentFee,
+            totalFees:
+              subscribedReaderListItem.totalFees + subscriptionEvent.paymentFee,
+          };
+        } else {
+          //older event
+          subscribedReaderListItem = {
+            ...subscribedReaderListItem,
+            totalFees:
+              subscribedReaderListItem.totalFees + subscriptionEvent.paymentFee,
+          };
+        }
+        subscribedReaderListItemsMap.set(
+          subscriptionEvent.readerPrincipalId,
+          subscribedReaderListItem
+        );
+      } else {
+        //it's the first time
+        //build the SubscribedReaderItem and put it in the map
+        subscribedReaderListItemsMap.set(subscriptionEvent.readerPrincipalId, {
+          userListItem: readerUserListItem,
+          subscriptionStartDate: Number(subscriptionEvent.startTime),
+          period: getPeriodBySubscriptionTimeInterval(
+            subscriptionEvent.subscriptionTimeInterval
+          ),
+          feePerPeriod: subscriptionEvent.paymentFee,
+          totalFees: subscriptionEvent.paymentFee,
+        });
+      }
+    }
+  }
+  //calculate the total nua earned
+  var totalNuaEarned = 0;
+  //calculate the number of subscribers 1 week ago
+  let oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  let oneWeekAgoSubscribersCounter = 0;
+  //historical data for number of subscribers
+  let breakPoints = new Map<number, number>();
+  details.writerSubscriptions.forEach((subscriptionEvent) => {
+    breakPoints.set(Number(subscriptionEvent.startTime), 0);
+    breakPoints.set(Number(subscriptionEvent.endTime), 0);
+  });
+
+  for (const subscriptionEvent of details.writerSubscriptions) {
+    totalNuaEarned += subscriptionEvent.paymentFee;
+    for (const breakPoint of breakPoints) {
+      if (
+        breakPoint[0] >= Number(subscriptionEvent.startTime) &&
+        breakPoint[0] <= Number(subscriptionEvent.endTime)
+      ) {
+        breakPoints.set(breakPoint[0], breakPoint[1] + 1);
+      }
+    }
+    if (
+      oneWeekAgo >= Number(subscriptionEvent.startTime) &&
+      oneWeekAgo <= Number(subscriptionEvent.endTime)
+    ) {
+      oneWeekAgoSubscribersCounter += 1;
+    }
+  }
+
+  return {
+    subscribedReaders: Array.from(subscribedReaderListItemsMap.values()),
+    numberOfSubscribersHistoricalData: Array.from(breakPoints),
+    subscribersCount: subscribedReaderListItemsMap.size,
+    totalNuaEarned,
+    lastWeekNewSubscribers:
+      subscribedReaderListItemsMap.size - oneWeekAgoSubscribersCounter,
+    writerPaymentInfo: { ...details, writerSubscriptions: [] },
+  };
 };
 
 const handleError = (err: any, preText?: string) => {
@@ -43,11 +331,11 @@ const isLocal: boolean =
   window.location.origin.includes('localhost') ||
   window.location.origin.includes('127.0.0.1');
 export interface SubscriptionStore {
-  getMySubscriptionHistoryAsReader: () => Promise<void>;
-  getMySubscriptionDetailsAsWriter: () => Promise<WriterSubscriptionDetails | void>;
+  getMySubscriptionHistoryAsReader: () => Promise<ReaderSubscriptionDetailsConverted | void>;
+  getMySubscriptionDetailsAsWriter: () => Promise<WriterSubscriptionDetailsConverted | void>;
   getPublicationSubscriptionDetailsAsEditor: (
     publicationCanisterId: string
-  ) => Promise<WriterSubscriptionDetails | void>;
+  ) => Promise<WriterSubscriptionDetailsConverted | void>;
   getWriterSubscriptionDetailsByPrincipalId: (
     principal: string
   ) => Promise<WriterSubscriptionDetails | void>;
@@ -60,15 +348,15 @@ export interface SubscriptionStore {
       paymentReceiverPrincipal: Principal;
       publicationCanisterId: string;
     }
-  ) => Promise<WriterSubscriptionDetails | void>;
+  ) => Promise<WriterSubscriptionDetailsConverted | void>;
   stopSubscriptionAsReader: (
     writerPrincipalId: string
-  ) => Promise<ReaderSubscriptionDetails | void>;
+  ) => Promise<ReaderSubscriptionDetailsConverted | void>;
   subscribeWriter: (
     writerPrincipalId: string,
     subscriptionTimeInterval: SubscriptionTimeInterval,
     amount: number
-  ) => Promise<ReaderSubscriptionDetails | void>;
+  ) => Promise<ReaderSubscriptionDetailsConverted | void>;
 }
 
 // Encapsulates and abstracts AuthClient
@@ -78,32 +366,20 @@ const createSubscriptionStore:
   | StateCreator<SubscriptionStore>
   | StoreApi<SubscriptionStore> = (set, get) => ({
   //returns the subscription history of the reader
-  getMySubscriptionHistoryAsReader: async (): Promise<void> => {
-    try {
-      let subscriptionActor = await getSubscriptionActor();
-      let userActor = await getUserActor();
-      let details = await subscriptionActor.getReaderSubscriptionDetails();
-      if ('ok' in details) {
-        //active
-        let activeSubscriptionsWriterPrincipalIds =
-          details.ok.readerNotStoppedSubscriptionsWriters.map(
-            (val) => val.writerPrincipalId
-          );
-        let expiredSubscriptionsWriterPrincipalIds: string[] = [];
-        let notExpiredSubscriptionsWriterPrincipalIds: string[] = [];
-        for (const subscriptionEvent of details.ok.readerSubscriptions) {
-          let now = new Date().getTime();
-          if (now > Number(subscriptionEvent.endTime)) {
-            //expired event
-            //add the writer principal id to the expiredSubscriptionsWriterPrincipalIds if it's not in notExpiredSubscriptionsWriterPrincipalIds
-          } else {
-          }
+  getMySubscriptionHistoryAsReader:
+    async (): Promise<ReaderSubscriptionDetailsConverted | void> => {
+      try {
+        let subscriptionActor = await getSubscriptionActor();
+        let details = await subscriptionActor.getReaderSubscriptionDetails();
+        if ('ok' in details) {
+          return await convertReaderSubscriptionDetails(details.ok);
+        } else {
+          handleError(details.err);
         }
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
       }
-    } catch (error) {
-      handleError(error, 'Unexpected error: ');
-    }
-  },
+    },
   //returns the subscription details of the writer by the principal id
   getWriterSubscriptionDetailsByPrincipalId: async (
     principal: string
@@ -123,13 +399,13 @@ const createSubscriptionStore:
   //should be called by the user - doesn't accept any principal id
   //it also returns the historical subscription data
   getMySubscriptionDetailsAsWriter:
-    async (): Promise<WriterSubscriptionDetails | void> => {
+    async (): Promise<WriterSubscriptionDetailsConverted | void> => {
       try {
         let subscriptionActor = await getSubscriptionActor();
         let writerDetails =
           await subscriptionActor.getWriterSubscriptionDetails([]);
         if ('ok' in writerDetails) {
-          return writerDetails.ok;
+          return await convertWriterSubscriptionDetails(writerDetails.ok);
         }
       } catch (error) {
         handleError(error, 'Unexpected error: ');
@@ -138,14 +414,14 @@ const createSubscriptionStore:
   //editors uses this method to get the publication subscription details
   getPublicationSubscriptionDetailsAsEditor: async (
     publicationCanisterId: string
-  ): Promise<WriterSubscriptionDetails | void> => {
+  ): Promise<WriterSubscriptionDetailsConverted | void> => {
     try {
       let subscriptionActor = await getSubscriptionActor();
       let writerDetails = await subscriptionActor.getWriterSubscriptionDetails([
         publicationCanisterId,
       ]);
       if ('ok' in writerDetails) {
-        return writerDetails.ok;
+        return await convertWriterSubscriptionDetails(writerDetails.ok);
       }
     } catch (error) {
       handleError(error, 'Unexpected error: ');
@@ -161,7 +437,7 @@ const createSubscriptionStore:
       paymentReceiverPrincipal: Principal;
       publicationCanisterId: string;
     }
-  ): Promise<WriterSubscriptionDetails | void> => {
+  ): Promise<WriterSubscriptionDetailsConverted | void> => {
     try {
       let subscriptionActor = await getSubscriptionActor();
       let response = await subscriptionActor.updateSubscriptionDetails({
@@ -179,7 +455,7 @@ const createSubscriptionStore:
         monthlyFee: monthlyFee ? [monthlyFee] : [],
       });
       if ('ok' in response) {
-        return response.ok;
+        return await convertWriterSubscriptionDetails(response.ok);
       } else {
         handleError(response.err);
       }
@@ -192,7 +468,7 @@ const createSubscriptionStore:
     writerPrincipalId: string,
     subscriptionTimeInterval: SubscriptionTimeInterval,
     amount: number
-  ): Promise<ReaderSubscriptionDetails | void> => {
+  ): Promise<ReaderSubscriptionDetailsConverted | void> => {
     try {
       let subscriptionActor = await getSubscriptionActor();
       let paymentRequest = await subscriptionActor.createPaymentRequestAsReader(
@@ -222,7 +498,7 @@ const createSubscriptionStore:
             paymentRequest.ok.subscriptionEventId
           );
           if ('ok' in response) {
-            return response.ok;
+            return await convertReaderSubscriptionDetails(response.ok);
           } else {
             handleError(response.err);
           }
@@ -239,14 +515,14 @@ const createSubscriptionStore:
   //should be called by the reader to stop the existing subscription
   stopSubscriptionAsReader: async (
     writerPrincipalId: string
-  ): Promise<ReaderSubscriptionDetails | void> => {
+  ): Promise<ReaderSubscriptionDetailsConverted | void> => {
     try {
       let subscriptionActor = await getSubscriptionActor();
       let response = await subscriptionActor.stopSubscription(
         writerPrincipalId
       );
       if ('ok' in response) {
-        return response.ok;
+        return await convertReaderSubscriptionDetails(response.ok);
       }
     } catch (error) {
       handleError(error, 'Unexpected error: ');

@@ -60,6 +60,7 @@ actor Subscription {
         paymentFee: Nat32;
         startTime: Int;
         endTime: Int;
+        isWriterSubscriptionActive: Bool;
     };
 
     //payment request returned to the reader
@@ -829,7 +830,6 @@ actor Subscription {
             readerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
                 buildSubscriptionEvent(subscriptionEventId)
             });
-            //readerNotStoppedSubscriptionsWriters = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []);
             readerNotStoppedSubscriptionsWriters = Array.map<Text, WriterSubscriptionDetails>(Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []), func(writerPrincipalId : Text) : WriterSubscriptionDetails {
                 buildWriterSubscriptionDetailsLighter(writerPrincipalId)
             });
@@ -838,14 +838,16 @@ actor Subscription {
 
     //builds the details of a subscription event by its unique id
     private func buildSubscriptionEvent(eventId: Text) : SubscriptionEvent {
+        let writerPrincipalId = Option.get(Map.get(subscriptionEventIdToWriterPrincipalId, thash, eventId), "");
         {
             subscriptionEventId = eventId;
-            writerPrincipalId = Option.get(Map.get(subscriptionEventIdToWriterPrincipalId, thash, eventId), "");
+            writerPrincipalId;
             readerPrincipalId = Option.get(Map.get(subscriptionEventIdToReaderPrincipalId, thash, eventId), "");
             subscriptionTimeInterval = Option.get(Map.get(subscriptionEventIdToSubscriptionTimeInterval, thash, eventId), #Weekly);
             paymentFee = Option.get(Map.get(subscriptionEventIdToPaymentFee, thash, eventId), Nat32.fromNat(0));
             startTime = Option.get(Map.get(subscriptionEventIdToStartTime, thash, eventId), 0);
             endTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
+            isWriterSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
         }
     };
 

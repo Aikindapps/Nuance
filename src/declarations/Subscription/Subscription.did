@@ -29,6 +29,7 @@ type SubscriptionTimeInterval =
 type SubscriptionEvent = 
  record {
    endTime: int;
+   isWriterSubscriptionActive: bool;
    paymentFee: nat32;
    readerPrincipalId: text;
    startTime: int;
