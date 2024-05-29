@@ -17,6 +17,8 @@ import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
+import Notifications "../Notifications/types";
 
 actor Subscription {
     let { ihash; nhash; thash; phash; calcHash } = Map;
@@ -930,6 +932,18 @@ actor Subscription {
         };
     };
 
+    stable var bulkNotifications : [(Notifications.NotificationType, Notifications.NotificationContent)] = [];
+
+    func addBulkNotification(notificationType : Notifications.NotificationType, notification : Notifications.NotificationContent) : () {
+        
+        let notificationsBuffer = Buffer.Buffer<(Notifications.NotificationType,Notifications.NotificationContent)>(0);
+        for(notif in Iter.fromArray(bulkNotifications)){
+            notificationsBuffer.add((notif.0, notif.1));
+        };
+        notificationsBuffer.add((notificationType, notification));
+        bulkNotifications := Buffer.toArray(notificationsBuffer);
+    };
+
     public shared func expiredNotificationsHeartbeatExternal() : async () {
         let now = U.epochTime();
         for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
@@ -960,7 +974,7 @@ actor Subscription {
                             //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
                             //canister 
                             // #AuthorExpiredSubscription and #ReaderExpiredSubscription;
-                            ignore U.createNotification(#AuthorExpiredSubscription, {
+                            addBulkNotification(#AuthorExpiredSubscription, {
                                 url = "";
                                 articleId = "";
                                 articleTitle = "";
@@ -977,7 +991,7 @@ actor Subscription {
                                 token = "";
                             });
 
-                            ignore U.createNotification(#ReaderExpiredSubscription, {
+                            addBulkNotification(#ReaderExpiredSubscription, {
                                 url = "";
                                 articleId = "";
                                 articleTitle = "";
@@ -1014,6 +1028,8 @@ actor Subscription {
             };
         };
         //ToDo: Send all the notifications to the Notifications canister
+        ignore U.disperseBulkSubscriptionNotifications(bulkNotifications);
+
     };
  
     public shared func disperseTokensForSuccessfulSubscription(eventId: Text) : async Result.Result<(), Text> {

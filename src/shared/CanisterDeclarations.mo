@@ -682,6 +682,7 @@ module{
     public type NotificationCanisterInterface = actor {
         createNotification : (notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
         newArticle : (content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
+        disperseBulkSubscriptionNotifications : [(notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent)] -> async Result.Result<(), Text>;
     };
     public func getNotificationCanister() : NotificationCanisterInterface {
         let canister : NotificationCanisterInterface = actor(ENV.NOTIFICATIONS_CANISTER_ID);
