@@ -813,7 +813,7 @@ actor Subscription {
                 isReply = false;
                 receiverPrincipal = Principal.fromText(event.writerPrincipalId);
                 receiverHandle = "";
-                senderPrincipal = Principal.fromText("2vxsx-fae");
+                senderPrincipal = Principal.fromText(event.readerPrincipalId);
                 senderHandle = "";
                 tags = [];
                 tipAmount = "0";
