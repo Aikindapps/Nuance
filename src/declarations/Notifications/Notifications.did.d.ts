@@ -64,18 +64,26 @@ export interface NotificationContent__1 {
 }
 export type NotificationType = { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
+  { 'AuthorLosesSubscriber' : null } |
+  { 'YouSubscribedToAuthor' : null } |
   { 'NewCommentOnMyArticle' : null } |
+  { 'YouUnsubscribedFromAuthor' : null } |
   { 'NewFollower' : null } |
   { 'PremiumArticleSold' : null } |
   { 'NewCommentOnFollowedArticle' : null } |
-  { 'NewArticleByFollowedTag' : null };
+  { 'NewArticleByFollowedTag' : null } |
+  { 'AuthorGainsNewSubscriber' : null };
 export type NotificationType__1 = { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
+  { 'AuthorLosesSubscriber' : null } |
+  { 'YouSubscribedToAuthor' : null } |
   { 'NewCommentOnMyArticle' : null } |
+  { 'YouUnsubscribedFromAuthor' : null } |
   { 'NewFollower' : null } |
   { 'PremiumArticleSold' : null } |
   { 'NewCommentOnFollowedArticle' : null } |
-  { 'NewArticleByFollowedTag' : null };
+  { 'NewArticleByFollowedTag' : null } |
+  { 'AuthorGainsNewSubscriber' : null };
 export interface Notifications {
   'id' : string,
   'content' : NotificationContent__1,
@@ -102,8 +110,12 @@ export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface UserNotificationSettings {
   'premiumArticleSold' : boolean,
   'tipReceived' : boolean,
+  'authorGainsNewSubscriber' : boolean,
+  'authorLosesSubscriber' : boolean,
   'newCommentOnFollowedArticle' : boolean,
+  'youSubscribedToAuthor' : boolean,
   'newCommentOnMyArticle' : boolean,
+  'youUnsubscribedFromAuthor' : boolean,
   'newFollower' : boolean,
   'newArticleByFollowedWriter' : boolean,
   'newArticleByFollowedTag' : boolean,
@@ -116,6 +128,11 @@ export interface _SERVICE {
     [NotificationType__1, NotificationContent],
     Result
   >,
+  'createNotifications' : ActorMethod<
+    [Array<[NotificationType__1, NotificationContent]>],
+    Result
+  >,
+  'expiredSubscription' : ActorMethod<[NotificationContent], Result>,
   'getAdmins' : ActorMethod<[], Result_3>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
@@ -130,9 +147,9 @@ export interface _SERVICE {
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'markNotificationAsRead' : ActorMethod<[Array<string>], Result>,
   'newArticle' : ActorMethod<[NotificationContent], Result>,
+  'newSubscription' : ActorMethod<[NotificationContent], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
-  'testnewnotifications2' : ActorMethod<[], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
   'updateUserNotificationSettings' : ActorMethod<
     [UserNotificationSettings],

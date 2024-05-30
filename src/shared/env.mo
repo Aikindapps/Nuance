@@ -14,6 +14,7 @@ module {
   public let PUBLICATION_MANAGEMENT_CANISTER_ID = CanisterIds.PUBLICATION_MANAGEMENT_CANISTER_ID;
   public let NFT_FACTORY_CANISTER_ID = CanisterIds.NFT_FACTORY_CANISTER_ID;
   public let NOTIFICATIONS_CANISTER_ID = CanisterIds.NOTIFICATIONS_CANISTER_ID;
+  public let SUBSCRIPTION_CANISTER_ID = CanisterIds.SUBSCRIPTION_CANISTER_ID;
   public let SNS_GOVERNANCE_CANISTER = "rqch6-oaaaa-aaaaq-aabta-cai";
   public let SNS_GOVERNANCE_IC_ACCOUNT = "f77cc353c778b02ad26974891950e4cb3ae1203e5cd8218e1b99bfc4f316d897";
   public let PAUL_PRINCIPAL_ID = "keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae";
@@ -159,6 +160,7 @@ module {
 
   public let TIPPING_TOKENS = ["NUA", "ICP", "ckBTC", "GHOST"];
   //means 10%
+  public let SUBSCRIPTION_FEE_AMOUNT = 10.0;
   public let TIP_FEE_AMOUNT = 10.0;
   public let TIP_FEE_RECEIVER_PRINCIPAL_ID = SNS_GOVERNANCE_CANISTER;
   public let TIP_FEE_RECEIVER_SUBACCOUNT : [Nat8] = [102, 220, 17, 70, 218, 116, 14, 60, 212, 188, 181, 179, 119, 252, 105, 10, 10, 131, 95, 223, 76, 125, 151, 200, 83, 208, 10, 80, 18, 198, 50, 254];

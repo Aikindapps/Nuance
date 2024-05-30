@@ -131,5 +131,11 @@ echo "##### Initialize Nuance Canisters for Metrics canister #####"
 dfx canister call Metrics initNuanceCanisters
 echo ""
 
+echo ""
+echo "### Setup Local Nua Ledger Canister ###"
+cd ./local-nua-token/icrc1
+dfx deploy
+echo ""
+
 echo "End of the DevInstall script"
 

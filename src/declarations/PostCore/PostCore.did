@@ -12,6 +12,7 @@ type UserPostCounts =
  record {
    draftCount: text;
    handle: text;
+   plannedCount: text;
    premiumCount: text;
    publishedCount: text;
    submittedToReviewCount: text;
@@ -128,6 +129,7 @@ type PostSaveModel =
    handle: text;
    headerImage: text;
    isDraft: bool;
+   isMembersOnly: bool;
    isPublication: bool;
    postId: text;
    premium: opt record {
@@ -135,6 +137,7 @@ type PostSaveModel =
                   maxSupply: nat;
                   thumbnail: text;
                 };
+   scheduledPublishedDate: opt int;
    subtitle: text;
    tagIds: vec text;
    title: text;
@@ -187,6 +190,7 @@ type Post =
    handle: text;
    headerImage: text;
    isDraft: bool;
+   isMembersOnly: bool;
    isPremium: bool;
    isPublication: bool;
    modified: text;
@@ -236,6 +240,7 @@ service : {
   addCanisterToCyclesDispenser: (text, nat, nat) -> (Result_1);
   addNewRules: (vec text) -> ();
   addPostCategory: (text, text, int) -> ();
+  addPostIdToUserDebug: (text, text) -> (Result_1);
   addWasmChunk: (blob) -> (Result_1);
   availableCycles: () -> (nat) query;
   checkViewsLast24Hours: () -> ();
@@ -361,6 +366,7 @@ service : {
   registerPublisher: () -> ();
   reindex: () -> (Result_2);
   removePostFromPopularityArrays: (text) -> () oneway;
+  removePostIdToUserDebug: (text, text) -> (Result_1);
   resetWasmChunks: () -> () oneway;
   save: (PostSaveModel) -> (Result_4);
   setFrontendCanisterId: (text) -> (Result_2);

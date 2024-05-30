@@ -50,11 +50,11 @@ actor class PostBucket() = this {
   // data type aliases
   type List<T> = List.List<T>;
   type User = UserTypes.User;
-  type PostBucketType = Types.PostBucketType;
+  type PostBucketType = CanisterDeclarations.PostBucketType;
   type Post = Types.Post;
   type UserPostCounts = Types.UserPostCounts;
-  type PostSaveModel = Types.PostSaveModelBucket;
-  type ToDo = Types.PostBucketType;
+  type PostSaveModel = CanisterDeclarations.PostSaveModelBucket;
+  type ToDo = CanisterDeclarations.PostBucketType;
   type Tag = Types.Tag;
   type TagModel = Types.TagModel;
   type PostTag = Types.PostTag;
@@ -76,8 +76,6 @@ actor class PostBucket() = this {
   type NftCanisterEntry = Types.NftCanisterEntry;
 
   type Order = { #less; #equal; #greater };
-
-  type PostSaveModelBucketMigration = Types.PostSaveModelBucketMigration;
 
   //ext metadata types
   type Metadata = Types.Metadata;
@@ -130,6 +128,7 @@ actor class PostBucket() = this {
   stable var categoryEntries : [(Text, Text)] = [];
   stable var wordCountsEntries : [(Text, Nat)] = [];
   stable var isPremiumEntries : [(Text, Bool)] = [];
+  stable var isMembersOnlyEntries : [(Text, Bool)] = [];
   stable var nftCanisterIdEntries : [(Text, Text)] = [];
   stable var tagNamesEntries : [(Text, [Text])] = [];
   stable var testEntries : [(Text, Text)] = [];
@@ -193,6 +192,7 @@ actor class PostBucket() = this {
   var categoryHashMap = HashMap.fromIter<Text, Text>(categoryEntries.vals(), initCapacity, Text.equal, Text.hash);
   var wordCountsHashmap = HashMap.fromIter<Text, Nat>(wordCountsEntries.vals(), initCapacity, Text.equal, Text.hash);
   var isPremiumHashMap = HashMap.fromIter<Text, Bool>(isPremiumEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var isMembersOnlyHashMap = HashMap.fromIter<Text, Bool>(isMembersOnlyEntries.vals(), initCapacity, Text.equal, Text.hash);
   var nftCanisterIdHashMap = HashMap.fromIter<Text, Text>(nftCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
   var tagNamesHashMap = HashMap.fromIter<Text, [Text]>(tagNamesEntries.vals(), initCapacity, Text.equal, Text.hash);
   var rejectedByModclubPostIdsHashmap = HashMap.fromIter<Text, Text>(rejectedByModclubPostIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
@@ -692,6 +692,7 @@ actor class PostBucket() = this {
     {
       postId = postId;
       handle = handle;
+      postOwnerPrincipal = principalId;
       url = buildPostUrl(postId, handle, title);
       title = title;
       subtitle = U.safeGet(subtitleHashMap, postId, "");
@@ -706,6 +707,7 @@ actor class PostBucket() = this {
       isPublication = U.safeGet(isPublicationHashMap, postId, false);
       category = U.safeGet(categoryHashMap, postId, "");
       isPremium = nftCanisterIdHashMap.get(postId) != null;
+      isMembersOnly = U.safeGet(isMembersOnlyHashMap, postId, false);
       nftCanisterId = nftCanisterIdHashMap.get(postId);
       wordCount = Nat.toText(U.safeGet(wordCountsHashmap, postId, 0));
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
@@ -744,6 +746,7 @@ actor class PostBucket() = this {
     {
       postId = postId;
       handle = U.safeGet(handleHashMap, principalId, "");
+      postOwnerPrincipal = principalId;
       url = url;
       title = title;
       subtitle = subTitle;
@@ -758,6 +761,7 @@ actor class PostBucket() = this {
       isPublication = U.safeGet(isPublicationHashMap, postId, false);
       category = U.safeGet(categoryHashMap, postId, "");
       isPremium = nftCanisterIdHashMap.get(postId) != null;
+      isMembersOnly = U.safeGet(isMembersOnlyHashMap, postId, false);
       nftCanisterId = nftCanisterIdHashMap.get(postId);
       wordCount = Nat.toText(U.safeGet(wordCountsHashmap, postId, 0));
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
@@ -807,7 +811,8 @@ actor class PostBucket() = this {
     creatorPrincipal : Text,
     isPublication : Bool,
     category : Text,
-    isPremium : Bool,
+    isMembersOnly: Bool,
+    scheduledPublishedDate: ?Int
   ) : (firstPublish: Bool) {
 
     // posts are not saved as single objects
@@ -832,9 +837,25 @@ actor class PostBucket() = this {
       }
     };
     let post = buildPost(postId);
-    if (isDraft == false and post.publishedDate == "0") {
-      publishedDateHashMap.put(postId, now);
-      firstPublish := true;
+
+    if(isDraft){
+      publishedDateHashMap.delete(postId);
+    }
+    else {
+      switch(scheduledPublishedDate) {
+        case(?scheduledPublishedDate) {
+          publishedDateHashMap.put(postId, scheduledPublishedDate);
+        };
+        case(null) {
+          if(post.publishedDate == "0"){
+            publishedDateHashMap.put(postId, now);
+          }
+        };
+      };
+      
+      if(post.publishedDate == "0"){
+        firstPublish := true;
+      }
     };
 
     addOrUpdatePostCategory(postId, category);
@@ -842,6 +863,13 @@ actor class PostBucket() = this {
 
     let wordCount = U.calculate_total_word_count(content);
     wordCountsHashmap.put(postId, wordCount);
+
+    if(isMembersOnly){
+      isMembersOnlyHashMap.put(postId, true);
+    }
+    else{
+      isMembersOnlyHashMap.delete(postId);
+    };
 
     return (firstPublish);
   };
@@ -857,7 +885,7 @@ actor class PostBucket() = this {
     Debug.print("PostBucket->Get: " # postId);
 
     //only the author can retrieve own drafts
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let isDraft = isDraftOrFutureArticle(postId);
     if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller) and not isNuanceCanister(caller)) {
       return #err(Unauthorized);
     };
@@ -872,10 +900,11 @@ actor class PostBucket() = this {
 
     var post = buildPost(postId);
 
-    if (post.isPremium) {
+    if (post.isPremium or post.isMembersOnly) {
       post := {
         postId = post.postId;
         handle = post.handle;
+        postOwnerPrincipal = post.postOwnerPrincipal;
         url = post.url;
         title = post.title;
         subtitle = post.subtitle;
@@ -890,6 +919,7 @@ actor class PostBucket() = this {
         isPublication = post.isPublication;
         category = post.category;
         isPremium = post.isPremium;
+        isMembersOnly = post.isMembersOnly;
         nftCanisterId = post.nftCanisterId;
         wordCount = post.wordCount;
         bucketCanisterId = Principal.toText(Principal.fromActor(this));
@@ -903,10 +933,9 @@ actor class PostBucket() = this {
 
   //only returns the post stored in this bucket
   public shared composite query ({ caller }) func getPostCompositeQuery(postId : Text) : async Result.Result<PostBucketType, Text> {
-    Debug.print("PostBucket->Get: " # postId);
-
+    Debug.print("PostBucket->getPostCompositeQuery: " # postId);
     //only the author can retrieve own drafts
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let isDraft = isDraftOrFutureArticle(postId);
     if (isDraft and not isAuthor(caller, postId) and not isAdmin(caller) and not isNuanceCanister(caller)) {
       if(U.safeGet(isPublicationHashMap, postId, false)){
         //publication post
@@ -948,13 +977,14 @@ actor class PostBucket() = this {
           case(#ok(value)) {
             //owns a token
             //return the full post
-            return #ok(post)
+            return #ok(post);
           };
           case(#err(error)) {
             //doesn't own any token in the canister
             post := {
               postId = post.postId;
               handle = post.handle;
+              postOwnerPrincipal = post.postOwnerPrincipal;
               url = post.url;
               title = post.title;
               subtitle = post.subtitle;
@@ -969,6 +999,7 @@ actor class PostBucket() = this {
               isPublication = post.isPublication;
               category = post.category;
               isPremium = post.isPremium;
+              isMembersOnly = post.isMembersOnly;
               nftCanisterId = post.nftCanisterId;
               wordCount = post.wordCount;
               bucketCanisterId = Principal.toText(Principal.fromActor(this));
@@ -978,7 +1009,49 @@ actor class PostBucket() = this {
         };
       };
       case(null) {
-        #ok(post);
+        if(post.isMembersOnly){
+          //members only post
+          //check if the caller is a subscriber
+          let SubscriptionCanister = CanisterDeclarations.getSubscriptionCanister();
+          let isReaderSubscriber = await SubscriptionCanister.isReaderSubscriber(post.postOwnerPrincipal, Principal.toText(caller));
+
+          if(isReaderSubscriber){
+            //caller is a subscriber
+            //return the full post
+            return #ok(post);
+          }
+          else{
+            //caller is not a subscriber
+            //make the content empty
+            post := {
+              postId = post.postId;
+              handle = post.handle;
+              postOwnerPrincipal = post.postOwnerPrincipal;
+              url = post.url;
+              title = post.title;
+              subtitle = post.subtitle;
+              headerImage = post.headerImage;
+              content = "";
+              isDraft = post.isDraft;
+              created = post.created;
+              modified = post.modified;
+              publishedDate = post.publishedDate;
+              creatorHandle = post.creatorHandle;
+              creatorPrincipal = post.creatorPrincipal;
+              isPublication = post.isPublication;
+              category = post.category;
+              isPremium = post.isPremium;
+              isMembersOnly = post.isMembersOnly;
+              nftCanisterId = post.nftCanisterId;
+              wordCount = post.wordCount;
+              bucketCanisterId = Principal.toText(Principal.fromActor(this));
+            };
+            #ok(post);
+          }
+        }
+        else{
+          return #ok(post);
+        }
       };
     };
   };
@@ -1211,14 +1284,12 @@ actor class PostBucket() = this {
       creatorHashMap.put(postId, userPrincipalId);
       //add postId to publication's posts
       addPostIdToUser(publicationPrincipalId, postId);
+      isDraftHashMap.put(postId, isDraft);
       if (isDraft) {
-       
-      } else {
-        let now = U.epochTime();
-        modifiedHashMap.put(postId, now);
-        isDraftHashMap.put(postId, isDraft);
+        publishedDateHashMap.delete(postId);
       };
-
+      let now = U.epochTime();
+      modifiedHashMap.put(postId, now);
     };
   };
 
@@ -1387,7 +1458,7 @@ actor class PostBucket() = this {
 
     var isFirstPublish = false;
 
-switch(addOrUpdatePost(
+    switch(addOrUpdatePost(
       isNew,
       postId,
       postOwnerPrincipalId,
@@ -1400,7 +1471,8 @@ switch(addOrUpdatePost(
       creatorPrincipal,
       isPublication,
       postModel.category,
-      false,
+      postModel.isMembersOnly,
+      postModel.scheduledPublishedDate
     )) {
       case (firstPublish){
         isFirstPublish := firstPublish;
@@ -1699,7 +1771,7 @@ switch(addOrUpdatePost(
       List.iterate(
         userPostIds,
         func(postId : Text) : () {
-          let isDraft = U.safeGet(isDraftHashMap, postId, true);
+          let isDraft = isDraftOrFutureArticle(postId);
 
           if (not isDraft and not rejectedByModClub(postId)) {
             let postListItem = buildPostListItem(postId);
@@ -1759,7 +1831,7 @@ switch(addOrUpdatePost(
     List.iterate(
       givenPostIds,
       func(postId : Text) : () {
-        let isDraft = U.safeGet(isDraftHashMap, postId, true);
+        let isDraft = isDraftOrFutureArticle(postId);
         let authorPrincipalId = U.safeGet(principalIdHashMap, postId, "");
         //only for publication posts
         let callerPostIds = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
@@ -1902,6 +1974,9 @@ switch(addOrUpdatePost(
     let now = U.epochTime();
     modifiedHashMap.put(postId, now);
     isDraftHashMap.put(postId, isDraft);
+    if(isDraft){
+      publishedDateHashMap.delete(postId);
+    };
     let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     let writerHandle = updatingPost.creatorHandle;
     let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
@@ -2054,6 +2129,13 @@ switch(addOrUpdatePost(
         return false;
       };
     };
+  };
+  //returns true if the post is draft or it's a scheduled post which was scheduled for future
+  private func isDraftOrFutureArticle(postId: Text) : Bool {
+    let now = U.epochTime();
+    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
+    publishedDate > now or isDraft
   };
 
   //returns all the rejected postIds
@@ -2469,7 +2551,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
         };
 
         //verify draft
-        if (post.isDraft) {
+        if (isDraftOrFutureArticle(post.postId)) {
           return #err(Unauthorized);
         };
 
@@ -3102,6 +3184,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     categoryEntries := Iter.toArray(categoryHashMap.entries());
     wordCountsEntries := Iter.toArray(wordCountsHashmap.entries());
     isPremiumEntries := Iter.toArray(isPremiumHashMap.entries());
+    isMembersOnlyEntries := Iter.toArray(isMembersOnlyHashMap.entries());
     nftCanisterIdEntries := Iter.toArray(nftCanisterIdHashMap.entries());
     tagNamesEntries := Iter.toArray(tagNamesHashMap.entries());
     accountIdsToHandleEntries := Iter.toArray(accountIdsToHandleHashMap.entries());
@@ -3160,6 +3243,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     categoryEntries := [];
     wordCountsEntries := [];
     isPremiumEntries := [];
+    isMembersOnlyEntries := [];
     nftCanisterIdEntries := [];
     tagNamesEntries := [];
     accountIdsToHandleEntries := [];

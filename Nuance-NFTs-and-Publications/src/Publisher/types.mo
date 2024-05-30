@@ -3,8 +3,7 @@ import HashMap "mo:base/HashMap";
 import List "mo:base/List";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
-import UserTypes "./types_user_canister";
-import PostCoreTypes "../../../src/PostCore/types";
+import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import Time "mo:base/Time";
 import ExtCore "../ext_v2/motoko/ext/Core";
 import Result "mo:base/Result";
@@ -12,15 +11,15 @@ import Result "mo:base/Result";
 module {
 
   type Time = Time.Time;
-  type User = UserTypes.User;
-  type PostSaveModel = PostCoreTypes.PostSaveModel;
-  type Post = PostCoreTypes.Post;
+  type User = CanisterDeclarations.User;
+  type PostSaveModel = CanisterDeclarations.PostSaveModel;
+  type Post = CanisterDeclarations.Post;
   type TokenIndex = ExtCore.TokenIndex;
   type TransferResponse = ExtCore.TransferResponse;
-  type PostSaveResult = PostCoreTypes.SaveResult;
-  type PostKeyProperties = PostCoreTypes.PostKeyProperties;
-  type PostBucketType = PostCoreTypes.PostBucketType;
-  type PostSaveModelBucket = PostCoreTypes.PostSaveModelBucket;
+  type PostSaveResult = CanisterDeclarations.SaveResult;
+  type PostKeyProperties = CanisterDeclarations.PostKeyProperties;
+  type PostBucketType = CanisterDeclarations.PostBucketType;
+  type PostSaveModelBucket = CanisterDeclarations.PostSaveModelBucket;
   // public type UserId = Principal;
   // public type Followers = List.List<Text>;
 

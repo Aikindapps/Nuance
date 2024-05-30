@@ -342,6 +342,15 @@ module {
     };
     return false;
   };
+
+  public func arrayContainsGeneric<T>(array : [T], element : T, equal: (T, T) -> Bool) : Bool {
+    for (el in array.vals()) {
+      if (equal(el, element)) {
+        return true;
+      };
+    };
+    return false;
+  };
   public func trim_category_name(phrase : Text) : Text {
     let lowerCase = Text.map(phrase, Prim.charToLower);
     return Text.map(

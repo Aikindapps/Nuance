@@ -14,6 +14,10 @@ module {
   #NewFollower;
   #TipReceived;
   #PremiumArticleSold;
+  #AuthorGainsNewSubscriber;
+  #AuthorLosesSubscriber;
+  #YouSubscribedToAuthor; // Reader subscribes to author, notification to reader
+  #YouUnsubscribedFromAuthor; // Reader unsubscribes from author, notification to reader
 };
 
 public type Notifications = {
@@ -50,6 +54,11 @@ public type UserNotificationSettings = {
   newFollower: Bool;
   tipReceived: Bool;
   premiumArticleSold: Bool;
+  authorGainsNewSubscriber: Bool;
+  authorLosesSubscriber: Bool;
+  youSubscribedToAuthor: Bool;
+  youUnsubscribedFromAuthor: Bool;
+
 };
 
 

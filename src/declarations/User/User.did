@@ -244,6 +244,7 @@ service : {
   getUserInternal: (text) -> (opt User) query;
   getUserListItemByHandle: (text) -> (Result_4) query;
   getUsersByHandles: (vec text) -> (vec UserListItem) query;
+  getUsersByPrincipals: (vec text) -> (vec UserListItem) query;
   handleClap: (text, text) -> () oneway;
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
