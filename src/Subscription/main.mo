@@ -17,6 +17,8 @@ import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
+import Notifications "../Notifications/types";
 
 actor Subscription {
     let { ihash; nhash; thash; phash; calcHash } = Map;
@@ -784,6 +786,42 @@ actor Subscription {
             //delete the value with the eventId
             Map.delete(pendingTokenDisbursements, thash, eventId);
             //ToDo: send the new subscription notifications to both writer and the reader
+            //#AuthorGainsNewSubscriber and #YouSubscribedToAuthor
+            let event = buildSubscriptionEvent(eventId);
+
+            ignore U.createNotification(#YouSubscribedToAuthor, {
+                url = "";
+                articleId = "";
+                articleTitle = "";
+                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                authorHandle = "";
+                comment = "";
+                isReply = false;
+                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                receiverHandle = "";
+                senderPrincipal = Principal.fromText("2vxsx-fae"); 
+                senderHandle = "";
+                tags = [];
+                tipAmount = "0";
+                token = "";
+            });
+            
+            ignore U.createNotification(#AuthorGainsNewSubscriber, {
+                url = "";
+                articleId = "";
+                articleTitle = "";
+                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                authorHandle = "";
+                comment = "";
+                isReply = false;
+                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                receiverHandle = "";
+                senderPrincipal = Principal.fromText(event.readerPrincipalId);
+                senderHandle = "";
+                tags = [];
+                tipAmount = "0";
+                token = "";
+            });
 
         }
         else{
@@ -896,6 +934,18 @@ actor Subscription {
         };
     };
 
+    stable var bulkNotifications : [(Notifications.NotificationType, Notifications.NotificationContent)] = [];
+
+    func addBulkNotification(notificationType : Notifications.NotificationType, notification : Notifications.NotificationContent) : () {
+        
+        let notificationsBuffer = Buffer.Buffer<(Notifications.NotificationType,Notifications.NotificationContent)>(0);
+        for(notif in Iter.fromArray(bulkNotifications)){
+            notificationsBuffer.add((notif.0, notif.1));
+        };
+        notificationsBuffer.add((notificationType, notification));
+        bulkNotifications := Buffer.toArray(notificationsBuffer);
+    };
+
     public shared func expiredNotificationsHeartbeatExternal() : async () {
         let now = U.epochTime();
         for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
@@ -925,6 +975,40 @@ actor Subscription {
                         if(event.endTime < now){
                             //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
                             //canister 
+                            // #AuthorExpiredSubscription and #ReaderExpiredSubscription;
+                            addBulkNotification(#AuthorExpiredSubscription, {
+                                url = "";
+                                articleId = "";
+                                articleTitle = "";
+                                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                                authorHandle = "";
+                                comment = "";
+                                isReply = false;
+                                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                                receiverHandle = "";
+                                senderPrincipal = Principal.fromText("2vxsx-fae");
+                                senderHandle = "";
+                                tags = [];
+                                tipAmount = "0";
+                                token = "";
+                            });
+
+                            addBulkNotification(#ReaderExpiredSubscription, {
+                                url = "";
+                                articleId = "";
+                                articleTitle = "";
+                                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                                authorHandle = "";
+                                comment = "";
+                                isReply = false;
+                                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                                receiverHandle = "";
+                                senderPrincipal = Principal.fromText("2vxsx-fae");
+                                senderHandle = "";
+                                tags = [];
+                                tipAmount = "0";
+                                token = "";
+                            });
 
                             //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
                             let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
@@ -946,6 +1030,8 @@ actor Subscription {
             };
         };
         //ToDo: Send all the notifications to the Notifications canister
+        ignore U.disperseBulkSubscriptionNotifications(bulkNotifications);
+
     };
  
     public shared func disperseTokensForSuccessfulSubscription(eventId: Text) : async Result.Result<(), Text> {
