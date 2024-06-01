@@ -1,3 +1,5 @@
+@import "../../shared/styles/Colors";
+
 .subscription-card-wrapper {
     padding: 1px; 
     background: linear-gradient(to top, #1BC0F2, #25F68D);
@@ -8,7 +10,7 @@
 
     .subscription-card {
         background: #fff; 
-        border-radius: 5px; 
+        border-radius: 8px; 
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -22,6 +24,16 @@
         background: white; 
         overflow: hidden; 
         text-align: center;
+        border:none;
+
+        &.dark {
+            background: $dark-primary-background-color;
+            color: $dark-primary-text-color;
+
+            a {
+                color: white;
+            }
+        }
     }
 }
 

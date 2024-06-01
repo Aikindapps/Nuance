@@ -116,6 +116,8 @@ export const icons = {
   NO_FILL_STAR: iconsPath + 'no-fill-star.svg',
   EXIT_NOTIFICATIONS: iconsPath + 'exit-notifications.svg',
   EXIT_NOTIFICATIONS_DARK: iconsPath + 'exit-notifications-dark.svg',
+  STOP_SUBSCRIPTION: iconsPath + 'stop-subscription.svg',
+  CANCEL_SUBSCRIPTION_SUCCESS: iconsPath + 'cancel-subscription-success.svg'
 };
 
 export const colors = {

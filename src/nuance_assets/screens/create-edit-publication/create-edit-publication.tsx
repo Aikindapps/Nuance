@@ -46,6 +46,7 @@ import PublicationCallToAction from '../../components/publication-call-to-action
 import { string } from 'prop-types';
 import BreadCrumbCropper from '../../UI/breadCrumbCropper/breadCrumbCropper';
 import { Toggle } from '../../UI/toggle/toggle';
+import SubscriptionSettings from './subscription-settings';
 
 const CreateEditPublication = () => {
   const { handle } = useParams();
@@ -570,7 +571,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -671,7 +672,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -772,7 +773,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -1124,7 +1125,7 @@ const CreateEditPublication = () => {
     }
   };
 
-  const clearAll = () => {};
+  const clearAll = () => { };
 
   const KeyCodes = {
     comma: 188,
@@ -1177,10 +1178,10 @@ const CreateEditPublication = () => {
               {publicationDoesNotExist
                 ? 'This publication no longer exists or you have entered the wrong handle'
                 : featureIsLive === false
-                ? 'This feature is not yet live! Stay tuned...'
-                : userIsEditor == false || publication == undefined
-                ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
-                : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
+                  ? 'This feature is not yet live! Stay tuned...'
+                  : userIsEditor == false || publication == undefined
+                    ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
+                    : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
             </h2>
           </div>
         )}
@@ -1229,11 +1230,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                          width: '96px',
-                          cursor: 'not-allowed',
-                          background: 'gray',
-                          borderColor: 'gray',
-                        }
+                        width: '96px',
+                        cursor: 'not-allowed',
+                        background: 'gray',
+                        borderColor: 'gray',
+                      }
                   }
                 >
                   Save
@@ -1956,15 +1957,15 @@ const CreateEditPublication = () => {
                 style={
                   !isAddNewSocialLinkActive()
                     ? {
-                        cursor: 'not-allowed',
-                        opacity: '0.5',
-                        marginTop: '20px',
-                        marginBottom: '20px',
-                      }
+                      cursor: 'not-allowed',
+                      opacity: '0.5',
+                      marginTop: '20px',
+                      marginBottom: '20px',
+                    }
                     : {
-                        marginTop: '20px',
-                        marginBottom: '20px',
-                      }
+                      marginTop: '20px',
+                      marginBottom: '20px',
+                    }
                 }
                 className='edit-publication-add-new-social-channel'
                 onClick={() => {
@@ -1978,6 +1979,10 @@ const CreateEditPublication = () => {
               >
                 <span>+</span>
                 {'  Add new link to social channel'}
+              </div>
+
+              <div className='subscription-settings-wrapper'>
+                <SubscriptionSettings />
               </div>
 
               <div style={{ display: 'inline-block' }}>
@@ -2006,11 +2011,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                          width: '96px',
-                          cursor: 'not-allowed',
-                          background: 'gray',
-                          borderColor: 'gray',
-                        }
+                        width: '96px',
+                        cursor: 'not-allowed',
+                        background: 'gray',
+                        borderColor: 'gray',
+                      }
                   }
                 >
                   Save

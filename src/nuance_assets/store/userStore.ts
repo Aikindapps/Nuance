@@ -643,7 +643,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         if (Err in result) {
           toastError(result.err);
         } else {
-          console.log('getUserNotifications:', result.ok[0]);
+         
 
           set({ notifications: result.ok[0] });
           set({ unreadNotificationCount: 0 });

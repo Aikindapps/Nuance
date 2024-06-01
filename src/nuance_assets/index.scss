@@ -53,6 +53,9 @@
 @import './components/subscription-cta/subscription-cta';
 @import './components/subscription-modal/subscription-modal';
 @import './screens/profile/subscriptions';
+@import './screens/profile/subscribers-tab';
+@import './screens/create-edit-publication/subscription-settings';
+@import './components/cancel-subscription-modal/cancel-subscription-modal.scss';
 
 /* Shared */
 @import './shared/styles/tags.scss';

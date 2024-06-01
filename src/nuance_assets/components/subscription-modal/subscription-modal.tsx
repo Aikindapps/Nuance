@@ -4,30 +4,74 @@ import { useTheme } from '../../contextes/ThemeContext';
 import { images, icons, colors } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import RequiredFieldMessage from '../../components/required-field-message/required-field-message';
+import './_subscription-modal.scss';
+import { useSubscriptionStore } from '../../store/subscriptionStore';
+import { useAuthStore } from '../../store/authStore';
+import { SubscriptionTimeInterval } from 'src/declarations/Subscription/Subscription.did';
 
 // Props interface
 interface SubscriptionModalProps {
     handle: string;
+    authorPrincipalId: string;
     profileImage: string;
     isPublication: boolean;
     onSubscriptionComplete: () => void;
 }
 
-const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileImage, isPublication, onSubscriptionComplete }) => {
+const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileImage, isPublication, onSubscriptionComplete, authorPrincipalId }) => {
     const modalContext = useContext(Context);
-    const { darkTheme } = useTheme();
+    const darkTheme = useTheme();
     const [selectedOption, setSelectedOption] = useState<string>('');
     const [termsChecked, setTermsChecked] = useState<boolean>(false);
     const [termCheckWarning, setTermCheckWarning] = useState<boolean>(false);
     const [isSubscriptionComplete, setIsSubscriptionComplete] = useState<boolean>(false);
 
+    const { subscribeWriter } = useSubscriptionStore((state) => ({
+        subscribeWriter: state.subscribeWriter
+    }));
+
+
+    //     export type SubscriptionTimeInterval = { 'LifeTime' : null } |
+    //   { 'Weekly' : null } |
+    //   { 'Monthly' : null } |
+    //   { 'Annually' : null };
+
+
     const handleSubscription = () => {
+
+        console.log('Subscribing to: ', handle, selectedOption, authorPrincipalId, isPublication)
         // Check if the terms and conditions are agreed and an option is selected
         if (!termsChecked || !selectedOption) {
             setTermCheckWarning(true);
             return;
         }
         console.log('Subscribing with option: ', selectedOption);
+
+        //     writerPrincipalId: string,
+        // subscriptionTimeInterval: SubscriptionTimeInterval,
+        // amount: number
+
+
+
+        const subscriptionInterval: SubscriptionTimeInterval = (() => {
+            switch (selectedOption) {
+                case 'Weekly':
+                    return { Weekly: null };
+                case 'Monthly':
+                    return { Monthly: null };
+                case 'Annually':
+                    return { Annually: null };
+                case 'Lifetime':
+                    return { LifeTime: null };
+                default:
+                    return { Weekly: null };
+            }
+        }
+        )();
+
+
+
+        subscribeWriter(authorPrincipalId, subscriptionInterval, 1);
         setIsSubscriptionComplete(true);
         onSubscriptionComplete();
     };
@@ -40,7 +84,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
     };
 
     return (
-        <div className="subscription-modal">
+        <div className={darkTheme ? "subscription-modal dark" : "subscription-modal"}>
             {isSubscriptionComplete ?
                 (
                     <>
@@ -66,8 +110,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
                             </p>
                         </div>
                         <div className='subscription-buttons'>
-                            <Button type='button' styleType='primary-2' style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>OK!</Button>
-                            <Button type='button' styleType='secondary' style={{ padding: "0px 16px" }} onClick={() => { console.log("redirect") }}>Cancel subscription</Button>
+                            <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>OK!</Button>
+                            <Button type='button' styleType='secondary' style={{ padding: "0px 16px" }} onClick={() => { modalContext?.openModal('cancelSubscription') }}>Cancel subscription</Button>
                         </div>
 
                     </>
@@ -96,13 +140,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
                             <div className="subscription-options">
                                 {['Weekly', 'Monthly', 'Annually', 'Lifetime'].map(option => (
                                     <div className={`option-wrapper ${selectedOption === option ? 'selected' : ''}`} key={option} onClick={() => setSelectedOption(option)}>
-                                        <div className={`option ${selectedOption === option ? 'selected' : ''}`}>
+                                        <div className={`option ${selectedOption === option ? 'selected' : ''} ${darkTheme ? "dark" : ""}`}>
                                             <div className="option-content">
                                                 <img src={selectedOption === option ? icons.GRADIENT_STAR : icons.NO_FILL_STAR} alt="star" className="star-icon" />
                                                 <div className="option-details">
                                                     <p className="option-title">{option}</p>
                                                     <p>{option === 'Weekly' ? <strong>0.3 NUA</strong> : option === 'Monthly' ? <strong>1 NUA</strong> : option === 'Annually' ? <strong>6 NUA</strong> : <strong>12 NUA</strong>}</p>
-                                                    <div className='subscription-conversions'>
+                                                    <div className={darkTheme ? 'subscription-conversions dark' : 'subscription-conversions'}>
                                                         <p>= 0.01 ICP</p>
                                                         <p>= 0.01 ckBTC</p>
                                                         <p>= 0.01 USD</p>
@@ -129,12 +173,12 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
                                         setTermCheckWarning(false);
                                     }}
                                 />
-                                <p className='terms'>I am aware of <a href='https://app.gitbook.com/o/-McG0wq9TbYHdM2GDu8k/s/-MfI7efMoHhyGJ3oojln/terms-and-conditions' target='_blank' rel='noreferrer'>terms and conditions</a>, general policy and agree to them.</p>
+                                <p className='terms'>I am aware of <a style={darkTheme ? { color: "white" } : {}} href='https://app.gitbook.com/o/-McG0wq9TbYHdM2GDu8k/s/-MfI7efMoHhyGJ3oojln/terms-and-conditions' target='_blank' rel='noreferrer'>terms and conditions</a>, general policy and agree to them.</p>
                             </div>
                             {termCheckWarning && <RequiredFieldMessage hasError={termCheckWarning} errorMessage="Please select an option and agree to the terms and conditions." />}
                             <div className='subscription-buttons'>
                                 <Button type='button' styleType='secondary' style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>Cancel</Button>
-                                <Button type='button' styleType='primary-2' style={{ padding: "0px 16px" }} disabled={!termsChecked || !selectedOption} onClick={handleSubscription}>Subscribe</Button>
+                                <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px" }} disabled={!termsChecked || !selectedOption} onClick={handleSubscription}>Subscribe</Button>
                             </div>
                         </div>
                     </>

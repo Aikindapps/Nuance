@@ -328,6 +328,11 @@
     align-items: center;
   overflow-y: scroll;
 
+  &.dark {
+    background: $dark-primary-background-color;
+    color: $dark-primary-text-color;
+  }
+
   @media only screen and (max-width: 1089px) {
     width: 100%;
     height: 100%;

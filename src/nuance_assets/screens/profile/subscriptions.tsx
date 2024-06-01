@@ -6,6 +6,7 @@ import { images, icons } from '../../shared/constants';
 import './_subscriptions.scss';
 import { Context } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
+import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 
 
 
@@ -19,6 +20,11 @@ const Menu = ({ activeTab }: any) => {
 
     const openModal = () => {
         modalContext?.openModal('Subscription');
+        toggleMenu();
+    }
+
+    const openCancelModal = () => {
+        modalContext?.openModal('cancelSubscription');
         toggleMenu();
     }
 
@@ -38,7 +44,7 @@ const Menu = ({ activeTab }: any) => {
                         <>
                             <p>Go to publication</p>
                             <p>Go to publisher</p>
-                            <p>Cancel subscription</p>
+                            <p onClick={openCancelModal}>Cancel subscription</p>
                         </>
                     )}
                 </div>
@@ -76,7 +82,12 @@ const Subscriptions = () => {
     return (
         <>
             {modalContext?.modalType === 'Subscription' && modalContext?.isModalOpen && (
-                <SubscriptionModal handle='Test' profileImage='' isPublication={true} onSubscriptionComplete={() => { }} />
+                <SubscriptionModal handle='Test' authorPrincipalId='' profileImage='' isPublication={true} onSubscriptionComplete={() => { }} />
+            )
+            }
+
+            {modalContext?.modalType === 'cancelSubscription' && modalContext?.isModalOpen && (
+                <CancelSubscriptionModal handle='Test' profileImage='' isPublication={false} onCancelComplete={() => { }} />
             )
             }
             <div className='subscription-wrapper'>

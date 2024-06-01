@@ -112,7 +112,9 @@ savePostReturn=$(dfx canister --network $network call $postCoreCanisterId save '
     content="'$content'"; 
     isDraft=false; 
     tagIds= vec{"1"; "5";}; 
-    creator="'$principal'"; 
+    creator="'$principal'";
+    creatorPrincipal="'$principal'";
+    creatorHandle="";  
     isPublication=true; 
     category=""; 
     premium= opt record {thumbnail= ""; maxSupply = 20: nat; icpPrice= 100000000: nat;};

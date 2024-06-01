@@ -14,6 +14,7 @@ import {
   CreatePremiumArticleData,
   PostType,
   PremiumArticleOwners as PremiumArticleOwnersObject,
+  PublicationObject,
   PublicationType,
 } from '../../types/types';
 import {
@@ -40,6 +41,11 @@ import Badge from '../../UI/badge/badge';
 import Dropdown from '../../UI/dropdown/dropdown';
 import { RxAvatar } from 'react-icons/rx';
 import RadioButtons from '../../UI/radio-buttons/radio-buttons';
+import { PostStore } from '../../store/postStore';
+import { PublisherStore } from '../../store/publisherStore';
+import { UserStore } from '../../store/userStore';
+import { AuthStore } from '../../store/authStore';
+import { TagModel } from 'src/declarations/PostCore/PostCore.did';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
@@ -66,7 +72,7 @@ const CreateEditArticle = () => {
     getAllTags,
     savePost,
     migratePostToPublication,
-  } = usePostStore((state) => ({
+  } = usePostStore((state: PostStore) => ({
     getPost: state.getSavedPostReturnOnly,
     getOwnersOfPremiumArticle: state.getOwnersOfPremiumArticleReturnOnly,
     nftCanistersEntries: state.nftCanistersEntries,
@@ -78,20 +84,20 @@ const CreateEditArticle = () => {
 
   //publisherStore
   const { savePublicationPost, getPublication } = usePublisherStore(
-    (state) => ({
+    (state: PublisherStore) => ({
       savePublicationPost: state.savePublicationPost,
       getPublication: state.getPublication,
     })
   );
 
   //userStore
-  const { getUser, user } = useUserStore((state) => ({
+  const { getUser, user } = useUserStore((state: UserStore) => ({
     getUser: state.getUser,
     user: state.user,
   }));
 
   //authStore
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isLoggedIn = useAuthStore((state: AuthStore) => state.isLoggedIn);
 
   //returns the current status of the post
   const getCurrentStatus = () => {
@@ -201,7 +207,7 @@ const CreateEditArticle = () => {
       let allPublications: string[] = [];
       let writerPublications: string[] = [];
       let editorPublications: string[] = [];
-      user.publicationsArray.forEach((publicationObject) => {
+      user.publicationsArray.forEach((publicationObject: PublicationObject) => {
         allPublications.push(publicationObject.publicationName);
         if (publicationObject.isEditor) {
           editorPublications.push(publicationObject.publicationName);
@@ -367,7 +373,7 @@ const CreateEditArticle = () => {
   };
   const onPostTagChange = (value: string[]) => {
     let usingTags: { tagId: string; tagName: string }[] = [];
-    allTags?.forEach((tag) => {
+    allTags?.forEach((tag: TagModel) => {
       value.forEach((tagName) => {
         if (tag.value === tagName) {
           usingTags.push({ tagId: tag.id, tagName });
@@ -510,6 +516,8 @@ const CreateEditArticle = () => {
             isPublication: true,
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
+            isMembersOnly: false,
+            scheduledPublishedDate: []
           });
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
@@ -556,6 +564,8 @@ const CreateEditArticle = () => {
             isPublication: false,
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
+            isMembersOnly: false,
+            scheduledPublishedDate: []
           });
           if (saveResult) {
             setSavingPost(saveResult);
@@ -586,6 +596,8 @@ const CreateEditArticle = () => {
           isPublication: true,
           postId: savingPost.postId,
           handle: selectedHandle,
+          isMembersOnly: false,
+          scheduledPublishedDate: []
         });
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
@@ -615,6 +627,8 @@ const CreateEditArticle = () => {
           isPublication: false,
           postId: savingPost.postId,
           handle: selectedHandle,
+          isMembersOnly: false,
+          scheduledPublishedDate: []
         });
         if (saveResult) {
           setSavingPost(saveResult);
@@ -1276,8 +1290,8 @@ const CreateEditArticle = () => {
           lastSavedPost.isPublication
             ? icons.PUBLICATION_ICON
             : darkTheme
-            ? icons.PROFILE_ICON_DARK
-            : icons.PROFILE_ICON,
+              ? icons.PROFILE_ICON_DARK
+              : icons.PROFILE_ICON,
         ];
       }
     } else {
@@ -1378,9 +1392,9 @@ const CreateEditArticle = () => {
                 style={
                   darkTheme
                     ? {
-                        background: colors.darkModePrimaryBackgroundColor,
-                        border: '1px solid rgb(153, 153, 153)',
-                      }
+                      background: colors.darkModePrimaryBackgroundColor,
+                      border: '1px solid rgb(153, 153, 153)',
+                    }
                     : {}
                 }
               >
@@ -1454,14 +1468,14 @@ const CreateEditArticle = () => {
                   <div className='edit-article-left-manage-title'>MANAGE</div>
                   {(getCurrentStatus() === 'Draft' ||
                     getCurrentStatus() === 'Not saved') && (
-                    <RadioButtons
-                      items={getRadioButtonItems()}
-                      onSelect={(index) => {
-                        setRadioButtonIndex(index);
-                      }}
-                      selectedIndex={radioButtonIndex}
-                    />
-                  )}
+                      <RadioButtons
+                        items={getRadioButtonItems()}
+                        onSelect={(index) => {
+                          setRadioButtonIndex(index);
+                        }}
+                        selectedIndex={radioButtonIndex}
+                      />
+                    )}
                   {getManageItems()}
                 </div>
               </div>

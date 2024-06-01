@@ -29,6 +29,8 @@ import { Helmet } from 'react-helmet';
 import SubscriptionCta from '../../components/subscription-cta/subscription-cta';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+import { get } from 'lodash';
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -78,12 +80,13 @@ function PublicationLanding() {
     getUserFollowersCount: state.getUserFollowersCount,
   }));
 
-  const { getPublication, publication, clearAll, getPublicationError } =
+  const { getPublication, publication, clearAll, getPublicationError, getCanisterIdByHandle } =
     usePublisherStore((state) => ({
       getPublication: state.getPublication,
       publication: state.publication,
       clearAll: state.clearAll,
       getPublicationError: state.getPublicationError,
+      getCanisterIdByHandle: state.getCanisterIdByHandle,
     }));
 
   const {
@@ -123,6 +126,7 @@ function PublicationLanding() {
 
   const [screenWidth, setScreenWidth] = useState(0);
   const [publicationHandle, setPublicationHandle] = useState('');
+  const [publicationCanisterId, setPublicationCanisterId] = useState('');
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [copyPublication, setCopyPublication] = useState(false);
@@ -190,6 +194,9 @@ function PublicationLanding() {
     clearPostsByFollowers();
     getAllTags();
     clearSearch();
+    getCanisterIdByHandle(handleName).then((canisterId) => {
+      setPublicationCanisterId(canisterId || '');
+    });
   }, []);
 
   useEffect(
@@ -346,6 +353,9 @@ function PublicationLanding() {
     setSidebarToggle(false);
   };
 
+  const handleCancelSubscription = () => {
+    console.log("cancel")
+  }
   const handleFollowClicked = () => {
     // prevent clicks while button spinner is visible
     if (updatingFollow) {
@@ -552,11 +562,23 @@ function PublicationLanding() {
 
             <SubscriptionModal
               handle={publication?.publicationHandle}
+              authorPrincipalId={publicationCanisterId}
               profileImage={publication?.avatar}
               isPublication={true}
               onSubscriptionComplete={() => { handleSubscriptionComplete() }}
             />
           )}
+
+          {modalContext?.isModalOpen && modalContext?.modalType === 'cancelSubscription' && (
+
+            <CancelSubscriptionModal
+              handle={publication?.publicationHandle}
+              profileImage={publication?.avatar}
+              isPublication={true}
+              onCancelComplete={() => { handleSubscriptionComplete() }}
+            />
+          )}
+
           <div className='header-image-container'>
             <img src={`${publication?.headerImage}`} className='header-img' />
 

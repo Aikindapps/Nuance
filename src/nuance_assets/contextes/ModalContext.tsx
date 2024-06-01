@@ -8,7 +8,8 @@ type ModalType =
   | 'Clap'
   | 'Premium article'
   | 'Notifications'
-  | 'Subscription';
+  | 'Subscription'
+  | 'cancelSubscription';
 
 
 type ModalData = {

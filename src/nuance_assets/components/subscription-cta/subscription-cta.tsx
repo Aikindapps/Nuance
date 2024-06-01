@@ -13,7 +13,7 @@ const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ }) => {
     const modalContext = React.useContext(Context);
     return (
         <div className="subscription-card-wrapper">
-            <div className="subscription-card">
+            <div className={darkTheme ? "subscription-card dark" : "subscription-card"}>
                 <div className="badge">NEW!</div>
                 <img src={icons.SUBSCRIPTION_STAR_ICON} alt="Star Icon" className="star-icon-cta" />
                 <p>Subscribe to this publication and get unlimited access to all <a href='/' >membership content</a> for a periodical fee!</p>
@@ -30,7 +30,7 @@ const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ }) => {
                     Subscribe now!
                 </Button>
             </div>
-        </div>
+        </div >
     );
 };
 

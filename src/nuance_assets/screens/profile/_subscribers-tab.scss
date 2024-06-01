@@ -1,0 +1,104 @@
+@import '../../shared/styles/Colors';
+
+.subscribers-tab{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title-wrapper{
+    width:100%;
+    margin-bottom:16px;
+}
+
+.subscribers-table-info{
+    color: #151451;
+    font-family: Roboto;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 22px;
+    margin-top: 48px;
+    margin-bottom: 32px;
+}
+
+.chart-title{
+    font-family: 'Roboto';
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 24px;
+    color: $darker-border-color;
+
+}
+.subscription-statistic-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 16px;
+
+    .subscription-statistic-horizontal-divider {
+      display: none;
+      width: 100%;
+      height: 0;
+      border-bottom: 1px dashed $medium-border-color;
+    }
+
+    .subscription-statistic {
+      display: flex;
+      height: 144px;
+
+      .subscription-stat {
+        border-left: 1px dashed $medium-border-color;
+        height: 100%;
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+
+        .subscription-count {
+          font-family: 'Roboto';
+          font-size: 24px;
+          font-weight: 900;
+          background: -webkit-linear-gradient($highlight-one, $highlight-two);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .subscription-title {
+          color: $darker-border-color;
+          font-size: 16px;
+          line-height: 24px;
+          font-weight: 300;
+          font-family: 'Roboto';
+        }
+      }
+    }
+                  }
+
+
+@media only screen and (max-width: 1089px) {
+    .subscription-statistic-wrapper {
+        flex-direction: column;
+        align-items: center;
+        row-gap: 8px;
+
+        .subscription-statistic {
+            display: flex;
+            flex-direction: column;
+            height: auto;
+            align-items: center;
+           
+          
+          .subscription-stat {
+            border-top: 1px dashed $medium-border-color;
+            border-left: none;
+          
+      }
+    }
+}
+    }

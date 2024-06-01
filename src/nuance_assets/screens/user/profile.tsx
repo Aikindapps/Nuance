@@ -25,6 +25,7 @@ import './_profile.scss';
 import { getIconForSocialChannel } from '../../shared/utils';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 import { Tooltip } from 'react-tooltip';
+import SubscribeButton from '../../components/subscribe-button/subscribe-button';
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [copyProfile, setCopyProfile] = useState(false);
@@ -245,8 +246,8 @@ const Profile = () => {
                   style={
                     darkTheme
                       ? {
-                          color: darkOptionsAndColors.color,
-                        }
+                        color: darkOptionsAndColors.color,
+                      }
                       : {}
                   }
                   className='username'
@@ -260,7 +261,7 @@ const Profile = () => {
                         onClick={() => {
                           let urlWithProtocol =
                             url.startsWith('https://') ||
-                            url.startsWith('http://')
+                              url.startsWith('http://')
                               ? url
                               : 'https://' + url;
                           window.open(urlWithProtocol, '_blank');
@@ -289,20 +290,27 @@ const Profile = () => {
                   style={
                     darkTheme
                       ? {
-                          color: darkOptionsAndColors.secondaryColor,
-                        }
+                        color: darkOptionsAndColors.secondaryColor,
+                      }
                       : {}
                   }
                 >
                   {author?.bio}
                 </p>
 
-                <FollowAuthor
-                  AuthorHandle={author?.handle || ''}
-                  Followers={user?.followersArray || undefined}
-                  user={user?.handle || ''}
-                  isPublication={false}
-                />
+                <div className='subscribe-and-follow-buttons'>
+                  <FollowAuthor
+                    AuthorHandle={author?.handle || ''}
+                    Followers={user?.followersArray || undefined}
+                    user={user?.handle || ''}
+                    isPublication={false}
+                  />
+                  <SubscribeButton
+                    AuthorHandle={author?.handle || ''}
+                    user={user?.handle || ''}
+                    isPublication={false}
+                  />
+                </div>
               </div>
 
               <div className='statistic-wrapper'>
@@ -346,7 +354,7 @@ const Profile = () => {
                 {userPostCounts &&
                   !loading &&
                   parseInt(userPostCounts?.publishedCount) >
-                    displayingPosts.length && (
+                  displayingPosts.length && (
                     <div className='load-more-container'>
                       <Button
                         styleType='secondary'

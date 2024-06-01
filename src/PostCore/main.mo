@@ -433,7 +433,7 @@ actor PostCore {
 
   private func isDraftOrFutureArticle(postId: Text) : Bool {
     let now = U.epochTime();
-    let isDraft = U.safeGet(isDraftHashMap, postId, true);
+    let isDraft = U.safeGet(isDraftHashMap, postId, false);
     let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
     publishedDate > now or isDraft
   };

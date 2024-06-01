@@ -38,6 +38,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     const [premiumArticleSold, setPremiumArticleSold] = useState(true);
     const [isSettingsSaving, setIsSettingsSaving] = useState(false);
 
+
+
     const saveNotificationSettings = () => {
         setIsSettingsSaving(true);
         const settings = {
@@ -48,6 +50,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
             newFollower: newFollower,
             tipReceived: applauseForMe,
             premiumArticleSold: premiumArticleSold,
+            authorGainsNewSubscriber: false,
+            authorLosesSubscriber: false,
+            youSubscribedToAuthor: false,
+            youUnsubscribedFromAuthor: false,
         };
 
         try {
@@ -133,8 +139,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         const fetchNotifications = () => {
             if (isLoggedIn && !isSidebarOpen && !modalContext?.isSidebarOpen && user) {
                 getUserNotifications(0, currentTo, isLoggedIn);
-                console.log('Fetching notifications');
-
             }
         };
 

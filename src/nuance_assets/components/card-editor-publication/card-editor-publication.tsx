@@ -109,11 +109,11 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
             ? { filter: 'blur(3px)' }
             : {}
           : isLoading
-          ? {
+            ? {
               filter: 'blur(3px)',
               zIndex: isDropdownOpen || isKebabMenuOpen ? '3' : 'unset',
             }
-          : {
+            : {
               zIndex: isDropdownOpen || isKebabMenuOpen ? '3' : 'unset',
             }
       }
@@ -148,8 +148,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           style={
             !isToggled
               ? {
-                  filter: 'grayscale(1)',
-                }
+                filter: 'grayscale(1)',
+              }
               : {}
           }
         />
@@ -201,8 +201,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         style={
           darkTheme
             ? {
-                color: darkOptionsAndColors.secondaryColor,
-              }
+              color: darkOptionsAndColors.secondaryColor,
+            }
             : {}
         }
         className='field-published-date field-general'
@@ -214,8 +214,8 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         style={
           darkTheme
             ? {
-                color: darkOptionsAndColors.secondaryColor,
-              }
+              color: darkOptionsAndColors.secondaryColor,
+            }
             : {}
         }
         className='field-modified field-general'
@@ -238,68 +238,70 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           items={
             !isToggled
               ? [
-                  {
-                    onClick: async () => {
-                      navigate('/article/edit/' + post.postId);
-                    },
-                    text: 'Edit',
-                    useDividerOnTop: false,
+                {
+                  onClick: async () => {
+                    navigate('/article/edit/' + post.postId);
                   },
-                  {
-                    onClick: async () => {
-                      setIsToggled(!isToggled);
-                      setIsLoading(true);
-                      await toggleHandler(post.postId, isToggled);
-                      await refreshPosts(post.postId);
-                      toastMessage(isToggled);
-                      setIsLoading(false);
-                    },
-                    text: 'Publish in publication',
-                    useDividerOnTop: false,
+                  text: 'Edit',
+                  useDividerOnTop: false,
+                },
+                {
+                  onClick: async () => {
+                    setIsToggled(!isToggled);
+                    setIsLoading(true);
+                    await toggleHandler(post.postId, isToggled);
+                    await refreshPosts(post.postId);
+                    toastMessage(isToggled);
+                    setIsLoading(false);
                   },
-                  {
-                    onClick: async () => {
-                      if (post.headerImage === '') {
-                        toastError(
-                          'You need to add an header image before minting an NFT for an article.'
-                        );
-                        return;
-                      }
-                      modalContext?.openModal('Premium article', {
-                        premiumPostNumberOfEditors: publication?.editors.length,
-                        premiumPostData: post,
-                        premiumPostOnSave: async (
-                          maxSupply: bigint,
-                          icpPrice: bigint,
-                          thumbnail: string
-                        ) => {
-                          await savePost({
-                            ...post,
-                            premium: [
-                              {
-                                thumbnail: thumbnail,
-                                icpPrice: icpPrice,
-                                maxSupply: maxSupply,
-                              },
-                            ],
-                            tagIds: post.tags.map((val) => val.tagId),
-                            creatorHandle: post.creatorHandle,
-                            isPublication: true,
-                            isDraft: false,
-                          });
-                        },
-                        premiumPostRefreshPost: async () => {
-                          await refreshPosts(post.postId);
-                        },
-                      });
-                    },
-                    text: 'Mint article',
-                    useDividerOnTop: true,
-                    icon: icons.NFT_ICON,
+                  text: 'Publish in publication',
+                  useDividerOnTop: false,
+                },
+                {
+                  onClick: async () => {
+                    if (post.headerImage === '') {
+                      toastError(
+                        'You need to add an header image before minting an NFT for an article.'
+                      );
+                      return;
+                    }
+                    modalContext?.openModal('Premium article', {
+                      premiumPostNumberOfEditors: publication?.editors.length,
+                      premiumPostData: post,
+                      premiumPostOnSave: async (
+                        maxSupply: bigint,
+                        icpPrice: bigint,
+                        thumbnail: string
+                      ) => {
+                        await savePost({
+                          ...post,
+                          premium: [
+                            {
+                              thumbnail: thumbnail,
+                              icpPrice: icpPrice,
+                              maxSupply: maxSupply,
+                            },
+                          ],
+                          tagIds: post.tags.map((val) => val.tagId),
+                          creatorHandle: post.creatorHandle,
+                          isPublication: true,
+                          isDraft: false,
+                          isMembersOnly: false,
+                          scheduledPublishedDate: [],
+                        });
+                      },
+                      premiumPostRefreshPost: async () => {
+                        await refreshPosts(post.postId);
+                      },
+                    });
                   },
-                ]
+                  text: 'Mint article',
+                  useDividerOnTop: true,
+                  icon: icons.NFT_ICON,
+                },
+              ]
               : post.isPremium
-              ? [
+                ? [
                   {
                     onClick: async () => {
                       navigate('/article/edit/' + post.postId);
@@ -308,7 +310,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
                     useDividerOnTop: false,
                   },
                 ]
-              : [
+                : [
                   {
                     onClick: async () => {
                       navigate('/article/edit/' + post.postId);
