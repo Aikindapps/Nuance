@@ -17,6 +17,8 @@ import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
+import Notifications "../Notifications/types";
 
 actor Subscription {
     let { ihash; nhash; thash; phash; calcHash } = Map;
@@ -60,6 +62,7 @@ actor Subscription {
         paymentFee: Nat32;
         startTime: Int;
         endTime: Int;
+        isWriterSubscriptionActive: Bool;
     };
 
     //payment request returned to the reader
@@ -480,6 +483,7 @@ actor Subscription {
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
         let now = U.epochTime();
         let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
+        let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
         for(writerPrincipalId in writerPrincipalIds.vals()){
             var latestSubscriptionEvent : ?SubscriptionEvent = null;
             //find the latest subscription event to the writer
@@ -504,7 +508,40 @@ actor Subscription {
                 case(?event) {
                     if(event.endTime < now){
                         //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
-                        //canister 
+                        //canister
+                        notifications.add(#AuthorExpiredSubscription, {
+                            url = "";
+                            articleId = "";
+                            articleTitle = "";
+                            authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                            authorHandle = "";
+                            comment = "";
+                            isReply = false;
+                            receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                            receiverHandle = "";
+                            senderPrincipal = Principal.fromText("2vxsx-fae");
+                            senderHandle = "";
+                            tags = [];
+                            tipAmount = "0";
+                            token = "";
+                        });
+
+                        notifications.add(#ReaderExpiredSubscription, {
+                            url = "";
+                            articleId = "";
+                            articleTitle = "";
+                            authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                            authorHandle = "";
+                            comment = "";
+                            isReply = false;
+                            receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                            receiverHandle = "";
+                            senderPrincipal = Principal.fromText("2vxsx-fae");
+                            senderHandle = "";
+                            tags = [];
+                            tipAmount = "0";
+                            token = "";
+                        });
 
                         //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
                         let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
@@ -525,6 +562,8 @@ actor Subscription {
             };
         };
         //ToDo: Send all the notifications to the Notifications canister with a single call here
+        let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+        let response = await NotificationCanister.disperseBulkSubscriptionNotifications(Buffer.toArray(notifications));
     };
 
     //stop the existing subscription
@@ -783,6 +822,53 @@ actor Subscription {
             //delete the value with the eventId
             Map.delete(pendingTokenDisbursements, thash, eventId);
             //ToDo: send the new subscription notifications to both writer and the reader
+            //#AuthorGainsNewSubscriber and #YouSubscribedToAuthor
+            let event = buildSubscriptionEvent(eventId);
+
+            let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
+
+            notifications.add(#YouSubscribedToAuthor, {
+                url = "";
+                articleId = "";
+                articleTitle = "";
+                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                authorHandle = "";
+                comment = "";
+                isReply = false;
+                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                receiverHandle = "";
+                senderPrincipal = Principal.fromText("2vxsx-fae"); 
+                senderHandle = "";
+                tags = [];
+                tipAmount = "0";
+                token = "";
+            });
+
+            notifications.add(#AuthorGainsNewSubscriber, {
+                url = "";
+                articleId = "";
+                articleTitle = "";
+                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                authorHandle = "";
+                comment = "";
+                isReply = false;
+                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                receiverHandle = "";
+                senderPrincipal = Principal.fromText(event.readerPrincipalId);
+                senderHandle = "";
+                tags = [];
+                tipAmount = "0";
+                token = "";
+            });
+
+            try{
+                let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+                ignore NotificationCanister.disperseBulkSubscriptionNotifications(Buffer.toArray(notifications));
+            }
+            catch(error){
+                //inter canister call for distributing the notifications has failed
+                //nothing to do
+            };
 
         }
         else{
@@ -829,7 +915,6 @@ actor Subscription {
             readerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
                 buildSubscriptionEvent(subscriptionEventId)
             });
-            //readerNotStoppedSubscriptionsWriters = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []);
             readerNotStoppedSubscriptionsWriters = Array.map<Text, WriterSubscriptionDetails>(Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, principal), []), func(writerPrincipalId : Text) : WriterSubscriptionDetails {
                 buildWriterSubscriptionDetailsLighter(writerPrincipalId)
             });
@@ -838,14 +923,16 @@ actor Subscription {
 
     //builds the details of a subscription event by its unique id
     private func buildSubscriptionEvent(eventId: Text) : SubscriptionEvent {
+        let writerPrincipalId = Option.get(Map.get(subscriptionEventIdToWriterPrincipalId, thash, eventId), "");
         {
             subscriptionEventId = eventId;
-            writerPrincipalId = Option.get(Map.get(subscriptionEventIdToWriterPrincipalId, thash, eventId), "");
+            writerPrincipalId;
             readerPrincipalId = Option.get(Map.get(subscriptionEventIdToReaderPrincipalId, thash, eventId), "");
             subscriptionTimeInterval = Option.get(Map.get(subscriptionEventIdToSubscriptionTimeInterval, thash, eventId), #Weekly);
             paymentFee = Option.get(Map.get(subscriptionEventIdToPaymentFee, thash, eventId), Nat32.fromNat(0));
             startTime = Option.get(Map.get(subscriptionEventIdToStartTime, thash, eventId), 0);
             endTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
+            isWriterSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
         }
     };
 
@@ -896,6 +983,7 @@ actor Subscription {
 
     public shared func expiredNotificationsHeartbeatExternal() : async () {
         let now = U.epochTime();
+        let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
         for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
             let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
             for(writerPrincipalId in writerPrincipalIds.vals()){
@@ -923,6 +1011,40 @@ actor Subscription {
                         if(event.endTime < now){
                             //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
                             //canister 
+                            // #AuthorExpiredSubscription and #ReaderExpiredSubscription;
+                            notifications.add(#AuthorExpiredSubscription, {
+                                url = "";
+                                articleId = "";
+                                articleTitle = "";
+                                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                                authorHandle = "";
+                                comment = "";
+                                isReply = false;
+                                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                                receiverHandle = "";
+                                senderPrincipal = Principal.fromText("2vxsx-fae");
+                                senderHandle = "";
+                                tags = [];
+                                tipAmount = "0";
+                                token = "";
+                            });
+
+                            notifications.add(#ReaderExpiredSubscription, {
+                                url = "";
+                                articleId = "";
+                                articleTitle = "";
+                                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                                authorHandle = "";
+                                comment = "";
+                                isReply = false;
+                                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                                receiverHandle = "";
+                                senderPrincipal = Principal.fromText("2vxsx-fae");
+                                senderHandle = "";
+                                tags = [];
+                                tipAmount = "0";
+                                token = "";
+                            });
 
                             //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
                             let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
@@ -937,13 +1059,15 @@ actor Subscription {
                     
                     };
                     case(null) {
-                        //not possible to be here
+                        //not possible to be heref
                         //nothing to do
                     };
                 };
             };
         };
         //ToDo: Send all the notifications to the Notifications canister
+        let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+        let response = await NotificationCanister.disperseBulkSubscriptionNotifications(Buffer.toArray(notifications));
     };
  
     public shared func disperseTokensForSuccessfulSubscription(eventId: Text) : async Result.Result<(), Text> {

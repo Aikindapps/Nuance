@@ -12,6 +12,7 @@ export const idlFactory = ({ IDL }) => {
     'subscriptionTimeInterval' : SubscriptionTimeInterval,
     'writerPrincipalId' : IDL.Text,
     'paymentFee' : IDL.Nat32,
+    'isWriterSubscriptionActive' : IDL.Bool,
     'readerPrincipalId' : IDL.Text,
   });
   const WriterSubscriptionDetails = IDL.Record({

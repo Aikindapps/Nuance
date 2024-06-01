@@ -1,13 +1,16 @@
 type UserNotificationSettings = 
  record {
+   authorExpiredSubscription: bool;
    authorGainsNewSubscriber: bool;
    authorLosesSubscriber: bool;
+   expiredSubscription: bool;
    newArticleByFollowedTag: bool;
    newArticleByFollowedWriter: bool;
    newCommentOnFollowedArticle: bool;
    newCommentOnMyArticle: bool;
    newFollower: bool;
    premiumArticleSold: bool;
+   readerExpiredSubscription: bool;
    tipReceived: bool;
    youSubscribedToAuthor: bool;
    youUnsubscribedFromAuthor: bool;
@@ -54,6 +57,7 @@ type Notifications =
  };
 type NotificationType__1 = 
  variant {
+   AuthorExpiredSubscription;
    AuthorGainsNewSubscriber;
    AuthorLosesSubscriber;
    NewArticleByFollowedTag;
@@ -62,12 +66,14 @@ type NotificationType__1 =
    NewCommentOnMyArticle;
    NewFollower;
    PremiumArticleSold;
+   ReaderExpiredSubscription;
    TipReceived;
    YouSubscribedToAuthor;
    YouUnsubscribedFromAuthor;
  };
 type NotificationType = 
  variant {
+   AuthorExpiredSubscription;
    AuthorGainsNewSubscriber;
    AuthorLosesSubscriber;
    NewArticleByFollowedTag;
@@ -76,6 +82,7 @@ type NotificationType =
    NewCommentOnMyArticle;
    NewFollower;
    PremiumArticleSold;
+   ReaderExpiredSubscription;
    TipReceived;
    YouSubscribedToAuthor;
    YouUnsubscribedFromAuthor;
@@ -165,7 +172,11 @@ service : {
           NotificationType__1;
           NotificationContent;
         }) -> (Result);
-  expiredSubscription: (NotificationContent) -> (Result);
+  disperseBulkSubscriptionNotifications:
+   (vec record {
+          NotificationType__1;
+          NotificationContent;
+        }) -> (Result);
   getAdmins: () -> (Result_3) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
@@ -177,7 +188,6 @@ service : {
   isThereEnoughMemory: () -> (bool) query;
   markNotificationAsRead: (vec text) -> (Result);
   newArticle: (NotificationContent) -> (Result);
-  newSubscription: (NotificationContent) -> (Result);
   registerCgUser: (text) -> (Result);
   setMaxMemorySize: (nat) -> (Result_1);
   unregisterCgUser: (text) -> (Result);

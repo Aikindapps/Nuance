@@ -330,64 +330,32 @@ public shared ({caller}) func newArticle(notification: NotificationContent) : as
   return #ok();
 };  
 
-//subnscriptions
-public shared ({caller}) func newSubscription(notification: NotificationContent) : async Result.Result<(), Text> {
-  let authorReceiver = notification.authorPrincipal; //author
-  let readerReceiver = notification.receiverPrincipal; //reader
-
-  let authorNotification = {
-      id = Nat.toText(notificationId);
-      notificationType = #AuthorGainsNewSubscriber;
-      content = notification;
-      timestamp = Int.toText(Time.now());
-      read = false;
+//subscriptions
+public shared ({caller}) func disperseBulkSubscriptionNotifications(subscriptions: [(NotificationType, NotificationContent)]) : async Result.Result<(), Text> {
+  if(not Text.equal(ENV.SUBSCRIPTION_CANISTER_ID, Principal.toText(caller))){
+    return #err("Unauthorized");
   };
 
-  let readerNotification = {
-      id = Nat.toText(notificationId);
-      notificationType = #YouSubscribedToAuthor;
-      content = notification;
-      timestamp = Int.toText(Time.now());
-      read = false;
+  for(subscription in Iter.fromArray(subscriptions)){
+    switch(subscription){
+      case(subscription){
+        createNotificationInternal(subscription.0, subscription.1);
+      };
+    };
   };
-  updateUserDirectNotification(authorReceiver, authorNotification);
-  notificationId += 1;
-  updateUserDirectNotification(readerReceiver, readerNotification);
-  notificationId += 1;
-  
-  #ok();
+
+  #ok()
 };
 
-public shared ({caller}) func expiredSubscription(notification: NotificationContent) : async Result.Result<(), Text> {
-  let authorReceiver = notification.authorPrincipal; //author
-  let readerReceiver = notification.receiverPrincipal; //reader
-  let AuthorNotification = {
-      id = Nat.toText(notificationId);
-      notificationType = #AuthorLosesSubscriber;
-      content = notification;
-      timestamp = Int.toText(Time.now());
-      read = false;
-  };
 
-  let ReaderNotification = {
-      id = Nat.toText(notificationId);
-      notificationType = #YouUnsubscribedFromAuthor;
-      content = notification;
-      timestamp = Int.toText(Time.now());
-      read = false;
-  };
-  updateUserDirectNotification(authorReceiver, AuthorNotification);
-  notificationId += 1;
 
-  updateUserDirectNotification(readerReceiver, ReaderNotification);
-  notificationId += 1;
-  #ok();
-};
+
+//utility functions
 
 let { ihash; nhash; thash; phash; calcHash } = Map;
 
 
-//utility functions
+
 func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool {
 
     let settings = Map.get(userNotificationSettings, phash, caller);
@@ -432,11 +400,16 @@ func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool 
         case (#YouUnsubscribedFromAuthor) {
           return settings.youUnsubscribedFromAuthor;
         };
-      };
-      return false;
-    };
+        case (#AuthorExpiredSubscription) {
+          return settings.authorExpiredSubscription;
         };
+        case (#ReaderExpiredSubscription) {
+          return settings.readerExpiredSubscription;
+        };
+     };
     };
+  };
+};
 
     func sortNotificationsById(a: Notifications, b: Notifications): Order.Order {
     if (U.textToNat(a.id) < U.textToNat(b.id)) {
@@ -857,20 +830,27 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
                 };
             };
         };
+        case (#AuthorExpiredSubscription) {
+            createDirectNotificationInternal(notification)      
+        };
+
+        case (#ReaderExpiredSubscription) {
+            createDirectNotificationInternal(notification)
+        };
 
         case (#AuthorGainsNewSubscriber) {
-          createDirectNotificationInternal(notification);
+            createDirectNotificationInternal(notification);
         };
         case (#YouSubscribedToAuthor) {
-          createDirectNotificationInternal(notification);
+            createDirectNotificationInternal(notification);
         };
 
         case (#AuthorLosesSubscriber) {
-          createDirectNotificationInternal(notification);
+            createDirectNotificationInternal(notification);
         };
 
         case (#YouUnsubscribedFromAuthor) {
-          createDirectNotificationInternal(notification);
+            createDirectNotificationInternal(notification);
         };
     };
 
@@ -1114,6 +1094,12 @@ func addBroadcast (notification : Notifications) : async Result.Result<(), Text>
   case (#YouUnsubscribedFromAuthor) {
     return #err("Broadcast notifications for expired subscriptions are not supported");
   };
+  case (#AuthorExpiredSubscription) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
+  case (#ReaderExpiredSubscription) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
   };
 };
 
@@ -1269,6 +1255,12 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
     return #err("Broadcast notifications for expired subscriptions are not supported");
   };
   case (#YouUnsubscribedFromAuthor) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
+  case (#AuthorExpiredSubscription) {
+    return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
+  case (#ReaderExpiredSubscription) {
     return #err("Broadcast notifications for expired subscriptions are not supported");
   };
   };

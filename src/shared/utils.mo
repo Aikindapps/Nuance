@@ -492,6 +492,10 @@ module {
     await NotificationActor().createNotification(notificationType, content);
   };
 
+  public func disperseBulkSubscriptionNotifications(notifications : [(NotificationType, NotificationContent)]) : async Result.Result<(), Text> {
+    await NotificationActor().disperseBulkSubscriptionNotifications(notifications);
+  };
+
   public func newArticle(content : NotificationContent) : async Result.Result<(), Text> {
     Debug.print("newArticle notification sent");
     await NotificationActor().newArticle(content);

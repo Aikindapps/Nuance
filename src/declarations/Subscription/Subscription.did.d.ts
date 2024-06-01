@@ -31,6 +31,7 @@ export interface SubscriptionEvent {
   'subscriptionTimeInterval' : SubscriptionTimeInterval,
   'writerPrincipalId' : string,
   'paymentFee' : number,
+  'isWriterSubscriptionActive' : boolean,
   'readerPrincipalId' : string,
 }
 export type SubscriptionTimeInterval = { 'LifeTime' : null } |
