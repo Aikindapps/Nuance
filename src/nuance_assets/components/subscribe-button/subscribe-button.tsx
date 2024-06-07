@@ -20,34 +20,34 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
     const context = useContext(Context)
     const modalContext = useContext(ModalContext)
 
-    //   const { followAuthor, unfollowAuthor } = useUserStore((state) => ({
-    //     followAuthor: state.followAuthor,
-    //     unfollowAuthor: state.unfollowAuthor,
-    //   }));
+
 
     function handleSubscribe() {
-        // if (!props.Followers || props?.Followers.includes(props.AuthorHandle)) {
-        //   return;
-        // }
+
+
+        if (props.user === '') {
+            console.log('Subscribing to author:', props.AuthorHandle);
+            handleRegister()
+
+        }
 
         if (props.AuthorHandle) {
-            console.log('Subscribing to author:', props.AuthorHandle);
-            setLoading(true);
+            modalContext?.openModal('Subscription');
 
-            setTimeout(() => {
-                setLoading(false);
-            }, 10000);
         }
+
+
     }
     function handleUnsubscribe() {
         if (props.AuthorHandle) {
             console.log('Unsubscribing to author:', props.AuthorHandle);
-            setLoading(true);
+            modalContext?.openModal('cancelSubscription');
 
-            setTimeout(() => {
-                setLoading(false);
-            }, 10000);
         }
+        if (props.user === '') {
+            handleRegister()
+        }
+
     }
 
     function handleRegister() {

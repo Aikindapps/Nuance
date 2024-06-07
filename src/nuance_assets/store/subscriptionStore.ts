@@ -18,7 +18,7 @@ import { toastError } from '../services/toastService';
 import { getErrorType } from '../services/errorService';
 import { NUA_CANISTER_ID } from '../shared/constants';
 
-type SubscribedWriterItem = {
+export type SubscribedWriterItem = {
   userListItem: UserListItem;
   subscriptionStartDate: number;
   period: string;
@@ -28,7 +28,7 @@ type SubscribedWriterItem = {
   isSubscriptionActive: boolean;
 };
 
-type ExpiredSubscriptionItem = {
+export type ExpiredSubscriptionItem = {
   userListItem: UserListItem;
   subscriptionStartDate: number;
   subscriptionEndDate: number;
@@ -39,12 +39,12 @@ type ExpiredSubscriptionItem = {
   isSubscriptionActive: boolean;
 };
 
-type ReaderSubscriptionDetailsConverted = {
+export type ReaderSubscriptionDetailsConverted = {
   activeSubscriptions: SubscribedWriterItem[];
   expiredSubscriptions: ExpiredSubscriptionItem[];
 };
 
-type SubscribedReaderItem = {
+export type SubscribedReaderItem = {
   userListItem: UserListItem;
   subscriptionStartDate: number;
   period: string;
@@ -52,7 +52,7 @@ type SubscribedReaderItem = {
   totalFees: number;
 };
 
-type WriterSubscriptionDetailsConverted = {
+export type WriterSubscriptionDetailsConverted = {
   subscribedReaders: SubscribedReaderItem[];
   numberOfSubscribersHistoricalData: [number, number][];
   subscribersCount: number;
@@ -78,6 +78,7 @@ export const getPeriodBySubscriptionTimeInterval = (
 const convertReaderSubscriptionDetails = async (
   details: ReaderSubscriptionDetails
 ): Promise<ReaderSubscriptionDetailsConverted> => {
+  console.log('Converting details', details)
   let userActor = await getUserActor();
   let postCoreActor = await getPostCoreActor();
   //firstly, fetch all the user list items from the user canister
@@ -372,6 +373,7 @@ const createSubscriptionStore:
         let subscriptionActor = await getSubscriptionActor();
         let details = await subscriptionActor.getReaderSubscriptionDetails();
         if ('ok' in details) {
+          console.log ('details', details);
           return await convertReaderSubscriptionDetails(details.ok);
         } else {
           handleError(details.err);
@@ -476,6 +478,8 @@ const createSubscriptionStore:
         subscriptionTimeInterval,
         amount
       );
+
+      console.log ('paymentRequest', paymentRequest);
       if ('ok' in paymentRequest) {
         //payment request has successfully been created
         //transfer the tokens to the subaccount
@@ -491,12 +495,14 @@ const createSubscriptionStore:
           created_at_time: [],
           amount: BigInt(paymentRequest.ok.paymentFee),
         });
+        console.log ('transferResponse', transferResponse);
         if ('Ok' in transferResponse) {
           //transfer is also successful
           //complete the subscription event and return the new readerDetails value
           let response = await subscriptionActor.completeSubscriptionEvent(
             paymentRequest.ok.subscriptionEventId
           );
+          console.log ('response', response);
           if ('ok' in response) {
             return await convertReaderSubscriptionDetails(response.ok);
           } else {

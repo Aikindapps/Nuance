@@ -7,10 +7,9 @@ import './_subscriptions.scss';
 import { Context } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+import { useSubscriptionStore, ReaderSubscriptionDetailsConverted, SubscribedWriterItem, ExpiredSubscriptionItem } from '../../store/subscriptionStore';
 
-
-
-const Menu = ({ activeTab }: any) => {
+const Menu = ({ activeTab }: { activeTab: string }) => {
     const modalContext = React.useContext(Context);
     const [isOpen, setIsOpen] = useState(false);
 
@@ -27,7 +26,6 @@ const Menu = ({ activeTab }: any) => {
         modalContext?.openModal('cancelSubscription');
         toggleMenu();
     }
-
 
     return (
         <div className='menu-container'>
@@ -61,11 +59,11 @@ const Subscriptions = () => {
     const darkTheme = useTheme();
 
     const [activeTab, setActiveTab] = useState('active');
-    const [subscriptions, setSubscriptions] = useState([
-        { id: 1, name: "Okapion Foodies", publisher: "@foodcompany", subscribedSince: "10-02-2022", period: "Month", fee: "1 NUA", totalFees: "21 NUA", status: 'active' },
-        { id: 2, name: "Mac Twain", publisher: "@marctwain", subscribedSince: "10-02-2022", period: "Week", fee: "1 NUA", totalFees: "1 NUA", status: 'active' },
-        { id: 3, name: "Sports United", publisher: "@elcoolio", subscribedSince: "10-02-2022", period: "Week", fee: "1 NUA", totalFees: "4 NUA", status: 'expired' },
-    ]);
+    const [subscriptions, setSubscriptions] = useState<{ activeSubscriptions: SubscribedWriterItem[], expiredSubscriptions: ExpiredSubscriptionItem[] }>({ activeSubscriptions: [], expiredSubscriptions: [] });
+
+    const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
+        getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    }));
 
     useEffect(() => {
         if (!isLoggedIn || !user) {
@@ -73,30 +71,53 @@ const Subscriptions = () => {
         }
     }, [isLoggedIn, user, navigate]);
 
-    const handleTabChange = (tab: any) => {
+    const handleTabChange = (tab: string) => {
         setActiveTab(tab);
     };
 
-    const filteredSubscriptions = subscriptions.filter(sub => sub.status === activeTab);
+    useEffect(() => {
+        const fetchSubscriptionHistory = async () => {
+            try {
+                const history = await getMySubscriptionHistoryAsReader();
+                console.log('Subscription History:', history);
+                if (history) {
+                    setSubscriptions(history);
+                }
+            } catch (error) {
+                console.error('Error fetching subscription history:', error);
+            }
+        };
+
+        fetchSubscriptionHistory();
+    }, [getMySubscriptionHistoryAsReader]);
+
+    const formatDate = (timestamp: number) => {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString();
+    };
+
+    const filteredSubscriptions = activeTab === 'active' ? subscriptions.activeSubscriptions : subscriptions.expiredSubscriptions;
 
     return (
         <>
             {modalContext?.modalType === 'Subscription' && modalContext?.isModalOpen && (
                 <SubscriptionModal handle='Test' authorPrincipalId='' profileImage='' isPublication={true} onSubscriptionComplete={() => { }} />
-            )
-            }
+            )}
 
             {modalContext?.modalType === 'cancelSubscription' && modalContext?.isModalOpen && (
-                <CancelSubscriptionModal handle='Test' profileImage='' isPublication={false} onCancelComplete={() => { }} />
-            )
-            }
-            <div className='subscription-wrapper'>
+                <CancelSubscriptionModal handle='Test' profileImage='' isPublication={false} authorPrincipalId={''} onCancelComplete={() => { }} />
+            )}
 
+            <div className='subscription-wrapper'>
                 <p className='subscription-title'>SUBSCRIPTIONS</p>
 
                 <div className='tabs'>
-                    <button onClick={() => handleTabChange('active')} className={activeTab === 'active' ? 'active' : ''}>Active ({subscriptions.filter(sub => sub.status === 'active').length})</button>
-                    <button onClick={() => handleTabChange('expired')} className={activeTab === 'expired' ? 'active' : ''}>Expired ({subscriptions.filter(sub => sub.status === 'expired').length})</button>
+                    <button onClick={() => handleTabChange('active')} className={activeTab === 'active' ? 'active' : ''}>
+                        Active ({subscriptions.activeSubscriptions.length})
+                    </button>
+                    <button onClick={() => handleTabChange('expired')} className={activeTab === 'expired' ? 'active' : ''}>
+                        Expired ({subscriptions.expiredSubscriptions.length})
+                    </button>
                 </div>
 
                 <div className='subscription-header'>
@@ -110,8 +131,8 @@ const Subscriptions = () => {
                     <table className='subscription-table'>
                         <thead>
                             <tr>
-                                <th></th>
                                 <th>PUBLICATION</th>
+                                <th></th>
                                 <th>PUBLISHER</th>
                                 <th>SUBSCRIBED SINCE</th>
                                 <th>PERIOD</th>
@@ -122,14 +143,14 @@ const Subscriptions = () => {
                         </thead>
                         <tbody>
                             {filteredSubscriptions.map((sub) => (
-                                <tr key={sub.id}>
-                                    <td><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={images.DEFAULT_AVATAR} alt="Avatar" /></td>
-                                    <td>{sub.name}</td>
-                                    <td>{sub.publisher}</td>
-                                    <td>{sub.subscribedSince}</td>
+                                <tr key={sub.subscriptionStartDate}>
+                                    <td><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /></td>
+                                    <td>{sub.userListItem.displayName}</td>
+                                    <td>@{sub.userListItem.handle}</td>
+                                    <td>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td>{sub.period}</td>
-                                    <td>{sub.fee}</td>
-                                    <td>{sub.totalFees}</td>
+                                    <td>{sub.feePerPeriod} NUA</td>
+                                    <td>{sub.totalFees} NUA</td>
                                     <td><Menu activeTab={activeTab} /></td>
                                 </tr>
                             ))}

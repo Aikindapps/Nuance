@@ -1,23 +1,46 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Toggle from "../../UI/toggle/toggle";
+import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 
-const membershipOptions = [
-    { period: 'Weekly', fee: 0, icp: 0.5, ckbtc: 1.14, usd: 2.03 },
-    { period: 'Monthly', fee: 0, icp: 0.5, ckbtc: 1.14, usd: 2.03 },
-    { period: 'Annually', fee: 0, icp: 0.5, ckbtc: 1.14, usd: 2.03 },
-    { period: 'Lifetime', fee: 0, icp: 0.5, ckbtc: 1.14, usd: 2.03, disabled: true }
-];
+interface SubscriptionDetailsState extends WriterSubscriptionDetails {
+    weeklyFeeEnabled: boolean;
+    monthlyFeeEnabled: boolean;
+    annuallyFeeEnabled: boolean;
+    lifeTimeFeeEnabled: boolean;
+}
 
-const MembershipSubscription = () => {
-    const [fees, setFees] = useState(membershipOptions.map(option => option.fee));
+interface MembershipSubscriptionProps {
+    subscriptionDetails: SubscriptionDetailsState;
+    setSubscriptionDetails: React.Dispatch<React.SetStateAction<SubscriptionDetailsState>>;
+    updateSubscriptionDetails: () => void;
+    isPublication: boolean;
+}
 
-    const handleFeeChange = (index: any, value: any) => {
-        setFees(prevFees => {
-            const newFees = [...prevFees];
-            newFees[index] = value;
-            return newFees;
-        });
+const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
+    subscriptionDetails,
+    setSubscriptionDetails,
+    updateSubscriptionDetails,
+    isPublication
+}) => {
+    const handleFeeChange = (type: keyof WriterSubscriptionDetails, value: number) => {
+        setSubscriptionDetails(prevOptions => ({
+            ...prevOptions,
+            [type]: [value]
+        }));
     };
+
+    const handleToggleChange = (type: keyof SubscriptionDetailsState) => {
+        setSubscriptionDetails(prevOptions => ({
+            ...prevOptions,
+            [type]: !prevOptions[type]
+        }));
+    };
+
+    const capitalizeFirstLetter = (string: string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    };
+
+    const feeTypes = ['weeklyFee', 'monthlyFee', 'annuallyFee', 'lifeTimeFee'] as const;
 
     return (
         <div className="membership-subscription">
@@ -30,32 +53,53 @@ const MembershipSubscription = () => {
                     <div className="header-fee">PERIODICAL FEE (IN NUA)</div>
                     <div className="header-conversion"></div>
                 </div>
-                {membershipOptions.map((option, index) => (
-                    <div key={option.period} className={`subscription-settings-option ${option.disabled ? 'disabled' : ''}`}>
+                {feeTypes.map(type => (
+                    <div key={type} className={`subscription-settings-option ${subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''}`}>
                         <div className="toggle">
-                            <Toggle toggled={!option.disabled} callBack={() => { }} />
+                            <Toggle toggled={subscriptionDetails[`${type}Enabled`]} callBack={() => handleToggleChange(`${type}Enabled` as keyof SubscriptionDetailsState)} />
                         </div>
-                        <div className="period">{option.period}</div>
+                        <div className="period">{capitalizeFirstLetter(type.replace('Fee', ''))}</div>
                         <div className="fee-controls">
                             <div className="value-container">
                                 <input
                                     type="number"
-                                    value={fees[index]}
+                                    value={subscriptionDetails[type]?.[0] ?? 0}
                                     placeholder='0 NUA'
-                                    onChange={(e) => { fees[index] <= 0 ? 0 : handleFeeChange(index, parseFloat(e.target.value) || 0) }}
-                                    disabled={option.disabled}
+                                    onChange={(e) => handleFeeChange(type, parseFloat(e.target.value) || 0)}
+                                    disabled={!subscriptionDetails[`${type}Enabled`]}
                                 />
                                 <div className="buttons">
-                                    <button className='subscription-inc-dec-button' onClick={() => handleFeeChange(index, fees[index] + 1)} disabled={option.disabled}>+</button>
-                                    <button className='subscription-inc-dec-button' onClick={() => handleFeeChange(index, fees[index] - 1)} disabled={fees[index] <= 0 || option.disabled}>-</button>
+                                    <button
+                                        className='subscription-inc-dec-button'
+                                        onClick={() => handleFeeChange(type, (subscriptionDetails[type]?.[0] ?? 0) + 1)}
+                                        disabled={!subscriptionDetails[`${type}Enabled`]}
+                                    >
+                                        +
+                                    </button>
+                                    <button
+                                        className='subscription-inc-dec-button'
+                                        onClick={() => handleFeeChange(type, (subscriptionDetails[type]?.[0] ?? 0) - 1)}
+                                        disabled={(subscriptionDetails[type]?.[0] ?? 0) <= 0 || !subscriptionDetails[`${type}Enabled`]}
+                                    >
+                                        -
+                                    </button>
                                 </div>
                             </div>
                         </div>
                         <div className="fees">
-                            = {option.icp} ICP | {option.ckbtc} ckBTC | {option.usd} USD
+                            = 0.5 ICP | 1.14 ckBTC | 2.03 USD
                         </div>
                     </div>
                 ))}
+                {isPublication && <div>
+                    <input
+                        type="text"
+                        value={subscriptionDetails.writerPrincipalId}
+                        placeholder='Writer Principal ID'
+                        onChange={(e) => setSubscriptionDetails(prevOptions => ({ ...prevOptions, writerPrincipalId: e.target.value }))}
+                    ></input>
+
+                </div>}
             </div>
         </div>
     );

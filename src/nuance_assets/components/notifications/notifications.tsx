@@ -57,7 +57,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
             authorExpiredSubscription: false,
             readerExpiredSubscription: false,
             expiredSubscription: false,
-
         };
 
         try {

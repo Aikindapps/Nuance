@@ -9,20 +9,22 @@ type ActivityLinkProps = {
     followingCount: number;
     followersCount: number;
     dark?: boolean;
+    subscriptionCount: number;
 };
 
 const Activity: React.FC<ActivityLinkProps> = ({
     followedTopicsCount,
     followingCount,
     followersCount,
-    dark
+    dark,
+    subscriptionCount,
 }) => {
     const [isActivityExpanded, setIsActivityExpanded] = useState(false);
     const location = useLocation();
 
     const activityRoutes = [
         {
-            title: 'Subscriptions (0)',
+            title: `Subscriptions (${subscriptionCount})`,
             goto: '/my-profile/subscriptions',
         },
         {

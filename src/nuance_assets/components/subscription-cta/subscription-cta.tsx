@@ -6,11 +6,18 @@ import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/ModalContext';
 
 interface SubscriptionCtaProps {
+    onOpen: () => void;
 }
 
-const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ }) => {
+const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ onOpen }) => {
     const darkTheme = useTheme();
     const modalContext = React.useContext(Context);
+
+    const handleOpen = () => {
+        modalContext?.openModal('Subscription');
+        onOpen();
+    }
+
     return (
         <div className="subscription-card-wrapper">
             <div className={darkTheme ? "subscription-card dark" : "subscription-card"}>
@@ -25,7 +32,7 @@ const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ }) => {
                             ? { background: colors.accentColor, width: '100%' }
                             : { width: '100%' }
                     }
-                    onClick={() => modalContext?.openModal('Subscription')}
+                    onClick={() => handleOpen()}
                 >
                     Subscribe now!
                 </Button>

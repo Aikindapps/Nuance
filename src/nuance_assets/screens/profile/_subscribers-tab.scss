@@ -1,5 +1,12 @@
 @import '../../shared/styles/Colors';
 
+.subscribers-tab-avatar{
+  width: 62px;
+  height: 62px;
+  border-radius: 50px;
+  margin-right: 10px;
+}
+
 .subscribers-tab{
     display: flex;
     flex-direction: column;

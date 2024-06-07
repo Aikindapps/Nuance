@@ -362,7 +362,7 @@ actor Subscription {
                     switch(writerSubscriptionDetails.weeklyFee) {
                         case(?fee) {
                             if(fee != amount){
-                                return #err("Invalid fee!");
+                                return #err("Invalid fee!, should be " # Nat32.toText(fee) # " NUA tokens.");
                             }
                         };
                         case(null) {
