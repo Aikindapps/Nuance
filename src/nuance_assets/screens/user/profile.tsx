@@ -26,6 +26,10 @@ import { getIconForSocialChannel } from '../../shared/utils';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 import { Tooltip } from 'react-tooltip';
 import SubscribeButton from '../../components/subscribe-button/subscribe-button';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
+import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [copyProfile, setCopyProfile] = useState(false);
@@ -33,12 +37,14 @@ const Profile = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
   const [author, setAuthor] = useState<UserType | undefined>();
+  const [authorPrincipalId, setAuthorPrincipalId] = useState<string | undefined>();
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
   const [userPostCounts, setUserPostCounts] = useState<
     UserPostCounts | undefined
   >();
   const { handle } = useParams();
   const darkTheme = useTheme();
+  const modalContext = useContext(ModalContext);
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -65,9 +71,10 @@ const Profile = () => {
   );
   const user = useUserStore((state) => state.user);
 
-  const { getAuthor, getUserPostCounts } = useUserStore((state) => ({
+  const { getAuthor, getUserPostCounts, getPrincipalByHandle } = useUserStore((state) => ({
     getAuthor: state.getAuthor,
     getUserPostCounts: state.getUserPostCounts,
+    getPrincipalByHandle: state.getPrincipalByHandle,
   }));
 
   const { getPostsByFollowers } = usePostStore((state) => ({
@@ -85,6 +92,13 @@ const Profile = () => {
       //if author exists, set the value
       if (authorResponse) {
         setAuthor(authorResponse);
+
+        try {
+          let principalId = await getPrincipalByHandle(handle);
+          setAuthorPrincipalId(principalId);
+        } catch (error) {
+          console.log('Error getting principal id', error);
+        }
       }
       //if there's any post, set the displaying posts
       if (posts) {
@@ -135,6 +149,10 @@ const Profile = () => {
   };
 
   const context = useContext(Context);
+
+  const handleSubscriptionComplete = () => {
+    //any action after subscription
+  };
 
   return (
     <div>
@@ -312,6 +330,26 @@ const Profile = () => {
                   />
                 </div>
               </div>
+              {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
+                <SubscriptionModal
+                  handle={author?.handle || ''}
+                  authorPrincipalId={authorPrincipalId || ''}
+                  profileImage={author?.avatar || ''}
+                  isPublication={false}
+                  onSubscriptionComplete={() => { handleSubscriptionComplete() }}
+                />
+              )}
+
+              {modalContext?.isModalOpen && modalContext?.modalType === 'cancelSubscription' && (
+
+                <CancelSubscriptionModal
+                  handle={author?.handle || ''}
+                  profileImage={author?.avatar || ''}
+                  isPublication={false}
+                  onCancelComplete={() => { handleSubscriptionComplete() }}
+                  authorPrincipalId={authorPrincipalId || ''}
+                />
+              )}
 
               <div className='statistic-wrapper'>
                 <div className='statistic'>

@@ -5,6 +5,7 @@ import {
   useUserStore,
   usePostStore,
   usePublisherStore,
+  useSubscriptionStore
 } from '../../store';
 import Header from '../../components/header/header';
 import Button from '../../UI/Button/Button';
@@ -54,6 +55,27 @@ const ProfileSidebar = () => {
       clearAuthor: state.clearAuthor,
     }));
 
+  const [subscriptionCount, setSubscriptionCount] = useState<number>(0);
+  const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader
+  }));
+
+  useEffect(() => {
+    const fetchSubscriptionHistory = async () => {
+      try {
+        const history = await getMySubscriptionHistoryAsReader();
+        console.log('Subscription History:', history);
+        if (history) {
+          setSubscriptionCount(history.activeSubscriptions.length);
+        }
+      } catch (error) {
+        console.error('Error fetching subscription history:', error);
+      }
+    };
+
+    fetchSubscriptionHistory();
+  }, [getMySubscriptionHistoryAsReader]);
+
   const { getMyTags, myTags } = usePostStore((state) => ({
     getMyTags: state.getMyTags,
     myTags: state.myTags,
@@ -62,6 +84,7 @@ const ProfileSidebar = () => {
   useEffect(() => {
     if (user) {
       getCounts(user.handle);
+      getMySubscriptionHistoryAsReader();
       getMyTags();
       setUserPublications(
         user.publicationsArray.filter((publication) => publication.isEditor)
@@ -126,16 +149,16 @@ const ProfileSidebar = () => {
         <div
           style={
             location.pathname.includes('publications') &&
-            screenWidth > 451 &&
-            screenWidth < 1089 &&
-            shown
+              screenWidth > 451 &&
+              screenWidth < 1089 &&
+              shown
               ? {}
               : (location.pathname.includes('published') ||
-                  location.pathname.includes('draft')) &&
+                location.pathname.includes('draft')) &&
                 screenWidth < 1089 &&
                 shown
-              ? {}
-              : {}
+                ? {}
+                : {}
           }
           className={`sidebar ${!shown ? 'not-toggled' : ''}`}
         >
@@ -160,8 +183,8 @@ const ProfileSidebar = () => {
                   shown && !location.pathname.includes('publications')
                     ? { width: 200 }
                     : shown
-                    ? { width: 200 }
-                    : { width: 0 }
+                      ? { width: 200 }
+                      : { width: 0 }
                 }
               >
                 <div
@@ -175,9 +198,8 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${
-                        location.pathname === '/my-profile' && 'active'
-                      }`}
+                      className={`route ${location.pathname === '/my-profile' && 'active'
+                        }`}
                       to='/my-profile'
                     >
                       My Profile
@@ -189,9 +211,8 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${
-                        location.pathname === '/my-profile/articles' && 'active'
-                      }`}
+                      className={`route ${location.pathname === '/my-profile/articles' && 'active'
+                        }`}
                       to='/my-profile/articles'
                     >
                       My Articles ({counts?.totalPostCount || 0})
@@ -202,6 +223,7 @@ const ProfileSidebar = () => {
                       followedTopicsCount={myTags?.length || 0}
                       followingCount={user?.followersArray.length || 0}
                       followersCount={user?.followersCount || 0}
+                      subscriptionCount={subscriptionCount || 0}
                     />
 
                     {userPublications.length !== 0 ? (
@@ -218,9 +240,8 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${
-                        location.pathname === '/my-profile/wallet' && 'active'
-                      }`}
+                      className={`route ${location.pathname === '/my-profile/wallet' && 'active'
+                        }`}
                       to='/my-profile/wallet'
                     >
                       My Wallet

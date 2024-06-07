@@ -47,6 +47,10 @@ import { string } from 'prop-types';
 import BreadCrumbCropper from '../../UI/breadCrumbCropper/breadCrumbCropper';
 import { Toggle } from '../../UI/toggle/toggle';
 import SubscriptionSettings from './subscription-settings';
+import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
+import { useSubscriptionStore } from '../../store/subscriptionStore';
+import { SubscriptionStore } from '../../store/subscriptionStore';
+import { Principal } from '@dfinity/principal';
 
 const CreateEditPublication = () => {
   const { handle } = useParams();
@@ -82,6 +86,7 @@ const CreateEditPublication = () => {
     updatePublicationCta,
     removeEditor,
     removeWriter,
+    getCanisterIdByHandle,
   } = usePublisherStore((state) => ({
     getPublication: state.getPublication,
     publication: state.publication,
@@ -91,7 +96,15 @@ const CreateEditPublication = () => {
     removeWriter: state.removeWriter,
     getPublicationError: state.getPublicationError,
     updatePublicationStyling: state.updatePublicationStyling,
+    getCanisterIdByHandle: state.getCanisterIdByHandle,
   }));
+
+  const { getWriterSubscriptionDetailsByPrincipalId, getPublicationSubscriptionDetailsAsEditor, updateSubscriptionDetails } = useSubscriptionStore((state: SubscriptionStore) => ({
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+    getPublicationSubscriptionDetailsAsEditor: state.getPublicationSubscriptionDetailsAsEditor,
+    updateSubscriptionDetails: state.updateSubscriptionDetails
+  }));
+
 
   const featureIsLive = useContext(Context).publicationFeature;
 
@@ -195,6 +208,81 @@ const CreateEditPublication = () => {
       cta?.link === ''
     );
   };
+
+
+
+  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetailsState>({
+    writerSubscriptions: [],
+    weeklyFee: [1],
+    writerPrincipalId: '',
+    lifeTimeFee: [],
+    isSubscriptionActive: false,
+    annuallyFee: [3],
+    monthlyFee: [0],
+    weeklyFeeEnabled: false,
+    monthlyFeeEnabled: false,
+    annuallyFeeEnabled: false,
+    lifeTimeFeeEnabled: false
+  });
+
+  interface SubscriptionDetailsState extends WriterSubscriptionDetails {
+    weeklyFeeEnabled: boolean;
+    monthlyFeeEnabled: boolean;
+    annuallyFeeEnabled: boolean;
+    lifeTimeFeeEnabled: boolean;
+  }
+
+  const handleUpdateSubscriptionDetails = async () => {
+    console.log('Saving subscription details:', subscriptionDetails);
+
+    try {
+      const publicationCanisterId = await getCanisterIdByHandle(publicationHandle);
+      updateSubscriptionDetails(
+        subscriptionDetails.weeklyFee[0] ?? undefined,
+        subscriptionDetails.monthlyFee[0] ?? undefined,
+        subscriptionDetails.annuallyFee[0] ?? undefined,
+        subscriptionDetails.lifeTimeFee[0] ?? undefined,
+        {
+          paymentReceiverPrincipal: Principal.fromText(subscriptionDetails.writerPrincipalId),
+          publicationCanisterId: publicationCanisterId ?? ""
+        }
+      );
+    } catch (error) {
+      console.error('Error fetching canister ID:', error);
+      // Handle the error as needed
+    }
+  };
+
+
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      console.log('Fetching subscription details for:', publicationHandle);
+      if (publication) {
+        const publicationCanisterId = await getCanisterIdByHandle(publicationHandle);
+        console.log('publicationCanisterId:', publicationCanisterId);
+        if (publicationCanisterId) {
+          console.log('Fetching subscription details for:', publicationCanisterId);
+          const fetchedDetails = await getWriterSubscriptionDetailsByPrincipalId(publicationCanisterId);
+          if (fetchedDetails) {
+            setSubscriptionDetails({
+              writerSubscriptions: fetchedDetails?.writerSubscriptions,
+              weeklyFee: fetchedDetails.weeklyFee,
+              writerPrincipalId: fetchedDetails.writerPrincipalId,
+              lifeTimeFee: fetchedDetails.lifeTimeFee,
+              isSubscriptionActive: fetchedDetails.isSubscriptionActive,
+              annuallyFee: fetchedDetails.annuallyFee,
+              monthlyFee: fetchedDetails.monthlyFee,
+              weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
+              monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
+              annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
+              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0
+            });
+          }
+        }
+      }
+    };
+    fetchSubscriptionDetails();
+  }, [publication]);
 
   useEffect(() => {
     clearAll();
@@ -1115,6 +1203,7 @@ const CreateEditPublication = () => {
           },
           publication?.publicationHandle as string
         ),
+        handleUpdateSubscriptionDetails(),
       ]);
       await getPublication(publicationHandle);
       setLoading(false);
@@ -1982,7 +2071,12 @@ const CreateEditPublication = () => {
               </div>
 
               <div className='subscription-settings-wrapper'>
-                <SubscriptionSettings />
+                <SubscriptionSettings
+                  subscriptionDetails={subscriptionDetails}
+                  updateSubscriptionDetails={handleUpdateSubscriptionDetails}
+                  setSubscriptionDetails={setSubscriptionDetails}
+                  isPublication={true}
+                />
               </div>
 
               <div style={{ display: 'inline-block' }}>

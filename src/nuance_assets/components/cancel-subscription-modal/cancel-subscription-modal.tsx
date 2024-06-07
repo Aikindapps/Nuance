@@ -3,7 +3,7 @@ import { Context } from '../../contextes/ModalContext';
 import { useTheme } from '../../contextes/ThemeContext';
 import { images, icons, colors } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
-import RequiredFieldMessage from '../../components/required-field-message/required-field-message';
+import { useSubscriptionStore } from '../../store/subscriptionStore';
 
 // Props interface
 interface SubscriptionModalProps {
@@ -11,9 +11,10 @@ interface SubscriptionModalProps {
     profileImage: string;
     isPublication: boolean;
     onCancelComplete: () => void;
+    authorPrincipalId: string;
 }
 
-const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileImage, isPublication, onCancelComplete }) => {
+const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileImage, isPublication, onCancelComplete, authorPrincipalId }) => {
     const modalContext = useContext(Context);
     const darkTheme = useTheme();
     const [selectedOption, setSelectedOption] = useState<string>('');
@@ -21,10 +22,17 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, pro
     const [termCheckWarning, setTermCheckWarning] = useState<boolean>(false);
     const [isCancelComplete, setIsCancelComplete] = useState<boolean>(false);
 
+    const { getWriterSubscriptionDetailsByPrincipalId, stopSubscriptionAsReader } = useSubscriptionStore((state) => ({
+        getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+        stopSubscriptionAsReader: state.stopSubscriptionAsReader
+    }));
+
     const handleCancelSubscription = () => {
         // Check if the terms and conditions are agreed and an option is selected
 
         console.log('unSubscribing... ', selectedOption);
+
+        stopSubscriptionAsReader(authorPrincipalId);
         setIsCancelComplete(true);
         onCancelComplete();
     };
@@ -77,12 +85,12 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, pro
                         <h2 className='subscription-header'>Stop subscription to {isPublication ? 'Publication' : 'User'} </h2>
                         <div className='subscribee-info'>
                             <img className='cancel-subscription-profile-image' src={profileImage || images.DEFAULT_AVATAR} alt="profile" />
-                            <img src={icons.STOP_SUBSCRIPTION} alt='stop-subscription-icon' className='stop-subscription-publication-icon' />
+                            <img src={isPublication ? icons.STOP_SUBSCRIPTION : icons.CANCEL_SUBSCRIPTION_USER} alt='stop-subscription-icon' className='stop-subscription-publication-icon' />
                         </div>
                         <div className="subscription-modal-content">
                             <p className='subscription-info'>
-                                You are about to cancel your subscription to the publication of <strong>@{handle}</strong>. <br /> <br />
-                                You will no longer have unlimited access to all its content for 1 NUA per month. Effective from the 1st of next month. <br /> <br />
+                                You are about to cancel your subscription to the {isPublication ? "publication of" : "user"} <strong>@{handle}</strong>. <br /> <br />
+                                You will no longer have unlimited access to all its content. Effective from the expiration of your subscription. <br /> <br />
                                 Is that what you want?
                             </p>
                         </div>

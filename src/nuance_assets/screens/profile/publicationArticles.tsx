@@ -610,7 +610,7 @@ const PublicationArticles = () => {
             />
           )
         )}
-        {activeTab === 'subscribers' && <SubscribersTab />}
+        {activeTab === 'subscribers' && <SubscribersTab publicationInfo={publication} />}
       </div>
       <Footer />
     </div>

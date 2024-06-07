@@ -2,6 +2,7 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import 'chartjs-adapter-date-fns'; // Import the date adapter
 
 Chart.register(...registerables, annotationPlugin);
 
@@ -23,22 +24,12 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         return <div>Error: Invalid data for the chart.</div>;
     }
 
-    // Aggregate data by month
-    const monthlyData = data.reduce((acc, item) => {
-        const month = new Date(item.day).toLocaleString('default', { month: 'short' });
-        if (!acc[month]) {
-            acc[month] = { month, count: 0 };
-        }
-        acc[month].count += item.count;
-        return acc;
-    }, {} as Record<string, { month: string; count: number }>);
-
+    // Prepare chart data
     const chartData = {
-        labels: Object.keys(monthlyData),
         datasets: [
             {
                 label: 'Subscribers',
-                data: Object.values(monthlyData).map(item => item.count),
+                data: data.map(item => ({ x: new Date(item.day), y: item.count })),
                 borderColor: '#435AAC',
                 backgroundColor: 'rgba(2, 195, 161, 0.2)',
                 fill: false,
@@ -47,17 +38,51 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         ],
     };
 
-    const today = new Date();
-    const todayMonth = today.toLocaleString('default', { month: 'short' });
+    // Calculate the minimum date (3 months before the first date in the data)
+    const firstDate = new Date(data[0].day);
+    const minDate = new Date(firstDate);
+    minDate.setMonth(minDate.getMonth() - 3);
+
+    // Calculate the maximum date (1 month after the last date in the data)
+    const lastDate = new Date(data[data.length - 1].day);
+    const maxDate = new Date(lastDate);
+    maxDate.setMonth(maxDate.getMonth() + 1);
 
     const options: any = {
         responsive: true,
         scales: {
             x: {
-                beginAtZero: true,
+                type: 'time',
+                time: {
+                    unit: 'month',
+                    tooltipFormat: 'MMM dd, yyyy',
+                    displayFormats: {
+                        day: 'MMM dd',
+                        week: 'MMM dd',
+                        month: 'MMM yyyy',
+                        quarter: 'MMM yyyy',
+                        year: 'yyyy'
+                    },
+                },
+                min: minDate,
+                max: maxDate,
+                title: {
+                    display: true,
+                    text: 'Date'
+                },
+                grid: {
+                    display: false
+                }
             },
             y: {
                 beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Count'
+                },
+                grid: {
+                    display: true
+                }
             },
         },
         plugins: {
@@ -67,8 +92,15 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
             },
             tooltip: {
                 callbacks: {
-                    label: (tooltipItem: TooltipItem<'line'>) => ` ${tooltipItem.raw}`,  // Show only the number
-                    title: () => '',  // Remove the title
+                    label: (tooltipItem: TooltipItem<'line'>) => {
+                        const dataPoint = tooltipItem.raw as { x: Date; y: number };
+                        return ` ${dataPoint.y}` + " ";
+                    },
+                    title: (tooltipItem: TooltipItem<'line'>[]) => {
+                        const dataPoint = tooltipItem[0].raw as { x: Date; y: number };
+                        //return new Date(dataPoint.x).toLocaleDateString();
+                        return ""
+                    }
                 },
                 backgroundColor: '#02C3A1',
                 titleFont: { size: 20 },
@@ -79,8 +111,8 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
                 annotations: {
                     line1: {
                         type: 'line',
-                        xMin: todayMonth,
-                        xMax: todayMonth,
+                        xMin: new Date().toISOString(),
+                        xMax: new Date().toISOString(),
                         borderColor: '#CC4747',
                         borderWidth: 2,
                         label: {
@@ -96,6 +128,5 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
 
     return <Line data={chartData} options={options} />;
 };
-
 
 export default SubscribersChart;

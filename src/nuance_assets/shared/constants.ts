@@ -117,7 +117,8 @@ export const icons = {
   EXIT_NOTIFICATIONS: iconsPath + 'exit-notifications.svg',
   EXIT_NOTIFICATIONS_DARK: iconsPath + 'exit-notifications-dark.svg',
   STOP_SUBSCRIPTION: iconsPath + 'stop-subscription.svg',
-  CANCEL_SUBSCRIPTION_SUCCESS: iconsPath + 'cancel-subscription-success.svg'
+  CANCEL_SUBSCRIPTION_SUCCESS: iconsPath + 'cancel-subscription-success.svg',
+  CANCEL_SUBSCRIPTION_USER: iconsPath + 'cancel-subscription-user.svg',
 };
 
 export const colors = {

@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { images } from '../../shared/constants';
 import SubscribersChart from './subscribers-chart';
+import { PublicationType } from 'src/nuance_assets/types/types';
+import { WriterSubscriptionDetailsConverted, useSubscriptionStore, SubscribedReaderItem } from '../../store/subscriptionStore';
+import { usePublisherStore } from '../../store/publisherStore';
+import './_subscribers-tab.scss';
 
 interface Subscriber {
     id: number;
@@ -11,56 +15,99 @@ interface Subscriber {
     totalFees: string;
 }
 
-const SubscribersTab: React.FC = () => {
-    const subscribers: Subscriber[] = [
-        { id: 1, name: "@foodcompany", subscribedSince: "10-02-2022", period: "Monthly", fee: "1 NUA", totalFees: "21 NUA" },
-        { id: 2, name: "@jazzyjeff", subscribedSince: "10-02-2022", period: "Monthly", fee: "1 NUA", totalFees: "12 NUA" },
-        { id: 3, name: "@jordan234", subscribedSince: "10-02-2022", period: "Weekly", fee: "0.5 NUA", totalFees: "11 NUA" },
-        { id: 4, name: "@bemyguest", subscribedSince: "10-02-2022", period: "Annually", fee: "6 NUA", totalFees: "30 NUA" },
-        { id: 5, name: "@laywithme", subscribedSince: "10-02-2022", period: "Annually", fee: "6 NUA", totalFees: "44 NUA" },
+//props
+interface SubscribersTabProps {
+    publicationInfo?: PublicationType;
+}
+
+const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
+    const [publicationCanisterId, setPublicationCanisterId] = useState<string>('');
+    const [subscribers, setSubscribers] = useState<SubscribedReaderItem[]>([]);
+    const [stats, setStats] = useState({
+        subscribers: 0,
+        nuaEarned: 0,
+        thisWeek: 0,
+    });
+    const [chartData, setChartData] = useState<{ day: string, count: number }[]>([]);
+
+    const dumyDataForTesting = [
+        { day: '2024-03-04', count: 1 },
+        { day: '2024-03-11', count: 2 },
+        { day: '2024-03-18', count: 3 },
+        { day: '2024-03-25', count: 4 },
+        { day: '2024-04-01', count: 5 },
+        { day: '2024-04-08', count: 6 },
+        { day: '2024-04-15', count: 7 },
+        { day: '2024-04-22', count: 8 },
+        { day: '2024-04-29', count: 9 },
+        { day: '2024-05-06', count: 10 },
+        { day: '2024-05-13', count: 11 },
+        { day: '2024-05-20', count: 12 },
+        { day: '2024-05-27', count: 13 },
+        { day: '2024-06-03', count: 14 },
+        { day: '2024-06-04', count: 1 },
+        { day: '2024-06-11', count: 1 }
     ];
 
-    const stats = {
-        subscribers: 36,
-        nuaEarned: 124,
-        thisWeek: 3,
+    const { getPublicationSubscriptionDetailsAsEditor } = useSubscriptionStore((state) => ({
+        getPublicationSubscriptionDetailsAsEditor: state.getPublicationSubscriptionDetailsAsEditor,
+    }));
+
+    const { getCanisterIdByHandle } = usePublisherStore((state) => ({
+        getCanisterIdByHandle: state.getCanisterIdByHandle,
+    }));
+
+    useEffect(() => {
+        const fetchDetails = async () => {
+            if (publicationInfo?.publicationHandle) {
+                try {
+                    const canisterId = await getCanisterIdByHandle(publicationInfo.publicationHandle);
+                    setPublicationCanisterId(canisterId || '');
+
+                    if (canisterId) {
+                        const details = await getPublicationSubscriptionDetailsAsEditor(canisterId);
+                        console.log('Subscription Details:', details as WriterSubscriptionDetailsConverted);
+                        if (details) {
+                            setStats({
+                                subscribers: details.subscribersCount || 0,
+                                nuaEarned: details.totalNuaEarned || 0,
+                                thisWeek: details.lastWeekNewSubscribers || 0,
+                            });
+                            setSubscribers(details.subscribedReaders);
+                            setChartData(details.numberOfSubscribersHistoricalData.map(([timestamp, count]) => ({
+                                day: new Date(timestamp).toLocaleDateString(),
+                                count,
+                            })));
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching subscription details:', error);
+                }
+            }
+        };
+
+        fetchDetails();
+    }, [publicationInfo, getCanisterIdByHandle, getPublicationSubscriptionDetailsAsEditor]);
+
+    const formatDate = (timestamp: number) => {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString();
     };
-
-    const chartData = [
-        { day: '2024-01-01', count: 10 },
-        { day: '2024-02-01', count: 15 },
-        { day: '2024-03-01', count: 20 },
-        { day: '2024-04-01', count: 25 },
-        { day: '2024-05-01', count: 30 },
-        { day: '2024-05-02', count: 31 },
-        { day: '2024-05-03', count: 32 },
-        { day: '2024-05-04', count: 33 },
-        { day: '2024-05-05', count: 34 },
-        { day: '2024-05-06', count: 35 },
-        { day: '2024-05-07', count: 36 },
-        { day: '2024-05-08', count: 37 },
-        { day: '2024-05-09', count: 38 },
-        { day: '2024-05-10', count: 39 },
-        { day: '2024-05-11', count: 40 },
-        { day: '2024-05-12', count: 41 },
-        { day: '2024-05-13', count: 42 },
-        // Today's data point
-    ];
 
     return (
         <div className='subscribers-tab'>
             <div className='subscription-statistic-wrapper'>
                 <div className='subscription-statistic'>
                     <div className='subscription-stat' style={{ border: "none" }}>
-                        <p className='subscription-count'>{0}</p>
+                        <p className='subscription-count'>{stats.subscribers}</p>
                         <p className='subscription-title'>Subscribers</p>
                     </div>
                     <div className='subscription-stat'>
-                        <p className='subscription-count'>{0}</p>
+                        <p className='subscription-count'>{stats.nuaEarned}</p>
                         <p className='subscription-title'>NUA earned</p>
                     </div>
-                    <div className='subscription-stat' >
-                        <p className='subscription-count' style={{ marginLeft: "-12px" }}>+{0}</p>
+                    <div className='subscription-stat'>
+                        <p className='subscription-count' style={{ marginLeft: "-12px" }}>+{stats.thisWeek}</p>
                         <p className='subscription-title'>This week</p>
                     </div>
                 </div>
@@ -69,7 +116,7 @@ const SubscribersTab: React.FC = () => {
                 <p className='chart-title'>SUBSCRIBERS 2024</p>
             </div>
             <SubscribersChart data={chartData} />
-            <p className='subscribers-table-info'>These readers are currently subscribed to the this publication. They have unlimited access to all the publication’s content for 1 NUA per month. They pay a monthly fee.</p>
+            <p className='subscribers-table-info'>These readers are currently subscribed to this publication. They have unlimited access to all the publication’s content for 1 NUA per month. They pay a monthly fee.</p>
             <table className='subscription-table'>
                 <thead>
                     <tr>
@@ -82,11 +129,11 @@ const SubscribersTab: React.FC = () => {
                 </thead>
                 <tbody>
                     {subscribers.map((sub) => (
-                        <tr key={sub.id}>
-                            <td><img className='avatar' src={images.DEFAULT_AVATAR} alt="Avatar" /> {sub.name}</td>
-                            <td>{sub.subscribedSince}</td>
+                        <tr key={sub.subscriptionStartDate}>
+                            <td><img className='subscribers-tab-avatar' src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /> @{sub.userListItem.handle}</td>
+                            <td>{formatDate(sub.subscriptionStartDate)}</td>
                             <td>{sub.period}</td>
-                            <td>{sub.fee}</td>
+                            <td>{sub.feePerPeriod}</td>
                             <td>{sub.totalFees}</td>
                         </tr>
                     ))}
@@ -94,6 +141,6 @@ const SubscribersTab: React.FC = () => {
             </table>
         </div>
     );
-}
+};
 
 export default SubscribersTab;

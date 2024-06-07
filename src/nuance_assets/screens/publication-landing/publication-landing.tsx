@@ -356,6 +356,10 @@ function PublicationLanding() {
   const handleCancelSubscription = () => {
     console.log("cancel")
   }
+
+  const closeMenus = () => {
+    setSidebarToggle(false);
+  };
   const handleFollowClicked = () => {
     // prevent clicks while button spinner is visible
     if (updatingFollow) {
@@ -542,7 +546,7 @@ function PublicationLanding() {
               </div>
 
               <div className='Subscription-container'>
-                <SubscriptionCta />
+                <SubscriptionCta onOpen={() => closeMenus()} />
               </div>
 
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
@@ -576,6 +580,7 @@ function PublicationLanding() {
               profileImage={publication?.avatar}
               isPublication={true}
               onCancelComplete={() => { handleSubscriptionComplete() }}
+              authorPrincipalId={publicationCanisterId}
             />
           )}
 
