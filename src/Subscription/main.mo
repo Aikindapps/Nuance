@@ -197,6 +197,19 @@ actor Subscription {
         };
     };
 
+    //a function to query the details of a pending subscription payment request
+    public shared query func getPaymentRequestBySubscriptionEventId(eventId: Text) : async Result.Result<PaymentRequest, Text> {
+        switch(Map.get(subscriptionEventIdToPaymentRequestWriterPrincipalId, thash, eventId)) {
+            case(?value) {
+                //the payment request exists
+                return #ok(buildPaymentRequest(eventId))
+            };
+            case(null) {
+                return #err("Payment request not found.");
+            };
+        };
+    };
+
     //a function to query the subscription details of the writer
     //can be called by anyone - doesn't return the subscription history
     public shared query func getWriterSubscriptionDetailsByPrincipalId(principal: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
