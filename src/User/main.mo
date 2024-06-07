@@ -326,7 +326,7 @@ actor User {
       followersCount = 0;
       claimInfo = {
         isClaimActive;
-        maxClaimableTokens = Nat32.fromNat(maxClaimTokens);
+        maxClaimableTokens = maxClaimTokens;
         lastClaimDate = null;
         subaccount = null;
         isUserBlocked = false;
@@ -365,7 +365,7 @@ actor User {
       case(?subaccountIndex) {
         return {
           isClaimActive;
-          maxClaimableTokens = Nat32.fromNat(maxClaimTokens);
+          maxClaimableTokens = maxClaimTokens;
           lastClaimDate = lastClaimDateHashMap.get(principalId);
           subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
           isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
@@ -375,7 +375,7 @@ actor User {
         //the user has not claimed any tokens yet
         return {
           isClaimActive;
-          maxClaimableTokens = Nat32.fromNat(maxClaimTokens);
+          maxClaimableTokens = maxClaimTokens;
           lastClaimDate = null;
           subaccount = null;
           isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
@@ -533,7 +533,7 @@ actor User {
       followersCount = 0;
       claimInfo = {
         isClaimActive;
-        maxClaimableTokens = Nat32.fromNat(maxClaimTokens);
+        maxClaimableTokens = maxClaimTokens;
         lastClaimDate = null;
         subaccount = null;
         isUserBlocked = false;

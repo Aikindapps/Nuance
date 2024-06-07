@@ -20,9 +20,9 @@ export type Result = { 'ok' : WriterSubscriptionDetails } |
   { 'err' : string };
 export type Result_1 = { 'ok' : ReaderSubscriptionDetails } |
   { 'err' : string };
-export type Result_2 = { 'ok' : null } |
+export type Result_2 = { 'ok' : PaymentRequest } |
   { 'err' : string };
-export type Result_3 = { 'ok' : PaymentRequest } |
+export type Result_3 = { 'ok' : null } |
   { 'err' : string };
 export interface SubscriptionEvent {
   'startTime' : bigint,
@@ -59,11 +59,12 @@ export interface _SERVICE {
   'completeSubscriptionEvent' : ActorMethod<[string], Result_1>,
   'createPaymentRequestAsReader' : ActorMethod<
     [string, SubscriptionTimeInterval, number],
-    Result_3
+    Result_2
   >,
-  'disperseTokensForSuccessfulSubscription' : ActorMethod<[string], Result_2>,
+  'disperseTokensForSuccessfulSubscription' : ActorMethod<[string], Result_3>,
   'expiredNotificationsHeartbeatExternal' : ActorMethod<[], undefined>,
   'getLatestTimerCall' : ActorMethod<[], [string, string]>,
+  'getPaymentRequestBySubscriptionEventId' : ActorMethod<[string], Result_2>,
   'getReaderSubscriptionDetails' : ActorMethod<[], Result_1>,
   'getWriterSubscriptionDetails' : ActorMethod<[[] | [string]], Result>,
   'getWriterSubscriptionDetailsByPrincipalId' : ActorMethod<[string], Result>,

@@ -26,7 +26,7 @@ module{
 
     public type UserClaimInfo = {
         isClaimActive: Bool;
-        maxClaimableTokens: Nat32;
+        maxClaimableTokens: Nat;
         lastClaimDate: Int;
         subaccount: Bool;
         isUserBlocked: Bool;
