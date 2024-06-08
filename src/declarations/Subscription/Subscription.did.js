@@ -42,8 +42,8 @@ export const idlFactory = ({ IDL }) => {
     'paymentFee' : IDL.Nat32,
     'readerPrincipalId' : IDL.Text,
   });
-  const Result_3 = IDL.Variant({ 'ok' : PaymentRequest, 'err' : IDL.Text });
-  const Result_2 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : PaymentRequest, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result = IDL.Variant({
     'ok' : WriterSubscriptionDetails,
     'err' : IDL.Text,
@@ -60,16 +60,21 @@ export const idlFactory = ({ IDL }) => {
     'completeSubscriptionEvent' : IDL.Func([IDL.Text], [Result_1], []),
     'createPaymentRequestAsReader' : IDL.Func(
         [IDL.Text, SubscriptionTimeInterval, IDL.Nat32],
-        [Result_3],
+        [Result_2],
         [],
       ),
     'disperseTokensForSuccessfulSubscription' : IDL.Func(
         [IDL.Text],
-        [Result_2],
+        [Result_3],
         [],
       ),
     'expiredNotificationsHeartbeatExternal' : IDL.Func([], [], []),
     'getLatestTimerCall' : IDL.Func([], [IDL.Text, IDL.Text], ['query']),
+    'getPaymentRequestBySubscriptionEventId' : IDL.Func(
+        [IDL.Text],
+        [Result_2],
+        ['query'],
+      ),
     'getReaderSubscriptionDetails' : IDL.Func([], [Result_1], ['query']),
     'getWriterSubscriptionDetails' : IDL.Func(
         [IDL.Opt(IDL.Text)],

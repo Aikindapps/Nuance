@@ -30,6 +30,15 @@ module {
         socialChannels: [Text];
         nuaTokens: Float;
         followersCount: Nat32;
+        claimInfo: UserClaimInfo;
+    };
+
+    public type UserClaimInfo = {
+        isClaimActive: Bool;
+        maxClaimableTokens: Text; //stored as Nat, returned as Text
+        lastClaimDate: ?Text; //stored as Int, returned as Text
+        subaccount: ?Blob;
+        isUserBlocked: Bool;
     };
 
     // Currently useful for getting avatar URLs

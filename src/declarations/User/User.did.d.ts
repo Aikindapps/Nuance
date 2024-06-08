@@ -69,19 +69,23 @@ export type Result = { 'ok' : User } |
   { 'err' : string };
 export type Result_1 = { 'ok' : null } |
   { 'err' : string };
+export type Result_10 = { 'ok' : string } |
+  { 'err' : string };
 export type Result_2 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_3 = { 'ok' : [bigint, bigint] } |
+export type Result_3 = { 'ok' : boolean } |
   { 'err' : string };
-export type Result_4 = { 'ok' : UserListItem } |
+export type Result_4 = { 'ok' : [bigint, bigint] } |
   { 'err' : string };
 export type Result_5 = { 'ok' : Array<string> } |
   { 'err' : string };
-export type Result_6 = { 'ok' : Array<UserListItem> } |
+export type Result_6 = { 'ok' : UserListItem } |
   { 'err' : string };
-export type Result_7 = { 'ok' : Array<User> } |
+export type Result_7 = { 'ok' : Array<UserListItem> } |
   { 'err' : string };
-export type Result_8 = { 'ok' : string } |
+export type Result_8 = { 'ok' : Array<User> } |
+  { 'err' : string };
+export type Result_9 = { 'ok' : Array<[string, bigint]> } |
   { 'err' : string };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
@@ -93,11 +97,19 @@ export interface User {
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'claimInfo' : UserClaimInfo,
   'website' : string,
   'handle' : string,
   'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
+}
+export interface UserClaimInfo {
+  'isUserBlocked' : boolean,
+  'maxClaimableTokens' : string,
+  'subaccount' : [] | [Uint8Array | number[]],
+  'lastClaimDate' : [] | [string],
+  'isClaimActive' : boolean,
 }
 export interface UserListItem {
   'bio' : string,
@@ -119,6 +131,7 @@ export interface User__1 {
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'claimInfo' : UserClaimInfo,
   'website' : string,
   'handle' : string,
   'followersPrincipals' : FollowersPrincipals,
@@ -134,8 +147,10 @@ export interface _SERVICE {
     [PublicationObject__1, string],
     AddPublicationReturn
   >,
-  'adminAirDrop' : ActorMethod<[number], Result_8>,
+  'adminAirDrop' : ActorMethod<[number], Result_10>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'blockUserFromClaiming' : ActorMethod<[string], Result_1>,
+  'claimRestrictedTokens' : ActorMethod<[], Result>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
   'deleteUser' : ActorMethod<[string], Result_2>,
@@ -145,6 +160,7 @@ export interface _SERVICE {
   'generateLowercaseHandles' : ActorMethod<[], [string, Array<string>]>,
   'getActiveUsersByRange' : ActorMethod<[Date], bigint>,
   'getAdmins' : ActorMethod<[], Result_5>,
+  'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_9>,
   'getAllHandles' : ActorMethod<[], Array<string>>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
@@ -162,21 +178,23 @@ export interface _SERVICE {
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_7>,
-  'getMyFollowers' : ActorMethod<[], Result_6>,
+  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_8>,
+  'getMyFollowers' : ActorMethod<[], Result_7>,
   'getNuaBalance' : ActorMethod<[string], NuaBalanceResult>,
   'getNumberOfAllRegisteredUsers' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPrincipalByHandle' : ActorMethod<[string], GetPrincipalByHandleReturn>,
   'getPrincipalsByHandles' : ActorMethod<[Array<string>], Array<string>>,
   'getRegistrationNumberLastDay' : ActorMethod<[], bigint>,
+  'getTotalNumberOfClaimedTokens' : ActorMethod<[], bigint>,
   'getTrustedCanisters' : ActorMethod<[], Result_5>,
   'getUser' : ActorMethod<[], Result>,
   'getUserByHandle' : ActorMethod<[string], Result>,
   'getUserByPrincipalId' : ActorMethod<[string], Result>,
   'getUserFollowers' : ActorMethod<[string], Array<UserListItem>>,
   'getUserInternal' : ActorMethod<[string], [] | [User]>,
-  'getUserListItemByHandle' : ActorMethod<[string], Result_4>,
+  'getUserListItemByHandle' : ActorMethod<[string], Result_6>,
+  'getUsersBlockedFromClaiming' : ActorMethod<[], Result_5>,
   'getUsersByHandles' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'handleClap' : ActorMethod<[string, string], undefined>,
@@ -184,7 +202,7 @@ export interface _SERVICE {
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'migrateFollowersHashmapsFromHandlesToPrincipalIds' : ActorMethod<
     [],
-    Result_3
+    Result_4
   >,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCanister' : ActorMethod<[string], Result_1>,
@@ -196,9 +214,17 @@ export interface _SERVICE {
     RemovePublicationReturn
   >,
   'setDailyMaxRegistration' : ActorMethod<[bigint], Result_2>,
+  'setIsClaimActive' : ActorMethod<[boolean], Result_3>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_2>,
+  'setMaxNumberOfClaimableTokens' : ActorMethod<[bigint], Result_2>,
   'spendNuaBalance' : ActorMethod<[string], undefined>,
+  'spendRestrictedTokensForSubscription' : ActorMethod<[string], Result_1>,
+  'spendRestrictedTokensForTipping' : ActorMethod<
+    [string, string, bigint],
+    Result_1
+  >,
   'testInstructionSize' : ActorMethod<[], string>,
+  'unblockUserFromClaiming' : ActorMethod<[string], Result_1>,
   'unfollowAuthor' : ActorMethod<[string], Result>,
   'unregisterAdmin' : ActorMethod<[string], Result_1>,
   'unregisterCanister' : ActorMethod<[string], Result_1>,

@@ -78,7 +78,7 @@ export const getPeriodBySubscriptionTimeInterval = (
 const convertReaderSubscriptionDetails = async (
   details: ReaderSubscriptionDetails
 ): Promise<ReaderSubscriptionDetailsConverted> => {
-  console.log('Converting details', details)
+  console.log('Converting details', details);
   let userActor = await getUserActor();
   let postCoreActor = await getPostCoreActor();
   //firstly, fetch all the user list items from the user canister
@@ -86,6 +86,7 @@ const convertReaderSubscriptionDetails = async (
   let allPrincipalIdsIncludingDuplicates = details.readerSubscriptions.map(
     (event) => event.writerPrincipalId
   );
+  console.log('1');
   let allPrincipalIds = [...new Set(allPrincipalIdsIncludingDuplicates)];
   let [allUserListItems, allPublications] = await Promise.all([
     userActor.getUsersByPrincipals(allPrincipalIds),
@@ -95,6 +96,7 @@ const convertReaderSubscriptionDetails = async (
   for (const userListItem of allUserListItems) {
     userListItemsMap.set(userListItem.principal, userListItem);
   }
+  console.log('2');
   //active
   let activeSubscriptionsWriterPrincipalIds =
     details.readerNotStoppedSubscriptionsWriters.map(
@@ -103,6 +105,7 @@ const convertReaderSubscriptionDetails = async (
   //key: writer principal id, value: SubscribedWriterItem
   let activeSubscriptionItemsMap = new Map<string, SubscribedWriterItem>();
   let expiredSubscriptionItemsArray: ExpiredSubscriptionItem[] = [];
+  console.log('3');
   for (const subscriptionEvent of details.readerSubscriptions) {
     if (
       activeSubscriptionsWriterPrincipalIds.includes(
@@ -373,10 +376,7 @@ const createSubscriptionStore:
         let subscriptionActor = await getSubscriptionActor();
         let details = await subscriptionActor.getReaderSubscriptionDetails();
         if ('ok' in details) {
-          console.log ('details', details);
           return await convertReaderSubscriptionDetails(details.ok);
-        } else {
-          handleError(details.err);
         }
       } catch (error) {
         handleError(error, 'Unexpected error: ');
@@ -479,7 +479,7 @@ const createSubscriptionStore:
         amount
       );
 
-      console.log ('paymentRequest', paymentRequest);
+      console.log('paymentRequest', paymentRequest);
       if ('ok' in paymentRequest) {
         //payment request has successfully been created
         //transfer the tokens to the subaccount
@@ -495,14 +495,14 @@ const createSubscriptionStore:
           created_at_time: [],
           amount: BigInt(paymentRequest.ok.paymentFee),
         });
-        console.log ('transferResponse', transferResponse);
+        console.log('transferResponse', transferResponse);
         if ('Ok' in transferResponse) {
           //transfer is also successful
           //complete the subscription event and return the new readerDetails value
           let response = await subscriptionActor.completeSubscriptionEvent(
             paymentRequest.ok.subscriptionEventId
           );
-          console.log ('response', response);
+          console.log('response', response);
           if ('ok' in response) {
             return await convertReaderSubscriptionDetails(response.ok);
           } else {

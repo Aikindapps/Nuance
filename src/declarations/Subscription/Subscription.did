@@ -40,12 +40,12 @@ type SubscriptionEvent =
 type Result_3 = 
  variant {
    err: text;
-   ok: PaymentRequest;
+   ok;
  };
 type Result_2 = 
  variant {
    err: text;
-   ok;
+   ok: PaymentRequest;
  };
 type Result_1 = 
  variant {
@@ -77,10 +77,11 @@ service : {
   checkMyExpiredSubscriptionsNotifications: () -> ();
   completeSubscriptionEvent: (text) -> (Result_1);
   createPaymentRequestAsReader: (text, SubscriptionTimeInterval, nat32) ->
-   (Result_3);
-  disperseTokensForSuccessfulSubscription: (text) -> (Result_2);
+   (Result_2);
+  disperseTokensForSuccessfulSubscription: (text) -> (Result_3);
   expiredNotificationsHeartbeatExternal: () -> ();
   getLatestTimerCall: () -> (text, text) query;
+  getPaymentRequestBySubscriptionEventId: (text) -> (Result_2) query;
   getReaderSubscriptionDetails: () -> (Result_1) query;
   getWriterSubscriptionDetails: (opt text) -> (Result) composite_query;
   getWriterSubscriptionDetailsByPrincipalId: (text) -> (Result) query;

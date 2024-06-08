@@ -4,7 +4,6 @@ import Result "mo:base/Result";
 import Principal "mo:base/Principal";
 import Prim "mo:prim";
 import Types "types";
-import UserTypes "../User/types";
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
@@ -49,7 +48,7 @@ actor class PostBucket() = this {
 
   // data type aliases
   type List<T> = List.List<T>;
-  type User = UserTypes.User;
+  type User = CanisterDeclarations.User;
   type PostBucketType = CanisterDeclarations.PostBucketType;
   type Post = Types.Post;
   type UserPostCounts = Types.UserPostCounts;

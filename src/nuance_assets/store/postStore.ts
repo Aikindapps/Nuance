@@ -13,6 +13,7 @@ import {
   PremiumArticleOwner,
   ApplaudListItem,
   TransactionListItem,
+  UserListItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -118,58 +119,56 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   });
 };
 
-async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
-  const usersCache: Map<string, User> = new Map();
-
-  async function fetchUser(principalId: string): Promise<User> {
-    let user = usersCache.get(principalId);
-    if (!user) {
-      const userResult = await (
-        await getUserActor()
-      ).getUserByPrincipalId(principalId);
-      if ('err' in userResult) throw new Error(userResult.err);
-      user = userResult.ok;
-      usersCache.set(principalId, user);
+const getAllPrincipalIdsInComments = (comments: Comment[]) => {
+  let creators: Set<string> = new Set();
+  comments.forEach((comment) => {
+    creators.add(comment.creator);
+    if (comment.replies.length > 0) {
+      getAllPrincipalIdsInComments(comment.replies);
     }
-    return user;
+  });
+  return Array.from(creators);
+};
+
+const enrichComments = (
+  comments: Comment[],
+  userListItemsMap: Map<string, UserListItem>
+): Comment[] => {
+  let result: Comment[] = [];
+  for (const comment of comments) {
+    let userListItem = userListItemsMap.get(comment.creator) as UserListItem;
+    if (comment.replies.length === 0) {
+      //no reply, just update the avatar and handle fields
+      result.push({
+        ...comment,
+        avatar: userListItem.avatar,
+        handle: userListItem.handle,
+      });
+    } else {
+      result.push({
+        ...comment,
+        avatar: userListItem.avatar,
+        handle: userListItem.handle,
+        replies: enrichComments(comment.replies, userListItemsMap),
+      });
+    }
+  }
+  return result;
+};
+
+async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
+  const usersCache = new Map<string, UserListItem>();
+
+  let allPrincipalIds = getAllPrincipalIdsInComments(comments);
+  let userActor = await getUserActor();
+  let userListItems = await userActor.getUsersByPrincipals(allPrincipalIds);
+  for (const userListItem of userListItems) {
+    usersCache.set(userListItem.principal, userListItem);
   }
 
-  async function addUserDetails(comment: Comment): Promise<Comment> {
-    const user = await fetchUser(comment.creator);
-    comment.avatar = user.avatar;
-    comment.handle = user.handle;
-    return comment;
-  }
-
-  // Enrich comments with user details and handle replies.
-  const enrichComments = async (
-    commentsToEnrich: Comment[]
-  ): Promise<Comment[]> => {
-    return Promise.all(
-      commentsToEnrich.map(async (comment) => {
-        comment = await addUserDetails(comment);
-        if (comment.replies && comment.replies.length > 0) {
-          comment.replies = await enrichComments(comment.replies);
-        }
-        return comment;
-      })
-    );
-  };
-
-  return enrichComments(comments);
-}
-
-function separateIds(input: string) {
-  // Split the input string by the '-' character
-  let parts = input.split('-');
-
-  // The first part is the post ID
-  let postId = parts[0];
-
-  // The rest of the parts make up the canister ID
-  let canisterId = parts.slice(1).join('-');
-  // Return the IDs in an object
-  return { postId, canisterId };
+  //now, rebuild the comments array
+  let result = enrichComments(comments, usersCache);
+  return result;
 }
 
 const isUserEditor = (publicationHandle: string, user?: UserType) => {
@@ -224,7 +223,9 @@ const fetchPostsByBuckets = async (
   let resultsArray = (await Promise.all(promises)).flat(1);
 
   return resultsArray.map((bucketType) => {
-    let keyProperties = postIdToKeyPropertiesMap.get(bucketType.postId) as PostKeyProperties;
+    let keyProperties = postIdToKeyPropertiesMap.get(
+      bucketType.postId
+    ) as PostKeyProperties;
     return { ...keyProperties, ...bucketType } as PostType;
   });
 };

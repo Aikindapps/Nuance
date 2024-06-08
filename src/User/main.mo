@@ -20,6 +20,7 @@ import IC "mo:base/ExperimentalInternetComputer";
 import Nat64 "mo:base/Nat64";
 import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
+import Blob "mo:base/Blob";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
@@ -48,6 +49,7 @@ actor User {
   type GetPrincipalByHandleReturn = Types.GetPrincipalByHandleReturn;
   type GetHandleByPrincipalReturn = Types.GetHandleByPrincipalReturn;
   type NftCanisterEntry = Types.NftCanisterEntry;
+  type UserClaimInfo = Types.UserClaimInfo;
 
   type List<T> = List.List<T>;
 
@@ -57,6 +59,10 @@ actor User {
   stable var userId : Nat = 0;
   stable var users : [(Text, User)] = [];
   stable var MAX_DAILY_REGISTRATION = 100;
+  stable var isClaimActive = false;
+  stable var claimSubaccountIndex = 0;
+  stable var maxClaimTokens = 5_000_000_000; //50 NUA tokens
+  stable var claimedTokensCounter = 0;
 
   stable var principalId : [(Text, Text)] = [];
   stable var handle : [(Text, Text)] = [];
@@ -77,6 +83,9 @@ actor User {
   stable var fontTypes : [(Text, Text)] = [];
   stable var myFollowers : [(Text, [Text])] = []; //who follows an account
   stable var lastLogins : [(Text, Int)] = [];
+  stable var lastClaimDate : [(Text, Int)] = [];
+  stable var claimSubaccountIndexes : [(Text, Nat)] = [];
+  stable var claimBlockedUsers : [(Text, Text)] = [];
 
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
 
@@ -101,7 +110,9 @@ actor User {
   var fontTypesHashmap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   var myFollowersHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
   var lastLoginsHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
-
+  var claimSubaccountIndexesHashMap = HashMap.HashMap<Text, Nat>(initCapacity, isEq, Text.hash);
+  var lastClaimDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
+  var claimBlockedUsersHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
   stable var accountIdsToHandleEntries : [(Text, Text)] = [];
@@ -313,7 +324,13 @@ actor User {
       socialChannels = [];
       nuaTokens = 0.0;
       followersCount = 0;
-
+      claimInfo = {
+        isClaimActive;
+        maxClaimableTokens = Nat.toText(maxClaimTokens);
+        lastClaimDate = null;
+        subaccount = null;
+        isUserBlocked = false;
+      };
     };
   };
 
@@ -338,12 +355,51 @@ actor User {
         socialChannels = U.safeGet(socialChannelsHashMap, principalId, []);
         nuaTokens = U.safeGet(nuaTokensHashMap, principalId, 0.0);
         followersCount = Nat32.fromNat(U.safeGet(myFollowersHashMap, userPrincipalId, []).size());
+        claimInfo = buildClaimInfo(principalId);
       };
     };
-
     user;
   };
-
+  private func buildClaimInfo(principalId: Text) : UserClaimInfo {
+    switch(claimSubaccountIndexesHashMap.get(principalId)) {
+      case(?subaccountIndex) {
+        switch(lastClaimDateHashMap.get(principalId)) {
+          case(?lastClaimDate) {
+            //there exists a lastClaimDate
+            return {
+              isClaimActive;
+              maxClaimableTokens = Nat.toText(maxClaimTokens);
+              lastClaimDate = ?Int.toText(lastClaimDate);
+              subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
+              isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
+            }
+          };
+          case(null) {
+            //there is no lastClaimDate
+            return {
+              isClaimActive;
+              maxClaimableTokens = Nat.toText(maxClaimTokens);
+              lastClaimDate = null;
+              subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
+              isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
+            }
+          };
+        };
+      };
+      case(null) {
+        //the user has not claimed any tokens yet
+        return {
+          isClaimActive;
+          maxClaimableTokens = Nat.toText(maxClaimTokens);
+          lastClaimDate = null;
+          subaccount = null;
+          isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
+        }
+      };
+    };
+    
+  };
+  
   private func putUser(principalId : Text, user : User) {
 
     canistergeekMonitor.collectMetrics();
@@ -490,6 +546,13 @@ actor User {
       socialChannels = [];
       nuaTokens = 0.0;
       followersCount = 0;
+      claimInfo = {
+        isClaimActive;
+        maxClaimableTokens = Nat.toText(maxClaimTokens);
+        lastClaimDate = null;
+        subaccount = null;
+        isUserBlocked = false;
+      };
     };
   };
 
@@ -1329,6 +1392,275 @@ actor User {
     };
   };
 
+  public shared ({caller}) func setIsClaimActive(isActive: Bool) : async Result.Result<Bool, Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    //set the value
+    isClaimActive := isActive;
+    //return the new value
+    #ok(isClaimActive)
+  };
+
+  public shared ({caller}) func setMaxNumberOfClaimableTokens(amount: Nat) : async Result.Result<Nat, Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    //set the value
+    maxClaimTokens := amount;
+    //return the new value
+    #ok(maxClaimTokens)
+  };
+
+  //returns the handles of the blocked users
+  public shared query ({caller}) func getUsersBlockedFromClaiming() : async Result.Result<[Text], Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    let principals = Iter.toArray(claimBlockedUsersHashMap.vals());
+    let handles = Buffer.Buffer<Text>(0);
+    for(principal in principals.vals()){
+      switch(handleHashMap.get(principal)) {
+        case(?handle) {
+          handles.add(handle)
+        };
+        case(null) {};
+      };
+    };
+    #ok(Buffer.toArray(handles))
+  };
+
+  //block the given user from claiming restricted tokens
+  public shared ({caller}) func blockUserFromClaiming(handle: Text) : async Result.Result<(), Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    
+    switch(handleReverseHashMap.get(handle)) {
+      case(?principalId) {
+        claimBlockedUsersHashMap.put(principalId, principalId);
+        return #ok();
+      };
+      case(null) {
+        //user not found
+        return #err(UserNotFound)
+      };
+    };
+  };
+  //unblock the given user from claiming
+  public shared ({caller}) func unblockUserFromClaiming(handle: Text) : async Result.Result<(), Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    switch(handleReverseHashMap.get(handle)) {
+      case(?principalId) {
+        switch(claimBlockedUsersHashMap.get(principalId)) {
+          case(?value) {
+            claimBlockedUsersHashMap.delete(principalId);
+            return #ok();
+          };
+          case(null) {
+            return #err("The given user is not blocked from claiming restricted tokens!")
+          };
+        };
+      };
+      case(null) {
+        //user not found
+        return #err(UserNotFound)
+      };
+    };
+  };
+
+  //a query function to return the subaccount index of all the users (only for the users who claimed restricted tokens at least one time)
+  public shared query ({caller}) func getAllClaimSubaccountIndexes() : async Result.Result<[(Text, Nat)], Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    return #ok(Iter.toArray(claimSubaccountIndexesHashMap.entries()))
+  };
+
+  public shared query ({caller}) func getTotalNumberOfClaimedTokens() : async Nat {
+    claimedTokensCounter
+  };
+
+
+  public shared ({caller}) func claimRestrictedTokens() : async Result.Result<User, Text> {
+    if(not isClaimActive){
+      return #err("Claim is not active.")
+    };
+    let principal = Principal.toText(caller);
+    switch (handleHashMap.get(principal)) {
+      case (?p) {
+        //caller has an account
+        //firstly, check if the caller has been blocked
+        switch(claimBlockedUsersHashMap.get(principal)) {
+          case(?value) {
+            return #err("The caller is not allowed to claim any restricted tokens.")
+          };
+          case(null) {};
+        };
+        //check if it's the first time user claims the tokens
+        var callerSubaccountIndex = 1;
+        switch(claimSubaccountIndexesHashMap.get(principal)) {
+          case(?subaccountIndex) {
+            //caller already have an assigned subaccount
+            callerSubaccountIndex := subaccountIndex;
+          };
+          case(null) {
+            //it's the first time user tries to claim tokens
+            //get a new index and map it with the user
+            claimSubaccountIndex += 1;
+            callerSubaccountIndex := claimSubaccountIndex;
+            claimSubaccountIndexesHashMap.put(principal, claimSubaccountIndex);
+          };
+        };
+        
+        let WEEK : Int = 86400000000000 * 7;
+        let now = Time.now();
+        //check if at least one week has passed until the last time the user has claimed tokens
+        let lastClaimDate = U.safeGet(lastClaimDateHashMap, principal, now);
+        if(lastClaimDate + WEEK > now){
+          return #err("Already claimed in last week.");
+        };
+
+        let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
+        let availableRestrictedTokenBalance = await NuaLedgerCanister.icrc1_balance_of({
+          owner = Principal.fromActor(User);
+          subaccount = ?Blob.fromArray(U.natToSubAccount(callerSubaccountIndex));
+        });
+
+        if(availableRestrictedTokenBalance >= maxClaimTokens){
+          return #err("There is no available token to claim.")
+        };
+
+        let claimableAmount = Nat.sub(maxClaimTokens, availableRestrictedTokenBalance);
+
+        //send the claimable tokens to the subaccount mapped to the caller
+        let response = await NuaLedgerCanister.icrc1_transfer({
+          amount = claimableAmount;
+          created_at_time = null;
+          fee = ?ENV.NUA_TOKEN_FEE;
+          from_subaccount = null;
+          memo = null;
+          to = {
+            owner = Principal.fromActor(User);
+            subaccount = ?Blob.fromArray(U.natToSubAccount(callerSubaccountIndex));
+          }
+        });
+        switch(response) {
+          case(#Ok(value)) {
+            //update the last claim date
+            lastClaimDateHashMap.put(principal, now);
+            //update the counter value
+            claimedTokensCounter += claimableAmount;
+            return #ok(buildUser(principal))
+          };
+          case(#Err(error)) {
+            return #err("An error occured while sending the tokens.")
+          };
+        };
+      };
+      case (null) {
+        //caller doesn't have an nuance account
+        return #err("There is no Nuance account to claim the restricted tokens.")
+      };
+    };
+  };
+
+  public shared ({caller}) func spendRestrictedTokensForTipping(bucketCanisterId: Text, postId: Text, amount: Nat) : async Result.Result<(), Text> {
+    let principal = Principal.toText(caller);
+    switch(claimSubaccountIndexesHashMap.get(principal)) {
+      case(?subaccountIndex) {
+        let PostBucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+        let post = await PostBucketActor.getPost(postId);
+        switch(post) {
+          case(#ok(postValue)) {
+            if(postValue.postOwnerPrincipal == principal or postValue.creatorPrincipal == principal){
+              return #err("You can not spend restricted tokens on your own articles.");
+            };
+            //if here, post is not related to caller
+            //transfer the tokens to the subaccount
+            let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
+            let transferResponse = await NuaLedgerCanister.icrc1_transfer({
+              amount;
+              created_at_time = null;
+              fee = ?ENV.NUA_TOKEN_FEE;
+              from_subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
+              memo = null;
+              to = {
+                owner = Principal.fromText(bucketCanisterId);
+                subaccount = ?Blob.fromArray(U.natToSubAccount(U.textToNat(postId)));
+              }
+            });
+            switch(transferResponse) {
+              case(#Ok(value)) {
+                return #ok();
+              };
+              case(#Err(error)) {
+                return #err("Transfer error.");
+              };
+            };
+          };
+          case(#err(error)) {
+            return #err("Post not found.")
+          };
+        };
+      };
+      case(null) {
+        //the user has not claimed any restricted tokens yet
+        return #err("There is no restricted NUA tokens to spend.")
+      };
+    };
+    #ok()
+  };
+
+  public shared ({caller}) func spendRestrictedTokensForSubscription(eventId: Text) : async Result.Result<(), Text> {
+    let principal = Principal.toText(caller);
+    switch(claimSubaccountIndexesHashMap.get(principal)) {
+      case(?subaccountIndex) {
+        let SubscriptionCanister = CanisterDeclarations.getSubscriptionCanister();
+        let subscriptionPaymentRequest = await SubscriptionCanister.getPaymentRequestBySubscriptionEventId(eventId);
+        switch(subscriptionPaymentRequest) {
+          case(#ok(paymentRequestDetails)) {
+            if(paymentRequestDetails.writerPrincipalId == principal or paymentRequestDetails.readerPrincipalId != principal){
+              return #err("Invalid subscription event.");
+            };
+            //if here, the given subscription payment request is valid
+            //transfer the tokens to the subaccount
+            let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
+            let transferResponse = await NuaLedgerCanister.icrc1_transfer({
+              amount = Nat32.toNat(paymentRequestDetails.paymentFee);
+              created_at_time = null;
+              fee = ?ENV.NUA_TOKEN_FEE;
+              from_subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
+              memo = null;
+              to = {
+                owner = Principal.fromText(ENV.SUBSCRIPTION_CANISTER_ID);
+                subaccount = ?paymentRequestDetails.subaccount;
+              }
+            });
+            switch(transferResponse) {
+              case(#Ok(value)) {
+                return #ok();
+              };
+              case(#Err(error)) {
+                return #err("Transfer error.");
+              };
+            };
+          };
+          case(#err(error)) {
+            return #err("Payment request not found.")
+          };
+        };
+      };
+      case(null) {
+        //the user has not claimed any restricted tokens yet
+        return #err("There is no restricted NUA tokens to spend.")
+      };
+    };
+    #ok()
+  };
+
   public shared ({ caller }) func updateLastLogin() : () {
     if (isAnonymous(caller)) {
       return;
@@ -1834,7 +2166,10 @@ actor User {
     fontTypes := Iter.toArray(fontTypesHashmap.entries());
     accountIdsToHandleEntries := Iter.toArray(accountIdsToHandleHashMap.entries());
     myFollowers := Iter.toArray(myFollowersHashMap.entries());
-    lastLogins := Iter.toArray(lastLoginsHashMap.entries())
+    lastLogins := Iter.toArray(lastLoginsHashMap.entries());
+    lastClaimDate := Iter.toArray(lastClaimDateHashMap.entries());
+    claimBlockedUsers := Iter.toArray(claimBlockedUsersHashMap.entries());
+    claimSubaccountIndexes := Iter.toArray(claimSubaccountIndexesHashMap.entries());
 
   };
 
@@ -1863,6 +2198,9 @@ actor User {
     accountIdsToHandleHashMap := HashMap.fromIter(accountIdsToHandleEntries.vals(), initCapacity, isEq, Text.hash);
     myFollowersHashMap := HashMap.fromIter(myFollowers.vals(), initCapacity, isEq, Text.hash);
     lastLoginsHashMap := HashMap.fromIter(lastLogins.vals(), initCapacity, isEq, Text.hash);
+    lastClaimDateHashMap := HashMap.fromIter(lastClaimDate.vals(), initCapacity, isEq, Text.hash);
+    claimBlockedUsersHashMap := HashMap.fromIter(claimBlockedUsers.vals(), initCapacity, isEq, Text.hash);
+    claimSubaccountIndexesHashMap := HashMap.fromIter(claimSubaccountIndexes.vals(), initCapacity, isEq, Text.hash);
 
     principalId := [];
     handle := [];
@@ -1877,6 +2215,9 @@ actor User {
     fontTypes := [];
     accountIdsToHandleEntries := [];
     lastLogins := [];
+    lastClaimDate := [];
+    claimBlockedUsers := [];
+    claimSubaccountIndexes := [];
   };
 
   //#endregion

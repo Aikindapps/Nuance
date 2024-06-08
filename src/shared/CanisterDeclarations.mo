@@ -21,6 +21,15 @@ module{
         socialChannels: [Text];
         nuaTokens: Float;
         followersCount: Nat32;
+        claimInfo: ?UserClaimInfo;
+    };
+
+    public type UserClaimInfo = {
+        isClaimActive: Bool;
+        maxClaimableTokens: Text; //stored as Nat, returned as Text
+        lastClaimDate: ?Text; //stored as Int, returned as Text
+        subaccount: ?Blob;
+        isUserBlocked: Bool;
     };
 
     public type PublicationObject = {
@@ -442,10 +451,27 @@ module{
     };
 
     //#########################__SUBSCRIPTION__CANISTER__#############################
+    type SubscriptionTimeInterval = {
+        #Weekly;
+        #Monthly;
+        #Annually;
+        #LifeTime;
+    };
+    //payment request returned to the reader
+    type PaymentRequest = {
+        subscriptionEventId: Text;
+        writerPrincipalId: Text;
+        readerPrincipalId: Text;
+        subscriptionTimeInterval: SubscriptionTimeInterval;
+        paymentFee: Nat32;
+        expirationDate: Int;
+        subaccount: Blob;
+    };
 
     public type SubscriptionCanisterInterface = actor {
         isReaderSubscriber : query (writerPrincipalId: Text, readerPrincipalId: Text) -> async Bool;
-        isWriterActivatedSubscription : query (writerPrincipalId: Text) -> async Bool
+        isWriterActivatedSubscription : query (writerPrincipalId: Text) -> async Bool;
+        getPaymentRequestBySubscriptionEventId(eventId: Text) : async Result.Result<PaymentRequest, Text>
     };
 
     public func getSubscriptionCanister() : SubscriptionCanisterInterface {
