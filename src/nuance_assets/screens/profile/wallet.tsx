@@ -90,7 +90,7 @@ const Wallet = () => {
     fetchTokenBalances();
     populateFields();
     fetchAllActivities();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!(modalContext?.modalType === 'WithdrawToken')) {

@@ -10,9 +10,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const UserClaimInfo = IDL.Record({
     'isUserBlocked' : IDL.Bool,
-    'maxClaimableTokens' : IDL.Nat,
+    'maxClaimableTokens' : IDL.Text,
     'subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
-    'lastClaimDate' : IDL.Opt(IDL.Int),
+    'lastClaimDate' : IDL.Opt(IDL.Text),
     'isClaimActive' : IDL.Bool,
   });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));

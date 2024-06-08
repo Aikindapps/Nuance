@@ -215,6 +215,14 @@ const toUserModel = (user: User): UserType => {
     ...user,
     lastLogin: 0,
     followedTags: [],
+    claimInfo: {
+      ...user.claimInfo,
+      maxClaimableTokens: Number(user.claimInfo.maxClaimableTokens),
+      lastClaimDate:
+        user.claimInfo.lastClaimDate[0] === undefined
+          ? []
+          : [Number(user.claimInfo.lastClaimDate[0])],
+    },
   } as UserType;
 };
 
@@ -643,12 +651,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         if (Err in result) {
           toastError(result.err);
         } else {
-         
-
           set({ notifications: result.ok[0] });
           set({ unreadNotificationCount: 0 });
           set({ totalNotificationCount: Number(result.ok[1]) });
-
           for (let i = 0; i < result.ok[0].length; i++) {
             if (result.ok[0][i].read === false) {
               set((state) => ({

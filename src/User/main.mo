@@ -326,7 +326,7 @@ actor User {
       followersCount = 0;
       claimInfo = {
         isClaimActive;
-        maxClaimableTokens = maxClaimTokens;
+        maxClaimableTokens = Nat.toText(maxClaimTokens);
         lastClaimDate = null;
         subaccount = null;
         isUserBlocked = false;
@@ -363,19 +363,34 @@ actor User {
   private func buildClaimInfo(principalId: Text) : UserClaimInfo {
     switch(claimSubaccountIndexesHashMap.get(principalId)) {
       case(?subaccountIndex) {
-        return {
-          isClaimActive;
-          maxClaimableTokens = maxClaimTokens;
-          lastClaimDate = lastClaimDateHashMap.get(principalId);
-          subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
-          isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
-        }
+        switch(lastClaimDateHashMap.get(principalId)) {
+          case(?lastClaimDate) {
+            //there exists a lastClaimDate
+            return {
+              isClaimActive;
+              maxClaimableTokens = Nat.toText(maxClaimTokens);
+              lastClaimDate = ?Int.toText(lastClaimDate);
+              subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
+              isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
+            }
+          };
+          case(null) {
+            //there is no lastClaimDate
+            return {
+              isClaimActive;
+              maxClaimableTokens = Nat.toText(maxClaimTokens);
+              lastClaimDate = null;
+              subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
+              isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
+            }
+          };
+        };
       };
       case(null) {
         //the user has not claimed any tokens yet
         return {
           isClaimActive;
-          maxClaimableTokens = maxClaimTokens;
+          maxClaimableTokens = Nat.toText(maxClaimTokens);
           lastClaimDate = null;
           subaccount = null;
           isUserBlocked = claimBlockedUsersHashMap.get(principalId) != null;
@@ -533,7 +548,7 @@ actor User {
       followersCount = 0;
       claimInfo = {
         isClaimActive;
-        maxClaimableTokens = maxClaimTokens;
+        maxClaimableTokens = Nat.toText(maxClaimTokens);
         lastClaimDate = null;
         subaccount = null;
         isUserBlocked = false;

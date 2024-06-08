@@ -106,9 +106,9 @@ export interface User {
 }
 export interface UserClaimInfo {
   'isUserBlocked' : boolean,
-  'maxClaimableTokens' : bigint,
+  'maxClaimableTokens' : string,
   'subaccount' : [] | [Uint8Array | number[]],
-  'lastClaimDate' : [] | [bigint],
+  'lastClaimDate' : [] | [string],
   'isClaimActive' : boolean,
 }
 export interface UserListItem {

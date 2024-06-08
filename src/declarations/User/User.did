@@ -36,8 +36,8 @@ type UserClaimInfo =
  record {
    isClaimActive: bool;
    isUserBlocked: bool;
-   lastClaimDate: opt int;
-   maxClaimableTokens: nat;
+   lastClaimDate: opt text;
+   maxClaimableTokens: text;
    subaccount: opt blob;
  };
 type User = 

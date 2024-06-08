@@ -35,8 +35,8 @@ module {
 
     public type UserClaimInfo = {
         isClaimActive: Bool;
-        maxClaimableTokens: Nat;
-        lastClaimDate: ?Int;
+        maxClaimableTokens: Text; //stored as Nat, returned as Text
+        lastClaimDate: ?Text; //stored as Int, returned as Text
         subaccount: ?Blob;
         isUserBlocked: Bool;
     };

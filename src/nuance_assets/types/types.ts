@@ -60,6 +60,15 @@ export type UserType = {
   socialChannels: Array<string>;
   nuaTokens: number;
   followersCount: number;
+  claimInfo: UserClaimInfoType;
+};
+
+type UserClaimInfoType = {
+  isUserBlocked: boolean;
+  maxClaimableTokens: number;
+  subaccount: [] | [Uint8Array | number[]];
+  lastClaimDate: [] | [number];
+  isClaimActive: boolean;
 };
 
 export type UserListItem = {
