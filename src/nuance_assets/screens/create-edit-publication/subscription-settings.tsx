@@ -1,6 +1,10 @@
 import React from 'react';
 import Toggle from "../../UI/toggle/toggle";
 import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
+import { useTheme } from '../../contextes/ThemeContext';
+import { Context } from '../../contextes/Context';
+import InputField from '../../UI/InputField2/InputField2';
+import { colors, icons } from '../../shared/constants';
 
 interface SubscriptionDetailsState extends WriterSubscriptionDetails {
     weeklyFeeEnabled: boolean;
@@ -22,6 +26,10 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
     updateSubscriptionDetails,
     isPublication
 }) => {
+
+
+    const darkTheme = useTheme();
+    const context = React.useContext(Context);
     const handleFeeChange = (type: keyof WriterSubscriptionDetails, value: number) => {
         setSubscriptionDetails(prevOptions => ({
             ...prevOptions,
@@ -60,13 +68,14 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                         </div>
                         <div className="period">{capitalizeFirstLetter(type.replace('Fee', ''))}</div>
                         <div className="fee-controls">
-                            <div className="value-container">
+                            <div className={darkTheme ? "value-container dark" : "value-container"}>
                                 <input
                                     type="number"
                                     value={subscriptionDetails[type]?.[0] ?? 0}
                                     placeholder='0 NUA'
                                     onChange={(e) => handleFeeChange(type, parseFloat(e.target.value) || 0)}
                                     disabled={!subscriptionDetails[`${type}Enabled`]}
+                                    className={darkTheme ? "dark" : ""}
                                 />
                                 <div className="buttons">
                                     <button
@@ -86,18 +95,35 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                                 </div>
                             </div>
                         </div>
-                        <div className="fees">
+                        <div className={darkTheme ? "fees dark" : "fees"}>
                             = 0.5 ICP | 1.14 ckBTC | 2.03 USD
                         </div>
                     </div>
                 ))}
-                {isPublication && <div>
-                    <input
-                        type="text"
+                {isPublication && <div className='subscription-payment-address'>
+                    <p
+                        className={
+                            context.width < 768 ? 'mainTitle mobile-title' : 'mainTitle'
+                        }
+                    >
+                        PAYMENT ADDRESS
+                    </p>
+                    <InputField
+                        classname='input-attributes-3'
+                        defaultText='Principal Id to receive payments'
+                        width='100%'
+                        height='50px'
+                        fontSize={'14px'}
+                        fontFamily='Roboto'
+                        fontColor={colors.editProfileInputTextColor}
+                        hasError={false}
+                        onChange={(e) => setSubscriptionDetails(prevOptions => ({ ...prevOptions, writerPrincipalId: e }))}
                         value={subscriptionDetails.writerPrincipalId}
-                        placeholder='Writer Principal ID'
-                        onChange={(e) => setSubscriptionDetails(prevOptions => ({ ...prevOptions, writerPrincipalId: e.target.value }))}
-                    ></input>
+                        maxLength={161}
+                        theme={darkTheme ? 'dark' : 'light'}
+                        icon={undefined}
+                        button={undefined}
+                    />
 
                 </div>}
             </div>

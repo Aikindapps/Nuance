@@ -29,6 +29,7 @@ import SubscribeButton from '../../components/subscribe-button/subscribe-button'
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+import { useSubscriptionStore } from '../../store/subscriptionStore';
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -45,6 +46,7 @@ const Profile = () => {
   const { handle } = useParams();
   const darkTheme = useTheme();
   const modalContext = useContext(ModalContext);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -79,6 +81,10 @@ const Profile = () => {
 
   const { getPostsByFollowers } = usePostStore((state) => ({
     getPostsByFollowers: state.getPostsByFollowers,
+  }));
+
+  const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader
   }));
 
   const load = async () => {
@@ -135,6 +141,29 @@ const Profile = () => {
     window.scrollTo(0, 0);
     load();
   }, []);
+
+  useEffect(() => {
+    const fetchSubscriptionHistory = async () => {
+      if (isLoggedIn) {
+        try {
+          let history = await getMySubscriptionHistoryAsReader();
+          console.log('history', history);
+
+          if (history) {
+            let isSubscribed = history.activeSubscriptions.some((subscription) => {
+              console.log('subscription', subscription);
+              return subscription.userListItem.handle === author?.handle;
+            });
+            setIsSubscribed(isSubscribed);
+          }
+        } catch (error) {
+          console.log('Error getting subscription history', error);
+        }
+      }
+    };
+
+    fetchSubscriptionHistory();
+  }, [isLoggedIn, author?.handle, user?.handle]);
 
   const getSocialChannelUrls = () => {
     if (author) {
@@ -327,6 +356,7 @@ const Profile = () => {
                     AuthorHandle={author?.handle || ''}
                     user={user?.handle || ''}
                     isPublication={false}
+                    isSubscribed={isSubscribed || false}
                   />
                 </div>
               </div>

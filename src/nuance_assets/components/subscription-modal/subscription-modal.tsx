@@ -9,6 +9,7 @@ import { useSubscriptionStore } from '../../store/subscriptionStore';
 import { useAuthStore } from '../../store/authStore';
 import { SubscriptionTimeInterval, WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 import { getPriceBetweenTokens, truncateToDecimalPlace } from '../../shared/utils';
+import Loader from '../../UI/loader/Loader';
 
 interface SubscriptionModalProps {
     handle: string;
@@ -31,6 +32,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
         Annually: { icp: '0 ICP', ckBTC: '0 ckBTC' },
         Lifetime: { icp: '0 ICP', ckBTC: '0 ckBTC' }
     });
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [subscriptionError, setSubscriptionError] = useState<string | null>(null); // State for error message
 
     const { sonicTokenPairs } = useAuthStore((state) => ({
         sonicTokenPairs: state.sonicTokenPairs,
@@ -49,7 +52,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
             try {
                 const details = await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
                 setSubscriptionDetails(details as WriterSubscriptionDetails);
-                console.log('Subscription details HERE:', details);
+
             } catch (error) {
                 console.error('Error fetching subscription details:', error);
             }
@@ -104,7 +107,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
         }
     }, [authorPrincipalId, subscriptionDetails]);
 
-    const handleSubscription = (fee: number[]) => {
+    const handleSubscription = async (fee: number[]) => {
         console.log('Subscribing to: ', handle, selectedOption, authorPrincipalId, isPublication);
         if (!termsChecked || !selectedOption) {
             setTermCheckWarning(true);
@@ -127,9 +130,18 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
             }
         })();
 
-        subscribeWriter(authorPrincipalId, subscriptionInterval, fee[0]);
-        setIsSubscriptionComplete(true);
-        onSubscriptionComplete();
+        try {
+            setIsLoading(true);
+            await subscribeWriter(authorPrincipalId, subscriptionInterval, fee[0]);
+            setIsSubscriptionComplete(true);
+            onSubscriptionComplete();
+        } catch (error: any) {
+            console.error('Subscription error:', JSON.stringify(error));
+            setSubscriptionError(""); // Set the error message
+            setTermCheckWarning(true); // Set term check warning to true
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const closeSubscriptionSuccess = () => {
@@ -164,91 +176,115 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
 
     return (
         <div className={darkTheme ? "subscription-modal dark" : "subscription-modal"}>
-            {isSubscriptionComplete ?
-                (
-                    <>
-                        <div className="modal-top-row">
-                            <img src={images.NUANCE_LOGO} alt="logo" className="nuance-logo-subscription" />
-                            <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
-                                <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt="Close modal" />
-                            </div>
+            {isSubscriptionComplete ? (
+                <>
+                    <div className="modal-top-row">
+                        <img src={images.NUANCE_LOGO} alt="logo" className="nuance-logo-subscription" />
+                        <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
+                            <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt="Close modal" />
                         </div>
-                        <h2 className='subscription-header'>Yes!</h2>
-                        <div className='subscription-success-info'>
-                            <img className='success-icon' src={icons.GRADIENT_PUBLICATION_SUCCESS_ICON} alt="success" />
+                    </div>
+                    <h2 className='subscription-header'>Yes!</h2>
+                    <div className='subscription-success-info'>
+                        <img className='success-icon' src={icons.GRADIENT_PUBLICATION_SUCCESS_ICON} alt="success" />
+                    </div>
+                    <div className="subscription-success-content">
+                        <p className='subscription-success-info'>
+                            You are now subscribed to <strong>@{handle}</strong>.
+                            <br />
+                            You have paid a {selectedOption} fee. You have unlimited access to all membership-only content for a {getSubscriptionPeriodText(selectedOption)}.
+                            <br />
+                            You can stop your subscription at any time.
+                        </p>
+                    </div>
+                    <div className='subscription-buttons'>
+                        <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>OK!</Button>
+                        <Button type='button' styleType='secondary' style={{ padding: "0px 16px" }} onClick={() => { modalContext?.openModal('cancelSubscription') }}>Cancel subscription</Button>
+                    </div>
+                </>
+            ) : termCheckWarning ? (
+                <>
+                    <div className="modal-top-row">
+                        <img src={images.NUANCE_LOGO} alt="logo" className="nuance-logo-subscription" />
+                        <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
+                            <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt="Close modal" />
                         </div>
-                        <div className="subscription-success-content">
-                            <p className='subscription-success-info'>
-                                You are now subscribed to <strong>@{handle}</strong>.
-                                <br />
-                                You have paid a {selectedOption} fee. You have unlimited access to all membership only content for a {getSubscriptionPeriodText(selectedOption)}.
-                                <br />
-                                You can stop your subscription at any time.
-                            </p>
+                    </div>
+                    <h2 className='subscription-header'>Error</h2>
+                    <div className="subscription-modal-content">
+                        <p className='subscription-info'>
+                            An error occurred while processing your subscription. Please try again.
+                            <br />
+                            {subscriptionError}
+                        </p>
+                    </div>
+                    <div className='subscription-buttons'>
+                        <Button type='button' styleType='secondary' style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>Cancel</Button>
+                        <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px" }} onClick={() => setTermCheckWarning(false)}>Retry</Button>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div className="modal-top-row">
+                        <img src={images.NUANCE_LOGO} alt="logo" className="nuance-logo-subscription" />
+                        <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
+                            <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt="Close subscriptions modal" />
                         </div>
-                        <div className='subscription-buttons'>
-                            <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>OK!</Button>
-                            <Button type='button' styleType='secondary' style={{ padding: "0px 16px" }} onClick={() => { modalContext?.openModal('cancelSubscription') }}>Cancel subscription</Button>
-                        </div>
-                    </>
-                )
-                : (
-                    <>
-                        <div className="modal-top-row">
-                            <img src={images.NUANCE_LOGO} alt="logo" className="nuance-logo-subscription" />
-                            <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
-                                <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt="Close subscriptions modal" />
-                            </div>
-                        </div>
-                        <h2 className='subscription-header'>Subscribe to {isPublication ? 'Publication' : 'User'} </h2>
-                        <div className='subscribee-info'>
-                            <img className='profile-image' src={profileImage} alt="profile" />
-                            {isPublication &&
-                                <img src={icons.PUBLICATION_ICON} alt='publication-icon' className='subscription-publication-icon' />
-                            }
-                            <div className='handle'><p>"{handle}"</p></div>
-                        </div>
-                        <div className="subscription-modal-content">
-                            {hasValidOptions ? (
-                                <>
-                                    <p className='subscription-info'>
-                                        When you subscribe to this {isPublication ? "publication" : "user"} you get unlimited access to all of their membership content for a fee paid in NUA. You pay the fee per period you choose. After this period, you will receive a notification for a possible continuation.
-                                    </p>
-                                    <p className='option-label'>Please choose the duration of your membership:</p>
-                                    <div className="subscription-options">
-                                        {subscriptionOptions.map(option => option.fee && option.fee.length > 0 && (
-                                            <div className={`option-wrapper ${selectedOption === option.label ? 'selected' : ''}`} key={option.label} onClick={() => setSelectedOption(option.label)}>
-                                                <div className={`option ${selectedOption === option.label ? 'selected' : ''} ${darkTheme ? "dark" : ""}`}>
-                                                    <div className="option-content">
-                                                        <img src={selectedOption === option.label ? icons.GRADIENT_STAR : icons.NO_FILL_STAR} alt="star" className="star-icon" />
-                                                        <div className="option-details">
-                                                            <p className="option-title">{option.label}</p>
-                                                            <p>
-                                                                <strong>{option.fee} NUA</strong>
-                                                            </p>
-                                                            <div className={darkTheme ? 'subscription-conversions dark' : 'subscription-conversions'}>
-                                                                <p>= {conversionPrices[option.label]?.icp}</p>
-                                                                <p>= {conversionPrices[option.label]?.ckBTC}</p>
-                                                                <p>= ?.?? USD</p>
-                                                            </div>
+                    </div>
+                    <h2 className='subscription-header'>Subscribe to {isPublication ? 'Publication' : 'User'}</h2>
+                    <div className='subscribee-info'>
+                        <img className='profile-image' src={profileImage} alt="profile" />
+                        {isPublication &&
+                            <img src={icons.PUBLICATION_ICON} alt='publication-icon' className='subscription-publication-icon' />
+                        }
+                        <div className='handle'><p>"{handle}"</p></div>
+                    </div>
+
+                    <div className="subscription-modal-content">
+                        {hasValidOptions ? (
+                            <>
+                                <p className='subscription-info'>
+                                    When you subscribe to this {isPublication ? "publication" : "user"} you get unlimited access to all of their membership content for a fee paid in NUA. You pay the fee per period you choose. After this period, you will receive a notification for a possible continuation.
+                                </p>
+                                <p className='option-label'>Please choose the duration of your membership:</p>
+                                <div className="subscription-options">
+                                    {subscriptionOptions.map(option => option.fee && option.fee.length > 0 && (
+                                        <div className={`option-wrapper ${selectedOption === option.label ? 'selected' : ''}`} key={option.label} onClick={() => setSelectedOption(option.label)}>
+                                            <div className={`option ${selectedOption === option.label ? 'selected' : ''} ${darkTheme ? "dark" : ""}`}>
+                                                <div className="option-content">
+                                                    <img src={selectedOption === option.label ? icons.GRADIENT_STAR : icons.NO_FILL_STAR} alt="star" className="star-icon" />
+                                                    <div className="option-details">
+                                                        <p className="option-title">{option.label}</p>
+                                                        <p>
+                                                            <strong>{option.fee} NUA</strong>
+                                                        </p>
+                                                        <div className={darkTheme ? 'subscription-conversions dark' : 'subscription-conversions'}>
+                                                            <p>= {conversionPrices[option.label]?.icp}</p>
+                                                            <p>= {conversionPrices[option.label]?.ckBTC}</p>
+                                                            <p>= ?.?? USD</p>
                                                         </div>
-                                                        <div className="subscription-radio-wrapper">
-                                                            <input type="radio" name="subscriptionOption" checked={selectedOption === option.label} onChange={() => setSelectedOption(option.label)} className="option-radio" />
-                                                            <span>Select</span>
-                                                        </div>
+                                                    </div>
+                                                    <div className="subscription-radio-wrapper">
+                                                        <input type="radio" name="subscriptionOption" checked={selectedOption === option.label} onChange={() => setSelectedOption(option.label)} className="option-radio" />
+                                                        <span>Select</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </>
-                            ) : (
-                                <p className='no-subscription-info'>
-                                    Please check back later. The author has not set up any subscriptions yet.
-                                </p>
-                            )}
-                        </div>
-                        <div className="subscription-modal-footer">
+                                        </div>
+                                    ))}
+
+                                </div>
+
+                            </>
+                        ) : (
+                            <p className='no-subscription-info'>
+                                Please check back later. The author has not set up any subscriptions yet.
+                            </p>
+                        )}
+                    </div>
+                    <div className="subscription-modal-footer">
+
+                        {hasValidOptions &&
                             <div className='subscription-terms'>
                                 <input
                                     type='checkbox'
@@ -261,16 +297,17 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
                                 />
                                 <p className='terms'>I am aware of <a style={darkTheme ? { color: "white" } : {}} href='https://app.gitbook.com/o/-McG0wq9TbYHdM2GDu8k/s/-MfI7efMoHhyGJ3oojln/terms-and-conditions' target='_blank' rel='noreferrer'>terms and conditions</a>, general policy and agree to them.</p>
                             </div>
-                            {termCheckWarning && <RequiredFieldMessage hasError={termCheckWarning} errorMessage="Please select an option and agree to the terms and conditions." />}
-                            <div className='subscription-buttons'>
-                                <Button type='button' styleType='secondary' style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>Cancel</Button>
-                                <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px" }} disabled={!termsChecked || !selectedOption} onClick={() => handleSubscription(parseFee(selectedOption))}>Subscribe</Button>
-                            </div>
+                        }
+                        {termCheckWarning && <RequiredFieldMessage hasError={termCheckWarning} errorMessage="Please select an option and agree to the terms and conditions." />}
+                        <div className='subscription-buttons'>
+                            <Button type='button' styleType='secondary' style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>Cancel</Button>
+                            <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px", display: "flex", flexDirection: "row-reverse" }} loading={isLoading} disabled={!termsChecked || !selectedOption || isLoading} onClick={() => handleSubscription(parseFee(selectedOption))}>Subscribe</Button>
                         </div>
-                    </>
-                )}
+                    </div>
+                </>
+            )}
         </div>
     );
-};
+}
 
 export default SubscriptionModal;

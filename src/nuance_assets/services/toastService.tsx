@@ -9,6 +9,7 @@ import { useState } from 'react';
 import './../components/notifications/_notifications.scss';
 import { timeAgo } from '../../nuance_assets/shared/utils';
 import { icons, colors } from '../shared/constants';
+import Button from '../UI/Button/Button';
 
 
 
@@ -77,6 +78,14 @@ const CustomNotificationContent = ({ message, toast }: { message: string, toast:
     return Object.keys(notificationType)[0];
   }
 
+  function handleResubscription(handle: string) {
+
+    modalContext?.openModal("Subscription");
+    window.history.pushState({}, '', `/user/${handle}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+
+
   function formatNotificationMessage(notification: Notifications) {
     const notificationTypeKey = getNotificationTypeKey(notification.notificationType);
     let handleUrl = <a href={`/user/${notification?.content.senderHandle}`}>@{notification.content.senderHandle} </a>;
@@ -99,6 +108,26 @@ const CustomNotificationContent = ({ message, toast }: { message: string, toast:
         return <span>Excellent! {handleUrl} has <b>applauded</b> +{notification.content.tipAmount} {notification.content.token} on "{articleUrl}"</span>;
       case 'PremiumArticleSold':
         return <span>K-ching! {handleUrl} bought an <b>NFT access</b> key for your article "{articleUrl}"</span>;
+      case 'AuthorGainsNewSubscriber':
+        return <span>🎉 You have a <b>new subscriber</b>!</span>;
+      case 'YouSubscribedToAuthor':
+        return <span>You <b>subscribed</b> to a writer. Enjoy!</span>;
+      case 'readerExpiredSubscription':
+        return <span>Your subscription to {authorHandleUrl} has expired.
+          <Button styleType={darkTheme ? "primary-blue-dark" : "primary-blue"}
+            onClick={() => handleResubscription(notification.content.authorHandle)}
+            loading={false}
+            dark={darkTheme}
+            style={{
+              display: 'flex',
+              flexDirection: 'row-reverse',
+              marginTop: '10px',
+              float: 'right'
+            }}>
+
+            Extend now
+          </Button></span>;
+
       default:
         return 'You have a new notification!';
     }

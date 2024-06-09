@@ -64,11 +64,12 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    overflow: show;
 }
 
 @media (max-width: 1080px) {
     .subscription-options {
+        display: inline;
         flex-direction: row; 
         overflow-x: auto;
         white-space: nowrap; 
@@ -227,7 +228,7 @@ margin-bottom: 8px;
 .subscription-info{
     width: 402px;
     max-width: 99%;
-    height: 144px;
+    
     text-align: center;
     color: currentColor;
     margin-bottom: 21px;
@@ -235,7 +236,7 @@ margin-bottom: 8px;
 
 .option-label{
     color: currentColor;
-    margin-top: 20px;
+    margin-bottom: 32px;
 }
 
 .subscription-terms{

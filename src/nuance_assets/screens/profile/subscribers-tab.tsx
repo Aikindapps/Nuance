@@ -5,6 +5,7 @@ import { PublicationType } from 'src/nuance_assets/types/types';
 import { WriterSubscriptionDetailsConverted, useSubscriptionStore, SubscribedReaderItem } from '../../store/subscriptionStore';
 import { usePublisherStore } from '../../store/publisherStore';
 import './_subscribers-tab.scss';
+import { Link } from 'react-router-dom';
 
 interface Subscriber {
     id: number;
@@ -116,7 +117,7 @@ const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
                 <p className='chart-title'>SUBSCRIBERS 2024</p>
             </div>
             <SubscribersChart data={chartData} />
-            <p className='subscribers-table-info'>These readers are currently subscribed to this publication. They have unlimited access to all the publication’s content for 1 NUA per month. They pay a monthly fee.</p>
+            <p className='subscribers-table-info'>These readers are currently subscribed to this publication. They have unlimited access to all the publication’s content for a chosen period. Your subscribers are prompted to renew their memeberships once the period has expired.</p>
             <table className='subscription-table'>
                 <thead>
                     <tr>
@@ -130,7 +131,7 @@ const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
                 <tbody>
                     {subscribers.map((sub) => (
                         <tr key={sub.subscriptionStartDate}>
-                            <td><img className='subscribers-tab-avatar' src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /> @{sub.userListItem.handle}</td>
+                            <td><Link to={`/user/${sub.userListItem.handle}`}><img className='subscribers-tab-avatar' src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /></Link> <Link to={`/user/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
                             <td>{formatDate(sub.subscriptionStartDate)}</td>
                             <td>{sub.period}</td>
                             <td>{sub.feePerPeriod}</td>

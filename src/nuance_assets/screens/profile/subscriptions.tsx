@@ -8,24 +8,27 @@ import { Context } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import { useSubscriptionStore, ReaderSubscriptionDetailsConverted, SubscribedWriterItem, ExpiredSubscriptionItem } from '../../store/subscriptionStore';
+import { Link } from 'react-router-dom';
 
-const Menu = ({ activeTab }: { activeTab: string }) => {
-    const modalContext = React.useContext(Context);
+
+
+const Menu = ({ activeTab, subscription, openSubscriptionModal, openCancelSubscriptionModal }: { activeTab: string, subscription: SubscribedWriterItem | ExpiredSubscriptionItem, openSubscriptionModal: (subscription: SubscribedWriterItem | ExpiredSubscriptionItem) => void, openCancelSubscriptionModal: (subscription: SubscribedWriterItem | ExpiredSubscriptionItem) => void }) => {
+    const darkTheme = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
     const toggleMenu = () => {
         setIsOpen(!isOpen);
     };
 
-    const openModal = () => {
-        modalContext?.openModal('Subscription');
+    const handleOpenSubscriptionModal = () => {
+        openSubscriptionModal(subscription);
         toggleMenu();
-    }
+    };
 
-    const openCancelModal = () => {
-        modalContext?.openModal('cancelSubscription');
+    const handleOpenCancelSubscriptionModal = () => {
+        openCancelSubscriptionModal(subscription);
         toggleMenu();
-    }
+    };
 
     return (
         <div className='menu-container'>
@@ -34,15 +37,14 @@ const Menu = ({ activeTab }: { activeTab: string }) => {
                 <div className='menu-dropdown'>
                     {activeTab === 'expired' ? (
                         <>
-                            <p>Go to publication</p>
-                            <p>Go to publisher</p>
-                            <p onClick={openModal}>Start publication subscription</p>
+                            <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}><p>Go to {subscription.isPublication ? "publication" : "user profile"}</p></Link>
+                            <p onClick={handleOpenSubscriptionModal}>Start publication subscription</p>
                         </>
                     ) : (
                         <>
-                            <p>Go to publication</p>
-                            <p>Go to publisher</p>
-                            <p onClick={openCancelModal}>Cancel subscription</p>
+                            <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}><p>Go to {subscription.isPublication ? "publication" : "user profile"}</p></Link>
+
+                            <p onClick={handleOpenCancelSubscriptionModal}>Cancel subscription</p>
                         </>
                     )}
                 </div>
@@ -50,6 +52,7 @@ const Menu = ({ activeTab }: { activeTab: string }) => {
         </div>
     );
 };
+
 
 const Subscriptions = () => {
     const modalContext = React.useContext(Context);
@@ -60,9 +63,16 @@ const Subscriptions = () => {
 
     const [activeTab, setActiveTab] = useState('active');
     const [subscriptions, setSubscriptions] = useState<{ activeSubscriptions: SubscribedWriterItem[], expiredSubscriptions: ExpiredSubscriptionItem[] }>({ activeSubscriptions: [], expiredSubscriptions: [] });
+    const [selectedSubscription, setSelectedSubscription] = useState({} as SubscribedWriterItem | ExpiredSubscriptionItem);
+    const [modalType, setModalType] = useState('');
+    const [principalId, setPrincipalId] = useState('');
 
     const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
         getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    }));
+
+    const { getPrincipalByHandle } = useUserStore((state) => ({
+        getPrincipalByHandle: state.getPrincipalByHandle,
     }));
 
     useEffect(() => {
@@ -79,7 +89,6 @@ const Subscriptions = () => {
         const fetchSubscriptionHistory = async () => {
             try {
                 const history = await getMySubscriptionHistoryAsReader();
-                console.log('Subscription History:', history);
                 if (history) {
                     setSubscriptions(history);
                 }
@@ -98,29 +107,57 @@ const Subscriptions = () => {
 
     const filteredSubscriptions = activeTab === 'active' ? subscriptions.activeSubscriptions : subscriptions.expiredSubscriptions;
 
+    const openSubscriptionModal = async (subscription: any) => {
+        const principalId = await getPrincipalByHandle(subscription.userListItem.handle);
+        setSelectedSubscription(subscription);
+        setPrincipalId(principalId || '');
+        setModalType('Subscription');
+        modalContext?.openModal('Subscription');
+    };
+
+    const openCancelSubscriptionModal = async (subscription: any) => {
+        const principalId = await getPrincipalByHandle(subscription.userListItem.handle);
+        setSelectedSubscription(subscription);
+        setPrincipalId(principalId || '');
+        setModalType('cancelSubscription');
+        modalContext?.openModal('cancelSubscription');
+    };
+
     return (
         <>
-            {modalContext?.modalType === 'Subscription' && modalContext?.isModalOpen && (
-                <SubscriptionModal handle='Test' authorPrincipalId='' profileImage='' isPublication={true} onSubscriptionComplete={() => { }} />
+            {modalType === 'Subscription' && modalContext?.isModalOpen && selectedSubscription && (
+                <SubscriptionModal
+                    handle={selectedSubscription?.userListItem.handle || ''}
+                    authorPrincipalId={principalId || ''}
+                    profileImage={selectedSubscription.userListItem.avatar}
+                    isPublication={selectedSubscription.isPublication}
+                    onSubscriptionComplete={() => { }}
+                />
             )}
 
-            {modalContext?.modalType === 'cancelSubscription' && modalContext?.isModalOpen && (
-                <CancelSubscriptionModal handle='Test' profileImage='' isPublication={false} authorPrincipalId={''} onCancelComplete={() => { }} />
+            {modalType === 'cancelSubscription' && modalContext?.isModalOpen && selectedSubscription && (
+                <CancelSubscriptionModal
+                    handle={selectedSubscription.userListItem.handle || ''}
+                    profileImage={selectedSubscription.userListItem.avatar}
+                    isPublication={selectedSubscription.isPublication}
+                    authorPrincipalId={principalId || ''}
+                    onCancelComplete={() => { }}
+                />
             )}
 
-            <div className='subscription-wrapper'>
+            <div className={darkTheme ? 'subscription-wrapper dark' : 'subscription-wrapper'}>
                 <p className='subscription-title'>SUBSCRIPTIONS</p>
 
                 <div className='tabs'>
-                    <button onClick={() => handleTabChange('active')} className={activeTab === 'active' ? 'active' : ''}>
+                    <button onClick={() => handleTabChange('active')} className={activeTab === 'active' ? 'active' : darkTheme ? 'dark' : ''}>
                         Active ({subscriptions.activeSubscriptions.length})
                     </button>
-                    <button onClick={() => handleTabChange('expired')} className={activeTab === 'expired' ? 'active' : ''}>
+                    <button onClick={() => handleTabChange('expired')} className={activeTab === 'expired' ? 'active' : darkTheme ? 'dark' : ''}>
                         Expired ({subscriptions.expiredSubscriptions.length})
                     </button>
                 </div>
 
-                <div className='subscription-header'>
+                <div className={darkTheme ? 'subscription-header dark' : 'subscription-header'}>
                     {activeTab === 'active' ?
                         "You are currently subscribed to these publications and writers. You have unlimited access to all their member content for a certain amount NUA per period that you chose to be a member." :
                         "You are no longer subscribed to these publications and writers. You can expand your membership to still have unlimited access to all their member content for a certain amount NUA per period that you choose to be a member."
@@ -144,14 +181,21 @@ const Subscriptions = () => {
                         <tbody>
                             {filteredSubscriptions.map((sub) => (
                                 <tr key={sub.subscriptionStartDate}>
-                                    <td><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /></td>
+                                    <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /> </Link></td>
                                     <td>{sub.userListItem.displayName}</td>
-                                    <td>@{sub.userListItem.handle}</td>
+                                    <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
                                     <td>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td>{sub.period}</td>
                                     <td>{sub.feePerPeriod} NUA</td>
                                     <td>{sub.totalFees} NUA</td>
-                                    <td><Menu activeTab={activeTab} /></td>
+                                    <td>
+                                        <Menu
+                                            activeTab={activeTab}
+                                            subscription={sub}
+                                            openSubscriptionModal={openSubscriptionModal}
+                                            openCancelSubscriptionModal={openCancelSubscriptionModal}
+                                        />
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
