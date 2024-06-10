@@ -471,68 +471,72 @@ const createSubscriptionStore:
     writerPrincipalId: string,
     subscriptionTimeInterval: SubscriptionTimeInterval,
     amount: number
-): Promise<ReaderSubscriptionDetailsConverted | string> => {
+  ): Promise<ReaderSubscriptionDetailsConverted | string> => {
     try {
-        const subscriptionActor = await getSubscriptionActor();
-        const paymentRequest = await subscriptionActor.createPaymentRequestAsReader(
-            writerPrincipalId,
-            subscriptionTimeInterval,
-            amount
+      const subscriptionActor = await getSubscriptionActor();
+      const paymentRequest =
+        await subscriptionActor.createPaymentRequestAsReader(
+          writerPrincipalId,
+          subscriptionTimeInterval,
+          amount
         );
+      if ('ok' in paymentRequest) {
+        // Payment request has successfully been created
+        // Transfer the tokens to the subaccount
+        const nuaLedgerCanister = await getIcrc1Actor(NUA_CANISTER_ID);
+        const transferResponse = await nuaLedgerCanister.icrc1_transfer({
+          to: {
+            owner: Principal.fromText(SUBSCRIPTION_CANISTER_ID),
+            subaccount: [paymentRequest.ok.subaccount],
+          },
+          fee: [BigInt(100000)],
+          memo: [],
+          from_subaccount: [],
+          created_at_time: [],
+          amount: BigInt(paymentRequest.ok.paymentFee),
+        });
 
-        console.log('paymentRequest', paymentRequest);
-        if ('ok' in paymentRequest) {
-            // Payment request has successfully been created
-            // Transfer the tokens to the subaccount
-            const nuaLedgerCanister = await getIcrc1Actor(NUA_CANISTER_ID);
-            const transferResponse = await nuaLedgerCanister.icrc1_transfer({
-                to: {
-                    owner: Principal.fromText(SUBSCRIPTION_CANISTER_ID),
-                    subaccount: [paymentRequest.ok.subaccount],
-                },
-                fee: [BigInt(100000)],
-                memo: [],
-                from_subaccount: [],
-                created_at_time: [],
-                amount: BigInt(paymentRequest.ok.paymentFee),
-            });
-
-            console.log('transferResponse', transferResponse);
-            if ('Ok' in transferResponse) {
-                // Transfer is also successful
-                // Complete the subscription event and return the new readerDetails value
-                const response = await subscriptionActor.completeSubscriptionEvent(
-                    paymentRequest.ok.subscriptionEventId
-                );
-                console.log('response', response);
-                if ('ok' in response) {
-                    return await convertReaderSubscriptionDetails(response.ok);
-                } else {
-                    const errorMessage = `Subscription completion failed: ${response.err}`;
-                    toastError(errorMessage);
-                    handleError(response.err);
-                    return errorMessage;
-                }
-            } else {
-                const errorMessage = `Token transfer failed: ${transferResponse.Err}`;
-               toastError(errorMessage);
-                handleError(transferResponse.Err);
-                return errorMessage;
-            }
-        } else {
-            const errorMessage = `Payment request failed: ${paymentRequest.err}`;
+        if ('Ok' in transferResponse) {
+          // Transfer is also successful
+          // Complete the subscription event and return the new readerDetails value
+          const response = await subscriptionActor.completeSubscriptionEvent(
+            paymentRequest.ok.subscriptionEventId
+          );
+          if ('ok' in response) {
+            //fire and forget the disperse function
+            subscriptionActor.disperseTokensForSuccessfulSubscription(
+              paymentRequest.ok.subscriptionEventId
+            );
+            return await convertReaderSubscriptionDetails(response.ok);
+          } else {
+            //call the function to get back sent tokens
+            subscriptionActor.pendingStuckTokensHeartbeatExternal();
+            const errorMessage = `Subscription completion failed: ${response.err}`;
             toastError(errorMessage);
-            handleError(paymentRequest.err);
+            handleError(response.err);
             return errorMessage;
+          }
+        } else {
+          const errorMessage = `Token transfer failed: ${transferResponse.Err}`;
+          toastError(errorMessage);
+          handleError(transferResponse.Err);
+          return errorMessage;
         }
-    } catch (error: any) {
-        const errorMessage = `Unexpected error: ${error.message || error.toString()}`;
-        console.error(errorMessage);
-        handleError(errorMessage);
+      } else {
+        const errorMessage = `Payment request failed: ${paymentRequest.err}`;
+        toastError(errorMessage);
+        handleError(paymentRequest.err);
         return errorMessage;
+      }
+    } catch (error: any) {
+      const errorMessage = `Unexpected error: ${
+        error.message || error.toString()
+      }`;
+      console.error(errorMessage);
+      handleError(errorMessage);
+      return errorMessage;
     }
-},
-
+  },
 
   //should be called by the reader to stop the existing subscription
   stopSubscriptionAsReader: async (
@@ -551,7 +555,6 @@ const createSubscriptionStore:
     }
   },
 });
-
 
 export const useSubscriptionStore = create<SubscriptionStore>(
   persist(
