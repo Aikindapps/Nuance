@@ -2,7 +2,7 @@ import create, { GetState, SetState, StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toastError, toast, ToastType } from '../services/toastService';
 import { ErrorType, getErrorType } from '../services/errorService';
-import { useAuthStore } from './';
+import { useAuthStore, useSubscriptionStore } from './';
 import { UserType, UserListItem, PublicationType } from '../types/types';
 import {
   getUserActor,
@@ -17,8 +17,10 @@ import {
   NotificationType,
   NotificationContent,
   UserNotificationSettings,
+  getSubscriptionActor,
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
+import { ReaderSubscriptionDetailsConverted } from './subscriptionStore';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -206,7 +208,15 @@ export interface UserStore {
   updateUserNotificationSettings: (
     notificationSettings: UserNotificationSettings
   ) => Promise<void>;
-
+  claimTokens: () => Promise<void>;
+  spendRestrictedTokensForTipping: (
+    postId: string,
+    bucketCanisterId: string,
+    amount: number
+  ) => Promise<boolean | void>;
+  spendRestrictedTokensForSubscription: (
+    writerPrincipalId: string
+  ) => Promise<ReaderSubscriptionDetailsConverted | void>;
   clearAll: () => void;
 }
 
@@ -757,6 +767,77 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       } catch (err) {
         console.error('markAllNotificationsAsRead:', err);
       }
+    }
+  },
+  //users can call this method to claim their restricted tokens
+  claimTokens: async (): Promise<void> => {
+    try {
+      let userActor = await getUserActor();
+      let response = await userActor.claimRestrictedTokens();
+      if ('err' in response) {
+        handleError(response.err);
+      } else {
+        //claim successful
+        //refresh the balances
+        await useAuthStore.getState().fetchTokenBalances();
+        //set the user object with the updated value
+        set({ user: toUserModel(response.ok) });
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+  //gets the postId, bucketCanisterId and the amount as an argument
+  //sends the restricted tokens to the correspnding subaccount of the PostBucket canister
+  spendRestrictedTokensForTipping: async (
+    postId: string,
+    bucketCanisterId: string,
+    amount: number
+  ): Promise<boolean | void> => {
+    try {
+      let userActor = await getUserActor();
+      let response = await userActor.spendRestrictedTokensForTipping(
+        bucketCanisterId,
+        postId,
+        BigInt(amount)
+      );
+      if ('err' in response) {
+        handleError(response.err);
+      } else {
+        //event is successful
+        //refresh the balances
+        await useAuthStore.getState().fetchTokenBalances();
+        return true;
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  //gets the postId, bucketCanisterId and the amount as an argument
+  //sends the restricted tokens to the correspnding subaccount of the PostBucket canister
+  spendRestrictedTokensForSubscription: async (
+    writerPrincipalId: string
+  ): Promise<ReaderSubscriptionDetailsConverted | void> => {
+    try {
+      let userActor = await getUserActor();
+      let response = await userActor.spendRestrictedTokensForSubscription(
+        writerPrincipalId
+      );
+      if ('err' in response) {
+        handleError(response.err);
+      } else {
+        //event is successful
+        //refresh the balances & refresh the subscription history of the reader
+        let [_, readerSubscriptionHistory] = await Promise.all([
+          useAuthStore.getState().fetchTokenBalances(),
+          useSubscriptionStore.getState().getMySubscriptionHistoryAsReader(),
+        ]);
+        //return the refreshed subscription history of the reader
+        return readerSubscriptionHistory;
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
     }
   },
 

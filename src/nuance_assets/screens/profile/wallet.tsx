@@ -22,6 +22,7 @@ import {
   ApplaudListItem,
   PremiumPostActivityListItem,
   TransactionListItem,
+  UserType,
 } from '../../types/types';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
@@ -150,6 +151,45 @@ const Wallet = () => {
       })
     );
   };
+  const userAllowedToClaimByDate = (user: UserType) => {
+    if (user.claimInfo.lastClaimDate.length === 0) {
+      return true;
+    } else {
+      let lastClaimDate = user.claimInfo.lastClaimDate[0] / 1000000;
+      let now = new Date().getTime();
+      const week = 24 * 60 * 60 * 1000 * 7;
+      if (now - lastClaimDate > week) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+
+  const howMuchTimeLeftToClaim = (user: UserType) => {
+    if (user.claimInfo.lastClaimDate.length === 0) {
+      return '';
+    }
+    const oneMinute = 60 * 1000;
+    const oneHour = 60 * oneMinute;
+    const oneDay = 24 * oneHour;
+
+    let lastClaimDate = user.claimInfo.lastClaimDate[0] / 1000000;
+    let now = new Date().getTime();
+
+    const diffInTime = now - lastClaimDate;
+
+    const days = Math.floor(diffInTime / oneDay);
+    const hours = Math.floor((diffInTime % oneDay) / oneHour);
+    const minutes = Math.floor((diffInTime % oneHour) / oneMinute);
+
+    if (days >= 1) {
+      return `${days} days ${hours} hours`;
+    } else {
+      return `${hours} hours ${minutes} minutes`;
+    }
+  };
+
   const getStatsElement = () => {
     return (
       <div
@@ -260,6 +300,62 @@ const Wallet = () => {
         >
           Withdraw from your wallet
         </Button>
+      </div>
+      <div className='request-nua-wrapper'>
+        <div className='request-nua-left'>
+          <div className='request-nua-title'>FREE NUA TOKENS</div>
+          <div
+            className='request-nua-content'
+            style={darkTheme ? { color: '#FFF' } : {}}
+          >
+            * Free Nuance Tokens are only meant to be used on Nuance before they
+            become refundable. 7 days after your last request, you can request a
+            refill of free new NUA up to a total of{' '}
+            {(
+              (user?.claimInfo.maxClaimableTokens as number) / Math.pow(10, 8)
+            ).toFixed(0)}{' '}
+            NUA.
+          </div>
+        </div>
+        {user && (
+          <div className='request-nua-right'>
+            {user.claimInfo.isClaimActive ? (
+              user.claimInfo.isUserBlocked ? (
+                <div
+                  className='request-nua-info'
+                  style={darkTheme ? { background: '#ffffff1f' } : {}}
+                >
+                  You're blocked!
+                </div>
+              ) : userAllowedToClaimByDate(user) ? (
+                <Button
+                  styleType='deposit'
+                  type='button'
+                  style={{ maxWidth: '180px', fontSize: '14px' }}
+                  onClick={() => {
+                    modalContext?.openModal('Deposit');
+                  }}
+                >
+                  Request Free NUA
+                </Button>
+              ) : (
+                <div
+                  className='request-nua-info'
+                  style={darkTheme ? { background: '#ffffff1f' } : {}}
+                >
+                  {howMuchTimeLeftToClaim(user)} until new request is allowed.
+                </div>
+              )
+            ) : (
+              <div
+                className='request-nua-info'
+                style={darkTheme ? { background: '#ffffff1f' } : {}}
+              >
+                Claim is not active yet.
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className='token-activities'>
         <div className='token-activities-header'>
