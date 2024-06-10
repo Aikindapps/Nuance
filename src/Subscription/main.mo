@@ -310,6 +310,9 @@ actor Subscription {
         //set the weekly fee if provided
         switch(subscriptionDetails.weeklyFee) {
             case(?weeklyFee) {
+                if(weeklyFee < 100_000_000){
+                    return #err("The fee can not be less than 1 NUA!");
+                };
                 Map.set(writerPrincipalIdToWeeklySubscriptionFee, thash, writerPrincipalId, weeklyFee);
             };
             case(null) {
@@ -321,6 +324,9 @@ actor Subscription {
         //set the monthly fee if provided
         switch(subscriptionDetails.monthlyFee) {
             case(?monthlyFee) {
+                if(monthlyFee < 100_000_000){
+                    return #err("The fee can not be less than 1 NUA!");
+                };
                 Map.set(writerPrincipalIdToMonthlySubscriptionFee, thash, writerPrincipalId, monthlyFee);
             };
             case(null) {
@@ -332,6 +338,9 @@ actor Subscription {
         //set the annually fee if provided
         switch(subscriptionDetails.annuallyFee) {
             case(?annuallyFee) {
+                if(annuallyFee < 100_000_000){
+                    return #err("The fee can not be less than 1 NUA!");
+                };
                 Map.set(writerPrincipalIdToAnnuallySubscriptionFee, thash, writerPrincipalId, annuallyFee);
             };
             case(null) {
@@ -343,6 +352,9 @@ actor Subscription {
         //set the lifetime fee if provided
         switch(subscriptionDetails.lifeTimeFee) {
             case(?lifeTimeFee) {
+                if(lifeTimeFee < 100_000_000){
+                    return #err("The fee can not be less than 1 NUA!");
+                };
                 Map.set(writerPrincipalIdToLifeTimeSubscriptionFee, thash, writerPrincipalId, lifeTimeFee);
             };
             case(null) {
