@@ -1519,7 +1519,7 @@ actor User {
         let now = Time.now();
         //check if at least one week has passed until the last time the user has claimed tokens
         let lastClaimDate = U.safeGet(lastClaimDateHashMap, principal, now);
-        if(lastClaimDate + WEEK > now){
+        if(lastClaimDate + WEEK <= now){
           return #err("Already claimed in last week.");
         };
 

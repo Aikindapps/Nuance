@@ -22,6 +22,7 @@ import {
   ApplaudListItem,
   PremiumPostActivityListItem,
   TransactionListItem,
+  UserType,
 } from '../../types/types';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
@@ -56,16 +57,17 @@ const Wallet = () => {
     getUserWallet,
     userWallet,
     tokenBalances,
+    restrictedTokenBalance,
     fetchTokenBalances,
     sonicTokenPairs,
   } = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
     tokenBalances: state.tokenBalances,
+    restrictedTokenBalance: state.restrictedTokenBalance,
     fetchTokenBalances: state.fetchTokenBalances,
     sonicTokenPairs: state.sonicTokenPairs,
   }));
-
   const {
     getOwnedNfts,
     getSellingNfts,
@@ -150,6 +152,46 @@ const Wallet = () => {
       })
     );
   };
+  const userAllowedToClaimByDate = (user: UserType) => {
+    if (user.claimInfo.lastClaimDate.length === 0) {
+      return true;
+    } else {
+      let lastClaimDate = user.claimInfo.lastClaimDate[0] / 1000000;
+      let now = new Date().getTime();
+      const week = 24 * 60 * 60 * 1000 * 7;
+      if (now - lastClaimDate > week) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+
+  const howMuchTimeLeftToClaim = (user: UserType) => {
+    if (user.claimInfo.lastClaimDate.length === 0) {
+      return '';
+    }
+    const oneMinute = 60 * 1000;
+    const oneHour = 60 * oneMinute;
+    const oneDay = 24 * oneHour;
+    const oneWeek = 7 * oneDay;
+
+    let lastClaimDate = user.claimInfo.lastClaimDate[0] / 1000000;
+    let now = new Date().getTime();
+
+    const diffInTime = lastClaimDate + oneWeek - now;
+
+    const days = Math.floor(diffInTime / oneDay);
+    const hours = Math.floor((diffInTime % oneDay) / oneHour);
+    const minutes = Math.floor((diffInTime % oneHour) / oneMinute);
+
+    if (days >= 1) {
+      return `${days} days ${hours} hours`;
+    } else {
+      return `${hours} hours ${minutes} minutes`;
+    }
+  };
+
   const getStatsElement = () => {
     return (
       <div
@@ -157,9 +199,19 @@ const Wallet = () => {
         style={{ marginBottom: '40px', marginTop: '5px' }}
       >
         <div className='statistic'>
-          {tokenBalances.slice(0, 2).map((tokenBalance, index) => {
+          <div className='stat stat-0'>
+            <p className='count-free-nua'>
+              {(restrictedTokenBalance / Math.pow(10, 8)).toFixed(0)}
+            </p>
+            <p className='title'>Free NUA*</p>
+            <p className='title'>(Nuance Token)</p>
+          </div>
+          {tokenBalances.map((tokenBalance, index) => {
             return (
-              <div className='stat' key={tokenBalance.token.symbol}>
+              <div
+                className={'stat stat-' + (index + 1)}
+                key={tokenBalance.token.symbol}
+              >
                 <p className='count'>
                   {truncateToDecimalPlace(
                     tokenBalance.balance /
@@ -187,40 +239,7 @@ const Wallet = () => {
               </div>
             );
           })}
-        </div>
-        <div className='statistic-horizontal-divider' />
-        <div className='statistic'>
-          {tokenBalances.slice(2).map((tokenBalance, index) => {
-            return (
-              <div className='stat' key={tokenBalance.token.symbol}>
-                <p className='count'>
-                  {truncateToDecimalPlace(
-                    tokenBalance.balance /
-                      Math.pow(10, tokenBalance.token.decimals),
-                    4
-                  )}
-                </p>
-                <p className='title'>{tokenBalance.token.symbol}</p>
-                {tokenBalance.token.symbol === 'NUA' ? (
-                  <p className='title'>(Nuance Token)</p>
-                ) : (
-                  <div className='nua-equivalance'>
-                    <div className='eq'>=</div>
-                    <div className='value'>
-                      {(
-                        getNuaEquivalance(
-                          sonicTokenPairs,
-                          tokenBalance.token.symbol,
-                          tokenBalance.balance
-                        ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                      ).toFixed(0) + ' NUA'}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div className='stat'>
+          <div className='stat stat-4'>
             <p className='count'>{ownedKeys}</p>
             <p className='title'>Article Keys</p>
           </div>
@@ -228,7 +247,6 @@ const Wallet = () => {
       </div>
     );
   };
-
   return (
     <div className='wrapper'>
       <p className='title'>MY WALLET</p>
@@ -260,6 +278,70 @@ const Wallet = () => {
         >
           Withdraw from your wallet
         </Button>
+      </div>
+      <div className='request-nua-wrapper'>
+        <div className='request-nua-left'>
+          <div className='request-nua-title'>FREE NUA TOKENS</div>
+          <div
+            className='request-nua-content'
+            style={darkTheme ? { color: '#FFF' } : {}}
+          >
+            * Free Nuance Tokens are only meant to be used on Nuance before they
+            become refundable. 7 days after your last request, you can request a
+            refill of free new NUA up to a total of{' '}
+            {(
+              (user?.claimInfo.maxClaimableTokens as number) / Math.pow(10, 8)
+            ).toFixed(0)}{' '}
+            NUA.
+          </div>
+        </div>
+        {user && (
+          <div className='request-nua-right'>
+            {user.claimInfo.isClaimActive ? (
+              user.claimInfo.isUserBlocked ? (
+                <div
+                  className='request-nua-info'
+                  style={darkTheme ? { background: '#ffffff1f' } : {}}
+                >
+                  You're blocked!
+                </div>
+              ) : userAllowedToClaimByDate(user) &&
+                user.claimInfo.maxClaimableTokens <= restrictedTokenBalance ? (
+                <div
+                  className='request-nua-info'
+                  style={darkTheme ? { background: '#ffffff1f' } : {}}
+                >
+                  No available free tokens to claim!
+                </div>
+              ) : userAllowedToClaimByDate(user) ? (
+                <Button
+                  styleType='deposit'
+                  type='button'
+                  style={{ maxWidth: '180px', fontSize: '14px' }}
+                  onClick={() => {
+                    modalContext?.openModal('claim restricted tokens');
+                  }}
+                >
+                  Request Free NUA
+                </Button>
+              ) : (
+                <div
+                  className='request-nua-info'
+                  style={darkTheme ? { background: '#ffffff1f' } : {}}
+                >
+                  {howMuchTimeLeftToClaim(user)} until new request is allowed.
+                </div>
+              )
+            ) : (
+              <div
+                className='request-nua-info'
+                style={darkTheme ? { background: '#ffffff1f' } : {}}
+              >
+                Claim is not active yet.
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div className='token-activities'>
         <div className='token-activities-header'>
