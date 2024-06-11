@@ -208,7 +208,7 @@ export interface UserStore {
   updateUserNotificationSettings: (
     notificationSettings: UserNotificationSettings
   ) => Promise<void>;
-  claimTokens: () => Promise<void>;
+  claimTokens: () => Promise<boolean | void>;
   spendRestrictedTokensForTipping: (
     postId: string,
     bucketCanisterId: string,
@@ -770,7 +770,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
   //users can call this method to claim their restricted tokens
-  claimTokens: async (): Promise<void> => {
+  claimTokens: async (): Promise<boolean | void> => {
     try {
       let userActor = await getUserActor();
       let response = await userActor.claimRestrictedTokens();
@@ -782,6 +782,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         await useAuthStore.getState().fetchTokenBalances();
         //set the user object with the updated value
         set({ user: toUserModel(response.ok) });
+        return true;
       }
     } catch (err) {
       handleError(err, Unexpected);

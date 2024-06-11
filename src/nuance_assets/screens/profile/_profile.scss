@@ -283,27 +283,24 @@
 
         .statistic {
           display: flex;
-          height: 144px;
           width: 100%;
-
-          &:last-child {
-            .stat {
-              &:last-child {
-                border-right: 1px dashed $medium-border-color;
-              }
-            }
-          }
+          flex-wrap: wrap;
+          row-gap: 18px;
+          column-gap: 12px;
+          justify-content: center;
 
           .stat {
-            border-left: 1px dashed $medium-border-color;
-            height: 100%;
             box-sizing: border-box;
-            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-
+            padding-left: 24px;
+            padding-right: 24px;
+            min-width: 153px;
+            max-width: 153px;
+            border-left: 1px solid transparent;
+            border-right: 1px solid transparent;
             .count {
               font-family: 'Roboto';
               font-size: 32px;
@@ -316,6 +313,20 @@
               -webkit-background-clip: text;
               -webkit-text-fill-color: transparent;
             }
+            .count-free-nua {
+              background: linear-gradient(180deg, #25f68d 0%, #1bc0f2 100%);
+              padding-left: 18px;
+              padding-right: 18px;
+              padding-top: 6px;
+              padding-bottom: 6px;
+              border-radius: 6px;
+              font-family: Roboto;
+              font-size: 32px;
+              font-weight: 900;
+              line-height: 24px;
+              text-align: center;
+              color: #fff;
+            }
 
             .title {
               color: $darker-border-color;
@@ -323,6 +334,8 @@
               line-height: 24px;
               font-weight: 300;
               font-family: 'Roboto';
+              text-wrap: nowrap;
+              text-align: center;
             }
 
             .nua-equivalance {
@@ -342,6 +355,15 @@
               .value {
               }
             }
+          }
+          .stat-2 {
+            border-left: 1px dashed #999999;
+          }
+          .stat-3 {
+            border-left: 1px dashed #999999;
+          }
+          .stat-4 {
+            border-left: 1px dashed #999999;
           }
         }
       }
@@ -364,6 +386,7 @@
         align-items: center;
         box-shadow: 0px 2px 10px 5px #0000000f;
         column-gap: 24px;
+        margin-bottom: 24px;
         .request-nua-left {
           display: flex;
           row-gap: 12px;
@@ -774,6 +797,15 @@
         .address-flex {
           width: 90%;
         }
+        .request-nua-wrapper {
+          flex-direction: column;
+          row-gap: 18px;
+          .request-nua-right {
+            .request-nua-info {
+              text-wrap: nowrap;
+            }
+          }
+        }
 
         .statistic {
           .stat {
@@ -827,43 +859,6 @@
   margin-top: 0;
 }
 
-@media only screen and (max-width: 768px) {
-  .profile-wrapper {
-    .container {
-      .wrapper {
-        .statistic-wrapper {
-          flex-direction: column;
-          row-gap: 8px;
-
-          .statistic-horizontal-divider {
-            display: flex;
-          }
-
-          .statistic {
-            &:last-child {
-              .stat {
-                &:last-child {
-                  border-right: none;
-                }
-              }
-            }
-
-            .stat {
-              &:last-child {
-                border-right: none;
-              }
-
-              &:first-child {
-                border-left: none;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 @media only screen and (max-width: 546px) {
   .profile-wrapper .container .wrapper .deposit-withdraw-buttons-wrapper {
     width: 100%;
@@ -885,6 +880,121 @@
 
     .button-attributes-withdraw-dark {
       width: 100%;
+    }
+  }
+}
+
+//stat borders
+@media only screen and (max-width: 1125px) {
+  .profile-wrapper {
+    .container {
+      .wrapper {
+        .statistic-wrapper {
+          .statistic {
+            .stat-0 {
+              border-left-color: transparent;
+            }
+            .stat-1 {
+              border-left-color: transparent;
+            }
+            .stat-2 {
+              border-left: 1px dashed #999999;
+            }
+            .stat-3 {
+              border-left: 1px dashed #999999;
+            }
+            .stat-4 {
+              border-left-color: transparent;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 996px) {
+  .profile-wrapper {
+    .container {
+      .wrapper {
+        .statistic-wrapper {
+          .statistic {
+            .stat-0 {
+              border-left-color: transparent;
+            }
+            .stat-1 {
+              border-left-color: transparent;
+            }
+            .stat-2 {
+              border-left: 1px dashed #999999;
+            }
+            .stat-3 {
+              border-left-color: transparent;
+            }
+            .stat-4 {
+              border-left: 1px dashed #999999;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 743px) {
+  .profile-wrapper {
+    .container {
+      .wrapper {
+        .statistic-wrapper {
+          .statistic {
+            .stat-0 {
+              border-left-color: transparent;
+            }
+            .stat-1 {
+              border-left: 1px dashed #999999;
+            }
+            .stat-2 {
+              border-left-color: transparent;
+            }
+            .stat-3 {
+              border-left: 1px dashed #999999;
+            }
+            .stat-4 {
+              border-left-color: transparent;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 489px) {
+  .profile-wrapper {
+    .container {
+      .wrapper {
+        .statistic-wrapper {
+          .statistic {
+            justify-content: start;
+
+            .stat-0 {
+              border-left-color: transparent;
+            }
+            .stat-1 {
+              border-left-color: transparent;
+            }
+            .stat-2 {
+              border-left-color: transparent;
+            }
+            .stat-3 {
+              border-left-color: transparent;
+            }
+            .stat-4 {
+              border-left-color: transparent;
+            }
+          }
+        }
+      }
     }
   }
 }

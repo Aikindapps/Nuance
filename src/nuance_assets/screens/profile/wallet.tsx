@@ -57,16 +57,17 @@ const Wallet = () => {
     getUserWallet,
     userWallet,
     tokenBalances,
+    restrictedTokenBalance,
     fetchTokenBalances,
     sonicTokenPairs,
   } = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
     tokenBalances: state.tokenBalances,
+    restrictedTokenBalance: state.restrictedTokenBalance,
     fetchTokenBalances: state.fetchTokenBalances,
     sonicTokenPairs: state.sonicTokenPairs,
   }));
-
   const {
     getOwnedNfts,
     getSellingNfts,
@@ -173,11 +174,12 @@ const Wallet = () => {
     const oneMinute = 60 * 1000;
     const oneHour = 60 * oneMinute;
     const oneDay = 24 * oneHour;
+    const oneWeek = 7 * oneDay;
 
     let lastClaimDate = user.claimInfo.lastClaimDate[0] / 1000000;
     let now = new Date().getTime();
 
-    const diffInTime = now - lastClaimDate;
+    const diffInTime = lastClaimDate + oneWeek - now;
 
     const days = Math.floor(diffInTime / oneDay);
     const hours = Math.floor((diffInTime % oneDay) / oneHour);
@@ -197,9 +199,19 @@ const Wallet = () => {
         style={{ marginBottom: '40px', marginTop: '5px' }}
       >
         <div className='statistic'>
-          {tokenBalances.slice(0, 2).map((tokenBalance, index) => {
+          <div className='stat stat-0'>
+            <p className='count-free-nua'>
+              {(restrictedTokenBalance / Math.pow(10, 8)).toFixed(0)}
+            </p>
+            <p className='title'>Free NUA*</p>
+            <p className='title'>(Nuance Token)</p>
+          </div>
+          {tokenBalances.map((tokenBalance, index) => {
             return (
-              <div className='stat' key={tokenBalance.token.symbol}>
+              <div
+                className={'stat stat-' + (index + 1)}
+                key={tokenBalance.token.symbol}
+              >
                 <p className='count'>
                   {truncateToDecimalPlace(
                     tokenBalance.balance /
@@ -227,40 +239,7 @@ const Wallet = () => {
               </div>
             );
           })}
-        </div>
-        <div className='statistic-horizontal-divider' />
-        <div className='statistic'>
-          {tokenBalances.slice(2).map((tokenBalance, index) => {
-            return (
-              <div className='stat' key={tokenBalance.token.symbol}>
-                <p className='count'>
-                  {truncateToDecimalPlace(
-                    tokenBalance.balance /
-                      Math.pow(10, tokenBalance.token.decimals),
-                    4
-                  )}
-                </p>
-                <p className='title'>{tokenBalance.token.symbol}</p>
-                {tokenBalance.token.symbol === 'NUA' ? (
-                  <p className='title'>(Nuance Token)</p>
-                ) : (
-                  <div className='nua-equivalance'>
-                    <div className='eq'>=</div>
-                    <div className='value'>
-                      {(
-                        getNuaEquivalance(
-                          sonicTokenPairs,
-                          tokenBalance.token.symbol,
-                          tokenBalance.balance
-                        ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
-                      ).toFixed(0) + ' NUA'}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div className='stat'>
+          <div className='stat stat-4'>
             <p className='count'>{ownedKeys}</p>
             <p className='title'>Article Keys</p>
           </div>
@@ -268,7 +247,6 @@ const Wallet = () => {
       </div>
     );
   };
-
   return (
     <div className='wrapper'>
       <p className='title'>MY WALLET</p>
@@ -327,13 +305,21 @@ const Wallet = () => {
                 >
                   You're blocked!
                 </div>
+              ) : userAllowedToClaimByDate(user) &&
+                user.claimInfo.maxClaimableTokens <= restrictedTokenBalance ? (
+                <div
+                  className='request-nua-info'
+                  style={darkTheme ? { background: '#ffffff1f' } : {}}
+                >
+                  No available free tokens to claim!
+                </div>
               ) : userAllowedToClaimByDate(user) ? (
                 <Button
                   styleType='deposit'
                   type='button'
                   style={{ maxWidth: '180px', fontSize: '14px' }}
                   onClick={() => {
-                    modalContext?.openModal('Deposit');
+                    modalContext?.openModal('claim restricted tokens');
                   }}
                 >
                   Request Free NUA

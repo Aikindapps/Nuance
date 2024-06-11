@@ -73,7 +73,8 @@ export const icons = {
   CLAP_WHITE: iconsPath + 'clap-white.svg',
   CLAP_BLUE: iconsPath + 'clap-blue.png',
   PUBLICATION_ICON: iconsPath + 'publication-icon.svg',
-  GRADIENT_PUBLICATION_SUCCESS_ICON: iconsPath + 'gradient-publication-icon.svg',
+  GRADIENT_PUBLICATION_SUCCESS_ICON:
+    iconsPath + 'gradient-publication-icon.svg',
   SUCCESS_STAR: iconsPath + 'success-star.svg',
   EMAIL_OPT_IN: iconsPath + 'email-opt-in.png',
   EMAIL_OPT_IN_SUCCESS: iconsPath + 'email-opt-in-success.png',
@@ -119,6 +120,7 @@ export const icons = {
   STOP_SUBSCRIPTION: iconsPath + 'stop-subscription.svg',
   CANCEL_SUBSCRIPTION_SUCCESS: iconsPath + 'cancel-subscription-success.svg',
   CANCEL_SUBSCRIPTION_USER: iconsPath + 'cancel-subscription-user.svg',
+  APPLAUD_ICON: iconsPath + 'applaud-icon.svg',
 };
 
 export const colors = {
