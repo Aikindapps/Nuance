@@ -213,12 +213,12 @@ const CreateEditPublication = () => {
 
   const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetailsState>({
     writerSubscriptions: [],
-    weeklyFee: [1],
+    weeklyFee: [],
     writerPrincipalId: '',
     lifeTimeFee: [],
     isSubscriptionActive: false,
-    annuallyFee: [3],
-    monthlyFee: [0],
+    annuallyFee: [],
+    monthlyFee: [],
     weeklyFeeEnabled: false,
     monthlyFeeEnabled: false,
     annuallyFeeEnabled: false,

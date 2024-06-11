@@ -30,7 +30,7 @@ import SubscriptionCta from '../../components/subscription-cta/subscription-cta'
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
-import { get } from 'lodash';
+import { useSubscriptionStore } from '../../store';
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -121,6 +121,10 @@ function PublicationLanding() {
     unfollowTag: state.unfollowTag,
   }));
 
+  const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+  }));
+
   const featureIsLive = useContext(Context).publicationFeature;
   const refEmailOptIn = useRef<HTMLDivElement>(null);
 
@@ -146,6 +150,7 @@ function PublicationLanding() {
   const [updatingFollow, setUpdatingFollow] = useState(false);
   const [isFollowingTag, setIsFollowingTag] = useState(false);
   const [EmailOptInScroll, setEmailOptInScroll] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
 
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
   const [initialPostsLoading, setInitialPostsLoading] = useState(false);
@@ -163,6 +168,36 @@ function PublicationLanding() {
       setLoadingPublication(false);
     }
   }, [publication]);
+
+  useEffect(() => {
+    const fetchSubscriptionHistory = async () => {
+      if (isLoggedIn) {
+        try {
+          let history = await getMySubscriptionHistoryAsReader();
+          console.log('history', history);
+
+          if (history) {
+            let isSubscribed = history.activeSubscriptions.some((subscription) => {
+              console.log('subscription', subscription);
+              return subscription.userListItem.handle === author?.handle;
+            });
+
+            if (!isSubscribed) {
+              isSubscribed = history.expiredSubscriptions.some((subscription) => {
+                return subscription.userListItem.handle === author?.handle;
+              });
+            }
+
+            setSubscribed(isSubscribed);
+          }
+        } catch (error) {
+          console.log('Error getting subscription history', error);
+        }
+      }
+    };
+
+    fetchSubscriptionHistory();
+  }, [isLoggedIn, author?.handle, user?.handle]);
 
   const getPublicationHandleFromUrl = () => {
     if (
@@ -544,10 +579,11 @@ function PublicationLanding() {
                   primaryColor={publication?.styling.primaryColor}
                 />
               </div>
-
-              <div className='Subscription-container'>
-                <SubscriptionCta onOpen={() => closeMenus()} />
-              </div>
+              {!subscribed &&
+                <div className='Subscription-container'>
+                  <SubscriptionCta onOpen={() => closeMenus()} />
+                </div>
+              }
 
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
                 {/* Change to FB handle when FB publication is established */}

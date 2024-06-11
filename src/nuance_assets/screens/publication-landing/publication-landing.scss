@@ -331,6 +331,7 @@
   &.dark {
     background: $dark-primary-background-color;
     color: $dark-primary-text-color;
+    border: none;
   }
 
   @media only screen and (max-width: 1089px) {
@@ -338,6 +339,7 @@
     height: 100%;
     border-radius: 0px;
     overflow-x: hidden;
+    padding: 10px;
   }
 }
 

@@ -11,10 +11,10 @@ type SubscribeButtonProps = {
     user: string;
     isPublication: boolean;
     primaryColor?: string;
+    isSubscribed: boolean;
 };
 
 const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => {
-    const [subscribed, setSubscribed] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const context = useContext(Context)
@@ -27,11 +27,10 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
 
         if (props.user === '') {
             console.log('Subscribing to author:', props.AuthorHandle);
+            console.log('User:', props.user);
             handleRegister()
 
-        }
-
-        if (props.AuthorHandle) {
+        } else {
             modalContext?.openModal('Subscription');
 
         }
@@ -57,7 +56,7 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
 
     return (
         <div className='followAuthor'>
-            {subscribed ? (
+            {props.isSubscribed ? (
                 <Button
                     styleType='secondary'
                     type='button'

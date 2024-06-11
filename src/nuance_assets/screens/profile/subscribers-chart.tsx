@@ -21,7 +21,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     const isValidData = data && data.length > 0 && data.every(item => item.day && typeof item.count === 'number');
 
     if (!isValidData) {
-        return <div>Error: Invalid data for the chart.</div>;
+        return <div>You do not have any subscription data yet.</div>;
     }
 
     // Prepare chart data

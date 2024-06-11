@@ -559,9 +559,9 @@ const PublicationArticles = () => {
             </div>
           </div>
         </div>
-        <div className='tabs'>
-          <button onClick={() => setActiveTab('articles')} className={activeTab === 'articles' ? 'active' : ''}>Articles</button>
-          <button onClick={() => setActiveTab('subscribers')} className={activeTab === 'subscribers' ? 'active' : ''}>Subscribers</button>
+        <div className={darkTheme ? 'tabs dark' : 'tabs'}>
+          <button onClick={() => setActiveTab('articles')} className={activeTab === 'articles' ? 'active' : darkTheme ? 'dark' : ''}>Articles</button>
+          <button onClick={() => setActiveTab('subscribers')} className={activeTab === 'subscribers' ? 'active' : darkTheme ? 'dark' : ''}>Subscribers</button>
         </div>
         {activeTab === 'articles' && (
           showSearchResults ? (

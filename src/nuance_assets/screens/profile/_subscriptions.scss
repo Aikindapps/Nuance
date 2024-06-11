@@ -9,6 +9,11 @@
     overflow-x: auto;
     height: 100%;
 
+    &.dark {
+        background-color: $dark-primary-background-color;
+        color: $dark-primary-text-color;
+    }
+
     .subscription-header {
         color: #151451;
         font-family: Roboto;
@@ -19,6 +24,11 @@
         text-align: left;
         margin: 24px 0px; 
         max-width: 520px;
+
+        &.dark {
+            color: $dark-primary-text-color;
+            border: none;
+        }
     }
 
     .subscription-title {
@@ -55,6 +65,10 @@
                 color: #02C3A1;
                 border-bottom: 3px solid #02C3A1;
             }
+
+            &.dark {
+                color: $dark-primary-text-color;
+            }
         }
     }
 
@@ -76,16 +90,17 @@
         }
 
         th {
-            background-color: white; 
             font-family: 'Roboto';
             font-weight: 700;
             font-size: 12px;
             line-height: 24px;
             color: $darker-border-color;
+
+            &.dark {
+            }
         }
 
         tbody tr:hover {
-            background-color: white; 
         }
 
         .subscription-avatar {
@@ -115,7 +130,7 @@
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
             z-index: 1000;
             width: 208px;
-            height: 134px;
+            height: 80px;
 
             p {
                 margin: 0;

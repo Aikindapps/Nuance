@@ -831,8 +831,41 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
             };
         };
         case (#AuthorExpiredSubscription) {
-            createDirectNotificationInternal(notification)      
+           if (notification.content.senderHandle == "") {
+        let author = await UserCanister.getUserByPrincipalId(Principal.toText(notification.content.authorPrincipal));
+        switch (author) {
+            case (#ok(user)) {
+              notification := {
+                id = Nat.toText(notificationId);
+                notificationType = notificationType;
+                content = {
+                    url = content.url;
+                    senderPrincipal = content.senderPrincipal;
+                    senderHandle = content.senderHandle;
+                    receiverPrincipal = content.receiverPrincipal;
+                    receiverHandle = content.receiverHandle;
+                    tags = content.tags;
+                    articleId = content.articleId;
+                    articleTitle = content.articleTitle;
+                    authorPrincipal = content.authorPrincipal;
+                    authorHandle = user.handle;
+                    comment = content.comment;
+                    isReply = content.isReply;
+                    tipAmount = content.tipAmount;
+                    token = content.token;
+                };
+                timestamp = Int.toText(Time.now());
+                read = false;
+              };
+            };
+            case (#err(err)) {
+            };
         };
+           };
+            createDirectNotificationInternal(notification)   
+
+        };
+
 
         case (#ReaderExpiredSubscription) {
             createDirectNotificationInternal(notification)

@@ -10,6 +10,10 @@
     align-items: stretch;
 }
 
+.subscription-payment-address{
+    margin-top: 20px;
+}
+
 .subscription-settings-option {
     gap: 28px;
     display: flex;
@@ -70,6 +74,7 @@
     margin-left: 35px;
 }
 
+
 .fee-controls {
     flex-basis: 30%;
     display: flex;
@@ -80,6 +85,9 @@
     max-width: 80px;
 }
 
+.value-container {
+  border: none;
+}
 .fee-controls .value-container {
     display: flex;
     flex-direction: row;
@@ -96,6 +104,11 @@
     &:focus {
         outline: none;
         border-bottom: 1px solid $highlight-two;
+    }
+
+    &.dark {
+        background: $dark-primary-background-color;
+        color: currentColor;
     }
 
 }
@@ -157,6 +170,11 @@ background: none;        }
     border-radius: 4px;
     padding: 8px;
     white-space: nowrap;
+
+    &.dark {
+        background: $dark-primary-background-color;
+        border: none;
+    }
 }
 
 .fees div {
