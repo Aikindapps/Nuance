@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Context } from '../../contextes/ModalContext';
 import { useTheme } from '../../contextes/ThemeContext';
-import { images, icons, SupportedTokenSymbol, getDecimalsByTokenSymbol } from '../../shared/constants';
+import { images, icons, getDecimalsByTokenSymbol, SUPPORTED_TOKENS, SupportedTokenSymbol, TokenBalance, } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import RequiredFieldMessage from '../../components/required-field-message/required-field-message';
 import './_subscription-modal.scss';
@@ -9,7 +9,6 @@ import { useSubscriptionStore } from '../../store/subscriptionStore';
 import { useAuthStore } from '../../store/authStore';
 import { SubscriptionTimeInterval, WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 import { getPriceBetweenTokens, truncateToDecimalPlace } from '../../shared/utils';
-import Loader from '../../UI/loader/Loader';
 
 interface SubscriptionModalProps {
     handle: string;
@@ -22,37 +21,81 @@ interface SubscriptionModalProps {
 const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileImage, isPublication, onSubscriptionComplete, authorPrincipalId }) => {
     const modalContext = useContext(Context);
     const darkTheme = useTheme();
+
     const [selectedOption, setSelectedOption] = useState<string>('');
     const [termsChecked, setTermsChecked] = useState<boolean>(false);
     const [termCheckWarning, setTermCheckWarning] = useState<boolean>(false);
     const [isSubscriptionComplete, setIsSubscriptionComplete] = useState<boolean>(false);
+    const [sufficientBalance, setSufficientBalance] = useState<boolean>(false);
     const [conversionPrices, setConversionPrices] = useState<{ [key: string]: { icp: string, ckBTC: string } }>({
         Weekly: { icp: '0 ICP', ckBTC: '0 ckBTC' },
         Monthly: { icp: '0 ICP', ckBTC: '0 ckBTC' },
         Annually: { icp: '0 ICP', ckBTC: '0 ckBTC' },
         Lifetime: { icp: '0 ICP', ckBTC: '0 ckBTC' }
     });
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [subscriptionError, setSubscriptionError] = useState<string | null>(null); // State for error message
 
-    const { sonicTokenPairs } = useAuthStore((state) => ({
-        sonicTokenPairs: state.sonicTokenPairs,
-    }));
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+    const { userWallet, tokenBalances, fetchTokenBalances, sonicTokenPairs } =
+        useAuthStore((state) => ({
+            userWallet: state.userWallet,
+            tokenBalances: state.tokenBalances,
+            fetchTokenBalances: state.fetchTokenBalances,
+            sonicTokenPairs: state.sonicTokenPairs,
+        }));
+
 
     const { subscribeWriter, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
         subscribeWriter: state.subscribeWriter,
         getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId
     }));
 
+    const getSufficientBalance = (fee: number) => {
+        fee = fee * 1e8;
+
+        if (!termsChecked || !selectedOption) {
+            return true;
+        }
+
+        var selectedCurrencyAndBalance: TokenBalance = {
+            balance: 0,
+            token: SUPPORTED_TOKENS[0],
+        };
+        tokenBalances.forEach((tokenBalance) => {
+            if (tokenBalance.token.symbol === 'NUA') {
+                selectedCurrencyAndBalance = tokenBalance;
+            }
+        });
+        console.log('selectedCurrencyAndBalance', selectedCurrencyAndBalance);
+        console.log('fee', fee);
+        console.log('SUPPORTED_TOKENS[0].fee', SUPPORTED_TOKENS[0].fee);
+
+        return selectedCurrencyAndBalance && selectedCurrencyAndBalance.balance >= fee + SUPPORTED_TOKENS[0].fee;
+    }
+
+
     const [subscriptionDetails, setSubscriptionDetails] = useState<WriterSubscriptionDetails | null>(null);
 
     useEffect(() => {
-        console.log('authorPrincipalId', authorPrincipalId);
+
         const fetchSubscriptionDetails = async () => {
             try {
                 const details = await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
-                setSubscriptionDetails(details as WriterSubscriptionDetails);
 
+                if (details) {
+                    // Convert fees from e8s to the appropriate units
+                    const convertFromE8s = (fee: number | undefined) => (fee ? fee / 1e8 : 0);
+
+                    const convertedDetails = {
+                        ...details,
+                        weeklyFee: details.weeklyFee.length > 0 ? [convertFromE8s(details.weeklyFee[0])] : [],
+                        monthlyFee: details.monthlyFee.length > 0 ? [convertFromE8s(details.monthlyFee[0])] : [],
+                        annuallyFee: details.annuallyFee.length > 0 ? [convertFromE8s(details.annuallyFee[0])] : [],
+                        lifeTimeFee: details.lifeTimeFee.length > 0 ? [convertFromE8s(details.lifeTimeFee[0])] : [],
+                    };
+
+                    setSubscriptionDetails(convertedDetails as WriterSubscriptionDetails);
+                }
             } catch (error) {
                 console.error('Error fetching subscription details:', error);
             }
@@ -62,6 +105,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
             fetchSubscriptionDetails();
         }
     }, [authorPrincipalId]);
+
+
+    useEffect(() => {
+        //balance check
+        setSufficientBalance(getSufficientBalance(parseFee(selectedOption)[0]));
+    }
+        , [selectedOption, termsChecked, tokenBalances]);
 
     const parseFee = (option: string) => {
         if (!subscriptionDetails) return [0];
@@ -108,11 +158,17 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
     }, [authorPrincipalId, subscriptionDetails]);
 
     const handleSubscription = async (fee: number[]) => {
-        console.log('Subscribing to: ', handle, selectedOption, authorPrincipalId, isPublication);
         if (!termsChecked || !selectedOption) {
             setTermCheckWarning(true);
             return;
         }
+
+        if (!sufficientBalance) {
+            setSubscriptionError("Insufficient balance. Please top up your account.");
+            return;
+        }
+
+        console.log('Subscribing to: ', handle, selectedOption, authorPrincipalId, isPublication);
         console.log('Subscribing with option: ', selectedOption);
 
         const subscriptionInterval: SubscriptionTimeInterval = (() => {
@@ -130,18 +186,16 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
             }
         })();
 
-        try {
-            setIsLoading(true);
-            await subscribeWriter(authorPrincipalId, subscriptionInterval, fee[0]);
+        setIsLoading(true);
+        const result = await subscribeWriter(authorPrincipalId, subscriptionInterval, fee[0] * 1e8);
+        if (result) {
             setIsSubscriptionComplete(true);
             onSubscriptionComplete();
-        } catch (error: any) {
-            console.error('Subscription error:', JSON.stringify(error));
-            setSubscriptionError(""); // Set the error message
-            setTermCheckWarning(true); // Set term check warning to true
-        } finally {
-            setIsLoading(false);
+        } else {
+            console.error('Subscription error:', result);
+            setSubscriptionError("An error occurred during subscription. Please try again."); // Set the error message
         }
+        setIsLoading(false);
     };
 
     const closeSubscriptionSuccess = () => {
@@ -283,7 +337,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
                         )}
                     </div>
                     <div className="subscription-modal-footer">
-
                         {hasValidOptions &&
                             <div className='subscription-terms'>
                                 <input
@@ -301,9 +354,21 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ handle, profileIm
                         {termCheckWarning && <RequiredFieldMessage hasError={termCheckWarning} errorMessage="Please select an option and agree to the terms and conditions." />}
                         <div className='subscription-buttons'>
                             <Button type='button' styleType='secondary' style={{ padding: "0px 16px", margin: "0px" }} onClick={() => modalContext?.closeModal()}>Cancel</Button>
-                            <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: "0px 16px", display: "flex", flexDirection: "row-reverse" }} loading={isLoading} disabled={!termsChecked || !selectedOption || isLoading} onClick={() => handleSubscription(parseFee(selectedOption))}>Subscribe</Button>
+                            <Button
+                                type='button'
+                                styleType={darkTheme ? 'primary-2-dark' : 'primary-2'}
+                                style={{ padding: "0px 16px", display: "flex", flexDirection: "row-reverse" }}
+                                loading={isLoading}
+                                disabled={!termsChecked || !selectedOption || isLoading || !sufficientBalance}
+                                onClick={() => handleSubscription(parseFee(selectedOption))}
+                            >
+                                Subscribe
+                            </Button>
+
                         </div>
+                        {(!sufficientBalance) ? <RequiredFieldMessage hasError={true} errorMessage={"Please top up wallet with NUA"} /> : null}
                     </div>
+
                 </>
             )}
         </div>

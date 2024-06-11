@@ -104,7 +104,7 @@ const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
                         <p className='subscription-title'>Subscribers</p>
                     </div>
                     <div className='subscription-stat'>
-                        <p className='subscription-count'>{stats.nuaEarned}</p>
+                        <p className='subscription-count'>{stats.nuaEarned / 1e8}</p>
                         <p className='subscription-title'>NUA earned</p>
                     </div>
                     <div className='subscription-stat'>
@@ -134,8 +134,8 @@ const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
                             <td><Link to={`/user/${sub.userListItem.handle}`}><img className='subscribers-tab-avatar' src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /></Link> <Link to={`/user/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
                             <td>{formatDate(sub.subscriptionStartDate)}</td>
                             <td>{sub.period}</td>
-                            <td>{sub.feePerPeriod}</td>
-                            <td>{sub.totalFees}</td>
+                            <td>{sub.feePerPeriod / 1e8}</td>
+                            <td>{sub.totalFees / 1e8}</td>
                         </tr>
                     ))}
                 </tbody>

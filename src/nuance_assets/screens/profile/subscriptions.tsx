@@ -186,8 +186,8 @@ const Subscriptions = () => {
                                     <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
                                     <td>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td>{sub.period}</td>
-                                    <td>{sub.feePerPeriod} NUA</td>
-                                    <td>{sub.totalFees} NUA</td>
+                                    <td>{sub.feePerPeriod / 1e8} NUA</td>
+                                    <td>{sub.totalFees / 1e8} NUA</td>
                                     <td>
                                         <Menu
                                             activeTab={activeTab}

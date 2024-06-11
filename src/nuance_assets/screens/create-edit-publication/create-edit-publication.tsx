@@ -235,13 +235,21 @@ const CreateEditPublication = () => {
   const handleUpdateSubscriptionDetails = async () => {
     console.log('Saving subscription details:', subscriptionDetails);
 
+    // Convert fees to e8s
+    const convertToE8s = (fee: number | undefined) => fee ? fee * 1e8 : undefined;
+
+    const weeklyFeeE8s = convertToE8s(subscriptionDetails.weeklyFee[0]);
+    const monthlyFeeE8s = convertToE8s(subscriptionDetails.monthlyFee[0]);
+    const annuallyFeeE8s = convertToE8s(subscriptionDetails.annuallyFee[0]);
+    const lifeTimeFeeE8s = convertToE8s(subscriptionDetails.lifeTimeFee[0]);
+
     try {
       const publicationCanisterId = await getCanisterIdByHandle(publicationHandle);
       updateSubscriptionDetails(
-        subscriptionDetails.weeklyFee[0] ?? undefined,
-        subscriptionDetails.monthlyFee[0] ?? undefined,
-        subscriptionDetails.annuallyFee[0] ?? undefined,
-        subscriptionDetails.lifeTimeFee[0] ?? undefined,
+        weeklyFeeE8s,
+        monthlyFeeE8s,
+        annuallyFeeE8s,
+        lifeTimeFeeE8s,
         {
           paymentReceiverPrincipal: Principal.fromText(subscriptionDetails.writerPrincipalId),
           publicationCanisterId: publicationCanisterId ?? ""
@@ -252,6 +260,7 @@ const CreateEditPublication = () => {
       // Handle the error as needed
     }
   };
+
 
 
   useEffect(() => {
@@ -266,12 +275,12 @@ const CreateEditPublication = () => {
           if (fetchedDetails) {
             setSubscriptionDetails({
               writerSubscriptions: fetchedDetails?.writerSubscriptions,
-              weeklyFee: fetchedDetails.weeklyFee,
+              weeklyFee: fetchedDetails.weeklyFee[0] ? [fetchedDetails.weeklyFee[0] / 1e8] : [],
               writerPrincipalId: fetchedDetails.writerPrincipalId,
-              lifeTimeFee: fetchedDetails.lifeTimeFee,
+              lifeTimeFee: fetchedDetails.lifeTimeFee[0] ? [fetchedDetails.lifeTimeFee[0] / 1e8] : [],
               isSubscriptionActive: fetchedDetails.isSubscriptionActive,
-              annuallyFee: fetchedDetails.annuallyFee,
-              monthlyFee: fetchedDetails.monthlyFee,
+              annuallyFee: fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0] / 1e8] : [],
+              monthlyFee: fetchedDetails.monthlyFee[0] ? [fetchedDetails.monthlyFee[0] / 1e8] : [],
               weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
               monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
               annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,

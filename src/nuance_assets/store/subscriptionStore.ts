@@ -361,7 +361,7 @@ export interface SubscriptionStore {
     writerPrincipalId: string,
     subscriptionTimeInterval: SubscriptionTimeInterval,
     amount: number
-  ) => Promise<ReaderSubscriptionDetailsConverted | string>;
+  ) => Promise<ReaderSubscriptionDetailsConverted | void>;
 }
 
 // Encapsulates and abstracts AuthClient
@@ -471,7 +471,7 @@ const createSubscriptionStore:
     writerPrincipalId: string,
     subscriptionTimeInterval: SubscriptionTimeInterval,
     amount: number
-  ): Promise<ReaderSubscriptionDetailsConverted | string> => {
+  ): Promise<ReaderSubscriptionDetailsConverted | void> => {
     try {
       const subscriptionActor = await getSubscriptionActor();
       const paymentRequest =
@@ -513,28 +513,23 @@ const createSubscriptionStore:
             subscriptionActor.pendingStuckTokensHeartbeatExternal();
             const errorMessage = `Subscription completion failed: ${response.err}`;
             toastError(errorMessage);
-            handleError(response.err);
-            return errorMessage;
+           
           }
         } else {
           const errorMessage = `Token transfer failed: ${transferResponse.Err}`;
           toastError(errorMessage);
-          handleError(transferResponse.Err);
-          return errorMessage;
+          
         }
       } else {
         const errorMessage = `Payment request failed: ${paymentRequest.err}`;
         toastError(errorMessage);
-        handleError(paymentRequest.err);
-        return errorMessage;
+       
       }
     } catch (error: any) {
       const errorMessage = `Unexpected error: ${
         error.message || error.toString()
       }`;
       console.error(errorMessage);
-      handleError(errorMessage);
-      return errorMessage;
     }
   },
 

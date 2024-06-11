@@ -95,13 +95,15 @@ const EditProfile = () => {
   const handleUpdateSubscriptionDetails = async () => {
     console.log('Saving subscription details:', subscriptionDetails);
 
+    const convertToE8s = (fee: number | undefined) => (fee ? fee * 1e8 : undefined);
+
     try {
       const userPrincipalId = await getPrincipalByHandle(user?.handle || '');
       updateSubscriptionDetails(
-        subscriptionDetails.weeklyFee[0] ?? undefined,
-        subscriptionDetails.monthlyFee[0] ?? undefined,
-        subscriptionDetails.annuallyFee[0] ?? undefined,
-        subscriptionDetails.lifeTimeFee[0] ?? undefined,
+        convertToE8s(subscriptionDetails.weeklyFee[0]),
+        convertToE8s(subscriptionDetails.monthlyFee[0]),
+        convertToE8s(subscriptionDetails.annuallyFee[0]),
+        convertToE8s(subscriptionDetails.lifeTimeFee[0]),
         {
           paymentReceiverPrincipal: Principal.fromText(subscriptionDetails.writerPrincipalId),
           publicationCanisterId: userPrincipalId ?? ""
@@ -109,7 +111,6 @@ const EditProfile = () => {
       );
     } catch (error) {
       console.error('Error fetching canister ID:', error);
-      // Handle the error as needed
     }
   };
 
@@ -124,17 +125,19 @@ const EditProfile = () => {
           if (fetchedDetails) {
             setSubscriptionDetails({
               writerSubscriptions: fetchedDetails?.writerSubscriptions,
-              weeklyFee: fetchedDetails.weeklyFee,
+              weeklyFee: fetchedDetails.weeklyFee[0] ? [fetchedDetails.weeklyFee[0] / 1e8] : [],
               writerPrincipalId: fetchedDetails.writerPrincipalId,
-              lifeTimeFee: fetchedDetails.lifeTimeFee,
+              lifeTimeFee: fetchedDetails.lifeTimeFee[0] ? [fetchedDetails.lifeTimeFee[0] / 1e8] : [],
               isSubscriptionActive: fetchedDetails.isSubscriptionActive,
-              annuallyFee: fetchedDetails.annuallyFee,
-              monthlyFee: fetchedDetails.monthlyFee,
+              annuallyFee: fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0] / 1e8] : [],
+              monthlyFee: fetchedDetails.monthlyFee[0] ? [fetchedDetails.monthlyFee[0] / 1e8] : [],
               weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
               monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
               annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
               lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0
             });
+            console.log('Fetched subscription details:', fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0] / 1e8] : []);
+            console.log('Fetched subscription details:', fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0]] : []);
           }
         }
       }
@@ -289,10 +292,10 @@ const EditProfile = () => {
       }
 
       updateSubscriptionDetails(
-        subscriptionDetails.weeklyFee[0] ?? undefined,
-        subscriptionDetails.monthlyFee[0] ?? undefined,
-        subscriptionDetails.annuallyFee[0] ?? undefined,
-        subscriptionDetails.lifeTimeFee[0] ?? undefined,
+        subscriptionDetails.weeklyFee[0] ? subscriptionDetails.weeklyFee[0] * 1e8 : undefined,
+        subscriptionDetails.monthlyFee[0] ? subscriptionDetails.monthlyFee[0] * 1e8 : undefined,
+        subscriptionDetails.annuallyFee[0] ? subscriptionDetails.annuallyFee[0] * 1e8 : undefined,
+        subscriptionDetails.lifeTimeFee[0] ? subscriptionDetails.lifeTimeFee[0] * 1e8 : undefined,
       );
     }
 
