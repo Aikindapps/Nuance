@@ -132,18 +132,20 @@ const convertReaderSubscriptionDetails = async (
           //update the related values
           subscribedWriterItem = {
             ...subscribedWriterItem,
-            feePerPeriod: subscriptionEvent.paymentFee,
+            feePerPeriod: Number(subscriptionEvent.paymentFee),
             period: getPeriodBySubscriptionTimeInterval(
               subscriptionEvent.subscriptionTimeInterval
             ),
             subscriptionStartDate: Number(subscriptionEvent.startTime),
             totalFees:
-              subscribedWriterItem.totalFees + subscriptionEvent.paymentFee,
+              subscribedWriterItem.totalFees +
+              Number(subscriptionEvent.paymentFee),
           };
         } else {
           //this is an older event, just update the totalFees
           subscribedWriterItem.totalFees =
-            subscribedWriterItem.totalFees + subscriptionEvent.paymentFee;
+            subscribedWriterItem.totalFees +
+            Number(subscriptionEvent.paymentFee);
         }
 
         activeSubscriptionItemsMap.set(
@@ -158,8 +160,8 @@ const convertReaderSubscriptionDetails = async (
           period: getPeriodBySubscriptionTimeInterval(
             subscriptionEvent.subscriptionTimeInterval
           ),
-          feePerPeriod: subscriptionEvent.paymentFee,
-          totalFees: subscriptionEvent.paymentFee,
+          feePerPeriod: Number(subscriptionEvent.paymentFee),
+          totalFees: Number(subscriptionEvent.paymentFee),
           isPublication: allPublications
             .map((val) => val[1])
             .includes(subscriptionEvent.writerPrincipalId),
@@ -172,7 +174,7 @@ const convertReaderSubscriptionDetails = async (
       var totalFee = 0;
       details.readerSubscriptions.forEach((event) => {
         if (event.writerPrincipalId === subscriptionEvent.writerPrincipalId) {
-          totalFee += event.paymentFee;
+          totalFee += Number(event.paymentFee);
         }
       });
       //push the value to expiredSubscriptionItemsArray
@@ -186,7 +188,7 @@ const convertReaderSubscriptionDetails = async (
         period: getPeriodBySubscriptionTimeInterval(
           subscriptionEvent.subscriptionTimeInterval
         ),
-        feePerPeriod: subscriptionEvent.paymentFee,
+        feePerPeriod: Number(subscriptionEvent.paymentFee),
         totalFees: totalFee,
         isPublication: allPublications
           .map((val) => val[1])
@@ -255,16 +257,18 @@ const convertWriterSubscriptionDetails = async (
             period: getPeriodBySubscriptionTimeInterval(
               subscriptionEvent.subscriptionTimeInterval
             ),
-            feePerPeriod: subscriptionEvent.paymentFee,
+            feePerPeriod: Number(subscriptionEvent.paymentFee),
             totalFees:
-              subscribedReaderListItem.totalFees + subscriptionEvent.paymentFee,
+              subscribedReaderListItem.totalFees +
+              Number(subscriptionEvent.paymentFee),
           };
         } else {
           //older event
           subscribedReaderListItem = {
             ...subscribedReaderListItem,
             totalFees:
-              subscribedReaderListItem.totalFees + subscriptionEvent.paymentFee,
+              subscribedReaderListItem.totalFees +
+              Number(subscriptionEvent.paymentFee),
           };
         }
         subscribedReaderListItemsMap.set(
@@ -280,8 +284,8 @@ const convertWriterSubscriptionDetails = async (
           period: getPeriodBySubscriptionTimeInterval(
             subscriptionEvent.subscriptionTimeInterval
           ),
-          feePerPeriod: subscriptionEvent.paymentFee,
-          totalFees: subscriptionEvent.paymentFee,
+          feePerPeriod: Number(subscriptionEvent.paymentFee),
+          totalFees: Number(subscriptionEvent.paymentFee),
         });
       }
     }
@@ -299,7 +303,7 @@ const convertWriterSubscriptionDetails = async (
   });
 
   for (const subscriptionEvent of details.writerSubscriptions) {
-    totalNuaEarned += subscriptionEvent.paymentFee;
+    totalNuaEarned += Number(subscriptionEvent.paymentFee);
     for (const breakPoint of breakPoints) {
       if (
         breakPoint[0] >= Number(subscriptionEvent.startTime) &&
@@ -452,10 +456,10 @@ const createSubscriptionStore:
               ],
             ]
           : [],
-        weeklyFee: weeklyFee ? [weeklyFee] : [],
-        lifeTimeFee: lifeTimeFee ? [lifeTimeFee] : [],
-        annuallyFee: annuallyFee ? [annuallyFee] : [],
-        monthlyFee: monthlyFee ? [monthlyFee] : [],
+        weeklyFee: weeklyFee ? [BigInt(weeklyFee)] : [],
+        lifeTimeFee: lifeTimeFee ? [BigInt(lifeTimeFee)] : [],
+        annuallyFee: annuallyFee ? [BigInt(annuallyFee)] : [],
+        monthlyFee: monthlyFee ? [BigInt(monthlyFee)] : [],
       });
       if ('ok' in response) {
         return await convertWriterSubscriptionDetails(response.ok);
@@ -478,7 +482,7 @@ const createSubscriptionStore:
         await subscriptionActor.createPaymentRequestAsReader(
           writerPrincipalId,
           subscriptionTimeInterval,
-          amount
+          BigInt(amount)
         );
       if ('ok' in paymentRequest) {
         // Payment request has successfully been created
@@ -513,17 +517,14 @@ const createSubscriptionStore:
             subscriptionActor.pendingStuckTokensHeartbeatExternal();
             const errorMessage = `Subscription completion failed: ${response.err}`;
             toastError(errorMessage);
-           
           }
         } else {
           const errorMessage = `Token transfer failed: ${transferResponse.Err}`;
           toastError(errorMessage);
-          
         }
       } else {
         const errorMessage = `Payment request failed: ${paymentRequest.err}`;
         toastError(errorMessage);
-       
       }
     } catch (error: any) {
       const errorMessage = `Unexpected error: ${

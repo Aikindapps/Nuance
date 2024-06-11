@@ -30,15 +30,21 @@ var psl = require('psl');
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
-  const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore((state) => ({
-    getUser: state.getUser,
-    updateUserDetails: state.updateUserDetails,
-    getPrincipalByHandle: state.getPrincipalByHandle,
-  }));
+  const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore(
+    (state) => ({
+      getUser: state.getUser,
+      updateUserDetails: state.updateUserDetails,
+      getPrincipalByHandle: state.getPrincipalByHandle,
+    })
+  );
 
-  const { getWriterSubscriptionDetailsByPrincipalId, updateSubscriptionDetails } = useSubscriptionStore((state: SubscriptionStore) => ({
-    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
-    updateSubscriptionDetails: state.updateSubscriptionDetails
+  const {
+    getWriterSubscriptionDetailsByPrincipalId,
+    updateSubscriptionDetails,
+  } = useSubscriptionStore((state: SubscriptionStore) => ({
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
+    updateSubscriptionDetails: state.updateSubscriptionDetails,
   }));
 
   const firstLoad = async () => {
@@ -70,20 +76,20 @@ const EditProfile = () => {
   const [postHtml, setPostHtml] = useState('');
   const darkTheme = useTheme();
 
-
-  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetailsState>({
-    writerSubscriptions: [],
-    weeklyFee: [],
-    writerPrincipalId: '',
-    lifeTimeFee: [],
-    isSubscriptionActive: false,
-    annuallyFee: [],
-    monthlyFee: [],
-    weeklyFeeEnabled: false,
-    monthlyFeeEnabled: false,
-    annuallyFeeEnabled: false,
-    lifeTimeFeeEnabled: false
-  });
+  const [subscriptionDetails, setSubscriptionDetails] =
+    useState<SubscriptionDetailsState>({
+      writerSubscriptions: [],
+      weeklyFee: [],
+      writerPrincipalId: '',
+      lifeTimeFee: [],
+      isSubscriptionActive: false,
+      annuallyFee: [],
+      monthlyFee: [],
+      weeklyFeeEnabled: false,
+      monthlyFeeEnabled: false,
+      annuallyFeeEnabled: false,
+      lifeTimeFeeEnabled: false,
+    });
 
   interface SubscriptionDetailsState extends WriterSubscriptionDetails {
     weeklyFeeEnabled: boolean;
@@ -95,7 +101,8 @@ const EditProfile = () => {
   const handleUpdateSubscriptionDetails = async () => {
     console.log('Saving subscription details:', subscriptionDetails);
 
-    const convertToE8s = (fee: number | undefined) => (fee ? fee * 1e8 : undefined);
+    const convertToE8s = (fee: string | undefined) =>
+      fee ? Number(fee) * 1e8 : undefined;
 
     try {
       const userPrincipalId = await getPrincipalByHandle(user?.handle || '');
@@ -105,8 +112,10 @@ const EditProfile = () => {
         convertToE8s(subscriptionDetails.annuallyFee[0]),
         convertToE8s(subscriptionDetails.lifeTimeFee[0]),
         {
-          paymentReceiverPrincipal: Principal.fromText(subscriptionDetails.writerPrincipalId),
-          publicationCanisterId: userPrincipalId ?? ""
+          paymentReceiverPrincipal: Principal.fromText(
+            subscriptionDetails.writerPrincipalId
+          ),
+          publicationCanisterId: userPrincipalId ?? '',
         }
       );
     } catch (error) {
@@ -114,30 +123,48 @@ const EditProfile = () => {
     }
   };
 
-
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
       console.log('Fetching subscription details for:', user?.handle);
       if (user) {
         const userPrincipalId = await getPrincipalByHandle(user.handle);
         if (userPrincipalId) {
-          const fetchedDetails = await getWriterSubscriptionDetailsByPrincipalId(userPrincipalId);
+          const fetchedDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(userPrincipalId);
           if (fetchedDetails) {
             setSubscriptionDetails({
               writerSubscriptions: fetchedDetails?.writerSubscriptions,
-              weeklyFee: fetchedDetails.weeklyFee[0] ? [fetchedDetails.weeklyFee[0] / 1e8] : [],
+              weeklyFee: fetchedDetails.weeklyFee[0]
+                ? [(Number(fetchedDetails.weeklyFee[0]) / 1e8).toString()]
+                : [],
               writerPrincipalId: fetchedDetails.writerPrincipalId,
-              lifeTimeFee: fetchedDetails.lifeTimeFee[0] ? [fetchedDetails.lifeTimeFee[0] / 1e8] : [],
+              lifeTimeFee: fetchedDetails.lifeTimeFee[0]
+                ? [(Number(fetchedDetails.lifeTimeFee[0]) / 1e8).toString()]
+                : [],
               isSubscriptionActive: fetchedDetails.isSubscriptionActive,
-              annuallyFee: fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0] / 1e8] : [],
-              monthlyFee: fetchedDetails.monthlyFee[0] ? [fetchedDetails.monthlyFee[0] / 1e8] : [],
+              annuallyFee: fetchedDetails.annuallyFee[0]
+                ? [(Number(fetchedDetails.annuallyFee[0]) / 1e8).toString()]
+                : [],
+              monthlyFee: fetchedDetails.monthlyFee[0]
+                ? [(Number(fetchedDetails.monthlyFee[0]) / 1e8).toString()]
+                : [],
               weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
               monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
               annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
-              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0
+              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0,
             });
-            console.log('Fetched subscription details:', fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0] / 1e8] : []);
-            console.log('Fetched subscription details:', fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0]] : []);
+            console.log(
+              'Fetched subscription details:',
+              fetchedDetails.annuallyFee[0]
+                ? [(Number(fetchedDetails.annuallyFee[0]) / 1e8).toString()]
+                : []
+            );
+            console.log(
+              'Fetched subscription details:',
+              fetchedDetails.annuallyFee[0]
+                ? [fetchedDetails.annuallyFee[0]]
+                : []
+            );
           }
         }
       }
@@ -160,21 +187,20 @@ const EditProfile = () => {
   function validateURL(url: string) {
     var validUrl = require('valid-url');
     if (url != '') {
-      return validUrl.isWebUri(url)
+      return validUrl.isWebUri(url);
     } else return true;
   }
 
   const isAddNewSocialLinkActive = () => {
     if (user) {
       if (user.socialChannels.length === 0) {
-        return true
-      }
-      else {
+        return true;
+      } else {
         return validateURL(user.socialChannels[user.socialChannels.length - 1]);
       }
     }
-    return false
-  }
+    return false;
+  };
 
   const validateSocialLinks = () => {
     if (user) {
@@ -184,43 +210,39 @@ const EditProfile = () => {
         }
       }
     }
-    return true
-  }
+    return true;
+  };
 
   const validate = () => {
     if (user) {
       if (user.website !== '') {
         return validateSocialLinks() && validateURL(user.website);
-      }
-      else {
-        return validateSocialLinks()
+      } else {
+        return validateSocialLinks();
       }
     }
-    return false
-  }
+    return false;
+  };
 
   const onWebsiteChange = (value: string) => {
     if (user) {
       setUser({ ...user, website: value });
     }
-  }
+  };
 
   const onSocialChannelUrlChange = (value: string, index: number) => {
     if (user) {
       let allUrls = user.socialChannels;
       allUrls = allUrls.map((val, i) => {
         if (i === index) {
-          return value
+          return value;
+        } else {
+          return val;
         }
-        else {
-          return val
-        }
-      })
+      });
       setUser({ ...user, socialChannels: allUrls });
     }
-  }
-
-
+  };
 
   const editor = useRef(null);
   const [hideEditor, setHideEditor] = useState(true);
@@ -292,10 +314,18 @@ const EditProfile = () => {
       }
 
       updateSubscriptionDetails(
-        subscriptionDetails.weeklyFee[0] ? subscriptionDetails.weeklyFee[0] * 1e8 : undefined,
-        subscriptionDetails.monthlyFee[0] ? subscriptionDetails.monthlyFee[0] * 1e8 : undefined,
-        subscriptionDetails.annuallyFee[0] ? subscriptionDetails.annuallyFee[0] * 1e8 : undefined,
-        subscriptionDetails.lifeTimeFee[0] ? subscriptionDetails.lifeTimeFee[0] * 1e8 : undefined,
+        subscriptionDetails.weeklyFee[0]
+          ? Number(subscriptionDetails.weeklyFee[0]) * 1e8
+          : undefined,
+        subscriptionDetails.monthlyFee[0]
+          ? Number(subscriptionDetails.monthlyFee[0]) * 1e8
+          : undefined,
+        subscriptionDetails.annuallyFee[0]
+          ? Number(subscriptionDetails.annuallyFee[0]) * 1e8
+          : undefined,
+        subscriptionDetails.lifeTimeFee[0]
+          ? Number(subscriptionDetails.lifeTimeFee[0]) * 1e8
+          : undefined
       );
     }
 
@@ -332,7 +362,7 @@ const EditProfile = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -606,9 +636,9 @@ const EditProfile = () => {
           style={
             !isAddNewSocialLinkActive()
               ? {
-                cursor: 'not-allowed',
-                opacity: '0.5',
-              }
+                  cursor: 'not-allowed',
+                  opacity: '0.5',
+                }
               : {}
           }
           className='edit-profile-add-new-social-channel'
@@ -653,11 +683,11 @@ const EditProfile = () => {
             style={
               !validate()
                 ? {
-                  cursor: 'not-allowed',
-                  background: 'gray',
-                  borderColor: 'gray',
-                  width: '120px',
-                }
+                    cursor: 'not-allowed',
+                    background: 'gray',
+                    borderColor: 'gray',
+                    width: '120px',
+                  }
                 : { width: '120px' }
             }
           >

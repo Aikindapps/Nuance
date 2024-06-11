@@ -99,12 +99,17 @@ const CreateEditPublication = () => {
     getCanisterIdByHandle: state.getCanisterIdByHandle,
   }));
 
-  const { getWriterSubscriptionDetailsByPrincipalId, getPublicationSubscriptionDetailsAsEditor, updateSubscriptionDetails } = useSubscriptionStore((state: SubscriptionStore) => ({
-    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
-    getPublicationSubscriptionDetailsAsEditor: state.getPublicationSubscriptionDetailsAsEditor,
-    updateSubscriptionDetails: state.updateSubscriptionDetails
+  const {
+    getWriterSubscriptionDetailsByPrincipalId,
+    getPublicationSubscriptionDetailsAsEditor,
+    updateSubscriptionDetails,
+  } = useSubscriptionStore((state: SubscriptionStore) => ({
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
+    getPublicationSubscriptionDetailsAsEditor:
+      state.getPublicationSubscriptionDetailsAsEditor,
+    updateSubscriptionDetails: state.updateSubscriptionDetails,
   }));
-
 
   const featureIsLive = useContext(Context).publicationFeature;
 
@@ -209,21 +214,20 @@ const CreateEditPublication = () => {
     );
   };
 
-
-
-  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetailsState>({
-    writerSubscriptions: [],
-    weeklyFee: [],
-    writerPrincipalId: '',
-    lifeTimeFee: [],
-    isSubscriptionActive: false,
-    annuallyFee: [],
-    monthlyFee: [],
-    weeklyFeeEnabled: false,
-    monthlyFeeEnabled: false,
-    annuallyFeeEnabled: false,
-    lifeTimeFeeEnabled: false
-  });
+  const [subscriptionDetails, setSubscriptionDetails] =
+    useState<SubscriptionDetailsState>({
+      writerSubscriptions: [],
+      weeklyFee: [],
+      writerPrincipalId: '',
+      lifeTimeFee: [],
+      isSubscriptionActive: false,
+      annuallyFee: [],
+      monthlyFee: [],
+      weeklyFeeEnabled: false,
+      monthlyFeeEnabled: false,
+      annuallyFeeEnabled: false,
+      lifeTimeFeeEnabled: false,
+    });
 
   interface SubscriptionDetailsState extends WriterSubscriptionDetails {
     weeklyFeeEnabled: boolean;
@@ -236,7 +240,8 @@ const CreateEditPublication = () => {
     console.log('Saving subscription details:', subscriptionDetails);
 
     // Convert fees to e8s
-    const convertToE8s = (fee: number | undefined) => fee ? fee * 1e8 : undefined;
+    const convertToE8s = (fee: string | undefined) =>
+      fee ? Number(fee) * 1e8 : undefined;
 
     const weeklyFeeE8s = convertToE8s(subscriptionDetails.weeklyFee[0]);
     const monthlyFeeE8s = convertToE8s(subscriptionDetails.monthlyFee[0]);
@@ -244,15 +249,19 @@ const CreateEditPublication = () => {
     const lifeTimeFeeE8s = convertToE8s(subscriptionDetails.lifeTimeFee[0]);
 
     try {
-      const publicationCanisterId = await getCanisterIdByHandle(publicationHandle);
+      const publicationCanisterId = await getCanisterIdByHandle(
+        publicationHandle
+      );
       updateSubscriptionDetails(
         weeklyFeeE8s,
         monthlyFeeE8s,
         annuallyFeeE8s,
         lifeTimeFeeE8s,
         {
-          paymentReceiverPrincipal: Principal.fromText(subscriptionDetails.writerPrincipalId),
-          publicationCanisterId: publicationCanisterId ?? ""
+          paymentReceiverPrincipal: Principal.fromText(
+            subscriptionDetails.writerPrincipalId
+          ),
+          publicationCanisterId: publicationCanisterId ?? '',
         }
       );
     } catch (error) {
@@ -261,30 +270,44 @@ const CreateEditPublication = () => {
     }
   };
 
-
-
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
       console.log('Fetching subscription details for:', publicationHandle);
       if (publication) {
-        const publicationCanisterId = await getCanisterIdByHandle(publicationHandle);
+        const publicationCanisterId = await getCanisterIdByHandle(
+          publicationHandle
+        );
         console.log('publicationCanisterId:', publicationCanisterId);
         if (publicationCanisterId) {
-          console.log('Fetching subscription details for:', publicationCanisterId);
-          const fetchedDetails = await getWriterSubscriptionDetailsByPrincipalId(publicationCanisterId);
+          console.log(
+            'Fetching subscription details for:',
+            publicationCanisterId
+          );
+          const fetchedDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(
+              publicationCanisterId
+            );
           if (fetchedDetails) {
             setSubscriptionDetails({
               writerSubscriptions: fetchedDetails?.writerSubscriptions,
-              weeklyFee: fetchedDetails.weeklyFee[0] ? [fetchedDetails.weeklyFee[0] / 1e8] : [],
+              weeklyFee: fetchedDetails.weeklyFee[0]
+                ? [(Number(fetchedDetails.weeklyFee[0]) / 1e8).toString()]
+                : [],
               writerPrincipalId: fetchedDetails.writerPrincipalId,
-              lifeTimeFee: fetchedDetails.lifeTimeFee[0] ? [fetchedDetails.lifeTimeFee[0] / 1e8] : [],
+              lifeTimeFee: fetchedDetails.lifeTimeFee[0]
+                ? [(Number(fetchedDetails.lifeTimeFee[0]) / 1e8).toString()]
+                : [],
               isSubscriptionActive: fetchedDetails.isSubscriptionActive,
-              annuallyFee: fetchedDetails.annuallyFee[0] ? [fetchedDetails.annuallyFee[0] / 1e8] : [],
-              monthlyFee: fetchedDetails.monthlyFee[0] ? [fetchedDetails.monthlyFee[0] / 1e8] : [],
+              annuallyFee: fetchedDetails.annuallyFee[0]
+                ? [(Number(fetchedDetails.annuallyFee[0]) / 1e8).toString()]
+                : [],
+              monthlyFee: fetchedDetails.monthlyFee[0]
+                ? [(Number(fetchedDetails.monthlyFee[0]) / 1e8).toString()]
+                : [],
               weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
               monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
               annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
-              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0
+              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0,
             });
           }
         }
@@ -668,7 +691,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -769,7 +792,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -870,7 +893,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -1223,7 +1246,7 @@ const CreateEditPublication = () => {
     }
   };
 
-  const clearAll = () => { };
+  const clearAll = () => {};
 
   const KeyCodes = {
     comma: 188,
@@ -1276,10 +1299,10 @@ const CreateEditPublication = () => {
               {publicationDoesNotExist
                 ? 'This publication no longer exists or you have entered the wrong handle'
                 : featureIsLive === false
-                  ? 'This feature is not yet live! Stay tuned...'
-                  : userIsEditor == false || publication == undefined
-                    ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
-                    : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
+                ? 'This feature is not yet live! Stay tuned...'
+                : userIsEditor == false || publication == undefined
+                ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
+                : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
             </h2>
           </div>
         )}
@@ -1328,11 +1351,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                        width: '96px',
-                        cursor: 'not-allowed',
-                        background: 'gray',
-                        borderColor: 'gray',
-                      }
+                          width: '96px',
+                          cursor: 'not-allowed',
+                          background: 'gray',
+                          borderColor: 'gray',
+                        }
                   }
                 >
                   Save
@@ -2055,15 +2078,15 @@ const CreateEditPublication = () => {
                 style={
                   !isAddNewSocialLinkActive()
                     ? {
-                      cursor: 'not-allowed',
-                      opacity: '0.5',
-                      marginTop: '20px',
-                      marginBottom: '20px',
-                    }
+                        cursor: 'not-allowed',
+                        opacity: '0.5',
+                        marginTop: '20px',
+                        marginBottom: '20px',
+                      }
                     : {
-                      marginTop: '20px',
-                      marginBottom: '20px',
-                    }
+                        marginTop: '20px',
+                        marginBottom: '20px',
+                      }
                 }
                 className='edit-publication-add-new-social-channel'
                 onClick={() => {
@@ -2114,11 +2137,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                        width: '96px',
-                        cursor: 'not-allowed',
-                        background: 'gray',
-                        borderColor: 'gray',
-                      }
+                          width: '96px',
+                          cursor: 'not-allowed',
+                          background: 'gray',
+                          borderColor: 'gray',
+                        }
                   }
                 >
                   Save

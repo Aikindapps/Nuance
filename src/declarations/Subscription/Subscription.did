@@ -1,23 +1,23 @@
 type WriterSubscriptionDetails = 
  record {
-   annuallyFee: opt nat32;
+   annuallyFee: opt text;
    isSubscriptionActive: bool;
-   lifeTimeFee: opt nat32;
-   monthlyFee: opt nat32;
-   weeklyFee: opt nat32;
+   lifeTimeFee: opt text;
+   monthlyFee: opt text;
+   weeklyFee: opt text;
    writerPrincipalId: text;
    writerSubscriptions: vec SubscriptionEvent;
  };
 type UpdateSubscriptionDetailsModel = 
  record {
-   annuallyFee: opt nat32;
-   lifeTimeFee: opt nat32;
-   monthlyFee: opt nat32;
+   annuallyFee: opt nat;
+   lifeTimeFee: opt nat;
+   monthlyFee: opt nat;
    publicationInformation: opt record {
                                  principal;
                                  text;
                                };
-   weeklyFee: opt nat32;
+   weeklyFee: opt nat;
  };
 type SubscriptionTimeInterval = 
  variant {
@@ -30,7 +30,7 @@ type SubscriptionEvent =
  record {
    endTime: int;
    isWriterSubscriptionActive: bool;
-   paymentFee: nat32;
+   paymentFee: text;
    readerPrincipalId: text;
    startTime: int;
    subscriptionEventId: text;
@@ -66,7 +66,7 @@ type ReaderSubscriptionDetails =
 type PaymentRequest = 
  record {
    expirationDate: int;
-   paymentFee: nat32;
+   paymentFee: text;
    readerPrincipalId: text;
    subaccount: blob;
    subscriptionEventId: text;
@@ -76,7 +76,7 @@ type PaymentRequest =
 service : {
   checkMyExpiredSubscriptionsNotifications: () -> ();
   completeSubscriptionEvent: (text) -> (Result_1);
-  createPaymentRequestAsReader: (text, SubscriptionTimeInterval, nat32) ->
+  createPaymentRequestAsReader: (text, SubscriptionTimeInterval, nat) ->
    (Result_2);
   disperseTokensForSuccessfulSubscription: (text) -> (Result_3);
   expiredNotificationsHeartbeatExternal: () -> ();

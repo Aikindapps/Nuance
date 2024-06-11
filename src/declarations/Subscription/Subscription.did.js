@@ -11,18 +11,18 @@ export const idlFactory = ({ IDL }) => {
     'endTime' : IDL.Int,
     'subscriptionTimeInterval' : SubscriptionTimeInterval,
     'writerPrincipalId' : IDL.Text,
-    'paymentFee' : IDL.Nat32,
+    'paymentFee' : IDL.Text,
     'isWriterSubscriptionActive' : IDL.Bool,
     'readerPrincipalId' : IDL.Text,
   });
   const WriterSubscriptionDetails = IDL.Record({
     'writerSubscriptions' : IDL.Vec(SubscriptionEvent),
-    'weeklyFee' : IDL.Opt(IDL.Nat32),
+    'weeklyFee' : IDL.Opt(IDL.Text),
     'writerPrincipalId' : IDL.Text,
-    'lifeTimeFee' : IDL.Opt(IDL.Nat32),
+    'lifeTimeFee' : IDL.Opt(IDL.Text),
     'isSubscriptionActive' : IDL.Bool,
-    'annuallyFee' : IDL.Opt(IDL.Nat32),
-    'monthlyFee' : IDL.Opt(IDL.Nat32),
+    'annuallyFee' : IDL.Opt(IDL.Text),
+    'monthlyFee' : IDL.Opt(IDL.Text),
   });
   const ReaderSubscriptionDetails = IDL.Record({
     'readerSubscriptions' : IDL.Vec(SubscriptionEvent),
@@ -39,7 +39,7 @@ export const idlFactory = ({ IDL }) => {
     'subscriptionTimeInterval' : SubscriptionTimeInterval,
     'writerPrincipalId' : IDL.Text,
     'expirationDate' : IDL.Int,
-    'paymentFee' : IDL.Nat32,
+    'paymentFee' : IDL.Text,
     'readerPrincipalId' : IDL.Text,
   });
   const Result_2 = IDL.Variant({ 'ok' : PaymentRequest, 'err' : IDL.Text });
@@ -49,17 +49,17 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const UpdateSubscriptionDetailsModel = IDL.Record({
-    'weeklyFee' : IDL.Opt(IDL.Nat32),
-    'lifeTimeFee' : IDL.Opt(IDL.Nat32),
-    'annuallyFee' : IDL.Opt(IDL.Nat32),
-    'monthlyFee' : IDL.Opt(IDL.Nat32),
+    'weeklyFee' : IDL.Opt(IDL.Nat),
+    'lifeTimeFee' : IDL.Opt(IDL.Nat),
+    'annuallyFee' : IDL.Opt(IDL.Nat),
+    'monthlyFee' : IDL.Opt(IDL.Nat),
     'publicationInformation' : IDL.Opt(IDL.Tuple(IDL.Principal, IDL.Text)),
   });
   return IDL.Service({
     'checkMyExpiredSubscriptionsNotifications' : IDL.Func([], [], []),
     'completeSubscriptionEvent' : IDL.Func([IDL.Text], [Result_1], []),
     'createPaymentRequestAsReader' : IDL.Func(
-        [IDL.Text, SubscriptionTimeInterval, IDL.Nat32],
+        [IDL.Text, SubscriptionTimeInterval, IDL.Nat],
         [Result_2],
         [],
       ),

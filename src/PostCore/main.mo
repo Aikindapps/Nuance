@@ -1874,6 +1874,56 @@ actor PostCore {
     Buffer.toArray(postsBuffer);
   };
 
+  //returns the caller's planned posts key properties
+  public shared query ({ caller }) func getMyPlannedPosts(
+    indexFrom : Nat32,
+    indexTo : Nat32,
+  ) : async [PostKeyProperties] {
+
+    Debug.print("PostCore->getMyPosts");
+
+    var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(10);
+    let callerPrincipalId = Principal.toText(caller);
+    let userPosts = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
+    let now = U.epochTime();
+
+    // filter: only planned posts
+    // posts are already stored desc by created time
+    let postIds = Array.filter<Text>(
+      List.toArray(userPosts),
+      func filter(postId : Text) : Bool {
+        let isDraft = U.safeGet(isDraftHashMap, postId, false);
+        let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
+        return (not isDraft) and publishedDate > now;
+      },
+    );
+
+    // prevent underflow error
+    let l : Nat = postIds.size();
+    if (l == 0) {
+      return [];
+    };
+
+    let lastIndex : Nat = l - 1;
+
+    let indexStart = Nat32.toNat(indexFrom);
+    if (indexStart > lastIndex) {
+      return [];
+    };
+
+    var indexEnd = Nat32.toNat(indexTo) - 1;
+    if (indexEnd > lastIndex) {
+      indexEnd := lastIndex;
+    };
+
+    for (i in Iter.range(indexStart, indexEnd)) {
+      let postListItem = buildPostKeyProperties(postIds[i]);
+      postsBuffer.add(postListItem);
+    };
+
+    Buffer.toArray(postsBuffer);
+  };
+
   //returns the caller's posts
   public shared query ({ caller }) func getMyPublishedPosts(
     indexFrom : Nat32,

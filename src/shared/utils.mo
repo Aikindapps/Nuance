@@ -334,6 +334,30 @@ module {
 
     num;
   };
+
+  public func optNatToOptText(nat : ?Nat) : ?Text {
+    switch(nat) {
+      case(?value) {
+        ?Nat.toText(value);
+      };
+      case(null) {
+        return null;
+      };
+    };
+  };
+
+  public func optTextToOptNat(txt : ?Text) : ?Nat {
+    switch(txt) {
+      case(?value) {
+        ?textToNat(value);
+      };
+      case(null) {
+        return null;
+      };
+    };
+  };
+
+
   public func arrayContains(array : [Text], element : Text) : Bool {
     for (el in array.vals()) {
       if (Text.equal(el, element)) {

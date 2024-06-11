@@ -8,7 +8,7 @@ export interface PaymentRequest {
   'subscriptionTimeInterval' : SubscriptionTimeInterval,
   'writerPrincipalId' : string,
   'expirationDate' : bigint,
-  'paymentFee' : number,
+  'paymentFee' : string,
   'readerPrincipalId' : string,
 }
 export interface ReaderSubscriptionDetails {
@@ -30,7 +30,7 @@ export interface SubscriptionEvent {
   'endTime' : bigint,
   'subscriptionTimeInterval' : SubscriptionTimeInterval,
   'writerPrincipalId' : string,
-  'paymentFee' : number,
+  'paymentFee' : string,
   'isWriterSubscriptionActive' : boolean,
   'readerPrincipalId' : string,
 }
@@ -39,26 +39,26 @@ export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Monthly' : null } |
   { 'Annually' : null };
 export interface UpdateSubscriptionDetailsModel {
-  'weeklyFee' : [] | [number],
-  'lifeTimeFee' : [] | [number],
-  'annuallyFee' : [] | [number],
-  'monthlyFee' : [] | [number],
+  'weeklyFee' : [] | [bigint],
+  'lifeTimeFee' : [] | [bigint],
+  'annuallyFee' : [] | [bigint],
+  'monthlyFee' : [] | [bigint],
   'publicationInformation' : [] | [[Principal, string]],
 }
 export interface WriterSubscriptionDetails {
   'writerSubscriptions' : Array<SubscriptionEvent>,
-  'weeklyFee' : [] | [number],
+  'weeklyFee' : [] | [string],
   'writerPrincipalId' : string,
-  'lifeTimeFee' : [] | [number],
+  'lifeTimeFee' : [] | [string],
   'isSubscriptionActive' : boolean,
-  'annuallyFee' : [] | [number],
-  'monthlyFee' : [] | [number],
+  'annuallyFee' : [] | [string],
+  'monthlyFee' : [] | [string],
 }
 export interface _SERVICE {
   'checkMyExpiredSubscriptionsNotifications' : ActorMethod<[], undefined>,
   'completeSubscriptionEvent' : ActorMethod<[string], Result_1>,
   'createPaymentRequestAsReader' : ActorMethod<
-    [string, SubscriptionTimeInterval, number],
+    [string, SubscriptionTimeInterval, bigint],
     Result_2
   >,
   'disperseTokensForSuccessfulSubscription' : ActorMethod<[string], Result_3>,

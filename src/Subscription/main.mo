@@ -32,10 +32,10 @@ actor Subscription {
     //all the details of the writer's subscription info and history
     type WriterSubscriptionDetails = {
         writerPrincipalId: Text;
-        weeklyFee: ?Nat32;
-        monthlyFee: ?Nat32;
-        annuallyFee: ?Nat32;
-        lifeTimeFee: ?Nat32;
+        weeklyFee: ?Text; //stored as Nat, served as Text
+        monthlyFee: ?Text; //stored as Nat, served as Text
+        annuallyFee: ?Text; //stored as Nat, served as Text
+        lifeTimeFee: ?Text; //stored as Nat, served as Text
         isSubscriptionActive: Bool;
         writerSubscriptions: [SubscriptionEvent];
     };
@@ -48,10 +48,10 @@ actor Subscription {
     //used as argument in updateSubscriptionDetails function
     type UpdateSubscriptionDetailsModel = {
         publicationInformation: ?(paymentReveiverAddress: Principal, publicationCanisterId: Text);
-        weeklyFee: ?Nat32;
-        monthlyFee: ?Nat32;
-        annuallyFee: ?Nat32;
-        lifeTimeFee: ?Nat32;
+        weeklyFee: ?Nat;
+        monthlyFee: ?Nat;
+        annuallyFee: ?Nat;
+        lifeTimeFee: ?Nat;
     };
     //single subscription event
     type SubscriptionEvent = {
@@ -59,7 +59,7 @@ actor Subscription {
         writerPrincipalId: Text;
         readerPrincipalId: Text;
         subscriptionTimeInterval: SubscriptionTimeInterval;
-        paymentFee: Nat32;
+        paymentFee: Text; //stored as Nat, served as Text
         startTime: Int;
         endTime: Int;
         isWriterSubscriptionActive: Bool;
@@ -71,7 +71,7 @@ actor Subscription {
         writerPrincipalId: Text;
         readerPrincipalId: Text;
         subscriptionTimeInterval: SubscriptionTimeInterval;
-        paymentFee: Nat32;
+        paymentFee: Text; //stored as Nat, served as Text
         expirationDate: Int;
         subaccount: Blob;
     };
@@ -87,13 +87,13 @@ actor Subscription {
     //key: writer principal id, value: the address that will receive the subscription fee
     stable var writerPrincipalIdToPaymentReceiverAddress = Map.new<Text, Principal>();
     //key: writer principal id, value: weekly subscription fee
-    stable var writerPrincipalIdToWeeklySubscriptionFee = Map.new<Text, Nat32>();
+    stable var writerPrincipalIdToWeeklySubscriptionFee = Map.new<Text, Nat>();
     //key: writer principal id, value: monthly subscription fee
-    stable var writerPrincipalIdToMonthlySubscriptionFee = Map.new<Text, Nat32>();
+    stable var writerPrincipalIdToMonthlySubscriptionFee = Map.new<Text, Nat>();
     //key: writer principal id, value: annually subscription fee
-    stable var writerPrincipalIdToAnnuallySubscriptionFee = Map.new<Text, Nat32>();
+    stable var writerPrincipalIdToAnnuallySubscriptionFee = Map.new<Text, Nat>();
     //key: writer principal id, value: life time subscription fee
-    stable var writerPrincipalIdToLifeTimeSubscriptionFee = Map.new<Text, Nat32>();
+    stable var writerPrincipalIdToLifeTimeSubscriptionFee = Map.new<Text, Nat>();
     //key: writer principal id, value: array of subscription events of the writer
     stable var writerPrincipalIdToSubscriptionEventIds = Map.new<Text, [Text]>();
 
@@ -111,7 +111,7 @@ actor Subscription {
     //key: subscription event id, value: subscription interval (weekly, monthly etc.)
     stable var subscriptionEventIdToSubscriptionTimeInterval = Map.new<Text, SubscriptionTimeInterval>();
     //key: subscription event id, value: amount of the payment sent at the time of the subscription
-    stable var subscriptionEventIdToPaymentFee = Map.new<Text, Nat32>();
+    stable var subscriptionEventIdToPaymentFee = Map.new<Text, Nat>();
     //key: subscription event id, value: unix time of subscription start
     stable var subscriptionEventIdToStartTime = Map.new<Text, Int>();
     //key: subscription event id, value: unix time of subscription end
@@ -124,7 +124,7 @@ actor Subscription {
     //key: subscription event id, value: pending payment request subscription time interval
     stable var subscriptionEventIdToPaymentRequestSubscriptionTimeInterval = Map.new<Text, SubscriptionTimeInterval>();
     //key: subscription event id, value: pending payment request fee
-    stable var subscriptionEventIdToPaymentRequestFee = Map.new<Text, Nat32>();
+    stable var subscriptionEventIdToPaymentRequestFee = Map.new<Text, Nat>();
     //key: subscription event id, value: unix time of payment request expiration date
     stable var subscriptionEventIdToPaymentRequestExpireTime = Map.new<Text, Int>();
 
@@ -133,7 +133,7 @@ actor Subscription {
     stable var pendingStuckTokenDisbursements = Map.new<Text, Text>();
     //a map to hold the regular token disbursements for each subscription event - to writer and the Nuance DAO
     //key: subscriptionEventId, value: [(receiver account principal id, receiver subaccount, amount)]
-    stable var pendingTokenDisbursements = Map.new<Text, [(Text, ?Blob, Nat32)]>();
+    stable var pendingTokenDisbursements = Map.new<Text, [(Text, ?Blob, Nat)]>();
 
     //#region - public query functions
 
@@ -371,7 +371,7 @@ actor Subscription {
     //reader calls this method with the principal id of the writer and the time interval
     //if the request is valid, it returns the PaymentRequest object
     //reader then uses this object to send the funds and complete the payment
-    public shared ({caller}) func createPaymentRequestAsReader(writerPrincipalId: Text, timeInterval: SubscriptionTimeInterval, amount: Nat32) : async Result.Result<PaymentRequest, Text> {
+    public shared ({caller}) func createPaymentRequestAsReader(writerPrincipalId: Text, timeInterval: SubscriptionTimeInterval, amount: Nat) : async Result.Result<PaymentRequest, Text> {
         //before any payment request creation, make sure there is no expired request
         deleteExpiredPaymentRequests();
 
@@ -386,8 +386,8 @@ actor Subscription {
                 case(#Weekly) {
                     switch(writerSubscriptionDetails.weeklyFee) {
                         case(?fee) {
-                            if(fee != amount){
-                                return #err("Invalid fee!, should be " # Nat32.toText(fee) # " NUA tokens.");
+                            if(U.textToNat(fee) != amount){
+                                return #err("Invalid fee!, should be " # fee # " NUA tokens.");
                             }
                         };
                         case(null) {
@@ -398,8 +398,8 @@ actor Subscription {
                 case(#Monthly) {
                     switch(writerSubscriptionDetails.monthlyFee) {
                         case(?fee) {
-                            if(fee != amount){
-                                return #err("Invalid fee!");
+                            if(U.textToNat(fee) != amount){
+                                return #err("Invalid fee!, should be " # fee # " NUA tokens.");
                             }
                         };
                         case(null) {
@@ -410,8 +410,8 @@ actor Subscription {
                 case(#Annually){
                     switch(writerSubscriptionDetails.annuallyFee) {
                         case(?fee) {
-                            if(fee != amount){
-                                return #err("Invalid fee!");
+                            if(U.textToNat(fee) != amount){
+                                return #err("Invalid fee!, should be " # fee # " NUA tokens.");
                             }
                         };
                         case(null) {
@@ -422,8 +422,8 @@ actor Subscription {
                 case(#LifeTime){
                     switch(writerSubscriptionDetails.lifeTimeFee) {
                         case(?fee) {
-                            if(fee != amount){
-                                return #err("Invalid fee!");
+                            if(U.textToNat(fee) != amount){
+                                return #err("Invalid fee!, should be " # fee # " NUA tokens.");
                             }
                         };
                         case(null) {
@@ -476,8 +476,8 @@ actor Subscription {
                     subaccount = ?paymentRequestDetails.subaccount;
                 });
 
-                if(Nat32.fromNat(balance) == paymentRequestDetails.paymentFee){
-                    //if here, reader has sent the exact amount of tokens to the receiver account
+                if(balance >= U.textToNat(paymentRequestDetails.paymentFee)){
+                    //if here, reader has sent enough tokens to the receiver account
                     //delete the payment request first
                     deletePaymentRequest(eventId);
                     //update the internal state and add the token disbursements
@@ -619,19 +619,19 @@ actor Subscription {
         let expriationDate = now + MINUTE;
         let writerDetails = buildWriterSubscriptionDetails(writerPrincipalId);
         
-        var fee = Nat32.fromNat(0);
+        var fee = 0;
         switch(timeInterval) {
             case(#Weekly) {
-                fee := Option.get(writerDetails.weeklyFee, Nat32.fromNat(0));
+                fee := U.textToNat(Option.get(writerDetails.weeklyFee, "0"));
             };
             case(#Monthly) {
-                fee := Option.get(writerDetails.monthlyFee, Nat32.fromNat(0));
+                fee := U.textToNat(Option.get(writerDetails.monthlyFee, "0"));
             };
             case(#Annually){
-                fee := Option.get(writerDetails.annuallyFee, Nat32.fromNat(0));
+                fee := U.textToNat(Option.get(writerDetails.annuallyFee, "0"));
             };
             case(#LifeTime){
-                fee := Option.get(writerDetails.lifeTimeFee, Nat32.fromNat(0));
+                fee := U.textToNat(Option.get(writerDetails.lifeTimeFee, "0"));
             };
         };
 
@@ -713,20 +713,20 @@ actor Subscription {
         Map.set(subscriptionEventIdToWriterPrincipalId, thash, subscriptionEventId, paymentRequest.writerPrincipalId);
         Map.set(subscriptionEventIdToReaderPrincipalId, thash, subscriptionEventId, paymentRequest.readerPrincipalId);
         Map.set(subscriptionEventIdToSubscriptionTimeInterval, thash, subscriptionEventId, paymentRequest.subscriptionTimeInterval);
-        Map.set(subscriptionEventIdToPaymentFee, thash, subscriptionEventId, paymentRequest.paymentFee);
+        Map.set(subscriptionEventIdToPaymentFee, thash, subscriptionEventId, U.textToNat(paymentRequest.paymentFee));
         Map.set(subscriptionEventIdToStartTime, thash, subscriptionEventId, now);
         Map.set(subscriptionEventIdToEndTime, thash, subscriptionEventId, getSubscriptionEndTimeByTimeInterval(now, paymentRequest.subscriptionTimeInterval));
 
         //add the token disbursements to pendingTokenDisbursements map
         let nuaTokenFeeFloat = Float.fromInt(ENV.NUA_TOKEN_FEE);
-        let totalPaymentAmountFloat = Float.fromInt(Nat32.toNat(paymentRequest.paymentFee)) - 2 * nuaTokenFeeFloat;
+        let totalPaymentAmountFloat = Float.fromInt(U.textToNat(paymentRequest.paymentFee)) - 2 * nuaTokenFeeFloat;
         let nuanceDaoShareFloat = totalPaymentAmountFloat * ENV.SUBSCRIPTION_FEE_AMOUNT / 100;
         let writerShareFloat = totalPaymentAmountFloat - nuanceDaoShareFloat;
         let nuanceDaoShareNat = Option.get(Nat.fromText(Int.toText(Float.toInt(nuanceDaoShareFloat))), ENV.NUA_TOKEN_FEE);
         let writerShareNat = Option.get(Nat.fromText(Int.toText(Float.toInt(writerShareFloat))), ENV.NUA_TOKEN_FEE);
-        let disbursements : [(Text, ?Blob, Nat32)] = [
-            (paymentRequest.writerPrincipalId, null, Nat32.fromNat(writerShareNat)),
-            (ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID, ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT), Nat32.fromNat(nuanceDaoShareNat))
+        let disbursements : [(Text, ?Blob, Nat)] = [
+            (paymentRequest.writerPrincipalId, null, writerShareNat),
+            (ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID, ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT), nuanceDaoShareNat)
         ];
         Map.set(pendingTokenDisbursements, thash, subscriptionEventId, disbursements);
 
@@ -812,7 +812,7 @@ actor Subscription {
         for(disbursement in disbursements.vals()) {
             try{
                 let transferResult = await NuaCanister.icrc1_transfer({
-                    amount = Nat32.toNat(disbursement.2);
+                    amount = disbursement.2;
                     created_at_time = null;
                     fee = ?nuaTokenFee;
                     from_subaccount = ?subaccount;
@@ -833,7 +833,7 @@ actor Subscription {
         };
 
         //filter the disbursements using the successfulDisbursementIndexes
-        let filteredDisbursements = Buffer.Buffer<(Text, ?Blob, Nat32)>(0);
+        let filteredDisbursements = Buffer.Buffer<(Text, ?Blob, Nat)>(0);
         counter := 0;
         for(disbursement in disbursements.vals()) {
             if(not U.arrayContainsGeneric(Buffer.toArray(successfulDisbursementIndexes), counter, Nat.equal)){
@@ -908,10 +908,10 @@ actor Subscription {
     //build a WriterSubscriptionDetails from the principal id of the writer
     private func buildWriterSubscriptionDetails(principal: Text) : WriterSubscriptionDetails {
         {
-            annuallyFee = Map.get(writerPrincipalIdToAnnuallySubscriptionFee, thash, principal);
-            lifeTimeFee = Map.get(writerPrincipalIdToLifeTimeSubscriptionFee, thash, principal);
-            monthlyFee = Map.get(writerPrincipalIdToMonthlySubscriptionFee, thash, principal);
-            weeklyFee = Map.get(writerPrincipalIdToWeeklySubscriptionFee, thash, principal);
+            annuallyFee = U.optNatToOptText(Map.get(writerPrincipalIdToAnnuallySubscriptionFee, thash, principal));
+            lifeTimeFee = U.optNatToOptText(Map.get(writerPrincipalIdToLifeTimeSubscriptionFee, thash, principal));
+            monthlyFee = U.optNatToOptText(Map.get(writerPrincipalIdToMonthlySubscriptionFee, thash, principal));
+            weeklyFee = U.optNatToOptText(Map.get(writerPrincipalIdToWeeklySubscriptionFee, thash, principal));
             writerPrincipalId = principal;
             isSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal), false);
             writerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(writerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
@@ -923,10 +923,10 @@ actor Subscription {
     //build a WriterSubscriptionDetails from the principal id of the writer without the subscription history
     private func buildWriterSubscriptionDetailsLighter(principal: Text) : WriterSubscriptionDetails {
         {
-            annuallyFee = Map.get(writerPrincipalIdToAnnuallySubscriptionFee, thash, principal);
-            lifeTimeFee = Map.get(writerPrincipalIdToLifeTimeSubscriptionFee, thash, principal);
-            monthlyFee = Map.get(writerPrincipalIdToMonthlySubscriptionFee, thash, principal);
-            weeklyFee = Map.get(writerPrincipalIdToWeeklySubscriptionFee, thash, principal);
+            annuallyFee = U.optNatToOptText(Map.get(writerPrincipalIdToAnnuallySubscriptionFee, thash, principal));
+            lifeTimeFee = U.optNatToOptText(Map.get(writerPrincipalIdToLifeTimeSubscriptionFee, thash, principal));
+            monthlyFee = U.optNatToOptText(Map.get(writerPrincipalIdToMonthlySubscriptionFee, thash, principal));
+            weeklyFee = U.optNatToOptText(Map.get(writerPrincipalIdToWeeklySubscriptionFee, thash, principal));
             writerPrincipalId = principal;
             isSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal), false);
             writerSubscriptions = [];
@@ -954,7 +954,7 @@ actor Subscription {
             writerPrincipalId;
             readerPrincipalId = Option.get(Map.get(subscriptionEventIdToReaderPrincipalId, thash, eventId), "");
             subscriptionTimeInterval = Option.get(Map.get(subscriptionEventIdToSubscriptionTimeInterval, thash, eventId), #Weekly);
-            paymentFee = Option.get(Map.get(subscriptionEventIdToPaymentFee, thash, eventId), Nat32.fromNat(0));
+            paymentFee = Nat.toText(Option.get(Map.get(subscriptionEventIdToPaymentFee, thash, eventId), 0));
             startTime = Option.get(Map.get(subscriptionEventIdToStartTime, thash, eventId), 0);
             endTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
             isWriterSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
@@ -968,7 +968,7 @@ actor Subscription {
             writerPrincipalId = Option.get(Map.get(subscriptionEventIdToPaymentRequestWriterPrincipalId, thash, eventId), "");
             readerPrincipalId = Option.get(Map.get(subscriptionEventIdToPaymentRequestReaderPrincipalId, thash, eventId), "");
             subscriptionTimeInterval = Option.get(Map.get(subscriptionEventIdToPaymentRequestSubscriptionTimeInterval, thash, eventId), #Weekly);
-            paymentFee = Option.get(Map.get(subscriptionEventIdToPaymentRequestFee, thash, eventId), Nat32.fromNat(0));
+            paymentFee = Nat.toText(Option.get(Map.get(subscriptionEventIdToPaymentRequestFee, thash, eventId), 0));
             expirationDate = Option.get(Map.get(subscriptionEventIdToPaymentRequestExpireTime, thash, eventId), 0);
             subaccount = Blob.fromArray(U.natToSubAccount(U.textToNat(eventId)));
         }

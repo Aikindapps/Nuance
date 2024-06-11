@@ -252,6 +252,7 @@ export interface PostStore {
   myPublishedPosts: PostType[] | undefined;
   myAllPosts: PostType[] | undefined;
   submittedForReviewPosts: PostType[] | undefined;
+  plannedPosts: PostType[] | undefined;
   claps: string | undefined;
   isTagScreen: boolean;
   userPostIds: Array<string> | undefined;
@@ -328,6 +329,10 @@ export interface PostStore {
     indexTo: number
   ) => Promise<PostType[] | undefined>;
   getMySubmittedForReviewPosts: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<PostType[] | undefined>;
+  getMyPlannedPosts: (
     indexFrom: number,
     indexTo: number
   ) => Promise<PostType[] | undefined>;
@@ -502,6 +507,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   myPublishedPosts: undefined,
   myAllPosts: undefined,
   submittedForReviewPosts: undefined,
+  plannedPosts: undefined,
   claps: undefined,
   ClearSearchBar: false,
   isTagScreen: false,
@@ -1363,7 +1369,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const postsWithAvatars = await mergeAuthorAvatars(myDraftPosts);
       set({ myDraftPosts: postsWithAvatars });
 
-      return myDraftPosts;
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1385,7 +1391,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const postsWithAvatars = await mergeAuthorAvatars(myPublishedPosts);
       set({ myPublishedPosts: postsWithAvatars });
 
-      return myPublishedPosts;
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1412,7 +1418,29 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       );
       set({ submittedForReviewPosts: postsWithAvatars });
 
-      return submittedForReviewPosts;
+      return postsWithAvatars;
+    } catch (err: any) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  getMyPlannedPosts: async (
+    indexFrom: number,
+    indexTo: number
+  ): Promise<PostType[] | undefined> => {
+    try {
+      const coreActor = await getPostCoreActor();
+      const keyProperties = await coreActor.getMyPlannedPosts(
+        indexFrom,
+        indexTo
+      );
+      const plannedPosts = await fetchPostsByBuckets(keyProperties, true);
+      set({ plannedPosts });
+
+      const postsWithAvatars = await mergeAuthorAvatars(plannedPosts);
+      set({ submittedForReviewPosts: postsWithAvatars });
+
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1431,7 +1459,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const postsWithAvatars = await mergeAuthorAvatars(myAllPosts);
       set({ myAllPosts: postsWithAvatars });
 
-      return myAllPosts;
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
