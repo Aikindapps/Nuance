@@ -406,6 +406,9 @@ func filterForNotificationSettings(n : Notifications, caller: Principal) : Bool 
         case (#ReaderExpiredSubscription) {
           return settings.readerExpiredSubscription;
         };
+        case (#FaucetClaimAvailable){
+          return settings.faucetClaimAvailable;
+        };
      };
     };
   };
@@ -866,6 +869,10 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
 
         };
 
+        case (#FaucetClaimAvailable) {
+            createDirectNotificationInternal(notification)
+        };
+
 
         case (#ReaderExpiredSubscription) {
             createDirectNotificationInternal(notification)
@@ -1133,6 +1140,9 @@ func addBroadcast (notification : Notifications) : async Result.Result<(), Text>
   case (#ReaderExpiredSubscription) {
     return #err("Broadcast notifications for expired subscriptions are not supported");
   };
+  case (#FaucetClaimAvailable) {
+    return #err("Broadcast notifications for faucet claims are not supported");
+  };
   };
 };
 
@@ -1295,6 +1305,9 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
   };
   case (#ReaderExpiredSubscription) {
     return #err("Broadcast notifications for expired subscriptions are not supported");
+  };
+  case (#FaucetClaimAvailable) {
+    return #err("Broadcast notifications for faucet claims are not supported");
   };
   };
 };

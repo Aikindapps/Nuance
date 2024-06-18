@@ -20,6 +20,7 @@ module {
   #YouUnsubscribedFromAuthor; // Reader unsubscribes from author, notification to reader
   #AuthorExpiredSubscription; // Author loses subscriber
   #ReaderExpiredSubscription; // Reader loses subscription
+  #FaucetClaimAvailable;// User can collect tokens from faucet
 };
 
 public type Notifications = {
@@ -63,6 +64,7 @@ public type UserNotificationSettings = {
   expiredSubscription: Bool;
   authorExpiredSubscription: Bool;
   readerExpiredSubscription: Bool;
+  faucetClaimAvailable: Bool;
 };
 
 

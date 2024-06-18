@@ -1652,7 +1652,25 @@ actor User {
     };
     //if here, send the notification
     lastClaimNotificationDateHashMap.put(principal, now);
+
+    let user = buildUser(principal);
     //ToDo: send the notification to the user
+    ignore U.createNotification(#FaucetClaimAvailable, {
+      url = "";
+      articleId = "";
+      articleTitle = "";
+      authorPrincipal =  Principal.fromText("2vxsx-fae");
+      authorHandle = "";
+      comment = "";
+      isReply = false;
+      receiverPrincipal = Principal.fromText(principal);
+      receiverHandle = user.handle;
+      senderHandle = "User Canister";
+      senderPrincipal = Principal.fromActor(User);
+      tags = [];
+      tipAmount = "";
+      token = "NUA";
+    });
   };
 
   public shared ({caller}) func spendRestrictedTokensForTipping(bucketCanisterId: Text, postId: Text, amount: Nat) : async Result.Result<(), Text> {
