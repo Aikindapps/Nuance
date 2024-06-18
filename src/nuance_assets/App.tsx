@@ -82,6 +82,7 @@ const Routes = () => {
         { path: 'submitted-for-review', element: <SubmittedArticles /> },
         { path: 'articles', element: <PersonalArticles /> },
         { path: 'published', element: <PublishedArticles /> },
+        { path: 'planned', element: <div>Test</div> },
         { path: 'topics', element: <FollowedTags /> },
         { path: 'following', element: <Following /> },
         { path: 'followers', element: <Followers /> },

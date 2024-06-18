@@ -1,0 +1,241 @@
+@import "../../shared/styles/Colors";
+
+
+.custom-date-time-picker {
+    padding: 10px;
+   
+    
+
+    .form-group {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .date-time-picker {
+        display: flex;
+        flex-direction: column;
+        position: relative;  // Ensure the container has a positioning context
+
+        .custom-input {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid $second-accent-color;
+            margin: 10px 0px;
+
+            .calendar-icon {
+                margin-left: auto;
+                display: flex;
+                align-items: center;
+            }
+
+            .calendar-icon img {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    }
+
+    .access-select {
+        max-width: 200px;
+        border: none;
+        
+        .css-t3ipsp-control{
+        border: none;
+        box-shadow: none;
+        border-bottom: 1px solid $second-accent-color;
+        border-radius: 0;
+
+        :focus {
+            outline: none;
+        }
+
+    } 
+    .css-1nmdiq5-menu{
+        background: $primary-background-color;
+    .css-tr4s17-option{ //selected option
+            background: none;
+            color: currentColor;
+            &:hover{
+                background: darken($primary-background-color, 5%);
+                color: currentColor;
+            }
+        }
+    .css-d7l1ni-option{ //hovered option
+        background: darken($primary-background-color, 5%);
+        color: currentColor;
+    }
+    }
+
+    .css-qbdosj-Input{
+        padding: 0;
+    }
+
+
+    .css-13cymwt-control{
+        border: none;
+        border-bottom: 1px solid $second-accent-color;
+        border-radius: 0;
+       
+
+        .css-1fdsijx-ValueContainer{
+            padding: 0;
+        }
+    }
+    .css-1u9des2-indicatorSeparator{
+        display: none;
+    }
+    .css-tj5bde-Svg{
+        fill: #303E84;
+
+    }
+    }
+
+    .custom-calendar {
+        width: 247px;
+        height: 286px;
+
+        .react-datepicker {
+            //position: absolute;
+            z-index: 1050;  // High z-index to ensure it is on top
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+            font-size: 10px;
+
+            &__navigation-icon {
+                color: $primary-text-color;
+                border-color: $primary-text-color;
+                border-width: 1px 1px 0 0;
+
+                &::before {
+                    color: $primary-text-color;
+                border-color: $primary-text-color;
+                border-width: 1px 1px 0 0;
+                width: 10px;
+                height: 10px;
+                }
+            }
+            
+            &__triangle{
+                display: none;
+            }
+
+            &__navigation--previous {
+                border-right-color: #000;
+                left: 27px;
+                margin-top: 14px;
+              
+            }
+
+
+            &__navigation--next {
+                border-left-color: #000;
+                right:27px;
+                margin-top: 14px;
+            }
+
+            &__header {
+                background-color: #fff;
+                border-bottom: none;
+                margin-top:  15px;
+            }
+
+            &__current-month {
+                font-size: 12px;
+                font-weight: 500;
+                color: #666;
+            }
+
+            &__day-name {
+                width: 21px;
+                line-height: 21px;
+                color: #999;
+            }
+            &__day {
+                width: 21px;
+                line-height: 21px;
+                color: #1A1A1A;
+
+                &:hover {
+                   border-radius: 100%;
+                }
+            }
+
+            &__day-names{
+                font-size: 12px;
+                font-weight: 500;
+                color: #999;
+                margin-top: 5px;
+            }
+
+            &__day--selected, &__day--keyboard-selected {
+                background-color: $dark-primary-background-color;
+                color: white;
+                border-radius: 100%;
+            }
+            &__day--today {
+                border: .5px solid $second-accent-color;
+                border-radius: 100%;
+
+            }
+
+            &__month-container {
+                width: 247px;
+    height: 286px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                position: relative;  // Ensure the time picker can be positioned relative to this
+                z-index: 0;
+
+            }
+
+            &__month {
+               margin: 0px;
+            }
+
+            .custom-time-input {
+                display: flex;
+                align-items: center;
+                margin-bottom: 25px;
+
+                img {
+                    width: 20px;
+                    height: 20px;
+                    margin-right: 10px;
+                }
+
+                select {
+                    border: none;
+                    border-bottom: 1px solid $second-accent-color;
+                    background: none;
+                    font-size: 16px;
+                    margin: 0 5px;
+                    appearance: none;
+                    cursor: pointer;
+                    padding: 10px;
+
+                    &:focus {
+                        outline: none;
+                    }
+                }
+
+                select::-ms-expand {
+                    display: none;
+                }
+
+                option {
+                    background: white;
+                    color: black;
+                }
+            }
+        }
+    }
+}

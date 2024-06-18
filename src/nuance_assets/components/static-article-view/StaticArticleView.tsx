@@ -20,6 +20,12 @@ export const StaticArticleView = (props: {
   };
   return (
     <div style={{ paddingRight: '15%', width: '100%' }}>
+      {post?.isMembersOnly && (
+        <div className='static-article-members-only'>
+          <img src={icons.MEMBERS_ONLY} className='static-members-only-icon'></img>
+
+        </div>
+      )}
       <div className='title-post-info-wrapper'>
         {post.isPremium ? (
           <img
@@ -38,9 +44,9 @@ export const StaticArticleView = (props: {
           style={
             post.isPublication
               ? {
-                  fontFamily: fontType,
-                  color: darkOptionsAndColors.color,
-                }
+                fontFamily: fontType,
+                color: darkOptionsAndColors.color,
+              }
               : {}
           }
           className='title'
@@ -72,7 +78,7 @@ export const StaticArticleView = (props: {
         />
         {post.tags?.map((tag) => {
           return (
-            <span key={tag.tagId} className='tag-link' onClick={() => {}}>
+            <span key={tag.tagId} className='tag-link' onClick={() => { }}>
               {tag.tagName}
             </span>
           );

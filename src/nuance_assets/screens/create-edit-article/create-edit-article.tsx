@@ -46,6 +46,7 @@ import { PublisherStore } from '../../store/publisherStore';
 import { UserStore } from '../../store/userStore';
 import { AuthStore } from '../../store/authStore';
 import { TagModel } from 'src/declarations/PostCore/PostCore.did';
+import SchedulePublish from '../../components/schedule-publish/schedule-publish';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
@@ -101,20 +102,38 @@ const CreateEditArticle = () => {
 
   //returns the current status of the post
   const getCurrentStatus = () => {
+    const currentDate = new Date();
+
     if (location.pathname === '/article/new') {
       return 'Not saved';
-    } else {
-      if (lastSavedPost?.isDraft) {
-        if (userPublicationsWriter.includes(lastSavedPost.handle)) {
-          return 'Submitted for review';
-        } else {
-          return 'Draft';
-        }
+    }
+
+    if (lastSavedPost?.isDraft) {
+      if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+        return 'Submitted for review';
+      } else {
+        return 'Draft';
+      }
+    }
+
+    if (lastSavedPost?.publishedDate) {
+      // Assuming lastSavedPost.publishedDate is in milliseconds
+      const scheduledDate = new Date(Number(lastSavedPost.publishedDate));
+
+
+      if (scheduledDate > currentDate) {
+        return 'Planned';
       } else {
         return 'Published';
       }
     }
+
+    return 'Published';
   };
+
+
+
+
 
   const isPublishButtonVisible = () => {
     if (lastSavedPost) {
@@ -183,6 +202,7 @@ const CreateEditArticle = () => {
       claps: '',
       category: '',
       isPremium: false,
+      isMembersOnly: false,
       bucketCanisterId: '',
       wordCount: '',
       isPublication: false,
@@ -307,6 +327,8 @@ const CreateEditArticle = () => {
     setLoading(false);
   };
 
+
+
   //refresh the user related fields if the user object changes
   useEffect(() => {
     fillUserRelatedFields();
@@ -351,6 +373,48 @@ const CreateEditArticle = () => {
   //menu vars
   const [copyArticle, setCopyArticle] = useState(false);
   const [shownMeatball, setShownMeatball] = useState(false);
+
+  //schedule publish
+  const [date, setDate] = useState<Date | null>(new Date());
+  const [time, setTime] = useState({ hours: new Date().getHours().toString().padStart(2, '0'), minutes: new Date().getMinutes().toString().padStart(2, '0') });
+  const [access, setAccess] = useState<{ value: string, label: string }>({ value: 'public', label: 'Public' });
+
+  const handleDateChange = (newDate: Date | null) => {
+    setDate(newDate);
+  };
+
+  const handleTimeChange = (newTime: { hours: string, minutes: string }) => {
+    setTime(newTime);
+  };
+
+  const handleAccessChange = (newAccess: { value: string, label: string }) => {
+    setAccess(newAccess);
+  };
+
+  const handleScheduledPublishDate = (): [] | [bigint] => {
+    if (date) {
+      const newDate = new Date(date);
+      newDate.setHours(parseInt(time.hours, 10));
+      newDate.setMinutes(parseInt(time.minutes, 10));
+
+      const currentDate = new Date();
+      if (newDate <= currentDate) {
+        return [];
+      }
+
+      const milliseconds = BigInt(newDate.getTime());
+      return [milliseconds];
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    if (lastSavedPost) {
+      setAccess({ value: lastSavedPost.isMembersOnly ? 'members-only' : 'public', label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public' });
+      handleAccessChange({ value: lastSavedPost.isMembersOnly ? 'members-only' : 'public', label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public' });
+    }
+  }, [lastSavedPost]);
+
 
   //set post fields
   const setIsDraft = (isDraft: boolean) => {
@@ -493,6 +557,7 @@ const CreateEditArticle = () => {
     const result = await convertImagesToUrls(postHtml, savingPost.headerImage);
     const contentWithUrls = result?.contentWithUrls;
     const headerUrl = result?.headerUrl;
+
     if (lastSavedPost) {
       //edit article
       let isPublication = user?.handle !== selectedHandle;
@@ -516,8 +581,8 @@ const CreateEditArticle = () => {
             isPublication: true,
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
-            isMembersOnly: false,
-            scheduledPublishedDate: []
+            isMembersOnly: access.value === 'members-only',
+            scheduledPublishedDate: handleScheduledPublishDate() || []
           });
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
@@ -564,8 +629,8 @@ const CreateEditArticle = () => {
             isPublication: false,
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
-            isMembersOnly: false,
-            scheduledPublishedDate: []
+            isMembersOnly: access.value === 'members-only',
+            scheduledPublishedDate: handleScheduledPublishDate() || []
           });
           if (saveResult) {
             setSavingPost(saveResult);
@@ -580,6 +645,7 @@ const CreateEditArticle = () => {
       //new article
       let isPublication = user?.handle !== selectedHandle;
       if (isPublication) {
+
         //create a publication post
         let savePublicationResult = await savePublicationPost({
           title: savingPost.title,
@@ -596,8 +662,8 @@ const CreateEditArticle = () => {
           isPublication: true,
           postId: savingPost.postId,
           handle: selectedHandle,
-          isMembersOnly: false,
-          scheduledPublishedDate: []
+          isMembersOnly: access.value === 'members-only',
+          scheduledPublishedDate: handleScheduledPublishDate() || []
         });
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
@@ -627,8 +693,8 @@ const CreateEditArticle = () => {
           isPublication: false,
           postId: savingPost.postId,
           handle: selectedHandle,
-          isMembersOnly: false,
-          scheduledPublishedDate: []
+          isMembersOnly: access.value === 'members-only',
+          scheduledPublishedDate: handleScheduledPublishDate() || []
         });
         if (saveResult) {
           setSavingPost(saveResult);
@@ -680,8 +746,7 @@ const CreateEditArticle = () => {
               darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
             }
           >
-            Publish and mint this article and create NFT keys that people need
-            to buy to read the article.
+            Publish and mint as an NFT gated limited edition article.
             <br /> <br /> You can then no longer edit this article or un-publish
             it....ever.
           </div>,
@@ -1476,6 +1541,15 @@ const CreateEditArticle = () => {
                         selectedIndex={radioButtonIndex}
                       />
                     )}
+                  <div className='schedule-publish-container'>
+                    <SchedulePublish
+                      onDateChange={handleDateChange}
+                      onTimeChange={handleTimeChange}
+                      onAccessChange={handleAccessChange}
+                      initialAccess={access}
+                      isPremium={radioButtonIndex === 2 || lastSavedPost?.isPremium}
+                    />
+                  </div>
                   {getManageItems()}
                 </div>
               </div>
@@ -1490,9 +1564,11 @@ const CreateEditArticle = () => {
             <div className='edit-article-right-content'>
               {/* if the post is premium, act like the read-article screen. if not, simply show the input fields */}
               {isEditAllowed() ? (
+
                 <EditArticleInputFields
                   isMobile={isMobile()}
                   lastSavedPost={lastSavedPost}
+                  membersOnly={access.value === 'members-only' && radioButtonIndex != 2}
                   savingPost={savingPost}
                   postHtml={postHtml}
                   darkTheme={darkTheme}

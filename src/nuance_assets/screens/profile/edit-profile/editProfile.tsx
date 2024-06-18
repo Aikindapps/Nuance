@@ -99,7 +99,6 @@ const EditProfile = () => {
   }
 
   const handleUpdateSubscriptionDetails = async () => {
-    console.log('Saving subscription details:', subscriptionDetails);
 
     const convertToE8s = (fee: string | undefined) =>
       fee ? Number(fee) * 1e8 : undefined;
@@ -362,7 +361,7 @@ const EditProfile = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -636,9 +635,9 @@ const EditProfile = () => {
           style={
             !isAddNewSocialLinkActive()
               ? {
-                  cursor: 'not-allowed',
-                  opacity: '0.5',
-                }
+                cursor: 'not-allowed',
+                opacity: '0.5',
+              }
               : {}
           }
           className='edit-profile-add-new-social-channel'
@@ -683,11 +682,11 @@ const EditProfile = () => {
             style={
               !validate()
                 ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                    width: '120px',
-                  }
+                  cursor: 'not-allowed',
+                  background: 'gray',
+                  borderColor: 'gray',
+                  width: '120px',
+                }
                 : { width: '120px' }
             }
           >

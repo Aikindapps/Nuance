@@ -102,10 +102,13 @@ export type PostType = {
   claps: string;
   category: string;
   isPremium: boolean;
+  isMembersOnly: boolean;
   nftCanisterId?: [] | [string];
   premiumArticleSaleInfo?: PremiumArticleSaleInformation;
   bucketCanisterId: string;
   wordCount: string;
+
+  principal?: string;
 
   // populated for post lists after calling
   // getUsersByHandles in User canister

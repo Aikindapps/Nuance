@@ -67,7 +67,6 @@ const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
 
                     if (canisterId) {
                         const details = await getPublicationSubscriptionDetailsAsEditor(canisterId);
-                        console.log('Subscription Details:', details as WriterSubscriptionDetailsConverted);
                         if (details) {
                             setStats({
                                 subscribers: details.subscribersCount || 0,
