@@ -61,7 +61,7 @@ actor User {
   stable var MAX_DAILY_REGISTRATION = 100;
   stable var isClaimActive = false;
   stable var claimSubaccountIndex = 0;
-  stable var maxClaimTokens = 5_000_000_000; //50 NUA tokens
+  stable var maxClaimTokens = 5_001_000_000; //50.001 NUA tokens - including the fee
   stable var claimedTokensCounter = 0;
 
   stable var principalId : [(Text, Text)] = [];
@@ -84,6 +84,7 @@ actor User {
   stable var myFollowers : [(Text, [Text])] = []; //who follows an account
   stable var lastLogins : [(Text, Int)] = [];
   stable var lastClaimDate : [(Text, Int)] = [];
+  stable var lastClaimNotificationDate : [(Text, Int)] = [];
   stable var claimSubaccountIndexes : [(Text, Nat)] = [];
   stable var claimBlockedUsers : [(Text, Text)] = [];
 
@@ -112,6 +113,7 @@ actor User {
   var lastLoginsHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var claimSubaccountIndexesHashMap = HashMap.HashMap<Text, Nat>(initCapacity, isEq, Text.hash);
   var lastClaimDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
+  var lastClaimNotificationDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var claimBlockedUsersHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
@@ -1567,6 +1569,92 @@ actor User {
     };
   };
 
+  public shared ({caller}) func checkMyClaimNotification() : async () {
+    if(not isClaimActive){
+      return
+    };
+    Debug.print("User: checkMyClaimNotification");
+    let now = Time.now();
+    let principal = Principal.toText(caller);
+    switch (handleHashMap.get(principal)) {
+      case (?p) {
+        //caller has an account
+        //firstly, check if the caller has been blocked
+        switch(claimBlockedUsersHashMap.get(principal)) {
+          case(?value) {
+            return;
+          };
+          case(null) {};
+        };
+
+        //check if the user has claimed any tokens yet
+        switch(lastClaimDateHashMap.get(principal)) {
+          case(?lastClaimDate) {
+            //check if the user is eligible to claim tokens
+            //get the balance of the restricted tokens
+            let userSubaccountIndex = U.safeGet(claimSubaccountIndexesHashMap, principal, 0);
+            let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
+            let balance = await NuaLedgerCanister.icrc1_balance_of({
+              owner = Principal.fromActor(User);
+              subaccount = ?Blob.fromArray(U.natToSubAccount(userSubaccountIndex));
+            });
+            let WEEK : Int = 86400000000000 * 7;
+            if(lastClaimDate < now - WEEK and balance < maxClaimTokens){
+              //user is eligible to claim tokens
+              //check if the user has been notified yet
+              switch(lastClaimNotificationDateHashMap.get(principal)) {
+                case(?lastNotificationDate) {
+                  //check if the lastNotificationDate is after the lastClaimDate
+                  if(lastNotificationDate > lastClaimDate){
+                    //the user has already been notified
+                    //don't send the notification again
+                    return;
+                  }
+                  else{
+                    //user has not been notified yet
+                    //notify the user
+                  }
+                };
+                case(null) {
+                  //user has not been notified ever
+                  //notify the user
+                };
+              };
+            }
+            else{
+              //one week has not passed yet
+              //don't send the notification
+              return;
+            }
+          };
+          case(null) {
+            //user has not claimed any tokens yet
+            //user is eligible to claim tokens
+            //check if the user has been notified yet
+            switch(lastClaimNotificationDateHashMap.get(principal)) {
+              case(?value) {
+                //user has already been notified
+                //don't send the notification again
+                return
+              };
+              case(null) {
+                //user has not been notified ever
+                //notify the user
+              };
+            };
+          };
+        };
+      };
+      case (null) {
+        //caller doesn't have an nuance account
+        return;
+      };
+    };
+    //if here, send the notification
+    lastClaimNotificationDateHashMap.put(principal, now);
+    //ToDo: send the notification to the user
+  };
+
   public shared ({caller}) func spendRestrictedTokensForTipping(bucketCanisterId: Text, postId: Text, amount: Nat) : async Result.Result<(), Text> {
     let principal = Principal.toText(caller);
     switch(claimSubaccountIndexesHashMap.get(principal)) {
@@ -2168,6 +2256,7 @@ actor User {
     myFollowers := Iter.toArray(myFollowersHashMap.entries());
     lastLogins := Iter.toArray(lastLoginsHashMap.entries());
     lastClaimDate := Iter.toArray(lastClaimDateHashMap.entries());
+    lastClaimNotificationDate := Iter.toArray(lastClaimNotificationDateHashMap.entries());
     claimBlockedUsers := Iter.toArray(claimBlockedUsersHashMap.entries());
     claimSubaccountIndexes := Iter.toArray(claimSubaccountIndexesHashMap.entries());
 
@@ -2199,6 +2288,7 @@ actor User {
     myFollowersHashMap := HashMap.fromIter(myFollowers.vals(), initCapacity, isEq, Text.hash);
     lastLoginsHashMap := HashMap.fromIter(lastLogins.vals(), initCapacity, isEq, Text.hash);
     lastClaimDateHashMap := HashMap.fromIter(lastClaimDate.vals(), initCapacity, isEq, Text.hash);
+    lastClaimNotificationDateHashMap := HashMap.fromIter(lastClaimNotificationDate.vals(), initCapacity, isEq, Text.hash);
     claimBlockedUsersHashMap := HashMap.fromIter(claimBlockedUsers.vals(), initCapacity, isEq, Text.hash);
     claimSubaccountIndexesHashMap := HashMap.fromIter(claimSubaccountIndexes.vals(), initCapacity, isEq, Text.hash);
 
@@ -2216,6 +2306,7 @@ actor User {
     accountIdsToHandleEntries := [];
     lastLogins := [];
     lastClaimDate := [];
+    lastClaimNotificationDate := [];
     claimBlockedUsers := [];
     claimSubaccountIndexes := [];
   };

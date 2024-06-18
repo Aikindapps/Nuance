@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../UI/Button/Button';
 import {
   ApplaudListItem,
+  ClaimTransactionHistoryItem,
   PremiumPostActivityListItem,
   TransactionListItem,
   UserType,
@@ -34,7 +35,12 @@ const Wallet = () => {
   const [ownedKeys, setOwnedKeys] = useState(0);
   const [soldKeys, setSoldKeys] = useState(0);
   const [displayingActivities, setDisplayingActivities] = useState<
-    (PremiumPostActivityListItem | ApplaudListItem | TransactionListItem)[]
+    (
+      | PremiumPostActivityListItem
+      | ApplaudListItem
+      | TransactionListItem
+      | ClaimTransactionHistoryItem
+    )[]
   >([]);
 
   //NFT feature toggle
@@ -75,6 +81,7 @@ const Wallet = () => {
     getUserIcpTransactions,
     getUserNuaTransactions,
     getUserCkbtcTransactions,
+    getUserRestrictedNuaTransactions,
   } = usePostStore((state) => ({
     getOwnedNfts: state.getOwnedNfts,
     getSellingNfts: state.getSellingNfts,
@@ -82,6 +89,7 @@ const Wallet = () => {
     getUserIcpTransactions: state.getUserIcpTransactions,
     getUserNuaTransactions: state.getUserNuaTransactions,
     getUserCkbtcTransactions: state.getUserCkbtcTransactions,
+    getUserRestrictedNuaTransactions: state.getUserRestrictedNuaTransactions,
   }));
 
   const { user } = useUserStore((state) => ({
@@ -131,6 +139,7 @@ const Wallet = () => {
       icpTransactions,
       nuaTransactions,
       ckBtcTransactions,
+      restrictedNuaTransactions,
     ] = await Promise.all([
       getSellingNfts(userWallet.accountId),
       getOwnedNfts(userWallet.accountId),
@@ -138,6 +147,7 @@ const Wallet = () => {
       getUserIcpTransactions(),
       getUserNuaTransactions(),
       getUserCkbtcTransactions(),
+      getUserRestrictedNuaTransactions(),
     ]);
     setDisplayingActivities(
       [
@@ -147,6 +157,7 @@ const Wallet = () => {
         ...icpTransactions,
         ...nuaTransactions,
         ...ckBtcTransactions,
+        ...restrictedNuaTransactions,
       ].sort((act_1, act_2) => {
         return parseInt(act_2.date) - parseInt(act_1.date);
       })
@@ -343,6 +354,7 @@ const Wallet = () => {
           </div>
         )}
       </div>
+      <div className='wallet-history-text'>YOUR WALLET HISTORY</div>
       <div className='token-activities'>
         <div className='token-activities-header'>
           <div className='amount'>AMOUNT</div>
@@ -600,6 +612,54 @@ const Wallet = () => {
                         style={{ alignItems: 'start' }}
                       >
                         {activity.isDeposit ? 'Deposit' : 'Withdrawal'}
+                      </div>
+                      <div
+                        className='transfer-icon transfer'
+                        style={{ visibility: 'hidden' }}
+                      >
+                        <img />
+                      </div>
+                    </div>
+                    <div className='horizontal-divider' />
+                  </div>
+                );
+              } else if ('claimedAmount' in activity) {
+                return (
+                  <div className='token-activity-wrapper' key={index}>
+                    <div
+                      className='token-activity-flex'
+                      style={{
+                        display: 'flex',
+                        color: darkOptionsAndColors.color,
+                      }}
+                    >
+                      <div className='amount'>
+                        {'+ ' +
+                          activity.claimedAmount / Math.pow(10, 8) +
+                          ' Free NUA'}
+                      </div>
+                      <div
+                        className='date'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        {activity.date !== ''
+                          ? formatDate(parseInt(activity.date).toString())
+                          : ' --- '}
+                      </div>
+                      <a
+                        className='from'
+                        style={{ color: darkOptionsAndColors.color }}
+                        href='https://dashboard.internetcomputer.org/sns/rzbmc-yiaaa-aaaaq-aabsq-cai'
+                        target='_blank'
+                      >
+                        Nuance DAO Faucet Pool
+                      </a>
+
+                      <div
+                        className='key key-flex'
+                        style={{ alignItems: 'start' }}
+                      >
+                        Free NUA drop
                       </div>
                       <div
                         className='transfer-icon transfer'

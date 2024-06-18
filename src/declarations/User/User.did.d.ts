@@ -150,6 +150,7 @@ export interface _SERVICE {
   'adminAirDrop' : ActorMethod<[number], Result_10>,
   'availableCycles' : ActorMethod<[], bigint>,
   'blockUserFromClaiming' : ActorMethod<[string], Result_1>,
+  'checkMyClaimNotification' : ActorMethod<[], undefined>,
   'claimRestrictedTokens' : ActorMethod<[], Result>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,

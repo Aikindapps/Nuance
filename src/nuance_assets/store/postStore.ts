@@ -14,6 +14,7 @@ import {
   ApplaudListItem,
   TransactionListItem,
   UserListItem,
+  ClaimTransactionHistoryItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -45,6 +46,7 @@ import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
 import {
+  areUint8ArraysEqual,
   getFieldsFromMetadata,
   icpPriceToString,
   toBase256,
@@ -65,12 +67,21 @@ import {
   ckBTC_CANISTER_ID,
   ckBTC_INDEX_CANISTER_ID,
 } from '../shared/constants';
+import {
+  canisterId as userCanisterId,
+  createActor as createUserActor,
+  idlFactory as userFactory,
+} from '../../declarations/User';
 global.fetch = fetch;
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const ArticleNotFound = 'Article not found';
 type GetPopularReturnType = { posts: PostType[]; totalCount: number };
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 // fetch and merge author avatars into a list of posts
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
@@ -444,6 +455,9 @@ export interface PostStore {
   getUserIcpTransactions: () => Promise<TransactionListItem[]>;
   getUserNuaTransactions: () => Promise<TransactionListItem[]>;
   getUserCkbtcTransactions: () => Promise<TransactionListItem[]>;
+  getUserRestrictedNuaTransactions: () => Promise<
+    ClaimTransactionHistoryItem[]
+  >;
   settleToken: (
     tokenId: string,
     canisterId: string
@@ -2225,7 +2239,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     try {
       let nuaLedgerCanister = await getIcrc1TokenActorAnonymous(
         NUA_CANISTER_ID,
-        true
+        !isLocal
       );
       let userWallet = await useAuthStore.getState().getUserWallet();
       if (userWallet.principal.length === 0) {
@@ -2238,6 +2252,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         });
       var transactions: ArchiveTransaction[] =
         nuaTransactionsLedgerResponse.transactions;
+      console.log('rrr: ', transactions);
       //archive canister promises
       let promises = [];
       for (const archivedTransaction of nuaTransactionsLedgerResponse.archived_transactions) {
@@ -2330,6 +2345,77 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         });
       }
       //filter the transactions to just include user's transactions
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  },
+  getUserRestrictedNuaTransactions: async (): Promise<
+    ClaimTransactionHistoryItem[]
+  > => {
+    try {
+      let nuaLedgerCanister = await getIcrc1TokenActorAnonymous(
+        NUA_CANISTER_ID,
+        !isLocal
+      );
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      if (userWallet.principal.length === 0) {
+        return [];
+      }
+      let user = useUserStore.getState().user;
+      if (!user) {
+        return [];
+      }
+      let nuaTransactionsLedgerResponse =
+        await nuaLedgerCanister.get_transactions({
+          start: BigInt(0),
+          length: BigInt(100_000_000_000_000), //just an arbitrary big number to get all the info we need for ALL transactions
+        });
+      var transactions: ArchiveTransaction[] =
+        nuaTransactionsLedgerResponse.transactions;
+      //archive canister promises
+      let promises = [];
+      for (const archivedTransaction of nuaTransactionsLedgerResponse.archived_transactions) {
+        let archiveCanister = await getIcrc1ArchiveCanister(
+          archivedTransaction.callback[0].toText()
+        );
+        promises.push(
+          archiveCanister.get_transactions({
+            start: archivedTransaction.start,
+            length: archivedTransaction.length,
+          })
+        );
+      }
+
+      let archivedTransactionsResults = await Promise.all(promises);
+      archivedTransactionsResults.forEach((archived) => {
+        transactions = [...archived.transactions, ...transactions];
+      });
+      //filter the transactions to just include the deposits from the faucet to the user's restricted nua token account
+      transactions = transactions.filter((transaction) => {
+        if (transaction.transfer.length !== 0 && user) {
+          return (
+            transaction.transfer[0].to.owner.toText() === userCanisterId &&
+            areUint8ArraysEqual(
+              transaction.transfer[0].to.subaccount[0],
+              user.claimInfo.subaccount[0]
+            )
+          );
+        }
+        return false;
+      });
+      let transfers = transactions.map((transaction) => {
+        return transaction.transfer[0];
+      }) as Transfer[];
+      return transfers.map((t, index) => {
+        return {
+          date: (Number(transactions[index].timestamp) / 1000000).toString(),
+
+          claimedAmount:
+            Number((Number(t.amount) / Math.pow(10, 8)).toFixed(0)) *
+            Math.pow(10, 8),
+        };
+      });
     } catch (error) {
       handleError(error);
       return [];

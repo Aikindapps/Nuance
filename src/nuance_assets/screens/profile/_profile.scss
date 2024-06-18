@@ -270,6 +270,82 @@
         border-bottom: 1px dashed #b2b2b2;
       }
 
+      .my-profile-screen-statistic-wrapper {
+        display: flex;
+        width: 100%;
+
+        .statistic-horizontal-divider {
+          display: none;
+          width: 100%;
+          height: 0;
+          border-bottom: 1px dashed $medium-border-color;
+        }
+
+        .statistic {
+          display: flex;
+          height: 144px;
+          width: 100%;
+
+          &:last-child {
+            .stat {
+              &:last-child {
+                border-right: 1px dashed $medium-border-color;
+              }
+            }
+          }
+
+          .stat {
+            border-left: 1px dashed $medium-border-color;
+            height: 100%;
+            box-sizing: border-box;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+
+            .count {
+              font-family: 'Roboto';
+              font-size: 32px;
+              font-weight: 900;
+              background: -webkit-linear-gradient(
+                $highlight-one,
+                $highlight-two
+              );
+              background-clip: text;
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+            }
+
+            .title {
+              color: $darker-border-color;
+              font-size: 16px;
+              line-height: 24px;
+              font-weight: 300;
+              font-family: 'Roboto';
+            }
+
+            .nua-equivalance {
+              border-radius: 4px;
+              background: #f2f2f2;
+              display: flex;
+              align-items: center;
+              padding: 5px;
+              color: #999999;
+              justify-content: space-between;
+              column-gap: 5px;
+              font-size: 12px;
+
+              .eq {
+              }
+
+              .value {
+              }
+            }
+          }
+        }
+      }
+
       .statistic-wrapper {
         display: flex;
         width: 100%;
@@ -533,7 +609,15 @@
           }
         }
       }
-
+      .wallet-history-text {
+        font-family: 'Roboto';
+        font-style: normal;
+        font-weight: 700;
+        font-size: 12px;
+        line-height: 42px;
+        color: #999999;
+        margin-bottom: 12px;
+      }
       .token-activities {
         overflow-x: auto;
         margin-bottom: 50px;
@@ -802,7 +886,7 @@
           row-gap: 18px;
           .request-nua-right {
             .request-nua-info {
-              text-wrap: nowrap;
+              text-wrap: balance;
             }
           }
         }
@@ -945,6 +1029,34 @@
   .profile-wrapper {
     .container {
       .wrapper {
+        .my-profile-screen-statistic-wrapper {
+          flex-direction: column;
+          row-gap: 8px;
+
+          .statistic-horizontal-divider {
+            display: flex;
+          }
+
+          .statistic {
+            &:last-child {
+              .stat {
+                &:last-child {
+                  border-right: none;
+                }
+              }
+            }
+
+            .stat {
+              &:last-child {
+                border-right: none;
+              }
+
+              &:first-child {
+                border-left: none;
+              }
+            }
+          }
+        }
         .statistic-wrapper {
           .statistic {
             .stat-0 {

@@ -197,6 +197,7 @@ export interface UserStore {
     to: number,
     isLoggedIn: boolean
   ) => Promise<void>;
+  checkMyClaimNotification: () => Promise<void>;
   loadMoreNotifications: (from: number, to: number) => Promise<void>;
   createNotification: (
     notificationType: NotificationType,
@@ -688,6 +689,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       } catch (err) {
         console.error('getUserNotifications:', err);
       }
+    }
+  },
+
+  checkMyClaimNotification: async (): Promise<void> => {
+    try {
+      let userActor = await getUserActor();
+      //fire and forget
+      userActor.checkMyClaimNotification();
+    } catch (error) {
+      console.log(error);
     }
   },
 

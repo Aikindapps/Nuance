@@ -71,6 +71,11 @@ type UserClaimInfoType = {
   isClaimActive: boolean;
 };
 
+export type ClaimTransactionHistoryItem = {
+  date: string;
+  claimedAmount: number;
+};
+
 export type UserListItem = {
   handle: string;
   avatar: string;

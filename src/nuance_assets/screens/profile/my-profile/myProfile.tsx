@@ -21,8 +21,8 @@ const MyProfile = () => {
   const navigate = useNavigate();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const darkTheme = useTheme();
-  const context = useContext(Context)
-  const modalContext = useContext(ModalContext)
+  const context = useContext(Context);
+  const modalContext = useContext(ModalContext);
   const {
     user,
     getUser,
@@ -65,7 +65,6 @@ const MyProfile = () => {
     navigate('/my-profile/edit', { replace: true });
   };
 
-
   const [hoverRemovePublication, setHoverRemovePublication] = useState(false);
 
   const { removeEditor, removeWriter } = usePublisherStore((state) => ({
@@ -76,17 +75,14 @@ const MyProfile = () => {
   const getSocialChannelUrls = () => {
     if (user) {
       if (user.website === '') {
-        return user.socialChannels
+        return user.socialChannels;
+      } else {
+        return [user.website, ...user.socialChannels];
       }
-      else {
-        return [user.website, ...user.socialChannels]
-      }
+    } else {
+      return [];
     }
-    else {
-      return []
-    }
-  }
-
+  };
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -142,8 +138,8 @@ const MyProfile = () => {
           style={
             darkTheme
               ? {
-                color: darkOptionsAndColors.color,
-              }
+                  color: darkOptionsAndColors.color,
+                }
               : {}
           }
           className='username'
@@ -180,15 +176,20 @@ const MyProfile = () => {
             );
           })}
         </div>
-        <p style={
-          darkTheme
-            ? {
-              color: darkOptionsAndColors.secondaryColor,
-            }
-            : {}
-        } className='description'>{user?.bio}</p>
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: darkOptionsAndColors.secondaryColor,
+                }
+              : {}
+          }
+          className='description'
+        >
+          {user?.bio}
+        </p>
       </div>
-      <div className='statistic-wrapper'>
+      <div className='my-profile-screen-statistic-wrapper'>
         <div className='statistic'>
           <div className='stat'>
             <p className='count'>{counts?.publishedCount || 0}</p>

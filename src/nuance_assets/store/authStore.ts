@@ -180,7 +180,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         )
       );
     }
-
     let [
       tokenBalancesResponses,
       sonicTokenPairsResponses,
@@ -188,12 +187,16 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     ] = await Promise.all([
       Promise.all(tokenBalancesPromises),
       Promise.all(sonicTokenPairsPromises),
-      (
-        await getIcrc1Actor(NUA_CANISTER_ID)
-      ).icrc1_balance_of({
-        owner: Principal.fromText(userCanisterId),
-        subaccount: user.claimInfo.subaccount,
-      }),
+      user.claimInfo.subaccount.length === 0
+        ? 0
+        : new Uint8Array(user.claimInfo.subaccount[0]).length === 0
+        ? 0
+        : (
+            await getIcrc1Actor(NUA_CANISTER_ID)
+          ).icrc1_balance_of({
+            owner: Principal.fromText(userCanisterId),
+            subaccount: [new Uint8Array(user.claimInfo.subaccount[0])],
+          }),
     ]);
     let tokenBalances: TokenBalance[] = tokenBalancesResponses.map(
       (balance, index) => {

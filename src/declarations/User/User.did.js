@@ -156,6 +156,7 @@ export const idlFactory = ({ IDL }) => {
     'adminAirDrop' : IDL.Func([IDL.Float64], [Result_10], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'blockUserFromClaiming' : IDL.Func([IDL.Text], [Result_1], []),
+    'checkMyClaimNotification' : IDL.Func([], [], []),
     'claimRestrictedTokens' : IDL.Func([], [Result], []),
     'clearAllMyFollowers' : IDL.Func([], [IDL.Text], []),
     'collectCanisterMetrics' : IDL.Func([], [], []),

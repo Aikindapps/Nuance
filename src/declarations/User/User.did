@@ -232,6 +232,7 @@ service : {
   adminAirDrop: (float64) -> (Result_10);
   availableCycles: () -> (nat) query;
   blockUserFromClaiming: (text) -> (Result_1);
+  checkMyClaimNotification: () -> ();
   claimRestrictedTokens: () -> (Result);
   clearAllMyFollowers: () -> (text);
   collectCanisterMetrics: () -> ();
