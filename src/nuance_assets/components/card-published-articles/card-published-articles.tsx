@@ -61,7 +61,7 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
             </Link>
           </div>
           <div className='card-published-articles-actions-right'>
-            {post.isPublication && (
+            {post.isPublication ? (
               <div className='card-published-articles-right-publication'>
                 {post.isPremium ? (
                   <img
@@ -79,8 +79,8 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
                   style={
                     dark
                       ? {
-                          color: darkOptionsAndColors.secondaryColor,
-                        }
+                        color: darkOptionsAndColors.secondaryColor,
+                      }
                       : {}
                   }
                   className='card-published-articles-right-publication-text'
@@ -88,7 +88,19 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
                   In{' ' + post.handle}
                 </Link>
               </div>
-            )}
+            ) : post.isMembersOnly ? (
+              <div className='card-published-articles-right-publication'>
+                <img
+                  className='card-published-articles-action-icon-pointer members'
+                  src={
+                    icons.MEMBERS_ONLY
+                  }
+                  style={{
+                    filter: dark ? 'contrast(.6)' : '',
+                  }}
+                />
+              </div>
+            ) : null}
             <div className='card-published-articles-right-action-wrapper'>
               <PiHandsClappingLight
                 className={
@@ -101,8 +113,8 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
                 style={
                   dark
                     ? {
-                        color: darkOptionsAndColors.secondaryColor,
-                      }
+                      color: darkOptionsAndColors.secondaryColor,
+                    }
                     : {}
                 }
                 className='card-published-articles-right-action-text'
@@ -114,8 +126,8 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
               style={
                 dark
                   ? {
-                      color: darkOptionsAndColors.secondaryColor,
-                    }
+                    color: darkOptionsAndColors.secondaryColor,
+                  }
                   : {}
               }
               className='card-published-articles-date'
@@ -130,8 +142,8 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
             style={
               dark
                 ? {
-                    color: darkOptionsAndColors.color,
-                  }
+                  color: darkOptionsAndColors.color,
+                }
                 : {}
             }
             className='card-published-articles-title'
@@ -145,8 +157,8 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
           style={
             dark
               ? {
-                  color: darkOptionsAndColors.secondaryColor,
-                }
+                color: darkOptionsAndColors.secondaryColor,
+              }
               : {}
           }
           className='card-published-articles-subtitle'

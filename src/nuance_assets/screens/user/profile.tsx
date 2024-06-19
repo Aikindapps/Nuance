@@ -147,17 +147,15 @@ const Profile = () => {
       if (isLoggedIn) {
         try {
           let history = await getMySubscriptionHistoryAsReader();
-          console.log('history', history);
 
           if (history) {
             let isSubscribed = history.activeSubscriptions.some((subscription) => {
-              console.log('subscription', subscription);
               return subscription.userListItem.handle === author?.handle;
             });
             setIsSubscribed(isSubscribed);
           }
         } catch (error) {
-          console.log('Error getting subscription history', error);
+          console.log('Error fetching subscription history', error);
         }
       }
     };

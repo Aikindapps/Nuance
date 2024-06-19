@@ -96,8 +96,8 @@ const QuillTextEditor: React.FC<TextEditorProps> = (props) => {
       ? 'has-error text-editor-dark'
       : 'has-editor'
     : props.dark
-    ? 'text-editor-dark'
-    : 'text-editor';
+      ? 'text-editor-dark'
+      : 'text-editor';
 
   return (
     <div className={className}>

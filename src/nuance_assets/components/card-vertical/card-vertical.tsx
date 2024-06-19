@@ -104,7 +104,19 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
                 {'In ' + post.handle}
               </p>
             </div>
-          ) : null}
+          ) : post.isMembersOnly ? (
+
+            <img
+              className='subscription-icon'
+              src={
+                icons.MEMBERS_ONLY
+              }
+              style={{
+                filter: darkTheme ? 'contrast(.6)' : '',
+              }}
+            />
+          ) : null
+          }
           <div className='divider' />
           <p>
             {formatDate(post.publishedDate, DateFormat.NoYear) ||

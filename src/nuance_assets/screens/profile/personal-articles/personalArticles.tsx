@@ -8,6 +8,7 @@ import { useTheme } from '../../../contextes/ThemeContext';
 import { colors, images } from '../../../shared/constants';
 import Button from '../../../UI/Button/Button';
 import './_personal-articles.scss';
+import { get } from 'lodash';
 
 const PersonalArticles = () => {
   const { user, getUser, getCounts, counts } = useUserStore((state) => ({
@@ -23,11 +24,13 @@ const PersonalArticles = () => {
     getMyPublishedPosts,
     getMyAllPosts,
     getMySubmittedForReviewPosts,
+    getMyPlannedPosts,
   } = usePostStore((state) => ({
     getMyDraftPosts: state.getMyDraftPosts,
     getMyPublishedPosts: state.getMyPublishedPosts,
     getMyAllPosts: state.getMyAllPosts,
     getMySubmittedForReviewPosts: state.getMySubmittedForReviewPosts,
+    getMyPlannedPosts: state.getMyPlannedPosts,
   }));
 
   const getInitialPage = () => {
@@ -39,12 +42,15 @@ const PersonalArticles = () => {
       return 'Submitted for review';
     } else if (window.location.href.includes('?page=published')) {
       return 'Published';
+    } else if (window.location.href.includes('?page=planned')) {
+      return 'Planned';
     }
+
     return 'All';
   };
 
-  type Page = 'All' | 'Drafts' | 'Published' | 'Submitted for review';
-  const pages: Page[] = ['All', 'Drafts', 'Submitted for review', 'Published'];
+  type Page = 'All' | 'Drafts' | 'Published' | 'Submitted for review' | 'Planned';
+  const pages: Page[] = ['All', 'Drafts', 'Submitted for review', 'Published', 'Planned'];
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [loading, setLoading] = useState(false);
@@ -62,6 +68,7 @@ const PersonalArticles = () => {
   const [submittedToReviewPosts, setSubmittedToReviewPosts] = useState<
     PostType[]
   >([]);
+  const [plannedPosts, setPlannedPosts] = useState<PostType[]>([]);
   const [page, setPage] = useState<Page>(getInitialPage());
 
   const navigate = useNavigate();
@@ -131,6 +138,16 @@ const PersonalArticles = () => {
           loadMoreCounterSubmittedToReview + 1
         );
         break;
+      case 'Planned':
+        let postsPlanned = await getMyPlannedPosts(
+          (loadMoreCounterAll - 1) * 20 + 20,
+          20 + loadMoreCounterAll * 20
+        );
+        if (postsPlanned) {
+          setAllPosts([...allPosts, ...postsPlanned]);
+        }
+        setLoadMoreCounterAll(loadMoreCounterAll + 1);
+        break;
     }
 
     setLoadingMore(false);
@@ -138,11 +155,12 @@ const PersonalArticles = () => {
 
   const loadInitial = async () => {
     setLoading(true);
-    const [allPosts, draftPosts, submittedToReviewPosts, publishedPosts] =
+    const [allPosts, draftPosts, submittedToReviewPosts, plannedPosts, publishedPosts] =
       await Promise.all([
         getMyAllPosts(0, 20),
         getMyDraftPosts(0, 20),
         getMySubmittedForReviewPosts(0, 20),
+        getMyPlannedPosts(0, 20),
         getMyPublishedPosts(0, 20),
       ]);
 
@@ -158,6 +176,9 @@ const PersonalArticles = () => {
     if (publishedPosts) {
       setPublishedPosts(publishedPosts);
     }
+    if (plannedPosts) {
+      setPlannedPosts(plannedPosts);
+    }
     setLoading(false);
   };
 
@@ -171,10 +192,11 @@ const PersonalArticles = () => {
         return publishedPosts;
       case 'Submitted for review':
         return submittedToReviewPosts;
+      case 'Planned':
+        return plannedPosts;
     }
   };
-  //console.log(counts)
-  //console.log(allPosts)
+
   const displayLoadMore = () => {
     if (counts && !loading) {
       switch (page) {
@@ -189,6 +211,8 @@ const PersonalArticles = () => {
             parseInt(counts.submittedToReviewCount) >
             submittedToReviewPosts.length
           );
+        case 'Planned':
+          return parseInt(counts.plannedCount) > plannedPosts.length;
       }
     }
     return false;
@@ -200,8 +224,8 @@ const PersonalArticles = () => {
         style={
           darkTheme
             ? {
-                background: colors.darkModePrimaryBackgroundColor,
-              }
+              background: colors.darkModePrimaryBackgroundColor,
+            }
             : {}
         }
         className='personal-articles-title-navigation-wrapper'
@@ -222,38 +246,40 @@ const PersonalArticles = () => {
                 style={
                   page === pageName && darkTheme
                     ? {
-                        color: colors.darkModePrimaryTextColor,
-                        borderColor: colors.darkModePrimaryTextColor,
-                      }
+                      color: colors.darkModePrimaryTextColor,
+                      borderColor: colors.darkModePrimaryTextColor,
+                    }
                     : {}
                 }
                 onClick={() => {
                   setPage(pageName);
                   navigate(
-                    `/my-profile/articles?page=${
-                      pageName === 'All'
-                        ? 'all'
-                        : pageName === 'Drafts'
+                    `/my-profile/articles?page=${pageName === 'All'
+                      ? 'all'
+                      : pageName === 'Drafts'
                         ? 'draft'
                         : pageName === 'Published'
-                        ? 'published'
-                        : pageName === 'Submitted for review'
-                        ? 'submitted'
-                        : ''
+                          ? 'published'
+                          : pageName === 'Submitted for review'
+                            ? 'submitted'
+                            : pageName === 'Planned'
+                              ? 'planned'
+                              : ''
                     }`
                   );
                 }}
-              >{`${pageName} (${
-                pageName === 'All'
-                  ? counts?.totalPostCount || 0
-                  : pageName === 'Drafts'
+              >{`${pageName} (${pageName === 'All'
+                ? counts?.totalPostCount || 0
+                : pageName === 'Drafts'
                   ? counts?.draftCount || 0
                   : pageName === 'Published'
-                  ? counts?.publishedCount || 0
-                  : pageName === 'Submitted for review'
-                  ? counts?.submittedToReviewCount || 0
-                  : null
-              })`}</div>
+                    ? counts?.publishedCount || 0
+                    : pageName === 'Submitted for review'
+                      ? counts?.submittedToReviewCount || 0
+                      : pageName === 'Planned'
+                        ? counts?.plannedCount || 0
+                        : null
+                })`}</div>
             );
           })}
         </div>

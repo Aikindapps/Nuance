@@ -39,6 +39,9 @@ import WriteComment from '../../components/comments/write-comments';
 import { PostBucket } from 'src/declarations/PostBucket';
 import { get } from 'lodash';
 import { Tooltip } from 'react-tooltip';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
+import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -51,6 +54,8 @@ const ReadArticle = () => {
   const [avatar, setAvatar] = useState('');
   const [bio, setBio] = useState('');
   const [socialUrls, setSocialUrls] = useState<string[]>([]);
+  const [modalType, setModalType] = useState('');
+
 
   // Publication Feature Context
   const publicationFeatureIsLive = useContext(Context).publicationFeature;
@@ -65,6 +70,7 @@ const ReadArticle = () => {
   const { handle, id } = useParams();
 
   const context = useContext(Context);
+  const modalContext = useContext(ModalContext);
 
   const {
     getPost,
@@ -134,6 +140,16 @@ const ReadArticle = () => {
       const { postId, bucketCanisterId } = separateIds(id);
       getPost(handle, postId, bucketCanisterId);
     }
+  };
+
+  const openSubscriptionModal = async () => {
+    setModalType('Subscription');
+    modalContext?.openModal('Subscription');
+  };
+
+  const openCancelSubscriptionModal = async () => {
+    setModalType('cancelSubscription');
+    modalContext?.openModal('cancelSubscription');
   };
 
   const separateIds = (input: string) => {
@@ -229,6 +245,12 @@ const ReadArticle = () => {
   useEffect(() => {
     if (post && !loading) {
       redirect(post?.url);
+    }
+  }, [post]);
+
+  useEffect(() => {
+    if (post?.isMembersOnly && post?.content === "") {
+      openSubscriptionModal();
     }
   }, [post]);
 
@@ -498,9 +520,8 @@ const ReadArticle = () => {
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/user/${
-                    post.isPublication ? post.creatorHandle : author.handle
-                  }`}
+                  to={`/user/${post.isPublication ? post.creatorHandle : author.handle
+                    }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -574,6 +595,7 @@ const ReadArticle = () => {
           )}
 
           {!loading && post && author && (
+
             <div className='content'>
               <div className='title-post-info-wrapper'>
                 {post.isPremium ? (
@@ -582,14 +604,24 @@ const ReadArticle = () => {
                     src={icons.NFT_LOCK_ICON}
                     style={{ filter: darkTheme ? 'contrast(0.5)' : '' }}
                   />
+                ) : post.isMembersOnly ? (
+                  <div className='read-article-subscription'>
+                    <img
+                      className='read-article-subscription-icon'
+                      src={icons.MEMBERS_ONLY}
+                      style={{ filter: darkTheme ? 'contrast(0.5)' : '' }}
+                    />
+                    <p className='read-article-subscription-text'>Members Only</p>
+                  </div>
                 ) : null}
+
                 <h1
                   style={
                     post.isPublication
                       ? {
-                          fontFamily: publication?.styling.fontType,
-                          color: darkOptionsAndColors.color,
-                        }
+                        fontFamily: publication?.styling.fontType,
+                        color: darkOptionsAndColors.color,
+                      }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -630,12 +662,37 @@ const ReadArticle = () => {
                       load();
                     }}
                   />
+                ) : post.isMembersOnly && post.content === "" ? (
+                  <>
+                    {modalType === 'Subscription' && modalContext?.isModalOpen && (
+                      <SubscriptionModal
+                        handle={author.handle || ''}
+                        authorPrincipalId={post.principal || ''}
+                        profileImage={author.avatar}
+                        isPublication={post.isPublication || false}
+                        onSubscriptionComplete={() => { }}
+                      />
+                    )}
+
+                    {modalType === 'cancelSubscription' && modalContext?.isModalOpen && (
+                      <CancelSubscriptionModal
+                        handle={author.handle || ''}
+                        profileImage={author.avatar}
+                        isPublication={post.isPublication || false}
+                        authorPrincipalId={post.principal || ''}
+                        onCancelComplete={() => { }}
+                      />
+                    )}
+                  </>
                 ) : null}
 
-                {post.premiumArticleSaleInfo ? (
+
+
+                {post.premiumArticleSaleInfo || (post.isMembersOnly && post.content === "") ? (
                   <div className='text text-not-allowed'>
                     {parse(premiumArticlePlaceHolder)}
                   </div>
+
                 ) : (
                   <div className={darkTheme ? 'dark-text' : 'text'}>
                     {parse(post.content)}
@@ -697,9 +754,8 @@ const ReadArticle = () => {
                     className='profile-picture'
                   />
                   <Link
-                    to={`/user/${
-                      post.isPublication ? post.creatorHandle : author.handle
-                    }`}
+                    to={`/user/${post.isPublication ? post.creatorHandle : author.handle
+                      }`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
@@ -713,7 +769,7 @@ const ReadArticle = () => {
                           onClick={() => {
                             let urlWithProtocol =
                               url.startsWith('https://') ||
-                              url.startsWith('http://')
+                                url.startsWith('http://')
                                 ? url
                                 : 'https://' + url;
                             window.open(urlWithProtocol, '_blank');
@@ -742,8 +798,8 @@ const ReadArticle = () => {
                     style={
                       darkTheme
                         ? {
-                            color: darkOptionsAndColors.secondaryColor,
-                          }
+                          color: darkOptionsAndColors.secondaryColor,
+                        }
                         : {}
                     }
                   >

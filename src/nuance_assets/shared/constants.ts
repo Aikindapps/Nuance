@@ -121,6 +121,9 @@ export const icons = {
   CANCEL_SUBSCRIPTION_SUCCESS: iconsPath + 'cancel-subscription-success.svg',
   CANCEL_SUBSCRIPTION_USER: iconsPath + 'cancel-subscription-user.svg',
   APPLAUD_ICON: iconsPath + 'applaud-icon.svg',
+  CALENDAR_ICON: iconsPath + 'calendar.svg',
+  CLOCK_ICON: iconsPath + 'clock.svg',
+  MEMBERS_ONLY: iconsPath + 'members-only.svg', 
 };
 
 export const colors = {

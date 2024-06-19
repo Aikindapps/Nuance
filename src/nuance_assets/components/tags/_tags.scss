@@ -13,7 +13,7 @@
 .tags {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13pt;
-  position: relative;
+  //position: relative;
 
   ::placeholder {
     font-style: italic;
@@ -22,7 +22,7 @@
   }
 
   .tag-icon {
-    position: relative;
+    //position: relative;
     top: 3px;
     margin-right: 10px;
   }
