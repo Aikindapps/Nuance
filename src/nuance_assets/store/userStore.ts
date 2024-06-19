@@ -304,6 +304,8 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           user,
           unregistered: false,
         });
+        //fetch the token balances in background
+        useAuthStore.getState().fetchTokenBalances();
         return user;
       }
     } catch (err: any) {

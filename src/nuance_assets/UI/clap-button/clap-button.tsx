@@ -123,11 +123,9 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
       className={'button-attributes-' + styleType}
       style={style}
       onClick={() => {
-        console.log('clapButton onClick');
         if (user) {
           //clapAnimation()
           //check if the post is written by the user
-          console.log('user is defined');
           if (
             applaudingPost?.handle === user.handle ||
             applaudingPost?.creatorHandle === user.handle
@@ -135,7 +133,6 @@ const ClapButton: React.FC<ButtonProps> = (props): JSX.Element => {
             toastError('You can not applaud your own article!');
             return;
           }
-          console.log(applaudingPost, tokenBalances)
           if (applaudingPost && tokenBalances.length !== 0) {
             modalContext?.openModal('Clap', {
               clappingPostData: applaudingPost,
