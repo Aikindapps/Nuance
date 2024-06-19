@@ -4,6 +4,7 @@ type UserNotificationSettings =
    authorGainsNewSubscriber: bool;
    authorLosesSubscriber: bool;
    expiredSubscription: bool;
+   faucetClaimAvailable: bool;
    newArticleByFollowedTag: bool;
    newArticleByFollowedWriter: bool;
    newCommentOnFollowedArticle: bool;
@@ -60,6 +61,7 @@ type NotificationType__1 =
    AuthorExpiredSubscription;
    AuthorGainsNewSubscriber;
    AuthorLosesSubscriber;
+   FaucetClaimAvailable;
    NewArticleByFollowedTag;
    NewArticleByFollowedWriter;
    NewCommentOnFollowedArticle;
@@ -76,6 +78,7 @@ type NotificationType =
    AuthorExpiredSubscription;
    AuthorGainsNewSubscriber;
    AuthorLosesSubscriber;
+   FaucetClaimAvailable;
    NewArticleByFollowedTag;
    NewArticleByFollowedWriter;
    NewCommentOnFollowedArticle;

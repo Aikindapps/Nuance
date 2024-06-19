@@ -62,7 +62,8 @@ export interface NotificationContent__1 {
   'authorHandle' : string,
   'authorPrincipal' : Principal,
 }
-export type NotificationType = { 'TipReceived' : null } |
+export type NotificationType = { 'FaucetClaimAvailable' : null } |
+  { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
   { 'AuthorLosesSubscriber' : null } |
   { 'YouSubscribedToAuthor' : null } |
@@ -75,7 +76,8 @@ export type NotificationType = { 'TipReceived' : null } |
   { 'NewCommentOnFollowedArticle' : null } |
   { 'NewArticleByFollowedTag' : null } |
   { 'AuthorGainsNewSubscriber' : null };
-export type NotificationType__1 = { 'TipReceived' : null } |
+export type NotificationType__1 = { 'FaucetClaimAvailable' : null } |
+  { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
   { 'AuthorLosesSubscriber' : null } |
   { 'YouSubscribedToAuthor' : null } |
@@ -125,6 +127,7 @@ export interface UserNotificationSettings {
   'readerExpiredSubscription' : boolean,
   'newArticleByFollowedWriter' : boolean,
   'newArticleByFollowedTag' : boolean,
+  'faucetClaimAvailable' : boolean,
   'expiredSubscription' : boolean,
 }
 export interface _SERVICE {

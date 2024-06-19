@@ -1,6 +1,7 @@
 export const idlFactory = ({ IDL }) => {
   const List = IDL.Rec();
   const NotificationType__1 = IDL.Variant({
+    'FaucetClaimAvailable' : IDL.Null,
     'TipReceived' : IDL.Null,
     'NewArticleByFollowedWriter' : IDL.Null,
     'AuthorLosesSubscriber' : IDL.Null,
@@ -90,6 +91,7 @@ export const idlFactory = ({ IDL }) => {
     'authorPrincipal' : IDL.Principal,
   });
   const NotificationType = IDL.Variant({
+    'FaucetClaimAvailable' : IDL.Null,
     'TipReceived' : IDL.Null,
     'NewArticleByFollowedWriter' : IDL.Null,
     'AuthorLosesSubscriber' : IDL.Null,
@@ -130,6 +132,7 @@ export const idlFactory = ({ IDL }) => {
     'readerExpiredSubscription' : IDL.Bool,
     'newArticleByFollowedWriter' : IDL.Bool,
     'newArticleByFollowedTag' : IDL.Bool,
+    'faucetClaimAvailable' : IDL.Bool,
     'expiredSubscription' : IDL.Bool,
   });
   return IDL.Service({
