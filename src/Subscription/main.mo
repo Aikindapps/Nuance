@@ -18,6 +18,7 @@ import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
+import Debug "mo:base/Debug";
 import Notifications "../Notifications/types";
 
 actor Subscription {
@@ -32,6 +33,7 @@ actor Subscription {
     //all the details of the writer's subscription info and history
     type WriterSubscriptionDetails = {
         writerPrincipalId: Text;
+        paymentReceiverPrincipalId: Text;
         weeklyFee: ?Text; //stored as Nat, served as Text
         monthlyFee: ?Text; //stored as Nat, served as Text
         annuallyFee: ?Text; //stored as Nat, served as Text
@@ -244,6 +246,8 @@ actor Subscription {
         var writerPrincipalId = callerPrincipalId;
         var paymentReceiverPrincipalId = caller;
 
+        Debug.print("updateSubscriptionDetails arguments: " # debug_show(subscriptionDetails));
+
         switch(subscriptionDetails.publicationInformation) {
             case(?publicationInformation) {
                 //publication related info provided
@@ -317,7 +321,8 @@ actor Subscription {
             };
             case(null) {
                 //weekly fee has not been provided
-                //do nothing
+                //delete if there's any existing weekly fee
+                Map.delete(writerPrincipalIdToWeeklySubscriptionFee, thash, writerPrincipalId);
             };
         };
 
@@ -331,7 +336,8 @@ actor Subscription {
             };
             case(null) {
                 //monthly fee has not been provided
-                //do nothing
+                //delete if there's any existing weekly fee
+                Map.delete(writerPrincipalIdToMonthlySubscriptionFee, thash, writerPrincipalId);
             };
         };
 
@@ -345,7 +351,8 @@ actor Subscription {
             };
             case(null) {
                 //annually fee has not been provided
-                //do nothing
+                //delete if there's any existing weekly fee
+                Map.delete(writerPrincipalIdToAnnuallySubscriptionFee, thash, writerPrincipalId);
             };
         };
 
@@ -359,7 +366,8 @@ actor Subscription {
             };
             case(null) {
                 //lifetime fee has not been provided
-                //do nothing
+                //delete if there's any existing weekly fee
+                Map.delete(writerPrincipalIdToLifeTimeSubscriptionFee, thash, writerPrincipalId);
             };
         };
         //set the payment receiver principal id
@@ -913,6 +921,7 @@ actor Subscription {
             monthlyFee = U.optNatToOptText(Map.get(writerPrincipalIdToMonthlySubscriptionFee, thash, principal));
             weeklyFee = U.optNatToOptText(Map.get(writerPrincipalIdToWeeklySubscriptionFee, thash, principal));
             writerPrincipalId = principal;
+            paymentReceiverPrincipalId = Principal.toText(Option.get(Map.get(writerPrincipalIdToPaymentReceiverAddress, thash, principal), Principal.fromText(principal)));
             isSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal), false);
             writerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(writerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
                 buildSubscriptionEvent(subscriptionEventId)
@@ -928,6 +937,7 @@ actor Subscription {
             monthlyFee = U.optNatToOptText(Map.get(writerPrincipalIdToMonthlySubscriptionFee, thash, principal));
             weeklyFee = U.optNatToOptText(Map.get(writerPrincipalIdToWeeklySubscriptionFee, thash, principal));
             writerPrincipalId = principal;
+            paymentReceiverPrincipalId = Principal.toText(Option.get(Map.get(writerPrincipalIdToPaymentReceiverAddress, thash, principal), Principal.fromText(principal)));
             isSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal), false);
             writerSubscriptions = [];
         }

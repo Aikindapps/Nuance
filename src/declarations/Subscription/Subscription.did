@@ -4,6 +4,7 @@ type WriterSubscriptionDetails =
    isSubscriptionActive: bool;
    lifeTimeFee: opt text;
    monthlyFee: opt text;
+   paymentReceiverPrincipalId: text;
    weeklyFee: opt text;
    writerPrincipalId: text;
    writerSubscriptions: vec SubscriptionEvent;

@@ -48,6 +48,7 @@ export interface UpdateSubscriptionDetailsModel {
 export interface WriterSubscriptionDetails {
   'writerSubscriptions' : Array<SubscriptionEvent>,
   'weeklyFee' : [] | [string],
+  'paymentReceiverPrincipalId' : string,
   'writerPrincipalId' : string,
   'lifeTimeFee' : [] | [string],
   'isSubscriptionActive' : boolean,

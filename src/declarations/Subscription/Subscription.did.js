@@ -18,6 +18,7 @@ export const idlFactory = ({ IDL }) => {
   const WriterSubscriptionDetails = IDL.Record({
     'writerSubscriptions' : IDL.Vec(SubscriptionEvent),
     'weeklyFee' : IDL.Opt(IDL.Text),
+    'paymentReceiverPrincipalId' : IDL.Text,
     'writerPrincipalId' : IDL.Text,
     'lifeTimeFee' : IDL.Opt(IDL.Text),
     'isSubscriptionActive' : IDL.Bool,

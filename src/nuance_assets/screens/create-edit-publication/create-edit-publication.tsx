@@ -219,6 +219,7 @@ const CreateEditPublication = () => {
       writerSubscriptions: [],
       weeklyFee: [],
       writerPrincipalId: '',
+      paymentReceiverPrincipalId: '',
       lifeTimeFee: [],
       isSubscriptionActive: false,
       annuallyFee: [],
@@ -291,6 +292,7 @@ const CreateEditPublication = () => {
                 ? [(Number(fetchedDetails.weeklyFee[0]) / 1e8).toString()]
                 : [],
               writerPrincipalId: fetchedDetails.writerPrincipalId,
+              paymentReceiverPrincipalId: fetchedDetails.paymentReceiverPrincipalId,
               lifeTimeFee: fetchedDetails.lifeTimeFee[0]
                 ? [(Number(fetchedDetails.lifeTimeFee[0]) / 1e8).toString()]
                 : [],
