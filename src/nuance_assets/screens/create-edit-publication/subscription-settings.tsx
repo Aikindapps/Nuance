@@ -4,9 +4,14 @@ import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscri
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import InputField from '../../UI/InputField2/InputField2';
-import { colors } from '../../shared/constants';
+import { colors, getDecimalsByTokenSymbol } from '../../shared/constants';
 import RequiredFieldMessage from '../../components/required-field-message/required-field-message';
 import { Principal } from '@dfinity/principal';
+import {
+  getPriceBetweenTokens,
+  truncateToDecimalPlace,
+} from '../../shared/utils';
+import { useAuthStore } from '../../store';
 
 interface SubscriptionDetailsState extends WriterSubscriptionDetails {
   weeklyFeeEnabled: boolean;
@@ -35,7 +40,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
   const darkTheme = useTheme();
   const context = React.useContext(Context);
   const [inputAddressErrorMessage, setInputAddressErrorMessage] = useState('');
-
+  const sonicTokenPairs = useAuthStore((state) => state.sonicTokenPairs);
 
   const handleFeeChange = (
     type: keyof WriterSubscriptionDetails,
@@ -68,9 +73,6 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
     'lifeTimeFee',
   ] as const;
 
-
-
-
   return (
     <div className='membership-subscription'>
       <p className='mainTitle'>MEMBERSHIP SUBSCRIPTION</p>
@@ -88,8 +90,9 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
         {feeTypes.map((type) => (
           <div
             key={type}
-            className={`subscription-settings-option ${subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''
-              }`}
+            className={`subscription-settings-option ${
+              subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''
+            }`}
           >
             <div className='toggle'>
               <Toggle
@@ -153,7 +156,40 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               </div>
             </div>
             <div className={darkTheme ? 'fees dark' : 'fees'}>
-              = 0.5 ICP | 1.14 ckBTC | 2.03 USD
+              ={' '}
+              {truncateToDecimalPlace(
+                getPriceBetweenTokens(
+                  sonicTokenPairs,
+                  'NUA',
+                  'ICP',
+                  parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
+                    Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
+                2
+              )}{' '}
+              ICP |{' '}
+              {truncateToDecimalPlace(
+                getPriceBetweenTokens(
+                  sonicTokenPairs,
+                  'NUA',
+                  'ckBTC',
+                  parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
+                    Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
+                2
+              )}{' '}
+              ckBTC |{' '}
+              {truncateToDecimalPlace(
+                getPriceBetweenTokens(
+                  sonicTokenPairs,
+                  'NUA',
+                  'ckUSDC',
+                  parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
+                    Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
+                2
+              )}{' '}
+              USD
             </div>
           </div>
         ))}
@@ -188,7 +224,10 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               button={undefined}
             />
             {error && (
-              <RequiredFieldMessage hasError={error} errorMessage={"Invalid Principal Id!"} />
+              <RequiredFieldMessage
+                hasError={error}
+                errorMessage={'Invalid Principal Id!'}
+              />
             )}
           </div>
         )}

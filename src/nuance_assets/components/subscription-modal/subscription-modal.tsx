@@ -293,12 +293,14 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     { label: 'Lifetime', fee: subscriptionDetails?.lifeTimeFee },
   ];
 
-  const hasValidOptions = !optionsLoading && subscriptionOptions.some(
-    (option) => option.fee && option.fee.length > 0
-  );
+  const hasValidOptions =
+    !optionsLoading &&
+    subscriptionOptions.some((option) => option.fee && option.fee.length > 0);
 
   return (
-    <div className={darkTheme ? 'subscription-modal dark' : 'subscription-modal'}>
+    <div
+      className={darkTheme ? 'subscription-modal dark' : 'subscription-modal'}
+    >
       {isSubscriptionComplete ? (
         <>
           <div className='modal-top-row'>
@@ -437,7 +439,11 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             Subscribe to {isPublication ? 'Publication' : 'User'}
           </h2>
           <div className='subscribee-info'>
-            <img className='profile-image' src={profileImage != "" ? profileImage : images.DEFAULT_AVATAR} alt='profile' />
+            <img
+              className='profile-image'
+              src={profileImage != '' ? profileImage : images.DEFAULT_AVATAR}
+              alt='profile'
+            />
             {isPublication && (
               <img
                 src={icons.PUBLICATION_ICON}
@@ -471,14 +477,16 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                       option.fee &&
                       option.fee.length > 0 && (
                         <div
-                          className={`option-wrapper ${selectedOption === option.label ? 'selected' : ''
-                            }`}
+                          className={`option-wrapper ${
+                            selectedOption === option.label ? 'selected' : ''
+                          }`}
                           key={option.label}
                           onClick={() => setSelectedOption(option.label)}
                         >
                           <div
-                            className={`option ${selectedOption === option.label ? 'selected' : ''
-                              } ${darkTheme ? 'dark' : ''}`}
+                            className={`option ${
+                              selectedOption === option.label ? 'selected' : ''
+                            } ${darkTheme ? 'dark' : ''}`}
                           >
                             <div className='option-content'>
                               <img
@@ -506,7 +514,27 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                   <p>
                                     = {conversionPrices[option.label]?.ckBTC}
                                   </p>
-                                  <p>= ?.?? USD</p>
+                                  <p>
+                                    ={' '}
+                                    {truncateToDecimalPlace(
+                                      getPriceBetweenTokens(
+                                        sonicTokenPairs,
+                                        'NUA',
+                                        'ckUSDC',
+                                        parseFloat(option.fee[0] || '0') *
+                                          Math.pow(
+                                            10,
+                                            getDecimalsByTokenSymbol('NUA')
+                                          )
+                                      ) /
+                                        Math.pow(
+                                          10,
+                                          getDecimalsByTokenSymbol('NUA')
+                                        ),
+                                      2
+                                    )}{' '}
+                                    USD
+                                  </p>
                                 </div>
                               </div>
                               <div className='subscription-radio-wrapper'>
@@ -571,8 +599,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
             {!sufficientBalance && !optionsLoading && (
               <WarningMessage
-                message="Insufficient balance. Please fund your "
-                link="/my-profile/wallet"
+                message='Insufficient balance. Please fund your '
+                link='/my-profile/wallet'
                 onClick={() => modalContext?.closeModal()}
               />
             )}
