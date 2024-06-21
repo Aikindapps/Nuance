@@ -121,8 +121,9 @@ function PublicationLanding() {
     unfollowTag: state.unfollowTag,
   }));
 
-  const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
+  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
     getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
   }));
 
   const featureIsLive = useContext(Context).publicationFeature;
@@ -198,6 +199,30 @@ function PublicationLanding() {
 
     fetchSubscriptionHistory();
   }, [isLoggedIn, author?.handle, user?.handle]);
+
+
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  //get subscription details
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (publicationCanisterId) {
+        try {
+          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(publicationCanisterId);
+          if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
+            setHasValidSubscriptionOptions(true);
+            console.log('Subscription details:', subscriptionDetails);
+          } else {
+            setHasValidSubscriptionOptions(false);
+            console.log('No valid subscription options');
+          }
+        } catch (error) {
+          console.log('Error fetching subscription details', error);
+        }
+      }
+    }
+    fetchSubscriptionDetails();
+  }
+    , [publicationCanisterId]);
 
   const getPublicationHandleFromUrl = () => {
     if (
@@ -579,7 +604,7 @@ function PublicationLanding() {
                   primaryColor={publication?.styling.primaryColor}
                 />
               </div>
-              {!subscribed &&
+              {!subscribed && hasValidSubscriptionOptions && isLoggedIn &&
                 <div className='Subscription-container'>
                   <SubscriptionCta onOpen={() => closeMenus()} />
                 </div>

@@ -458,6 +458,7 @@ const createSubscriptionStore:
         monthlyFee: monthlyFee ? [BigInt(monthlyFee)] : [],
       });
       if ('ok' in response) {
+
         return await convertWriterSubscriptionDetails(response.ok);
       } else {
         handleError(response.err);
