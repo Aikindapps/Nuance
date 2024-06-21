@@ -18,7 +18,6 @@ import { Row, Col } from 'react-bootstrap';
 import { PostType, PublicationObject, UserType } from '../../types/types';
 import { Context } from '../../contextes/Context';
 import { useTheme } from '../../contextes/ThemeContext';
-import { get } from 'lodash';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import { UserPostCounts } from '../../../declarations/PostCore/PostCore.did';
 import './_profile.scss';
@@ -29,7 +28,7 @@ import SubscribeButton from '../../components/subscribe-button/subscribe-button'
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
-import { useSubscriptionStore } from '../../store/subscriptionStore';
+import { WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -164,6 +163,29 @@ const Profile = () => {
 
     fetchSubscriptionHistory();
   }, [isLoggedIn, author?.handle, user?.handle]);
+
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  //get subscription details
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (authorPrincipalId) {
+        try {
+          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
+          if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
+            setHasValidSubscriptionOptions(true);
+            console.log('Subscription details:', subscriptionDetails);
+          } else {
+            setHasValidSubscriptionOptions(false);
+            console.log('No valid subscription options');
+          }
+        } catch (error) {
+          console.log('Error fetching subscription details', error);
+        }
+      }
+    }
+    fetchSubscriptionDetails();
+  }
+    , [authorPrincipalId]);
 
   const getSocialChannelUrls = () => {
     if (author) {
@@ -352,12 +374,14 @@ const Profile = () => {
                     user={user?.handle || ''}
                     isPublication={false}
                   />
-                  <SubscribeButton
-                    AuthorHandle={author?.handle || ''}
-                    user={user?.handle || ''}
-                    isPublication={false}
-                    isSubscribed={isSubscribed || false}
-                  />
+                  {isLoggedIn && user?.handle !== author?.handle && hasValidSubscriptionOptions &&
+                    <SubscribeButton
+                      AuthorHandle={author?.handle || ''}
+                      user={user?.handle || ''}
+                      isPublication={false}
+                      isSubscribed={isSubscribed || false}
+                    />
+                  }
                 </div>
               </div>
               {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
