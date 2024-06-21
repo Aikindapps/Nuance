@@ -1963,7 +1963,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         }
         index += 1;
       }
-      console.log('responses: ', responses);
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const item of result) {
@@ -2252,7 +2251,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         });
       var transactions: ArchiveTransaction[] =
         nuaTransactionsLedgerResponse.transactions;
-      console.log('rrr: ', transactions);
       //archive canister promises
       let promises = [];
       for (const archivedTransaction of nuaTransactionsLedgerResponse.archived_transactions) {

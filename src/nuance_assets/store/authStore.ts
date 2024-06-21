@@ -23,6 +23,7 @@ import {
   getUserActor,
 } from '../services/actorService';
 import {
+  ckUSDC_CANISTER_ID,
   NUA_CANISTER_ID,
   SUPPORTED_CANISTER_IDS,
   SUPPORTED_TOKENS,
@@ -30,6 +31,7 @@ import {
 } from '../shared/constants';
 import { canisterId as userCanisterId } from '../../declarations/User';
 import { PairInfoExt } from '../services/sonic/Sonic.did';
+import { getPriceBetweenTokens, truncateToDecimalPlace } from '../shared/utils';
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
   window.location.origin.includes('127.0.0.1');
@@ -180,6 +182,13 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         )
       );
     }
+    //add the ICP / ckUSDC pair
+    sonicTokenPairsPromises.push(
+      (await getSonicActor()).getPair(
+        Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
+        Principal.fromText(ckUSDC_CANISTER_ID) //ckUSDC canister id
+      )
+    );
     let [
       tokenBalancesResponses,
       sonicTokenPairsResponses,
@@ -223,7 +232,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         });
       }
     });
-
     set({ tokenBalances, sonicTokenPairs });
 
     //if the subaccount value is not empty, set the restricted token balance value

@@ -123,7 +123,7 @@ export const icons = {
   APPLAUD_ICON: iconsPath + 'applaud-icon.svg',
   CALENDAR_ICON: iconsPath + 'calendar.svg',
   CLOCK_ICON: iconsPath + 'clock.svg',
-  MEMBERS_ONLY: iconsPath + 'members-only.svg', 
+  MEMBERS_ONLY: iconsPath + 'members-only.svg',
 };
 
 export const colors = {
@@ -185,6 +185,8 @@ export const ICP_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai';
 export const ckBTC_CANISTER_ID = 'mxzaz-hqaaa-aaaar-qaada-cai';
 export const ckBTC_INDEX_CANISTER_ID = 'n5wcd-faaaa-aaaar-qaaea-cai';
 
+export const ckUSDC_CANISTER_ID = 'xevnm-gaaaa-aaaar-qafnq-cai';
+
 export const NUA_CANISTER_ID = 'rxdbk-dyaaa-aaaaq-aabtq-cai';
 export const SUPPORTED_CANISTER_IDS = [
   ICP_CANISTER_ID,
@@ -219,11 +221,16 @@ export const SUPPORTED_TOKENS: SupportedToken[] = [
   },
 ];
 
-export const getDecimalsByTokenSymbol = (symbol: SupportedTokenSymbol) => {
+export const getDecimalsByTokenSymbol = (
+  symbol: SupportedTokenSymbol | 'ckUSDC'
+) => {
   for (const supported of SUPPORTED_TOKENS) {
     if (supported.symbol === symbol) {
       return supported.decimals;
     }
+  }
+  if (symbol === 'ckUSDC') {
+    return 6;
   }
   //if not found (not possible), return 8 as default
   return 8;

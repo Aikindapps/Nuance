@@ -79,7 +79,6 @@ export const getPeriodBySubscriptionTimeInterval = (
 const convertReaderSubscriptionDetails = async (
   details: ReaderSubscriptionDetails
 ): Promise<ReaderSubscriptionDetailsConverted> => {
-  console.log('Converting details', details);
   let userActor = await getUserActor();
   let postCoreActor = await getPostCoreActor();
   //firstly, fetch all the user list items from the user canister
@@ -87,7 +86,6 @@ const convertReaderSubscriptionDetails = async (
   let allPrincipalIdsIncludingDuplicates = details.readerSubscriptions.map(
     (event) => event.writerPrincipalId
   );
-  console.log('1');
   let allPrincipalIds = [...new Set(allPrincipalIdsIncludingDuplicates)];
   let [allUserListItems, allPublications] = await Promise.all([
     userActor.getUsersByPrincipals(allPrincipalIds),
@@ -97,7 +95,6 @@ const convertReaderSubscriptionDetails = async (
   for (const userListItem of allUserListItems) {
     userListItemsMap.set(userListItem.principal, userListItem);
   }
-  console.log('2');
   //active
   let activeSubscriptionsWriterPrincipalIds =
     details.readerNotStoppedSubscriptionsWriters.map(
@@ -106,7 +103,6 @@ const convertReaderSubscriptionDetails = async (
   //key: writer principal id, value: SubscribedWriterItem
   let activeSubscriptionItemsMap = new Map<string, SubscribedWriterItem>();
   let expiredSubscriptionItemsArray: ExpiredSubscriptionItem[] = [];
-  console.log('3');
   for (const subscriptionEvent of details.readerSubscriptions) {
     if (
       activeSubscriptionsWriterPrincipalIds.includes(
