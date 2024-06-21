@@ -26,8 +26,7 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
 
 
         if (props.user === '') {
-            console.log('Subscribing to author:', props.AuthorHandle);
-            console.log('User:', props.user);
+
             handleRegister()
 
         } else {

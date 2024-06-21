@@ -240,6 +240,7 @@ margin-bottom: 8px;
 }
 
 .subscription-terms{
+    margin-top: 32px;
     display: flex;
     flex-direction: row;
     gap: 8px;
@@ -247,6 +248,12 @@ margin-bottom: 8px;
 
     input{
         cursor: pointer;
+    }
+    .terms{
+        font-size: 14px;
+        margin-left: 8px;
+
+
     }
 }
 
@@ -257,7 +264,7 @@ margin-bottom: 8px;
     flex-direction: column;
     align-items: center;
     border:none;
-    gap: 8px;
+    gap: 32px;
 }
 .subscription-buttons{
     display: flex;
@@ -284,4 +291,8 @@ margin-bottom: 8px;
 .success-icon{
     margin-left: 25px;
     margin-top: 32px;
+}
+
+.no-subscription-info{
+    margin: 20px 0px;
 }

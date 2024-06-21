@@ -10,7 +10,8 @@ import {
   TokenBalance,
 } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
-import RequiredFieldMessage from '../../components/required-field-message/required-field-message';
+import WarningMessage from '../../UI/warning-message/warning-message';
+import Loader from '../../UI/loader/Loader';
 import './_subscription-modal.scss';
 import { useSubscriptionStore } from '../../store/subscriptionStore';
 import { useAuthStore } from '../../store/authStore';
@@ -91,9 +92,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         selectedCurrencyAndBalance = tokenBalance;
       }
     });
-    console.log('selectedCurrencyAndBalance', selectedCurrencyAndBalance);
-    console.log('fee', fee);
-    console.log('SUPPORTED_TOKENS[0].fee', SUPPORTED_TOKENS[0].fee);
 
     return (
       selectedCurrencyAndBalance &&
@@ -103,6 +101,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
   const [subscriptionDetails, setSubscriptionDetails] =
     useState<WriterSubscriptionDetails | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
@@ -140,6 +139,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         }
       } catch (error) {
         console.error('Error fetching subscription details:', error);
+      } finally {
+        setOptionsLoading(false);
       }
     };
 
@@ -292,14 +293,12 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     { label: 'Lifetime', fee: subscriptionDetails?.lifeTimeFee },
   ];
 
-  const hasValidOptions = subscriptionOptions.some(
+  const hasValidOptions = !optionsLoading && subscriptionOptions.some(
     (option) => option.fee && option.fee.length > 0
   );
 
   return (
-    <div
-      className={darkTheme ? 'subscription-modal dark' : 'subscription-modal'}
-    >
+    <div className={darkTheme ? 'subscription-modal dark' : 'subscription-modal'}>
       {isSubscriptionComplete ? (
         <>
           <div className='modal-top-row'>
@@ -438,7 +437,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             Subscribe to {isPublication ? 'Publication' : 'User'}
           </h2>
           <div className='subscribee-info'>
-            <img className='profile-image' src={profileImage} alt='profile' />
+            <img className='profile-image' src={profileImage != "" ? profileImage : images.DEFAULT_AVATAR} alt='profile' />
             {isPublication && (
               <img
                 src={icons.PUBLICATION_ICON}
@@ -452,7 +451,9 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           </div>
 
           <div className='subscription-modal-content'>
-            {hasValidOptions ? (
+            {optionsLoading ? (
+              <Loader />
+            ) : hasValidOptions ? (
               <>
                 <p className='subscription-info'>
                   When you subscribe to this{' '}
@@ -470,16 +471,14 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                       option.fee &&
                       option.fee.length > 0 && (
                         <div
-                          className={`option-wrapper ${
-                            selectedOption === option.label ? 'selected' : ''
-                          }`}
+                          className={`option-wrapper ${selectedOption === option.label ? 'selected' : ''
+                            }`}
                           key={option.label}
                           onClick={() => setSelectedOption(option.label)}
                         >
                           <div
-                            className={`option ${
-                              selectedOption === option.label ? 'selected' : ''
-                            } ${darkTheme ? 'dark' : ''}`}
+                            className={`option ${selectedOption === option.label ? 'selected' : ''
+                              } ${darkTheme ? 'dark' : ''}`}
                           >
                             <div className='option-content'>
                               <img
@@ -539,33 +538,42 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <div className='subscription-modal-footer'>
             {hasValidOptions && (
               <div className='subscription-terms'>
-                <input
-                  type='checkbox'
-                  className='checkbox'
-                  checked={termsChecked}
-                  onChange={() => {
-                    setTermsChecked(!termsChecked);
-                    setTermCheckWarning(false);
-                  }}
-                />
-                <p className='terms'>
-                  I am aware of{' '}
-                  <a
-                    style={darkTheme ? { color: 'white' } : {}}
-                    href='https://app.gitbook.com/o/-McG0wq9TbYHdM2GDu8k/s/-MfI7efMoHhyGJ3oojln/terms-and-conditions'
-                    target='_blank'
-                    rel='noreferrer'
-                  >
-                    terms and conditions
-                  </a>
-                  , general policy and agree to them.
-                </p>
+                <label className='terms-label'>
+                  <input
+                    type='checkbox'
+                    className='checkbox'
+                    checked={termsChecked}
+                    onChange={() => {
+                      setTermsChecked(!termsChecked);
+                      setTermCheckWarning(false);
+                    }}
+                  />
+                  <span className='terms'>
+                    I am aware of{' '}
+                    <a
+                      style={darkTheme ? { color: 'white' } : {}}
+                      href='https://app.gitbook.com/o/-McG0wq9TbYHdM2GDu8k/s/-MfI7efMoHhyGJ3oojln/terms-and-conditions'
+                      target='_blank'
+                      rel='noreferrer'
+                      onClick={(e) => e.stopPropagation()} // Prevent the link click from toggling the checkbox
+                    >
+                      terms and conditions
+                    </a>
+                    , general policy and agree to them.
+                  </span>
+                </label>
               </div>
             )}
+
             {termCheckWarning && (
-              <RequiredFieldMessage
-                hasError={termCheckWarning}
-                errorMessage='Please select an option and agree to the terms and conditions.'
+              <WarningMessage message='Please select an option and agree to the terms and conditions.' />
+            )}
+
+            {!sufficientBalance && !optionsLoading && (
+              <WarningMessage
+                message="Insufficient balance. Please fund your "
+                link="/my-profile/wallet"
+                onClick={() => modalContext?.closeModal()}
               />
             )}
             <div className='subscription-buttons'>
@@ -597,12 +605,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 Subscribe
               </Button>
             </div>
-            {!sufficientBalance ? (
-              <RequiredFieldMessage
-                hasError={true}
-                errorMessage={'Please top up wallet with NUA'}
-              />
-            ) : null}
           </div>
         </>
       )}

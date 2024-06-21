@@ -51,6 +51,7 @@ import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscri
 import { useSubscriptionStore } from '../../store/subscriptionStore';
 import { SubscriptionStore } from '../../store/subscriptionStore';
 import { Principal } from '@dfinity/principal';
+import { set } from 'lodash';
 
 const CreateEditPublication = () => {
   const { handle } = useParams();
@@ -379,6 +380,26 @@ const CreateEditPublication = () => {
     }
   }, [getPublicationError]);
 
+
+  const [validPrincipal, setValidPrincipal] = useState(true);
+  useEffect(() => {
+    if (subscriptionDetails.writerPrincipalId) {
+      validatePrincipal();
+    }
+  }, [subscriptionDetails.writerPrincipalId]);
+
+  const validatePrincipal = () => {
+    try {
+      let validation =
+        subscriptionDetails.writerPrincipalId === Principal.fromText(subscriptionDetails.writerPrincipalId).toText();
+      setValidPrincipal(validation);
+      return validation;
+    } catch (e) {
+      setValidPrincipal(false);
+      return false;
+    }
+  };
+
   useEffect(() => {
     fillFormValues();
     console.log("called fillFormValues, here's the pub", publication);
@@ -420,6 +441,14 @@ const CreateEditPublication = () => {
       }
       return;
     }
+    if (!validatePrincipal()) {
+      let el = document.getElementById('principal');
+      if (el) {
+        console.log(0, el.offsetTop);
+        window.scrollTo(0, el.offsetTop - 10);
+      }
+      return;
+    }
     if (publicationCtaWebsiteWarning) {
       let el = document.getElementById('pub-banner');
       if (el) {
@@ -427,10 +456,14 @@ const CreateEditPublication = () => {
         window.scrollTo(0, el.offsetTop - 10);
       }
       return;
-    }
 
+    }
     window.scrollTo(0, 0);
+
+
   };
+
+
 
   function validate() {
     const isValid =
@@ -440,7 +473,9 @@ const CreateEditPublication = () => {
       !publicationWarning &&
       !publicationDescriptionWarning &&
       !publicationCtaWebsiteWarning &&
-      publicationBannerImage !== '';
+      publicationBannerImage !== '' &&
+      validatePrincipal();
+
     return isValid;
   }
 
@@ -2107,6 +2142,7 @@ const CreateEditPublication = () => {
                   updateSubscriptionDetails={handleUpdateSubscriptionDetails}
                   setSubscriptionDetails={setSubscriptionDetails}
                   isPublication={true}
+                  error={!validPrincipal}
                 />
               </div>
 

@@ -12,7 +12,17 @@ import { Link } from 'react-router-dom';
 
 
 
-const Menu = ({ activeTab, subscription, openSubscriptionModal, openCancelSubscriptionModal }: { activeTab: string, subscription: SubscribedWriterItem | ExpiredSubscriptionItem, openSubscriptionModal: (subscription: SubscribedWriterItem | ExpiredSubscriptionItem) => void, openCancelSubscriptionModal: (subscription: SubscribedWriterItem | ExpiredSubscriptionItem) => void }) => {
+const Menu = ({
+    activeTab,
+    subscription,
+    openSubscriptionModal,
+    openCancelSubscriptionModal,
+}: {
+    activeTab: string;
+    subscription: SubscribedWriterItem | ExpiredSubscriptionItem;
+    openSubscriptionModal: (subscription: SubscribedWriterItem | ExpiredSubscriptionItem) => void;
+    openCancelSubscriptionModal: (subscription: SubscribedWriterItem | ExpiredSubscriptionItem) => void;
+}) => {
     const darkTheme = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -30,6 +40,11 @@ const Menu = ({ activeTab, subscription, openSubscriptionModal, openCancelSubscr
         toggleMenu();
     };
 
+    if ('subscriptionEndDate' in subscription) {
+        console.log(`Subscription End Date: ${new Date(subscription.subscriptionEndDate)}`);
+        console.log(`Current Date: ${new Date()}`);
+    }
+
     return (
         <div className='menu-container'>
             <img src={isOpen ? icons.THREE_DOTS_BLUE : icons.THREE_DOTS} alt="Menu" onClick={toggleMenu} />
@@ -37,13 +52,20 @@ const Menu = ({ activeTab, subscription, openSubscriptionModal, openCancelSubscr
                 <div className='menu-dropdown'>
                     {activeTab === 'expired' ? (
                         <>
-                            <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}><p>Go to {subscription.isPublication ? "publication" : "user profile"}</p></Link>
-                            <p onClick={handleOpenSubscriptionModal}>Start publication subscription</p>
+                            <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}>
+                                <p>Go to {subscription.isPublication ? "publication" : "user profile"}</p>
+                            </Link>
+                            {'subscriptionEndDate' in subscription && subscription.subscriptionEndDate < Date.now() && (
+                                <p onClick={handleOpenSubscriptionModal}>
+                                    Start {subscription.isPublication && " publication "} subscription
+                                </p>
+                            )}
                         </>
                     ) : (
                         <>
-                            <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}><p>Go to {subscription.isPublication ? "publication" : "user profile"}</p></Link>
-
+                            <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}>
+                                <p>Go to {subscription.isPublication ? "publication" : "user profile"}</p>
+                            </Link>
                             <p onClick={handleOpenCancelSubscriptionModal}>Cancel subscription</p>
                         </>
                     )}
@@ -52,6 +74,7 @@ const Menu = ({ activeTab, subscription, openSubscriptionModal, openCancelSubscr
         </div>
     );
 };
+
 
 
 const Subscriptions = () => {
@@ -71,6 +94,7 @@ const Subscriptions = () => {
         getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
     }));
 
+
     const { getPrincipalByHandle } = useUserStore((state) => ({
         getPrincipalByHandle: state.getPrincipalByHandle,
     }));
@@ -85,17 +109,18 @@ const Subscriptions = () => {
         setActiveTab(tab);
     };
 
-    useEffect(() => {
-        const fetchSubscriptionHistory = async () => {
-            try {
-                const history = await getMySubscriptionHistoryAsReader();
-                if (history) {
-                    setSubscriptions(history);
-                }
-            } catch (error) {
-                console.error('Error fetching subscription history:', error);
+    const fetchSubscriptionHistory = async () => {
+        try {
+            const history = await getMySubscriptionHistoryAsReader();
+            if (history) {
+                setSubscriptions(history);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching subscription history:', error);
+        }
+    };
+
+    useEffect(() => {
 
         fetchSubscriptionHistory();
     }, [getMySubscriptionHistoryAsReader]);
@@ -131,7 +156,7 @@ const Subscriptions = () => {
                     authorPrincipalId={principalId || ''}
                     profileImage={selectedSubscription.userListItem.avatar}
                     isPublication={selectedSubscription.isPublication}
-                    onSubscriptionComplete={() => { }}
+                    onSubscriptionComplete={() => { fetchSubscriptionHistory(); }}
                 />
             )}
 
@@ -141,7 +166,7 @@ const Subscriptions = () => {
                     profileImage={selectedSubscription.userListItem.avatar}
                     isPublication={selectedSubscription.isPublication}
                     authorPrincipalId={principalId || ''}
-                    onCancelComplete={() => { }}
+                    onCancelComplete={() => { fetchSubscriptionHistory(); }}
                 />
             )}
 
@@ -168,9 +193,8 @@ const Subscriptions = () => {
                     <table className='subscription-table'>
                         <thead>
                             <tr>
-                                <th>PUBLICATION</th>
+                                <th style={{ width: "10px" }}>PUBLISHER</th>
                                 <th></th>
-                                <th>PUBLISHER</th>
                                 <th>SUBSCRIBED SINCE</th>
                                 <th>PERIOD</th>
                                 <th>FEE PER PERIOD</th>
@@ -182,7 +206,6 @@ const Subscriptions = () => {
                             {filteredSubscriptions.map((sub) => (
                                 <tr key={sub.subscriptionStartDate}>
                                     <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /> </Link></td>
-                                    <td>{sub.userListItem.displayName}</td>
                                     <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
                                     <td>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td>{sub.period}</td>

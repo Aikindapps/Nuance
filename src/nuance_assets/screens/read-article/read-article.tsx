@@ -249,10 +249,12 @@ const ReadArticle = () => {
   }, [post]);
 
   useEffect(() => {
-    if (post?.isMembersOnly && post?.content === "") {
+    if (post?.isMembersOnly && post?.content === "" && isLoggedIn) {
       openSubscriptionModal();
+    } else if (post?.isMembersOnly && post?.content === "" && !isLoggedIn) {
+      modalContext?.openModal('Login');
     }
-  }, [post]);
+  }, [post, user]);
 
   useEffect(() => {
     if (post) {
@@ -662,7 +664,7 @@ const ReadArticle = () => {
                       load();
                     }}
                   />
-                ) : post.isMembersOnly && post.content === "" ? (
+                ) : post.isMembersOnly && post.content === "" && isLoggedIn ? (
                   <>
                     {modalType === 'Subscription' && modalContext?.isModalOpen && (
                       <SubscriptionModal
@@ -684,7 +686,8 @@ const ReadArticle = () => {
                       />
                     )}
                   </>
-                ) : null}
+                ) :
+                  null}
 
 
 

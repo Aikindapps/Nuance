@@ -83,8 +83,9 @@ const Profile = () => {
     getPostsByFollowers: state.getPostsByFollowers,
   }));
 
-  const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
-    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader
+  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
   }));
 
   const load = async () => {
@@ -142,6 +143,7 @@ const Profile = () => {
     load();
   }, []);
 
+
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
       if (isLoggedIn) {
@@ -178,7 +180,7 @@ const Profile = () => {
   const context = useContext(Context);
 
   const handleSubscriptionComplete = () => {
-    //any action after subscription
+    setIsSubscribed(!isSubscribed);
   };
 
   return (

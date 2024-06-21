@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Toggle from '../../UI/toggle/toggle';
 import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Context } from '../../contextes/Context';
 import InputField from '../../UI/InputField2/InputField2';
-import { colors, icons } from '../../shared/constants';
+import { colors } from '../../shared/constants';
+import RequiredFieldMessage from '../../components/required-field-message/required-field-message';
+import { Principal } from '@dfinity/principal';
 
 interface SubscriptionDetailsState extends WriterSubscriptionDetails {
   weeklyFeeEnabled: boolean;
@@ -20,6 +22,7 @@ interface MembershipSubscriptionProps {
   >;
   updateSubscriptionDetails: () => void;
   isPublication: boolean;
+  error?: boolean;
 }
 
 const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
@@ -27,23 +30,30 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
   setSubscriptionDetails,
   updateSubscriptionDetails,
   isPublication,
+  error,
 }) => {
   const darkTheme = useTheme();
   const context = React.useContext(Context);
+  const [inputAddressErrorMessage, setInputAddressErrorMessage] = useState('');
+
+
   const handleFeeChange = (
     type: keyof WriterSubscriptionDetails,
     value: number
   ) => {
-    setSubscriptionDetails((prevOptions) => ({
-      ...prevOptions,
-      [type]: [value],
-    }));
+    if (value > 0) {
+      setSubscriptionDetails((prevOptions) => ({
+        ...prevOptions,
+        [type]: [value],
+      }));
+    }
   };
 
   const handleToggleChange = (type: keyof SubscriptionDetailsState) => {
     setSubscriptionDetails((prevOptions) => ({
       ...prevOptions,
       [type]: !prevOptions[type],
+      ...(prevOptions[type] ? { [type.replace('Enabled', '')]: [] } : {}),
     }));
   };
 
@@ -57,6 +67,9 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
     'annuallyFee',
     'lifeTimeFee',
   ] as const;
+
+
+
 
   return (
     <div className='membership-subscription'>
@@ -75,9 +88,8 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
         {feeTypes.map((type) => (
           <div
             key={type}
-            className={`subscription-settings-option ${
-              subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''
-            }`}
+            className={`subscription-settings-option ${subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''
+              }`}
           >
             <div className='toggle'>
               <Toggle
@@ -100,13 +112,14 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               >
                 <input
                   type='number'
-                  value={subscriptionDetails[type]?.[0] ?? 0}
+                  value={subscriptionDetails[type]?.[0] ?? ''}
                   placeholder='0 NUA'
                   onChange={(e) =>
                     handleFeeChange(type, parseFloat(e.target.value) || 0)
                   }
                   disabled={!subscriptionDetails[`${type}Enabled`]}
                   className={darkTheme ? 'dark' : ''}
+                  min={1}
                 />
                 <div className='buttons'>
                   <button
@@ -130,7 +143,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                       )
                     }
                     disabled={
-                      Number(subscriptionDetails[type]?.[0] ?? 0) <= 0 ||
+                      Number(subscriptionDetails[type]?.[0] ?? 0) <= 1 ||
                       !subscriptionDetails[`${type}Enabled`]
                     }
                   >
@@ -174,6 +187,9 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               icon={undefined}
               button={undefined}
             />
+            {error && (
+              <RequiredFieldMessage hasError={error} errorMessage={"Invalid Principal Id!"} />
+            )}
           </div>
         )}
       </div>
