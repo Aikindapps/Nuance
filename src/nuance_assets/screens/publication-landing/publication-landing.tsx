@@ -30,7 +30,9 @@ import SubscriptionCta from '../../components/subscription-cta/subscription-cta'
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
-import { useSubscriptionStore } from '../../store';
+import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+
+
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -170,6 +172,9 @@ function PublicationLanding() {
     }
   }, [publication]);
 
+
+  const [isExpiring, setIsExpiring] = useState<boolean>(false);
+
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
       if (isLoggedIn) {
@@ -181,11 +186,12 @@ function PublicationLanding() {
             let isSubscribed = history.activeSubscriptions.some((subscription) => {
               console.log('subscription', subscription);
               return subscription.userListItem.handle === author?.handle;
+
             });
 
             if (!isSubscribed) {
               isSubscribed = history.expiredSubscriptions.some((subscription) => {
-                return subscription.userListItem.handle === author?.handle;
+                return subscription.userListItem.handle === author?.handle && subscription.subscriptionEndDate > Date.now();
               });
             }
 
@@ -223,6 +229,21 @@ function PublicationLanding() {
     fetchSubscriptionDetails();
   }
     , [publicationCanisterId]);
+
+  function checkExpiringSubscriptions(subscriptionHistory: ReaderSubscriptionDetailsConverted, authorHandle: string) {
+    const currentTime = Date.now();
+    const { expiredSubscriptions } = subscriptionHistory;
+
+    const isExpiring = expiredSubscriptions.some(subscription => {
+      return (
+        subscription.userListItem.handle === authorHandle &&
+        subscription.subscriptionEndDate > currentTime
+      );
+    });
+
+    return isExpiring;
+  }
+
 
   const getPublicationHandleFromUrl = () => {
     if (

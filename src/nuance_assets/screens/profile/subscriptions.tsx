@@ -206,7 +206,7 @@ const Subscriptions = () => {
                             {filteredSubscriptions.map((sub) => (
                                 <tr key={sub.subscriptionStartDate}>
                                     <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /> </Link></td>
-                                    <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
+                                    <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`} style={{ color: "currentcolor" }}>@{sub.userListItem.handle}</Link></td>
                                     <td>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td>{sub.period}</td>
                                     <td>{sub.feePerPeriod / 1e8} NUA</td>

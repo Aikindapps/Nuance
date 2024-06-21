@@ -28,7 +28,8 @@ import SubscribeButton from '../../components/subscribe-button/subscribe-button'
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
-import { WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+import { set } from 'lodash';
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -46,6 +47,8 @@ const Profile = () => {
   const darkTheme = useTheme();
   const modalContext = useContext(ModalContext);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isExpiring, setIsExpiring] = useState<boolean>(false);
+
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -150,10 +153,12 @@ const Profile = () => {
           let history = await getMySubscriptionHistoryAsReader();
 
           if (history) {
+            console.log('Subscription history:', history);
             let isSubscribed = history.activeSubscriptions.some((subscription) => {
               return subscription.userListItem.handle === author?.handle;
             });
             setIsSubscribed(isSubscribed);
+            setIsExpiring(checkExpiringSubscriptions(history, author?.handle || ''));
           }
         } catch (error) {
           console.log('Error fetching subscription history', error);
@@ -173,7 +178,7 @@ const Profile = () => {
           let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
           if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
             setHasValidSubscriptionOptions(true);
-            console.log('Subscription details:', subscriptionDetails);
+
           } else {
             setHasValidSubscriptionOptions(false);
             console.log('No valid subscription options');
@@ -186,6 +191,20 @@ const Profile = () => {
     fetchSubscriptionDetails();
   }
     , [authorPrincipalId]);
+
+  function checkExpiringSubscriptions(subscriptionHistory: ReaderSubscriptionDetailsConverted, authorHandle: string) {
+    const currentTime = Date.now();
+    const { expiredSubscriptions } = subscriptionHistory;
+
+    const isExpiring = expiredSubscriptions.some(subscription => {
+      return (
+        subscription.userListItem.handle === authorHandle &&
+        subscription.subscriptionEndDate > currentTime
+      );
+    });
+
+    return isExpiring;
+  }
 
   const getSocialChannelUrls = () => {
     if (author) {
@@ -374,7 +393,7 @@ const Profile = () => {
                     user={user?.handle || ''}
                     isPublication={false}
                   />
-                  {isLoggedIn && user?.handle !== author?.handle && hasValidSubscriptionOptions &&
+                  {isLoggedIn && user?.handle !== author?.handle && hasValidSubscriptionOptions && !isExpiring &&
                     <SubscribeButton
                       AuthorHandle={author?.handle || ''}
                       user={user?.handle || ''}
