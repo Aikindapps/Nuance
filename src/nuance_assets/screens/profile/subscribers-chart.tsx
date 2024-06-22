@@ -18,7 +18,15 @@ interface SubscribersChartProps {
 const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     console.log('SubscribersChart data:', data);
 
-    const isValidData = data && data.length > 0 && data.every(item => item.day && typeof item.count === 'number');
+    // Ensure the data is valid and unique
+    const filteredData = data.filter(
+        (item, index, self) =>
+            item.day &&
+            typeof item.count === 'number' &&
+            self.findIndex((i) => i.day === item.day) === index
+    );
+
+    const isValidData = filteredData.length > 0;
 
     if (!isValidData) {
         return <div>You do not have any subscription data yet.</div>;
@@ -29,7 +37,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         datasets: [
             {
                 label: 'Subscribers',
-                data: data.map(item => ({ x: new Date(item.day), y: item.count })),
+                data: filteredData.map(item => ({ x: new Date(item.day), y: item.count })),
                 borderColor: '#435AAC',
                 backgroundColor: 'rgba(2, 195, 161, 0.2)',
                 fill: false,
@@ -39,12 +47,12 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     };
 
     // Calculate the minimum date (3 months before the first date in the data)
-    const firstDate = new Date(data[0].day);
+    const firstDate = new Date(filteredData[0].day);
     const minDate = new Date(firstDate);
     minDate.setMonth(minDate.getMonth() - 3);
 
     // Calculate the maximum date (1 month after the last date in the data)
-    const lastDate = new Date(data[data.length - 1].day);
+    const lastDate = new Date(filteredData[filteredData.length - 1].day);
     const maxDate = new Date(lastDate);
     maxDate.setMonth(maxDate.getMonth() + 1);
 
