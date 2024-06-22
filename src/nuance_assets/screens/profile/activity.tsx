@@ -10,6 +10,7 @@ type ActivityLinkProps = {
     followersCount: number;
     dark?: boolean;
     subscriptionCount: number;
+    subscribersCount: number;
 };
 
 const Activity: React.FC<ActivityLinkProps> = ({
@@ -18,6 +19,7 @@ const Activity: React.FC<ActivityLinkProps> = ({
     followersCount,
     dark,
     subscriptionCount,
+    subscribersCount,
 }) => {
     const [isActivityExpanded, setIsActivityExpanded] = useState(false);
     const location = useLocation();
@@ -28,7 +30,7 @@ const Activity: React.FC<ActivityLinkProps> = ({
             goto: '/my-profile/subscriptions',
         },
         {
-            title: `My Subscribers (${followersCount})`,
+            title: `My Subscribers (${subscribersCount})`,
             goto: '/my-profile/subscribers',
         },
         {

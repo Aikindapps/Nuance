@@ -56,8 +56,9 @@ const ProfileSidebar = () => {
     }));
 
   const [subscriptionCount, setSubscriptionCount] = useState<number>(0);
-  const { getMySubscriptionHistoryAsReader } = useSubscriptionStore((state) => ({
-    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader
+  const { getMySubscriptionHistoryAsReader, getMySubscriptionDetailsAsWriter } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getMySubscriptionDetailsAsWriter: state.getMySubscriptionDetailsAsWriter,
   }));
 
   useEffect(() => {
@@ -75,6 +76,24 @@ const ProfileSidebar = () => {
 
     fetchSubscriptionHistory();
   }, [getMySubscriptionHistoryAsReader]);
+
+  const [subscriberCount, setSubscriberCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      try {
+        const details = await getMySubscriptionDetailsAsWriter();
+        console.log('Subscription Details:', details);
+        if (details) {
+          setSubscriberCount(details.subscribersCount);
+        }
+      } catch (error) {
+        console.error('Error fetching subscription details:', error);
+      }
+    };
+
+    fetchSubscriptionDetails();
+  }, [getMySubscriptionDetailsAsWriter]);
 
   const { getMyTags, myTags } = usePostStore((state) => ({
     getMyTags: state.getMyTags,
@@ -224,6 +243,7 @@ const ProfileSidebar = () => {
                       followingCount={user?.followersArray.length || 0}
                       followersCount={user?.followersCount || 0}
                       subscriptionCount={subscriptionCount || 0}
+                      subscribersCount={subscriberCount || 0}
                     />
 
                     {userPublications.length !== 0 ? (
