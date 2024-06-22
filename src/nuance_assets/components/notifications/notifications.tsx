@@ -18,7 +18,7 @@ import Button from '../../UI/Button/Button';
 
 type NotificationsSidebarProps = {};
 
-const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
+const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
   const darkTheme = useTheme();
   const darkOptionsAndColors = {
     background: darkTheme
@@ -205,6 +205,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
     }
   };
 
+  const handleSubscriptionClick = () => {
+    window.location.href = '/my-profile/subscriptions';
+  };
+
   function getNotificationTypeKey(notificationType: NotificationType): string {
     return Object.keys(notificationType)[0];
   }
@@ -299,8 +303,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
         );
       case 'YouSubscribedToAuthor':
         return (
+
           <span>
-            You <b>subscribed</b> to a writer. Enjoy!
+            You <b className='subscription-notification-text' onClick={handleSubscriptionClick}>subscribed</b> to a writer. Enjoy!
           </span>
         );
       case 'readerExpiredSubscription':
@@ -356,9 +361,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
   return (
     <aside
       ref={sidebarRef}
-      className={`notifications-sidebar ${
-        modalContext?.isSidebarOpen ? 'open' : ''
-      }`}
+      className={`notifications-sidebar ${modalContext?.isSidebarOpen ? 'open' : ''
+        }`}
       style={darkTheme ? { background: darkOptionsAndColors.background } : {}}
     >
       <div className='exit-icon' onClick={toggleSidebar}>
@@ -374,9 +378,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
         <h2>NOTIFICATIONS ({unreadNotificationCount} NEW)</h2>
         <div className='header-right'>
           <div
-            className={`notification-bell ${
-              currentView === 'notifications' ? 'selected' : ''
-            }`}
+            className={`notification-bell ${currentView === 'notifications' ? 'selected' : ''
+              }`}
             onClick={handleNotificationsClick}
           >
             <img
@@ -390,9 +393,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
           </div>
 
           <div
-            className={`settings-icon ${
-              currentView === 'settings' ? 'selected' : ''
-            }`}
+            className={`settings-icon ${currentView === 'settings' ? 'selected' : ''
+              }`}
             onClick={handleSettingsClick}
           >
             <img
@@ -410,9 +412,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
           }
         >
           <div
-            className={`notification-settings-content ${
-              darkTheme ? 'dark' : ''
-            }`}
+            className={`notification-settings-content ${darkTheme ? 'dark' : ''
+              }`}
           >
             <p>
               Please activate or de-activate the notifications of your choice:
@@ -492,11 +493,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
           {notifications.map((notification) => (
             <li
               key={notification.id}
-              className={`notification ${darkTheme ? 'dark' : ''} ${
-                notification.read ? 'read' : ''
-              } ${
-                selectedNotificationId === notification.id ? 'selected' : ''
-              }`}
+              className={`notification ${darkTheme ? 'dark' : ''} ${notification.read ? 'read' : ''
+                } ${selectedNotificationId === notification.id ? 'selected' : ''
+                }`}
               onClick={() => handleNotificationClick(notification)}
             >
               <div className='notification-details'>
@@ -522,9 +521,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({}) => {
                   </span>
                 </div>
                 <span
-                  className={`notification-action ${
-                    notification.read ? 'read' : ''
-                  }`}
+                  className={`notification-action ${notification.read ? 'read' : ''
+                    }`}
                 >
                   {formatNotificationMessage(notification)}
                 </span>

@@ -117,6 +117,10 @@ const CustomNotificationContent = ({
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
+  const handleSubscriptionClick = () => {
+    window.location.href = '/my-profile/subscriptions';
+  };
+
   function formatNotificationMessage(notification: Notifications) {
     const notificationTypeKey = getNotificationTypeKey(
       notification.notificationType
@@ -201,7 +205,7 @@ const CustomNotificationContent = ({
       case 'YouSubscribedToAuthor':
         return (
           <span>
-            You <b>subscribed</b> to a writer. Enjoy!
+            You <b className='subscription-notification-text' onClick={handleSubscriptionClick}>subscribed</b> to a writer. Enjoy!
           </span>
         );
       case 'readerExpiredSubscription':
