@@ -117,8 +117,12 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
     }, [selectedDate, onDateChange]);
 
     useEffect(() => {
-        setSelectedAccess(initialAccess ? initialAccess.label : 'Public');
-    }, [isPremium, validSubscriptionOptions, initialAccess]);
+        const accessOptions = getAccessOptions();
+        if (!accessOptions.includes(selectedAccess)) {
+            const defaultAccess = accessOptions[0];
+            handleAccessChange(defaultAccess);
+        }
+    }, [isPremium, validSubscriptionOptions]);
 
     return (
         <div style={{ background: darkTheme ? colors.darkModePrimaryBackgroundColor : "" }} className="custom-date-time-picker">

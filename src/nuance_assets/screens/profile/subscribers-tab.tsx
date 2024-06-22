@@ -130,11 +130,11 @@ const SubscribersTab: React.FC<SubscribersTabProps> = ({ publicationInfo }) => {
                 <tbody>
                     {subscribers.map((sub) => (
                         <tr key={sub.subscriptionStartDate}>
-                            <td><Link to={`/user/${sub.userListItem.handle}`}><img className='subscribers-tab-avatar' src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /></Link> <Link to={`/user/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
-                            <td>{formatDate(sub.subscriptionStartDate)}</td>
-                            <td>{sub.period}</td>
-                            <td>{sub.feePerPeriod / 1e8}</td>
-                            <td>{sub.totalFees / 1e8}</td>
+                            <td><Link to={`/user/${sub.userListItem.handle}`}><img className='subscribers-tab-avatar' src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /></Link> <Link className='subscribers-tab-chart-handle' to={`/user/${sub.userListItem.handle}`}>@{sub.userListItem.handle}</Link></td>
+                            <td className='subscribers-tab-chart-info'>{formatDate(sub.subscriptionStartDate)}</td>
+                            <td className='subscribers-tab-chart-info'>{sub.period}</td>
+                            <td className='subscribers-tab-chart-info'>{sub.feePerPeriod / 1e8}</td>
+                            <td className='subscribers-tab-chart-info'>{sub.totalFees / 1e8}</td>
                         </tr>
                     ))}
                 </tbody>
