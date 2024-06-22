@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker, { CalendarContainer } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import Select, { SingleValue } from 'react-select';
 import './_schedule-publish.scss';
 import { icons, colors } from '../../shared/constants';
+import { useTheme } from '../../contextes/ThemeContext';
+import Dropdown from '../../UI/dropdown/dropdown';
 
 interface CustomDateTimePickerProps {
     onDateChange: (date: Date | null) => void;
@@ -11,6 +12,7 @@ interface CustomDateTimePickerProps {
     onAccessChange: (access: { value: string, label: string }) => void;
     initialAccess?: { value: string, label: string };
     isPremium?: boolean;
+    validSubscriptionOptions: boolean;
 }
 
 const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
@@ -18,30 +20,28 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
     onTimeChange,
     onAccessChange,
     initialAccess,
-    isPremium = false
+    isPremium = false,
+    validSubscriptionOptions
 }) => {
     const currentDate = new Date();
     const [selectedDate, setSelectedDate] = useState<Date | null>(currentDate);
     const [selectedTime, setSelectedTime] = useState({ hours: currentDate.getHours().toString().padStart(2, '0'), minutes: currentDate.getMinutes().toString().padStart(2, '0') });
-    const [selectedAccess, setSelectedAccess] = useState<SingleValue<{ value: string; label: string }> | null>(initialAccess ? { value: initialAccess.value, label: initialAccess.label } : null);
+    const [selectedAccess, setSelectedAccess] = useState<string>(initialAccess ? initialAccess.label : 'Public');
 
-    const accessOptions = isPremium ?
-        [
-            { value: 'public', label: 'Public' }
-        ]
-        :
-        [
-            { value: 'members-only', label: 'Members only' },
-            { value: 'public', label: 'Public' }
-        ];
+    const darkTheme = useTheme();
 
-
-
-    const handleAccessChange = (newValue: SingleValue<{ value: string; label: string }>) => {
-        setSelectedAccess(newValue);
-        onAccessChange(newValue as { value: string, label: string });
+    const getAccessOptions = () => {
+        if (isPremium || !validSubscriptionOptions) {
+            return ['Public'];
+        }
+        return ['Members only', 'Public'];
     };
 
+    const handleAccessChange = (newValue: string) => {
+        const accessObject = { value: newValue.toLowerCase().replace(' ', '-'), label: newValue };
+        setSelectedAccess(newValue);
+        onAccessChange(accessObject);
+    };
 
     const handleTimeChange = (type: 'hours' | 'minutes') => (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newTime = { ...selectedTime, [type]: e.target.value };
@@ -116,9 +116,13 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
         onDateChange(selectedDate);
     }, [selectedDate, onDateChange]);
 
+    useEffect(() => {
+        setSelectedAccess(initialAccess ? initialAccess.label : 'Public');
+    }, [isPremium, validSubscriptionOptions, initialAccess]);
+
     return (
-        <div className="custom-date-time-picker">
-            <div className="form-group">
+        <div style={{ background: darkTheme ? colors.darkModePrimaryBackgroundColor : "" }} className="custom-date-time-picker">
+            <div className="schedule-publish-form-group">
                 <label className="edit-article-left-manage-title">PUBLISH {isPremium && " AND MINT "} MOMENT</label>
                 <div className="date-time-picker">
                     <DatePicker
@@ -133,12 +137,13 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
                     />
                 </div>
             </div>
-            <div className="form-group">
+            <div className="schedule-publish-form-group">
                 <label className="edit-article-left-manage-title">ACCESS</label>
-                <Select
-                    value={isPremium ? accessOptions[0] : selectedAccess}
-                    onChange={handleAccessChange}
-                    options={accessOptions}
+                <Dropdown
+                    items={getAccessOptions()}
+                    onSelect={handleAccessChange}
+                    uniqueId="access-dropdown"
+                    selected={selectedAccess}
                     className="access-select"
                 />
             </div>

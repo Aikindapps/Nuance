@@ -47,6 +47,7 @@ import { UserStore } from '../../store/userStore';
 import { AuthStore } from '../../store/authStore';
 import { TagModel } from 'src/declarations/PostCore/PostCore.did';
 import SchedulePublish from '../../components/schedule-publish/schedule-publish';
+import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
@@ -91,14 +92,24 @@ const CreateEditArticle = () => {
     })
   );
 
+  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+  }));
+
+
   //userStore
-  const { getUser, user } = useUserStore((state: UserStore) => ({
+  const { getUser, user, getPrincipalByHandle } = useUserStore((state: UserStore) => ({
+    getPrincipalByHandle: state.getPrincipalByHandle,
     getUser: state.getUser,
     user: state.user,
   }));
 
   //authStore
   const isLoggedIn = useAuthStore((state: AuthStore) => state.isLoggedIn);
+  const [currentStatus, setCurrentStatus] = useState('');
+
+
 
   //returns the current status of the post
   const getCurrentStatus = () => {
@@ -127,12 +138,8 @@ const CreateEditArticle = () => {
         return 'Published';
       }
     }
-
     return 'Published';
   };
-
-
-
 
 
   const isPublishButtonVisible = () => {
@@ -487,6 +494,11 @@ const CreateEditArticle = () => {
     };
   };
 
+  useEffect(() => {
+    setCurrentStatus(getCurrentStatus());
+    console.log('Current status:', getCurrentStatus());
+  }, [lastSavedPost]);
+
   //save functions
 
   const toastErrors = () => {
@@ -711,6 +723,39 @@ const CreateEditArticle = () => {
       }
     }
   };
+
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  //get subscription details
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (user) {
+        try {
+          let handle = user.handle === selectedHandle ? user.handle : selectedHandle;
+          let principal = await getPrincipalByHandle(handle);
+          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(principal || '');
+          console.log("debugging " + selectedHandle + " principal " + principal);
+
+          if (subscriptionDetails && (
+            subscriptionDetails.weeklyFee.length > 0 ||
+            subscriptionDetails.monthlyFee.length > 0 ||
+            subscriptionDetails.annuallyFee.length > 0 ||
+            subscriptionDetails.lifeTimeFee.length > 0
+          )) {
+            setHasValidSubscriptionOptions(true);
+            console.log('Valid subscription options', subscriptionDetails);
+          } else {
+            setHasValidSubscriptionOptions(false);
+            console.log('No valid subscription options', subscriptionDetails);
+          }
+        } catch (error) {
+          console.log('Error fetching subscription details', error);
+        }
+      }
+    };
+
+    fetchSubscriptionDetails();
+  }, [user, selectedHandle]);
+
 
   const [radioButtonIndex, setRadioButtonIndex] = useState(
     lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
@@ -1541,15 +1586,19 @@ const CreateEditArticle = () => {
                         selectedIndex={radioButtonIndex}
                       />
                     )}
-                  <div className='schedule-publish-container'>
-                    <SchedulePublish
-                      onDateChange={handleDateChange}
-                      onTimeChange={handleTimeChange}
-                      onAccessChange={handleAccessChange}
-                      initialAccess={access}
-                      isPremium={radioButtonIndex === 2 || lastSavedPost?.isPremium}
-                    />
-                  </div>
+                  {(currentStatus === 'Draft' || currentStatus === 'Not saved') && (
+                    <div className='schedule-publish-container'>
+                      <SchedulePublish
+                        onDateChange={handleDateChange}
+                        onTimeChange={handleTimeChange}
+                        onAccessChange={handleAccessChange}
+                        initialAccess={access}
+                        isPremium={radioButtonIndex === 2 || lastSavedPost?.isPremium}
+                        validSubscriptionOptions={hasValidSubscriptionOptions}
+                      />
+                    </div>
+                  )
+                  }
                   {getManageItems()}
                 </div>
               </div>

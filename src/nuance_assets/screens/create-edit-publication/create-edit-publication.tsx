@@ -262,7 +262,7 @@ const CreateEditPublication = () => {
           paymentReceiverPrincipal: Principal.fromText(
             subscriptionDetails.writerPrincipalId
           ),
-          publicationCanisterId: publicationCanisterId ?? '',
+          publicationCanisterId: publicationCanisterId || '',
         }
       );
     } catch (error) {

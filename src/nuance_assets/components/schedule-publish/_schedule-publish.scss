@@ -6,7 +6,7 @@
    
     
 
-    .form-group {
+    .schedule-publish-form-group {
         font-size: 14px;
         margin-bottom: 20px;
     }
@@ -45,57 +45,26 @@
     .access-select {
         max-width: 200px;
         border: none;
-        
-        .css-t3ipsp-control{
-        border: none;
-        box-shadow: none;
-        border-bottom: 1px solid $second-accent-color;
-        border-radius: 0;
+        cursor: pointer;
+      svg {
+        width: 12px;
+        height: 12px;
+      }
 
-        :focus {
-            outline: none;
-        }
-
-    } 
-    .css-1nmdiq5-menu{
-        background: $primary-background-color;
-    .css-tr4s17-option{ //selected option
-            background: none;
-            color: currentColor;
-            &:hover{
-                background: darken($primary-background-color, 5%);
-                color: currentColor;
-            }
-        }
-    .css-d7l1ni-option{ //hovered option
-        background: darken($primary-background-color, 5%);
+      .dropdown-menu-title{
         color: currentColor;
-    }
-    }
 
-    .css-qbdosj-Input{
-        padding: 0;
-    }
+        /* NUA/Roboto/14/Regular */
+        font-family: Roboto;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 20px; /* 142.857% */
+      }
+      border-bottom: 1px solid $second-accent-color;
 
-
-    .css-13cymwt-control{
-        border: none;
-        border-bottom: 1px solid $second-accent-color;
-        border-radius: 0;
-       
-
-        .css-1fdsijx-ValueContainer{
-            padding: 0;
-        }
-    }
-    .css-1u9des2-indicatorSeparator{
-        display: none;
-    }
-    .css-tj5bde-Svg{
-        fill: #303E84;
-
-    }
-    }
+      }
+      
 
     .custom-calendar {
         width: 247px;

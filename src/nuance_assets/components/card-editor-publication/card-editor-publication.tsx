@@ -123,6 +123,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           <img className='nft-icon' src={icons.NFT_ICON} />
         ) : (
           <Toggle
+            // backgroundColor={"orange"}
             toggled={isToggled}
             callBack={async () => {
               if (!isLoading) {
