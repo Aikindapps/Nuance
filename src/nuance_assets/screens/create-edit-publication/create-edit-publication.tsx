@@ -260,7 +260,7 @@ const CreateEditPublication = () => {
         lifeTimeFeeE8s,
         {
           paymentReceiverPrincipal: Principal.fromText(
-            subscriptionDetails.writerPrincipalId
+            subscriptionDetails.paymentReceiverPrincipalId
           ),
           publicationCanisterId: publicationCanisterId || '',
         }
@@ -383,15 +383,15 @@ const CreateEditPublication = () => {
 
   const [validPrincipal, setValidPrincipal] = useState(true);
   useEffect(() => {
-    if (subscriptionDetails.writerPrincipalId) {
+    if (subscriptionDetails.paymentReceiverPrincipalId) {
       validatePrincipal();
     }
-  }, [subscriptionDetails.writerPrincipalId]);
+  }, [subscriptionDetails.paymentReceiverPrincipalId]);
 
   const validatePrincipal = () => {
     try {
       let validation =
-        subscriptionDetails.writerPrincipalId === Principal.fromText(subscriptionDetails.writerPrincipalId).toText();
+        subscriptionDetails.paymentReceiverPrincipalId === Principal.fromText(subscriptionDetails.paymentReceiverPrincipalId).toText();
       setValidPrincipal(validation);
       return validation;
     } catch (e) {

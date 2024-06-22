@@ -90,9 +90,8 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
         {feeTypes.map((type) => (
           <div
             key={type}
-            className={`subscription-settings-option ${
-              subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''
-            }`}
+            className={`subscription-settings-option ${subscriptionDetails[`${type}Enabled`] ? 'disabled' : ''
+              }`}
           >
             <div className='toggle'>
               <Toggle
@@ -163,7 +162,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                   'NUA',
                   'ICP',
                   parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
-                    Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                  Math.pow(10, getDecimalsByTokenSymbol('NUA'))
                 ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
                 2
               )}{' '}
@@ -174,7 +173,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                   'NUA',
                   'ckBTC',
                   parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
-                    Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                  Math.pow(10, getDecimalsByTokenSymbol('NUA'))
                 ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
                 2
               )}{' '}
@@ -185,7 +184,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                   'NUA',
                   'ckUSDC',
                   parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
-                    Math.pow(10, getDecimalsByTokenSymbol('NUA'))
+                  Math.pow(10, getDecimalsByTokenSymbol('NUA'))
                 ) / Math.pow(10, getDecimalsByTokenSymbol('NUA')),
                 2
               )}{' '}
@@ -214,10 +213,10 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               onChange={(e) =>
                 setSubscriptionDetails((prevOptions) => ({
                   ...prevOptions,
-                  writerPrincipalId: e,
+                  paymentReceiverPrincipalId: e,
                 }))
               }
-              value={subscriptionDetails.writerPrincipalId}
+              value={subscriptionDetails.paymentReceiverPrincipalId}
               maxLength={161}
               theme={darkTheme ? 'dark' : 'light'}
               icon={undefined}
