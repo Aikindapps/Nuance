@@ -13,7 +13,7 @@ import { useTheme } from '../../contextes/ThemeContext';
 import './_publication-articles.scss';
 import Button from '../../UI/Button/Button';
 
-import SubscribersTab from './subscribers-tab';
+import PublicationSubscribersTab from './publication-subscribers-tab';
 import { PublisherStore } from '../../store/publisherStore';
 import { UserStore } from '../../store/userStore';
 import { PostStore } from '../../store/postStore';
@@ -610,7 +610,7 @@ const PublicationArticles = () => {
             />
           )
         )}
-        {activeTab === 'subscribers' && <SubscribersTab publicationInfo={publication} />}
+        {activeTab === 'subscribers' && <PublicationSubscribersTab publicationInfo={publication} />}
       </div>
       <Footer />
     </div>

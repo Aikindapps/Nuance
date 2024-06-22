@@ -54,6 +54,8 @@ import SubmittedArticles from './screens/profile/SubmittedArticles';
 import { ModalsWrapper } from './components/modals-wrapper/modals-wrapper';
 import NotificationsSidebar from './components/notifications/notifications';
 import Subscriptions from './screens/profile/subscriptions';
+import PublicationSubscribersTab from './screens/profile/publication-subscribers-tab';
+import SubscribersTab from './screens/profile/subscribers-tab';
 
 const Routes = () => {
   return useRoutes([
@@ -89,6 +91,7 @@ const Routes = () => {
         { path: 'wallet', element: <Wallet /> },
         { path: 'publications/:handle', element: <PublicationArticles /> },
         { path: 'subscriptions', element: <Subscriptions /> },
+        { path: 'subscribers', element: <SubscribersTab /> },
       ],
     },
   ]);

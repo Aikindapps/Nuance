@@ -28,6 +28,10 @@ const Activity: React.FC<ActivityLinkProps> = ({
             goto: '/my-profile/subscriptions',
         },
         {
+            title: `My Subscribers (${followersCount})`,
+            goto: '/my-profile/subscribers',
+        },
+        {
             title: `Followed Topics (${followedTopicsCount})`,
             goto: '/my-profile/topics',
         },
