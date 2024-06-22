@@ -600,7 +600,7 @@ const createPublisherStore:
           category: post.category,
           premium: post.premium,
           handle: post.handle,
-          isMembersOnly: false,
+          isMembersOnly: post.isMembersOnly,
           scheduledPublishedDate: post.scheduledPublishedDate,
         });
         if (Err in result) {
