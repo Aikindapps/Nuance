@@ -47,7 +47,7 @@ const Menu = ({
 
     return (
         <div className='menu-container'>
-            <img src={isOpen ? icons.THREE_DOTS_BLUE : icons.THREE_DOTS} alt="Menu" onClick={toggleMenu} />
+            <img src={isOpen ? darkTheme ? icons.THREE_DOTS_WHITE : icons.THREE_DOTS_BLUE : darkTheme ? icons.THREE_DOTS_WHITE : icons.THREE_DOTS} alt="Menu" onClick={toggleMenu} />
             {isOpen && (
                 <div className='menu-dropdown'>
                     {activeTab === 'expired' ? (
