@@ -1,8 +1,17 @@
+type UserClaimInfo = 
+ record {
+   isClaimActive: bool;
+   isUserBlocked: bool;
+   lastClaimDate: opt text;
+   maxClaimableTokens: text;
+   subaccount: opt blob;
+ };
 type User = 
  record {
    accountCreated: text;
    avatar: text;
    bio: text;
+   claimInfo: opt UserClaimInfo;
    displayName: text;
    followers: Followers;
    followersArray: vec text;
@@ -81,7 +90,7 @@ type Publisher =
    idQuick: () -> (principal);
    initializeCanister: (text, text, text) -> (Result_3);
    isThereEnoughMemory: () -> (bool) query;
-   migrateEditorsWritersHandles: () -> (Result);
+   refreshEditorsWritersHandles: () -> (Result_4);
    registerAdmin: (text) -> (Result_4);
    registerCgUser: (text) -> (Result_4);
    registerPlatformOperator: (text) -> (Result_4);
@@ -163,6 +172,7 @@ type Post =
    handle: text;
    headerImage: text;
    isDraft: bool;
+   isMembersOnly: bool;
    isPremium: bool;
    isPublication: bool;
    modified: text;

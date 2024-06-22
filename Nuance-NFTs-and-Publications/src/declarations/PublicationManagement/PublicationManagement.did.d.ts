@@ -9,18 +9,19 @@ export interface Management {
   'addWasmChunk' : ActorMethod<[Uint8Array | number[]], Result>,
   'availableCycles' : ActorMethod<[], bigint>,
   'createPublication' : ActorMethod<[string, string, string], Result_3>,
-  'getAdmins' : ActorMethod<[], Result_5>,
+  'getAdmins' : ActorMethod<[], Result_6>,
   'getAllPublisherIds' : ActorMethod<[], Array<string>>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPublishers' : ActorMethod<[], Array<[string, string]>>,
-  'getWasmChunks' : ActorMethod<[], Result_4>,
+  'getWasmChunks' : ActorMethod<[], Result_5>,
   'idQuick' : ActorMethod<[], Principal>,
   'initManagementCanister' : ActorMethod<[], RegisterUserReturn>,
   'initializeCanister' : ActorMethod<[string, string, string], Result_1>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
+  'refreshEditorsWritersHandles' : ActorMethod<[], Result_4>,
   'registerAdmin' : ActorMethod<[string], Result>,
   'registerExistingPublisher' : ActorMethod<[string, string], Result_3>,
   'registerPlatformOperator' : ActorMethod<[string], Result>,
@@ -47,9 +48,11 @@ export type Result_2 = { 'ok' : bigint } |
   { 'err' : string };
 export type Result_3 = { 'ok' : [string, string] } |
   { 'err' : string };
-export type Result_4 = { 'ok' : Uint8Array | number[] } |
+export type Result_4 = { 'ok' : [Array<string>, Array<string>] } |
   { 'err' : string };
-export type Result_5 = { 'ok' : Array<string> } |
+export type Result_5 = { 'ok' : Uint8Array | number[] } |
+  { 'err' : string };
+export type Result_6 = { 'ok' : Array<string> } |
   { 'err' : string };
 export interface User {
   'bio' : string,

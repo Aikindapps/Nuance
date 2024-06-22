@@ -50,7 +50,7 @@ actor class PostBucket() = this {
   type List<T> = List.List<T>;
   type User = CanisterDeclarations.User;
   type PostBucketType = CanisterDeclarations.PostBucketType;
-  type Post = Types.Post;
+  type Post = CanisterDeclarations.Post;
   type UserPostCounts = Types.UserPostCounts;
   type PostSaveModel = CanisterDeclarations.PostSaveModelBucket;
   type ToDo = CanisterDeclarations.PostBucketType;
@@ -1241,6 +1241,8 @@ actor class PostBucket() = this {
       url = postBucketType.url;
       views = keyProperties.views;
       wordCount = postBucketType.wordCount;
+      isMembersOnly = postBucketType.isMembersOnly;
+      nftCanisterId = postBucketType.nftCanisterId;
     });
   };
 
@@ -2004,6 +2006,8 @@ actor class PostBucket() = this {
       url = postBucketType.url;
       views = keyProperties.views;
       wordCount = postBucketType.wordCount;
+      isMembersOnly = postBucketType.isMembersOnly;
+      nftCanisterId = postBucketType.nftCanisterId;
     });
   };
 

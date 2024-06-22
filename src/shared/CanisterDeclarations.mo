@@ -424,7 +424,7 @@ module{
         get : (postId : Text) -> async Result.Result<PostBucketType, Text>;
         removePostCategory : (postId : Text) -> async Result.Result<PostBucketType, Text>;
         addPostCategory : (postId : Text, category : Text) -> async Result.Result<PostBucketType, Text>;
-        updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<PostBucketType, Text>;
+        updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<Post, Text>;
         makePostPremium : (postId : Text) -> async Bool;
         getMetadata : (postId : Text, totalSupply : Nat) -> async Result.Result<Metadata, Text>;
         getAllApplauds : query () ->  async [Applaud];

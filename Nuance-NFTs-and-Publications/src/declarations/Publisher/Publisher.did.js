@@ -54,6 +54,7 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
@@ -117,6 +118,13 @@ export const idlFactory = ({ IDL }) => {
     'isEditor' : IDL.Bool,
     'publicationName' : IDL.Text,
   });
+  const UserClaimInfo = IDL.Record({
+    'isUserBlocked' : IDL.Bool,
+    'maxClaimableTokens' : IDL.Text,
+    'subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
+    'lastClaimDate' : IDL.Opt(IDL.Text),
+    'isClaimActive' : IDL.Bool,
+  });
   const FollowersPrincipals = IDL.Opt(IDL.Tuple(IDL.Text, List));
   const Followers = IDL.Opt(IDL.Tuple(IDL.Text, List));
   const User = IDL.Record({
@@ -128,6 +136,7 @@ export const idlFactory = ({ IDL }) => {
     'nuaTokens' : IDL.Float64,
     'accountCreated' : IDL.Text,
     'publicationsArray' : IDL.Vec(PublicationObject),
+    'claimInfo' : IDL.Opt(UserClaimInfo),
     'website' : IDL.Text,
     'handle' : IDL.Text,
     'followersPrincipals' : FollowersPrincipals,
@@ -171,7 +180,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
-    'migrateEditorsWritersHandles' : IDL.Func([], [Result], []),
+    'refreshEditorsWritersHandles' : IDL.Func([], [Result_4], []),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_4], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_4], []),
     'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_4], []),

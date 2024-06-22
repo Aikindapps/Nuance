@@ -10,15 +10,23 @@ type User =
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
  };
-type Result_5 = 
+type Result_6 = 
  variant {
    err: text;
    ok: vec text;
  };
-type Result_4 = 
+type Result_5 = 
  variant {
    err: text;
    ok: blob;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: record {
+         vec text;
+         vec text;
+       };
  };
 type Result_3 = 
  variant {
@@ -59,7 +67,7 @@ type Management =
    addWasmChunk: (blob) -> (Result);
    availableCycles: () -> (nat) query;
    createPublication: (text, text, text) -> (Result_3);
-   getAdmins: () -> (Result_5) query;
+   getAdmins: () -> (Result_6) query;
    getAllPublisherIds: () -> (vec text) query;
    getCanisterVersion: () -> (text) query;
    getMaxMemorySize: () -> (nat) query;
@@ -69,11 +77,12 @@ type Management =
                                text;
                                text;
                              }) query;
-   getWasmChunks: () -> (Result_4);
+   getWasmChunks: () -> (Result_5);
    idQuick: () -> (principal) query;
    initManagementCanister: () -> (RegisterUserReturn);
    initializeCanister: (text, text, text) -> (Result_1);
    isThereEnoughMemory: () -> (bool) query;
+   refreshEditorsWritersHandles: () -> (Result_4);
    registerAdmin: (text) -> (Result);
    registerExistingPublisher: (text, text) -> (Result_3);
    registerPlatformOperator: (text) -> (Result);
