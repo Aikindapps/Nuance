@@ -142,6 +142,11 @@ const ReadArticle = () => {
     }
   };
 
+  const onSubsriptionComplete = () => {
+    modalContext?.closeModal();
+    load();
+  }
+
   const openSubscriptionModal = async () => {
     setModalType('Subscription');
     modalContext?.openModal('Subscription');
@@ -672,7 +677,7 @@ const ReadArticle = () => {
                         authorPrincipalId={post.principal || ''}
                         profileImage={author.avatar}
                         isPublication={post.isPublication || false}
-                        onSubscriptionComplete={() => { }}
+                        onSubscriptionComplete={() => { onSubsriptionComplete() }}
                       />
                     )}
 
