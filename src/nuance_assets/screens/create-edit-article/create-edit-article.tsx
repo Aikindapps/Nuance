@@ -1595,7 +1595,7 @@ const CreateEditArticle = () => {
                         selectedIndex={radioButtonIndex}
                       />
                     )}
-                  {(currentStatus === 'Draft' || currentStatus === 'Not saved') && (
+                  {(currentStatus === 'Draft' || currentStatus === 'Not saved') && (radioButtonIndex === 1 || radioButtonIndex === 2) && (
                     <div className='schedule-publish-container'>
                       <SchedulePublish
                         onDateChange={handleDateChange}
