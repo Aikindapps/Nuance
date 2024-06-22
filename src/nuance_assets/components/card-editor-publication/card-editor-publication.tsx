@@ -18,6 +18,7 @@ import { Tooltip } from 'react-tooltip';
 import { MeatBallMenuGeneral } from '../../UI/meatball-menu-general/meatball-menu-general';
 import PremiumArticleSoldBar from '../../UI/premium-article-sold-bar/premium-article-sold-bar';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import { is } from 'immutable';
 
 const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   post,
@@ -35,6 +36,14 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   const navigate = useNavigate();
   const darkTheme = useTheme();
   const modalContext = useContext(ModalContext);
+
+  const isScheduled = (post: PostType) => {
+    const postDate = new Date(Number(post.publishedDate));
+    const currentDate = new Date();
+    return postDate > currentDate;
+  };
+
+
 
   const handleCategoryChange = async (post: PostType, e: string) => {
     setIsLoading(true);
@@ -123,7 +132,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           <img className='nft-icon' src={icons.NFT_ICON} />
         ) : (
           <Toggle
-            // backgroundColor={"orange"}
+            scheduled={isScheduled(post)}
             toggled={isToggled}
             callBack={async () => {
               if (!isLoading) {
@@ -200,16 +209,15 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
       </div>
       <div
         style={
-          darkTheme
-            ? {
-              color: darkOptionsAndColors.secondaryColor,
-            }
-            : {}
+          isScheduled(post)
+            ? { color: '#FF8126' }
+            : darkTheme
+              ? { color: darkOptionsAndColors.secondaryColor }
+              : {}
         }
         className='field-published-date field-general'
       >
-        {formatDate(post.publishedDate, DateFormat.WithYear) ||
-          formatDate(post.created, DateFormat.WithYear)}
+        {formatDate(post.publishedDate, DateFormat.WithYear) || formatDate(post.created, DateFormat.WithYear)}
       </div>
       <div
         style={

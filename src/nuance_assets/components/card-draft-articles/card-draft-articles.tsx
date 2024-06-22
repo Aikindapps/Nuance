@@ -60,6 +60,13 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
     const currentDate = new Date();
 
     if (post.isPremium) {
+      if (post.publishedDate) {
+        const plannedDate = new Date(Number(post.publishedDate));
+        if (plannedDate > currentDate) {
+          return "Planned + Mint";
+        }
+      }
+
       return 'Minted';
     } else {
       if (post.isPublication) {
@@ -95,6 +102,12 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
     const currentDate = new Date();
 
     if (post.isPremium) {
+      if (post.publishedDate) {
+        const plannedDate = new Date(Number(post.publishedDate));
+        if (plannedDate > currentDate) {
+          return "Planned + Mint";
+        }
+      }
       return 'Minted';
     }
 
@@ -210,10 +223,10 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               style={
                 dark
                   ? {
-                    color: getPostStatus() === 'Planned' ? 'orange' : darkOptionsAndColors.secondaryColor,
+                    color: (getPostStatus() === 'Planned' || getPostStatus() === 'Planned + Mint') ? '#FF8126' : darkOptionsAndColors.secondaryColor,
                   }
-                  : getPostStatus() === 'Planned'
-                    ? { color: 'orange' }
+                  : (getPostStatus() === 'Planned' || getPostStatus() === 'Planned + Mint')
+                    ? { color: '#FF8126' }
                     : {}
               }
               className='card-draft-articles-date'

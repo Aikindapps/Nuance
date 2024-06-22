@@ -126,6 +126,15 @@ const CreateEditArticle = () => {
         return 'Draft';
       }
     }
+    if (lastSavedPost?.isPremium) {
+      if (lastSavedPost?.publishedDate) {
+        const plannedDate = new Date(Number(lastSavedPost?.publishedDate));
+        if (plannedDate > currentDate) {
+          return "Planned + Mint";
+        }
+      }
+      return "Minted";
+    }
 
     if (lastSavedPost?.publishedDate) {
       // Assuming lastSavedPost.publishedDate is in milliseconds

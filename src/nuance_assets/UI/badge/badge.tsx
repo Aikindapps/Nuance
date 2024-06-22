@@ -2,7 +2,7 @@ import React from 'react';
 import { icons, colors } from '../../shared/constants';
 import './_badge.scss';
 type BadgeProps = {
-  status: 'Draft' | 'Published' | 'Submitted for review' | 'Not saved' | 'Planned' | 'Minted';
+  status: 'Draft' | 'Published' | 'Submitted for review' | 'Not saved' | 'Planned' | 'Minted' | 'Planned + Mint';
   dark: boolean;
 };
 
@@ -29,6 +29,8 @@ const Badge: React.FC<BadgeProps> = (props): JSX.Element => {
         return { background: '#FFA768', color: '#FFFFFF' };
       case 'Minted':
         return { background: '#1BC1F0', color: '#FFFFFF' };
+      case 'Planned + Mint':
+        return { background: '#FFA768', color: '#FFFFFF' };
     }
   };
 
