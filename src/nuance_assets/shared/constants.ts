@@ -124,6 +124,7 @@ export const icons = {
   CALENDAR_ICON: iconsPath + 'calendar.svg',
   CLOCK_ICON: iconsPath + 'clock.svg',
   MEMBERS_ONLY: iconsPath + 'members-only.svg',
+  CHEVRON: iconsPath + 'chevron.svg',
 };
 
 export const colors = {

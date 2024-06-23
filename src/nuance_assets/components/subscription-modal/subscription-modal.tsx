@@ -61,12 +61,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [subscriptionError, setSubscriptionError] = useState<string | null>(
     null
   );
-  const { userWallet, tokenBalances, fetchTokenBalances, sonicTokenPairs } =
+  const { userWallet, tokenBalances, fetchTokenBalances, sonicTokenPairs, restrictedTokenBalance } =
     useAuthStore((state) => ({
       userWallet: state.userWallet,
       tokenBalances: state.tokenBalances,
       fetchTokenBalances: state.fetchTokenBalances,
       sonicTokenPairs: state.sonicTokenPairs,
+      restrictedTokenBalance: state.restrictedTokenBalance,
     }));
 
   const { subscribeWriter, getWriterSubscriptionDetailsByPrincipalId } =
@@ -75,6 +76,26 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       getWriterSubscriptionDetailsByPrincipalId:
         state.getWriterSubscriptionDetailsByPrincipalId,
     }));
+
+  // const getSelectedCurrencyBalance = () => {
+  //   var selectedCurrencyAndBalance: TokenBalance = {
+  //     balance: 0,
+  //     token: SUPPORTED_TOKENS[0],
+  //   };
+  //   tokenBalances.forEach((tokenBalance) => {
+  //     if (tokenBalance.token.symbol === selectedCurrency) {
+  //       if (selectedCurrency === 'NUA') {
+  //         selectedCurrencyAndBalance = {
+  //           balance: tokenBalance.balance + restrictedTokenBalance,
+  //           token: tokenBalance.token,
+  //         };
+  //       } else {
+  //         selectedCurrencyAndBalance = tokenBalance;
+  //       }
+  //     }
+  //   });
+  //   return selectedCurrencyAndBalance;
+  // };
 
   const getSufficientBalance = (fee: number) => {
     fee = fee * 1e8;
@@ -89,7 +110,10 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     };
     tokenBalances.forEach((tokenBalance) => {
       if (tokenBalance.token.symbol === 'NUA') {
-        selectedCurrencyAndBalance = tokenBalance;
+        selectedCurrencyAndBalance = {
+          balance: tokenBalance.balance + restrictedTokenBalance,
+          token: tokenBalance.token,
+        }
       }
     });
 
@@ -477,16 +501,14 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                       option.fee &&
                       option.fee.length > 0 && (
                         <div
-                          className={`option-wrapper ${
-                            selectedOption === option.label ? 'selected' : ''
-                          }`}
+                          className={`option-wrapper ${selectedOption === option.label ? 'selected' : ''
+                            }`}
                           key={option.label}
                           onClick={() => setSelectedOption(option.label)}
                         >
                           <div
-                            className={`option ${
-                              selectedOption === option.label ? 'selected' : ''
-                            } ${darkTheme ? 'dark' : ''}`}
+                            className={`option ${selectedOption === option.label ? 'selected' : ''
+                              } ${darkTheme ? 'dark' : ''}`}
                           >
                             <div className='option-content'>
                               <img
@@ -522,15 +544,15 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                         'NUA',
                                         'ckUSDC',
                                         parseFloat(option.fee[0] || '0') *
-                                          Math.pow(
-                                            10,
-                                            getDecimalsByTokenSymbol('NUA')
-                                          )
-                                      ) /
                                         Math.pow(
                                           10,
                                           getDecimalsByTokenSymbol('NUA')
-                                        ),
+                                        )
+                                      ) /
+                                      Math.pow(
+                                        10,
+                                        getDecimalsByTokenSymbol('NUA')
+                                      ),
                                       2
                                     )}{' '}
                                     USD

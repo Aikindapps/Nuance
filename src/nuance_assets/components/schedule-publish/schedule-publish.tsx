@@ -88,8 +88,11 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
                                 >
                                     {hour.toString().padStart(2, '0')}
                                 </option>
+
                             ))}
                         </select>
+                        <img className='hour-select-down-arrow' src={icons.CHEVRON} alt="down-arrow" />
+
                         :
                         <select value={selectedTime.minutes} onChange={handleTimeChange('minutes')}>
                             {['00', '15', '30', '45'].map(minute => (
@@ -106,6 +109,7 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
                                 </option>
                             ))}
                         </select>
+                        <img className='hour-select-down-arrow' src={icons.CHEVRON} alt="down-arrow" />
                     </div>
                 </div>
             </div>
