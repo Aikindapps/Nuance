@@ -77,25 +77,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         state.getWriterSubscriptionDetailsByPrincipalId,
     }));
 
-  // const getSelectedCurrencyBalance = () => {
-  //   var selectedCurrencyAndBalance: TokenBalance = {
-  //     balance: 0,
-  //     token: SUPPORTED_TOKENS[0],
-  //   };
-  //   tokenBalances.forEach((tokenBalance) => {
-  //     if (tokenBalance.token.symbol === selectedCurrency) {
-  //       if (selectedCurrency === 'NUA') {
-  //         selectedCurrencyAndBalance = {
-  //           balance: tokenBalance.balance + restrictedTokenBalance,
-  //           token: tokenBalance.token,
-  //         };
-  //       } else {
-  //         selectedCurrencyAndBalance = tokenBalance;
-  //       }
-  //     }
-  //   });
-  //   return selectedCurrencyAndBalance;
-  // };
 
   const getSufficientBalance = (fee: number) => {
     fee = fee * 1e8;
