@@ -226,11 +226,10 @@ const PremiumArticleThumbnail: React.FC<PremiumArticleThumbnailProps> = ({
       <text
         x='80'
         y='612'
-        font-size='21.4'
-        font-family='Arial'
-        font-style='normal'
-        font-weight='700'
-        line-height='21px'
+        fontSize='21.4'
+        fontFamily='Arial'
+        fontStyle='normal'
+        fontWeight='700'
         fill='white'
       >
         {'@' + handle}

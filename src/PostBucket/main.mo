@@ -1324,6 +1324,15 @@ actor class PostBucket() = this {
       return #err(NotPublicationPost);
     };
 
+    //if not isNew, and members-only article, don't allow it to be premium
+    if((not isNew) and U.safeGet(isMembersOnlyHashMap, postIdTrimmed, false)){
+      //existing members only article
+      //if postModel.premium is not null, return an error
+      if(postModel.premium != null){
+        return #err("You can not make a members only article premium!");
+      }
+    };
+
     //if the creator field is not empty and it's not a publication post, return an error
     if (not isPublication and postModel.creatorHandle != "") {
       return #err(Unauthorized);
@@ -1403,6 +1412,8 @@ actor class PostBucket() = this {
     //if premium post, call NftFactory canister to create new EXT NFT canister and map the canister id to the post id.
     switch(postModel.premium) {
       case(?premiumData) {
+        //check if the article is a members-only article
+        //if yes, return an error
         let writerAddress = U.fromText(creatorPrincipal, null);
         var initialMintingAddresses = Buffer.Buffer<Text>(0);
         initialMintingAddresses.add(writerAddress);
