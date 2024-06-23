@@ -18,13 +18,17 @@ interface SubscribersChartProps {
 const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     console.log('SubscribersChart data:', data);
 
-    // Ensure the data is valid and unique
-    const filteredData = data.filter(
-        (item, index, self) =>
-            item.day &&
-            typeof item.count === 'number' &&
-            self.findIndex((i) => i.day === item.day) === index
-    );
+    const currentDate = new Date();
+
+    // Ensure the data is valid, unique, and not in the future
+    const filteredData = data.reduce((acc, item) => {
+        const exists = acc.find(i => i.day === item.day);
+        const itemDate = new Date(item.day);
+        if (!exists && item.day && typeof item.count === 'number' && itemDate <= currentDate) {
+            acc.push(item);
+        }
+        return acc;
+    }, [] as SubscriberData[]);
 
     const isValidData = filteredData.length > 0;
 
@@ -106,7 +110,6 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
                     },
                     title: (tooltipItem: TooltipItem<'line'>[]) => {
                         const dataPoint = tooltipItem[0].raw as { x: Date; y: number };
-                        //return new Date(dataPoint.x).toLocaleDateString();
                         return ""
                     }
                 },

@@ -205,6 +205,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
   const handleSubscriptionClick = () => {
     window.location.href = '/my-profile/subscriptions';
   };
+  const handleSubscriberClick = () => {
+    window.location.href = '/my-profile/subscribers';
+  }
 
   function getNotificationTypeKey(notificationType: NotificationType): string {
     return Object.keys(notificationType)[0];
@@ -294,8 +297,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         );
       case 'AuthorGainsNewSubscriber':
         return (
+
           <span>
-            🎉 You have a <b>new subscriber</b>!
+            🎉 You have a <b className='subscription-notification-text' onClick={handleSubscriberClick}>new subscriber</b>!
           </span>
         );
       case 'YouSubscribedToAuthor':
