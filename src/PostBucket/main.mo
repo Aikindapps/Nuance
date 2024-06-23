@@ -1594,7 +1594,70 @@ actor class PostBucket() = this {
     };
     #ok(success, Buffer.toArray(stillNotFoundHandlesBuffer))
   };
-  
+  //will check all the posts of the given publication principal id and use the assigningWriterPrincipalId value as the creator
+  //will also add the postId to the writer's post ids by calling the addPostIdToUser function
+  public shared ({caller}) func fixEmptyCreatorFields(publicationPrincipalId: Text, assigningWriterPrincipalId: Text) : async Result.Result<Nat, Text> {
+    if(not isPlatformOperator(caller)){
+      return #err("Unauthorized");
+    };
+    var counter = 0;
+    let publicationPostIds = U.safeGet(userPostsHashMap, publicationPrincipalId, List.nil<Text>());
+    for(postId in List.toIter(publicationPostIds)) {
+      let isPublication = U.safeGet(isPublicationHashMap, postId, false);
+      let creator = U.safeGet(creatorHashMap, postId, "");
+      if(isPublication and creator == ""){
+        //post is a publication post and the creator field is empty
+        //use the given principal id
+        creatorHashMap.put(postId, assigningWriterPrincipalId);
+        //add the post id to the given writer's principal ids
+        addPostIdToUser(assigningWriterPrincipalId, postId);
+        counter += 1;
+      };
+    };
+
+    #ok(counter)
+  };
+  //returns the not migrated postIds
+  //once the debug is done, it should return an empty array
+  public shared query ({caller}) func getAllNotMigratedCreatorFields() : async [Text] {
+    if(not isPlatformOperator(caller)){
+      return []
+    };
+
+    let result = Buffer.Buffer<Text>(0);
+
+    for((postId, isPublication) in isPublicationHashMap.entries()){
+      if(isPublication){
+        let creator = U.safeGet(creatorHashMap, postId, "");
+        if(creator == ""){
+          result.add(postId);
+        };
+      }
+    };
+
+    Buffer.toArray(result)
+  };
+  //a debug function to set the creator field of a post individually
+  //hopefully, we won't need to use it
+  public shared ({caller}) func debugSetCreatorFieldAndAddPostIdToUser(postId: Text, creatorPrincipal: Text) : async Result.Result<PostBucketType, Text> {
+    if(not isPlatformOperator(caller)){
+      return #err("Unauthorized");
+    };
+
+    let isPublication = U.safeGet(isPublicationHashMap, postId, false);
+    if(isPublication){
+      //use the given principal id
+      creatorHashMap.put(postId, creatorPrincipal);
+      //add the post id to the given writer's principal ids
+      addPostIdToUser(creatorPrincipal, postId);
+      return #ok(buildPost(postId));
+    }
+    else{
+      return #err("Post is not a publication post.");
+    }
+
+  };
+
   public shared ({caller}) func migratePremiumArticleFromOldArch(postId: Text, price: ?Nat) : async Result.Result<Text, Text> {
     if(not (isPlatformOperator(caller) or isAdmin(caller))){
       return #err("Unauthorized.");
@@ -1761,6 +1824,10 @@ actor class PostBucket() = this {
         #err("Given post is not a premium article.")
       };
     };
+  };
+
+  public shared query func getUserPostIds(principalId: Text) : async [Text] {
+    List.toArray(U.safeGet(userPostsHashMap, principalId, List.nil<Text>()));
   };
 
   //added the includeDraft method to allow users to get their draft articles by this method
