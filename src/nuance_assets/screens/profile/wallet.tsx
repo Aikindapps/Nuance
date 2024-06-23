@@ -1,5 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useAuthStore, usePostStore, useUserStore } from '../../store';
+import {
+  useAuthStore,
+  usePostStore,
+  useSubscriptionStore,
+  useUserStore,
+} from '../../store';
 import { toast, ToastType } from '../../services/toastService';
 import {
   SupportedToken,
@@ -16,12 +21,13 @@ import {
   toBase256,
   truncateToDecimalPlace,
 } from '../../shared/utils';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../UI/Button/Button';
 import {
   ApplaudListItem,
   ClaimTransactionHistoryItem,
   PremiumPostActivityListItem,
+  SubscriptionHistoryItem,
   TransactionListItem,
   UserType,
 } from '../../types/types';
@@ -40,6 +46,7 @@ const Wallet = () => {
       | ApplaudListItem
       | TransactionListItem
       | ClaimTransactionHistoryItem
+      | SubscriptionHistoryItem
     )[]
   >([]);
 
@@ -73,6 +80,9 @@ const Wallet = () => {
     restrictedTokenBalance: state.restrictedTokenBalance,
     fetchTokenBalances: state.fetchTokenBalances,
     sonicTokenPairs: state.sonicTokenPairs,
+  }));
+  const { getMySubscriptionTransactions } = useSubscriptionStore((state) => ({
+    getMySubscriptionTransactions: state.getMySubscriptionTransactions,
   }));
   const {
     getOwnedNfts,
@@ -140,6 +150,7 @@ const Wallet = () => {
       nuaTransactions,
       ckBtcTransactions,
       restrictedNuaTransactions,
+      subscriptionTransactions,
     ] = await Promise.all([
       getSellingNfts(userWallet.accountId),
       getOwnedNfts(userWallet.accountId),
@@ -148,6 +159,7 @@ const Wallet = () => {
       getUserNuaTransactions(),
       getUserCkbtcTransactions(),
       getUserRestrictedNuaTransactions(),
+      getMySubscriptionTransactions(),
     ]);
     setDisplayingActivities(
       [
@@ -158,6 +170,7 @@ const Wallet = () => {
         ...nuaTransactions,
         ...ckBtcTransactions,
         ...restrictedNuaTransactions,
+        ...subscriptionTransactions,
       ].sort((act_1, act_2) => {
         return parseInt(act_2.date) - parseInt(act_1.date);
       })
@@ -660,6 +673,60 @@ const Wallet = () => {
                         style={{ alignItems: 'start' }}
                       >
                         Free NUA drop
+                      </div>
+                      <div
+                        className='transfer-icon transfer'
+                        style={{ visibility: 'hidden' }}
+                      >
+                        <img />
+                      </div>
+                    </div>
+                    <div className='horizontal-divider' />
+                  </div>
+                );
+              } else if ('subscriptionFee' in activity) {
+                return (
+                  <div className='token-activity-wrapper' key={index}>
+                    <div
+                      className='token-activity-flex'
+                      style={{
+                        display: 'flex',
+                        color: darkOptionsAndColors.color,
+                      }}
+                    >
+                      <div
+                        className='amount'
+                        style={!activity.isWriter ? { color: '#cc4747' } : {}}
+                      >
+                        {activity.isWriter
+                          ? '+ ' +
+                            activity.subscriptionFee / Math.pow(10, 8) +
+                            ' NUA'
+                          : '- ' +
+                            activity.subscriptionFee / Math.pow(10, 8) +
+                            ' NUA'}
+                      </div>
+                      <div
+                        className='date'
+                        style={{ color: darkOptionsAndColors.color }}
+                      >
+                        {activity.date !== ''
+                          ? formatDate(parseInt(activity.date).toString())
+                          : ' --- '}
+                      </div>
+                      <Link
+                        className='from'
+                        style={{ color: darkOptionsAndColors.color }}
+                        to={'/user/' + activity.handle}
+                      >
+                        @{activity.handle}
+                      </Link>
+
+                      <div
+                        className='key key-flex'
+                        style={{ alignItems: 'start' }}
+                      >
+                        {activity.isWriter ? 'New subscriber' : 'Subscribed'}
                       </div>
                       <div
                         className='transfer-icon transfer'

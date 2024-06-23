@@ -38,7 +38,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : User__1,
     'err' : IDL.Text,
   });
-  const Result_10 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_11 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const User = IDL.Record({
     'bio' : IDL.Text,
@@ -57,15 +57,15 @@ export const idlFactory = ({ IDL }) => {
     'avatar' : IDL.Text,
   });
   const Result = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
-  const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Date = IDL.Record({
     'day' : IDL.Nat,
     'month' : IDL.Nat,
     'hour' : IDL.Nat,
     'year' : IDL.Nat,
   });
-  const Result_5 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
-  const Result_9 = IDL.Variant({
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({
     'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
     'err' : IDL.Text,
   });
@@ -112,7 +112,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Opt(IDL.Text),
     'err' : IDL.Text,
   });
-  const Result_8 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
+  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const UserListItem = IDL.Record({
     'bio' : IDL.Text,
     'socialChannelsUrls' : IDL.Vec(IDL.Text),
@@ -124,7 +124,7 @@ export const idlFactory = ({ IDL }) => {
     'fontType' : IDL.Text,
     'avatar' : IDL.Text,
   });
-  const Result_7 = IDL.Variant({
+  const Result_8 = IDL.Variant({
     'ok' : IDL.Vec(UserListItem),
     'err' : IDL.Text,
   });
@@ -133,8 +133,8 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Opt(IDL.Text),
     'err' : IDL.Text,
   });
-  const Result_6 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
-  const Result_4 = IDL.Variant({
+  const Result_7 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({
     'ok' : IDL.Tuple(IDL.Nat, IDL.Nat),
     'err' : IDL.Text,
   });
@@ -143,7 +143,42 @@ export const idlFactory = ({ IDL }) => {
     'ok' : User__1,
     'err' : IDL.Text,
   });
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
+  const Result_4 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
+  const SubscriptionTimeInterval = IDL.Variant({
+    'LifeTime' : IDL.Null,
+    'Weekly' : IDL.Null,
+    'Monthly' : IDL.Null,
+    'Annually' : IDL.Null,
+  });
+  const SubscriptionEvent = IDL.Record({
+    'startTime' : IDL.Int,
+    'subscriptionEventId' : IDL.Text,
+    'endTime' : IDL.Int,
+    'subscriptionTimeInterval' : SubscriptionTimeInterval,
+    'writerPrincipalId' : IDL.Text,
+    'paymentFee' : IDL.Text,
+    'isWriterSubscriptionActive' : IDL.Bool,
+    'readerPrincipalId' : IDL.Text,
+  });
+  const WriterSubscriptionDetails = IDL.Record({
+    'writerSubscriptions' : IDL.Vec(SubscriptionEvent),
+    'weeklyFee' : IDL.Opt(IDL.Text),
+    'paymentReceiverPrincipalId' : IDL.Text,
+    'writerPrincipalId' : IDL.Text,
+    'lifeTimeFee' : IDL.Opt(IDL.Text),
+    'isSubscriptionActive' : IDL.Bool,
+    'annuallyFee' : IDL.Opt(IDL.Text),
+    'monthlyFee' : IDL.Opt(IDL.Text),
+  });
+  const ReaderSubscriptionDetails = IDL.Record({
+    'readerSubscriptions' : IDL.Vec(SubscriptionEvent),
+    'readerNotStoppedSubscriptionsWriters' : IDL.Vec(WriterSubscriptionDetails),
+    'readerPrincipalId' : IDL.Text,
+  });
+  const Result_2 = IDL.Variant({
+    'ok' : ReaderSubscriptionDetails,
+    'err' : IDL.Text,
+  });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
@@ -153,14 +188,14 @@ export const idlFactory = ({ IDL }) => {
         [AddPublicationReturn],
         [],
       ),
-    'adminAirDrop' : IDL.Func([IDL.Float64], [Result_10], []),
+    'adminAirDrop' : IDL.Func([IDL.Float64], [Result_11], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'blockUserFromClaiming' : IDL.Func([IDL.Text], [Result_1], []),
     'checkMyClaimNotification' : IDL.Func([], [], []),
     'claimRestrictedTokens' : IDL.Func([], [Result], []),
     'clearAllMyFollowers' : IDL.Func([], [IDL.Text], []),
     'collectCanisterMetrics' : IDL.Func([], [], []),
-    'deleteUser' : IDL.Func([IDL.Text], [Result_2], []),
+    'deleteUser' : IDL.Func([IDL.Text], [Result_3], []),
     'dumpUsers' : IDL.Func([], [IDL.Text], ['query']),
     'followAuthor' : IDL.Func([IDL.Text], [Result], []),
     'generateAccountIds' : IDL.Func([], [], []),
@@ -170,8 +205,8 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'getActiveUsersByRange' : IDL.Func([Date], [IDL.Nat], ['query']),
-    'getAdmins' : IDL.Func([], [Result_5], ['query']),
-    'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_9], ['query']),
+    'getAdmins' : IDL.Func([], [Result_6], ['query']),
+    'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_10], ['query']),
     'getAllHandles' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
@@ -179,7 +214,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
-    'getCgUsers' : IDL.Func([], [Result_5], ['query']),
+    'getCgUsers' : IDL.Func([], [Result_6], ['query']),
     'getDailyMaxRegistration' : IDL.Func([], [IDL.Nat], ['query']),
     'getFollowersCount' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
     'getHandleByPrincipal' : IDL.Func(
@@ -201,10 +236,10 @@ export const idlFactory = ({ IDL }) => {
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMultipleUsersByPrincipalId' : IDL.Func(
         [IDL.Vec(IDL.Text)],
-        [Result_8],
+        [Result_9],
         ['query'],
       ),
-    'getMyFollowers' : IDL.Func([], [Result_7], ['query']),
+    'getMyFollowers' : IDL.Func([], [Result_8], ['query']),
     'getNuaBalance' : IDL.Func([IDL.Text], [NuaBalanceResult], ['query']),
     'getNumberOfAllRegisteredUsers' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
@@ -220,7 +255,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getRegistrationNumberLastDay' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalNumberOfClaimedTokens' : IDL.Func([], [IDL.Nat], ['query']),
-    'getTrustedCanisters' : IDL.Func([], [Result_5], ['query']),
+    'getTrustedCanisters' : IDL.Func([], [Result_6], ['query']),
     'getUser' : IDL.Func([], [Result], ['query']),
     'getUserByHandle' : IDL.Func([IDL.Text], [Result], ['query']),
     'getUserByPrincipalId' : IDL.Func([IDL.Text], [Result], ['query']),
@@ -230,8 +265,8 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getUserInternal' : IDL.Func([IDL.Text], [IDL.Opt(User)], ['query']),
-    'getUserListItemByHandle' : IDL.Func([IDL.Text], [Result_6], ['query']),
-    'getUsersBlockedFromClaiming' : IDL.Func([], [Result_5], ['query']),
+    'getUserListItemByHandle' : IDL.Func([IDL.Text], [Result_7], ['query']),
+    'getUsersBlockedFromClaiming' : IDL.Func([], [Result_6], ['query']),
     'getUsersByHandles' : IDL.Func(
         [IDL.Vec(IDL.Text)],
         [IDL.Vec(UserListItem)],
@@ -247,7 +282,7 @@ export const idlFactory = ({ IDL }) => {
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'migrateFollowersHashmapsFromHandlesToPrincipalIds' : IDL.Func(
         [],
-        [Result_4],
+        [Result_5],
         [],
       ),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
@@ -264,14 +299,14 @@ export const idlFactory = ({ IDL }) => {
         [RemovePublicationReturn],
         [],
       ),
-    'setDailyMaxRegistration' : IDL.Func([IDL.Nat], [Result_2], []),
-    'setIsClaimActive' : IDL.Func([IDL.Bool], [Result_3], []),
-    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_2], []),
-    'setMaxNumberOfClaimableTokens' : IDL.Func([IDL.Nat], [Result_2], []),
+    'setDailyMaxRegistration' : IDL.Func([IDL.Nat], [Result_3], []),
+    'setIsClaimActive' : IDL.Func([IDL.Bool], [Result_4], []),
+    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_3], []),
+    'setMaxNumberOfClaimableTokens' : IDL.Func([IDL.Nat], [Result_3], []),
     'spendNuaBalance' : IDL.Func([IDL.Text], [], ['oneway']),
     'spendRestrictedTokensForSubscription' : IDL.Func(
-        [IDL.Text],
-        [Result_1],
+        [IDL.Text, IDL.Nat],
+        [Result_2],
         [],
       ),
     'spendRestrictedTokensForTipping' : IDL.Func(

@@ -76,6 +76,13 @@ export type ClaimTransactionHistoryItem = {
   claimedAmount: number;
 };
 
+export type SubscriptionHistoryItem = {
+  date: string;
+  subscriptionFee: number;
+  handle: string;
+  isWriter: boolean;
+};
+
 export type UserListItem = {
   handle: string;
   avatar: string;

@@ -260,9 +260,11 @@ type Post =
    handle: text;
    headerImage: text;
    isDraft: bool;
+   isMembersOnly: bool;
    isPremium: bool;
    isPublication: bool;
    modified: text;
+   nftCanisterId: opt text;
    postId: text;
    publishedDate: text;
    subtitle: text;

@@ -67,11 +67,8 @@ import {
   ckBTC_CANISTER_ID,
   ckBTC_INDEX_CANISTER_ID,
 } from '../shared/constants';
-import {
-  canisterId as userCanisterId,
-  createActor as createUserActor,
-  idlFactory as userFactory,
-} from '../../declarations/User';
+import { canisterId as userCanisterId } from '../../declarations/User';
+import { canisterId as subscriptionCanisterId } from '../../declarations/Subscription';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -2269,13 +2266,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       archivedTransactionsResults.forEach((archived) => {
         transactions = [...archived.transactions, ...transactions];
       });
+      console.log('subscriptionCanisterId: ', subscriptionCanisterId);
       //filter the transactions to just include user's transactions
       transactions = transactions.filter((transaction) => {
         if (transaction.transfer.length !== 0) {
           return (
-            transaction.transfer[0].from.owner.toText() ===
+            (transaction.transfer[0].from.owner.toText() ===
               userWallet.principal ||
-            transaction.transfer[0].to.owner.toText() === userWallet.principal
+              transaction.transfer[0].to.owner.toText() ===
+                userWallet.principal) &&
+            transaction.transfer[0].from.owner.toText() !==
+              subscriptionCanisterId &&
+            transaction.transfer[0].to.owner.toText() !== subscriptionCanisterId
           );
         }
         return false;

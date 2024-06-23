@@ -215,9 +215,6 @@ export interface UserStore {
     bucketCanisterId: string,
     amount: number
   ) => Promise<boolean | void>;
-  spendRestrictedTokensForSubscription: (
-    writerPrincipalId: string
-  ) => Promise<ReaderSubscriptionDetailsConverted | void>;
   clearAll: () => void;
 }
 
@@ -822,33 +819,6 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         //refresh the balances
         await useAuthStore.getState().fetchTokenBalances();
         return true;
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  //gets the postId, bucketCanisterId and the amount as an argument
-  //sends the restricted tokens to the correspnding subaccount of the PostBucket canister
-  spendRestrictedTokensForSubscription: async (
-    writerPrincipalId: string
-  ): Promise<ReaderSubscriptionDetailsConverted | void> => {
-    try {
-      let userActor = await getUserActor();
-      let response = await userActor.spendRestrictedTokensForSubscription(
-        writerPrincipalId
-      );
-      if ('err' in response) {
-        handleError(response.err);
-      } else {
-        //event is successful
-        //refresh the balances & refresh the subscription history of the reader
-        let [_, readerSubscriptionHistory] = await Promise.all([
-          useAuthStore.getState().fetchTokenBalances(),
-          useSubscriptionStore.getState().getMySubscriptionHistoryAsReader(),
-        ]);
-        //return the refreshed subscription history of the reader
-        return readerSubscriptionHistory;
       }
     } catch (err) {
       handleError(err, Unexpected);

@@ -151,6 +151,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   fetchTokenBalances: async (): Promise<void> => {
     let wallet = await get().getUserWallet();
     let user = useUserStore.getState().user;
+    //fire and forget
+    useUserStore.getState().checkMyClaimNotification();
     if (!user) {
       return;
     }

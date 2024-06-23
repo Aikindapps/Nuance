@@ -50,6 +50,7 @@ actor User {
   type GetHandleByPrincipalReturn = Types.GetHandleByPrincipalReturn;
   type NftCanisterEntry = Types.NftCanisterEntry;
   type UserClaimInfo = Types.UserClaimInfo;
+  type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
 
   type List<T> = List.List<T>;
 
@@ -1717,10 +1718,9 @@ actor User {
         return #err("There is no restricted NUA tokens to spend.")
       };
     };
-    #ok()
   };
 
-  public shared ({caller}) func spendRestrictedTokensForSubscription(eventId: Text) : async Result.Result<(), Text> {
+  public shared ({caller}) func spendRestrictedTokensForSubscription(eventId: Text, amount: Nat) : async Result.Result<ReaderSubscriptionDetails, Text> {
     let principal = Principal.toText(caller);
     switch(claimSubaccountIndexesHashMap.get(principal)) {
       case(?subaccountIndex) {
@@ -1732,10 +1732,15 @@ actor User {
               return #err("Invalid subscription event.");
             };
             //if here, the given subscription payment request is valid
+            //if the given amount value is bigger than the payment fee, return the error
+            let paymentFee = U.textToNat(paymentRequestDetails.paymentFee);
+            if(amount > paymentFee){
+              return #err("Invalid amount to spend!");
+            };
             //transfer the tokens to the subaccount
             let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
             let transferResponse = await NuaLedgerCanister.icrc1_transfer({
-              amount = Nat32.toNat(paymentRequestDetails.paymentFee);
+              amount = amount;
               created_at_time = null;
               fee = ?ENV.NUA_TOKEN_FEE;
               from_subaccount = ?Blob.fromArray(U.natToSubAccount(subaccountIndex));
@@ -1747,7 +1752,10 @@ actor User {
             });
             switch(transferResponse) {
               case(#Ok(value)) {
-                return #ok();
+                //transfer is successful
+                //complete the payment request
+                let completeResponse = await SubscriptionCanister.completeSubscriptionEvent(eventId);
+                return completeResponse;
               };
               case(#Err(error)) {
                 return #err("Transfer error.");
@@ -1764,7 +1772,6 @@ actor User {
         return #err("There is no restricted NUA tokens to spend.")
       };
     };
-    #ok()
   };
 
   public shared ({ caller }) func updateLastLogin() : () {

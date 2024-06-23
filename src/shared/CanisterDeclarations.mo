@@ -463,15 +463,43 @@ module{
         writerPrincipalId: Text;
         readerPrincipalId: Text;
         subscriptionTimeInterval: SubscriptionTimeInterval;
-        paymentFee: Nat32;
+        paymentFee: Text; //stored as Nat, served as Text
         expirationDate: Int;
         subaccount: Blob;
+    };
+    type WriterSubscriptionDetails = {
+        writerPrincipalId: Text;
+        paymentReceiverPrincipalId: Text;
+        weeklyFee: ?Text; //stored as Nat, served as Text
+        monthlyFee: ?Text; //stored as Nat, served as Text
+        annuallyFee: ?Text; //stored as Nat, served as Text
+        lifeTimeFee: ?Text; //stored as Nat, served as Text
+        isSubscriptionActive: Bool;
+        writerSubscriptions: [SubscriptionEvent];
+    };
+
+    type SubscriptionEvent = {
+        subscriptionEventId: Text;
+        writerPrincipalId: Text;
+        readerPrincipalId: Text;
+        subscriptionTimeInterval: SubscriptionTimeInterval;
+        paymentFee: Text; //stored as Nat, served as Text
+        startTime: Int;
+        endTime: Int;
+        isWriterSubscriptionActive: Bool;
+    };
+
+    public type ReaderSubscriptionDetails = {
+        readerPrincipalId: Text;
+        readerSubscriptions: [SubscriptionEvent];
+        readerNotStoppedSubscriptionsWriters: [WriterSubscriptionDetails];
     };
 
     public type SubscriptionCanisterInterface = actor {
         isReaderSubscriber : query (writerPrincipalId: Text, readerPrincipalId: Text) -> async Bool;
         isWriterActivatedSubscription : query (writerPrincipalId: Text) -> async Bool;
-        getPaymentRequestBySubscriptionEventId(eventId: Text) : async Result.Result<PaymentRequest, Text>
+        getPaymentRequestBySubscriptionEventId : query (eventId: Text) -> async Result.Result<PaymentRequest, Text>;
+        completeSubscriptionEvent : (eventId: Text) -> async Result.Result<ReaderSubscriptionDetails, Text>;
     };
 
     public func getSubscriptionCanister() : SubscriptionCanisterInterface {

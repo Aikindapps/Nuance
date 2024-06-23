@@ -73,7 +73,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     getUserNotifications,
     markNotificationAsRead,
     notifications,
-    checkMyClaimNotification,
     resetUnreadNotificationCount,
     unreadNotificationCount,
     loadMoreNotifications,
@@ -83,7 +82,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
   } = useUserStore((state) => ({
     user: state.user,
     getUserNotifications: state.getUserNotifications,
-    checkMyClaimNotification: state.checkMyClaimNotification,
     markNotificationAsRead: state.markNotificationAsRead,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
     notifications: state.notifications || [],
@@ -144,7 +142,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         user
       ) {
         getUserNotifications(0, currentTo, isLoggedIn);
-        checkMyClaimNotification();
       }
     };
 

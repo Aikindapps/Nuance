@@ -7,7 +7,7 @@ import {
   SUBSCRIPTION_CANISTER_ID,
   getPostCoreActor,
 } from '../services/actorService';
-import { UserListItem } from '../types/types';
+import { SubscriptionHistoryItem, UserListItem } from '../types/types';
 import {
   ReaderSubscriptionDetails,
   SubscriptionTimeInterval,
@@ -18,6 +18,8 @@ import { toastError } from '../services/toastService';
 import { getErrorType } from '../services/errorService';
 import { NUA_CANISTER_ID } from '../shared/constants';
 import { Toast } from 'react-bootstrap';
+import { useAuthStore } from './authStore';
+import { User } from '../services/ext-service/ext_v2.did';
 
 export type SubscribedWriterItem = {
   userListItem: UserListItem;
@@ -344,6 +346,7 @@ export interface SubscriptionStore {
   getWriterSubscriptionDetailsByPrincipalId: (
     principal: string
   ) => Promise<WriterSubscriptionDetails | void>;
+  getMySubscriptionTransactions: () => Promise<SubscriptionHistoryItem[]>;
   updateSubscriptionDetails: (
     weeklyFee?: number,
     monthlyFee?: number,
@@ -398,6 +401,85 @@ const createSubscriptionStore:
       }
     } catch (error) {}
   },
+
+  //returns an array of history item for wallet screen to use
+  getMySubscriptionTransactions: async (): Promise<
+    SubscriptionHistoryItem[]
+  > => {
+    try {
+      let subscriptionActor = await getSubscriptionActor();
+      let [readerDetails, writerDetails] = await Promise.all([
+        subscriptionActor.getReaderSubscriptionDetails(),
+        subscriptionActor.getWriterSubscriptionDetails([]),
+      ]);
+      let allPrincipalIds: string[] = [];
+      let userListItemsMap = new Map<string, UserListItem>();
+      if ('ok' in readerDetails) {
+        for (const readerSubscriptionEvent of readerDetails.ok
+          .readerSubscriptions) {
+          if (
+            !allPrincipalIds.includes(readerSubscriptionEvent.writerPrincipalId)
+          ) {
+            allPrincipalIds.push(readerSubscriptionEvent.writerPrincipalId);
+          }
+        }
+      }
+      if ('ok' in writerDetails) {
+        for (const writerSubscriptionEvent of writerDetails.ok
+          .writerSubscriptions) {
+          if (
+            !allPrincipalIds.includes(writerSubscriptionEvent.readerPrincipalId)
+          ) {
+            allPrincipalIds.push(writerSubscriptionEvent.readerPrincipalId);
+          }
+        }
+      }
+      let userActor = await getUserActor();
+      let allUserListItems = await userActor.getUsersByPrincipals(
+        allPrincipalIds
+      );
+      for (const userListItem of allUserListItems) {
+        userListItemsMap.set(userListItem.principal, userListItem);
+      }
+      //if here, all the necessary UserListItem values are fetched from backend
+      let readerTransactionDetails: SubscriptionHistoryItem[] = [];
+      if ('ok' in readerDetails) {
+        for (const readerSubscriptionEvent of readerDetails.ok
+          .readerSubscriptions) {
+          readerTransactionDetails.push({
+            date: Number(readerSubscriptionEvent.startTime).toString(),
+            subscriptionFee: Number(readerSubscriptionEvent.paymentFee),
+            handle: (
+              userListItemsMap.get(
+                readerSubscriptionEvent.writerPrincipalId
+              ) as UserListItem
+            ).handle,
+            isWriter: false,
+          });
+        }
+      }
+      let writerTransactionDetails: SubscriptionHistoryItem[] = [];
+      if ('ok' in writerDetails) {
+        for (const writerSubscriptionEvent of writerDetails.ok
+          .writerSubscriptions) {
+          writerTransactionDetails.push({
+            date: Number(writerSubscriptionEvent.startTime).toString(),
+            subscriptionFee: Number(writerSubscriptionEvent.paymentFee),
+            handle: (
+              userListItemsMap.get(
+                writerSubscriptionEvent.readerPrincipalId
+              ) as UserListItem
+            ).handle,
+            isWriter: true,
+          });
+        }
+      }
+      return [...readerTransactionDetails, ...writerTransactionDetails];
+    } catch (error) {
+      return [];
+    }
+  },
+
   //returns the subscription details of the user
   //should be called by the user - doesn't accept any principal id
   //it also returns the historical subscription data
@@ -458,7 +540,6 @@ const createSubscriptionStore:
         monthlyFee: monthlyFee ? [BigInt(monthlyFee)] : [],
       });
       if ('ok' in response) {
-
         return await convertWriterSubscriptionDetails(response.ok);
       } else {
         handleError(response.err);
@@ -484,39 +565,132 @@ const createSubscriptionStore:
       if ('ok' in paymentRequest) {
         // Payment request has successfully been created
         // Transfer the tokens to the subaccount
+        //in order to determine what to do, get the restricted token balance value of the user
+        let restrictedTokenBalance =
+          useAuthStore.getState().restrictedTokenBalance;
         const nuaLedgerCanister = await getIcrc1Actor(NUA_CANISTER_ID);
-        const transferResponse = await nuaLedgerCanister.icrc1_transfer({
-          to: {
-            owner: Principal.fromText(SUBSCRIPTION_CANISTER_ID),
-            subaccount: [paymentRequest.ok.subaccount],
-          },
-          fee: [BigInt(100000)],
-          memo: [],
-          from_subaccount: [],
-          created_at_time: [],
-          amount: BigInt(paymentRequest.ok.paymentFee),
-        });
 
-        if ('Ok' in transferResponse) {
+        console.log('restrictedTokenBalance: ', restrictedTokenBalance);
+
+        const restrictedNuaUsed = restrictedTokenBalance > Math.pow(10, 6);
+        var isPaymentSuccessful = false;
+        var errorMessage = '';
+        var readerSubscriptionDetailsNew:
+          | ReaderSubscriptionDetails
+          | undefined = undefined;
+
+        if (restrictedTokenBalance > Math.pow(10, 6)) {
+          //check if the restricted tokenBalance is enough
+          if (
+            restrictedTokenBalance >=
+            Number(paymentRequest.ok.paymentFee) + Math.pow(10, 6)
+          ) {
+            //use only the restricted NUA
+            console.log('only using the restricted NUA');
+            let userActor = await getUserActor();
+            let transferAndCompleteResponse =
+              await userActor.spendRestrictedTokensForSubscription(
+                paymentRequest.ok.subscriptionEventId,
+                BigInt(paymentRequest.ok.paymentFee)
+              );
+            if ('ok' in transferAndCompleteResponse) {
+              isPaymentSuccessful = true;
+              readerSubscriptionDetailsNew = transferAndCompleteResponse.ok;
+            } else {
+              errorMessage = transferAndCompleteResponse.err;
+            }
+          } else {
+            //use both regular NUA & restricted NUA
+            console.log('using both restricted & regular nua');
+            let userActor = await getUserActor();
+            //transfer the regular tokens first
+            let regularTransferResponse =
+              await nuaLedgerCanister.icrc1_transfer({
+                to: {
+                  owner: Principal.fromText(SUBSCRIPTION_CANISTER_ID),
+                  subaccount: [paymentRequest.ok.subaccount],
+                },
+                fee: [BigInt(100000)],
+                memo: [],
+                from_subaccount: [],
+                created_at_time: [],
+                amount: BigInt(
+                  Number(paymentRequest.ok.paymentFee) -
+                    restrictedTokenBalance +
+                    Math.pow(10, 6)
+                ),
+              });
+            if ('Ok' in regularTransferResponse) {
+              //regular tokens transferred successfully
+              //run the spendRestrictedTokensForSubscription to complete the payment
+              let restrictedTransferAndCompleteResponse =
+                await userActor.spendRestrictedTokensForSubscription(
+                  paymentRequest.ok.subscriptionEventId,
+                  BigInt(restrictedTokenBalance - Math.pow(10, 6))
+                );
+              if ('ok' in restrictedTransferAndCompleteResponse) {
+                isPaymentSuccessful = true;
+                readerSubscriptionDetailsNew =
+                  restrictedTransferAndCompleteResponse.ok;
+              } else {
+                errorMessage = restrictedTransferAndCompleteResponse.err;
+              }
+            } else {
+              errorMessage = regularTransferResponse.Err.toString();
+            }
+          }
+        } else {
+          //don't use the restricted tokens
+          //simply transfer the tokens
+          console.log('using only regular nua');
+          const transferResponse = await nuaLedgerCanister.icrc1_transfer({
+            to: {
+              owner: Principal.fromText(SUBSCRIPTION_CANISTER_ID),
+              subaccount: [paymentRequest.ok.subaccount],
+            },
+            fee: [BigInt(100000)],
+            memo: [],
+            from_subaccount: [],
+            created_at_time: [],
+            amount: BigInt(paymentRequest.ok.paymentFee),
+          });
+          if ('Ok' in transferResponse) {
+            isPaymentSuccessful = true;
+          } else {
+            errorMessage = `Token transfer failed: ${transferResponse.Err.toString()}`;
+          }
+        }
+
+        if (isPaymentSuccessful) {
           // Transfer is also successful
-          // Complete the subscription event and return the new readerDetails value
-          const response = await subscriptionActor.completeSubscriptionEvent(
-            paymentRequest.ok.subscriptionEventId
-          );
-          if ('ok' in response) {
+          // if the restricted NUA used, no need to run the completeSubscriptionEvent
+          // because User canister already handles that
+          if (!restrictedNuaUsed) {
+            // Complete the subscription event and return the new readerDetails value
+            const response = await subscriptionActor.completeSubscriptionEvent(
+              paymentRequest.ok.subscriptionEventId
+            );
+            if ('ok' in response) {
+              readerSubscriptionDetailsNew = response.ok;
+            } else {
+              errorMessage = `Subscription completion failed: ${response.err}`;
+            }
+          }
+
+          if (readerSubscriptionDetailsNew) {
             //fire and forget the disperse function
             subscriptionActor.disperseTokensForSuccessfulSubscription(
               paymentRequest.ok.subscriptionEventId
             );
-            return await convertReaderSubscriptionDetails(response.ok);
+            return await convertReaderSubscriptionDetails(
+              readerSubscriptionDetailsNew
+            );
           } else {
             //call the function to get back sent tokens
             subscriptionActor.pendingStuckTokensHeartbeatExternal();
-            const errorMessage = `Subscription completion failed: ${response.err}`;
             toastError(errorMessage);
           }
         } else {
-          const errorMessage = `Token transfer failed: ${transferResponse.Err}`;
           toastError(errorMessage);
         }
       } else {
