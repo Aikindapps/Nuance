@@ -1,15 +1,15 @@
 module {
-  public let USER_VERSION = "Vesper";
-  public let POSTCORE_VERSION = "Vesper";
-  public let POSTBUCKET_VERSION = "Vesper";
-  public let KINICENDPOINT_VERSION = "Vesper";
-  public let FASTBLOCKSEMAILOPTIN_VERSION = "Vesper";
-  public let POSTINDEX_VERSION = "Vesper";
-  public let STORAGE_VERSION = "Vesper";
-  public let CYCLESDISPENSER_VERSION = "Vesper";
-  public let METRICS_VERSION = "Vesper";
-  public let PUBLICATIONMANAGEMENT_VERSION = "Vesper";
-  public let PUBLICATION_VERSION = "Vesper";
-  public let NFTFACTORY_VERSION = "Vesper";
-  public let NOTIFICATIONS_VERSION = "Vesper";
+  public let USER_VERSION = "Bijou";
+  public let POSTCORE_VERSION = "Bijou";
+  public let POSTBUCKET_VERSION = "Bijou";
+  public let KINICENDPOINT_VERSION = "Bijou";
+  public let FASTBLOCKSEMAILOPTIN_VERSION = "Bijou";
+  public let POSTINDEX_VERSION = "Bijou";
+  public let STORAGE_VERSION = "Bijou";
+  public let CYCLESDISPENSER_VERSION = "Bijou";
+  public let METRICS_VERSION = "Bijou";
+  public let PUBLICATIONMANAGEMENT_VERSION = "Bijou";
+  public let PUBLICATION_VERSION = "Bijou";
+  public let NFTFACTORY_VERSION = "Bijou";
+  public let NOTIFICATIONS_VERSION = "Bijou";
 };
