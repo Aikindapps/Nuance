@@ -175,6 +175,14 @@ function PublicationLanding() {
 
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
 
+  const handleSubscriptionComplete = () => {
+    setSidebarToggle(false);
+  };
+
+  const handleCancelSubscription = () => {
+    console.log("cancel")
+  }
+
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
       if (isLoggedIn) {
@@ -204,7 +212,7 @@ function PublicationLanding() {
     };
 
     fetchSubscriptionHistory();
-  }, [isLoggedIn, author?.handle, user?.handle]);
+  }, [isLoggedIn, author?.handle, user?.handle, handleSubscriptionComplete, handleCancelSubscription]);
 
 
   const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
@@ -430,13 +438,7 @@ function PublicationLanding() {
     setShowSearchResults(false);
   };
 
-  const handleSubscriptionComplete = () => {
-    setSidebarToggle(false);
-  };
 
-  const handleCancelSubscription = () => {
-    console.log("cancel")
-  }
 
   const closeMenus = () => {
     setSidebarToggle(false);
