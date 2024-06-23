@@ -55,6 +55,14 @@
       "main": "src/Subscription/main.mo",
       "type": "motoko",
       "specified_id": "cbopz-duaaa-aaaaa-qaaka-cai"
+    },
+    "nuance_assets": {
+      "frontend": {
+        "entrypoint": "dist/index.html"
+      },
+      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "type": "assets",
+      "specified_id": "exwqn-uaaaa-aaaaf-qaeaa-cai"
     }
   },
   "defaults": {
