@@ -59,6 +59,7 @@ export interface Post {
   'handle' : string,
   'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -128,7 +129,7 @@ export interface Publisher {
   'idQuick' : ActorMethod<[], Principal>,
   'initializeCanister' : ActorMethod<[string, string, string], Result_3>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
-  'migrateEditorsWritersHandles' : ActorMethod<[], Result>,
+  'refreshEditorsWritersHandles' : ActorMethod<[], Result_4>,
   'registerAdmin' : ActorMethod<[string], Result_4>,
   'registerCgUser' : ActorMethod<[string], Result_4>,
   'registerPlatformOperator' : ActorMethod<[string], Result_4>,
@@ -195,11 +196,19 @@ export interface User {
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'claimInfo' : [] | [UserClaimInfo],
   'website' : string,
   'handle' : string,
   'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
+}
+export interface UserClaimInfo {
+  'isUserBlocked' : boolean,
+  'maxClaimableTokens' : string,
+  'subaccount' : [] | [Uint8Array | number[]],
+  'lastClaimDate' : [] | [string],
+  'isClaimActive' : boolean,
 }
 export interface _SERVICE extends Publisher {}
 export declare const idlFactory: IDL.InterfaceFactory;

@@ -19,15 +19,32 @@ import Loader from '../../../UI/loader/Loader';
 import { useTheme } from '../../../contextes/ThemeContext';
 import { colors, icons, images } from '../../../shared/constants';
 import { UserType } from 'src/nuance_assets/types/types';
+import SubscriptionSettings from '../../create-edit-publication/subscription-settings';
+import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
+import { useSubscriptionStore } from '../../../store/subscriptionStore';
+import { SubscriptionStore } from '../../../store/subscriptionStore';
+import { Principal } from '@dfinity/principal';
 import './_edit-profile.scss';
 var psl = require('psl');
 
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
-  const { updateUserDetails, getUser } = useUserStore((state) => ({
-    getUser: state.getUser,
-    updateUserDetails: state.updateUserDetails,
+  const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore(
+    (state) => ({
+      getUser: state.getUser,
+      updateUserDetails: state.updateUserDetails,
+      getPrincipalByHandle: state.getPrincipalByHandle,
+    })
+  );
+
+  const {
+    getWriterSubscriptionDetailsByPrincipalId,
+    updateSubscriptionDetails,
+  } = useSubscriptionStore((state: SubscriptionStore) => ({
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
+    updateSubscriptionDetails: state.updateSubscriptionDetails,
   }));
 
   const firstLoad = async () => {
@@ -59,6 +76,103 @@ const EditProfile = () => {
   const [postHtml, setPostHtml] = useState('');
   const darkTheme = useTheme();
 
+  const [subscriptionDetails, setSubscriptionDetails] =
+    useState<SubscriptionDetailsState>({
+      writerSubscriptions: [],
+      weeklyFee: [],
+      writerPrincipalId: '',
+      paymentReceiverPrincipalId: '',
+      lifeTimeFee: [],
+      isSubscriptionActive: false,
+      annuallyFee: [],
+      monthlyFee: [],
+      weeklyFeeEnabled: false,
+      monthlyFeeEnabled: false,
+      annuallyFeeEnabled: false,
+      lifeTimeFeeEnabled: false,
+    });
+
+  interface SubscriptionDetailsState extends WriterSubscriptionDetails {
+    weeklyFeeEnabled: boolean;
+    monthlyFeeEnabled: boolean;
+    annuallyFeeEnabled: boolean;
+    lifeTimeFeeEnabled: boolean;
+  }
+
+  const handleUpdateSubscriptionDetails = async () => {
+    const convertToE8s = (fee: string | undefined) =>
+      fee ? Number(fee) * 1e8 : undefined;
+
+    try {
+      const userPrincipalId = await getPrincipalByHandle(user?.handle || '');
+      updateSubscriptionDetails(
+        convertToE8s(subscriptionDetails.weeklyFee[0]),
+        convertToE8s(subscriptionDetails.monthlyFee[0]),
+        convertToE8s(subscriptionDetails.annuallyFee[0]),
+        convertToE8s(subscriptionDetails.lifeTimeFee[0]),
+        {
+          paymentReceiverPrincipal: Principal.fromText(
+            subscriptionDetails.writerPrincipalId
+          ),
+          publicationCanisterId: userPrincipalId ?? '',
+        }
+      );
+    } catch (error) {
+      console.error('Error fetching canister ID:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      console.log('Fetching subscription details for:', user?.handle);
+      if (user) {
+        const userPrincipalId = await getPrincipalByHandle(user.handle);
+        if (userPrincipalId) {
+          const fetchedDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(userPrincipalId);
+          if (fetchedDetails) {
+            setSubscriptionDetails({
+              writerSubscriptions: fetchedDetails?.writerSubscriptions,
+              weeklyFee: fetchedDetails.weeklyFee[0]
+                ? [(Number(fetchedDetails.weeklyFee[0]) / 1e8).toString()]
+                : [],
+              writerPrincipalId: fetchedDetails.writerPrincipalId,
+              paymentReceiverPrincipalId:
+                fetchedDetails.paymentReceiverPrincipalId,
+              lifeTimeFee: fetchedDetails.lifeTimeFee[0]
+                ? [(Number(fetchedDetails.lifeTimeFee[0]) / 1e8).toString()]
+                : [],
+              isSubscriptionActive: fetchedDetails.isSubscriptionActive,
+              annuallyFee: fetchedDetails.annuallyFee[0]
+                ? [(Number(fetchedDetails.annuallyFee[0]) / 1e8).toString()]
+                : [],
+              monthlyFee: fetchedDetails.monthlyFee[0]
+                ? [(Number(fetchedDetails.monthlyFee[0]) / 1e8).toString()]
+                : [],
+              weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
+              monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
+              annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
+              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0,
+            });
+            console.log(
+              'Fetched subscription details:',
+              fetchedDetails.annuallyFee[0]
+                ? [(Number(fetchedDetails.annuallyFee[0]) / 1e8).toString()]
+                : []
+            );
+            console.log(
+              'Fetched subscription details:',
+              fetchedDetails.annuallyFee[0]
+                ? [fetchedDetails.annuallyFee[0]]
+                : []
+            );
+          }
+        }
+      }
+    };
+    fetchSubscriptionDetails();
+  }, [user]);
+
   const onDisplayNameChange = (value: string) => {
     if (user) {
       setUser({ ...user, displayName: value });
@@ -74,21 +188,20 @@ const EditProfile = () => {
   function validateURL(url: string) {
     var validUrl = require('valid-url');
     if (url != '') {
-      return validUrl.isWebUri(url)
+      return validUrl.isWebUri(url);
     } else return true;
   }
 
   const isAddNewSocialLinkActive = () => {
     if (user) {
       if (user.socialChannels.length === 0) {
-        return true
-      }
-      else {
+        return true;
+      } else {
         return validateURL(user.socialChannels[user.socialChannels.length - 1]);
       }
     }
-    return false
-  }
+    return false;
+  };
 
   const validateSocialLinks = () => {
     if (user) {
@@ -98,43 +211,39 @@ const EditProfile = () => {
         }
       }
     }
-    return true
-  }
+    return true;
+  };
 
   const validate = () => {
     if (user) {
       if (user.website !== '') {
         return validateSocialLinks() && validateURL(user.website);
-      }
-      else {
-        return validateSocialLinks()
+      } else {
+        return validateSocialLinks();
       }
     }
-    return false
-  }
+    return false;
+  };
 
   const onWebsiteChange = (value: string) => {
     if (user) {
       setUser({ ...user, website: value });
     }
-  }
+  };
 
   const onSocialChannelUrlChange = (value: string, index: number) => {
     if (user) {
       let allUrls = user.socialChannels;
       allUrls = allUrls.map((val, i) => {
         if (i === index) {
-          return value
+          return value;
+        } else {
+          return val;
         }
-        else {
-          return val
-        }
-      })
+      });
       setUser({ ...user, socialChannels: allUrls });
     }
-  }
-
-
+  };
 
   const editor = useRef(null);
   const [hideEditor, setHideEditor] = useState(true);
@@ -204,6 +313,21 @@ const EditProfile = () => {
           setAvatar(response.avatar);
         }
       }
+
+      updateSubscriptionDetails(
+        subscriptionDetails.weeklyFee[0]
+          ? Number(subscriptionDetails.weeklyFee[0]) * 1e8
+          : undefined,
+        subscriptionDetails.monthlyFee[0]
+          ? Number(subscriptionDetails.monthlyFee[0]) * 1e8
+          : undefined,
+        subscriptionDetails.annuallyFee[0]
+          ? Number(subscriptionDetails.annuallyFee[0]) * 1e8
+          : undefined,
+        subscriptionDetails.lifeTimeFee[0]
+          ? Number(subscriptionDetails.lifeTimeFee[0]) * 1e8
+          : undefined
+      );
     }
 
     setIsLoading(false);
@@ -239,7 +363,7 @@ const EditProfile = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -513,9 +637,9 @@ const EditProfile = () => {
           style={
             !isAddNewSocialLinkActive()
               ? {
-                cursor: 'not-allowed',
-                opacity: '0.5',
-              }
+                  cursor: 'not-allowed',
+                  opacity: '0.5',
+                }
               : {}
           }
           className='edit-profile-add-new-social-channel'
@@ -530,6 +654,15 @@ const EditProfile = () => {
         >
           <span>+</span>
           {'  Add new link to social channel'}
+        </div>
+
+        <div className='subscription-settings-wrapper'>
+          <SubscriptionSettings
+            subscriptionDetails={subscriptionDetails}
+            updateSubscriptionDetails={handleUpdateSubscriptionDetails}
+            setSubscriptionDetails={setSubscriptionDetails}
+            isPublication={false}
+          />
         </div>
         <div className='edit-profile-buttons-wrapper'>
           <Button
@@ -551,11 +684,11 @@ const EditProfile = () => {
             style={
               !validate()
                 ? {
-                  cursor: 'not-allowed',
-                  background: 'gray',
-                  borderColor: 'gray',
-                  width: '120px',
-                }
+                    cursor: 'not-allowed',
+                    background: 'gray',
+                    borderColor: 'gray',
+                    width: '120px',
+                  }
                 : { width: '120px' }
             }
           >

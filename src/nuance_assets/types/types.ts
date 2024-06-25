@@ -60,6 +60,27 @@ export type UserType = {
   socialChannels: Array<string>;
   nuaTokens: number;
   followersCount: number;
+  claimInfo: UserClaimInfoType;
+};
+
+type UserClaimInfoType = {
+  isUserBlocked: boolean;
+  maxClaimableTokens: number;
+  subaccount: [] | [Uint8Array | number[]];
+  lastClaimDate: [] | [number];
+  isClaimActive: boolean;
+};
+
+export type ClaimTransactionHistoryItem = {
+  date: string;
+  claimedAmount: number;
+};
+
+export type SubscriptionHistoryItem = {
+  date: string;
+  subscriptionFee: number;
+  handle: string;
+  isWriter: boolean;
 };
 
 export type UserListItem = {
@@ -93,10 +114,13 @@ export type PostType = {
   claps: string;
   category: string;
   isPremium: boolean;
+  isMembersOnly: boolean;
   nftCanisterId?: [] | [string];
   premiumArticleSaleInfo?: PremiumArticleSaleInformation;
   bucketCanisterId: string;
   wordCount: string;
+
+  principal?: string;
 
   // populated for post lists after calling
   // getUsersByHandles in User canister

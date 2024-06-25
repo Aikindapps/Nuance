@@ -61,10 +61,10 @@ actor PostCore {
   type PostTag = Types.PostTag;
   type PostTagModel = Types.PostTagModel;
   type FrontendInterface = Types.FrontendInterface;
-  type PostKeyProperties = Types.PostKeyProperties;
-  type Post = Types.Post;
-  type PostBucketType = Types.PostBucketType;
-  type PostSaveModel = Types.PostSaveModel;
+  type PostKeyProperties = CanisterDeclarations.PostKeyProperties;
+  type Post = CanisterDeclarations.Post;
+  type PostBucketType = CanisterDeclarations.PostBucketType;
+  type PostSaveModel = CanisterDeclarations.PostSaveModel;
   type UserPostCounts = Types.UserPostCounts;
   type GetPostsByFollowers = Types.GetPostsByFollowers;
   type NftCanisterEntry = Types.NftCanisterEntry;
@@ -429,6 +429,13 @@ actor PostCore {
         return false;
       };
     };
+  };
+
+  private func isDraftOrFutureArticle(postId: Text) : Bool {
+    let now = U.epochTime();
+    let isDraft = U.safeGet(isDraftHashMap, postId, false);
+    let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
+    publishedDate > now or isDraft
   };
 
   public shared query func isWriterPublic(publicationCanisterId: Text, caller: Principal) : async Bool {
@@ -1082,8 +1089,7 @@ actor PostCore {
       if (not U.isTextLengthValid(tagId, 50)) {
         return #err("Invalid tagId");
       };
-    };
-    
+    };    
 
     if (not isThereEnoughMemoryPrivate()) {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
@@ -1096,6 +1102,25 @@ actor PostCore {
     if (getUserPostsCountLastDay(callerPrincipalId) > userDailyAllowedPostNumber and isNew) {
       //ToDo: Publications can add new editors and create new posts 
       return #err("You have reached the limit of posts you can publish in one day.");
+    };
+
+    //if scheduledPublishedDate value is not null, check if the input is valid
+    switch(postModel.scheduledPublishedDate) {
+      case(?scheduledPublishedDate) {
+        let now = U.epochTime();
+        if(now > scheduledPublishedDate){
+          return #err("Invalid scheduled time.")
+        };
+        
+        if(postModel.isDraft){
+          //scheduled posts can not be draft
+          return #err("Scheduled posts can not be draft!")
+        }
+
+      };
+      case(null) {
+        //nothing to check
+      };
     };
 
     //even if the isPublication field is true, caller should be a publication canister
@@ -1164,7 +1189,17 @@ actor PostCore {
     let postOwnerPrincipalId = if(isPublication){
       U.safeGet(publicationCanisterIdsHashmap, postModel.handle, "");
     }else{callerPrincipalId};
-    
+
+    //if isMembersOnly field is true, check if the owner of the post has the subscription feature enabled
+    if(postModel.isMembersOnly){
+      let SubscriptionCanister = CanisterDeclarations.getSubscriptionCanister();
+      let isSubscriptionActive = await SubscriptionCanister.isWriterActivatedSubscription(postOwnerPrincipalId);
+      if(not isSubscriptionActive){
+        //subscription feature has not been enabled by the writer yet
+        //return an error
+        return #err("Subscription option is not available!");
+      }
+    };
 
     let bucketCanisterId = if (isNew) { activeBucketCanisterId } else {
       U.safeGet(postIdsToBucketCanisterIdsHashMap, postIdTrimmed, activeBucketCanisterId);
@@ -1175,7 +1210,7 @@ actor PostCore {
       return #err(ArticleNotFound);
     };
 
-    // ensure the caller owns the post before updating it
+    //ensure the caller owns the post before updating it
     //exclude the publication posts because the authorization is done above
     if (not isPublication and not isNew and not isAuthor(caller, postIdTrimmed)) {
       return #err(Unauthorized);
@@ -1291,11 +1326,13 @@ actor PostCore {
       headerImage = postModel.headerImage;
       isDraft = postModel.isDraft;
       premium = premiumData;
+      isMembersOnly = postModel.isMembersOnly;
       isPublication = isPublication;
       postId = postModel.postId;
       subtitle = postModel.subtitle;
       tagNames = Buffer.toArray(tagNamesBuffer);
       title = postModel.title;
+      scheduledPublishedDate = postModel.scheduledPublishedDate
     });
 
     switch (saveReturn) {
@@ -1367,6 +1404,7 @@ actor PostCore {
           headerImage = postBucketReturn.headerImage;
           isDraft = postBucketReturn.isDraft;
           isPremium = postBucketReturn.isPremium;
+          isMembersOnly = postBucketReturn.isMembersOnly;
           nftCanisterId = postBucketReturn.nftCanisterId;
           isPublication = postBucketReturn.isPublication;
           modified = postBucketReturn.modified;
@@ -1477,14 +1515,15 @@ actor PostCore {
       //add postId to publication's posts
       addPostIdToUser(publicationPrincipalId, postId);
       if (isDraft) {
+        //if draft, remove the published date value if exists
+        publishedDateHashMap.delete(postId);
+        //remove the post from popular posts if it's draft
+        removePostFromPopularityArrays(postId);
         //ToDo: remove the post from latest posts if it's draft
       } else {
         let now = U.epochTime();
         modifiedHashMap.put(postId, now);
         isDraftHashMap.put(postId, isDraft);
-        if(isDraft){
-          removePostFromPopularityArrays(postId);
-        }
       };
 
     };
@@ -1553,9 +1592,11 @@ actor PostCore {
       createdHashMap.put(saveReturn.postId, U.textToNat(saveReturn.created));
     };
     let post = buildPostKeyProperties(saveReturn.postId);
-    if (not saveReturn.isDraft and post.publishedDate == "0" and not U.arrayContains(Iter.toArray(latestPostsHashmap.vals()), saveReturn.postId)) {
+    if (not saveReturn.isDraft) {
       publishedDateHashMap.put(saveReturn.postId, U.textToNat(saveReturn.publishedDate));
-      latestPostsHashmap.put(Int.toText(latestPostsHashmap.size()), saveReturn.postId);
+      if(not U.arrayContains(Iter.toArray(latestPostsHashmap.vals()), saveReturn.postId)){
+        latestPostsHashmap.put(Int.toText(latestPostsHashmap.size()), saveReturn.postId);
+      }
     };
 
     //publishedDate
@@ -1566,6 +1607,8 @@ actor PostCore {
       isDraftHashMap.put(saveReturn.postId, saveReturn.isDraft);
       //remove the post from popularity sorted arrays
       removePostFromPopularityArrays(saveReturn.postId);
+      //delete the publishedDate value if exists
+      publishedDateHashMap.delete(saveReturn.postId);
     } else {
       isDraftHashMap.delete(saveReturn.postId);
     };
@@ -1600,7 +1643,7 @@ actor PostCore {
       List.iterate(
         userPostIds,
         func(postId : Text) : () {
-          let isDraft = U.safeGet(isDraftHashMap, postId, false);
+          let isDraft = isDraftOrFutureArticle(postId);
 
           if (not isDraft and not rejectedByModClub(postId)) {
             let postListItem = buildPostKeyProperties(postId);
@@ -1647,7 +1690,7 @@ actor PostCore {
           return;
         };
 
-        let isDraft = U.safeGet(isDraftHashMap, postId, false);
+        let isDraft = isDraftOrFutureArticle(postId);
         if (not isDraft and not rejectedByModClub(postId)) {
           let postListItem = buildPostKeyProperties(postId);
           postsBuffer.add(postListItem);
@@ -1847,6 +1890,56 @@ actor PostCore {
     Buffer.toArray(postsBuffer);
   };
 
+  //returns the caller's planned posts key properties
+  public shared query ({ caller }) func getMyPlannedPosts(
+    indexFrom : Nat32,
+    indexTo : Nat32,
+  ) : async [PostKeyProperties] {
+
+    Debug.print("PostCore->getMyPosts");
+
+    var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(10);
+    let callerPrincipalId = Principal.toText(caller);
+    let userPosts = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
+    let now = U.epochTime();
+
+    // filter: only planned posts
+    // posts are already stored desc by created time
+    let postIds = Array.filter<Text>(
+      List.toArray(userPosts),
+      func filter(postId : Text) : Bool {
+        let isDraft = U.safeGet(isDraftHashMap, postId, false);
+        let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
+        return (not isDraft) and publishedDate > now;
+      },
+    );
+
+    // prevent underflow error
+    let l : Nat = postIds.size();
+    if (l == 0) {
+      return [];
+    };
+
+    let lastIndex : Nat = l - 1;
+
+    let indexStart = Nat32.toNat(indexFrom);
+    if (indexStart > lastIndex) {
+      return [];
+    };
+
+    var indexEnd = Nat32.toNat(indexTo) - 1;
+    if (indexEnd > lastIndex) {
+      indexEnd := lastIndex;
+    };
+
+    for (i in Iter.range(indexStart, indexEnd)) {
+      let postListItem = buildPostKeyProperties(postIds[i]);
+      postsBuffer.add(postListItem);
+    };
+
+    Buffer.toArray(postsBuffer);
+  };
+
   //returns the caller's posts
   public shared query ({ caller }) func getMyPublishedPosts(
     indexFrom : Nat32,
@@ -1897,6 +1990,7 @@ actor PostCore {
 
   public shared query func getUsersPostCountsByHandles(userHandles: [Text]) : async [UserPostCounts] {
     let result = Buffer.Buffer<UserPostCounts>(0);
+    let now = U.epochTime();
 
     for(userHandle in userHandles.vals()){
       let trimmedHandle = U.trim(userHandle);
@@ -1904,6 +1998,7 @@ actor PostCore {
       var draftCount : Nat = 0;
       var submittedToReviewCount : Nat = 0;
       var premiumCount : Nat = 0;
+      var plannedCount : Nat = 0;
       var publishedCount : Nat = 0;
       var totalViewCount : Nat = 0;
       var totalClapCount : Nat = 0;
@@ -1920,6 +2015,7 @@ actor PostCore {
           func(postId : Text) : () {
             let isDraft = U.safeGet(isDraftHashMap, postId, false);
             let postOwnerPrincipalId = U.safeGet(principalIdHashMap, postId, "");
+            let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
 
             if (isDraft) {
               if(postOwnerPrincipalId != principalId){
@@ -1929,7 +2025,12 @@ actor PostCore {
                 draftCount += 1;
               }
             } else {
-              publishedCount += 1;
+              if(publishedDate > now){
+                plannedCount += 1;
+              }
+              else{
+                publishedCount += 1;
+              }
             };
 
             if(postIdsToNftCanisterIdsHashMap.get(postId) != null){
@@ -1954,6 +2055,7 @@ actor PostCore {
         publishedCount = Nat.toText(publishedCount);
         premiumCount = Nat.toText(premiumCount);
         draftCount = Nat.toText(draftCount);
+        plannedCount = Nat.toText(plannedCount);
         submittedToReviewCount = Nat.toText(submittedToReviewCount);
         totalViewCount = Nat.toText(totalViewCount);
         // TODO: Implement counts
@@ -1970,10 +2072,11 @@ actor PostCore {
   public shared query func getUserPostCounts(userHandle : Text) : async UserPostCounts {
     // Iterates all of the user's posts, then adds up the
     // draft and published counts and the total view count of all posts.
-
+    let now = U.epochTime();
     let trimmedHandle = U.trim(userHandle);
     var totalPostCount : Nat = 0;
     var draftCount : Nat = 0;
+    var plannedCount : Nat = 0;
     var submittedToReviewCount : Nat = 0;
     var premiumCount : Nat = 0;
     var publishedCount : Nat = 0;
@@ -1992,6 +2095,7 @@ actor PostCore {
         func(postId : Text) : () {
           let isDraft = U.safeGet(isDraftHashMap, postId, false);
           let postOwnerPrincipalId = U.safeGet(principalIdHashMap, postId, "");
+          let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
 
           if (isDraft) {
             if(postOwnerPrincipalId != principalId){
@@ -2001,7 +2105,13 @@ actor PostCore {
               draftCount += 1;
             }
           } else {
-            publishedCount += 1;
+            if(publishedDate > now){
+              plannedCount += 1;
+            }
+            else{
+              publishedCount += 1;
+            }
+            
           };
 
           if(postIdsToNftCanisterIdsHashMap.get(postId) != null){
@@ -2027,6 +2137,7 @@ actor PostCore {
       publishedCount = Nat.toText(publishedCount);
       premiumCount = Nat.toText(premiumCount);
       draftCount = Nat.toText(draftCount);
+      plannedCount = Nat.toText(plannedCount);
       submittedToReviewCount = Nat.toText(submittedToReviewCount);
       totalViewCount = Nat.toText(totalViewCount);
       // TODO: Implement counts
@@ -2061,7 +2172,7 @@ actor PostCore {
     for (i in Iter.range(indexStart, indexEnd)) {
       //get the post id from latestPostsHashmap to build post
       let post = buildPostKeyProperties(U.safeGet(latestPostsHashmap, Nat.toText((latestPostsHashmap.size() - 1) - i), ""));
-      let isDraft = U.safeGet(isDraftHashMap, post.postId, false);
+      let isDraft = isDraftOrFutureArticle(post.postId);
 
       if (rejectedByModClub(post.postId)) {
         Debug.print("rejected");
@@ -2111,7 +2222,7 @@ actor PostCore {
 
     for (i in Iter.range(indexStart, indexEnd)) {
       let post = buildPostKeyProperties(Nat.toText(i));
-      let isDraft = U.safeGet(isDraftHashMap, post.postId, false);
+      let isDraft = isDraftOrFutureArticle(post.postId);
       //do not add draft posts
       if (not isDraft and not rejectedByModClub(Nat.toText(i))) {
         postsBuffer.add(post);
@@ -2143,7 +2254,7 @@ actor PostCore {
             userPostIds,
             func(postId : Text) : () {
               //check if draft
-              let isDraft = U.safeGet(isDraftHashMap, postId, false);
+              let isDraft = isDraftOrFutureArticle(postId);
               if (not isDraft and not rejectedByModClub(postId) and not U.arrayContains(Buffer.toArray(postIdsBuffer), postId)) {
                 postIdsBuffer.add(postId);
               };
@@ -2226,7 +2337,7 @@ actor PostCore {
         List.toArray(userPosts),
         func filter(postId : Text) : Bool {
           let post = buildPostKeyProperties(postId);
-          let isDraft = U.safeGet(isDraftHashMap, postId, false);
+          let isDraft = isDraftOrFutureArticle(postId);
           not isDraft and Text.equal(U.trim_category_name(post.category), category);
         },
       );
@@ -2318,6 +2429,7 @@ actor PostCore {
         //caller is a bucket canister
         if (isDraft) {
           isDraftHashMap.put(postId, true);
+          publishedDateHashMap.delete(postId);
           modifiedHashMap.put(postId, time);
           removePostFromPopularityArrays(postId);
           buildPostKeyProperties(postId);
@@ -2503,7 +2615,7 @@ actor PostCore {
       popularityThisMonthHashMap.delete(key);
     };
     for ((postId, principalId) in principalIdHashMap.entries()) {
-      let isDraft = U.safeGet(isDraftHashMap, postId, false);
+      let isDraft = isDraftOrFutureArticle(postId);
       let isRejected = rejectedByModClub(postId);
       if (not isDraft and not isRejected) {
         //the old clapsHashMap is frozen

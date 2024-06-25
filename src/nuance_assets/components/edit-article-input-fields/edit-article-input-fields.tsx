@@ -13,6 +13,7 @@ import { useLocation } from 'react-router-dom';
 export const EditArticleInputFields = (props: {
   isMobile: boolean;
   lastSavedPost: PostType | undefined;
+  membersOnly?: boolean;
   savingPost: PostType;
   postHtml: string;
   darkTheme: boolean;
@@ -39,6 +40,13 @@ export const EditArticleInputFields = (props: {
         <p className='edit-article-right-text'>
           last modified: {formatDate(props.lastSavedPost?.modified) || ' - '}
         </p>
+      )}
+
+      {props.lastSavedPost?.isMembersOnly || props.membersOnly && (
+        <div className='edit-article-members-only'>
+          <img src={icons.MEMBERS_ONLY} className='members-only-icon'></img>
+
+        </div>
       )}
 
       <div className='input-wrapper' ref={props.titleRef}>

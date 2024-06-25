@@ -89,11 +89,13 @@ counter=0
         content="'$content'"; 
         isDraft=false; 
         tagIds= vec{"1"; "5";}; 
-        creator="'$principal'"; 
+        creatorHandle="nuance-identity-0"; 
         isPublication=true; 
         category=""; 
         premium= null;
-        handle="Awesome-publication"
+        handle="Awesome-publication";
+        isMembersOnly=false;
+        scheduledPublishedDate=null;
     })'
 
     counter=$((counter + 1))
@@ -112,11 +114,14 @@ savePostReturn=$(dfx canister --network $network call $postCoreCanisterId save '
     content="'$content'"; 
     isDraft=false; 
     tagIds= vec{"1"; "5";}; 
-    creator="'$principal'"; 
+    creator="'$principal'";
+    creatorHandle="nuance-identity-0";
     isPublication=true; 
     category=""; 
     premium= opt record {thumbnail= ""; maxSupply = 20: nat; icpPrice= 100000000: nat;};
-    handle="Awesome-publication"
+    handle="Awesome-publication";
+    isMembersOnly=false;
+    scheduledPublishedDate=null;
 })')
 echo $savePostReturn
 

@@ -1,15 +1,15 @@
 module {
-  public let USER_VERSION = "RustyNail";
-  public let POSTCORE_VERSION = "RustyNail";
-  public let POSTBUCKET_VERSION = "RustyNail";
-  public let KINICENDPOINT_VERSION = "RustyNail";
-  public let FASTBLOCKSEMAILOPTIN_VERSION = "RustyNail";
-  public let POSTINDEX_VERSION = "RustyNail";
-  public let STORAGE_VERSION = "RustyNail";
-  public let CYCLESDISPENSER_VERSION = "RustyNail";
-  public let METRICS_VERSION = "RustyNail";
-  public let PUBLICATIONMANAGEMENT_VERSION = "RustyNail";
-  public let PUBLICATION_VERSION = "RustyNail";
-  public let NFTFACTORY_VERSION = "RustyNail";
-  public let NOTIFICATIONS_VERSION = "RustyNail";
+  public let USER_VERSION = "Bijou";
+  public let POSTCORE_VERSION = "Bijou";
+  public let POSTBUCKET_VERSION = "Bijou";
+  public let KINICENDPOINT_VERSION = "Bijou";
+  public let FASTBLOCKSEMAILOPTIN_VERSION = "Bijou";
+  public let POSTINDEX_VERSION = "Bijou";
+  public let STORAGE_VERSION = "Bijou";
+  public let CYCLESDISPENSER_VERSION = "Bijou";
+  public let METRICS_VERSION = "Bijou";
+  public let PUBLICATIONMANAGEMENT_VERSION = "Bijou";
+  public let PUBLICATION_VERSION = "Bijou";
+  public let NFTFACTORY_VERSION = "Bijou";
+  public let NOTIFICATIONS_VERSION = "Bijou";
 };

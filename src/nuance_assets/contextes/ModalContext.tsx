@@ -7,8 +7,10 @@ type ModalType =
   | 'Deposit'
   | 'Clap'
   | 'Premium article'
-  | 'Notifications';
-
+  | 'Notifications'
+  | 'Subscription'
+  | 'cancelSubscription'
+  | 'claim restricted tokens';
 
 type ModalData = {
   transferNftData?: PremiumPostActivityListItem;

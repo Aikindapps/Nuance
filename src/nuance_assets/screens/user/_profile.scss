@@ -23,6 +23,14 @@
         min-height: 100vh;
         display: flex;
 
+        .subscribe-and-follow-buttons{
+            display: flex;
+            margin-bottom: 64px;
+
+        }
+        .followAuthor{
+            margin: 8px;
+        }
         //justify-content: center;
         .button1 {
             height: 32px;

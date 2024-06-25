@@ -13,6 +13,8 @@ import {
   PremiumArticleOwner,
   ApplaudListItem,
   TransactionListItem,
+  UserListItem,
+  ClaimTransactionHistoryItem,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -44,6 +46,7 @@ import { TransferResult } from '../services/ledger-service/Ledger.did';
 import { downscaleImage } from '../components/quill-text-editor/modules/quill-image-compress/downscaleImage';
 import { Metadata, Transaction } from '../services/ext-service/ext_v2.did';
 import {
+  areUint8ArraysEqual,
   getFieldsFromMetadata,
   icpPriceToString,
   toBase256,
@@ -64,12 +67,18 @@ import {
   ckBTC_CANISTER_ID,
   ckBTC_INDEX_CANISTER_ID,
 } from '../shared/constants';
+import { canisterId as userCanisterId } from '../../declarations/User';
+import { canisterId as subscriptionCanisterId } from '../../declarations/Subscription';
 global.fetch = fetch;
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const ArticleNotFound = 'Article not found';
 type GetPopularReturnType = { posts: PostType[]; totalCount: number };
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 // fetch and merge author avatars into a list of posts
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
@@ -118,58 +127,56 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   });
 };
 
-async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
-  const usersCache: Map<string, User> = new Map();
-
-  async function fetchUser(principalId: string): Promise<User> {
-    let user = usersCache.get(principalId);
-    if (!user) {
-      const userResult = await (
-        await getUserActor()
-      ).getUserByPrincipalId(principalId);
-      if ('err' in userResult) throw new Error(userResult.err);
-      user = userResult.ok;
-      usersCache.set(principalId, user);
+const getAllPrincipalIdsInComments = (comments: Comment[]) => {
+  let creators: Set<string> = new Set();
+  comments.forEach((comment) => {
+    creators.add(comment.creator);
+    if (comment.replies.length > 0) {
+      getAllPrincipalIdsInComments(comment.replies);
     }
-    return user;
+  });
+  return Array.from(creators);
+};
+
+const enrichComments = (
+  comments: Comment[],
+  userListItemsMap: Map<string, UserListItem>
+): Comment[] => {
+  let result: Comment[] = [];
+  for (const comment of comments) {
+    let userListItem = userListItemsMap.get(comment.creator) as UserListItem;
+    if (comment.replies.length === 0) {
+      //no reply, just update the avatar and handle fields
+      result.push({
+        ...comment,
+        avatar: userListItem.avatar,
+        handle: userListItem.handle,
+      });
+    } else {
+      result.push({
+        ...comment,
+        avatar: userListItem.avatar,
+        handle: userListItem.handle,
+        replies: enrichComments(comment.replies, userListItemsMap),
+      });
+    }
+  }
+  return result;
+};
+
+async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
+  const usersCache = new Map<string, UserListItem>();
+
+  let allPrincipalIds = getAllPrincipalIdsInComments(comments);
+  let userActor = await getUserActor();
+  let userListItems = await userActor.getUsersByPrincipals(allPrincipalIds);
+  for (const userListItem of userListItems) {
+    usersCache.set(userListItem.principal, userListItem);
   }
 
-  async function addUserDetails(comment: Comment): Promise<Comment> {
-    const user = await fetchUser(comment.creator);
-    comment.avatar = user.avatar;
-    comment.handle = user.handle;
-    return comment;
-  }
-
-  // Enrich comments with user details and handle replies.
-  const enrichComments = async (
-    commentsToEnrich: Comment[]
-  ): Promise<Comment[]> => {
-    return Promise.all(
-      commentsToEnrich.map(async (comment) => {
-        comment = await addUserDetails(comment);
-        if (comment.replies && comment.replies.length > 0) {
-          comment.replies = await enrichComments(comment.replies);
-        }
-        return comment;
-      })
-    );
-  };
-
-  return enrichComments(comments);
-}
-
-function separateIds(input: string) {
-  // Split the input string by the '-' character
-  let parts = input.split('-');
-
-  // The first part is the post ID
-  let postId = parts[0];
-
-  // The rest of the parts make up the canister ID
-  let canisterId = parts.slice(1).join('-');
-  // Return the IDs in an object
-  return { postId, canisterId };
+  //now, rebuild the comments array
+  let result = enrichComments(comments, usersCache);
+  return result;
 }
 
 const isUserEditor = (publicationHandle: string, user?: UserType) => {
@@ -224,13 +231,10 @@ const fetchPostsByBuckets = async (
   let resultsArray = (await Promise.all(promises)).flat(1);
 
   return resultsArray.map((bucketType) => {
-    let keyProperties = postIdToKeyPropertiesMap.get(bucketType.postId);
-    if (keyProperties) {
-      return { ...keyProperties, ...bucketType } as PostType;
-    } else {
-      //should never happen
-      return { ...bucketType } as PostType;
-    }
+    let keyProperties = postIdToKeyPropertiesMap.get(
+      bucketType.postId
+    ) as PostKeyProperties;
+    return { ...keyProperties, ...bucketType } as PostType;
   });
 };
 
@@ -256,6 +260,7 @@ export interface PostStore {
   myPublishedPosts: PostType[] | undefined;
   myAllPosts: PostType[] | undefined;
   submittedForReviewPosts: PostType[] | undefined;
+  plannedPosts: PostType[] | undefined;
   claps: string | undefined;
   isTagScreen: boolean;
   userPostIds: Array<string> | undefined;
@@ -332,6 +337,10 @@ export interface PostStore {
     indexTo: number
   ) => Promise<PostType[] | undefined>;
   getMySubmittedForReviewPosts: (
+    indexFrom: number,
+    indexTo: number
+  ) => Promise<PostType[] | undefined>;
+  getMyPlannedPosts: (
     indexFrom: number,
     indexTo: number
   ) => Promise<PostType[] | undefined>;
@@ -443,6 +452,9 @@ export interface PostStore {
   getUserIcpTransactions: () => Promise<TransactionListItem[]>;
   getUserNuaTransactions: () => Promise<TransactionListItem[]>;
   getUserCkbtcTransactions: () => Promise<TransactionListItem[]>;
+  getUserRestrictedNuaTransactions: () => Promise<
+    ClaimTransactionHistoryItem[]
+  >;
   settleToken: (
     tokenId: string,
     canisterId: string
@@ -506,6 +518,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   myPublishedPosts: undefined,
   myAllPosts: undefined,
   submittedForReviewPosts: undefined,
+  plannedPosts: undefined,
   claps: undefined,
   ClearSearchBar: false,
   isTagScreen: false,
@@ -948,7 +961,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       }
     } catch (err) {
       handleError(err, Unexpected);
-      handleError("getSavedPostReturnOnly", Unexpected);
     }
     return;
   },
@@ -1368,7 +1380,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const postsWithAvatars = await mergeAuthorAvatars(myDraftPosts);
       set({ myDraftPosts: postsWithAvatars });
 
-      return myDraftPosts;
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1390,7 +1402,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const postsWithAvatars = await mergeAuthorAvatars(myPublishedPosts);
       set({ myPublishedPosts: postsWithAvatars });
 
-      return myPublishedPosts;
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1417,7 +1429,29 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       );
       set({ submittedForReviewPosts: postsWithAvatars });
 
-      return submittedForReviewPosts;
+      return postsWithAvatars;
+    } catch (err: any) {
+      handleError(err, Unexpected);
+    }
+  },
+
+  getMyPlannedPosts: async (
+    indexFrom: number,
+    indexTo: number
+  ): Promise<PostType[] | undefined> => {
+    try {
+      const coreActor = await getPostCoreActor();
+      const keyProperties = await coreActor.getMyPlannedPosts(
+        indexFrom,
+        indexTo
+      );
+      const plannedPosts = await fetchPostsByBuckets(keyProperties, true);
+      set({ plannedPosts });
+
+      const postsWithAvatars = await mergeAuthorAvatars(plannedPosts);
+      set({ submittedForReviewPosts: postsWithAvatars });
+
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1436,7 +1470,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       const postsWithAvatars = await mergeAuthorAvatars(myAllPosts);
       set({ myAllPosts: postsWithAvatars });
 
-      return myAllPosts;
+      return postsWithAvatars;
     } catch (err: any) {
       handleError(err, Unexpected);
     }
@@ -1926,7 +1960,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         }
         index += 1;
       }
-      console.log('responses: ', responses);
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const item of result) {
@@ -2202,7 +2235,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     try {
       let nuaLedgerCanister = await getIcrc1TokenActorAnonymous(
         NUA_CANISTER_ID,
-        true
+        !isLocal
       );
       let userWallet = await useAuthStore.getState().getUserWallet();
       if (userWallet.principal.length === 0) {
@@ -2233,13 +2266,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       archivedTransactionsResults.forEach((archived) => {
         transactions = [...archived.transactions, ...transactions];
       });
+      console.log('subscriptionCanisterId: ', subscriptionCanisterId);
       //filter the transactions to just include user's transactions
       transactions = transactions.filter((transaction) => {
         if (transaction.transfer.length !== 0) {
           return (
-            transaction.transfer[0].from.owner.toText() ===
+            (transaction.transfer[0].from.owner.toText() ===
               userWallet.principal ||
-            transaction.transfer[0].to.owner.toText() === userWallet.principal
+              transaction.transfer[0].to.owner.toText() ===
+                userWallet.principal) &&
+            transaction.transfer[0].from.owner.toText() !==
+              subscriptionCanisterId &&
+            transaction.transfer[0].to.owner.toText() !== subscriptionCanisterId
           );
         }
         return false;
@@ -2307,6 +2345,77 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         });
       }
       //filter the transactions to just include user's transactions
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  },
+  getUserRestrictedNuaTransactions: async (): Promise<
+    ClaimTransactionHistoryItem[]
+  > => {
+    try {
+      let nuaLedgerCanister = await getIcrc1TokenActorAnonymous(
+        NUA_CANISTER_ID,
+        !isLocal
+      );
+      let userWallet = await useAuthStore.getState().getUserWallet();
+      if (userWallet.principal.length === 0) {
+        return [];
+      }
+      let user = useUserStore.getState().user;
+      if (!user) {
+        return [];
+      }
+      let nuaTransactionsLedgerResponse =
+        await nuaLedgerCanister.get_transactions({
+          start: BigInt(0),
+          length: BigInt(100_000_000_000_000), //just an arbitrary big number to get all the info we need for ALL transactions
+        });
+      var transactions: ArchiveTransaction[] =
+        nuaTransactionsLedgerResponse.transactions;
+      //archive canister promises
+      let promises = [];
+      for (const archivedTransaction of nuaTransactionsLedgerResponse.archived_transactions) {
+        let archiveCanister = await getIcrc1ArchiveCanister(
+          archivedTransaction.callback[0].toText()
+        );
+        promises.push(
+          archiveCanister.get_transactions({
+            start: archivedTransaction.start,
+            length: archivedTransaction.length,
+          })
+        );
+      }
+
+      let archivedTransactionsResults = await Promise.all(promises);
+      archivedTransactionsResults.forEach((archived) => {
+        transactions = [...archived.transactions, ...transactions];
+      });
+      //filter the transactions to just include the deposits from the faucet to the user's restricted nua token account
+      transactions = transactions.filter((transaction) => {
+        if (transaction.transfer.length !== 0 && user) {
+          return (
+            transaction.transfer[0].to.owner.toText() === userCanisterId &&
+            areUint8ArraysEqual(
+              transaction.transfer[0].to.subaccount[0],
+              user.claimInfo.subaccount[0]
+            )
+          );
+        }
+        return false;
+      });
+      let transfers = transactions.map((transaction) => {
+        return transaction.transfer[0];
+      }) as Transfer[];
+      return transfers.map((t, index) => {
+        return {
+          date: (Number(transactions[index].timestamp) / 1000000).toString(),
+
+          claimedAmount:
+            Number((Number(t.amount) / Math.pow(10, 8)).toFixed(0)) *
+            Math.pow(10, 8),
+        };
+      });
     } catch (error) {
       handleError(error);
       return [];

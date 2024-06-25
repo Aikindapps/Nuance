@@ -62,20 +62,34 @@ export interface NotificationContent__1 {
   'authorHandle' : string,
   'authorPrincipal' : Principal,
 }
-export type NotificationType = { 'TipReceived' : null } |
+export type NotificationType = { 'FaucetClaimAvailable' : null } |
+  { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
+  { 'AuthorLosesSubscriber' : null } |
+  { 'YouSubscribedToAuthor' : null } |
+  { 'AuthorExpiredSubscription' : null } |
   { 'NewCommentOnMyArticle' : null } |
+  { 'YouUnsubscribedFromAuthor' : null } |
   { 'NewFollower' : null } |
+  { 'ReaderExpiredSubscription' : null } |
   { 'PremiumArticleSold' : null } |
   { 'NewCommentOnFollowedArticle' : null } |
-  { 'NewArticleByFollowedTag' : null };
-export type NotificationType__1 = { 'TipReceived' : null } |
+  { 'NewArticleByFollowedTag' : null } |
+  { 'AuthorGainsNewSubscriber' : null };
+export type NotificationType__1 = { 'FaucetClaimAvailable' : null } |
+  { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
+  { 'AuthorLosesSubscriber' : null } |
+  { 'YouSubscribedToAuthor' : null } |
+  { 'AuthorExpiredSubscription' : null } |
   { 'NewCommentOnMyArticle' : null } |
+  { 'YouUnsubscribedFromAuthor' : null } |
   { 'NewFollower' : null } |
+  { 'ReaderExpiredSubscription' : null } |
   { 'PremiumArticleSold' : null } |
   { 'NewCommentOnFollowedArticle' : null } |
-  { 'NewArticleByFollowedTag' : null };
+  { 'NewArticleByFollowedTag' : null } |
+  { 'AuthorGainsNewSubscriber' : null };
 export interface Notifications {
   'id' : string,
   'content' : NotificationContent__1,
@@ -102,11 +116,19 @@ export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface UserNotificationSettings {
   'premiumArticleSold' : boolean,
   'tipReceived' : boolean,
+  'authorGainsNewSubscriber' : boolean,
+  'authorExpiredSubscription' : boolean,
+  'authorLosesSubscriber' : boolean,
   'newCommentOnFollowedArticle' : boolean,
+  'youSubscribedToAuthor' : boolean,
   'newCommentOnMyArticle' : boolean,
+  'youUnsubscribedFromAuthor' : boolean,
   'newFollower' : boolean,
+  'readerExpiredSubscription' : boolean,
   'newArticleByFollowedWriter' : boolean,
   'newArticleByFollowedTag' : boolean,
+  'faucetClaimAvailable' : boolean,
+  'expiredSubscription' : boolean,
 }
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
@@ -114,6 +136,14 @@ export interface _SERVICE {
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
   'createNotification' : ActorMethod<
     [NotificationType__1, NotificationContent],
+    Result
+  >,
+  'createNotifications' : ActorMethod<
+    [Array<[NotificationType__1, NotificationContent]>],
+    Result
+  >,
+  'disperseBulkSubscriptionNotifications' : ActorMethod<
+    [Array<[NotificationType__1, NotificationContent]>],
     Result
   >,
   'getAdmins' : ActorMethod<[], Result_3>,
@@ -132,7 +162,6 @@ export interface _SERVICE {
   'newArticle' : ActorMethod<[NotificationContent], Result>,
   'registerCgUser' : ActorMethod<[string], Result>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
-  'testnewnotifications2' : ActorMethod<[], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
   'updateUserNotificationSettings' : ActorMethod<
     [UserNotificationSettings],

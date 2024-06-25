@@ -14,6 +14,7 @@ import {
   CreatePremiumArticleData,
   PostType,
   PremiumArticleOwners as PremiumArticleOwnersObject,
+  PublicationObject,
   PublicationType,
 } from '../../types/types';
 import {
@@ -40,6 +41,13 @@ import Badge from '../../UI/badge/badge';
 import Dropdown from '../../UI/dropdown/dropdown';
 import { RxAvatar } from 'react-icons/rx';
 import RadioButtons from '../../UI/radio-buttons/radio-buttons';
+import { PostStore } from '../../store/postStore';
+import { PublisherStore } from '../../store/publisherStore';
+import { UserStore } from '../../store/userStore';
+import { AuthStore } from '../../store/authStore';
+import { TagModel } from 'src/declarations/PostCore/PostCore.did';
+import SchedulePublish from '../../components/schedule-publish/schedule-publish';
+import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
@@ -66,7 +74,7 @@ const CreateEditArticle = () => {
     getAllTags,
     savePost,
     migratePostToPublication,
-  } = usePostStore((state) => ({
+  } = usePostStore((state: PostStore) => ({
     getPost: state.getSavedPostReturnOnly,
     getOwnersOfPremiumArticle: state.getOwnersOfPremiumArticleReturnOnly,
     nftCanistersEntries: state.nftCanistersEntries,
@@ -78,37 +86,70 @@ const CreateEditArticle = () => {
 
   //publisherStore
   const { savePublicationPost, getPublication } = usePublisherStore(
-    (state) => ({
+    (state: PublisherStore) => ({
       savePublicationPost: state.savePublicationPost,
       getPublication: state.getPublication,
     })
   );
 
+  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+  }));
+
+
   //userStore
-  const { getUser, user } = useUserStore((state) => ({
+  const { getUser, user, getPrincipalByHandle } = useUserStore((state: UserStore) => ({
+    getPrincipalByHandle: state.getPrincipalByHandle,
     getUser: state.getUser,
     user: state.user,
   }));
 
   //authStore
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const isLoggedIn = useAuthStore((state: AuthStore) => state.isLoggedIn);
+  const [currentStatus, setCurrentStatus] = useState('');
+
+
 
   //returns the current status of the post
   const getCurrentStatus = () => {
+    const currentDate = new Date();
+
     if (location.pathname === '/article/new') {
       return 'Not saved';
-    } else {
-      if (lastSavedPost?.isDraft) {
-        if (userPublicationsWriter.includes(lastSavedPost.handle)) {
-          return 'Submitted for review';
-        } else {
-          return 'Draft';
+    }
+
+    if (lastSavedPost?.isDraft) {
+      if (userPublicationsWriter.includes(lastSavedPost.handle)) {
+        return 'Submitted for review';
+      } else {
+        return 'Draft';
+      }
+    }
+    if (lastSavedPost?.isPremium) {
+      if (lastSavedPost?.publishedDate) {
+        const plannedDate = new Date(Number(lastSavedPost?.publishedDate));
+        if (plannedDate > currentDate) {
+          return "Planned + Mint";
         }
+      }
+      return "Minted";
+    }
+
+    if (lastSavedPost?.publishedDate) {
+      // Assuming lastSavedPost.publishedDate is in milliseconds
+      const scheduledDate = new Date(Number(lastSavedPost.publishedDate));
+
+
+      if (scheduledDate > currentDate) {
+        return 'Planned';
       } else {
         return 'Published';
       }
     }
+    return 'Published';
   };
+
 
   const isPublishButtonVisible = () => {
     if (lastSavedPost) {
@@ -177,6 +218,7 @@ const CreateEditArticle = () => {
       claps: '',
       category: '',
       isPremium: false,
+      isMembersOnly: false,
       bucketCanisterId: '',
       wordCount: '',
       isPublication: false,
@@ -201,7 +243,7 @@ const CreateEditArticle = () => {
       let allPublications: string[] = [];
       let writerPublications: string[] = [];
       let editorPublications: string[] = [];
-      user.publicationsArray.forEach((publicationObject) => {
+      user.publicationsArray.forEach((publicationObject: PublicationObject) => {
         allPublications.push(publicationObject.publicationName);
         if (publicationObject.isEditor) {
           editorPublications.push(publicationObject.publicationName);
@@ -301,6 +343,8 @@ const CreateEditArticle = () => {
     setLoading(false);
   };
 
+
+
   //refresh the user related fields if the user object changes
   useEffect(() => {
     fillUserRelatedFields();
@@ -346,6 +390,48 @@ const CreateEditArticle = () => {
   const [copyArticle, setCopyArticle] = useState(false);
   const [shownMeatball, setShownMeatball] = useState(false);
 
+  //schedule publish
+  const [date, setDate] = useState<Date | null>(new Date());
+  const [time, setTime] = useState({ hours: new Date().getHours().toString().padStart(2, '0'), minutes: new Date().getMinutes().toString().padStart(2, '0') });
+  const [access, setAccess] = useState<{ value: string, label: string }>({ value: 'public', label: 'Public' });
+
+  const handleDateChange = (newDate: Date | null) => {
+    setDate(newDate);
+  };
+
+  const handleTimeChange = (newTime: { hours: string, minutes: string }) => {
+    setTime(newTime);
+  };
+
+  const handleAccessChange = (newAccess: { value: string, label: string }) => {
+    setAccess(newAccess);
+  };
+
+  const handleScheduledPublishDate = (): [] | [bigint] => {
+    if (date) {
+      const newDate = new Date(date);
+      newDate.setHours(parseInt(time.hours, 10));
+      newDate.setMinutes(parseInt(time.minutes, 10));
+
+      const currentDate = new Date();
+      if (newDate <= currentDate) {
+        return [];
+      }
+
+      const milliseconds = BigInt(newDate.getTime());
+      return [milliseconds];
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    if (lastSavedPost) {
+      setAccess({ value: lastSavedPost.isMembersOnly ? 'members-only' : 'public', label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public' });
+      handleAccessChange({ value: lastSavedPost.isMembersOnly ? 'members-only' : 'public', label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public' });
+    }
+  }, [lastSavedPost]);
+
+
   //set post fields
   const setIsDraft = (isDraft: boolean) => {
     setSavingPost({ ...savingPost, isDraft: isDraft });
@@ -367,7 +453,7 @@ const CreateEditArticle = () => {
   };
   const onPostTagChange = (value: string[]) => {
     let usingTags: { tagId: string; tagName: string }[] = [];
-    allTags?.forEach((tag) => {
+    allTags?.forEach((tag: TagModel) => {
       value.forEach((tagName) => {
         if (tag.value === tagName) {
           usingTags.push({ tagId: tag.id, tagName });
@@ -416,6 +502,11 @@ const CreateEditArticle = () => {
       setSavingPost({ ...savingPost, headerImage: dataUrlCompressed });
     };
   };
+
+  useEffect(() => {
+    setCurrentStatus(getCurrentStatus());
+    console.log('Current status:', getCurrentStatus());
+  }, [lastSavedPost]);
 
   //save functions
 
@@ -487,6 +578,7 @@ const CreateEditArticle = () => {
     const result = await convertImagesToUrls(postHtml, savingPost.headerImage);
     const contentWithUrls = result?.contentWithUrls;
     const headerUrl = result?.headerUrl;
+
     if (lastSavedPost) {
       //edit article
       let isPublication = user?.handle !== selectedHandle;
@@ -510,6 +602,8 @@ const CreateEditArticle = () => {
             isPublication: true,
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
+            isMembersOnly: access.value === 'members-only',
+            scheduledPublishedDate: handleScheduledPublishDate() || []
           });
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
@@ -556,6 +650,8 @@ const CreateEditArticle = () => {
             isPublication: false,
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
+            isMembersOnly: access.value === 'members-only',
+            scheduledPublishedDate: handleScheduledPublishDate() || []
           });
           if (saveResult) {
             setSavingPost(saveResult);
@@ -570,6 +666,7 @@ const CreateEditArticle = () => {
       //new article
       let isPublication = user?.handle !== selectedHandle;
       if (isPublication) {
+
         //create a publication post
         let savePublicationResult = await savePublicationPost({
           title: savingPost.title,
@@ -586,6 +683,8 @@ const CreateEditArticle = () => {
           isPublication: true,
           postId: savingPost.postId,
           handle: selectedHandle,
+          isMembersOnly: access.value === 'members-only',
+          scheduledPublishedDate: handleScheduledPublishDate() || []
         });
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
@@ -615,6 +714,8 @@ const CreateEditArticle = () => {
           isPublication: false,
           postId: savingPost.postId,
           handle: selectedHandle,
+          isMembersOnly: access.value === 'members-only',
+          scheduledPublishedDate: handleScheduledPublishDate() || []
         });
         if (saveResult) {
           setSavingPost(saveResult);
@@ -631,6 +732,39 @@ const CreateEditArticle = () => {
       }
     }
   };
+
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  //get subscription details
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (user) {
+        try {
+          let handle = user.handle === selectedHandle ? user.handle : selectedHandle;
+          let principal = await getPrincipalByHandle(handle);
+          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(principal || '');
+          console.log("debugging " + selectedHandle + " principal " + principal);
+
+          if (subscriptionDetails && (
+            subscriptionDetails.weeklyFee.length > 0 ||
+            subscriptionDetails.monthlyFee.length > 0 ||
+            subscriptionDetails.annuallyFee.length > 0 ||
+            subscriptionDetails.lifeTimeFee.length > 0
+          )) {
+            setHasValidSubscriptionOptions(true);
+            console.log('Valid subscription options', subscriptionDetails);
+          } else {
+            setHasValidSubscriptionOptions(false);
+            console.log('No valid subscription options', subscriptionDetails);
+          }
+        } catch (error) {
+          console.log('Error fetching subscription details', error);
+        }
+      }
+    };
+
+    fetchSubscriptionDetails();
+  }, [user, selectedHandle]);
+
 
   const [radioButtonIndex, setRadioButtonIndex] = useState(
     lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
@@ -666,8 +800,7 @@ const CreateEditArticle = () => {
               darkTheme ? 'radio-button-text-dark-mode' : 'radio-button-text'
             }
           >
-            Publish and mint this article and create NFT keys that people need
-            to buy to read the article.
+            Publish and mint as an NFT gated limited edition article.
             <br /> <br /> You can then no longer edit this article or un-publish
             it....ever.
           </div>,
@@ -1276,8 +1409,8 @@ const CreateEditArticle = () => {
           lastSavedPost.isPublication
             ? icons.PUBLICATION_ICON
             : darkTheme
-            ? icons.PROFILE_ICON_DARK
-            : icons.PROFILE_ICON,
+              ? icons.PROFILE_ICON_DARK
+              : icons.PROFILE_ICON,
         ];
       }
     } else {
@@ -1378,9 +1511,9 @@ const CreateEditArticle = () => {
                 style={
                   darkTheme
                     ? {
-                        background: colors.darkModePrimaryBackgroundColor,
-                        border: '1px solid rgb(153, 153, 153)',
-                      }
+                      background: colors.darkModePrimaryBackgroundColor,
+                      border: '1px solid rgb(153, 153, 153)',
+                    }
                     : {}
                 }
               >
@@ -1454,14 +1587,27 @@ const CreateEditArticle = () => {
                   <div className='edit-article-left-manage-title'>MANAGE</div>
                   {(getCurrentStatus() === 'Draft' ||
                     getCurrentStatus() === 'Not saved') && (
-                    <RadioButtons
-                      items={getRadioButtonItems()}
-                      onSelect={(index) => {
-                        setRadioButtonIndex(index);
-                      }}
-                      selectedIndex={radioButtonIndex}
-                    />
-                  )}
+                      <RadioButtons
+                        items={getRadioButtonItems()}
+                        onSelect={(index) => {
+                          setRadioButtonIndex(index);
+                        }}
+                        selectedIndex={radioButtonIndex}
+                      />
+                    )}
+                  {(currentStatus === 'Draft' || currentStatus === 'Not saved') && (radioButtonIndex === 1 || radioButtonIndex === 2) && (
+                    <div className='schedule-publish-container'>
+                      <SchedulePublish
+                        onDateChange={handleDateChange}
+                        onTimeChange={handleTimeChange}
+                        onAccessChange={handleAccessChange}
+                        initialAccess={access}
+                        isPremium={radioButtonIndex === 2 || lastSavedPost?.isPremium}
+                        validSubscriptionOptions={hasValidSubscriptionOptions}
+                      />
+                    </div>
+                  )
+                  }
                   {getManageItems()}
                 </div>
               </div>
@@ -1476,9 +1622,11 @@ const CreateEditArticle = () => {
             <div className='edit-article-right-content'>
               {/* if the post is premium, act like the read-article screen. if not, simply show the input fields */}
               {isEditAllowed() ? (
+
                 <EditArticleInputFields
                   isMobile={isMobile()}
                   lastSavedPost={lastSavedPost}
+                  membersOnly={access.value === 'members-only' && radioButtonIndex != 2}
                   savingPost={savingPost}
                   postHtml={postHtml}
                   darkTheme={darkTheme}

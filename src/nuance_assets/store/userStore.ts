@@ -2,7 +2,7 @@ import create, { GetState, SetState, StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toastError, toast, ToastType } from '../services/toastService';
 import { ErrorType, getErrorType } from '../services/errorService';
-import { useAuthStore } from './';
+import { useAuthStore, useSubscriptionStore } from './';
 import { UserType, UserListItem, PublicationType } from '../types/types';
 import {
   getUserActor,
@@ -17,8 +17,10 @@ import {
   NotificationType,
   NotificationContent,
   UserNotificationSettings,
+  getSubscriptionActor,
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
+import { ReaderSubscriptionDetailsConverted } from './subscriptionStore';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -195,6 +197,7 @@ export interface UserStore {
     to: number,
     isLoggedIn: boolean
   ) => Promise<void>;
+  checkMyClaimNotification: () => Promise<void>;
   loadMoreNotifications: (from: number, to: number) => Promise<void>;
   createNotification: (
     notificationType: NotificationType,
@@ -206,7 +209,12 @@ export interface UserStore {
   updateUserNotificationSettings: (
     notificationSettings: UserNotificationSettings
   ) => Promise<void>;
-
+  claimTokens: () => Promise<boolean | void>;
+  spendRestrictedTokensForTipping: (
+    postId: string,
+    bucketCanisterId: string,
+    amount: number
+  ) => Promise<boolean | void>;
   clearAll: () => void;
 }
 
@@ -215,6 +223,14 @@ const toUserModel = (user: User): UserType => {
     ...user,
     lastLogin: 0,
     followedTags: [],
+    claimInfo: {
+      ...user.claimInfo,
+      maxClaimableTokens: Number(user.claimInfo.maxClaimableTokens),
+      lastClaimDate:
+        user.claimInfo.lastClaimDate[0] === undefined
+          ? []
+          : [Number(user.claimInfo.lastClaimDate[0])],
+    },
   } as UserType;
 };
 
@@ -285,6 +301,8 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           user,
           unregistered: false,
         });
+        //fetch the token balances in background
+        useAuthStore.getState().fetchTokenBalances();
         return user;
       }
     } catch (err: any) {
@@ -643,12 +661,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         if (Err in result) {
           toastError(result.err);
         } else {
-          console.log('getUserNotifications:', result.ok[0]);
-
           set({ notifications: result.ok[0] });
           set({ unreadNotificationCount: 0 });
           set({ totalNotificationCount: Number(result.ok[1]) });
-
           for (let i = 0; i < result.ok[0].length; i++) {
             if (result.ok[0][i].read === false) {
               set((state) => ({
@@ -673,6 +688,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       } catch (err) {
         console.error('getUserNotifications:', err);
       }
+    }
+  },
+
+  checkMyClaimNotification: async (): Promise<void> => {
+    try {
+      let userActor = await getUserActor();
+      //fire and forget
+      userActor.checkMyClaimNotification();
+    } catch (error) {
+      console.log(error);
     }
   },
 
@@ -752,6 +777,51 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       } catch (err) {
         console.error('markAllNotificationsAsRead:', err);
       }
+    }
+  },
+  //users can call this method to claim their restricted tokens
+  claimTokens: async (): Promise<boolean | void> => {
+    try {
+      let userActor = await getUserActor();
+      let response = await userActor.claimRestrictedTokens();
+      if ('err' in response) {
+        handleError(response.err);
+      } else {
+        //claim successful
+        //refresh the balances
+        await useAuthStore.getState().fetchTokenBalances();
+        //set the user object with the updated value
+        set({ user: toUserModel(response.ok) });
+        return true;
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+  },
+  //gets the postId, bucketCanisterId and the amount as an argument
+  //sends the restricted tokens to the correspnding subaccount of the PostBucket canister
+  spendRestrictedTokensForTipping: async (
+    postId: string,
+    bucketCanisterId: string,
+    amount: number
+  ): Promise<boolean | void> => {
+    try {
+      let userActor = await getUserActor();
+      let response = await userActor.spendRestrictedTokensForTipping(
+        bucketCanisterId,
+        postId,
+        BigInt(amount)
+      );
+      if ('err' in response) {
+        handleError(response.err);
+      } else {
+        //event is successful
+        //refresh the balances
+        await useAuthStore.getState().fetchTokenBalances();
+        return true;
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
     }
   },
 

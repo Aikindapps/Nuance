@@ -9,6 +9,7 @@ import { ClapModal } from '../clap-modal/clap-modal';
 import { EditArticlePremiumModal } from '../edit-article-premium-modal/edit-article-premium-modal';
 import { PostType } from 'src/nuance_assets/types/types';
 import NotificationsSidebar from '../notifications/notifications';
+import { ClaimRestrictedTokensModal } from '../claim-restricted-tokens-modal/claim-restricted-tokens-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   return (
@@ -17,15 +18,15 @@ export const ModalsWrapper = () => {
       style={
         modalContext?.isModalOpen && modalContext?.modalType !== 'Notifications'
           ? {
-            width: '100vw',
-            height: '100vh',
-            position: 'fixed',
-            background: 'rgba(0, 0, 0, 0.21)',
-            backdropFilter: 'blur(4px)',
-            top: '0',
-            left: '0',
-            opacity: '1',
-          }
+              width: '100vw',
+              height: '100vh',
+              position: 'fixed',
+              background: 'rgba(0, 0, 0, 0.21)',
+              backdropFilter: 'blur(4px)',
+              top: '0',
+              left: '0',
+              opacity: '1',
+            }
           : {}
       }
     >
@@ -52,11 +53,11 @@ export const ModalsWrapper = () => {
           refreshPost={modalContext.modalData.premiumPostRefreshPost}
           numberOfEditors={modalContext.modalData.premiumPostNumberOfEditors}
         />
-      ) :
-        modalContext?.modalType === 'Notifications' ? (
-          <NotificationsSidebar />
-        )
-          : null}
+      ) : modalContext?.modalType === 'Notifications' ? (
+        <NotificationsSidebar />
+      ) : modalContext?.modalType === 'claim restricted tokens' ? (
+        <ClaimRestrictedTokensModal />
+      ) : null}
     </div>
   );
 };

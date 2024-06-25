@@ -15,12 +15,14 @@ import { toast, toastError, ToastType } from '../../../services/toastService';
 import { useTheme } from '../../../contextes/ThemeContext';
 import { Tooltip } from 'react-tooltip';
 import { getIconForSocialChannel } from '../../../shared/utils';
+import { Context as ModalContext } from '../../../contextes/ModalContext';
 
 const MyProfile = () => {
   const navigate = useNavigate();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const darkTheme = useTheme();
-  const context = useContext(Context)
+  const context = useContext(Context);
+  const modalContext = useContext(ModalContext);
   const {
     user,
     getUser,
@@ -63,7 +65,6 @@ const MyProfile = () => {
     navigate('/my-profile/edit', { replace: true });
   };
 
-
   const [hoverRemovePublication, setHoverRemovePublication] = useState(false);
 
   const { removeEditor, removeWriter } = usePublisherStore((state) => ({
@@ -72,19 +73,16 @@ const MyProfile = () => {
   }));
 
   const getSocialChannelUrls = () => {
-    if(user){
-      if(user.website === '') {
-        return user.socialChannels
+    if (user) {
+      if (user.website === '') {
+        return user.socialChannels;
+      } else {
+        return [user.website, ...user.socialChannels];
       }
-      else{
-        return [user.website, ...user.socialChannels]
-      }
+    } else {
+      return [];
     }
-    else{
-      return []
-    }
-  }
-
+  };
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -178,15 +176,20 @@ const MyProfile = () => {
             );
           })}
         </div>
-        <p style={
-                    darkTheme
-                      ? {
-                          color: darkOptionsAndColors.secondaryColor,
-                        }
-                      : {}
-                  } className='description'>{user?.bio}</p>
+        <p
+          style={
+            darkTheme
+              ? {
+                  color: darkOptionsAndColors.secondaryColor,
+                }
+              : {}
+          }
+          className='description'
+        >
+          {user?.bio}
+        </p>
       </div>
-      <div className='statistic-wrapper'>
+      <div className='my-profile-screen-statistic-wrapper'>
         <div className='statistic'>
           <div className='stat'>
             <p className='count'>{counts?.publishedCount || 0}</p>

@@ -3,198 +3,13 @@ import Text "mo:base/Text";
 import Bool "mo:base/Bool";
 import Int "mo:base/Int";
 import Result "mo:base/Result";
+import CanisterDeclarations "../shared/CanisterDeclarations";
 
 module {
-    public type SaveResult = Result.Result<Post, Text>;
+    public type SaveResult = Result.Result<CanisterDeclarations.Post, Text>;
 
     public type PostId = {
         id: Text;
-    };
-
-    public type PostSaveModel = {
-        postId: Text;
-        handle: Text; //useless for the regular posts, it's used to determine the publication handle
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        tagIds: [Text];
-        creatorHandle: Text; //publication author
-        isPublication: Bool;
-        category: Text;
-        premium : ?{
-          //we  can extend this object with new fields to have more customization
-          thumbnail: Text;
-          maxSupply: Nat;
-          icpPrice: Nat;
-        };
-    };
-
-    
-
-    public type PostSaveModelBucket = {
-      postId : Text;
-      handle: Text; //useless for the regular posts, it's used to determine the publication handle
-      postOwnerPrincipalId: Text;
-      title : Text;
-      subtitle : Text;
-      headerImage : Text;
-      content : Text;
-      isDraft : Bool;
-      creatorHandle : Text; //publication author
-      isPublication : Bool;
-      category : Text;
-      premium : ?{
-        //we  can extend this object with new fields to have more customization
-        thumbnail: Text;
-        maxSupply: Nat;
-        icpPrice: Nat;
-        editorPrincipals: [Text]; //to populate the initalMintingAddresses field in NftFactory canister function
-      };
-      tagNames : [Text];
-      caller : Principal;
-    };
-
-    public type PostSaveModelBucketMigration = {
-        postId: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        creator: Text; //publication author
-        isPublication: Bool;
-        category: Text;
-        isPremium: Bool;
-        tagNames : [Text];
-        caller: Principal;
-        created: Text;
-        publishedDate: Text;
-        modified: Text;
-        creatorHandle: Text;
-        isRejected: Bool;
-    };
-
-    public type Post = {
-        postId: Text;
-        handle: Text;
-        url: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        isPremium: Bool;
-        nftCanisterId: ?Text;
-
-        // fields stored as Int, but returned to UI as Text
-        created: Text; //determined at draft creation
-        publishedDate: Text; //determined at publish
-        modified: Text; //determined at save
-        views: Text;
-        claps: Text;
-        
-        tags: [PostTagModel];
-
-        //publisher fields
-        creatorHandle: Text;
-        creatorPrincipal: Text;
-        isPublication: Bool;
-        category: Text;
-
-        bucketCanisterId: Text;
-        wordCount : Text;
-    };
-
-    public type PostBucketType = {
-      postId : Text;
-      handle : Text;
-      url : Text;
-      title : Text;
-      subtitle : Text;
-      headerImage : Text;
-      content : Text;
-      isDraft : Bool;
-      isPremium : Bool;
-      nftCanisterId: ?Text;
-
-      // fields stored as Int, but returned to UI as Text
-      created : Text; //determined at draft creation
-      publishedDate : Text; //determined at publish
-      modified : Text; //determined at save
-
-      //publisher fields
-      creatorPrincipal : Text;
-      creatorHandle: Text;
-      isPublication : Bool;
-      category : Text;
-      wordCount : Text;
-      bucketCanisterId : Text;
-    };
-
-    public type PostMigrationType = {
-        postId: Text;
-        handle: Text;
-        url: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-        isPremium: Bool;
-
-        // fields stored as Int, but returned to UI as Text
-        created: Text; //determined at draft creation
-        publishedDate: Text; //determined at publish
-        modified: Text; //determined at save
-        views: Text;
-        claps: Text;
-        
-        tags: [PostTagModel];
-
-        //publisher fields
-        creator: Text;
-        isPublication: Bool;
-        category: Text;
-        wordCount: Nat;
-        caller: Text;
-        isRejected: Bool;
-    };
-
-    public type PostKeyProperties = {
-        postId: Text;
-        handle: Text;
-        principal: Text;
-        bucketCanisterId: Text;
-        views: Text;
-        claps: Text;
-        tags: [PostTagModel];
-        created: Text;
-        isDraft: Bool;
-        category: Text;
-        publishedDate: Text; //may remove it if it's not needed
-        modified: Text; //may remove it if it's not needed
-    };
-    
-    public type FastblocksPost = {
-        postId: Text;
-        handle: Text;
-        url: Text;
-        title: Text;
-        subtitle: Text;
-        headerImage: Text;
-        content: Text;
-        isDraft: Bool;
-
-        // fields stored as Int, but returned to UI as Text
-        created: Text; //determined at draft creation
-        publishedDate: Text; //determined at publish
-        modified: Text; //determined at save
-        views: Text;
-        claps: Text;
-        
-        tags: [PostTagModel];
     };
 
     public type UserPostCounts = {
@@ -202,6 +17,7 @@ module {
         totalPostCount: Text;
         publishedCount: Text;
         draftCount: Text;
+        plannedCount: Text;
         submittedToReviewCount: Text;
         totalViewCount: Text;
         premiumCount: Text;
@@ -249,7 +65,7 @@ module {
 
     public type GetPostsByFollowers = {
         totalCount: Text;
-        posts: [PostKeyProperties];
+        posts: [CanisterDeclarations.PostKeyProperties];
     };
 
 

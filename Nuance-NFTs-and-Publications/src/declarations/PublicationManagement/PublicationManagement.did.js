@@ -5,9 +5,9 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Tuple(IDL.Text, IDL.Text),
     'err' : IDL.Text,
   });
-  const Result_5 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
-  const Result_4 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
   const PublicationObject = IDL.Record({
     'isEditor' : IDL.Bool,
     'publicationName' : IDL.Text,
@@ -26,6 +26,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const RegisterUserReturn = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_4 = IDL.Variant({
+    'ok' : IDL.Tuple(IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)),
+    'err' : IDL.Text,
+  });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Management = IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
@@ -36,7 +40,7 @@ export const idlFactory = ({ IDL }) => {
         [Result_3],
         [],
       ),
-    'getAdmins' : IDL.Func([], [Result_5], ['query']),
+    'getAdmins' : IDL.Func([], [Result_6], ['query']),
     'getAllPublisherIds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
@@ -47,7 +51,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
         ['query'],
       ),
-    'getWasmChunks' : IDL.Func([], [Result_4], []),
+    'getWasmChunks' : IDL.Func([], [Result_5], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
     'initManagementCanister' : IDL.Func([], [RegisterUserReturn], []),
     'initializeCanister' : IDL.Func(
@@ -56,6 +60,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
+    'refreshEditorsWritersHandles' : IDL.Func([], [Result_4], []),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),
     'registerExistingPublisher' : IDL.Func(
         [IDL.Text, IDL.Text],

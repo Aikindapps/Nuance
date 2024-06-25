@@ -41,6 +41,7 @@ export interface Post {
   'handle' : string,
   'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -88,6 +89,8 @@ export interface PostSaveModel {
   'handle' : string,
   'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
+  'scheduledPublishedDate' : [] | [bigint],
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -138,6 +141,7 @@ export interface TagModel {
 }
 export interface UserPostCounts {
   'totalViewCount' : string,
+  'plannedCount' : string,
   'uniqueClaps' : string,
   'draftCount' : string,
   'uniqueReaderCount' : string,
@@ -158,6 +162,7 @@ export interface _SERVICE {
   >,
   'addNewRules' : ActorMethod<[Array<string>], undefined>,
   'addPostCategory' : ActorMethod<[string, string, bigint], undefined>,
+  'addPostIdToUserDebug' : ActorMethod<[string, string], Result_1>,
   'addWasmChunk' : ActorMethod<[Uint8Array | number[]], Result_1>,
   'availableCycles' : ActorMethod<[], bigint>,
   'checkViewsLast24Hours' : ActorMethod<[], undefined>,
@@ -217,6 +222,7 @@ export interface _SERVICE {
     [number, number],
     GetPostsByFollowers
   >,
+  'getMyPlannedPosts' : ActorMethod<[number, number], Array<PostKeyProperties>>,
   'getMyPublishedPosts' : ActorMethod<
     [number, number],
     Array<PostKeyProperties>
@@ -297,6 +303,7 @@ export interface _SERVICE {
   'registerPublisher' : ActorMethod<[], undefined>,
   'reindex' : ActorMethod<[], Result_2>,
   'removePostFromPopularityArrays' : ActorMethod<[string], undefined>,
+  'removePostIdToUserDebug' : ActorMethod<[string, string], Result_1>,
   'resetWasmChunks' : ActorMethod<[], undefined>,
   'save' : ActorMethod<[PostSaveModel], Result_4>,
   'setFrontendCanisterId' : ActorMethod<[string], Result_2>,

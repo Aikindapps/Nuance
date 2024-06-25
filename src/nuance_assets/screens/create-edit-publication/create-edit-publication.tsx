@@ -46,6 +46,12 @@ import PublicationCallToAction from '../../components/publication-call-to-action
 import { string } from 'prop-types';
 import BreadCrumbCropper from '../../UI/breadCrumbCropper/breadCrumbCropper';
 import { Toggle } from '../../UI/toggle/toggle';
+import SubscriptionSettings from './subscription-settings';
+import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
+import { useSubscriptionStore } from '../../store/subscriptionStore';
+import { SubscriptionStore } from '../../store/subscriptionStore';
+import { Principal } from '@dfinity/principal';
+import { set } from 'lodash';
 
 const CreateEditPublication = () => {
   const { handle } = useParams();
@@ -81,6 +87,7 @@ const CreateEditPublication = () => {
     updatePublicationCta,
     removeEditor,
     removeWriter,
+    getCanisterIdByHandle,
   } = usePublisherStore((state) => ({
     getPublication: state.getPublication,
     publication: state.publication,
@@ -90,6 +97,19 @@ const CreateEditPublication = () => {
     removeWriter: state.removeWriter,
     getPublicationError: state.getPublicationError,
     updatePublicationStyling: state.updatePublicationStyling,
+    getCanisterIdByHandle: state.getCanisterIdByHandle,
+  }));
+
+  const {
+    getWriterSubscriptionDetailsByPrincipalId,
+    getPublicationSubscriptionDetailsAsEditor,
+    updateSubscriptionDetails,
+  } = useSubscriptionStore((state: SubscriptionStore) => ({
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
+    getPublicationSubscriptionDetailsAsEditor:
+      state.getPublicationSubscriptionDetailsAsEditor,
+    updateSubscriptionDetails: state.updateSubscriptionDetails,
   }));
 
   const featureIsLive = useContext(Context).publicationFeature;
@@ -195,6 +215,107 @@ const CreateEditPublication = () => {
     );
   };
 
+  const [subscriptionDetails, setSubscriptionDetails] =
+    useState<SubscriptionDetailsState>({
+      writerSubscriptions: [],
+      weeklyFee: [],
+      writerPrincipalId: '',
+      paymentReceiverPrincipalId: '',
+      lifeTimeFee: [],
+      isSubscriptionActive: false,
+      annuallyFee: [],
+      monthlyFee: [],
+      weeklyFeeEnabled: false,
+      monthlyFeeEnabled: false,
+      annuallyFeeEnabled: false,
+      lifeTimeFeeEnabled: false,
+    });
+
+  interface SubscriptionDetailsState extends WriterSubscriptionDetails {
+    weeklyFeeEnabled: boolean;
+    monthlyFeeEnabled: boolean;
+    annuallyFeeEnabled: boolean;
+    lifeTimeFeeEnabled: boolean;
+  }
+
+  const handleUpdateSubscriptionDetails = async () => {
+
+    // Convert fees to e8s
+    const convertToE8s = (fee: string | undefined) =>
+      fee ? Number(fee) * 1e8 : undefined;
+
+    const weeklyFeeE8s = convertToE8s(subscriptionDetails.weeklyFee[0]);
+    const monthlyFeeE8s = convertToE8s(subscriptionDetails.monthlyFee[0]);
+    const annuallyFeeE8s = convertToE8s(subscriptionDetails.annuallyFee[0]);
+    const lifeTimeFeeE8s = convertToE8s(subscriptionDetails.lifeTimeFee[0]);
+
+    try {
+      const publicationCanisterId = await getCanisterIdByHandle(
+        publicationHandle
+      );
+      updateSubscriptionDetails(
+        weeklyFeeE8s,
+        monthlyFeeE8s,
+        annuallyFeeE8s,
+        lifeTimeFeeE8s,
+        {
+          paymentReceiverPrincipal: Principal.fromText(
+            subscriptionDetails.paymentReceiverPrincipalId
+          ),
+          publicationCanisterId: publicationCanisterId || '',
+        }
+      );
+    } catch (error) {
+      console.error('Error fetching canister ID:', error);
+      // Handle the error as needed
+    }
+  };
+
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (publication) {
+        const publicationCanisterId = await getCanisterIdByHandle(
+          publicationHandle
+        );
+        if (publicationCanisterId) {
+          console.log(
+            'Fetching subscription details for:',
+            publicationCanisterId
+          );
+          const fetchedDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(
+              publicationCanisterId
+            );
+          if (fetchedDetails) {
+            setSubscriptionDetails({
+              writerSubscriptions: fetchedDetails?.writerSubscriptions,
+              weeklyFee: fetchedDetails.weeklyFee[0]
+                ? [(Number(fetchedDetails.weeklyFee[0]) / 1e8).toString()]
+                : [],
+              writerPrincipalId: fetchedDetails.writerPrincipalId,
+              paymentReceiverPrincipalId: fetchedDetails.paymentReceiverPrincipalId,
+              lifeTimeFee: fetchedDetails.lifeTimeFee[0]
+                ? [(Number(fetchedDetails.lifeTimeFee[0]) / 1e8).toString()]
+                : [],
+              isSubscriptionActive: fetchedDetails.isSubscriptionActive,
+              annuallyFee: fetchedDetails.annuallyFee[0]
+                ? [(Number(fetchedDetails.annuallyFee[0]) / 1e8).toString()]
+                : [],
+              monthlyFee: fetchedDetails.monthlyFee[0]
+                ? [(Number(fetchedDetails.monthlyFee[0]) / 1e8).toString()]
+                : [],
+              weeklyFeeEnabled: fetchedDetails.weeklyFee.length != 0,
+              monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
+              annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
+              lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0,
+            });
+          }
+        }
+      }
+    };
+    fetchSubscriptionDetails();
+  }, [publication]);
+
   useEffect(() => {
     clearAll();
     getUser();
@@ -259,6 +380,26 @@ const CreateEditPublication = () => {
     }
   }, [getPublicationError]);
 
+
+  const [validPrincipal, setValidPrincipal] = useState(true);
+  useEffect(() => {
+    if (subscriptionDetails.paymentReceiverPrincipalId) {
+      validatePrincipal();
+    }
+  }, [subscriptionDetails.paymentReceiverPrincipalId]);
+
+  const validatePrincipal = () => {
+    try {
+      let validation =
+        subscriptionDetails.paymentReceiverPrincipalId === Principal.fromText(subscriptionDetails.paymentReceiverPrincipalId).toText();
+      setValidPrincipal(validation);
+      return validation;
+    } catch (e) {
+      setValidPrincipal(false);
+      return false;
+    }
+  };
+
   useEffect(() => {
     fillFormValues();
     console.log("called fillFormValues, here's the pub", publication);
@@ -300,6 +441,14 @@ const CreateEditPublication = () => {
       }
       return;
     }
+    if (!validatePrincipal()) {
+      let el = document.getElementById('principal');
+      if (el) {
+        console.log(0, el.offsetTop);
+        window.scrollTo(0, el.offsetTop - 10);
+      }
+      return;
+    }
     if (publicationCtaWebsiteWarning) {
       let el = document.getElementById('pub-banner');
       if (el) {
@@ -307,10 +456,14 @@ const CreateEditPublication = () => {
         window.scrollTo(0, el.offsetTop - 10);
       }
       return;
-    }
 
+    }
     window.scrollTo(0, 0);
+
+
   };
+
+
 
   function validate() {
     const isValid =
@@ -320,7 +473,9 @@ const CreateEditPublication = () => {
       !publicationWarning &&
       !publicationDescriptionWarning &&
       !publicationCtaWebsiteWarning &&
-      publicationBannerImage !== '';
+      publicationBannerImage !== '' &&
+      validatePrincipal();
+
     return isValid;
   }
 
@@ -570,7 +725,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -671,7 +826,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -772,7 +927,7 @@ const CreateEditPublication = () => {
     if (errorImageName) {
       toast(
         `${errorImageName} exceeded the maximum image size of ` +
-          `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
         ToastType.Error
       );
 
@@ -1114,6 +1269,7 @@ const CreateEditPublication = () => {
           },
           publication?.publicationHandle as string
         ),
+        handleUpdateSubscriptionDetails(),
       ]);
       await getPublication(publicationHandle);
       setLoading(false);
@@ -1124,7 +1280,7 @@ const CreateEditPublication = () => {
     }
   };
 
-  const clearAll = () => {};
+  const clearAll = () => { };
 
   const KeyCodes = {
     comma: 188,
@@ -1177,10 +1333,10 @@ const CreateEditPublication = () => {
               {publicationDoesNotExist
                 ? 'This publication no longer exists or you have entered the wrong handle'
                 : featureIsLive === false
-                ? 'This feature is not yet live! Stay tuned...'
-                : userIsEditor == false || publication == undefined
-                ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
-                : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
+                  ? 'This feature is not yet live! Stay tuned...'
+                  : userIsEditor == false || publication == undefined
+                    ? 'You are not authorized to edit this publication or this publication does not exist. Only an Editor may edit the publication.'
+                    : 'You have reached a page that does not exist. Please use the header to navigate to a different page'}
             </h2>
           </div>
         )}
@@ -1229,11 +1385,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                          width: '96px',
-                          cursor: 'not-allowed',
-                          background: 'gray',
-                          borderColor: 'gray',
-                        }
+                        width: '96px',
+                        cursor: 'not-allowed',
+                        background: 'gray',
+                        borderColor: 'gray',
+                      }
                   }
                 >
                   Save
@@ -1956,15 +2112,15 @@ const CreateEditPublication = () => {
                 style={
                   !isAddNewSocialLinkActive()
                     ? {
-                        cursor: 'not-allowed',
-                        opacity: '0.5',
-                        marginTop: '20px',
-                        marginBottom: '20px',
-                      }
+                      cursor: 'not-allowed',
+                      opacity: '0.5',
+                      marginTop: '20px',
+                      marginBottom: '20px',
+                    }
                     : {
-                        marginTop: '20px',
-                        marginBottom: '20px',
-                      }
+                      marginTop: '20px',
+                      marginBottom: '20px',
+                    }
                 }
                 className='edit-publication-add-new-social-channel'
                 onClick={() => {
@@ -1978,6 +2134,16 @@ const CreateEditPublication = () => {
               >
                 <span>+</span>
                 {'  Add new link to social channel'}
+              </div>
+
+              <div className='subscription-settings-wrapper'>
+                <SubscriptionSettings
+                  subscriptionDetails={subscriptionDetails}
+                  updateSubscriptionDetails={handleUpdateSubscriptionDetails}
+                  setSubscriptionDetails={setSubscriptionDetails}
+                  isPublication={true}
+                  error={!validPrincipal}
+                />
               </div>
 
               <div style={{ display: 'inline-block' }}>
@@ -2006,11 +2172,11 @@ const CreateEditPublication = () => {
                     validateWebsiteAndSocialLinks()
                       ? { width: '96px' }
                       : {
-                          width: '96px',
-                          cursor: 'not-allowed',
-                          background: 'gray',
-                          borderColor: 'gray',
-                        }
+                        width: '96px',
+                        cursor: 'not-allowed',
+                        background: 'gray',
+                        borderColor: 'gray',
+                      }
                   }
                 >
                   Save

@@ -1,3 +1,14 @@
+type WriterSubscriptionDetails = 
+ record {
+   annuallyFee: opt text;
+   isSubscriptionActive: bool;
+   lifeTimeFee: opt text;
+   monthlyFee: opt text;
+   paymentReceiverPrincipalId: text;
+   weeklyFee: opt text;
+   writerPrincipalId: text;
+   writerSubscriptions: vec SubscriptionEvent;
+ };
 type Validate = 
  variant {
    Err: text;
@@ -8,6 +19,7 @@ type User__1 =
    accountCreated: text;
    avatar: text;
    bio: text;
+   claimInfo: UserClaimInfo;
    displayName: text;
    followers: Followers;
    followersArray: vec text;
@@ -31,11 +43,20 @@ type UserListItem =
    socialChannelsUrls: vec text;
    website: text;
  };
+type UserClaimInfo = 
+ record {
+   isClaimActive: bool;
+   isUserBlocked: bool;
+   lastClaimDate: opt text;
+   maxClaimableTokens: text;
+   subaccount: opt blob;
+ };
 type User = 
  record {
    accountCreated: text;
    avatar: text;
    bio: text;
+   claimInfo: UserClaimInfo;
    displayName: text;
    followers: Followers;
    followersArray: vec text;
@@ -48,32 +69,45 @@ type User =
    website: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
-type Result_8 = 
+type SubscriptionTimeInterval = 
  variant {
-   err: text;
-   ok: text;
+   Annually;
+   LifeTime;
+   Monthly;
+   Weekly;
  };
-type Result_7 = 
+type SubscriptionEvent = 
+ record {
+   endTime: int;
+   isWriterSubscriptionActive: bool;
+   paymentFee: text;
+   readerPrincipalId: text;
+   startTime: int;
+   subscriptionEventId: text;
+   subscriptionTimeInterval: SubscriptionTimeInterval;
+   writerPrincipalId: text;
+ };
+type Result_9 = 
  variant {
    err: text;
    ok: vec User;
  };
-type Result_6 = 
+type Result_8 = 
  variant {
    err: text;
    ok: vec UserListItem;
  };
-type Result_5 = 
- variant {
-   err: text;
-   ok: vec text;
- };
-type Result_4 = 
+type Result_7 = 
  variant {
    err: text;
    ok: UserListItem;
  };
-type Result_3 = 
+type Result_6 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_5 = 
  variant {
    err: text;
    ok: record {
@@ -81,10 +115,33 @@ type Result_3 =
          nat;
        };
  };
-type Result_2 = 
+type Result_4 = 
+ variant {
+   err: text;
+   ok: bool;
+ };
+type Result_3 = 
  variant {
    err: text;
    ok: nat;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: ReaderSubscriptionDetails;
+ };
+type Result_11 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: vec record {
+             text;
+             nat;
+           };
  };
 type Result_1 = 
  variant {
@@ -105,6 +162,12 @@ type RegisterUserReturn =
  variant {
    err: text;
    ok: User__1;
+ };
+type ReaderSubscriptionDetails = 
+ record {
+   readerNotStoppedSubscriptionsWriters: vec WriterSubscriptionDetails;
+   readerPrincipalId: text;
+   readerSubscriptions: vec SubscriptionEvent;
  };
 type PublicationObject__1 = 
  record {
@@ -206,21 +269,25 @@ service : {
   acceptCycles: () -> ();
   addNuaBalance: (text) -> () oneway;
   addPublication: (PublicationObject__1, text) -> (AddPublicationReturn);
-  adminAirDrop: (float64) -> (Result_8);
+  adminAirDrop: (float64) -> (Result_11);
   availableCycles: () -> (nat) query;
+  blockUserFromClaiming: (text) -> (Result_1);
+  checkMyClaimNotification: () -> ();
+  claimRestrictedTokens: () -> (Result);
   clearAllMyFollowers: () -> (text);
   collectCanisterMetrics: () -> ();
-  deleteUser: (text) -> (Result_2);
+  deleteUser: (text) -> (Result_3);
   dumpUsers: () -> (text) query;
   followAuthor: (text) -> (Result);
   generateAccountIds: () -> ();
   generateLowercaseHandles: () -> (text, vec text);
   getActiveUsersByRange: (Date) -> (nat) query;
-  getAdmins: () -> (Result_5) query;
+  getAdmins: () -> (Result_6) query;
+  getAllClaimSubaccountIndexes: () -> (Result_10) query;
   getAllHandles: () -> (vec text) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
-  getCgUsers: () -> (Result_5) query;
+  getCgUsers: () -> (Result_6) query;
   getDailyMaxRegistration: () -> (nat) query;
   getFollowersCount: (text) -> (text) query;
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
@@ -228,26 +295,29 @@ service : {
   getHandlesByPrincipals: (vec text) -> (vec text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getMultipleUsersByPrincipalId: (vec text) -> (Result_7) query;
-  getMyFollowers: () -> (Result_6) query;
+  getMultipleUsersByPrincipalId: (vec text) -> (Result_9) query;
+  getMyFollowers: () -> (Result_8) query;
   getNuaBalance: (text) -> (NuaBalanceResult) query;
   getNumberOfAllRegisteredUsers: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
   getPrincipalByHandle: (text) -> (GetPrincipalByHandleReturn) query;
   getPrincipalsByHandles: (vec text) -> (vec text) query;
   getRegistrationNumberLastDay: () -> (nat) query;
-  getTrustedCanisters: () -> (Result_5) query;
+  getTotalNumberOfClaimedTokens: () -> (nat) query;
+  getTrustedCanisters: () -> (Result_6) query;
   getUser: () -> (Result) query;
   getUserByHandle: (text) -> (Result) query;
   getUserByPrincipalId: (text) -> (Result) query;
   getUserFollowers: (text) -> (vec UserListItem) query;
   getUserInternal: (text) -> (opt User) query;
-  getUserListItemByHandle: (text) -> (Result_4) query;
+  getUserListItemByHandle: (text) -> (Result_7) query;
+  getUsersBlockedFromClaiming: () -> (Result_6) query;
   getUsersByHandles: (vec text) -> (vec UserListItem) query;
+  getUsersByPrincipals: (vec text) -> (vec UserListItem) query;
   handleClap: (text, text) -> () oneway;
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
-  migrateFollowersHashmapsFromHandlesToPrincipalIds: () -> (Result_3);
+  migrateFollowersHashmapsFromHandlesToPrincipalIds: () -> (Result_5);
   registerAdmin: (text) -> (Result_1);
   registerCanister: (text) -> (Result_1);
   registerCgUser: (text) -> (Result_1);
@@ -255,10 +325,15 @@ service : {
   registerUser: (text, text, text) -> (RegisterUserReturn);
   removePublication: (PublicationObject__1, text) ->
    (RemovePublicationReturn);
-  setDailyMaxRegistration: (nat) -> (Result_2);
-  setMaxMemorySize: (nat) -> (Result_2);
+  setDailyMaxRegistration: (nat) -> (Result_3);
+  setIsClaimActive: (bool) -> (Result_4);
+  setMaxMemorySize: (nat) -> (Result_3);
+  setMaxNumberOfClaimableTokens: (nat) -> (Result_3);
   spendNuaBalance: (text) -> () oneway;
+  spendRestrictedTokensForSubscription: (text, nat) -> (Result_2);
+  spendRestrictedTokensForTipping: (text, text, nat) -> (Result_1);
   testInstructionSize: () -> (text);
+  unblockUserFromClaiming: (text) -> (Result_1);
   unfollowAuthor: (text) -> (Result);
   unregisterAdmin: (text) -> (Result_1);
   unregisterCanister: (text) -> (Result_1);

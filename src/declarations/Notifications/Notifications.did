@@ -1,12 +1,20 @@
 type UserNotificationSettings = 
  record {
+   authorExpiredSubscription: bool;
+   authorGainsNewSubscriber: bool;
+   authorLosesSubscriber: bool;
+   expiredSubscription: bool;
+   faucetClaimAvailable: bool;
    newArticleByFollowedTag: bool;
    newArticleByFollowedWriter: bool;
    newCommentOnFollowedArticle: bool;
    newCommentOnMyArticle: bool;
    newFollower: bool;
    premiumArticleSold: bool;
+   readerExpiredSubscription: bool;
    tipReceived: bool;
+   youSubscribedToAuthor: bool;
+   youUnsubscribedFromAuthor: bool;
  };
 type UpdateCallsAggregatedData = vec nat64;
 type Result_3 = 
@@ -50,23 +58,37 @@ type Notifications =
  };
 type NotificationType__1 = 
  variant {
+   AuthorExpiredSubscription;
+   AuthorGainsNewSubscriber;
+   AuthorLosesSubscriber;
+   FaucetClaimAvailable;
    NewArticleByFollowedTag;
    NewArticleByFollowedWriter;
    NewCommentOnFollowedArticle;
    NewCommentOnMyArticle;
    NewFollower;
    PremiumArticleSold;
+   ReaderExpiredSubscription;
    TipReceived;
+   YouSubscribedToAuthor;
+   YouUnsubscribedFromAuthor;
  };
 type NotificationType = 
  variant {
+   AuthorExpiredSubscription;
+   AuthorGainsNewSubscriber;
+   AuthorLosesSubscriber;
+   FaucetClaimAvailable;
    NewArticleByFollowedTag;
    NewArticleByFollowedWriter;
    NewCommentOnFollowedArticle;
    NewCommentOnMyArticle;
    NewFollower;
    PremiumArticleSold;
+   ReaderExpiredSubscription;
    TipReceived;
+   YouSubscribedToAuthor;
+   YouUnsubscribedFromAuthor;
  };
 type NotificationContent__1 = 
  record {
@@ -148,6 +170,16 @@ service : {
   availableCycles: () -> (nat) query;
   collectCanisterMetrics: () -> ();
   createNotification: (NotificationType__1, NotificationContent) -> (Result);
+  createNotifications:
+   (vec record {
+          NotificationType__1;
+          NotificationContent;
+        }) -> (Result);
+  disperseBulkSubscriptionNotifications:
+   (vec record {
+          NotificationType__1;
+          NotificationContent;
+        }) -> (Result);
   getAdmins: () -> (Result_3) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
@@ -161,7 +193,6 @@ service : {
   newArticle: (NotificationContent) -> (Result);
   registerCgUser: (text) -> (Result);
   setMaxMemorySize: (nat) -> (Result_1);
-  testnewnotifications2: () -> (Result);
   unregisterCgUser: (text) -> (Result);
   updateUserNotificationSettings: (UserNotificationSettings) -> (Result);
 }

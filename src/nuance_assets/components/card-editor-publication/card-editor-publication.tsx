@@ -18,6 +18,7 @@ import { Tooltip } from 'react-tooltip';
 import { MeatBallMenuGeneral } from '../../UI/meatball-menu-general/meatball-menu-general';
 import PremiumArticleSoldBar from '../../UI/premium-article-sold-bar/premium-article-sold-bar';
 import { Context as ModalContext } from '../../contextes/ModalContext';
+import { is } from 'immutable';
 
 const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   post,
@@ -35,6 +36,12 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
   const navigate = useNavigate();
   const darkTheme = useTheme();
   const modalContext = useContext(ModalContext);
+
+  const isScheduled = (post: PostType) => {
+    const postDate = new Date(Number(post.publishedDate));
+    const currentDate = new Date();
+    return postDate > currentDate;
+  };
 
   const handleCategoryChange = async (post: PostType, e: string) => {
     setIsLoading(true);
@@ -123,6 +130,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
           <img className='nft-icon' src={icons.NFT_ICON} />
         ) : (
           <Toggle
+            scheduled={isScheduled(post)}
             toggled={isToggled}
             callBack={async () => {
               if (!isLoading) {
@@ -199,10 +207,10 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
       </div>
       <div
         style={
-          darkTheme
-            ? {
-                color: darkOptionsAndColors.secondaryColor,
-              }
+          isScheduled(post)
+            ? { color: '#FF8126' }
+            : darkTheme
+            ? { color: darkOptionsAndColors.secondaryColor }
             : {}
         }
         className='field-published-date field-general'
@@ -237,67 +245,92 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
         <MeatBallMenuGeneral
           items={
             !isToggled
-              ? [
-                  {
-                    onClick: async () => {
-                      navigate('/article/edit/' + post.postId);
+              ? post.isMembersOnly
+                ? [
+                    {
+                      onClick: async () => {
+                        navigate('/article/edit/' + post.postId);
+                      },
+                      text: 'Edit',
+                      useDividerOnTop: false,
                     },
-                    text: 'Edit',
-                    useDividerOnTop: false,
-                  },
-                  {
-                    onClick: async () => {
-                      setIsToggled(!isToggled);
-                      setIsLoading(true);
-                      await toggleHandler(post.postId, isToggled);
-                      await refreshPosts(post.postId);
-                      toastMessage(isToggled);
-                      setIsLoading(false);
+                    {
+                      onClick: async () => {
+                        setIsToggled(!isToggled);
+                        setIsLoading(true);
+                        await toggleHandler(post.postId, isToggled);
+                        await refreshPosts(post.postId);
+                        toastMessage(isToggled);
+                        setIsLoading(false);
+                      },
+                      text: 'Publish in publication',
+                      useDividerOnTop: false,
                     },
-                    text: 'Publish in publication',
-                    useDividerOnTop: false,
-                  },
-                  {
-                    onClick: async () => {
-                      if (post.headerImage === '') {
-                        toastError(
-                          'You need to add an header image before minting an NFT for an article.'
-                        );
-                        return;
-                      }
-                      modalContext?.openModal('Premium article', {
-                        premiumPostNumberOfEditors: publication?.editors.length,
-                        premiumPostData: post,
-                        premiumPostOnSave: async (
-                          maxSupply: bigint,
-                          icpPrice: bigint,
-                          thumbnail: string
-                        ) => {
-                          await savePost({
-                            ...post,
-                            premium: [
-                              {
-                                thumbnail: thumbnail,
-                                icpPrice: icpPrice,
-                                maxSupply: maxSupply,
-                              },
-                            ],
-                            tagIds: post.tags.map((val) => val.tagId),
-                            creatorHandle: post.creatorHandle,
-                            isPublication: true,
-                            isDraft: false,
-                          });
-                        },
-                        premiumPostRefreshPost: async () => {
-                          await refreshPosts(post.postId);
-                        },
-                      });
+                  ]
+                : [
+                    {
+                      onClick: async () => {
+                        navigate('/article/edit/' + post.postId);
+                      },
+                      text: 'Edit',
+                      useDividerOnTop: false,
                     },
-                    text: 'Mint article',
-                    useDividerOnTop: true,
-                    icon: icons.NFT_ICON,
-                  },
-                ]
+                    {
+                      onClick: async () => {
+                        setIsToggled(!isToggled);
+                        setIsLoading(true);
+                        await toggleHandler(post.postId, isToggled);
+                        await refreshPosts(post.postId);
+                        toastMessage(isToggled);
+                        setIsLoading(false);
+                      },
+                      text: 'Publish in publication',
+                      useDividerOnTop: false,
+                    },
+                    {
+                      onClick: async () => {
+                        if (post.headerImage === '') {
+                          toastError(
+                            'You need to add an header image before minting an NFT for an article.'
+                          );
+                          return;
+                        }
+                        modalContext?.openModal('Premium article', {
+                          premiumPostNumberOfEditors:
+                            publication?.editors.length,
+                          premiumPostData: post,
+                          premiumPostOnSave: async (
+                            maxSupply: bigint,
+                            icpPrice: bigint,
+                            thumbnail: string
+                          ) => {
+                            await savePost({
+                              ...post,
+                              premium: [
+                                {
+                                  thumbnail: thumbnail,
+                                  icpPrice: icpPrice,
+                                  maxSupply: maxSupply,
+                                },
+                              ],
+                              tagIds: post.tags.map((val) => val.tagId),
+                              creatorHandle: post.creatorHandle,
+                              isPublication: true,
+                              isDraft: false,
+                              isMembersOnly: false,
+                              scheduledPublishedDate: [],
+                            });
+                          },
+                          premiumPostRefreshPost: async () => {
+                            await refreshPosts(post.postId);
+                          },
+                        });
+                      },
+                      text: 'Mint article',
+                      useDividerOnTop: true,
+                      icon: icons.NFT_ICON,
+                    },
+                  ]
               : post.isPremium
               ? [
                   {

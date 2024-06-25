@@ -8,6 +8,11 @@
   border-radius: 24px; 
   cursor: pointer;
 
+  &.scheduled{
+    background-color: #FF8126;
+    border: 1px solid #FF8126;
+  }
+
   &::after {
     content: "";
     position: absolute;
@@ -30,6 +35,11 @@
   &.toggled {
     background-color: #43DFBA;
     border: 1px solid #43DFBA;
+
+    &.scheduled{
+      background-color: #FF8126;
+      border: 1px solid #FF8126;
+    }
 
     &::after {
       left: calc(100% - 18px - 3px);

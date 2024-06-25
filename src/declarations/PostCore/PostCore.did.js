@@ -61,6 +61,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const UserPostCounts = IDL.Record({
     'totalViewCount' : IDL.Text,
+    'plannedCount' : IDL.Text,
     'uniqueClaps' : IDL.Text,
     'draftCount' : IDL.Text,
     'uniqueReaderCount' : IDL.Text,
@@ -119,6 +120,8 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
+    'scheduledPublishedDate' : IDL.Opt(IDL.Int),
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
@@ -143,6 +146,7 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'creatorHandle' : IDL.Text,
     'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
@@ -170,6 +174,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'addNewRules' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
     'addPostCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Int], [], []),
+    'addPostIdToUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
     'addWasmChunk' : IDL.Func([IDL.Vec(IDL.Nat8)], [Result_1], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'checkViewsLast24Hours' : IDL.Func([], [], []),
@@ -265,6 +270,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Nat32, IDL.Nat32],
         [GetPostsByFollowers],
         ['composite_query'],
+      ),
+    'getMyPlannedPosts' : IDL.Func(
+        [IDL.Nat32, IDL.Nat32],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
       ),
     'getMyPublishedPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
@@ -399,6 +409,7 @@ export const idlFactory = ({ IDL }) => {
     'registerPublisher' : IDL.Func([], [], []),
     'reindex' : IDL.Func([], [Result_2], []),
     'removePostFromPopularityArrays' : IDL.Func([IDL.Text], [], ['oneway']),
+    'removePostIdToUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_1], []),
     'resetWasmChunks' : IDL.Func([], [], ['oneway']),
     'save' : IDL.Func([PostSaveModel], [Result_4], []),
     'setFrontendCanisterId' : IDL.Func([IDL.Text], [Result_2], []),

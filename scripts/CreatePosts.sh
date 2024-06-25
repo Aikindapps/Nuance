@@ -34,11 +34,14 @@ do
         content="'$content'"; 
         isDraft=false; 
         tagIds= vec{"1"; "5";}; 
-        creator=""; 
+        creatorPrincipal="";
+        creatorHandle=""; 
         isPublication=false; 
         category=""; 
         premium=null;
-        handle=""
+        handle="";
+        isMembersOnly=false;
+        scheduledPublishedDate=null;
     })'
 
     counterLocal=$((counterLocal + 1))

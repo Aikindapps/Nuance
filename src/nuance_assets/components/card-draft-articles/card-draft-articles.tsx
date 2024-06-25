@@ -11,6 +11,7 @@ import Badge from '../../UI/badge/badge';
 import { Context } from '../../contextes/Context';
 import { PiHandsClappingLight } from "react-icons/pi";
 import { PiPencilSimpleThin } from "react-icons/pi";
+import { get } from 'lodash';
 
 
 
@@ -56,38 +57,78 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
   };
 
   const getEditStatus = () => {
+    const currentDate = new Date();
+
     if (post.isPremium) {
-      return 'Premium';
+      if (post.publishedDate) {
+        const plannedDate = new Date(Number(post.publishedDate));
+        if (plannedDate > currentDate) {
+          return "Planned + Mint";
+        }
+      }
+
+      return 'Minted';
     } else {
       if (post.isPublication) {
         if (post.isDraft) {
-          return "Submitted for review"
+          return "Submitted for review";
         } else {
-          return "Published publication"
+          if (post.publishedDate) {
+            const plannedDate = new Date(Number(post.publishedDate));
+            if (plannedDate > currentDate) {
+              return "Planned";
+            }
+          }
+          return "Published publication";
         }
       } else {
         if (post.isDraft) {
           return 'Draft';
         } else {
+          if (post.publishedDate) {
+            const plannedDate = new Date(Number(post.publishedDate));
+            if (plannedDate > currentDate) {
+              return "Planned";
+            }
+          }
           return 'Published';
         }
       }
     }
   };
 
+
   const getPostStatus = () => {
+    const currentDate = new Date();
+
+    if (post.isPremium) {
+      if (post.publishedDate) {
+        const plannedDate = new Date(Number(post.publishedDate));
+        if (plannedDate > currentDate) {
+          return "Planned + Mint";
+        }
+      }
+      return 'Minted';
+    }
+
     if (post.isDraft) {
       if (post.isPublication) {
-        return 'Submitted for review'
+        return 'Submitted for review';
+      } else {
+        return 'Draft';
       }
-      else {
-        return 'Draft'
+    } else {
+      if (post.publishedDate) {
+        const plannedDate = new Date(Number(post.publishedDate));
+        if (plannedDate > currentDate) {
+          return 'Planned';
+        }
       }
+      return 'Published';
     }
-    else {
-      return 'Published'
-    }
-  }
+  };
+
+
 
   const { getApplaudedHandles } = usePostStore((state) => ({
     getApplaudedHandles: state.getApplaudedHandles,
@@ -119,7 +160,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
         <div className='card-draft-articles-actions-wrapper'>
           <div className='card-draft-articles-actions-left'>
             <Link to={'/article/edit/' + post.postId}>
-              {getEditStatus() === 'Premium' ? (
+              {getEditStatus() === 'Minted' ? (
                 <img
                   className='card-draft-articles-action-icon-pointer'
                   src={icons.NFT_ICON}
@@ -133,12 +174,20 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
                       : 'card-draft-articles-action-icon-pointer'
                   }
                 />
-              ) : (
-                <img
-                  className='card-draft-articles-action-icon-pointer'
-                  src={icons.PUBLICATION_ICON}
-                />
-              )}
+              ) : getEditStatus() === 'Planned' ? (
+                <PiPencilSimpleThin
+                  className={
+                    dark
+                      ? 'card-draft-articles-action-icon-pointer-dark'
+                      : 'card-draft-articles-action-icon-pointer'
+                  } />
+              ) :
+                (
+                  <img
+                    className='card-draft-articles-action-icon-pointer'
+                    src={icons.PUBLICATION_ICON}
+                  />
+                )}
             </Link>
           </div>
           <div className='card-draft-articles-actions-right'>
@@ -174,9 +223,11 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
               style={
                 dark
                   ? {
-                    color: darkOptionsAndColors.secondaryColor,
+                    color: (getPostStatus() === 'Planned' || getPostStatus() === 'Planned + Mint') ? '#FF8126' : darkOptionsAndColors.secondaryColor,
                   }
-                  : {}
+                  : (getPostStatus() === 'Planned' || getPostStatus() === 'Planned + Mint')
+                    ? { color: '#FF8126' }
+                    : {}
               }
               className='card-draft-articles-date'
             >

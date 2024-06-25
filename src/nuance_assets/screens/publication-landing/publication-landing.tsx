@@ -26,6 +26,13 @@ import SearchList from '../../components/search-list/search-list';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
 import { useTheme } from '../../contextes/ThemeContext';
 import { Helmet } from 'react-helmet';
+import SubscriptionCta from '../../components/subscription-cta/subscription-cta';
+import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+
+
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -42,6 +49,8 @@ function PublicationLanding() {
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
   };
+
+  const modalContext = useContext(ModalContext);
 
   const { isLoggedIn, redirect, redirectScreen } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
@@ -73,12 +82,13 @@ function PublicationLanding() {
     getUserFollowersCount: state.getUserFollowersCount,
   }));
 
-  const { getPublication, publication, clearAll, getPublicationError } =
+  const { getPublication, publication, clearAll, getPublicationError, getCanisterIdByHandle } =
     usePublisherStore((state) => ({
       getPublication: state.getPublication,
       publication: state.publication,
       clearAll: state.clearAll,
       getPublicationError: state.getPublicationError,
+      getCanisterIdByHandle: state.getCanisterIdByHandle,
     }));
 
   const {
@@ -113,11 +123,17 @@ function PublicationLanding() {
     unfollowTag: state.unfollowTag,
   }));
 
+  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+  }));
+
   const featureIsLive = useContext(Context).publicationFeature;
   const refEmailOptIn = useRef<HTMLDivElement>(null);
 
   const [screenWidth, setScreenWidth] = useState(0);
   const [publicationHandle, setPublicationHandle] = useState('');
+  const [publicationCanisterId, setPublicationCanisterId] = useState('');
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [copyPublication, setCopyPublication] = useState(false);
@@ -137,6 +153,7 @@ function PublicationLanding() {
   const [updatingFollow, setUpdatingFollow] = useState(false);
   const [isFollowingTag, setIsFollowingTag] = useState(false);
   const [EmailOptInScroll, setEmailOptInScroll] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
 
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
   const [initialPostsLoading, setInitialPostsLoading] = useState(false);
@@ -154,6 +171,87 @@ function PublicationLanding() {
       setLoadingPublication(false);
     }
   }, [publication]);
+
+
+  const [isExpiring, setIsExpiring] = useState<boolean>(false);
+
+  const handleSubscriptionComplete = () => {
+    setSidebarToggle(false);
+  };
+
+  const handleCancelSubscription = () => {
+    console.log("cancel")
+  }
+
+  useEffect(() => {
+    const fetchSubscriptionHistory = async () => {
+      if (isLoggedIn) {
+        try {
+          let history = await getMySubscriptionHistoryAsReader();
+          console.log('history', history);
+
+          if (history) {
+            let isSubscribed = history.activeSubscriptions.some((subscription) => {
+              console.log('subscription', subscription);
+              return subscription.userListItem.handle === author?.handle;
+
+            });
+
+            if (!isSubscribed) {
+              isSubscribed = history.expiredSubscriptions.some((subscription) => {
+                return subscription.userListItem.handle === author?.handle && subscription.subscriptionEndDate > Date.now();
+              });
+            }
+
+            setSubscribed(isSubscribed);
+          }
+        } catch (error) {
+          console.log('Error getting subscription history', error);
+        }
+      }
+    };
+
+    fetchSubscriptionHistory();
+  }, [isLoggedIn, author?.handle, user?.handle, handleSubscriptionComplete, handleCancelSubscription]);
+
+
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  //get subscription details
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (publicationCanisterId) {
+        try {
+          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(publicationCanisterId);
+          if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
+            setHasValidSubscriptionOptions(true);
+            console.log('Subscription details:', subscriptionDetails);
+          } else {
+            setHasValidSubscriptionOptions(false);
+            console.log('No valid subscription options');
+          }
+        } catch (error) {
+          console.log('Error fetching subscription details', error);
+        }
+      }
+    }
+    fetchSubscriptionDetails();
+  }
+    , [publicationCanisterId]);
+
+  function checkExpiringSubscriptions(subscriptionHistory: ReaderSubscriptionDetailsConverted, authorHandle: string) {
+    const currentTime = Date.now();
+    const { expiredSubscriptions } = subscriptionHistory;
+
+    const isExpiring = expiredSubscriptions.some(subscription => {
+      return (
+        subscription.userListItem.handle === authorHandle &&
+        subscription.subscriptionEndDate > currentTime
+      );
+    });
+
+    return isExpiring;
+  }
+
 
   const getPublicationHandleFromUrl = () => {
     if (
@@ -185,6 +283,9 @@ function PublicationLanding() {
     clearPostsByFollowers();
     getAllTags();
     clearSearch();
+    getCanisterIdByHandle(handleName).then((canisterId) => {
+      setPublicationCanisterId(canisterId || '');
+    });
   }, []);
 
   useEffect(
@@ -337,6 +438,11 @@ function PublicationLanding() {
     setShowSearchResults(false);
   };
 
+
+
+  const closeMenus = () => {
+    setSidebarToggle(false);
+  };
   const handleFollowClicked = () => {
     // prevent clicks while button spinner is visible
     if (updatingFollow) {
@@ -395,7 +501,7 @@ function PublicationLanding() {
   if (
     !publication?.publicationHandle ||
     publication.publicationHandle.toLowerCase() !==
-      getPublicationHandleFromUrl().toLowerCase()
+    getPublicationHandleFromUrl().toLowerCase()
   ) {
     return (
       <div style={{ background: darkOptionsAndColors.background }}>
@@ -449,13 +555,13 @@ function PublicationLanding() {
                 style={
                   !isSidebarToggled && screenWidth <= 1089
                     ? {
-                        display: 'none',
-                      }
+                      display: 'none',
+                    }
                     : {
-                        marginRight: '15px',
-                        width: '150px',
-                        height: '47.5px',
-                      }
+                      marginRight: '15px',
+                      width: '150px',
+                      height: '47.5px',
+                    }
                 }
                 className='brand-logo-left'
                 src={publication?.styling.logo}
@@ -521,6 +627,11 @@ function PublicationLanding() {
                   primaryColor={publication?.styling.primaryColor}
                 />
               </div>
+              {!subscribed && hasValidSubscriptionOptions && isLoggedIn &&
+                <div className='Subscription-container'>
+                  <SubscriptionCta onOpen={() => closeMenus()} />
+                </div>
+              }
 
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
                 {/* Change to FB handle when FB publication is established */}
@@ -535,6 +646,28 @@ function PublicationLanding() {
           </div>
         </div>
         <div className='right'>
+          {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
+
+            <SubscriptionModal
+              handle={publication?.publicationHandle}
+              authorPrincipalId={publicationCanisterId}
+              profileImage={publication?.avatar}
+              isPublication={true}
+              onSubscriptionComplete={() => { handleSubscriptionComplete() }}
+            />
+          )}
+
+          {modalContext?.isModalOpen && modalContext?.modalType === 'cancelSubscription' && (
+
+            <CancelSubscriptionModal
+              handle={publication?.publicationHandle}
+              profileImage={publication?.avatar}
+              isPublication={true}
+              onCancelComplete={() => { handleSubscriptionComplete() }}
+              authorPrincipalId={publicationCanisterId}
+            />
+          )}
+
           <div className='header-image-container'>
             <img src={`${publication?.headerImage}`} className='header-img' />
 

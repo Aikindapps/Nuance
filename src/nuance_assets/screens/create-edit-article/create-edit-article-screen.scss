@@ -8,6 +8,14 @@
     width: 100vw;
     row-gap: 20px;
 
+    .edit-article-members-only{
+        width: 100%;
+
+        .members-only-icon{
+            margin-bottom: 80px;
+            padding: 0px 0px 0px 0px;
+            }
+    }
     .edit-article-content-wrapper {
         display: flex;
         max-width: 1400px;
@@ -193,6 +201,12 @@
                                 background-color: #d9d9d9;
                                 height: 1px;
                             }
+                        }
+                        .schedule-publish-container{
+                            background: white;
+                            width: 100%;
+                            border-radius: 4px;
+                            margin-top: 20px;
                         }
                     }
                 }

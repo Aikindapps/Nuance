@@ -73,6 +73,9 @@ export const icons = {
   CLAP_WHITE: iconsPath + 'clap-white.svg',
   CLAP_BLUE: iconsPath + 'clap-blue.png',
   PUBLICATION_ICON: iconsPath + 'publication-icon.svg',
+  GRADIENT_PUBLICATION_SUCCESS_ICON:
+    iconsPath + 'gradient-publication-icon.svg',
+  SUCCESS_STAR: iconsPath + 'success-star.svg',
   EMAIL_OPT_IN: iconsPath + 'email-opt-in.png',
   EMAIL_OPT_IN_SUCCESS: iconsPath + 'email-opt-in-success.png',
   NFT_LOCK_ICON: iconsPath + 'NFT-Lock-Icon.svg',
@@ -109,8 +112,19 @@ export const icons = {
   NOTIFICATION_BELL_DARK: iconsPath + 'notification-bell-dark.svg',
   SETTINGS: iconsPath + 'settings.svg',
   SETTINGS_DARK: iconsPath + 'settings-dark.svg',
+  SUBSCRIPTION_STAR_ICON: iconsPath + 'subscription-star-icon.svg',
+  GRADIENT_STAR: iconsPath + 'gradient-star.svg',
+  NO_FILL_STAR: iconsPath + 'no-fill-star.svg',
   EXIT_NOTIFICATIONS: iconsPath + 'exit-notifications.svg',
   EXIT_NOTIFICATIONS_DARK: iconsPath + 'exit-notifications-dark.svg',
+  STOP_SUBSCRIPTION: iconsPath + 'stop-subscription.svg',
+  CANCEL_SUBSCRIPTION_SUCCESS: iconsPath + 'cancel-subscription-success.svg',
+  CANCEL_SUBSCRIPTION_USER: iconsPath + 'cancel-subscription-user.svg',
+  APPLAUD_ICON: iconsPath + 'applaud-icon.svg',
+  CALENDAR_ICON: iconsPath + 'calendar.svg',
+  CLOCK_ICON: iconsPath + 'clock.svg',
+  MEMBERS_ONLY: iconsPath + 'members-only.svg',
+  CHEVRON: iconsPath + 'chevron.svg',
 };
 
 export const colors = {
@@ -172,6 +186,8 @@ export const ICP_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai';
 export const ckBTC_CANISTER_ID = 'mxzaz-hqaaa-aaaar-qaada-cai';
 export const ckBTC_INDEX_CANISTER_ID = 'n5wcd-faaaa-aaaar-qaaea-cai';
 
+export const ckUSDC_CANISTER_ID = 'xevnm-gaaaa-aaaar-qafnq-cai';
+
 export const NUA_CANISTER_ID = 'rxdbk-dyaaa-aaaaq-aabtq-cai';
 export const SUPPORTED_CANISTER_IDS = [
   ICP_CANISTER_ID,
@@ -181,12 +197,12 @@ export const SUPPORTED_CANISTER_IDS = [
 
 export const SUPPORTED_TOKENS: SupportedToken[] = [
   {
-    canisterId: isLocal ? ICP_CANISTER_ID : NUA_CANISTER_ID,
+    canisterId: NUA_CANISTER_ID,
     logo: images.NUANCE_LOGO,
     decimals: 8,
     name: 'Nuance',
     symbol: 'NUA',
-    fee: isLocal ? 10000 : 100000,
+    fee: 100000,
   },
   {
     canisterId: ICP_CANISTER_ID,
@@ -206,11 +222,16 @@ export const SUPPORTED_TOKENS: SupportedToken[] = [
   },
 ];
 
-export const getDecimalsByTokenSymbol = (symbol: SupportedTokenSymbol) => {
+export const getDecimalsByTokenSymbol = (
+  symbol: SupportedTokenSymbol | 'ckUSDC'
+) => {
   for (const supported of SUPPORTED_TOKENS) {
     if (supported.symbol === symbol) {
       return supported.decimals;
     }
+  }
+  if (symbol === 'ckUSDC') {
+    return 6;
   }
   //if not found (not possible), return 8 as default
   return 8;

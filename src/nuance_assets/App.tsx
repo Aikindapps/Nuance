@@ -53,6 +53,9 @@ import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';
 import { ModalsWrapper } from './components/modals-wrapper/modals-wrapper';
 import NotificationsSidebar from './components/notifications/notifications';
+import Subscriptions from './screens/profile/subscriptions';
+import PublicationSubscribersTab from './screens/profile/publication-subscribers-tab';
+import SubscribersTab from './screens/profile/subscribers-tab';
 
 const Routes = () => {
   return useRoutes([
@@ -81,11 +84,14 @@ const Routes = () => {
         { path: 'submitted-for-review', element: <SubmittedArticles /> },
         { path: 'articles', element: <PersonalArticles /> },
         { path: 'published', element: <PublishedArticles /> },
+        { path: 'planned', element: <div>Test</div> },
         { path: 'topics', element: <FollowedTags /> },
         { path: 'following', element: <Following /> },
         { path: 'followers', element: <Followers /> },
         { path: 'wallet', element: <Wallet /> },
         { path: 'publications/:handle', element: <PublicationArticles /> },
+        { path: 'subscriptions', element: <Subscriptions /> },
+        { path: 'subscribers', element: <SubscribersTab /> },
       ],
     },
   ]);

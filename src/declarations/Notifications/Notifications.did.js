@@ -1,13 +1,20 @@
 export const idlFactory = ({ IDL }) => {
   const List = IDL.Rec();
   const NotificationType__1 = IDL.Variant({
+    'FaucetClaimAvailable' : IDL.Null,
     'TipReceived' : IDL.Null,
     'NewArticleByFollowedWriter' : IDL.Null,
+    'AuthorLosesSubscriber' : IDL.Null,
+    'YouSubscribedToAuthor' : IDL.Null,
+    'AuthorExpiredSubscription' : IDL.Null,
     'NewCommentOnMyArticle' : IDL.Null,
+    'YouUnsubscribedFromAuthor' : IDL.Null,
     'NewFollower' : IDL.Null,
+    'ReaderExpiredSubscription' : IDL.Null,
     'PremiumArticleSold' : IDL.Null,
     'NewCommentOnFollowedArticle' : IDL.Null,
     'NewArticleByFollowedTag' : IDL.Null,
+    'AuthorGainsNewSubscriber' : IDL.Null,
   });
   const NotificationContent = IDL.Record({
     'url' : IDL.Text,
@@ -84,13 +91,20 @@ export const idlFactory = ({ IDL }) => {
     'authorPrincipal' : IDL.Principal,
   });
   const NotificationType = IDL.Variant({
+    'FaucetClaimAvailable' : IDL.Null,
     'TipReceived' : IDL.Null,
     'NewArticleByFollowedWriter' : IDL.Null,
+    'AuthorLosesSubscriber' : IDL.Null,
+    'YouSubscribedToAuthor' : IDL.Null,
+    'AuthorExpiredSubscription' : IDL.Null,
     'NewCommentOnMyArticle' : IDL.Null,
+    'YouUnsubscribedFromAuthor' : IDL.Null,
     'NewFollower' : IDL.Null,
+    'ReaderExpiredSubscription' : IDL.Null,
     'PremiumArticleSold' : IDL.Null,
     'NewCommentOnFollowedArticle' : IDL.Null,
     'NewArticleByFollowedTag' : IDL.Null,
+    'AuthorGainsNewSubscriber' : IDL.Null,
   });
   const Notifications = IDL.Record({
     'id' : IDL.Text,
@@ -107,11 +121,19 @@ export const idlFactory = ({ IDL }) => {
   const UserNotificationSettings = IDL.Record({
     'premiumArticleSold' : IDL.Bool,
     'tipReceived' : IDL.Bool,
+    'authorGainsNewSubscriber' : IDL.Bool,
+    'authorExpiredSubscription' : IDL.Bool,
+    'authorLosesSubscriber' : IDL.Bool,
     'newCommentOnFollowedArticle' : IDL.Bool,
+    'youSubscribedToAuthor' : IDL.Bool,
     'newCommentOnMyArticle' : IDL.Bool,
+    'youUnsubscribedFromAuthor' : IDL.Bool,
     'newFollower' : IDL.Bool,
+    'readerExpiredSubscription' : IDL.Bool,
     'newArticleByFollowedWriter' : IDL.Bool,
     'newArticleByFollowedTag' : IDL.Bool,
+    'faucetClaimAvailable' : IDL.Bool,
+    'expiredSubscription' : IDL.Bool,
   });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
@@ -119,6 +141,16 @@ export const idlFactory = ({ IDL }) => {
     'collectCanisterMetrics' : IDL.Func([], [], []),
     'createNotification' : IDL.Func(
         [NotificationType__1, NotificationContent],
+        [Result],
+        [],
+      ),
+    'createNotifications' : IDL.Func(
+        [IDL.Vec(IDL.Tuple(NotificationType__1, NotificationContent))],
+        [Result],
+        [],
+      ),
+    'disperseBulkSubscriptionNotifications' : IDL.Func(
+        [IDL.Vec(IDL.Tuple(NotificationType__1, NotificationContent))],
         [Result],
         [],
       ),
@@ -143,7 +175,6 @@ export const idlFactory = ({ IDL }) => {
     'newArticle' : IDL.Func([NotificationContent], [Result], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),
-    'testnewnotifications2' : IDL.Func([], [Result], []),
     'unregisterCgUser' : IDL.Func([IDL.Text], [Result], []),
     'updateUserNotificationSettings' : IDL.Func(
         [UserNotificationSettings],

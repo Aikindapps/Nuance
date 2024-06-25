@@ -18,13 +18,19 @@ import { Row, Col } from 'react-bootstrap';
 import { PostType, PublicationObject, UserType } from '../../types/types';
 import { Context } from '../../contextes/Context';
 import { useTheme } from '../../contextes/ThemeContext';
-import { get } from 'lodash';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import { UserPostCounts } from '../../../declarations/PostCore/PostCore.did';
 import './_profile.scss';
 import { getIconForSocialChannel } from '../../shared/utils';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 import { Tooltip } from 'react-tooltip';
+import SubscribeButton from '../../components/subscribe-button/subscribe-button';
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
+import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+import { set } from 'lodash';
+
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [copyProfile, setCopyProfile] = useState(false);
@@ -32,12 +38,17 @@ const Profile = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
   const [author, setAuthor] = useState<UserType | undefined>();
+  const [authorPrincipalId, setAuthorPrincipalId] = useState<string | undefined>();
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
   const [userPostCounts, setUserPostCounts] = useState<
     UserPostCounts | undefined
   >();
   const { handle } = useParams();
   const darkTheme = useTheme();
+  const modalContext = useContext(ModalContext);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isExpiring, setIsExpiring] = useState<boolean>(false);
+
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -64,13 +75,19 @@ const Profile = () => {
   );
   const user = useUserStore((state) => state.user);
 
-  const { getAuthor, getUserPostCounts } = useUserStore((state) => ({
+  const { getAuthor, getUserPostCounts, getPrincipalByHandle } = useUserStore((state) => ({
     getAuthor: state.getAuthor,
     getUserPostCounts: state.getUserPostCounts,
+    getPrincipalByHandle: state.getPrincipalByHandle,
   }));
 
   const { getPostsByFollowers } = usePostStore((state) => ({
     getPostsByFollowers: state.getPostsByFollowers,
+  }));
+
+  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
   }));
 
   const load = async () => {
@@ -84,6 +101,13 @@ const Profile = () => {
       //if author exists, set the value
       if (authorResponse) {
         setAuthor(authorResponse);
+
+        try {
+          let principalId = await getPrincipalByHandle(handle);
+          setAuthorPrincipalId(principalId);
+        } catch (error) {
+          console.log('Error getting principal id', error);
+        }
       }
       //if there's any post, set the displaying posts
       if (posts) {
@@ -121,6 +145,67 @@ const Profile = () => {
     load();
   }, []);
 
+
+  useEffect(() => {
+    const fetchSubscriptionHistory = async () => {
+      if (isLoggedIn) {
+        try {
+          let history = await getMySubscriptionHistoryAsReader();
+
+          if (history) {
+            console.log('Subscription history:', history);
+            let isSubscribed = history.activeSubscriptions.some((subscription) => {
+              return subscription.userListItem.handle === author?.handle;
+            });
+            setIsSubscribed(isSubscribed);
+            setIsExpiring(checkExpiringSubscriptions(history, author?.handle || ''));
+          }
+        } catch (error) {
+          console.log('Error fetching subscription history', error);
+        }
+      }
+    };
+
+    fetchSubscriptionHistory();
+  }, [isLoggedIn, author?.handle, user?.handle]);
+
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  //get subscription details
+  useEffect(() => {
+    const fetchSubscriptionDetails = async () => {
+      if (authorPrincipalId) {
+        try {
+          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
+          if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
+            setHasValidSubscriptionOptions(true);
+
+          } else {
+            setHasValidSubscriptionOptions(false);
+            console.log('No valid subscription options');
+          }
+        } catch (error) {
+          console.log('Error fetching subscription details', error);
+        }
+      }
+    }
+    fetchSubscriptionDetails();
+  }
+    , [authorPrincipalId]);
+
+  function checkExpiringSubscriptions(subscriptionHistory: ReaderSubscriptionDetailsConverted, authorHandle: string) {
+    const currentTime = Date.now();
+    const { expiredSubscriptions } = subscriptionHistory;
+
+    const isExpiring = expiredSubscriptions.some(subscription => {
+      return (
+        subscription.userListItem.handle === authorHandle &&
+        subscription.subscriptionEndDate > currentTime
+      );
+    });
+
+    return isExpiring;
+  }
+
   const getSocialChannelUrls = () => {
     if (author) {
       if (author.website === '') {
@@ -134,6 +219,10 @@ const Profile = () => {
   };
 
   const context = useContext(Context);
+
+  const handleSubscriptionComplete = () => {
+    setIsSubscribed(!isSubscribed);
+  };
 
   return (
     <div>
@@ -245,8 +334,8 @@ const Profile = () => {
                   style={
                     darkTheme
                       ? {
-                          color: darkOptionsAndColors.color,
-                        }
+                        color: darkOptionsAndColors.color,
+                      }
                       : {}
                   }
                   className='username'
@@ -260,7 +349,7 @@ const Profile = () => {
                         onClick={() => {
                           let urlWithProtocol =
                             url.startsWith('https://') ||
-                            url.startsWith('http://')
+                              url.startsWith('http://')
                               ? url
                               : 'https://' + url;
                           window.open(urlWithProtocol, '_blank');
@@ -289,21 +378,51 @@ const Profile = () => {
                   style={
                     darkTheme
                       ? {
-                          color: darkOptionsAndColors.secondaryColor,
-                        }
+                        color: darkOptionsAndColors.secondaryColor,
+                      }
                       : {}
                   }
                 >
                   {author?.bio}
                 </p>
 
-                <FollowAuthor
-                  AuthorHandle={author?.handle || ''}
-                  Followers={user?.followersArray || undefined}
-                  user={user?.handle || ''}
-                  isPublication={false}
-                />
+                <div className='subscribe-and-follow-buttons'>
+                  <FollowAuthor
+                    AuthorHandle={author?.handle || ''}
+                    Followers={user?.followersArray || undefined}
+                    user={user?.handle || ''}
+                    isPublication={false}
+                  />
+                  {isLoggedIn && user?.handle !== author?.handle && hasValidSubscriptionOptions && !isExpiring &&
+                    <SubscribeButton
+                      AuthorHandle={author?.handle || ''}
+                      user={user?.handle || ''}
+                      isPublication={false}
+                      isSubscribed={isSubscribed || false}
+                    />
+                  }
+                </div>
               </div>
+              {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
+                <SubscriptionModal
+                  handle={author?.handle || ''}
+                  authorPrincipalId={authorPrincipalId || ''}
+                  profileImage={author?.avatar || ''}
+                  isPublication={false}
+                  onSubscriptionComplete={() => { handleSubscriptionComplete() }}
+                />
+              )}
+
+              {modalContext?.isModalOpen && modalContext?.modalType === 'cancelSubscription' && (
+
+                <CancelSubscriptionModal
+                  handle={author?.handle || ''}
+                  profileImage={author?.avatar || ''}
+                  isPublication={false}
+                  onCancelComplete={() => { handleSubscriptionComplete() }}
+                  authorPrincipalId={authorPrincipalId || ''}
+                />
+              )}
 
               <div className='statistic-wrapper'>
                 <div className='statistic'>
@@ -346,7 +465,7 @@ const Profile = () => {
                 {userPostCounts &&
                   !loading &&
                   parseInt(userPostCounts?.publishedCount) >
-                    displayingPosts.length && (
+                  displayingPosts.length && (
                     <div className='load-more-container'>
                       <Button
                         styleType='secondary'

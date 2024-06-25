@@ -21,6 +21,15 @@ module{
         socialChannels: [Text];
         nuaTokens: Float;
         followersCount: Nat32;
+        claimInfo: ?UserClaimInfo;
+    };
+
+    public type UserClaimInfo = {
+        isClaimActive: Bool;
+        maxClaimableTokens: Text; //stored as Nat, returned as Text
+        lastClaimDate: ?Text; //stored as Int, returned as Text
+        subaccount: ?Blob;
+        isUserBlocked: Bool;
     };
 
     public type PublicationObject = {
@@ -100,6 +109,8 @@ module{
           maxSupply: Nat;
           icpPrice: Nat;
         };
+        isMembersOnly: Bool;
+        scheduledPublishedDate: ?Int;
     };
     public type Post = {
         postId: Text;
@@ -111,6 +122,7 @@ module{
         content: Text;
         isDraft: Bool;
         isPremium: Bool;
+        isMembersOnly: Bool;
         nftCanisterId: ?Text;
 
         // fields stored as Int, but returned to UI as Text
@@ -312,6 +324,7 @@ module{
     public type PostBucketType = {
         postId : Text;
         handle : Text;
+        postOwnerPrincipal: Text; //principal id of the publication if a publicaiton post
         url : Text;
         title : Text;
         subtitle : Text;
@@ -333,6 +346,7 @@ module{
         category : Text;
         wordCount : Text;
         bucketCanisterId : Text;
+        isMembersOnly: Bool;
     };
 
     public type Metadata = {
@@ -397,8 +411,10 @@ module{
             icpPrice: Nat;
             editorPrincipals: [Text]; //to populate the initalMintingAddresses field in NftFactory canister function
         };
+        isMembersOnly: Bool;
         tagNames : [Text];
         caller : Principal;
+        scheduledPublishedDate: ?Int;
     };
 
     public type SaveResultBucket = Result.Result<PostBucketType, Text>;
@@ -408,7 +424,7 @@ module{
         get : (postId : Text) -> async Result.Result<PostBucketType, Text>;
         removePostCategory : (postId : Text) -> async Result.Result<PostBucketType, Text>;
         addPostCategory : (postId : Text, category : Text) -> async Result.Result<PostBucketType, Text>;
-        updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<PostBucketType, Text>;
+        updatePostDraft : (postId : Text, isDraft : Bool) -> async Result.Result<Post, Text>;
         makePostPremium : (postId : Text) -> async Bool;
         getMetadata : (postId : Text, totalSupply : Nat) -> async Result.Result<Metadata, Text>;
         getAllApplauds : query () ->  async [Applaud];
@@ -434,6 +450,64 @@ module{
         let canister : PostBucketCanisterInterface = actor(canisterId);
         return canister;
     };
+
+    //#########################__SUBSCRIPTION__CANISTER__#############################
+    type SubscriptionTimeInterval = {
+        #Weekly;
+        #Monthly;
+        #Annually;
+        #LifeTime;
+    };
+    //payment request returned to the reader
+    type PaymentRequest = {
+        subscriptionEventId: Text;
+        writerPrincipalId: Text;
+        readerPrincipalId: Text;
+        subscriptionTimeInterval: SubscriptionTimeInterval;
+        paymentFee: Text; //stored as Nat, served as Text
+        expirationDate: Int;
+        subaccount: Blob;
+    };
+    type WriterSubscriptionDetails = {
+        writerPrincipalId: Text;
+        paymentReceiverPrincipalId: Text;
+        weeklyFee: ?Text; //stored as Nat, served as Text
+        monthlyFee: ?Text; //stored as Nat, served as Text
+        annuallyFee: ?Text; //stored as Nat, served as Text
+        lifeTimeFee: ?Text; //stored as Nat, served as Text
+        isSubscriptionActive: Bool;
+        writerSubscriptions: [SubscriptionEvent];
+    };
+
+    type SubscriptionEvent = {
+        subscriptionEventId: Text;
+        writerPrincipalId: Text;
+        readerPrincipalId: Text;
+        subscriptionTimeInterval: SubscriptionTimeInterval;
+        paymentFee: Text; //stored as Nat, served as Text
+        startTime: Int;
+        endTime: Int;
+        isWriterSubscriptionActive: Bool;
+    };
+
+    public type ReaderSubscriptionDetails = {
+        readerPrincipalId: Text;
+        readerSubscriptions: [SubscriptionEvent];
+        readerNotStoppedSubscriptionsWriters: [WriterSubscriptionDetails];
+    };
+
+    public type SubscriptionCanisterInterface = actor {
+        isReaderSubscriber : query (writerPrincipalId: Text, readerPrincipalId: Text) -> async Bool;
+        isWriterActivatedSubscription : query (writerPrincipalId: Text) -> async Bool;
+        getPaymentRequestBySubscriptionEventId : query (eventId: Text) -> async Result.Result<PaymentRequest, Text>;
+        completeSubscriptionEvent : (eventId: Text) -> async Result.Result<ReaderSubscriptionDetails, Text>;
+    };
+
+    public func getSubscriptionCanister() : SubscriptionCanisterInterface {
+        let canister : SubscriptionCanisterInterface = actor(ENV.SUBSCRIPTION_CANISTER_ID);
+        return canister;
+    };
+
     //##########################___PUBLICATION_CANISTER___############################
     public type PublicationCanisterInterface = actor {
         getEditorAndWriterPrincipalIds : query () -> async ([Text], [Text]);
@@ -663,6 +737,7 @@ module{
     public type NotificationCanisterInterface = actor {
         createNotification : (notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
         newArticle : (content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
+        disperseBulkSubscriptionNotifications : [(notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent)] -> async Result.Result<(), Text>;
     };
     public func getNotificationCanister() : NotificationCanisterInterface {
         let canister : NotificationCanisterInterface = actor(ENV.NOTIFICATIONS_CANISTER_ID);

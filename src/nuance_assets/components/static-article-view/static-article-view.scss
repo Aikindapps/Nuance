@@ -1,5 +1,6 @@
 .title-post-info-wrapper {
     padding: 0 0 0 25px;
+    
   
     .static-article-view-icon{
       width: 30px;
@@ -23,6 +24,14 @@
       }
   
   }
+  .static-article-members-only{
+    width: 100%;
+
+    .static-members-only-icon{
+        margin-bottom: 80px;
+        padding: 0px 0px 0px 25px;
+        }
+}
   .header-image-static-article-view{
     width: 100%;
     object-fit: contain;

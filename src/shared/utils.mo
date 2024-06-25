@@ -334,9 +334,42 @@ module {
 
     num;
   };
+
+  public func optNatToOptText(nat : ?Nat) : ?Text {
+    switch(nat) {
+      case(?value) {
+        ?Nat.toText(value);
+      };
+      case(null) {
+        return null;
+      };
+    };
+  };
+
+  public func optTextToOptNat(txt : ?Text) : ?Nat {
+    switch(txt) {
+      case(?value) {
+        ?textToNat(value);
+      };
+      case(null) {
+        return null;
+      };
+    };
+  };
+
+
   public func arrayContains(array : [Text], element : Text) : Bool {
     for (el in array.vals()) {
       if (Text.equal(el, element)) {
+        return true;
+      };
+    };
+    return false;
+  };
+
+  public func arrayContainsGeneric<T>(array : [T], element : T, equal: (T, T) -> Bool) : Bool {
+    for (el in array.vals()) {
+      if (equal(el, element)) {
         return true;
       };
     };
@@ -481,6 +514,10 @@ module {
 
   public func createNotification(notificationType : NotificationType, content : NotificationContent) : async Result.Result<(), Text> {
     await NotificationActor().createNotification(notificationType, content);
+  };
+
+  public func disperseBulkSubscriptionNotifications(notifications : [(NotificationType, NotificationContent)]) : async Result.Result<(), Text> {
+    await NotificationActor().disperseBulkSubscriptionNotifications(notifications);
   };
 
   public func newArticle(content : NotificationContent) : async Result.Result<(), Text> {

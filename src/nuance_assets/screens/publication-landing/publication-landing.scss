@@ -311,6 +311,37 @@
     }
   }
 }
+.subscription-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-height: 100%;
+  max-width: 728px;
+  background: white;
+  border-radius: 0px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+    flex-direction: column;
+    align-items: center;
+  overflow-y: scroll;
+
+  &.dark {
+    background: $dark-primary-background-color;
+    color: $dark-primary-text-color;
+    border: none;
+  }
+
+  @media only screen and (max-width: 1089px) {
+    width: 100%;
+    height: 100%;
+    border-radius: 0px;
+    overflow-x: hidden;
+    padding: 10px;
+  }
+}
 
 @media only screen and (max-width: 557px) {
   .publication-landing-wrapper {

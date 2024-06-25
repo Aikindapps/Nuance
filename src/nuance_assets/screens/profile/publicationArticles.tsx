@@ -13,9 +13,15 @@ import { useTheme } from '../../contextes/ThemeContext';
 import './_publication-articles.scss';
 import Button from '../../UI/Button/Button';
 
+import PublicationSubscribersTab from './publication-subscribers-tab';
+import { PublisherStore } from '../../store/publisherStore';
+import { UserStore } from '../../store/userStore';
+import { PostStore } from '../../store/postStore';
+
 const PublicationArticles = () => {
   const navigate = useNavigate();
   const pageSize = 20;
+  const [activeTab, setActiveTab] = useState('articles'); // State to track active tab
   const [publicationHandle, setPublicationHandle] = useState<any>('');
   const [publicationDisplayName, setPublicationDisplayName] = useState<any>('');
   const [publicationHeaderImage, setPublicationHeaderImage] = useState<any>('');
@@ -60,7 +66,7 @@ const PublicationArticles = () => {
     removePublicationPostCategory,
     addPublicationPostCategory,
     updatePublicationPostDraft,
-  } = usePublisherStore((state) => ({
+  } = usePublisherStore((state: PublisherStore) => ({
     publication: state.publication,
     getPublication: state.getPublication,
     getPublicationPosts: state.getPublicationPosts,
@@ -75,7 +81,7 @@ const PublicationArticles = () => {
     getUserFollowersCount,
     userFollowersCount,
     user,
-  } = useUserStore((state) => ({
+  } = useUserStore((state: UserStore) => ({
     userPostCounts: state.userPostCounts,
     getWriterPostCounts: state.getWriterPostCounts,
     writerPostCounts: state.writerPostCounts,
@@ -96,7 +102,7 @@ const PublicationArticles = () => {
     userPostIds,
     getUserPostIds,
     getSavedPostReturnOnly,
-  } = usePostStore((state) => ({
+  } = usePostStore((state: PostStore) => ({
     searchText: state.searchText,
     setSearchText: state.setSearchText,
     searchWithinPublication: state.searchWithinPublication,
@@ -192,9 +198,9 @@ const PublicationArticles = () => {
   }, [window.location.pathname]);
 
   const toggleHandler = async (postId: string, isDraft: boolean) => {
-    console.log('before update')
+    console.log('before update');
     await updatePublicationPostDraft(postId, isDraft, publicationHandle);
-    console.log('after update')
+    console.log('after update');
   };
   const categoryChangeHandler = async (
     post: PostType,
@@ -434,8 +440,8 @@ const PublicationArticles = () => {
           {featureIsLive == false
             ? 'This feature is not yet live! Stay tuned...'
             : userIsNotEditor
-            ? 'You are not an Editor of this publication so you are unauthorized to view this page'
-            : 'You are unauthorized to view this page'}
+              ? 'You are not an Editor of this publication so you are unauthorized to view this page'
+              : 'You are unauthorized to view this page'}
         </h2>
       </div>
     );
@@ -504,11 +510,11 @@ const PublicationArticles = () => {
                   style={
                     context.width < 1089
                       ? {
-                          width: '100px',
-                          height: '25px',
-                          fontSize: '12px',
-                          margin: '0',
-                        }
+                        width: '100px',
+                        height: '25px',
+                        fontSize: '12px',
+                        margin: '0',
+                      }
                       : { width: '115px', margin: '0' }
                   }
                   onClick={() =>
@@ -536,8 +542,8 @@ const PublicationArticles = () => {
                   style={
                     darkTheme
                       ? {
-                          color: colors.darkSecondaryTextColor,
-                        }
+                        color: colors.darkSecondaryTextColor,
+                      }
                       : {}
                   }
                 >
@@ -553,55 +559,64 @@ const PublicationArticles = () => {
             </div>
           </div>
         </div>
-        {showSearchResults ? (
-          <EditorSearchList
-            posts={searchedPosts}
-            loading={loadingSearchResults}
-            loadingMore={searchLoadingMore}
-            loadMoreHandler={handleSearchMore}
-            totalCount={searchTotalCount}
-            searchedTag={searchedTag}
-            lastSearchPhrase={lastSearchPhrase}
-            setShowResults={handleShowSearchResults}
-            user={user}
-            publicationName={publication?.publicationTitle}
-            publicationHandle={publication?.publicationHandle}
-            categoryChangeHandler={categoryChangeHandler}
-            categories={categories}
-            toggleHandler={toggleHandler}
-            sortedByLastModifiedDate={sortedByLastModifiedDateSearchedPosts}
-            sortedByPublishedDate={sortedByPublishedDateSearchedPosts}
-            handleSortByModifiedDate={handleSortByModifiedDateSearchedPosts}
-            handleSortByPublishedDate={handleSortByPublishedDateSearchedPosts}
-            publication={publication}
-            refreshPosts={async (postId: string) => {
-              await refreshPost(postId);
-            }}
-          />
-        ) : (
-          <EditorArticleList
-            displayingPosts={displayingPosts}
-            displayingPostsLoading={displayingPostsLoading}
-            categoryChangeHandler={categoryChangeHandler}
-            categories={categories}
-            toggleHandler={toggleHandler}
-            articlesCount={articlesCount}
-            handleLoadMore={loadMoreHandler}
-            loadingMore={loadingMore}
-            handleSortByModifiedDate={handleSortByModifiedDate}
-            handleSortByPublishedDate={handleSortByPublishedDate}
-            sortedByLastModifiedDate={sortedByLastModifiedDate}
-            sortedByPublishedDate={sortedByPublishedDate}
-            publication={publication}
-            refreshPosts={async (postId: string) => {
-              await refreshPost(postId);
-            }}
-          />
+        <div className={darkTheme ? 'tabs dark' : 'tabs'}>
+          <button onClick={() => setActiveTab('articles')} className={activeTab === 'articles' ? 'active' : darkTheme ? 'dark' : ''}>Articles</button>
+          <button onClick={() => setActiveTab('subscribers')} className={activeTab === 'subscribers' ? 'active' : darkTheme ? 'dark' : ''}>Subscribers</button>
+        </div>
+        {activeTab === 'articles' && (
+          showSearchResults ? (
+            <EditorSearchList
+              posts={searchedPosts}
+              loading={loadingSearchResults}
+              loadingMore={searchLoadingMore}
+              loadMoreHandler={handleSearchMore}
+              totalCount={searchTotalCount}
+              searchedTag={searchedTag}
+              lastSearchPhrase={lastSearchPhrase}
+              setShowResults={handleShowSearchResults}
+              user={user}
+              publicationName={publication?.publicationTitle}
+              publicationHandle={publication?.publicationHandle}
+              categoryChangeHandler={categoryChangeHandler}
+              categories={categories}
+              toggleHandler={toggleHandler}
+              sortedByLastModifiedDate={sortedByLastModifiedDateSearchedPosts}
+              sortedByPublishedDate={sortedByPublishedDateSearchedPosts}
+              handleSortByModifiedDate={handleSortByModifiedDateSearchedPosts}
+              handleSortByPublishedDate={handleSortByPublishedDateSearchedPosts}
+              publication={publication}
+              refreshPosts={async (postId: string) => {
+                await refreshPost(postId);
+              }}
+            />
+          ) : (
+            <EditorArticleList
+              displayingPosts={displayingPosts}
+              displayingPostsLoading={displayingPostsLoading}
+              categoryChangeHandler={categoryChangeHandler}
+              categories={categories}
+              toggleHandler={toggleHandler}
+              articlesCount={articlesCount}
+              handleLoadMore={loadMoreHandler}
+              loadingMore={loadingMore}
+              handleSortByModifiedDate={handleSortByModifiedDate}
+              handleSortByPublishedDate={handleSortByPublishedDate}
+              sortedByLastModifiedDate={sortedByLastModifiedDate}
+              sortedByPublishedDate={sortedByPublishedDate}
+              publication={publication}
+              refreshPosts={async (postId: string) => {
+                await refreshPost(postId);
+              }}
+            />
+          )
         )}
+        {activeTab === 'subscribers' && <PublicationSubscribersTab publicationInfo={publication} />}
       </div>
       <Footer />
     </div>
   );
 };
-
 export default PublicationArticles;
+
+
+

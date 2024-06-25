@@ -11,11 +11,8 @@ import { UserListItem } from 'src/nuance_assets/types/types';
 
 const Followers = () => {
   // This component is a child of profileSidebar
-
   usePostStore((state) => state);
   const darkTheme = useTheme();
-  const [page, setPage] = useState(0);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [myFollowers, setMyFollowers] = useState<UserListItem[]>([]);
 
   const { user, getAuthor, author, getMyFollowers } = useUserStore((state) => ({

@@ -43,12 +43,12 @@ actor class Publisher() = this {
     //data type aliases
     type List<T> = List.List<T>;
     type Publication = Types.Publication;
-    type PostSaveModel = PostCoreTypes.PostSaveModel;
+    type PostSaveModel = CanisterDeclarations.PostSaveModel;
     type PostSaveResult = PostCoreTypes.SaveResult;
     type Metadata = PostCoreTypes.Metadata;
     type User = CanisterDeclarations.User;
-    type Post = PostCoreTypes.Post;
-    type PostKeyProperties = PostCoreTypes.PostKeyProperties;
+    type Post = CanisterDeclarations.Post;
+    type PostKeyProperties = CanisterDeclarations.PostKeyProperties;
     type CrossCanisterReturn = Types.CrossCanisterReturn;
     type PostCrossCanisterReturn = Types.PostCrossCanisterReturn;
     type UserCrossCanisterReturn = Types.UserCrossCanisterReturn;
@@ -1476,6 +1476,7 @@ actor class Publisher() = this {
                             headerImage = postBucketType.headerImage;
                             isDraft = postBucketType.isDraft;
                             isPremium = postBucketType.isPremium;
+                            isMembersOnly = postBucketType.isMembersOnly;
                             nftCanisterId = postBucketType.nftCanisterId;
                             isPublication = postBucketType.isPublication;
                             modified = postBucketType.modified;
@@ -1544,6 +1545,7 @@ actor class Publisher() = this {
                             headerImage = postBucketType.headerImage;
                             isDraft = postBucketType.isDraft;
                             isPremium = postBucketType.isPremium;
+                            isMembersOnly = postBucketType.isMembersOnly;
                             nftCanisterId = postBucketType.nftCanisterId;
                             isPublication = postBucketType.isPublication;
                             modified = postBucketType.modified;
@@ -1569,6 +1571,7 @@ actor class Publisher() = this {
     };
 
     public shared ({ caller }) func updatePublicationPostDraft(postId : Text, isDraft : Bool) : async Result.Result<Post, Text> {
+        Debug.print("1");
         if (isAnonymous(caller)) {
             return #err("Cannot use this method anonymously.");
         };
@@ -1579,18 +1582,20 @@ actor class Publisher() = this {
         };
 
         var publicationCanisterId = idInternal();
-
+        Debug.print("2");
         if (not isEditor(caller, Principal.toText(publicationCanisterId))) {
             return #err(Unauthorized);
         };
 
         let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        Debug.print("3");
         switch (await PostCoreCanister.getPostKeyProperties(postId)) {
             case (#ok(keyProperties)) {
-                let bucketActor = actor (keyProperties.bucketCanisterId) : PostBucketInterface;
+                Debug.print("4");
+                let bucketActor = CanisterDeclarations.getPostBucketCanister(keyProperties.bucketCanisterId);
 
                 let bucketCanisterReturn = await bucketActor.updatePostDraft(postId, isDraft);
-
+                Debug.print("5");
                 switch (bucketCanisterReturn) {
                     case (#ok(postBucketType)) {
                         return #ok({
@@ -1605,6 +1610,7 @@ actor class Publisher() = this {
                             headerImage = postBucketType.headerImage;
                             isDraft = postBucketType.isDraft;
                             isPremium = postBucketType.isPremium;
+                            isMembersOnly = postBucketType.isMembersOnly;
                             nftCanisterId = postBucketType.nftCanisterId;
                             isPublication = postBucketType.isPublication;
                             modified = postBucketType.modified;

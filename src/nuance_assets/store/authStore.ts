@@ -5,7 +5,12 @@ import { Principal } from '@dfinity/principal';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { Usergeek } from 'usergeek-ic-js';
 import { AnonymousIdentity, Identity } from '@dfinity/agent';
-import { ToastType, toast, toastError, showBlockingToast } from '../services/toastService';
+import {
+  ToastType,
+  toast,
+  toastError,
+  showBlockingToast,
+} from '../services/toastService';
 import { useUserStore, usePostStore } from './';
 import { StoicIdentity } from 'ic-stoic-identity';
 import { PairInfo, UserWallet } from '../types/types';
@@ -18,11 +23,15 @@ import {
   getUserActor,
 } from '../services/actorService';
 import {
+  ckUSDC_CANISTER_ID,
+  NUA_CANISTER_ID,
   SUPPORTED_CANISTER_IDS,
   SUPPORTED_TOKENS,
   TokenBalance,
 } from '../shared/constants';
+import { canisterId as userCanisterId } from '../../declarations/User';
 import { PairInfoExt } from '../services/sonic/Sonic.did';
+import { getPriceBetweenTokens, truncateToDecimalPlace } from '../shared/utils';
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
   window.location.origin.includes('127.0.0.1');
@@ -61,15 +70,15 @@ const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
 
 declare global {
   interface Navigator {
-      brave: {
-          isBrave: () => Promise<boolean>;
-      }
+    brave: {
+      isBrave: () => Promise<boolean>;
+    };
   }
 }
 async function detectBrave() {
-  if (navigator.brave){
-  const isBrave = await navigator.brave.isBrave();
-  return isBrave;
+  if (navigator.brave) {
+    const isBrave = await navigator.brave.isBrave();
+    return isBrave;
   } else {
     return false;
   }
@@ -80,9 +89,10 @@ async function isChrome() {
   let isBrave = await detectBrave();
 
   // Basic check for Chrome in userAgent
-  var isChromeUA = userAgent.includes('Chrome') && !userAgent.includes('Edg') && !isBrave;
+  var isChromeUA =
+    userAgent.includes('Chrome') && !userAgent.includes('Edg') && !isBrave;
   var hasChromeFeatures = 'chrome' in window;
-  
+
   return isChromeUA && hasChromeFeatures;
 }
 
@@ -103,6 +113,7 @@ export interface AuthStore {
   readonly redirectScreen: string;
   readonly userWallet: UserWallet | undefined;
   readonly tokenBalances: TokenBalance[];
+  readonly restrictedTokenBalance: number;
   readonly sonicTokenPairs: PairInfo[];
   login: (loginMethod: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -130,6 +141,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   redirectScreen: '/',
   userWallet: undefined,
   tokenBalances: [],
+  restrictedTokenBalance: 0,
   sonicTokenPairs: [],
 
   redirect: (_screen: string) => {
@@ -138,7 +150,12 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   fetchTokenBalances: async (): Promise<void> => {
     let wallet = await get().getUserWallet();
-
+    let user = useUserStore.getState().user;
+    //fire and forget
+    useUserStore.getState().checkMyClaimNotification();
+    if (!user) {
+      return;
+    }
     if (wallet.principal.length === 0) {
       return;
     }
@@ -157,6 +174,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         })
       );
     }
+
     let sonicTokenPairsPromises = [];
     for (const supportedTokenCanisterId of SUPPORTED_CANISTER_IDS) {
       sonicTokenPairsPromises.push(
@@ -166,10 +184,30 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         )
       );
     }
-
-    let [tokenBalancesResponses, sonicTokenPairsResponses] = await Promise.all([
+    //add the ICP / ckUSDC pair
+    sonicTokenPairsPromises.push(
+      (await getSonicActor()).getPair(
+        Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
+        Principal.fromText(ckUSDC_CANISTER_ID) //ckUSDC canister id
+      )
+    );
+    let [
+      tokenBalancesResponses,
+      sonicTokenPairsResponses,
+      restrictedTokenBalance,
+    ] = await Promise.all([
       Promise.all(tokenBalancesPromises),
       Promise.all(sonicTokenPairsPromises),
+      user.claimInfo.subaccount.length === 0
+        ? 0
+        : new Uint8Array(user.claimInfo.subaccount[0]).length === 0
+        ? 0
+        : (
+            await getIcrc1Actor(NUA_CANISTER_ID)
+          ).icrc1_balance_of({
+            owner: Principal.fromText(userCanisterId),
+            subaccount: [new Uint8Array(user.claimInfo.subaccount[0])],
+          }),
     ]);
     let tokenBalances: TokenBalance[] = tokenBalancesResponses.map(
       (balance, index) => {
@@ -196,8 +234,12 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         });
       }
     });
-
     set({ tokenBalances, sonicTokenPairs });
+
+    //if the subaccount value is not empty, set the restricted token balance value
+    if (user.claimInfo.subaccount.length !== 0) {
+      set({ restrictedTokenBalance: Number(restrictedTokenBalance) });
+    }
   },
 
   updateLastLogin: async (): Promise<void> => {
@@ -251,10 +293,11 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               'Must enable all cookies for Stoic wallet to work with Brave browser'
             )
           : console.log('Not a brave browser');
-        
-        await isChrome() ? await new Promise((resolve) => showBlockingToast( '', resolve)) : console.log('Not a chrome browser');  
-        window.location.href = '/register';
 
+        (await isChrome())
+          ? await new Promise((resolve) => showBlockingToast('', resolve))
+          : console.log('Not a chrome browser');
+        window.location.href = '/register';
       } else {
         //user fetched successfully, get the token balances
         await get().fetchTokenBalances();

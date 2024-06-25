@@ -7,6 +7,7 @@ import {
   NUA_CANISTER_ID,
   SupportedTokenSymbol,
   ckBTC_CANISTER_ID,
+  ckUSDC_CANISTER_ID,
   getDecimalsByTokenSymbol,
   icons,
 } from './constants';
@@ -394,6 +395,26 @@ export const convertImagesToUrls = async (
   return { headerUrl, contentWithUrls: c };
 };
 
+export function areUint8ArraysEqual(
+  arr1: Uint8Array | number[] | undefined,
+  arr2: Uint8Array | number[] | undefined
+): boolean {
+  if (!arr1 || !arr2) {
+    return false;
+  }
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export const getNuaEquivalance = (
   tokenPairs: PairInfo[],
   symbol: SupportedTokenSymbol,
@@ -417,8 +438,8 @@ export const getNuaEquivalance = (
 
 export const getPriceBetweenTokens = (
   tokenPairs: PairInfo[],
-  token0Symbol: SupportedTokenSymbol,
-  token1Symbol: SupportedTokenSymbol,
+  token0Symbol: 'ICP' | 'ckBTC' | 'NUA' | 'ckUSDC',
+  token1Symbol: 'ICP' | 'ckBTC' | 'NUA' | 'ckUSDC',
   amount: number
 ): number => {
   if (token0Symbol === token1Symbol) {
@@ -445,6 +466,9 @@ export const getPriceBetweenTokens = (
     case 'ckBTC':
       token0 = ckBTC_CANISTER_ID;
       break;
+    case 'ckUSDC':
+      token0 = ckUSDC_CANISTER_ID;
+      break;
   }
   switch (token1Symbol) {
     case 'NUA':
@@ -455,6 +479,9 @@ export const getPriceBetweenTokens = (
       break;
     case 'ckBTC':
       token1 = ckBTC_CANISTER_ID;
+      break;
+    case 'ckUSDC':
+      token1 = ckUSDC_CANISTER_ID;
       break;
   }
   let poolIncludingUndefined = tokenPairs.map((poolValue) => {
@@ -493,15 +520,9 @@ export const getPriceBetweenTokens = (
 
       //amountOut means the ICP equivalance of the other token
       if (token0Symbol === 'ICP') {
-        return (
-          (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) *
-          amountOut
-        );
+        return (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) * amountOut;
       } else {
-        return (
-          (amount / amountOut) *
-          Math.pow(10, getDecimalsByTokenSymbol(token0Symbol))
-        );
+        return (amount / amountOut) * Math.pow(10, getDecimalsByTokenSymbol(token0Symbol));
       }
     } else {
       //the pool not found -> not fetched yet return 0
