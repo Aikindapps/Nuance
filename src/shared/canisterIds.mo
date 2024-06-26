@@ -11,5 +11,5 @@ module {
   public let NFT_FACTORY_CANISTER_ID = "kc4mb-myaaa-aaaaf-qajpq-cai";
   public let PUBLICATION_MANAGEMENT_CANISTER_ID = "kq23y-aiaaa-aaaaf-qajmq-cai";
   public let NOTIFICATIONS_CANISTER_ID = "55qxh-qqaaa-aaaap-qhfia-cai";
-  public let SUBSCRIPTION_CANISTER_ID = "cbopz-duaaa-aaaaa-qaaka-cai";
+  public let SUBSCRIPTION_CANISTER_ID = "s6qib-6qaaa-aaaaf-qalwa-cai";
 };
