@@ -11,6 +11,9 @@
   "Metrics": {
     "ic": "xjlvo-hyaaa-aaaam-qbcga-cai"
   },
+  "Notifications": {
+    "ic": "55qxh-qqaaa-aaaap-qhfia-cai"
+  },
   "PostBucket": {
     "ic": "3uy7l-ayaaa-aaaaf-qakhq-cai"
   },
@@ -23,13 +26,13 @@
   "Storage": {
     "ic": "y2pkg-ciaaa-aaaaf-qagbq-cai"
   },
+  "Subscription": {
+    "ic": "s6qib-6qaaa-aaaaf-qalwa-cai"
+  },
   "User": {
     "ic": "rtqeo-eyaaa-aaaaf-qaana-cai"
   },
   "nuance_assets": {
     "ic": "exwqn-uaaaa-aaaaf-qaeaa-cai"
-  },
-  "Notifications": {
-    "ic": "55qxh-qqaaa-aaaap-qhfia-cai"
   }
 }
