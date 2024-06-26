@@ -74,7 +74,8 @@ jobs:
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
             "Metrics": { "ic": "'"$METRICS"'" },
-            "Notifications": { "ic": "'"$NOTIFICATIONS"'" }
+            "Notifications": { "ic": "'"$NOTIFICATIONS"'",
+            "Subscription": { "ic": "'"$SUBSCRIPTION"'"}
           }' > canister_ids.json
           echo '{
             "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
@@ -109,6 +110,7 @@ jobs:
             public let PUBLICATION_MANAGEMENT_CANISTER_ID = "'"$PUBLICATIONMANAGEMENT"'";
             public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
             public let NOTIFICATIONS_CANISTER_ID = "'"$NOTIFICATIONS"'";
+            public let SUBSCRIPTION_CANISTER_ID = "'"$SUBSCRIPTION"'";
           };' > src/shared/canisterIds.mo
 
         env:
@@ -126,6 +128,7 @@ jobs:
           PUBLICATIONMANAGEMENT: ${{ secrets.UAT_PUBLICATIONMANAGEMENT }}
           PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
           NOTIFICATIONS: ${{ secrets.UAT_NOTIFICATIONS }}
+          SUBSCRIPTION: ${{ secrets.UAT_SUBSCRIPTION }}
 
       - name: Generate canister_ids.json in for NFTs and Publications
         run: |

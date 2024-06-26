@@ -14,6 +14,7 @@ dfx generate
 dfx build --all --network $NETWORK
 dfx deploy nuance_assets --network $NETWORK -y
 dfx deploy Notifications --network $NETWORK -y # deploy here until officially added to SNS
+dfx deploy Subscription --network $NETWORK -y # deploy here until officially added to SNS
 node scripts/upgrades/bucketCanisterUpgrade.js --multi --$NETWORK
 
 echo ""
