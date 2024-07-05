@@ -3,8 +3,8 @@ import Button from '../../UI/Button/Button';
 import { useUserStore } from '../../store';
 import { images } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
-import {Context as ModalContext} from '../../contextes/ModalContext'
-
+import { Context as ModalContext } from '../../contextes/ModalContext';
+import { useTheme } from '../../contextes/ThemeContext';
 
 type FollowAuthorProps = {
   AuthorHandle: string;
@@ -18,8 +18,9 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
   const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const context = useContext(Context)
-  const modalContext = useContext(ModalContext)
+  const context = useContext(Context);
+  const modalContext = useContext(ModalContext);
+  const darkTheme = useTheme();
 
   const { followAuthor, unfollowAuthor } = useUserStore((state) => ({
     followAuthor: state.followAuthor,
@@ -52,7 +53,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
   }
 
   function handleRegister() {
-    modalContext?.openModal('Login')
+    modalContext?.openModal('Login');
   }
 
   useEffect(() => {
@@ -68,8 +69,9 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
           styleType='secondary'
           type='button'
           style={
-            props.isPublication ? { width: '180px', margin: '10px 0' }
-            : { width: '110px', margin: '10px 0' }
+            props.isPublication
+              ? { width: '180px', margin: '10px 0' }
+              : { width: '110px', margin: '10px 0' }
           }
           onClick={handleUnfollow}
           disabled={loading}
@@ -80,11 +82,12 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
         </Button>
       ) : (
         <Button
-          styleType='secondary'
+          styleType={darkTheme ? 'secondary' : 'primary-1'}
           type='button'
           style={
-            props.isPublication ? { width: '180px', margin: '10px 0' }
-            : { width: '96px', margin: '10px 0' }
+            props.isPublication
+              ? { width: '180px', margin: '10px 0' }
+              : { width: '96px', margin: '10px 0' }
           }
           onClick={props.user ? handleFollow : handleRegister}
           disabled={loading}
