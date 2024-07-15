@@ -1521,9 +1521,18 @@ actor User {
         let WEEK : Int = 86400000000000 * 7;
         let now = Time.now();
         //check if at least one week has passed until the last time the user has claimed tokens
-        let lastClaimDate = U.safeGet(lastClaimDateHashMap, principal, now);
-        if(lastClaimDate + WEEK <= now){
-          return #err("Already claimed in last week.");
+        switch(lastClaimDateHashMap.get(principal)) {
+          case(?lastClaimDate) {
+            //not the first time user claims
+            //compare the values
+            if(lastClaimDate + WEEK > now){
+              return #err("Already claimed in last week.");
+            };
+          };
+          case(null) {
+            //it's the first time user try to claim
+            //nothing to compare
+          };
         };
 
         let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);

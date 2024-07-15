@@ -46,7 +46,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
     type: keyof WriterSubscriptionDetails,
     value: number
   ) => {
-    if (value > 0) {
+    if (value >= 0) {
       setSubscriptionDetails((prevOptions) => ({
         ...prevOptions,
         [type]: [value],

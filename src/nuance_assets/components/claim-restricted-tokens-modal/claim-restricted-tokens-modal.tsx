@@ -28,6 +28,14 @@ export const ClaimRestrictedTokensModal = () => {
 
   const [page, setPage] = useState<ClaimModalPage>('claim');
 
+  const [allowedToRequest, setAllowedToRequest] = useState(0);
+  const getAllowedToRequest = () => {
+    return (
+      (50 * Math.pow(10, 8) - restrictedTokenBalance / Math.pow(10, 8)) /
+      Math.pow(10, 8)
+    );
+  };
+
   if (page === 'claim') {
     return (
       <div
@@ -92,12 +100,7 @@ export const ClaimRestrictedTokensModal = () => {
             <div className='amount-item'>
               <div className='title'>Allowed to request</div>
               <div className='amount'>
-                {'+ ' +
-                  (
-                    (50 * Math.pow(10, 8) -
-                      restrictedTokenBalance / Math.pow(10, 8)) /
-                    Math.pow(10, 8)
-                  ).toFixed(0)}
+                {'+ ' + getAllowedToRequest().toFixed(0)}
               </div>
               <div className='subtitle'>Free NUA</div>
             </div>
@@ -163,6 +166,7 @@ export const ClaimRestrictedTokensModal = () => {
               onClick={async () => {
                 if (termsAccepted && !loading) {
                   setLoading(true);
+                  setAllowedToRequest(getAllowedToRequest());
                   let response = await claimTokens();
                   setLoading(false);
                   //if successful, navigate to congrats page
@@ -218,7 +222,7 @@ export const ClaimRestrictedTokensModal = () => {
           }
           className='information-text'
         >
-          We have transferred the equivalent of 14 NUA to applaud from your
+          We have transferred the equivalent of {allowedToRequest.toFixed(0)} NUA to applaud from your
           wallet to @{user?.handle}.
         </p>
         <div className='token-amounts-and-terms-wrapper'>
