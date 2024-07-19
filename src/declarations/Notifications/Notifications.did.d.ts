@@ -110,7 +110,9 @@ export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
 export type Result_2 = { 'ok' : [Array<Notifications>, bigint] } |
   { 'err' : string };
-export type Result_3 = { 'ok' : Array<string> } |
+export type Result_3 = { 'ok' : UserNotificationSettings } |
+  { 'err' : string };
+export type Result_4 = { 'ok' : Array<string> } |
   { 'err' : string };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface UserNotificationSettings {
@@ -146,16 +148,17 @@ export interface _SERVICE {
     [Array<[NotificationType__1, NotificationContent]>],
     Result
   >,
-  'getAdmins' : ActorMethod<[], Result_3>,
+  'getAdmins' : ActorMethod<[], Result_4>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_3>,
+  'getCgUsers' : ActorMethod<[], Result_4>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
+  'getUserNotificationSettings' : ActorMethod<[], Result_3>,
   'getUserNotifications' : ActorMethod<[string, string], Result_2>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'markNotificationAsRead' : ActorMethod<[Array<string>], Result>,

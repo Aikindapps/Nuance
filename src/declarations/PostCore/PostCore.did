@@ -360,6 +360,7 @@ service : {
   migrateModclubInterface: () -> (Result_2);
   migratePremiumArticleFromOldArch: () -> (Result_5);
   modClubCallback: (ContentResult) -> () oneway;
+  refreshUserPostIds: (text) -> (Result_3);
   registerAdmin: (text) -> (Result_1);
   registerCanister: (text) -> (Result_1);
   registerCgUser: (text) -> (Result_1);

@@ -87,6 +87,10 @@ export interface PostBucket {
     [string, string, string],
     Result_11
   >,
+  'debugSetCreatorFieldAndAddPostIdToUser' : ActorMethod<
+    [string, string],
+    Result_6
+  >,
   'delete' : ActorMethod<[string], Result_4>,
   'deleteComment' : ActorMethod<[string], Result_5>,
   'deleteUserPosts' : ActorMethod<[string], Result_4>,
@@ -94,9 +98,11 @@ export interface PostBucket {
   'dumpIds' : ActorMethod<[], Result_3>,
   'dumpPosts' : ActorMethod<[], Result_3>,
   'dumpUserIds' : ActorMethod<[], Result_3>,
+  'fixEmptyCreatorFields' : ActorMethod<[string, string], Result_4>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
   'getAdmins' : ActorMethod<[], Result_9>,
   'getAllApplauds' : ActorMethod<[], Array<Applaud>>,
+  'getAllNotMigratedCreatorFields' : ActorMethod<[], Array<string>>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
   'getApplaudById' : ActorMethod<[string], Result_11>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
@@ -130,6 +136,7 @@ export interface PostBucket {
   'getTotalPostCount' : ActorMethod<[], bigint>,
   'getTrustedCanisters' : ActorMethod<[], Result_9>,
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
+  'getUserPostIds' : ActorMethod<[string], Array<string>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
   'initializeBucketCanister' : ActorMethod<
     [

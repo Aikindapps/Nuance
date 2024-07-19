@@ -15,6 +15,7 @@ import { icons } from '../../shared/constants';
 import Toggle from '../../../nuance_assets/UI/toggle/toggle';
 import { colors } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
+import { get } from 'lodash';
 
 type NotificationsSidebarProps = {};
 
@@ -79,6 +80,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     totalNotificationCount,
     markAllNotificationsAsRead,
     updateUserNotificationSettings,
+    getUserNotificationSettings,
   } = useUserStore((state) => ({
     user: state.user,
     getUserNotifications: state.getUserNotifications,
@@ -90,6 +92,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     loadMoreNotifications: state.loadMoreNotifications,
     totalNotificationCount: state.totalNotificationCount,
     updateUserNotificationSettings: state.updateUserNotificationSettings,
+    getUserNotificationSettings: state.getUserNotificationSettings,
   }));
 
   const { isLoggedIn } = useAuthStore((state) => ({
@@ -151,6 +154,32 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
 
     return () => clearInterval(intervalId);
   }, [isLoggedIn, isSidebarOpen, modalContext?.isSidebarOpen, user]);
+
+  //get user notification settings
+  async function populateUserNotificationSettings() {
+    if (isLoggedIn) {
+
+      const settings = await getUserNotificationSettings();
+      try {
+        setCommentsReplies(get(settings, 'newCommentOnMyArticle', true));
+        setApplauseForMe(get(settings, 'tipReceived', true));
+        setNewArticleByAuthor(get(settings, 'newArticleByFollowedWriter', true));
+        setNewArticleOnTopic(get(settings, 'newArticleByFollowedTag', true));
+        setNewFollower(get(settings, 'newFollower', true));
+        setPremiumArticleSold(get(settings, 'premiumArticleSold', true));
+      } catch (error) {
+        console.error('Error populating user notification settings:', error);
+      }
+    }
+  }
+
+
+  useEffect(() => {
+    if (user) {
+      //initial settings, on login/load
+      populateUserNotificationSettings();
+    }
+  }, [user]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

@@ -17,10 +17,15 @@ type UserNotificationSettings =
    youUnsubscribedFromAuthor: bool;
  };
 type UpdateCallsAggregatedData = vec nat64;
-type Result_3 = 
+type Result_4 = 
  variant {
    err: text;
    ok: vec text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: UserNotificationSettings;
  };
 type Result_2 = 
  variant {
@@ -180,13 +185,14 @@ service : {
           NotificationType__1;
           NotificationContent;
         }) -> (Result);
-  getAdmins: () -> (Result_3) query;
+  getAdmins: () -> (Result_4) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
-  getCgUsers: () -> (Result_3) query;
+  getCgUsers: () -> (Result_4) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
+  getUserNotificationSettings: () -> (Result_3) query;
   getUserNotifications: (text, text) -> (Result_2) query;
   isThereEnoughMemory: () -> (bool) query;
   markNotificationAsRead: (vec text) -> (Result);

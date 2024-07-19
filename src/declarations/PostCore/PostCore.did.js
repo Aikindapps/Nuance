@@ -402,6 +402,7 @@ export const idlFactory = ({ IDL }) => {
     'migrateModclubInterface' : IDL.Func([], [Result_2], []),
     'migratePremiumArticleFromOldArch' : IDL.Func([], [Result_5], []),
     'modClubCallback' : IDL.Func([ContentResult], [], ['oneway']),
+    'refreshUserPostIds' : IDL.Func([IDL.Text], [Result_3], []),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCanister' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_1], []),

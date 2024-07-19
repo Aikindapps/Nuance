@@ -209,6 +209,7 @@ export interface UserStore {
   updateUserNotificationSettings: (
     notificationSettings: UserNotificationSettings
   ) => Promise<void>;
+  getUserNotificationSettings: () => void;
   claimTokens: () => Promise<boolean | void>;
   spendRestrictedTokensForTipping: (
     postId: string,
@@ -779,6 +780,21 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       }
     }
   },
+
+  getUserNotificationSettings: async (): Promise<UserNotificationSettings | undefined> => {
+      try {
+        const result = await (await getNotificationsActor()).getUserNotificationSettings();
+        if (Err in result) {
+          toastError(result.err);
+        } else {
+          return result.ok;
+        }
+      } catch (err) {
+        handleError(err, Unexpected);
+      }
+      return undefined;
+    },
+
   //users can call this method to claim their restricted tokens
   claimTokens: async (): Promise<boolean | void> => {
     try {

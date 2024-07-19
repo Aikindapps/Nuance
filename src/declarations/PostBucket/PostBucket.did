@@ -166,6 +166,7 @@ type PostBucket =
    buildCommentUrl: (text) -> (text) query;
    checkTipping: (text) -> ();
    checkTippingByTokenSymbol: (text, text, text) -> (Result_11);
+   debugSetCreatorFieldAndAddPostIdToUser: (text, text) -> (Result_6);
    delete: (text) -> (Result_4);
    deleteComment: (text) -> (Result_5);
    deleteUserPosts: (text) -> (Result_4);
@@ -173,9 +174,11 @@ type PostBucket =
    dumpIds: () -> (Result_3);
    dumpPosts: () -> (Result_3);
    dumpUserIds: () -> (Result_3);
+   fixEmptyCreatorFields: (text, text) -> (Result_4);
    generatePublishedDates: () -> ();
    getAdmins: () -> (Result_9) query;
    getAllApplauds: () -> (vec Applaud) query;
+   getAllNotMigratedCreatorFields: () -> (vec text) query;
    getAllRejected: () -> (vec record {
                                 text;
                                 text;
@@ -207,6 +210,7 @@ type PostBucket =
    getTotalPostCount: () -> (nat) query;
    getTrustedCanisters: () -> (Result_9) query;
    getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
+   getUserPostIds: (text) -> (vec text) query;
    getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
    initializeBucketCanister: (vec text, vec text, vec text,
     vec record {

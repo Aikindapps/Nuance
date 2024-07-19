@@ -296,6 +296,7 @@ export interface _SERVICE {
   'migrateModclubInterface' : ActorMethod<[], Result_2>,
   'migratePremiumArticleFromOldArch' : ActorMethod<[], Result_5>,
   'modClubCallback' : ActorMethod<[ContentResult], undefined>,
+  'refreshUserPostIds' : ActorMethod<[string], Result_3>,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCanister' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,
