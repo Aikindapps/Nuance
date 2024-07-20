@@ -187,6 +187,11 @@ export const idlFactory = ({ IDL }) => {
         [Result_11],
         [],
       ),
+    'debugSetCreatorFieldAndAddPostIdToUser' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [Result_6],
+        [],
+      ),
     'delete' : IDL.Func([IDL.Text], [Result_4], []),
     'deleteComment' : IDL.Func([IDL.Text], [Result_5], []),
     'deleteUserPosts' : IDL.Func([IDL.Text], [Result_4], []),
@@ -194,9 +199,15 @@ export const idlFactory = ({ IDL }) => {
     'dumpIds' : IDL.Func([], [Result_3], []),
     'dumpPosts' : IDL.Func([], [Result_3], []),
     'dumpUserIds' : IDL.Func([], [Result_3], []),
+    'fixEmptyCreatorFields' : IDL.Func([IDL.Text, IDL.Text], [Result_4], []),
     'generatePublishedDates' : IDL.Func([], [], []),
     'getAdmins' : IDL.Func([], [Result_9], ['query']),
     'getAllApplauds' : IDL.Func([], [IDL.Vec(Applaud)], ['query']),
+    'getAllNotMigratedCreatorFields' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getAllRejected' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
@@ -252,6 +263,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Applaud)],
         ['query'],
       ),
+    'getUserPostIds' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
     'getUserPosts' : IDL.Func(
         [IDL.Text, IDL.Bool],
         [IDL.Vec(PostBucketType__1)],

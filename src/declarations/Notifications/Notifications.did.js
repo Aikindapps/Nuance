@@ -33,7 +33,7 @@ export const idlFactory = ({ IDL }) => {
     'authorPrincipal' : IDL.Principal,
   });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_4 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const MetricsGranularity = IDL.Variant({
     'hourly' : IDL.Null,
     'daily' : IDL.Null,
@@ -74,6 +74,27 @@ export const idlFactory = ({ IDL }) => {
   });
   const CanisterMetrics = IDL.Record({ 'data' : CanisterMetricsData });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
+  const UserNotificationSettings = IDL.Record({
+    'premiumArticleSold' : IDL.Bool,
+    'tipReceived' : IDL.Bool,
+    'authorGainsNewSubscriber' : IDL.Bool,
+    'authorExpiredSubscription' : IDL.Bool,
+    'authorLosesSubscriber' : IDL.Bool,
+    'newCommentOnFollowedArticle' : IDL.Bool,
+    'youSubscribedToAuthor' : IDL.Bool,
+    'newCommentOnMyArticle' : IDL.Bool,
+    'youUnsubscribedFromAuthor' : IDL.Bool,
+    'newFollower' : IDL.Bool,
+    'readerExpiredSubscription' : IDL.Bool,
+    'newArticleByFollowedWriter' : IDL.Bool,
+    'newArticleByFollowedTag' : IDL.Bool,
+    'faucetClaimAvailable' : IDL.Bool,
+    'expiredSubscription' : IDL.Bool,
+  });
+  const Result_3 = IDL.Variant({
+    'ok' : UserNotificationSettings,
+    'err' : IDL.Text,
+  });
   const NotificationContent__1 = IDL.Record({
     'url' : IDL.Text,
     'token' : IDL.Text,
@@ -118,23 +139,6 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
-  const UserNotificationSettings = IDL.Record({
-    'premiumArticleSold' : IDL.Bool,
-    'tipReceived' : IDL.Bool,
-    'authorGainsNewSubscriber' : IDL.Bool,
-    'authorExpiredSubscription' : IDL.Bool,
-    'authorLosesSubscriber' : IDL.Bool,
-    'newCommentOnFollowedArticle' : IDL.Bool,
-    'youSubscribedToAuthor' : IDL.Bool,
-    'newCommentOnMyArticle' : IDL.Bool,
-    'youUnsubscribedFromAuthor' : IDL.Bool,
-    'newFollower' : IDL.Bool,
-    'readerExpiredSubscription' : IDL.Bool,
-    'newArticleByFollowedWriter' : IDL.Bool,
-    'newArticleByFollowedTag' : IDL.Bool,
-    'faucetClaimAvailable' : IDL.Bool,
-    'expiredSubscription' : IDL.Bool,
-  });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
@@ -154,17 +158,18 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         [],
       ),
-    'getAdmins' : IDL.Func([], [Result_3], ['query']),
+    'getAdmins' : IDL.Func([], [Result_4], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
         [IDL.Opt(CanisterMetrics)],
         ['query'],
       ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
-    'getCgUsers' : IDL.Func([], [Result_3], ['query']),
+    'getCgUsers' : IDL.Func([], [Result_4], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
+    'getUserNotificationSettings' : IDL.Func([], [Result_3], ['query']),
     'getUserNotifications' : IDL.Func(
         [IDL.Text, IDL.Text],
         [Result_2],

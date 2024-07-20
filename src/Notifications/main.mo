@@ -213,6 +213,38 @@ actor Notifications {
 // key: principalId, value: UserNotificationSettings
 stable var userNotificationSettings = Map.new<Principal, UserNotificationSettings>();
 
+public shared query ({caller}) func getUserNotificationSettings() : async Result.Result<UserNotificationSettings, Text> {
+    if (isAnonymous(caller)) {
+        return #err("Cannot use this method anonymously.");
+    };
+
+    let settings = Map.get(userNotificationSettings, phash, caller);
+    switch (settings) {
+        case null {
+            #ok({
+                newCommentOnMyArticle = true;
+                newCommentOnFollowedArticle = true;
+                newArticleByFollowedWriter = true;
+                newArticleByFollowedTag = true;
+                newFollower = true;
+                tipReceived = true;
+                premiumArticleSold = true;
+                authorGainsNewSubscriber = true;
+                youSubscribedToAuthor = true;
+                authorLosesSubscriber = true;
+                youUnsubscribedFromAuthor = true;
+                authorExpiredSubscription = true;
+                readerExpiredSubscription = true;
+                faucetClaimAvailable = true;
+                expiredSubscription = true;
+            });
+        };
+        case (?settings) {
+            #ok(settings);
+        };
+    };
+};
+
 // notifications are direct or broadcast, both are stored in nested hashmaps, sorted by principalId
 
 //Broadcasts will be added to seperate hashmaps for bulk distribution when we have a lot of users
