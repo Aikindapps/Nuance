@@ -53,9 +53,6 @@ export const ClapModal = (props: { post: PostType }) => {
   //page 0 -> input page
   //page 1 -> congratulations page
   const [page, setPage] = useState(0);
-  const [nuaConversionPrice, setNuaConversionPrice] = useState('0 NUA');
-  const [icpConversionPrice, setIcpConversionPrice] = useState('0 ICP');
-  const [ckBTCConversionPrice, setCkBTCConversionPrice] = useState('0 ckBTC');
 
   const getSelectedCurrencyBalance = () => {
     var selectedCurrencyAndBalance: TokenBalance = {
@@ -77,28 +74,20 @@ export const ClapModal = (props: { post: PostType }) => {
     return selectedCurrencyAndBalance;
   };
 
-  function updateConversionPrice(
-    tokenSymbol: SupportedTokenSymbol,
-    conversionSetter: Function
-  ) {
+  const getConversionPrice = (tokenSymbol: SupportedTokenSymbol) => {
     const pricePerUnit =
       getPriceBetweenTokens(
         sonicTokenPairs,
-        selectedCurrency,
+        'NUA',
         tokenSymbol,
         inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
       ) / Math.pow(10, getDecimalsByTokenSymbol(tokenSymbol));
 
     const formattedPrice =
       truncateToDecimalPlace(pricePerUnit, 4) + ` ${tokenSymbol}`;
-    conversionSetter(formattedPrice);
-  }
 
-  useEffect(() => {
-    updateConversionPrice('NUA', setNuaConversionPrice);
-    updateConversionPrice('ICP', setIcpConversionPrice);
-    updateConversionPrice('ckBTC', setCkBTCConversionPrice);
-  }, [selectedCurrency, inputAmount, sonicTokenPairs]);
+    return formattedPrice;
+  };
 
   const getMaxAmountToApplaud = () => {
     let activeBalance = getSelectedCurrencyBalance();
@@ -471,11 +460,11 @@ export const ClapModal = (props: { post: PostType }) => {
               </div>
               <div className='amount-input-conversion-wrapper'>
                 <div>=</div>
-                <div>{nuaConversionPrice}</div>
+                <div>{getConversionPrice('NUA')}</div>
                 <div>|</div>
-                <div>{icpConversionPrice}</div>
+                <div>{getConversionPrice('ICP')}</div>
                 <div>|</div>
-                <div>{ckBTCConversionPrice}</div>
+                <div>{getConversionPrice('ckBTC')}</div>
               </div>
             </div>
             {inputAmount > getMaxAmountToApplaud() && inputAmount !== 0 && (
