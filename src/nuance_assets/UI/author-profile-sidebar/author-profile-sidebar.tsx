@@ -73,7 +73,7 @@ const AuthorProfileSidebar = () => {
               style={isLoggedIn ? {} : { display: 'none' }}
             ></div>
 
-            <LoggedOutSidebar/>
+            {!isLoggedIn && <LoggedOutSidebar />}
           </div>
         </div>
       }

@@ -24,6 +24,7 @@ module {
   public let BARAN_PRINCIPAL_ID = "p5x7e-xqqb3-orerc-tmqof-rnhhy-5y7r7-vpoog-bpqrf-6cuki-bwdpd-3ae";
   public let BARAN_DASHBOARD_PRINCIPAL_ID = "cy7n3-o7lpm-lij55-yisew-ubfjf-bjq5a-46vej-2xw3d-5hjxs-znnvm-eae";
   public let BARAN_DASHBOARD_PRINCIPAL_ID_LOCAL = "z6siy-nz3zx-njbew-yoypf-fn2ti-nkfej-zz2vy-zmy5f-kdzez-ojapo-bqe";
+  public let ILYAS_PRINCIPAL_ID = "c3ex3-xqejx-wbada-ly2rt-j4djv-w6hp6-lcv4j-jm7wy-mg23w-vqzya-lqe";
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
   public let NICK_DASHBOARD_PRINCIPAL_ID = "67owo-lqhq6-2vsvz-ne4qm-g4e2q-2kasi-at36g-zppj6-obsdc-d32rg-jqe";
   public let RHIANNON_PRINCIPAL_ID = "cqt7v-ben4o-y335u-srt3v-nzd6e-wknuf-2t2mb-mji7i-ar3bf-7ysop-2qe";
@@ -42,6 +43,8 @@ module {
     BARAN_PRINCIPAL_ID,
     BARAN_DASHBOARD_PRINCIPAL_ID,
     BARAN_DASHBOARD_PRINCIPAL_ID_LOCAL,
+
+    ILYAS_PRINCIPAL_ID,
 
     NICK_PRINCIPAL_ID,
     NICK_DASHBOARD_PRINCIPAL_ID,
