@@ -54,30 +54,49 @@ export const formatDate = (
 export const timeAgo = (datePast: Date) => {
   const dateNow = new Date();
   const seconds = Math.floor((dateNow.getTime() - datePast.getTime()) / 1000);
-  
-  const pluralize = (count: number, noun: string) => count === 1 ? noun : `${noun}s`;
+
+  const pluralize = (count: number, noun: string) =>
+    count === 1 ? noun : `${noun}s`;
 
   let interval = seconds / 31536000;
   if (interval > 1) {
-    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'year')} ago`;
+    return `${Math.floor(interval)} ${pluralize(
+      Math.floor(interval),
+      'year'
+    )} ago`;
   }
   interval = seconds / 2592000;
   if (interval > 1) {
-    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'month')} ago`;
+    return `${Math.floor(interval)} ${pluralize(
+      Math.floor(interval),
+      'month'
+    )} ago`;
   }
   interval = seconds / 86400;
   if (interval > 1) {
-    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'day')} ago`;
+    return `${Math.floor(interval)} ${pluralize(
+      Math.floor(interval),
+      'day'
+    )} ago`;
   }
   interval = seconds / 3600;
   if (interval > 1) {
-    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'hour')} ago`;
+    return `${Math.floor(interval)} ${pluralize(
+      Math.floor(interval),
+      'hour'
+    )} ago`;
   }
   interval = seconds / 60;
   if (interval > 1) {
-    return `${Math.floor(interval)} ${pluralize(Math.floor(interval), 'minute')} ago`;
+    return `${Math.floor(interval)} ${pluralize(
+      Math.floor(interval),
+      'minute'
+    )} ago`;
   }
-  return `${Math.floor(seconds)} ${pluralize(Math.floor(seconds), 'second')} ago`;
+  return `${Math.floor(seconds)} ${pluralize(
+    Math.floor(seconds),
+    'second'
+  )} ago`;
 };
 
 export const arraysEqual = <T>(a: T[], b: T[]) => {
@@ -520,9 +539,15 @@ export const getPriceBetweenTokens = (
 
       //amountOut means the ICP equivalance of the other token
       if (token0Symbol === 'ICP') {
-        return (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) * amountOut;
+        return (
+          (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) *
+          amountOut
+        );
       } else {
-        return (amount / amountOut) * Math.pow(10, getDecimalsByTokenSymbol(token0Symbol));
+        return (
+          (amount / amountOut) *
+          Math.pow(10, getDecimalsByTokenSymbol(token0Symbol))
+        );
       }
     } else {
       //the pool not found -> not fetched yet return 0
@@ -591,7 +616,7 @@ export const getIconForSocialChannel = (url: string, dark: boolean) => {
     ['tiktok', 'com'],
     ['dfinity', 'org'],
     ['oc', 'app'],
-    ['taggr', 'link']
+    ['taggr', 'link'],
   ];
   const path = '/assets/images/icons/social-channels/';
   for (const supportedChannel of supportedChannels) {
