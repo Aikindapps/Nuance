@@ -2014,6 +2014,7 @@ actor PostCore {
           userPostIds,
           func(postId : Text) : () {
             let isDraft = U.safeGet(isDraftHashMap, postId, false);
+            let isRejected = rejectedByModClub(postId);
             let postOwnerPrincipalId = U.safeGet(principalIdHashMap, postId, "");
             let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
 
@@ -2024,7 +2025,8 @@ actor PostCore {
               else{
                 draftCount += 1;
               }
-            } else {
+            } 
+            else if (not isRejected) {
               if(publishedDate > now){
                 plannedCount += 1;
               }
@@ -2094,6 +2096,7 @@ actor PostCore {
         userPostIds,
         func(postId : Text) : () {
           let isDraft = U.safeGet(isDraftHashMap, postId, false);
+          let isRejected = rejectedByModClub(postId);
           let postOwnerPrincipalId = U.safeGet(principalIdHashMap, postId, "");
           let publishedDate = U.safeGet(publishedDateHashMap, postId, now);
 
@@ -2104,14 +2107,14 @@ actor PostCore {
             else{
               draftCount += 1;
             }
-          } else {
-            if(publishedDate > now){
-              plannedCount += 1;
-            }
-            else{
-              publishedCount += 1;
-            }
-            
+          }
+          else if (not isRejected){
+              if(publishedDate > now){
+                plannedCount += 1;
+              }
+              else{
+                publishedCount += 1;
+              }
           };
 
           if(postIdsToNftCanisterIdsHashMap.get(postId) != null){

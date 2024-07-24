@@ -28,7 +28,11 @@ import SubscribeButton from '../../components/subscribe-button/subscribe-button'
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
-import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+import {
+  ReaderSubscriptionDetailsConverted,
+  WriterSubscriptionDetailsConverted,
+  useSubscriptionStore,
+} from '../../store/subscriptionStore';
 import { set } from 'lodash';
 
 const Profile = () => {
@@ -38,7 +42,9 @@ const Profile = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
   const [author, setAuthor] = useState<UserType | undefined>();
-  const [authorPrincipalId, setAuthorPrincipalId] = useState<string | undefined>();
+  const [authorPrincipalId, setAuthorPrincipalId] = useState<
+    string | undefined
+  >();
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
   const [userPostCounts, setUserPostCounts] = useState<
     UserPostCounts | undefined
@@ -48,7 +54,6 @@ const Profile = () => {
   const modalContext = useContext(ModalContext);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
-
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -75,19 +80,25 @@ const Profile = () => {
   );
   const user = useUserStore((state) => state.user);
 
-  const { getAuthor, getUserPostCounts, getPrincipalByHandle } = useUserStore((state) => ({
-    getAuthor: state.getAuthor,
-    getUserPostCounts: state.getUserPostCounts,
-    getPrincipalByHandle: state.getPrincipalByHandle,
-  }));
+  const { getAuthor, getUserPostCounts, getPrincipalByHandle } = useUserStore(
+    (state) => ({
+      getAuthor: state.getAuthor,
+      getUserPostCounts: state.getUserPostCounts,
+      getPrincipalByHandle: state.getPrincipalByHandle,
+    })
+  );
 
   const { getPostsByFollowers } = usePostStore((state) => ({
     getPostsByFollowers: state.getPostsByFollowers,
   }));
 
-  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+  const {
+    getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId,
+  } = useSubscriptionStore((state) => ({
     getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
-    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
   }));
 
   const load = async () => {
@@ -145,7 +156,6 @@ const Profile = () => {
     load();
   }, []);
 
-
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
       if (isLoggedIn) {
@@ -154,11 +164,15 @@ const Profile = () => {
 
           if (history) {
             console.log('Subscription history:', history);
-            let isSubscribed = history.activeSubscriptions.some((subscription) => {
-              return subscription.userListItem.handle === author?.handle;
-            });
+            let isSubscribed = history.activeSubscriptions.some(
+              (subscription) => {
+                return subscription.userListItem.handle === author?.handle;
+              }
+            );
             setIsSubscribed(isSubscribed);
-            setIsExpiring(checkExpiringSubscriptions(history, author?.handle || ''));
+            setIsExpiring(
+              checkExpiringSubscriptions(history, author?.handle || '')
+            );
           }
         } catch (error) {
           console.log('Error fetching subscription history', error);
@@ -169,16 +183,25 @@ const Profile = () => {
     fetchSubscriptionHistory();
   }, [isLoggedIn, author?.handle, user?.handle]);
 
-  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] =
+    useState<boolean>(false);
   //get subscription details
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
       if (authorPrincipalId) {
         try {
-          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
-          if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
+          let subscriptionDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(authorPrincipalId);
+          if (
+            (subscriptionDetails &&
+              subscriptionDetails?.weeklyFee.length > 0) ||
+            (subscriptionDetails &&
+              subscriptionDetails?.monthlyFee.length > 0) ||
+            (subscriptionDetails &&
+              subscriptionDetails?.annuallyFee.length > 0) ||
+            (subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0)
+          ) {
             setHasValidSubscriptionOptions(true);
-
           } else {
             setHasValidSubscriptionOptions(false);
             console.log('No valid subscription options');
@@ -187,16 +210,18 @@ const Profile = () => {
           console.log('Error fetching subscription details', error);
         }
       }
-    }
+    };
     fetchSubscriptionDetails();
-  }
-    , [authorPrincipalId]);
+  }, [authorPrincipalId]);
 
-  function checkExpiringSubscriptions(subscriptionHistory: ReaderSubscriptionDetailsConverted, authorHandle: string) {
+  function checkExpiringSubscriptions(
+    subscriptionHistory: ReaderSubscriptionDetailsConverted,
+    authorHandle: string
+  ) {
     const currentTime = Date.now();
     const { expiredSubscriptions } = subscriptionHistory;
 
-    const isExpiring = expiredSubscriptions.some(subscription => {
+    const isExpiring = expiredSubscriptions.some((subscription) => {
       return (
         subscription.userListItem.handle === authorHandle &&
         subscription.subscriptionEndDate > currentTime
@@ -334,8 +359,8 @@ const Profile = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.color,
-                      }
+                          color: darkOptionsAndColors.color,
+                        }
                       : {}
                   }
                   className='username'
@@ -349,7 +374,7 @@ const Profile = () => {
                         onClick={() => {
                           let urlWithProtocol =
                             url.startsWith('https://') ||
-                              url.startsWith('http://')
+                            url.startsWith('http://')
                               ? url
                               : 'https://' + url;
                           window.open(urlWithProtocol, '_blank');
@@ -378,8 +403,8 @@ const Profile = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.secondaryColor,
-                      }
+                          color: darkOptionsAndColors.secondaryColor,
+                        }
                       : {}
                   }
                 >
@@ -393,36 +418,44 @@ const Profile = () => {
                     user={user?.handle || ''}
                     isPublication={false}
                   />
-                  {isLoggedIn && user?.handle !== author?.handle && hasValidSubscriptionOptions && !isExpiring &&
-                    <SubscribeButton
-                      AuthorHandle={author?.handle || ''}
-                      user={user?.handle || ''}
-                      isPublication={false}
-                      isSubscribed={isSubscribed || false}
-                    />
-                  }
+                  {isLoggedIn &&
+                    user?.handle !== author?.handle &&
+                    hasValidSubscriptionOptions &&
+                    !isExpiring && (
+                      <SubscribeButton
+                        AuthorHandle={author?.handle || ''}
+                        user={user?.handle || ''}
+                        isPublication={false}
+                        isSubscribed={isSubscribed || false}
+                      />
+                    )}
                 </div>
               </div>
-              {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
-                <SubscriptionModal
-                  handle={author?.handle || ''}
-                  authorPrincipalId={authorPrincipalId || ''}
-                  profileImage={author?.avatar || ''}
-                  isPublication={false}
-                  onSubscriptionComplete={() => { handleSubscriptionComplete() }}
-                />
-              )}
+              {modalContext?.isModalOpen &&
+                modalContext?.modalType === 'Subscription' && (
+                  <SubscriptionModal
+                    handle={author?.handle || ''}
+                    authorPrincipalId={authorPrincipalId || ''}
+                    profileImage={author?.avatar || ''}
+                    isPublication={false}
+                    onSubscriptionComplete={() => {
+                      handleSubscriptionComplete();
+                    }}
+                  />
+                )}
 
-              {modalContext?.isModalOpen && modalContext?.modalType === 'cancelSubscription' && (
-
-                <CancelSubscriptionModal
-                  handle={author?.handle || ''}
-                  profileImage={author?.avatar || ''}
-                  isPublication={false}
-                  onCancelComplete={() => { handleSubscriptionComplete() }}
-                  authorPrincipalId={authorPrincipalId || ''}
-                />
-              )}
+              {modalContext?.isModalOpen &&
+                modalContext?.modalType === 'cancelSubscription' && (
+                  <CancelSubscriptionModal
+                    handle={author?.handle || ''}
+                    profileImage={author?.avatar || ''}
+                    isPublication={false}
+                    onCancelComplete={() => {
+                      handleSubscriptionComplete();
+                    }}
+                    authorPrincipalId={authorPrincipalId || ''}
+                  />
+                )}
 
               <div className='statistic-wrapper'>
                 <div className='statistic'>
@@ -465,7 +498,7 @@ const Profile = () => {
                 {userPostCounts &&
                   !loading &&
                   parseInt(userPostCounts?.publishedCount) >
-                  displayingPosts.length && (
+                    displayingPosts.length && (
                     <div className='load-more-container'>
                       <Button
                         styleType='secondary'
