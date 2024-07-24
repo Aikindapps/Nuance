@@ -589,6 +589,9 @@ export const getIconForSocialChannel = (url: string, dark: boolean) => {
     ['pinterest', 'com'],
     ['snapchat', 'com'],
     ['tiktok', 'com'],
+    ['dfinity', 'org'],
+    ['oc', 'app'],
+    ['taggr', 'link']
   ];
   const path = '/assets/images/icons/social-channels/';
   for (const supportedChannel of supportedChannels) {
