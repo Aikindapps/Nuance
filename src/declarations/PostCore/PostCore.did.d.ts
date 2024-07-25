@@ -211,6 +211,10 @@ export interface _SERVICE {
   'getList' : ActorMethod<[Array<string>], Array<PostKeyProperties>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
+  'getMoreArticlesFromUsers' : ActorMethod<
+    [string, Array<string>],
+    Array<Array<PostKeyProperties>>
+  >,
   'getMoreLatestPosts' : ActorMethod<
     [number, number],
     Array<PostKeyProperties>
