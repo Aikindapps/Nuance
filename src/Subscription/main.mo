@@ -134,8 +134,8 @@ actor Subscription {
     //key: SubscriptionEventId, value: reader principal id
     stable var pendingStuckTokenDisbursements = Map.new<Text, Text>();
     //a map to hold the regular token disbursements for each subscription event - to writer and the Nuance DAO
-    //key: subscriptionEventId, value: [(receiver account principal id, receiver subaccount, amount)]
-    stable var pendingTokenDisbursements = Map.new<Text, [(Text, ?Blob, Nat)]>();
+    //key: subscriptionEventId, value: [(receiver account principal id, receiver subaccount, amount, memo)]
+    stable var pendingTokenDisbursements = Map.new<Text, [(Text, ?Blob, Nat, ?Blob)]>();
 
     //#region - public query functions
 
@@ -245,8 +245,6 @@ actor Subscription {
         let callerPrincipalId = Principal.toText(caller);
         var writerPrincipalId = callerPrincipalId;
         var paymentReceiverPrincipalId = caller;
-
-        Debug.print("updateSubscriptionDetails arguments: " # debug_show(subscriptionDetails));
 
         switch(subscriptionDetails.publicationInformation) {
             case(?publicationInformation) {
@@ -732,12 +730,12 @@ actor Subscription {
         let writerShareFloat = totalPaymentAmountFloat - nuanceDaoShareFloat;
         let nuanceDaoShareNat = Option.get(Nat.fromText(Int.toText(Float.toInt(nuanceDaoShareFloat))), ENV.NUA_TOKEN_FEE);
         let writerShareNat = Option.get(Nat.fromText(Int.toText(Float.toInt(writerShareFloat))), ENV.NUA_TOKEN_FEE);
-        let disbursements : [(Text, ?Blob, Nat)] = [
-            (paymentRequest.writerPrincipalId, null, writerShareNat),
-            (ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID, ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT), nuanceDaoShareNat)
+        let paymentReceiverPrincipalId = Option.get(Map.get(writerPrincipalIdToPaymentReceiverAddress, thash, paymentRequest.writerPrincipalId), Principal.fromText(paymentRequest.writerPrincipalId));
+        let disbursements : [(Text, ?Blob, Nat, ?Blob)] = [
+            (Principal.toText(paymentReceiverPrincipalId), null, writerShareNat, ?Text.encodeUtf8("sub_" # U.getTextFirstChars(paymentRequest.writerPrincipalId, 20))),
+            (ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID, ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT), nuanceDaoShareNat, null)
         ];
         Map.set(pendingTokenDisbursements, thash, subscriptionEventId, disbursements);
-
         //add the notifications
     };
 
@@ -824,7 +822,7 @@ actor Subscription {
                     created_at_time = null;
                     fee = ?nuaTokenFee;
                     from_subaccount = ?subaccount;
-                    memo = null;
+                    memo = disbursement.3;
                     to = {
                         owner = Principal.fromText(disbursement.0);
                         subaccount = disbursement.1;
@@ -841,7 +839,7 @@ actor Subscription {
         };
 
         //filter the disbursements using the successfulDisbursementIndexes
-        let filteredDisbursements = Buffer.Buffer<(Text, ?Blob, Nat)>(0);
+        let filteredDisbursements = Buffer.Buffer<(Text, ?Blob, Nat, ?Blob)>(0);
         counter := 0;
         for(disbursement in disbursements.vals()) {
             if(not U.arrayContainsGeneric(Buffer.toArray(successfulDisbursementIndexes), counter, Nat.equal)){

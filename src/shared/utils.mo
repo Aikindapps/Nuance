@@ -357,6 +357,19 @@ module {
     };
   };
 
+  public func getTextFirstChars(txt: Text, n: Nat) : Text {
+    var counter = 0;
+    var result = "";
+    for(char in Text.toIter(txt)){
+      if(counter < n){
+        result #= Char.toText(char);
+      };
+      counter += 1;
+    };
+    
+    result
+  };
+
 
   public func arrayContains(array : [Text], element : Text) : Bool {
     for (el in array.vals()) {
