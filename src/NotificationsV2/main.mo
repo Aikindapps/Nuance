@@ -1114,10 +1114,15 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
             case(#err(error)) {};
         };
 
+            let updatedContent = modifyContent(content, { url = ?url; senderHandle = ?senderHandle; senderPrincipal = null; receiverHandle = null; receiverPrincipal = null; tags = ?Buffer.toArray(tags); articleId = ?articleId; articleTitle = ?articleTitle; authorPrincipal = null; authorHandle = ?authorHandle; isAuthorPublication = null; comment = null; isReply = null; commenterPrincipal = null; commenterHandle = null; purchaserHandle = null; purchaserPrincipal = null; claimed = null; followerUrl = null; followerPrincipal = null; followerHandle = null; postUrl = null; recieverIsPublication = null; tipAmount = null; token = null; subscriberHandle = null; subscriberPrincipal = null; time = null });
+
             notification := {
                 id = Nat.toText(notificationId);
                 notificationType = notificationType;
-                content = ?content; //todo ensure fields arent empty
+                content = switch (updatedContent) {
+                    case (#ok(content)) { content };
+                    case (#err(err)) { return #err(err) };
+                };
                 timestamp = Int.toText(Time.now());
                 read = false;
             };
