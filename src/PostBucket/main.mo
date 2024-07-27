@@ -1494,21 +1494,16 @@ actor class PostBucket() = this {
 
     if (isFirstPublish) {
 
-      ignore await U.newArticle({
-        articleId = postId;
+      ignore await U.newArticle( #PostNotificationContent{
         url = buildPostUrl(postId, postModel.handle, postModel.title);
+        receiverPrincipal = Principal.fromText("2vxsx-fae");
+        receiverHandle = "";
+        articleId = postId;
         articleTitle = postModel.title;
         authorPrincipal = Principal.fromText(postModel.postOwnerPrincipalId);
         authorHandle = postModel.handle;
-        comment = "";
-        isReply = false;
-        receiverPrincipal = Principal.fromText("2vxsx-fae");
-        receiverHandle = "";
-        senderPrincipal = Principal.fromText("2vxsx-fae");
-        senderHandle = "";
+        isAuthorPublication = isPublication;
         tags = postModel.tagNames;
-        tipAmount = "";
-        token = "";
     })
 
     };
@@ -2670,21 +2665,19 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
           //send notification for new comments only
           let author = U.safeGet(principalIdHashMap, postId, "");
         
-            ignore U.createNotification(#NewCommentOnFollowedArticle, {
-              articleId = postId;
+        
+            ignore U.createNotification(#NewCommentOnFollowedArticle, #NewCommentOnFollowedArticleNotificationContent {
               url = buildPostUrl(postId, U.safeGet(handleHashMap, author, ""), U.safeGet(titleHashMap, postId, "")) # "?comment=" # validCommentId;
+              articleId = postId;
               articleTitle = U.safeGet(titleHashMap, postId, "");
               authorPrincipal = Principal.fromText(author);
               authorHandle = U.safeGet(handleHashMap, author, "");
+              isAuthorPublication = post.isPublication;
               comment = content;
               isReply = isReply;
-              receiverPrincipal = Principal.fromText(author);
-              receiverHandle = U.safeGet(handleHashMap, author, "");
-              senderPrincipal = caller;
-              senderHandle = U.safeGet(handleHashMap, userPrincipalId, "");
+              commenterPrincipal = caller;
+              commenterHandle = U.safeGet(handleHashMap, userPrincipalId, "");
               tags = [];
-              tipAmount = "";
-              token = "";
             });
         };
 
@@ -3217,19 +3210,15 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       return #err("Incrementing the number of applauds failed.");
     };
 
-     ignore U.createNotification(#TipReceived, {
-      url = buildPostUrl(postId, receiverPrincipalId, U.safeGet(titleHashMap, postId, ""));
-      articleId = postId;
-      articleTitle = U.safeGet(titleHashMap, postId, "");
-      authorPrincipal = Principal.fromText(receiverPrincipalId);
-      authorHandle = U.safeGet(handleHashMap, receiverPrincipalId, "");
-      comment = "";
-      isReply = false;
+     ignore U.createNotification(#TipReceived,#TipRecievedNotificationContent {
+      postUrl = buildPostUrl(postId, receiverPrincipalId, U.safeGet(titleHashMap, postId, ""));
       receiverPrincipal = Principal.fromText(receiverPrincipalId);
       receiverHandle = U.safeGet(handleHashMap, receiverPrincipalId, "");
+      recieverIsPublication = U.safeGet(isPublicationHashMap, postId, false);
       senderPrincipal = Principal.fromText(sender);
       senderHandle = U.safeGet(handleHashMap, sender, "");
-      tags = [];
+      articleId = postId;
+      articleTitle = U.safeGet(titleHashMap, postId, "");
       tipAmount = Nat.toText(balance / 100000000);
       token = symbol;
     });

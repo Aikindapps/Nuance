@@ -2,7 +2,7 @@ import Result "mo:base/Result";
 import List "mo:base/List";
 import Time "mo:base/Time";
 import ENV "env";
-import NotificationTypes "../Notifications/types";
+import NotificationTypes "../NotificationsV2/types";
 module{
 
 

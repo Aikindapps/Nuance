@@ -739,23 +739,17 @@ actor class EXTNFT() = this {
                           }]);
                           _tokenListing.delete(token);
                           _paymentSettlements.delete(paymentaddress);
-                          
+
                           //send notification
-                          ignore U.createNotification(#PremiumArticleSold, {
+                          ignore U.createNotification(#PremiumArticleSold, #PremiumArticleSoldNotificationContent {
                             url = "";
                             articleId = postId;
                             articleTitle = "";
                             authorPrincipal = writer_principal_id;
                             authorHandle = "";
-                            comment = "";
-                            isReply = false;
-                            receiverPrincipal = writer_principal_id;
-                            receiverHandle = "";
-                            senderPrincipal = msg.caller;
-                            senderHandle = "";
-                            tags = [];
-                            tipAmount = "";
-                            token = "";
+                            isAuthorPublication = false;//should be checked in Notifications backend
+                            purchaserPrincipal = msg.caller;
+                            purchaserHandle = "";
                           });
 
                           //nuance addition

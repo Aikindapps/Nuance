@@ -996,21 +996,12 @@ actor User {
 
     Debug.print("User->followAuthor:" # author);
 
-    ignore U.createNotification(#NewFollower, {
-      url = "";
-      articleId = "";
-      articleTitle = "";
+    ignore U.createNotification(#NewFollower, #NewFollowerNotificationContent {
+      followerUrl = "";
       authorPrincipal = Principal.fromText(followingPrincipalId);
       authorHandle = author;
-      comment = "";
-      isReply = false;
-      receiverPrincipal = Principal.fromText(followingPrincipalId);
-      receiverHandle = author;
-      senderHandle = user.handle;
-      senderPrincipal = Principal.fromText(principalId);
-      tags = [];
-      tipAmount = "";
-      token = "";
+      followerHandle = user.handle;
+      followerPrincipal = Principal.fromText(principalId);
     });
     
     #ok(buildUser(principalId));
@@ -1665,21 +1656,10 @@ actor User {
 
     let user = buildUser(principal);
     //ToDo: send the notification to the user
-    ignore U.createNotification(#FaucetClaimAvailable, {
-      url = "";
-      articleId = "";
-      articleTitle = "";
-      authorPrincipal =  Principal.fromText("2vxsx-fae");
-      authorHandle = "";
-      comment = "";
-      isReply = false;
-      receiverPrincipal = Principal.fromText(principal);
-      receiverHandle = user.handle;
-      senderHandle = "User Canister";
-      senderPrincipal = Principal.fromActor(User);
-      tags = [];
-      tipAmount = "";
-      token = "NUA";
+    ignore U.createNotification(#FaucetClaimAvailable, #FaucetClaimAvailableNotificationContent{
+      recieverPrincipal = Principal.fromText(principal);
+      recieverHandle = user.handle;
+      claimed = null;
     });
   };
 
