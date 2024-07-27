@@ -283,7 +283,7 @@ stable var articleCommenters = Map.new<Text, [Principal]>();
 //events are singular actions that trigger multiple notifications, ex. an article creates multiple notifications for followers of the writer and tags
 
 //event helpers
-private func createNewNotificationObject(notificationType: NotificationType, content: ?NotificationContent) : Notifications {
+private func createNewNotificationObject(notificationType: NotificationType, content: NotificationContent) : Notifications {
     {
         id = Nat.toText(notificationId);
         notificationType = notificationType;
@@ -404,7 +404,7 @@ private func createNewNotificationObject(notificationType: NotificationType, con
 
 
 
-private func getTags(notification: ?NotificationContent) : [Text] {
+private func getTags(notification: NotificationContent) : [Text] {
     switch (notification) {
         case (?#PostNotificationContent {tags = t}) { t };
         case (?#NewCommentOnFollowedArticleNotificationContent {tags = t}) { t };
@@ -413,7 +413,7 @@ private func getTags(notification: ?NotificationContent) : [Text] {
     }
 };
 
-private func getAuthorHandle(notification: ?NotificationContent) : Text {
+private func getAuthorHandle(notification: NotificationContent) : Text {
     switch (notification) {
         case (?#PostNotificationContent {authorHandle = ah}) { ah };
         case (?#PremiumArticleSoldNotificationContent {authorHandle = ah}) { ah };
@@ -425,7 +425,7 @@ private func getAuthorHandle(notification: ?NotificationContent) : Text {
     }
 };
 
-private func getAuthorPrincipal(notification: ?NotificationContent) : Principal {
+private func getAuthorPrincipal(notification: NotificationContent) : Principal {
     switch (notification) {
         case (?#PostNotificationContent {authorPrincipal = ap}) { ap };
         case (?#PremiumArticleSoldNotificationContent {authorPrincipal = ap}) { ap };
@@ -439,7 +439,7 @@ private func getAuthorPrincipal(notification: ?NotificationContent) : Principal 
 
 
 
-private func getSenderHandle(notification: ?NotificationContent) : Text {
+private func getSenderHandle(notification: NotificationContent) : Text {
     switch (notification) {
         case (?#PremiumArticleSoldNotificationContent {purchaserHandle = ph}) { ph };  
         case (?#NewCommentOnFollowedArticleNotificationContent {commenterHandle = ch}) { ch };
@@ -451,7 +451,7 @@ private func getSenderHandle(notification: ?NotificationContent) : Text {
     }
 };
 
-private func getSenderPrincipal(notification: ?NotificationContent) : Principal {
+private func getSenderPrincipal(notification: NotificationContent) : Principal {
     switch (notification) {
         case (?#PremiumArticleSoldNotificationContent {purchaserPrincipal = pp}) { pp };
         case (?#NewCommentOnFollowedArticleNotificationContent {commenterPrincipal = cp}) { cp };
@@ -464,7 +464,7 @@ private func getSenderPrincipal(notification: ?NotificationContent) : Principal 
 };
 
 
-private func generateContent(content: ?NotificationContent) : Result.Result<?NotificationContent, Text> {
+private func generateContent(content: NotificationContent) : Result.Result<NotificationContent, Text> {
     switch (content) {
         case (?#PostNotificationContent(postNotificationContent)) {
             return #ok( ?#PostNotificationContent postNotificationContent);
@@ -522,7 +522,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
     time: ?Text;
     subscriberHandle: ?Text;
     subscriberPrincipal: ?Principal;
-}) : Result.Result<?NotificationContent, Text> {
+}) : Result.Result<NotificationContent, Text> {
 
     func updateField<T>(original: T, updated: ?T) : T {
         switch (updated) {
@@ -532,7 +532,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
     };
 
     switch (content) {
-        case (#PostNotificationContent(postNotificationContent)) {
+        case (?#PostNotificationContent(postNotificationContent)) {
             return #ok(?#PostNotificationContent{
                 url = updateField(postNotificationContent.url, updatedFields.url);
                 receiverHandle = updateField(postNotificationContent.receiverHandle, updatedFields.receiverHandle);
@@ -545,7 +545,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 isAuthorPublication = updateField(postNotificationContent.isAuthorPublication, updatedFields.isAuthorPublication);
             });
         };
-        case (#PremiumArticleSoldNotificationContent(premiumArticleSoldNotificationContent)) {
+        case (?#PremiumArticleSoldNotificationContent(premiumArticleSoldNotificationContent)) {
             return #ok(?#PremiumArticleSoldNotificationContent{
                 url = updateField(premiumArticleSoldNotificationContent.url, updatedFields.url);
                 purchaserHandle = updateField(premiumArticleSoldNotificationContent.purchaserHandle, updatedFields.purchaserHandle);
@@ -557,7 +557,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 isAuthorPublication = updateField(premiumArticleSoldNotificationContent.isAuthorPublication, updatedFields.isAuthorPublication);
             });
         };
-        case (#NewCommentOnFollowedArticleNotificationContent(newCommentOnFollowedArticleNotificationContent)) {
+        case (?#NewCommentOnFollowedArticleNotificationContent(newCommentOnFollowedArticleNotificationContent)) {
             return #ok(?#NewCommentOnFollowedArticleNotificationContent{
                 url = updateField(newCommentOnFollowedArticleNotificationContent.url, updatedFields.url);
                 articleId = updateField(newCommentOnFollowedArticleNotificationContent.articleId, updatedFields.articleId);
@@ -572,7 +572,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 tags = updateField(newCommentOnFollowedArticleNotificationContent.tags, updatedFields.tags);
             });
         };
-        case (#NewFollowerNotificationContent(newFollowerNotificationContent)) {
+        case (?#NewFollowerNotificationContent(newFollowerNotificationContent)) {
             return #ok(?#NewFollowerNotificationContent{
                 followerUrl = updateField(newFollowerNotificationContent.followerUrl, updatedFields.followerUrl);
                 followerPrincipal = updateField(newFollowerNotificationContent.followerPrincipal, updatedFields.followerPrincipal);
@@ -581,14 +581,14 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 authorHandle = updateField(newFollowerNotificationContent.authorHandle, updatedFields.authorHandle);
             });
         };
-        case (#FaucetClaimAvailableNotificationContent(faucetClaimAvailableNotificationContent)) {
+        case (?#FaucetClaimAvailableNotificationContent(faucetClaimAvailableNotificationContent)) {
             return #ok(?#FaucetClaimAvailableNotificationContent{
                 receiverPrincipal = updateField(faucetClaimAvailableNotificationContent.receiverPrincipal, updatedFields.receiverPrincipal);
                 receiverHandle = updateField(faucetClaimAvailableNotificationContent.receiverHandle, updatedFields.receiverHandle);
                 claimed = faucetClaimAvailableNotificationContent.claimed; //TODO: implement a claimed field maybe???
             });
         };
-        case (#NewArticleNotificationContent(newArticleNotificationContent)) {
+        case (?#NewArticleNotificationContent(newArticleNotificationContent)) {
             return #ok(?#NewArticleNotificationContent{
                 url = updateField(newArticleNotificationContent.url, updatedFields.url);
                 articleId = updateField(newArticleNotificationContent.articleId, updatedFields.articleId);
@@ -599,7 +599,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 tags = updateField(newArticleNotificationContent.tags, updatedFields.tags);
             });
         };
-        case (#TipRecievedNotificationContent(tipRecievedNotificationContent)) {
+        case (?#TipRecievedNotificationContent(tipRecievedNotificationContent)) {
             return #ok(?#TipRecievedNotificationContent{
                 postUrl = updateField(tipRecievedNotificationContent.postUrl, updatedFields.postUrl);
                 articleId = updateField(tipRecievedNotificationContent.articleId, updatedFields.articleId);
@@ -613,7 +613,7 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 token = updateField(tipRecievedNotificationContent.token, updatedFields.token);
             });
         };
-        case (#AuthorExpiredSubscriptionNotificationContent(authorExpiredSubscriptionNotificationContent)) {
+        case (?#AuthorExpiredSubscriptionNotificationContent(authorExpiredSubscriptionNotificationContent)) {
             return #ok(?#AuthorExpiredSubscriptionNotificationContent{
                 authorHandle = updateField(authorExpiredSubscriptionNotificationContent.authorHandle, updatedFields.authorHandle);
                 authorPrincipal = updateField(authorExpiredSubscriptionNotificationContent.authorPrincipal, updatedFields.authorPrincipal);
@@ -622,13 +622,16 @@ private func modifyContent(content: NotificationContent, updatedFields: {
                 time = updateField(authorExpiredSubscriptionNotificationContent.time, updatedFields.time);
             });
         };
+        case _ {
+            return #err("Invalid notification type passed to modifyContent func");
+        };
     };
 };
 
 
 public shared ({caller}) func newArticle(notificationContents: NotificationContent) : async Result.Result<(), Text> {
     
-    let generateNotificationContent = generateContent(?notificationContents);
+    let generateNotificationContent = generateContent(notificationContents);
     let notificationContent = switch (generateNotificationContent) {
         case (#ok(content)) { content };
         case (#err(err)) { return #err(err) };
@@ -986,7 +989,7 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
         return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    let generateNotificationContent = generateContent(?content);
+    let generateNotificationContent = generateContent(content);
     let notificationContent = switch (generateNotificationContent) {
         case (#ok(content)) { content };
         case (#err(err)) { return #err(err) };
@@ -997,15 +1000,15 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
     var notification = {
         id = Nat.toText(notificationId);
         notificationType = notificationType;
-        content : ?NotificationContent = notificationContent;
+        content : NotificationContent = notificationContent;
         timestamp = Int.toText(Time.now());
         read = false;
     };
 
 
-    let senderHandle = getSenderHandle(?content);
+    let senderHandle = getSenderHandle(content);
 
-    let senderPrincipal = getSenderPrincipal(?content);
+    let senderPrincipal = getSenderPrincipal(content);
 
     if (senderHandle == "") {
 
@@ -1055,9 +1058,9 @@ public shared ({caller}) func  createNotification(notificationType : Notificatio
         case (#PremiumArticleSold) {
            
           //generate handles for frontend
-            var authorHandle = getAuthorHandle(?content);
+            var authorHandle = getAuthorHandle(content);
             var senderHandle = "";
-            var authorPrincipal = getAuthorPrincipal(?content);
+            var authorPrincipal = getAuthorPrincipal(content);
 
             switch (await UserCanister.getUserByPrincipalId(Principal.toText(authorPrincipal))) {
                 case (#ok(user)) {
@@ -1266,7 +1269,7 @@ private func createNotificationInternal(notificationType: NotificationType, cont
   var notification = {
         id = Nat.toText(notificationId);
         notificationType = notificationType;
-        content = ?content;
+        content = content;
         read = false;
         timestamp = Int.toText(Time.now());
     };
@@ -1525,7 +1528,7 @@ func createBroadcastNotification (notification : Notifications) : async Result.R
             if (authorPrincipal != commenterPrincipal) {
             switch (generateContent(notification.content)) {
                 case (#ok(content)) {
-                    let notificationContent : ?NotificationContent = content;
+                    let notificationContent : NotificationContent = content;
                     let newNotification : Notifications = {
                         id = Nat.toText(notificationId);
                         notificationType = #NewCommentOnMyArticle;

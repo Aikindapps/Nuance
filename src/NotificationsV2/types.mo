@@ -26,7 +26,7 @@ module {
 public type Notifications = {
   id: Text;
   notificationType: NotificationType;
-  content: ?NotificationContent;
+  content: NotificationContent;
   timestamp: Text;
   read: Bool;
 };
@@ -38,7 +38,7 @@ public type Notifications = {
 //5. test upgradeability/composability
 
 
-public type NotificationContent = {
+public type NotificationContent =  ? {
   #PostNotificationContent : {
       url: Text;
       receiverHandle: Text;
