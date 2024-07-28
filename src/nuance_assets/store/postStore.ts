@@ -2266,17 +2266,26 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       archivedTransactionsResults.forEach((archived) => {
         transactions = [...archived.transactions, ...transactions];
       });
-      console.log('subscriptionCanisterId: ', subscriptionCanisterId);
       //filter the transactions to just include user's transactions
       transactions = transactions.filter((transaction) => {
         if (transaction.transfer.length !== 0) {
+          let memo = '';
+          if (transaction.transfer[0].memo.length !== 0) {
+            memo = new TextDecoder().decode(
+              (transaction.transfer[0].memo as [Uint8Array])[0]
+            );
+          }
+
           return (
             (transaction.transfer[0].from.owner.toText() ===
               userWallet.principal ||
               transaction.transfer[0].to.owner.toText() ===
                 userWallet.principal) &&
-            transaction.transfer[0].from.owner.toText() !==
+            ((transaction.transfer[0].from.owner.toText() ===
               subscriptionCanisterId &&
+              memo !== 'sub_' + userWallet.principal.slice(0, 20)) ||
+              transaction.transfer[0].from.owner.toText() !==
+                subscriptionCanisterId) &&
             transaction.transfer[0].to.owner.toText() !== subscriptionCanisterId
           );
         }
