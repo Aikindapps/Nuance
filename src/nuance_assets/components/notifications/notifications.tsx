@@ -13,9 +13,10 @@ import {
 } from '../../../../src/declarations/Notifications/Notifications.did';
 import { icons } from '../../shared/constants';
 import Toggle from '../../../nuance_assets/UI/toggle/toggle';
-import { colors } from '../../shared/constants';
+import { colors, getDecimalsByTokenSymbol } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import { get } from 'lodash';
+import { getPriceBetweenTokens } from '../../shared/utils';
 
 type NotificationsSidebarProps = {};
 
@@ -95,8 +96,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     getUserNotificationSettings: state.getUserNotificationSettings,
   }));
 
-  const { isLoggedIn } = useAuthStore((state) => ({
+  const { isLoggedIn, sonicTokenPairs } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
+    sonicTokenPairs: state.sonicTokenPairs
   }));
 
   const [selectedNotificationId, setSelectedNotificationId] = useState<
@@ -309,10 +311,23 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           </span>
         );
       case 'TipReceived':
+        const tippedToken = notification.content.token;
+        let applauseAmount = 0;
+
+        if (tippedToken === 'NUA' || tippedToken === 'ICP' || tippedToken === 'ckBTC') {
+          applauseAmount = getPriceBetweenTokens(
+            sonicTokenPairs,
+            tippedToken,
+            'NUA',
+            parseFloat(notification.content.tipAmount) *
+              Math.pow(10, getDecimalsByTokenSymbol(tippedToken))
+          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'));
+        }
+
         return (
           <span>
-            Excellent! {handleUrl} has <b>applauded</b> +
-            {notification.content.tipAmount} {notification.content.token} on "
+            Excellent! {handleUrl} has given you +
+            {applauseAmount.toString()} applause in {notification.content.token} on "
             {articleUrl}"
           </span>
         );
