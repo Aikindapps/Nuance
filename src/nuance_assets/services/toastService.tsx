@@ -29,10 +29,6 @@ export const RenderToaster = () => {
   return <Toaster position='bottom-center' />;
 };
 
-const { sonicTokenPairs } = useAuthStore((state) => ({
-  sonicTokenPairs: state.sonicTokenPairs
-}));
-
 const BlockingToastContent = ({ closeToast }: { closeToast: () => void }) => (
   <div
     style={{
@@ -112,6 +108,10 @@ const CustomNotificationContent = ({
   toast: Toast;
 }) => {
   const darkTheme = useTheme();
+
+  const { sonicTokenPairs } = useAuthStore((state) => ({
+    sonicTokenPairs: state.sonicTokenPairs
+  }));
 
   function getNotificationTypeKey(notificationType: NotificationType): string {
     return Object.keys(notificationType)[0];
