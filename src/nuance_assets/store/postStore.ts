@@ -15,6 +15,7 @@ import {
   TransactionListItem,
   UserListItem,
   ClaimTransactionHistoryItem,
+  MoreFromThisAuthor,
 } from '../types/types';
 import {
   getPostIndexActor,
@@ -480,6 +481,7 @@ export interface PostStore {
 
   getUserDailyPostStatus: () => Promise<boolean>;
   getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
+  getMoreFromThisAuthor: (post: PostType) => Promise<MoreFromThisAuthor>;
   saveComment: (
     commentModel: SaveCommentModel,
     bucketCanisterId: string,
@@ -585,6 +587,43 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       }
     } catch (err) {
       handleError(err, Unexpected);
+    }
+  },
+
+  getMoreFromThisAuthor: async (
+    post: PostType
+  ): Promise<MoreFromThisAuthor> => {
+    try {
+      let postCoreActor = await getPostCoreActor();
+      if (post.isPublication) {
+        let result = await postCoreActor.getMoreArticlesFromUsers(post.postId, [
+          post.creatorHandle.toLowerCase(),
+          post.handle.toLowerCase(),
+        ]);
+        let posts = await fetchPostsByBuckets(
+          [...result[0], ...result[1]],
+          false
+        );
+        return {
+          authorArticles: posts.slice(0, result[0].length),
+          publicationArticles: posts.slice(result[0].length),
+        };
+      } else {
+        let result = await postCoreActor.getMoreArticlesFromUsers(post.postId, [
+          post.handle.toLowerCase(),
+        ]);
+        let posts = await fetchPostsByBuckets(result[0], false);
+        return {
+          authorArticles: posts,
+          publicationArticles: [],
+        };
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+      return {
+        authorArticles: [],
+        publicationArticles: [],
+      };
     }
   },
 

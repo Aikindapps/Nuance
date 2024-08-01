@@ -1656,6 +1656,54 @@ actor PostCore {
     Buffer.toArray(postsBuffer);
   };
 
+  //returns the 5 most recent published articles from all the given handles
+  //handles the duplicate posts
+  public shared query ({ caller }) func getMoreArticlesFromUsers(postId: Text, handles : [Text]) : async [[PostKeyProperties]] {
+    Debug.print("PostCore->getMoreArticlesFromUsers: " # debug_show(handles));
+
+    let result = Buffer.Buffer<[PostKeyProperties]>(0);
+
+    for(handle in handles.vals()){
+      let posts = Buffer.Buffer<PostKeyProperties>(0);
+      let trimmedHandle = U.trim(handle);
+      let authorPrincipalId = U.safeGet(lowercaseHandleReverseHashMap, trimmedHandle, "");
+
+      if (authorPrincipalId != "") {
+        let userPostIds = U.safeGet(userPostsHashMap, authorPrincipalId, List.nil<Text>());
+        //sort the post ids by publishedDate and then reverse it
+        let userPostIdsArray = List.toArray(userPostIds);
+        var userPostIdsArraySorted = Array.sort(userPostIdsArray, func (postId_1: Text, postId_2: Text) : { #less; #equal; #greater } {
+          let publishedDate_1 = U.safeGet(publishedDateHashMap, postId_1, 0);
+          let publishedDate_2 = U.safeGet(publishedDateHashMap, postId_2, 0);
+          return Int.compare(publishedDate_1, publishedDate_2);
+        });
+        userPostIdsArraySorted := Array.reverse(userPostIdsArraySorted);
+
+        for(userPostId in userPostIdsArraySorted.vals()){
+          var alreadyExists = false;
+          //check if the postId is added to any array in result buffer
+          for(existingBuffer in result.vals()){
+            for(existingPost in existingBuffer.vals()){
+              if(existingPost.postId == userPostId){
+                //the post has already been added to the result buffer
+                //pass this post
+                alreadyExists := true;
+              }
+            };
+          };
+
+          let isDraft = isDraftOrFutureArticle(userPostId);
+          if (not isDraft and not rejectedByModClub(userPostId) and not alreadyExists and posts.size() < 5 and userPostId != postId) {
+            let postListItem = buildPostKeyProperties(userPostId);
+            posts.add(postListItem);
+          };
+        };
+      };
+      result.add(Buffer.toArray(posts));
+    };
+    return Buffer.toArray(result);
+  };
+
   //returns the list of bucket canister ids that stores the posts of given handles
   public shared query func getBucketCanisterIdsOfGivenHandles(handles : [Text]) : async [Text] {
     var usingBucketCanisterIds = Buffer.Buffer<Text>(0);

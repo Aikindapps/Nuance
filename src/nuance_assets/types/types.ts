@@ -237,3 +237,8 @@ export type CreatePremiumArticleData = {
   icpPrice: bigint;
   maxSupply: bigint;
 };
+
+export type MoreFromThisAuthor = {
+  authorArticles: PostType[];
+  publicationArticles: PostType[];
+};
