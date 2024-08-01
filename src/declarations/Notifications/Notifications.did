@@ -75,6 +75,7 @@ type NotificationType__1 =
    PremiumArticleSold;
    ReaderExpiredSubscription;
    TipReceived;
+   UnknownNotificationType;
    YouSubscribedToAuthor;
    YouUnsubscribedFromAuthor;
  };
@@ -92,42 +93,205 @@ type NotificationType =
    PremiumArticleSold;
    ReaderExpiredSubscription;
    TipReceived;
+   UnknownNotificationType;
    YouSubscribedToAuthor;
    YouUnsubscribedFromAuthor;
  };
 type NotificationContent__1 = 
- record {
-   articleId: text;
-   articleTitle: text;
-   authorHandle: text;
-   authorPrincipal: principal;
-   comment: text;
-   isReply: bool;
-   receiverHandle: text;
-   receiverPrincipal: principal;
-   senderHandle: text;
-   senderPrincipal: principal;
-   tags: vec text;
-   tipAmount: text;
-   token: text;
-   url: text;
+ variant {
+   AuthorExpiredSubscriptionNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   AuthorGainsNewSubscriberNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   AuthorLosesSubscriberNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   CommentNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      comment: text;
+      commenterPrincipal: principal;
+      isAuthorPublication: bool;
+      isReply: bool;
+      tags: vec text;
+      url: text;
+    };
+   FaucetClaimAvailableNotificationContent:
+    record {receiverPrincipal: principal;};
+   NewArticleNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      tags: vec text;
+      url: text;
+    };
+   NewFollowerNotificationContent:
+    record {
+      authorPrincipal: principal;
+      followerPrincipal: principal;
+      followerUrl: text;
+    };
+   PostNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      receiverPrincipal: principal;
+      tags: vec text;
+      url: text;
+    };
+   PremiumArticleSoldNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      purchaserPrincipal: principal;
+      url: text;
+    };
+   ReaderExpiredSubscriptionNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   TipRecievedNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      postUrl: text;
+      receiverPrincipal: principal;
+      recieverIsPublication: bool;
+      senderPrincipal: principal;
+      tipAmount: text;
+      token: text;
+    };
+   YouSubscribedToAuthorNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   YouUnsubscribedFromAuthorNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
  };
 type NotificationContent = 
- record {
-   articleId: text;
-   articleTitle: text;
-   authorHandle: text;
-   authorPrincipal: principal;
-   comment: text;
-   isReply: bool;
-   receiverHandle: text;
-   receiverPrincipal: principal;
-   senderHandle: text;
-   senderPrincipal: principal;
-   tags: vec text;
-   tipAmount: text;
-   token: text;
-   url: text;
+ variant {
+   AuthorExpiredSubscriptionNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   AuthorGainsNewSubscriberNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   AuthorLosesSubscriberNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   CommentNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      comment: text;
+      commenterPrincipal: principal;
+      isAuthorPublication: bool;
+      isReply: bool;
+      tags: vec text;
+      url: text;
+    };
+   FaucetClaimAvailableNotificationContent:
+    record {receiverPrincipal: principal;};
+   NewArticleNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      tags: vec text;
+      url: text;
+    };
+   NewFollowerNotificationContent:
+    record {
+      authorPrincipal: principal;
+      followerPrincipal: principal;
+      followerUrl: text;
+    };
+   PostNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      receiverPrincipal: principal;
+      tags: vec text;
+      url: text;
+    };
+   PremiumArticleSoldNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      purchaserPrincipal: principal;
+      url: text;
+    };
+   ReaderExpiredSubscriptionNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   TipRecievedNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      postUrl: text;
+      receiverPrincipal: principal;
+      recieverIsPublication: bool;
+      senderPrincipal: principal;
+      tipAmount: text;
+      token: text;
+    };
+   YouSubscribedToAuthorNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   YouUnsubscribedFromAuthorNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
  };
 type MetricsGranularity = 
  variant {

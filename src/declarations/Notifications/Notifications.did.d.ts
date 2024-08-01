@@ -30,39 +30,228 @@ export interface HourlyMetricsData {
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
-export interface NotificationContent {
-  'url' : string,
-  'token' : string,
-  'tipAmount' : string,
-  'tags' : Array<string>,
-  'senderHandle' : string,
-  'receiverPrincipal' : Principal,
-  'comment' : string,
-  'articleId' : string,
-  'isReply' : boolean,
-  'senderPrincipal' : Principal,
-  'receiverHandle' : string,
-  'articleTitle' : string,
-  'authorHandle' : string,
-  'authorPrincipal' : Principal,
-}
-export interface NotificationContent__1 {
-  'url' : string,
-  'token' : string,
-  'tipAmount' : string,
-  'tags' : Array<string>,
-  'senderHandle' : string,
-  'receiverPrincipal' : Principal,
-  'comment' : string,
-  'articleId' : string,
-  'isReply' : boolean,
-  'senderPrincipal' : Principal,
-  'receiverHandle' : string,
-  'articleTitle' : string,
-  'authorHandle' : string,
-  'authorPrincipal' : Principal,
-}
-export type NotificationType = { 'FaucetClaimAvailable' : null } |
+export type NotificationContent = {
+    'TipRecievedNotificationContent' : {
+      'token' : string,
+      'postUrl' : string,
+      'recieverIsPublication' : boolean,
+      'tipAmount' : string,
+      'receiverPrincipal' : Principal,
+      'articleId' : string,
+      'senderPrincipal' : Principal,
+      'articleTitle' : string,
+    }
+  } |
+  {
+    'NewFollowerNotificationContent' : {
+      'followerPrincipal' : Principal,
+      'followerUrl' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorExpiredSubscriptionNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'NewArticleNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'PostNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'receiverPrincipal' : Principal,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'CommentNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'comment' : string,
+      'articleId' : string,
+      'isReply' : boolean,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'commenterPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorLosesSubscriberNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'FaucetClaimAvailableNotificationContent' : {
+      'receiverPrincipal' : Principal,
+    }
+  } |
+  {
+    'YouUnsubscribedFromAuthorNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorGainsNewSubscriberNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'YouSubscribedToAuthorNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'PremiumArticleSoldNotificationContent' : {
+      'url' : string,
+      'purchaserPrincipal' : Principal,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'ReaderExpiredSubscriptionNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  };
+export type NotificationContent__1 = {
+    'TipRecievedNotificationContent' : {
+      'token' : string,
+      'postUrl' : string,
+      'recieverIsPublication' : boolean,
+      'tipAmount' : string,
+      'receiverPrincipal' : Principal,
+      'articleId' : string,
+      'senderPrincipal' : Principal,
+      'articleTitle' : string,
+    }
+  } |
+  {
+    'NewFollowerNotificationContent' : {
+      'followerPrincipal' : Principal,
+      'followerUrl' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorExpiredSubscriptionNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'NewArticleNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'PostNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'receiverPrincipal' : Principal,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'CommentNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'comment' : string,
+      'articleId' : string,
+      'isReply' : boolean,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'commenterPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorLosesSubscriberNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'FaucetClaimAvailableNotificationContent' : {
+      'receiverPrincipal' : Principal,
+    }
+  } |
+  {
+    'YouUnsubscribedFromAuthorNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorGainsNewSubscriberNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'YouSubscribedToAuthorNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'PremiumArticleSoldNotificationContent' : {
+      'url' : string,
+      'purchaserPrincipal' : Principal,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'ReaderExpiredSubscriptionNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  };
+export type NotificationType = { 'UnknownNotificationType' : null } |
+  { 'FaucetClaimAvailable' : null } |
   { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
   { 'AuthorLosesSubscriber' : null } |
@@ -76,7 +265,8 @@ export type NotificationType = { 'FaucetClaimAvailable' : null } |
   { 'NewCommentOnFollowedArticle' : null } |
   { 'NewArticleByFollowedTag' : null } |
   { 'AuthorGainsNewSubscriber' : null };
-export type NotificationType__1 = { 'FaucetClaimAvailable' : null } |
+export type NotificationType__1 = { 'UnknownNotificationType' : null } |
+  { 'FaucetClaimAvailable' : null } |
   { 'TipReceived' : null } |
   { 'NewArticleByFollowedWriter' : null } |
   { 'AuthorLosesSubscriber' : null } |

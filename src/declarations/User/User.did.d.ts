@@ -44,6 +44,147 @@ export interface HourlyMetricsData {
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
+export type NotificationContent = {
+    'TipRecievedNotificationContent' : {
+      'token' : string,
+      'postUrl' : string,
+      'recieverIsPublication' : boolean,
+      'tipAmount' : string,
+      'receiverPrincipal' : Principal,
+      'articleId' : string,
+      'senderPrincipal' : Principal,
+      'articleTitle' : string,
+    }
+  } |
+  {
+    'NewFollowerNotificationContent' : {
+      'followerPrincipal' : Principal,
+      'followerUrl' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorExpiredSubscriptionNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'NewArticleNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'PostNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'receiverPrincipal' : Principal,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'CommentNotificationContent' : {
+      'url' : string,
+      'tags' : Array<string>,
+      'comment' : string,
+      'articleId' : string,
+      'isReply' : boolean,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'commenterPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorLosesSubscriberNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'FaucetClaimAvailableNotificationContent' : {
+      'receiverPrincipal' : Principal,
+    }
+  } |
+  {
+    'YouUnsubscribedFromAuthorNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'AuthorGainsNewSubscriberNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'YouSubscribedToAuthorNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'PremiumArticleSoldNotificationContent' : {
+      'url' : string,
+      'purchaserPrincipal' : Principal,
+      'articleId' : string,
+      'isAuthorPublication' : boolean,
+      'articleTitle' : string,
+      'authorPrincipal' : Principal,
+    }
+  } |
+  {
+    'ReaderExpiredSubscriptionNotificationContent' : {
+      'time' : string,
+      'subscriberPrincipal' : Principal,
+      'authorPrincipal' : Principal,
+    }
+  };
+export type NotificationType = { 'UnknownNotificationType' : null } |
+  { 'FaucetClaimAvailable' : null } |
+  { 'TipReceived' : null } |
+  { 'NewArticleByFollowedWriter' : null } |
+  { 'AuthorLosesSubscriber' : null } |
+  { 'YouSubscribedToAuthor' : null } |
+  { 'AuthorExpiredSubscription' : null } |
+  { 'NewCommentOnMyArticle' : null } |
+  { 'YouUnsubscribedFromAuthor' : null } |
+  { 'NewFollower' : null } |
+  { 'ReaderExpiredSubscription' : null } |
+  { 'PremiumArticleSold' : null } |
+  { 'NewCommentOnFollowedArticle' : null } |
+  { 'NewArticleByFollowedTag' : null } |
+  { 'AuthorGainsNewSubscriber' : null };
+export interface Notifications {
+  'id' : string,
+  'content' : NotificationContent,
+  'notificationType' : NotificationType,
+  'read' : boolean,
+  'timestamp' : string,
+}
+export interface NotificationsExtended {
+  'id' : string,
+  'content' : NotificationContent,
+  'notificationType' : NotificationType,
+  'read' : boolean,
+  'senderHandle' : string,
+  'receiverHandle' : string,
+  'timestamp' : string,
+}
 export type NuaBalanceResult = { 'ok' : string } |
   { 'err' : string };
 export interface NumericEntity {
@@ -201,6 +342,7 @@ export interface _SERVICE {
   'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_6>,
   'getDailyMaxRegistration' : ActorMethod<[], bigint>,
+  'getFollowersByPrincipalId' : ActorMethod<[Principal], Array<UserListItem>>,
   'getFollowersCount' : ActorMethod<[string], string>,
   'getHandleByPrincipal' : ActorMethod<[string], GetHandleByPrincipalReturn>,
   'getHandlesByAccountIdentifiers' : ActorMethod<
@@ -208,6 +350,10 @@ export interface _SERVICE {
     Array<string>
   >,
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
+  'getHandlesFromNotifications' : ActorMethod<
+    [Array<Notifications>],
+    Array<NotificationsExtended>
+  >,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_9>,

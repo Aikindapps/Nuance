@@ -136,7 +136,7 @@ export type {
   Notifications,
   NotificationContent,
   NotificationType,
-  UserNotificationSettings,
+  UserNotificationSettings, 
 } from '../../declarations/Notifications/Notifications.did';
 
 export const SUBSCRIPTION_CANISTER_ID = subscriptionCanisterId;

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { toastError, toast, ToastType } from '../services/toastService';
 import { ErrorType, getErrorType } from '../services/errorService';
 import { useAuthStore, useSubscriptionStore } from './';
-import { UserType, UserListItem, PublicationType } from '../types/types';
+import { UserType, UserListItem, PublicationType} from '../types/types';
 import {
   getUserActor,
   User,
@@ -21,6 +21,8 @@ import {
 } from '../services/actorService';
 import UserListElement from '../components/user-list-item/user-list-item';
 import { ReaderSubscriptionDetailsConverted } from './subscriptionStore';
+import { Principal } from '@dfinity/principal';
+import { NotificationsExtended } from 'src/declarations/User/User.did';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -141,7 +143,7 @@ export interface UserStore {
   readonly searchUserResults: UserListItem[] | undefined;
   readonly searchPublicationResults: PublicationType[] | undefined;
   readonly myFollowers: UserListItem[] | undefined;
-  readonly notifications: Notifications[] | undefined;
+  readonly notifications: NotificationsExtended[] | undefined;
   readonly totalNotificationCount: number;
   readonly unreadNotificationCount: number;
   readonly notificationsToasted: string[];
@@ -156,6 +158,7 @@ export interface UserStore {
   getAuthor: (handle: string) => Promise<UserType | undefined>;
   getAllUsersHandles: () => Promise<string[]>;
   getAllPublicationsHandles: () => Promise<[string, string][]>;
+  getHandlesByPrincipals: (principals: string[]) => Promise<string[]>;
   searchUsers: (input: string) => Promise<UserListItem[]>;
   searchPublications: (input: string) => Promise<PublicationType[]>;
   getUserPostCounts: (handle: string) => Promise<UserPostCounts | undefined>;
@@ -197,12 +200,9 @@ export interface UserStore {
     to: number,
     isLoggedIn: boolean
   ) => Promise<void>;
+  getHandlesFromNotifications: (notifications: [Notifications]) => Promise<NotificationsExtended[]>;
   checkMyClaimNotification: () => Promise<void>;
   loadMoreNotifications: (from: number, to: number) => Promise<void>;
-  createNotification: (
-    notificationType: NotificationType,
-    notificationContent: NotificationContent
-  ) => Promise<void>;
   markNotificationAsRead: (notificationId: string[]) => Promise<void>;
   markAllNotificationsAsRead: () => void;
   resetUnreadNotificationCount: () => void;
@@ -332,6 +332,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       return result.ok[0];
     }
     return undefined;
+  },
+
+  getHandlesByPrincipals: async (principals: string[]): Promise<string[]> => {
+    const result = await (
+      await getUserActor()
+    ).getHandlesByPrincipals(principals);
+    if (!(Err in result)) {
+      return result;
+    }
+    return [];
   },
 
   getUserPostCounts: async (
@@ -658,31 +668,36 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           await getNotificationsActor()
         ).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
         var toToast = [];
-
+  
         if (Err in result) {
           toastError(result.err);
         } else {
-          set({ notifications: result.ok[0] });
+
+          const notifications= result.ok[0];
+          const notificationsWithHandles = await get().getHandlesFromNotifications(notifications as [Notifications]);
+          
+          set({ notifications: notificationsWithHandles });
           set({ unreadNotificationCount: 0 });
           set({ totalNotificationCount: Number(result.ok[1]) });
-          for (let i = 0; i < result.ok[0].length; i++) {
-            if (result.ok[0][i].read === false) {
+  
+          for (let i = 0; i < notificationsWithHandles.length; i++) {
+            if (!notificationsWithHandles[i].read) {
               set((state) => ({
                 unreadNotificationCount: state.unreadNotificationCount + 1,
               }));
-              if (!get().notificationsToasted.includes(result.ok[0][i].id)) {
-                toToast.push(result.ok[0][i]);
+              if (!get().notificationsToasted.includes(notificationsWithHandles[i].id)) {
+                toToast.push(notificationsWithHandles[i]);
                 set((state) => ({
                   notificationsToasted: [
                     ...state.notificationsToasted,
-                    result.ok[0][i].id,
+                    notificationsWithHandles[i].id,
                   ],
                 }));
               }
             }
           }
         }
-
+  
         if (toToast?.length > 0) {
           toast(JSON.stringify(toToast), ToastType.Notification);
         }
@@ -690,6 +705,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         console.error('getUserNotifications:', err);
       }
     }
+  },
+
+  getHandlesFromNotifications: async (notifications: [Notifications]): Promise<[NotificationsExtended]> => {
+    const result = await (await getUserActor()).getHandlesFromNotifications(notifications);
+    console.log("getHandlesFromNotifications", result as [NotificationsExtended]);
+    return result as [NotificationsExtended];
   },
 
   checkMyClaimNotification: async (): Promise<void> => {
@@ -711,31 +732,14 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         toastError(result.err);
       } else {
         let notifications = get().notifications || [];
-        set({ notifications: [...notifications, ...result.ok[0]] });
+
+          const notificationsWithHandles = await get().getHandlesFromNotifications(result.ok[0] as [Notifications]);
+        set({ notifications: [...notifications, ...notificationsWithHandles] });
       }
     } catch (err) {
       handleError(err, Unexpected);
     }
   },
-
-  createNotification: async (
-    notificationType: NotificationType,
-    notificationContent: NotificationContent
-  ): Promise<void> => {
-    try {
-      const result = await (
-        await getNotificationsActor()
-      ).createNotification(notificationType, notificationContent);
-      if (Err in result) {
-        console.log('createNotification:', result.err);
-      } else {
-        console.log('createNotification:', result.ok);
-      }
-    } catch (err) {
-      console.log('createNotification:', err);
-    }
-  },
-
   markNotificationAsRead: async (notificationId: string[]): Promise<void> => {
     try {
       const result = await (
