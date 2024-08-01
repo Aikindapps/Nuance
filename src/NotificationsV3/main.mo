@@ -1100,14 +1100,13 @@ private func generateContent(notificationContent: NotificationContent): Notifica
 
 
     private func saveNotification(notification: Notifications, receiverPID: Principal) {
-      
       var receiver = receiverPID;
 
       if (receiver == ANONYMOUS_PRINCIPAL) {
        receiver := getReciever(notification);
       };
 
-      notificationId := notificationId + 1;
+      notificationId += 1;
 
       func saveIdsToPrincipal (notificationId: Text) {
           let currentNotificationIds = switch (Map.get(principalToNotificationId, phash, receiver)) {
@@ -1429,7 +1428,7 @@ public shared ({caller}) func disperseBulkSubscriptionNotifications(subscription
     switch(subscription){
       case(subscription){
        
-     switch (createNotification(subscription.0, subscription.1)) {
+     switch (createNotificationInternal(subscription.0, subscription.1)) {
       case (result) {};
      };
       };
@@ -1745,43 +1744,46 @@ public shared ({caller}) func  createNotifications(input: [(NotificationType, No
     return #err("Unauthorized");
   };
   for(notificationInput in input.vals()){
-    switch (createNotification(notificationInput.0, notificationInput.1)) {
-      case (result) {};
+    switch (createNotificationInternal(notificationInput.0, notificationInput.1)) {
+      case (result) {
+        Debug.print("createNotifications: " # debug_show(notificationInput) # debug_show(result));
+      };
   };
   };
 
   #ok()
 };
 
-//BARAN DO WE STILL NEED THIS? 
+private func createNotificationInternal(notificationType: NotificationType, content: NotificationContent) : () {
+  var notification = {
+        id = Nat.toText(notificationId);
+        notificationType = notificationType;
+        content = content;
+        timestamp = Int.toText(Time.now());
+        read = false;
+    };
 
-// private func createNotificationInternal(notificationType: NotificationType, content: NotificationContent) : () {
-//   var notification = {
-//         id = Nat.toText(notificationId);
-//         notificationType = notificationType;
-//         content = content;
-//         timestamp = Int.toText(Time.now());
-//         read = false;
-//     };
+    switch (notificationType) {
+        case (#AuthorGainsNewSubscriber) {
 
-//     switch (notificationType) {
-//         case (#AuthorGainsNewSubscriber) {
-//           createDirectNotificationInternal(notification);
-//         };
-//         case (#YouSubscribedToAuthor) {
-//           createDirectNotificationInternal(notification);
-//         };
+          Debug.print("createNotificationInternal: AuthorGainsNewSubscriber" # debug_show(notification) # "IS it the reciever:" # debug_show(getReciever(notification)));
+          Debug.print("The id is " # debug_show(notification.id));
+          saveNotification(notification, getReciever(notification));
+        };
+        case (#YouSubscribedToAuthor) {
+          saveNotification(notification, getReciever(notification));
+        };
 
-//         case (#AuthorLosesSubscriber) {
-//           createDirectNotificationInternal(notification);
-//         };
+        case (#AuthorLosesSubscriber) {
+         saveNotification(notification, getReciever(notification));
+        };
 
-//         case (#YouUnsubscribedFromAuthor) {
-//           createDirectNotificationInternal(notification);
-//         };
-//         case (_) {};
-//     };
-// };
+        case (#YouUnsubscribedFromAuthor) {
+          saveNotification(notification, getReciever(notification));
+        };
+        case (_) {};
+    };
+};
 
 
 
@@ -1793,3 +1795,45 @@ system func postupgrade() {};
             
   };
 
+
+//maybe useful debug funcs?
+// public func debugId () : async Text {
+    //   return debug_show(notificationId);
+    // };
+
+    // public func debugGetNotification (id: Text) : async Notifications {
+    //   notificationId := U.textToNat(id);
+    //   return
+    //   {
+    //     id = id;
+    //     notificationType = switch (Map.get(notificationIdToNotificationType, thash, id)) {
+    //       case (?value) { value };
+    //       case null { #UnknownNotificationType };
+    //     };
+    //     timestamp = switch (Map.get(notificationIdToTimestamp, thash, id)) {
+    //       case (?value) { value };
+    //       case null { "" };
+    //     };
+    //     read = switch (Map.get(notificationIdToRead, thash, id)) {
+    //       case (?value) { value };
+    //       case null { false };
+    //     };
+    //     content = buildContent(id);
+
+    //   };
+      
+     
+    // };
+
+    // public func debugGetUserNotificationIds (caller: Principal) : async [Text] {
+    //   let notificationIds = switch (Map.get(principalToNotificationId, phash, caller)) {
+    //     case (?value) { value };
+    //     case null { [] };
+    //   };
+    //   return notificationIds;
+    // };
+
+    // public func debugIdSetNotificationId (id: Text) : async Text {
+    //   notificationId := U.textToNat(id);
+    //   return debug_show(notificationId);
+    // };

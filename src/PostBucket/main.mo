@@ -1486,22 +1486,22 @@ actor class PostBucket() = this {
       postModel.isMembersOnly,
       postModel.scheduledPublishedDate
     )) {
-      case (firstPublish){
-        isFirstPublish := firstPublish;
+      case (firstPublish) {
+        if (not postModel.isDraft) {
+          isFirstPublish := firstPublish;
+        };
       };
       
       };
 
-    if (isFirstPublish) {
-
+    if (isFirstPublish and not postModel.isDraft) {
+      
       ignore await U.newArticle( #PostNotificationContent{
         url = buildPostUrl(postId, postModel.handle, postModel.title);
         receiverPrincipal = Principal.fromText("2vxsx-fae");
-        receiverHandle = "";
         articleId = postId;
         articleTitle = postModel.title;
         authorPrincipal = Principal.fromText(postModel.postOwnerPrincipalId);
-        authorHandle = postModel.handle;
         isAuthorPublication = isPublication;
         tags = postModel.tagNames;
     })

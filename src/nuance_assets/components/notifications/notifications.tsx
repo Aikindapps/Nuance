@@ -320,9 +320,17 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     );
   }
 
-  function articleUrl(url: string, title: string) {
+  function articleUrl(originalUrl: string, title: string, newHandle: string) {
+    // Extract the initial part of the URL before the first slash after the handle
+    const firstSlashIndex = originalUrl.indexOf('/', 1);
+    const urlPrefix = originalUrl.slice(0, firstSlashIndex);
+
+    // Construct the new URL with the fresh handle just in case handle has changed
+    const updatedUrl = `/${newHandle}${originalUrl.slice(firstSlashIndex)}`;
+
+
     return (
-      <a href={`${url}`}>{title}</a>
+      <a href={updatedUrl}>{title}</a>
     );
   }
 
@@ -335,7 +343,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
       return (
         <span>
           Excellent! {handleUrl(senderHandle!, content.recieverIsPublication)} has <b>applauded</b> +
-          {content.tipAmount} {content.token} on "{articleUrl(content.postUrl, content.articleTitle)}"
+          {content.tipAmount} {content.token} on "{articleUrl(content.postUrl, content.articleTitle, notification.receiverHandle)}"
         </span>
       );
     } else if (isNewFollower(notification.content)) {
@@ -351,7 +359,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
       const senderHandle = notification.senderHandle;
       return (
         <span>
-          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle)}"
+          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
         </span>
       );
     } else if (isPost(notification.content)) {
@@ -359,7 +367,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
       const senderHandle = notification.senderHandle;
       return (
         <span>
-          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle)}"
+          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
         </span>
       );
     } else if (isAuthorLosesSubscriber(notification.content)) {
@@ -423,7 +431,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
       const senderHandle = notification.senderHandle;
       return (
         <span>
-          {handleUrl(senderHandle!, content.isAuthorPublication)} {content.isReply ? <b>replied</b> : <b>commented</b>} on "{articleUrl(content.url, content.articleTitle)}"
+          {handleUrl(senderHandle!, content.isAuthorPublication)} {content.isReply ? <b>replied</b> : <b>commented</b>} on "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
         </span>
       );
     } else if (isPremiumArticleSold(notification.content)) {
@@ -431,7 +439,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
       const senderHandle = notification.senderHandle;
       return (
         <span>
-          K-ching! {handleUrl(senderHandle!, content.isAuthorPublication)} bought an <b>NFT access</b> key for your article "{articleUrl(content.url, content.articleTitle)}"
+          K-ching! {handleUrl(senderHandle!, content.isAuthorPublication)} bought an <b>NFT access</b> key for your article "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
         </span>
       );
     } else if (isReaderExpiredSubscription(notification.content)) {

@@ -50,7 +50,8 @@
     },
     "Notifications": {
       "main": "src/NotificationsV3/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "specified_id": "a3shf-5eaaa-aaaaa-qaafa-cai"
     },
     "Notifications_old": {
       "main": "src/Notifications/main.mo",
