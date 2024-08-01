@@ -19,7 +19,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
 import Iter "mo:base/Iter";
 import Debug "mo:base/Debug";
-import Notifications "../Notifications/types";
+import Notifications "../NotificationsV3/types";
 
 actor Subscription {
     let { ihash; nhash; thash; phash; calcHash } = Map;
@@ -542,38 +542,20 @@ actor Subscription {
                     if(event.endTime < now){
                         //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
                         //canister
-                        notifications.add(#AuthorExpiredSubscription, {
-                            url = "";
-                            articleId = "";
-                            articleTitle = "";
+                        notifications.add(#AuthorExpiredSubscription,   #AuthorExpiredSubscriptionNotificationContent {
+                           
                             authorPrincipal = Principal.fromText(event.writerPrincipalId);
-                            authorHandle = "";
-                            comment = "";
-                            isReply = false;
-                            receiverPrincipal = Principal.fromText(event.writerPrincipalId);
-                            receiverHandle = "";
-                            senderPrincipal = Principal.fromText("2vxsx-fae");
-                            senderHandle = "";
-                            tags = [];
-                            tipAmount = "0";
-                            token = "";
+                            subscriberPrincipal = Principal.fromText(event.writerPrincipalId);
+                            time = ""; 
+                            //BARAN HERE! is it possible to find isPublication here?                       
                         });
 
-                        notifications.add(#ReaderExpiredSubscription, {
-                            url = "";
-                            articleId = "";
-                            articleTitle = "";
+                        notifications.add(#ReaderExpiredSubscription,  #ReaderExpiredSubscriptionNotificationContent {
+                          
                             authorPrincipal = Principal.fromText(event.writerPrincipalId);
-                            authorHandle = "";
-                            comment = "";
-                            isReply = false;
-                            receiverPrincipal = Principal.fromText(event.readerPrincipalId);
-                            receiverHandle = "";
-                            senderPrincipal = Principal.fromText("2vxsx-fae");
-                            senderHandle = "";
-                            tags = [];
-                            tipAmount = "0";
-                            token = "";
+                            subscriberPrincipal = Principal.fromText(event.readerPrincipalId);
+                            time = "";
+                            //BARAN HERE! is it possible to find isPublication here?         
                         });
 
                         //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
@@ -860,38 +842,19 @@ actor Subscription {
 
             let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
 
-            notifications.add(#YouSubscribedToAuthor, {
-                url = "";
-                articleId = "";
-                articleTitle = "";
+            notifications.add(#YouSubscribedToAuthor, #YouSubscribedToAuthorNotificationContent {
+               
                 authorPrincipal = Principal.fromText(event.writerPrincipalId);
-                authorHandle = "";
-                comment = "";
-                isReply = false;
-                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
-                receiverHandle = "";
-                senderPrincipal = Principal.fromText("2vxsx-fae"); 
-                senderHandle = "";
-                tags = [];
-                tipAmount = "0";
-                token = "";
+                subscriberPrincipal = Principal.fromText(event.readerPrincipalId);
+                time = "";
             });
 
-            notifications.add(#AuthorGainsNewSubscriber, {
-                url = "";
-                articleId = "";
-                articleTitle = "";
+            notifications.add(#AuthorGainsNewSubscriber, #AuthorGainsNewSubscriberNotificationContent {
+               
                 authorPrincipal = Principal.fromText(event.writerPrincipalId);
-                authorHandle = "";
-                comment = "";
-                isReply = false;
-                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
-                receiverHandle = "";
-                senderPrincipal = Principal.fromText(event.readerPrincipalId);
-                senderHandle = "";
-                tags = [];
-                tipAmount = "0";
-                token = "";
+                subscriberPrincipal = Principal.fromText(event.readerPrincipalId);
+                time = "";
+               
             });
 
             try{
@@ -1047,38 +1010,18 @@ actor Subscription {
                             //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
                             //canister 
                             // #AuthorExpiredSubscription and #ReaderExpiredSubscription;
-                            notifications.add(#AuthorExpiredSubscription, {
-                                url = "";
-                                articleId = "";
-                                articleTitle = "";
+                            notifications.add(#AuthorExpiredSubscription, #AuthorExpiredSubscriptionNotificationContent {
+                              
                                 authorPrincipal = Principal.fromText(event.writerPrincipalId);
-                                authorHandle = "";
-                                comment = "";
-                                isReply = false;
-                                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
-                                receiverHandle = "";
-                                senderPrincipal = Principal.fromText("2vxsx-fae");
-                                senderHandle = "";
-                                tags = [];
-                                tipAmount = "0";
-                                token = "";
+                                subscriberPrincipal = Principal.fromText(event.readerPrincipalId);
+                                time = "";
                             });
 
-                            notifications.add(#ReaderExpiredSubscription, {
-                                url = "";
-                                articleId = "";
-                                articleTitle = "";
+                            notifications.add(#ReaderExpiredSubscription, #ReaderExpiredSubscriptionNotificationContent {
+                              
                                 authorPrincipal = Principal.fromText(event.writerPrincipalId);
-                                authorHandle = "";
-                                comment = "";
-                                isReply = false;
-                                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
-                                receiverHandle = "";
-                                senderPrincipal = Principal.fromText("2vxsx-fae");
-                                senderHandle = "";
-                                tags = [];
-                                tipAmount = "0";
-                                token = "";
+                                subscriberPrincipal = Principal.fromText(event.readerPrincipalId);
+                                time = "";
                             });
 
                             //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map

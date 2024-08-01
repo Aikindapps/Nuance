@@ -25,6 +25,7 @@ import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
 import CanisterDeclarations "../shared/CanisterDeclarations";
+import NotificationTypes "../NotificationsV3/types";
 
 actor User {
   let Unauthorized = "Unauthorized";
@@ -51,6 +52,10 @@ actor User {
   type NftCanisterEntry = Types.NftCanisterEntry;
   type UserClaimInfo = Types.UserClaimInfo;
   type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
+  type Notifications = NotificationTypes.Notifications;
+  type NotificationsExtended = NotificationTypes.NotificationsExtended;
+  type NotificationContent = NotificationTypes.NotificationContent;
+  type NotificationType = NotificationTypes.NotificationType;
 
   type List<T> = List.List<T>;
 
@@ -142,6 +147,8 @@ actor User {
   stable var platformOperators : List.List<Text> = List.nil<Text>();
   stable var nuanceCanisters : List.List<Text> = List.nil<Text>();
   stable var cgusers : List.List<Text> = List.nil<Text>();
+
+  stable var ANONYMOUS_PRINCIPAL = Principal.fromText("2vxsx-fae");
 
   func isAnonymous(caller : Principal) : Bool {
     Principal.equal(caller, Principal.fromText("2vxsx-fae"));
@@ -999,8 +1006,6 @@ actor User {
     ignore U.createNotification(#NewFollower, #NewFollowerNotificationContent {
       followerUrl = "";
       authorPrincipal = Principal.fromText(followingPrincipalId);
-      authorHandle = author;
-      followerHandle = user.handle;
       followerPrincipal = Principal.fromText(principalId);
     });
     
@@ -1060,6 +1065,31 @@ actor User {
     };
 
     let followers = U.safeGet(myFollowersHashMap, principalId, []);
+    let users = Buffer.Buffer<UserListItem>(0);
+
+    for (followerPrincipalId in followers.vals()) {
+      let user : UserListItem = {
+        handle = U.safeGet(handleHashMap, followerPrincipalId, "");
+        avatar = U.safeGet(avatarHashMap, followerPrincipalId, "");
+        displayName = U.safeGet(displayNameHashMap, followerPrincipalId, "");
+        fontType = U.safeGet(fontTypesHashmap, followerPrincipalId, "");
+        bio = U.safeGet(bioHashMap, followerPrincipalId, "");
+        principal = followerPrincipalId;
+        website = U.safeGet(websiteHashMap, followerPrincipalId, "");
+        socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
+        followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+      };
+      users.add(user);
+    };
+    Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
+    Buffer.toArray(users);
+  };
+
+  public shared query func getFollowersByPrincipalId(principalId : Principal) : async [UserListItem] {
+    Debug.print("Get User Followers => " # Principal.toText(principalId));
+   
+
+    let followers = U.safeGet(myFollowersHashMap, Principal.toText(principalId), []);
     let users = Buffer.Buffer<UserListItem>(0);
 
     for (followerPrincipalId in followers.vals()) {
@@ -1657,9 +1687,7 @@ actor User {
     let user = buildUser(principal);
     //ToDo: send the notification to the user
     ignore U.createNotification(#FaucetClaimAvailable, #FaucetClaimAvailableNotificationContent{
-      recieverPrincipal = Principal.fromText(principal);
-      recieverHandle = user.handle;
-      claimed = null;
+      receiverPrincipal = Principal.fromText(principal);
     });
   };
 
@@ -2064,6 +2092,67 @@ actor User {
       };
     };
     Buffer.toArray(handlesBuffer);
+  };
+
+
+//Each notification gets a receiver and a sender, with the variety of notifications they are not always straightforward, sometimes its the author, sometimes its the receiver, sometimes its the commenter etc.
+//90% of the notifications have a receiver and a sender, some only have one of them, some have none.
+//These functions should alleviate the burden of figuring out who is the receiver and who is the sender for each notification type.
+  private func getReciever(notification: Notifications) : Principal {
+      let receiver = switch (notification.content) {
+        case (#PostNotificationContent {receiverPrincipal = rp}) { rp };
+        case (#PremiumArticleSoldNotificationContent {authorPrincipal = ap}) { ap };
+        case (#NewFollowerNotificationContent {authorPrincipal = ap}) { ap };
+        case (#FaucetClaimAvailableNotificationContent {receiverPrincipal = rp}) { rp };
+        case (#TipRecievedNotificationContent {receiverPrincipal = rp}) { rp };
+        case (#CommentNotificationContent {authorPrincipal = ap}) {switch (notification.notificationType) {
+          case (#NewCommentOnMyArticle) { ap };
+          case (#NewCommentOnFollowedArticle) { ANONYMOUS_PRINCIPAL }; // shouldn't need in this context
+          case _ {return ANONYMOUS_PRINCIPAL; };
+        };};
+        
+        case (#AuthorGainsNewSubscriberNotificationContent {authorPrincipal = ap}) { ap };
+        case (#YouSubscribedToAuthorNotificationContent {subscriberPrincipal = sp}) { sp };
+        case (#AuthorLosesSubscriberNotificationContent {authorPrincipal = ap}) { ap };
+        case (#YouUnsubscribedFromAuthorNotificationContent {subscriberPrincipal = sp}) { sp };
+        case (#AuthorExpiredSubscriptionNotificationContent {authorPrincipal = ap}) { ap };
+        case (#ReaderExpiredSubscriptionNotificationContent {subscriberPrincipal = sp}) { sp };
+        case (#NewArticleNotificationContent {} ) {return ANONYMOUS_PRINCIPAL; };
+      };
+    };
+
+private func getSenderPrincipal(notification: NotificationContent) : Principal {
+    switch (notification) {
+        case (#PremiumArticleSoldNotificationContent {purchaserPrincipal = pp}) { pp };
+        case (#CommentNotificationContent {commenterPrincipal = cp}) { cp };
+        case (#NewFollowerNotificationContent {followerPrincipal = fp}) { fp };
+        case (#NewArticleNotificationContent {authorPrincipal = ap}) { ap };
+        case (#PostNotificationContent {authorPrincipal = ap}) { ap };
+        case (#AuthorExpiredSubscriptionNotificationContent {subscriberPrincipal = sp}) { sp };
+        case (#TipRecievedNotificationContent {senderPrincipal = sp}) { sp };
+        case _ { ANONYMOUS_PRINCIPAL };
+    }
+};
+
+
+  public shared query func getHandlesFromNotifications(notifications : [Notifications]) : async [NotificationsExtended] {
+    var newNotificationsBuffer = Buffer.Buffer<NotificationsExtended>(0);
+    for (notification in notifications.vals()) {
+
+          let extendedNotification : NotificationsExtended = {
+            id = notification.id;
+            notificationType = notification.notificationType;
+            content = notification.content;
+            timestamp = notification.timestamp;
+            read = notification.read;
+
+            //you can add other fields here
+            senderHandle = U.safeGet(handleHashMap, Principal.toText(getSenderPrincipal(notification.content)), "");
+            receiverHandle = U.safeGet(handleHashMap, Principal.toText(getReciever(notification)), "");
+          };
+          newNotificationsBuffer.add(extendedNotification);
+    };
+    Buffer.toArray(newNotificationsBuffer);
   };
 
   public shared query ({ caller }) func getUserInternal(userPrincipalId : Text) : async ?User {

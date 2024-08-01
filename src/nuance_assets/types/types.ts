@@ -1,6 +1,7 @@
 import internal from 'stream';
 import { SupportedTokenSymbol } from '../shared/constants';
 import { UserPostCounts } from '../services/actorService';
+import {Notifications, NotificationContent, NotificationType} from '../services/actorService';
 
 export type SocialLinksObject = {
   website: string;

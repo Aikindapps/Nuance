@@ -192,6 +192,140 @@ type NuaBalanceResult =
    err: text;
    ok: text;
  };
+type NotificationsExtended = 
+ record {
+   content: NotificationContent;
+   id: text;
+   notificationType: NotificationType;
+   read: bool;
+   receiverHandle: text;
+   senderHandle: text;
+   timestamp: text;
+ };
+type Notifications = 
+ record {
+   content: NotificationContent;
+   id: text;
+   notificationType: NotificationType;
+   read: bool;
+   timestamp: text;
+ };
+type NotificationType = 
+ variant {
+   AuthorExpiredSubscription;
+   AuthorGainsNewSubscriber;
+   AuthorLosesSubscriber;
+   FaucetClaimAvailable;
+   NewArticleByFollowedTag;
+   NewArticleByFollowedWriter;
+   NewCommentOnFollowedArticle;
+   NewCommentOnMyArticle;
+   NewFollower;
+   PremiumArticleSold;
+   ReaderExpiredSubscription;
+   TipReceived;
+   UnknownNotificationType;
+   YouSubscribedToAuthor;
+   YouUnsubscribedFromAuthor;
+ };
+type NotificationContent = 
+ variant {
+   AuthorExpiredSubscriptionNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   AuthorGainsNewSubscriberNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   AuthorLosesSubscriberNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   CommentNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      comment: text;
+      commenterPrincipal: principal;
+      isAuthorPublication: bool;
+      isReply: bool;
+      tags: vec text;
+      url: text;
+    };
+   FaucetClaimAvailableNotificationContent:
+    record {receiverPrincipal: principal;};
+   NewArticleNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      tags: vec text;
+      url: text;
+    };
+   NewFollowerNotificationContent:
+    record {
+      authorPrincipal: principal;
+      followerPrincipal: principal;
+      followerUrl: text;
+    };
+   PostNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      receiverPrincipal: principal;
+      tags: vec text;
+      url: text;
+    };
+   PremiumArticleSoldNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      authorPrincipal: principal;
+      isAuthorPublication: bool;
+      purchaserPrincipal: principal;
+      url: text;
+    };
+   ReaderExpiredSubscriptionNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   TipRecievedNotificationContent:
+    record {
+      articleId: text;
+      articleTitle: text;
+      postUrl: text;
+      receiverPrincipal: principal;
+      recieverIsPublication: bool;
+      senderPrincipal: principal;
+      tipAmount: text;
+      token: text;
+    };
+   YouSubscribedToAuthorNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+   YouUnsubscribedFromAuthorNotificationContent:
+    record {
+      authorPrincipal: principal;
+      subscriberPrincipal: principal;
+      time: text;
+    };
+ };
 type MetricsGranularity = 
  variant {
    daily;
@@ -289,10 +423,13 @@ service : {
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_6) query;
   getDailyMaxRegistration: () -> (nat) query;
+  getFollowersByPrincipalId: (principal) -> (vec UserListItem) query;
   getFollowersCount: (text) -> (text) query;
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
   getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
   getHandlesByPrincipals: (vec text) -> (vec text) query;
+  getHandlesFromNotifications: (vec Notifications) ->
+   (vec NotificationsExtended) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getMultipleUsersByPrincipalId: (vec text) -> (Result_9) query;

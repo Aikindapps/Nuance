@@ -2666,7 +2666,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
           let author = U.safeGet(principalIdHashMap, postId, "");
         
         
-            ignore U.createNotification(#NewCommentOnFollowedArticle, #NewCommentOnFollowedArticleNotificationContent {
+            ignore U.createNotification(#NewCommentOnFollowedArticle, #CommentNotificationContent {
               url = buildPostUrl(postId, U.safeGet(handleHashMap, author, ""), U.safeGet(titleHashMap, postId, "")) # "?comment=" # validCommentId;
               articleId = postId;
               articleTitle = U.safeGet(titleHashMap, postId, "");
@@ -3211,12 +3211,10 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     };
 
      ignore U.createNotification(#TipReceived,#TipRecievedNotificationContent {
-      postUrl = buildPostUrl(postId, receiverPrincipalId, U.safeGet(titleHashMap, postId, ""));
+      postUrl = buildPostUrl(postId, post.handle, U.safeGet(titleHashMap, postId, ""));
       receiverPrincipal = Principal.fromText(receiverPrincipalId);
-      receiverHandle = U.safeGet(handleHashMap, receiverPrincipalId, "");
       recieverIsPublication = U.safeGet(isPublicationHashMap, postId, false);
       senderPrincipal = Principal.fromText(sender);
-      senderHandle = U.safeGet(handleHashMap, sender, "");
       articleId = postId;
       articleTitle = U.safeGet(titleHashMap, postId, "");
       tipAmount = Nat.toText(balance / 100000000);

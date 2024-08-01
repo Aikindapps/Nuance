@@ -22,7 +22,7 @@ import SHA224 "./SHA224";
 import CRC32 "./CRC32";
 import Hex "./Hex";
 import ENV "../shared/env";
-import NotificationTypes "../NotificationsV2/types";
+import NotificationTypes "../NotificationsV3/types";
 import CanisterDeclarations "CanisterDeclarations";
 
 module {

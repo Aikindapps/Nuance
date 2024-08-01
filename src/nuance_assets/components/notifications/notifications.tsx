@@ -11,12 +11,12 @@ import {
   NotificationContent,
   NotificationType,
 } from '../../../../src/declarations/Notifications/Notifications.did';
+import { NotificationsExtended } from '../../../../src/declarations/User/User.did';
 import { icons } from '../../shared/constants';
 import Toggle from '../../../nuance_assets/UI/toggle/toggle';
 import { colors } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import { get } from 'lodash';
-
 type NotificationsSidebarProps = {};
 
 const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
@@ -216,7 +216,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
   };
 
   //mark notification as read
-  const handleNotificationClick = (notification: Notifications) => {
+  const handleNotificationClick = (notification: NotificationsExtended) => {
     setSelectedNotificationId(notification.id);
 
     if (!notification.read) {
@@ -248,143 +248,218 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
-  function formatNotificationMessage(notification: Notifications) {
-    const notificationTypeKey = getNotificationTypeKey(
-      notification.notificationType
-    );
-    let handleUrl = (
-      <a href={`/user/${notification?.content.senderHandle}`}>
-        @{notification.content.senderHandle}{' '}
-      </a>
-    );
-    let tagHandleUrl = (
-      <a href={`/${notification?.content.authorHandle}`}>
-        @{notification.content.authorHandle}{' '}
-      </a>
-    );
-    let authorHandleUrl = (
-      <a href={`/user/${notification?.content.authorHandle}`}>
-        @{notification.content.authorHandle}{' '}
-      </a>
-    );
-    let articleUrl = (
-      <a href={`${notification?.content.url}`}>
-        {notification?.content.articleTitle}
-      </a>
-    );
+  // Type guards
+  function isTipReceived(content: NotificationContent): content is { TipRecievedNotificationContent: any } {
 
-    switch (notificationTypeKey) {
-      case 'NewCommentOnMyArticle':
-        return (
-          <span>
-            {handleUrl}{' '}
-            {notification.content.isReply ? <b>replied</b> : <b>commented</b>}{' '}
-            on your article "{articleUrl}"
-          </span>
-        );
-      case 'NewCommentOnFollowedArticle':
-        return (
-          <span>
-            {handleUrl}{' '}
-            {notification.content.isReply ? <b>replied</b> : <b>commented</b>}{' '}
-            on "<a>{articleUrl}</a>"
-          </span>
-        );
-      case 'NewArticleByFollowedWriter':
-        return (
-          <span>
-            {authorHandleUrl} posted a <b>new article</b>: "{articleUrl}"
-          </span>
-        );
-      case 'NewArticleByFollowedTag':
-        return (
-          <span>
-            {tagHandleUrl} posted a <b>new article</b>: "{articleUrl}"
-          </span>
-        );
-      case 'NewFollower':
-        return (
-          <span>
-            {handleUrl} is now <b>following</b> you. Well done!
-          </span>
-        );
-      case 'TipReceived':
-        return (
-          <span>
-            Excellent! {handleUrl} has <b>applauded</b> +
-            {notification.content.tipAmount} {notification.content.token} on "
-            {articleUrl}"
-          </span>
-        );
-      case 'PremiumArticleSold':
-        return (
-          <span>
-            K-ching!{' '}
-            {notification.content.senderHandle != '' ? handleUrl : 'Someone'}{' '}
-            bought an <b>NFT access</b> key for your article "{articleUrl}"
-          </span>
-        );
-      case 'AuthorGainsNewSubscriber':
-        return (
+    return 'TipRecievedNotificationContent' in content;
+  }
 
-          <span>
-            🎉 You have a <b className='subscription-notification-text' onClick={handleSubscriberClick}>new subscriber</b>!
-          </span>
-        );
-      case 'YouSubscribedToAuthor':
-        return (
+  function isNewFollower(content: NotificationContent): content is { NewFollowerNotificationContent: any } {
+    return 'NewFollowerNotificationContent' in content;
+  }
 
-          <span>
-            You <b className='subscription-notification-text' onClick={handleSubscriptionClick}>subscribed</b> to a writer. Enjoy!
-          </span>
-        );
-      case 'readerExpiredSubscription':
-        return (
-          <span>
-            Your subscription to {authorHandleUrl} has expired.
-            <Button
-              styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
-              onClick={() =>
-                handleResubscription(notification.content.authorHandle)
-              }
-              loading={false}
-              dark={darkTheme}
-              style={{
-                display: 'flex',
-                flexDirection: 'row-reverse',
-                marginTop: '10px',
-                float: 'right',
-              }}
-            >
-              Extend now
-            </Button>
-          </span>
-        );
-      case 'FaucetClaimAvailable':
-        return (
-          <span>
-            You are allowed to request new Free NUA refill up to a total of 50
-            Free NUA in your wallet!
-            <Button
-              styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
-              onClick={() => {
-                window.location.pathname = '/my-profile/wallet';
-              }}
-              loading={false}
-              dark={darkTheme}
-              style={{
-                display: 'flex',
-                flexDirection: 'row-reverse',
-                marginTop: '10px',
-                float: 'right',
-              }}
-            >
-              Request Free NUA
-            </Button>
-          </span>
-        );
-      default:
-        return 'You have a new notification!';
+  function isAuthorExpiredSubscription(content: NotificationContent): content is { AuthorExpiredSubscriptionNotificationContent: any } {
+    return 'AuthorExpiredSubscriptionNotificationContent' in content;
+  }
+
+  function isNewArticle(content: NotificationContent): content is { NewArticleNotificationContent: any } {
+    return 'NewArticleNotificationContent' in content;
+  }
+
+  function isPost(content: NotificationContent): content is { PostNotificationContent: any } {
+    return 'PostNotificationContent' in content;
+  }
+
+  function isAuthorLosesSubscriber(content: NotificationContent): content is { AuthorLosesSubscriberNotificationContent: any } {
+    return 'AuthorLosesSubscriberNotificationContent' in content;
+  }
+
+  function isFaucetClaimAvailable(content: NotificationContent): content is { FaucetClaimAvailableNotificationContent: any } {
+    return 'FaucetClaimAvailableNotificationContent' in content;
+  }
+
+  function isYouUnsubscribedFromAuthor(content: NotificationContent): content is { YouUnsubscribedFromAuthorNotificationContent: any } {
+    return 'YouUnsubscribedFromAuthorNotificationContent' in content;
+  }
+
+  function isAuthorGainsNewSubscriber(content: NotificationContent): content is { AuthorGainsNewSubscriberNotificationContent: any } {
+    return 'AuthorGainsNewSubscriberNotificationContent' in content;
+  }
+
+  function isYouSubscribedToAuthor(content: NotificationContent): content is { YouSubscribedToAuthorNotificationContent: any } {
+    return 'YouSubscribedToAuthorNotificationContent' in content;
+  }
+
+  function isNewCommentOnFollowedArticle(content: NotificationContent): content is { CommentNotificationContent: any } {
+    return 'CommentNotificationContent' in content;
+  }
+
+  function isPremiumArticleSold(content: NotificationContent): content is { PremiumArticleSoldNotificationContent: any } {
+    return 'PremiumArticleSoldNotificationContent' in content;
+  }
+
+  function isReaderExpiredSubscription(content: NotificationContent): content is { ReaderExpiredSubscriptionNotificationContent: any } {
+    return 'ReaderExpiredSubscriptionNotificationContent' in content;
+  }
+
+  function handleUrl(handle: string, isPublication: boolean = false) {
+    return (
+      <a href={`/${isPublication ? "publication" : "user"}/${handle}`}>@{handle} </a>
+    );
+  }
+
+  function tagHandleUrl(handle: string) {
+    return (
+      <a href={`/${handle}`}>@{handle} </a>
+    );
+  }
+
+  function authorHandleUrl(handle: string, isPublication: boolean = false) {
+    return (
+      <a href={`/${isPublication ? "publication" : "user"}/${handle}`}>@{handle} </a>
+    );
+  }
+
+  function articleUrl(url: string, title: string) {
+    return (
+      <a href={`${url}`}>{title}</a>
+    );
+  }
+
+  function formatNotificationMessage(notification: NotificationsExtended) {
+    const notificationTypeKey = getNotificationTypeKey(notification.notificationType);
+
+    if (isTipReceived(notification.content)) {
+      const content = notification.content.TipRecievedNotificationContent;
+      const senderHandle = notification.senderHandle;
+      return (
+        <span>
+          Excellent! {handleUrl(senderHandle!, content.recieverIsPublication)} has <b>applauded</b> +
+          {content.tipAmount} {content.token} on "{articleUrl(content.postUrl, content.articleTitle)}"
+        </span>
+      );
+    } else if (isNewFollower(notification.content)) {
+      const content = notification.content.NewFollowerNotificationContent;
+      const senderHandle = notification.senderHandle
+      return (
+        <span>
+          {handleUrl(senderHandle!)} is now <b>following</b> you. Well done!
+        </span>
+      );
+    } else if (isNewArticle(notification.content)) {
+      const content = notification.content.NewArticleNotificationContent;
+      const senderHandle = notification.senderHandle;
+      return (
+        <span>
+          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle)}"
+        </span>
+      );
+    } else if (isPost(notification.content)) {
+      const content = notification.content.PostNotificationContent;
+      const senderHandle = notification.senderHandle;
+      return (
+        <span>
+          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle)}"
+        </span>
+      );
+    } else if (isAuthorLosesSubscriber(notification.content)) {
+      const content = notification.content.AuthorLosesSubscriberNotificationContent;
+      const senderHandle = notification.senderHandle;
+      const receiverHandle = notification.receiverHandle;
+      return (
+        <span>
+          {content.time} - {handleUrl(senderHandle!)} has unsubscribed from {authorHandleUrl(receiverHandle!)}.
+        </span>
+      );
+    } else if (isFaucetClaimAvailable(notification.content)) {
+      return (
+        <span>
+          You are allowed to request new Free NUA refill up to a total of 50
+          Free NUA in your wallet!
+          <Button
+            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
+            onClick={() => {
+              window.location.pathname = '/my-profile/wallet';
+            }}
+            loading={false}
+            dark={darkTheme}
+            style={{
+              display: 'flex',
+              flexDirection: 'row-reverse',
+              marginTop: '10px',
+              float: 'right',
+            }}
+          >
+            Request Free NUA
+          </Button>
+        </span>
+      );
+    } else if (isYouUnsubscribedFromAuthor(notification.content)) {
+      const content = notification.content.YouUnsubscribedFromAuthorNotificationContent;
+      const authorHandle = notification.senderHandle;
+      return (
+        <span>
+          {content.time} - You have unsubscribed from <b className='subscription-notification-text' onClick={handleSubscriptionClick}>{authorHandle!}</b>.
+        </span>
+      );
+    } else if (isAuthorGainsNewSubscriber(notification.content)) {
+      const content = notification.content.AuthorGainsNewSubscriberNotificationContent;
+      const senderHandle = notification.senderHandle;
+      return (
+        <span>
+          🎉 You have a <b className='subscription-notification-text' onClick={handleSubscriberClick}>new subscriber</b>!
+        </span>
+      );
+    } else if (isYouSubscribedToAuthor(notification.content)) {
+      const content = notification.content.YouSubscribedToAuthorNotificationContent;
+      const authorHandle = notification.senderHandle;
+      return (
+        <span>
+          You <b className='subscription-notification-text' onClick={handleSubscriptionClick}>subscribed</b> to a writer. Enjoy!
+        </span>
+      );
+    } else if (isNewCommentOnFollowedArticle(notification.content)) {
+      const content = notification.content.CommentNotificationContent;
+      const senderHandle = notification.senderHandle;
+      return (
+        <span>
+          {handleUrl(senderHandle!, content.isAuthorPublication)} {content.isReply ? <b>replied</b> : <b>commented</b>} on "{articleUrl(content.url, content.articleTitle)}"
+        </span>
+      );
+    } else if (isPremiumArticleSold(notification.content)) {
+      const content = notification.content.PremiumArticleSoldNotificationContent;
+      const senderHandle = notification.senderHandle;
+      return (
+        <span>
+          K-ching! {handleUrl(senderHandle!, content.isAuthorPublication)} bought an <b>NFT access</b> key for your article "{articleUrl(content.url, content.articleTitle)}"
+        </span>
+      );
+    } else if (isReaderExpiredSubscription(notification.content)) {
+      const content = notification.content.ReaderExpiredSubscriptionNotificationContent;
+      const authorHandle = notification.senderHandle;
+      return (
+        <span>
+          Your subscription to <b className='subscription-notification-text' onClick={handleSubscriptionClick}>{authorHandle!}</b> has expired.
+          <Button
+            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
+            onClick={() =>
+              handleResubscription(authorHandle ? authorHandle : '')
+            }
+            loading={false}
+            dark={darkTheme}
+            style={{
+              display: 'flex',
+              flexDirection: 'row-reverse',
+              marginTop: '10px',
+              float: 'right',
+            }}
+          >
+            Extend now
+          </Button>
+        </span>
+      );
+    } else {
+      return 'You have a new notification!';
     }
   }
 

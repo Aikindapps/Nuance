@@ -11,7 +11,9 @@
       "specified_id": "dgwwd-jaaaa-aaaaf-qai7a-cai"
     },
     "KinicEndpoint": {
-      "dependencies": ["PostCore"],
+      "dependencies": [
+        "PostCore"
+      ],
       "main": "src/KinicEndpoint/main.mo",
       "type": "motoko",
       "specified_id": "4m3sz-lqaaa-aaaaf-qagza-cai"
@@ -47,6 +49,10 @@
       "specified_id": "xjlvo-hyaaa-aaaam-qbcga-cai"
     },
     "Notifications": {
+      "main": "src/NotificationsV3/main.mo",
+      "type": "motoko"
+    },
+    "Notifications_old": {
       "main": "src/Notifications/main.mo",
       "type": "motoko",
       "specified_id": "55qxh-qqaaa-aaaap-qhfia-cai"
@@ -60,7 +66,11 @@
       "frontend": {
         "entrypoint": "dist/index.html"
       },
-      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "source": [
+        "dist/",
+        "src/well-known/",
+        "src/SEO/"
+      ],
       "type": "assets",
       "specified_id": "exwqn-uaaaa-aaaaf-qaeaa-cai"
     }

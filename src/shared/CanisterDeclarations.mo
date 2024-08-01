@@ -2,7 +2,7 @@ import Result "mo:base/Result";
 import List "mo:base/List";
 import Time "mo:base/Time";
 import ENV "env";
-import NotificationTypes "../NotificationsV2/types";
+import NotificationTypes "../NotificationsV3/types";
 module{
 
 
@@ -69,7 +69,8 @@ module{
         getUserByPrincipalId : (userPrincipalId : Text) -> async Result.Result<User, Text>;
         getUsersByHandles : (handles : [Text]) -> async [UserListItem];
         getUserFollowers : (handle : Text) -> async [UserListItem];
-        getPrincipalByHandle(handle : Text) : async GetPrincipalByHandleReturn;
+        getFollowersByPrincipalId : (principalId : Principal) -> async [UserListItem];
+        getPrincipalByHandle : (handle : Text) -> async GetPrincipalByHandleReturn;
         registerUser : (handle : Text, displayName : Text, avatar : Text) -> async RegisterUserReturn;
         addPublication : (publication : PublicationObject, callerId : Text) -> async AddPublicationReturn;
         removePublication : (publication : PublicationObject, callerId : Text) -> async RemovePublicationReturn;

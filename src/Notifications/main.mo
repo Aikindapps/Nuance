@@ -270,9 +270,6 @@ stable var userBroadcastNotifications = Map.new<Principal, BroadcastNotification
 // key: articleId, value: array of principalIds who've commented on the article. 
 stable var articleCommenters = Map.new<Text, [Principal]>();
 
-//writer and tag followers are derived from the user canister and postcore canister respectively
-//for single source of truth, we will not store them here. These notifications are also not time sensitive.
-
 
 ///////////////////////////////////////////events///////////////////////////////////////////
 
