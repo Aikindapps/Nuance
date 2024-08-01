@@ -7,13 +7,15 @@ import {
   NotificationContent,
   NotificationType,
 } from './actorService';
+import { useAuthStore } from '../store/authStore';
 import { Context } from '../../nuance_assets/contextes/ModalContext';
 import { useTheme } from '../contextes/ThemeContext';
 import { useState } from 'react';
 import './../components/notifications/_notifications.scss';
 import { timeAgo } from '../../nuance_assets/shared/utils';
-import { icons, colors } from '../shared/constants';
+import { icons, colors, getDecimalsByTokenSymbol } from '../shared/constants';
 import Button from '../UI/Button/Button';
+import { getPriceBetweenTokens } from '../shared/utils';
 
 export enum ToastType {
   Plain,
@@ -107,6 +109,10 @@ const CustomNotificationContent = ({
 }) => {
   const darkTheme = useTheme();
 
+  const { sonicTokenPairs } = useAuthStore((state) => ({
+    sonicTokenPairs: state.sonicTokenPairs
+  }));
+
   function getNotificationTypeKey(notificationType: NotificationType): string {
     return Object.keys(notificationType)[0];
   }
@@ -182,10 +188,23 @@ const CustomNotificationContent = ({
           </span>
         );
       case 'TipReceived':
+        const tippedToken = notification.content.token;
+        let applauseAmount = 0;
+
+        if (tippedToken === 'NUA' || tippedToken === 'ICP' || tippedToken === 'ckBTC') {
+          applauseAmount = getPriceBetweenTokens(
+            sonicTokenPairs,
+            tippedToken,
+            'NUA',
+            parseFloat(notification.content.tipAmount) *
+              Math.pow(10, getDecimalsByTokenSymbol(tippedToken))
+          ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'));
+        }
+
         return (
           <span>
-            Excellent! {handleUrl} has <b>applauded</b> +
-            {notification.content.tipAmount} {notification.content.token} on "
+            Excellent! {handleUrl} has given you +
+            {applauseAmount.toString()} applause in {notification.content.token} on "
             {articleUrl}"
           </span>
         );
