@@ -1753,6 +1753,38 @@ public shared ({caller}) func  createNotifications(input: [(NotificationType, No
   #ok()
 };
 
+//BARAN DO WE STILL NEED THIS? 
+
+// private func createNotificationInternal(notificationType: NotificationType, content: NotificationContent) : () {
+//   var notification = {
+//         id = Nat.toText(notificationId);
+//         notificationType = notificationType;
+//         content = content;
+//         timestamp = Int.toText(Time.now());
+//         read = false;
+//     };
+
+//     switch (notificationType) {
+//         case (#AuthorGainsNewSubscriber) {
+//           createDirectNotificationInternal(notification);
+//         };
+//         case (#YouSubscribedToAuthor) {
+//           createDirectNotificationInternal(notification);
+//         };
+
+//         case (#AuthorLosesSubscriber) {
+//           createDirectNotificationInternal(notification);
+//         };
+
+//         case (#YouUnsubscribedFromAuthor) {
+//           createDirectNotificationInternal(notification);
+//         };
+//         case (_) {};
+//     };
+// };
+
+
+
 // #endregion
 system func preupgrade() {};
 system func postupgrade() {};
