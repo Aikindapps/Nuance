@@ -145,7 +145,7 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
                     />
                 </div>
             </div>
-            <div className="schedule-publish-form-group">
+            {!isPremium && <div className="schedule-publish-form-group">
                 <label className="edit-article-left-manage-title">ACCESS</label>
                 <Dropdown
                     items={getAccessOptions()}
@@ -154,7 +154,7 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({
                     selected={selectedAccess}
                     className="access-select"
                 />
-            </div>
+            </div>}
         </div>
     );
 };
