@@ -299,6 +299,7 @@ const convertWriterSubscriptionDetails = async (
     breakPoints.set(Number(subscriptionEvent.startTime), 0);
     breakPoints.set(Number(subscriptionEvent.endTime), 0);
   });
+  breakPoints.set(new Date().getTime(), 0);
 
   for (const subscriptionEvent of details.writerSubscriptions) {
     totalNuaEarned += Number(subscriptionEvent.paymentFee);

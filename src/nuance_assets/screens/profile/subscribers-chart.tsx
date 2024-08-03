@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chartjs-adapter-date-fns'; // Import the date adapter
+import { parse, isValid } from 'date-fns';
 
 Chart.register(...registerables, annotationPlugin);
 
@@ -21,17 +22,23 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
   // Ensure the data is valid, unique, and not in the future
   const filteredData = data.reduce((acc, item) => {
     const exists = acc.find((i) => i.day === item.day);
-    const itemDate = new Date(item.day);
+    const itemDate = parse(item.day, 'dd.MM.yyyy', new Date());
     if (
       !exists &&
-      item.day &&
-      typeof item.count === 'number' &&
-      itemDate <= currentDate
+      isValid(itemDate) &&
+      itemDate <= currentDate &&
+      typeof item.count === 'number'
     ) {
       acc.push(item);
     }
     return acc;
   }, [] as SubscriberData[]);
+
+  useEffect(() => {
+    console.log('Filtered Data:', filteredData);
+  }, [filteredData]);
+
+  console.log("Props Data:", data);
 
   const isValidData = filteredData.length > 0;
 
@@ -45,7 +52,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
       {
         label: 'Subscribers',
         data: filteredData.map((item) => ({
-          x: new Date(item.day),
+          x: parse(item.day, 'dd.MM.yyyy', new Date()),
           y: item.count,
         })),
         borderColor: '#435AAC',
@@ -57,12 +64,12 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
   };
 
   // Calculate the minimum date (3 months before the first date in the data)
-  const firstDate = new Date(filteredData[0].day);
+  const firstDate = parse(filteredData[0].day, 'dd.MM.yyyy', new Date());
   const minDate = new Date(firstDate);
-  minDate.setMonth(minDate.getMonth() - 3);
+  minDate.setMonth(minDate.getMonth() - 1);
 
   // Calculate the maximum date (1 month after the last date in the data)
-  const lastDate = new Date(filteredData[filteredData.length - 1].day);
+  const lastDate = parse(filteredData[filteredData.length - 1].day, 'dd.MM.yyyy', new Date());
   const maxDate = new Date(lastDate);
   maxDate.setMonth(maxDate.getMonth() + 1);
 
@@ -89,8 +96,12 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
           text: 'Date',
         },
         grid: {
-          display: false,
+          display: true,
+          borderDash: [2, 2]
         },
+        ticks: {
+          stepSize: 1
+        }
       },
       y: {
         beginAtZero: true,
@@ -100,6 +111,9 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         },
         grid: {
           display: true,
+        },
+        ticks: {
+          stepSize: 1,
         },
       },
     },
@@ -112,16 +126,16 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         callbacks: {
           label: (tooltipItem: TooltipItem<'line'>) => {
             const dataPoint = tooltipItem.raw as { x: Date; y: number };
-            return ` ${dataPoint.y}` + ' ';
+            return `Subscribers: ${dataPoint.y}` + ' ';
           },
           title: (tooltipItem: TooltipItem<'line'>[]) => {
             const dataPoint = tooltipItem[0].raw as { x: Date; y: number };
-            return '';
+            return ` ${dataPoint.x.toLocaleDateString()}` + ' ';
           },
         },
         backgroundColor: '#02C3A1',
-        titleFont: { size: 20 },
-        bodyFont: { size: 20 },
+        titleFont: { size: 12 },
+        bodyFont: { size: 12 },
         displayColors: false,
       },
       annotation: {
@@ -132,12 +146,13 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
             xMax: new Date().toISOString(),
             borderColor: '#CC4747',
             borderWidth: 2,
+            display: false,
             label: {
               content: 'Today',
               enabled: true,
               position: 'top' as const,
             },
-          },
+          }
         },
       },
     },

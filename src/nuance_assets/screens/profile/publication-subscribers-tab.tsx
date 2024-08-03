@@ -107,6 +107,8 @@ const PublicationSubscribersTab: React.FC<PublicationSubscribersTabProps> = ({
     return date.toLocaleDateString();
   };
 
+  console.log("Chart Data:", chartData);
+
   return (
     <div className='subscribers-tab'>
       <div className='subscription-statistic-wrapper'>
