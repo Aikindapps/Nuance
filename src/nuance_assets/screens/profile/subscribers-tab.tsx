@@ -54,7 +54,7 @@ const SubscribersTab: React.FC = () => {
             setChartData(
               details.numberOfSubscribersHistoricalData.map(
                 ([timestamp, count]: [number, number]) => ({
-                  day: new Date(timestamp).toLocaleDateString(),
+                  day: new Date(timestamp).toLocaleString(),
                   count,
                 })
               )
@@ -100,14 +100,14 @@ const SubscribersTab: React.FC = () => {
                     className='subscription-count'
                     style={{ marginLeft: '-12px' }}
                   >
-                    +{stats.thisWeek}
+                    {stats.thisWeek >= 0 ? `+${stats.thisWeek}` : `-${stats.thisWeek}`}
                   </p>
                   <p className='subscription-title'>This week</p>
                 </div>
               </div>
             </div>
             <div className='title-wrapper'>
-              <p className='chart-title'>SUBSCRIBERS 2024</p>
+              <p className='chart-title'>SUBSCRIBERS {new Date().getFullYear()}</p>
             </div>
             <SubscribersChart data={chartData} />
             <p className='subscribers-table-info'>

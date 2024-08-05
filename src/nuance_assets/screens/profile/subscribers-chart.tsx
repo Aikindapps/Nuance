@@ -3,7 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chartjs-adapter-date-fns'; // Import the date adapter
-import { parse, isValid } from 'date-fns';
+import { parse, isValid, addWeeks, subWeeks } from 'date-fns';
 
 Chart.register(...registerables, annotationPlugin);
 
@@ -20,11 +20,11 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
   const currentDate = new Date();
 
   // Ensure the data is valid, unique, and not in the future
-  const filteredData = data.reduce((acc, item) => {
-    const exists = acc.find((i) => i.day === item.day);
-    const itemDate = parse(item.day, 'dd.MM.yyyy', new Date());
+  let filteredData = data.reduce((acc, item) => {
+    const exists = acc.filter((i) => i.day === item.day);
+    const itemDate = parse(item.day, 'dd.MM.yyyy HH:mm:ss', new Date());
     if (
-      !exists &&
+      exists &&
       isValid(itemDate) &&
       itemDate <= currentDate &&
       typeof item.count === 'number'
@@ -34,13 +34,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     return acc;
   }, [] as SubscriberData[]);
 
-  useEffect(() => {
-    console.log('Filtered Data:', filteredData);
-  }, [filteredData]);
-
-  console.log("Props Data:", data);
-
-  const isValidData = filteredData.length > 0;
+  const isValidData = filteredData.length > 0 && filteredData[0].count !== 0;
 
   if (!isValidData) {
     return <div>You do not have any subscription data yet.</div>;
@@ -52,26 +46,24 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
       {
         label: 'Subscribers',
         data: filteredData.map((item) => ({
-          x: parse(item.day, 'dd.MM.yyyy', new Date()),
+          x: parse(item.day, 'dd.MM.yyyy HH:mm:ss', new Date()),
           y: item.count,
         })),
         borderColor: '#435AAC',
         backgroundColor: 'rgba(2, 195, 161, 0.2)',
         fill: false,
-        tension: 0.1,
+        tension: 0.05,
       },
     ],
   };
 
-  // Calculate the minimum date (3 months before the first date in the data)
-  const firstDate = parse(filteredData[0].day, 'dd.MM.yyyy', new Date());
-  const minDate = new Date(firstDate);
-  minDate.setMonth(minDate.getMonth() - 1);
+  // Calculate the minimum date (1 week before the first date in the data)
+  const firstDate = parse(filteredData[0].day, 'dd.MM.yyyy HH:mm:ss', new Date());
+  const minDate = subWeeks(new Date(firstDate), 1);
 
-  // Calculate the maximum date (1 month after the last date in the data)
-  const lastDate = parse(filteredData[filteredData.length - 1].day, 'dd.MM.yyyy', new Date());
-  const maxDate = new Date(lastDate);
-  maxDate.setMonth(maxDate.getMonth() + 1);
+  // Calculate the maximum date (1 week after the first date in the data)
+  const lastDate = parse(filteredData[filteredData.length - 1].day, 'dd.MM.yyyy HH:mm:ss', new Date());
+  const maxDate = addWeeks(new Date(lastDate), 1);
 
   const options: any = {
     responsive: true,
@@ -79,11 +71,11 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
       x: {
         type: 'time',
         time: {
-          unit: 'month',
+          unit: 'week',
           tooltipFormat: 'MMM dd, yyyy',
           displayFormats: {
             day: 'MMM dd',
-            week: 'MMM dd',
+            week: 'MMM dd yyyy',
             month: 'MMM yyyy',
             quarter: 'MMM yyyy',
             year: 'yyyy',
@@ -96,8 +88,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
           text: 'Date',
         },
         grid: {
-          display: true,
-          borderDash: [2, 2]
+          display: false,
         },
         ticks: {
           stepSize: 1
@@ -126,7 +117,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         callbacks: {
           label: (tooltipItem: TooltipItem<'line'>) => {
             const dataPoint = tooltipItem.raw as { x: Date; y: number };
-            return `Subscribers: ${dataPoint.y}` + ' ';
+            return `Subscribers: ${dataPoint.y}`;
           },
           title: (tooltipItem: TooltipItem<'line'>[]) => {
             const dataPoint = tooltipItem[0].raw as { x: Date; y: number };
