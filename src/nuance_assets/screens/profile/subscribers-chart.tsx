@@ -20,7 +20,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
   const currentDate = new Date();
 
   // Ensure the data is valid, unique, and not in the future
-  let filteredData = data.reduce((acc, item) => {
+  const filteredData = data.reduce((acc, item) => {
     const exists = acc.filter((i) => i.day === item.day);
     const itemDate = parse(item.day, 'dd.MM.yyyy HH:mm:ss', new Date());
     if (
