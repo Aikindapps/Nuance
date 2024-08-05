@@ -121,7 +121,7 @@ const PublicationSubscribersTab: React.FC<PublicationSubscribersTabProps> = ({
           </div>
           <div className='subscription-stat'>
             <p className='subscription-count' style={{ marginLeft: '-12px' }}>
-              {stats.thisWeek >= 0 ? `+${stats.thisWeek}` : `-${stats.thisWeek}`}
+              {stats.thisWeek >= 0 ? `+${stats.thisWeek}` : `${stats.thisWeek}`}
             </p>
             <p className='subscription-title'>This week</p>
           </div>
