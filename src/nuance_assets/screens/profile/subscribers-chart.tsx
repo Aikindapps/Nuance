@@ -40,30 +40,38 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     return <div>You do not have any subscription data yet.</div>;
   }
 
+  const sortedData = filteredData.sort((a, b) => {
+    const dateA = parse(a.day, 'dd.MM.yyyy HH:mm:ss', new Date());
+    const dateB = parse(b.day, 'dd.MM.yyyy HH:mm:ss', new Date());
+    return dateA.getTime() - dateB.getTime();
+  });
+
   // Prepare chart data
   const chartData = {
     datasets: [
       {
         label: 'Subscribers',
-        data: filteredData.map((item) => ({
+        data: sortedData.map((item) => ({
           x: parse(item.day, 'dd.MM.yyyy HH:mm:ss', new Date()),
           y: item.count,
         })),
         borderColor: '#435AAC',
         backgroundColor: 'rgba(2, 195, 161, 0.2)',
         fill: false,
-        tension: 0.05,
+        tension: 0,
       },
     ],
   };
 
   // Calculate the minimum date (1 week before the first date in the data)
-  const firstDate = parse(filteredData[0].day, 'dd.MM.yyyy HH:mm:ss', new Date());
+  const firstDate = parse(sortedData[0].day, 'dd.MM.yyyy HH:mm:ss', new Date());
   const minDate = subWeeks(new Date(firstDate), 1);
 
   // Calculate the maximum date (1 week after the first date in the data)
-  const lastDate = parse(filteredData[filteredData.length - 1].day, 'dd.MM.yyyy HH:mm:ss', new Date());
+  const lastDate = parse(sortedData[sortedData.length - 1].day, 'dd.MM.yyyy HH:mm:ss', new Date());
   const maxDate = addWeeks(new Date(lastDate), 1);
+
+  const maxCount = Math.max(...sortedData.map((item) => item.count)) + 1;
 
   const options: any = {
     responsive: true,
@@ -96,6 +104,8 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
       },
       y: {
         beginAtZero: true,
+        max: maxCount,
+
         title: {
           display: true,
           text: 'Count',
