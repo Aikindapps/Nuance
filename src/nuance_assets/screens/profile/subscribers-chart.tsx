@@ -34,17 +34,17 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     return acc;
   }, [] as SubscriberData[]);
 
-  const isValidData = filteredData.length > 0 && filteredData[0].count !== 0;
-
-  if (!isValidData) {
-    return <div>You do not have any subscription data yet.</div>;
-  }
-
   const sortedData = filteredData.sort((a, b) => {
     const dateA = parse(a.day, 'dd.MM.yyyy HH:mm:ss', new Date());
     const dateB = parse(b.day, 'dd.MM.yyyy HH:mm:ss', new Date());
     return dateA.getTime() - dateB.getTime();
   });
+
+  const isValidData = sortedData.length > 0 && sortedData[0].count !== 0;
+
+  if (!isValidData) {
+    return <div>You do not have any subscription data yet.</div>;
+  }
 
   // Prepare chart data
   const chartData = {
