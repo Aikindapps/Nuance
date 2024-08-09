@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import 'chartjs-adapter-date-fns'; // Import the date adapter
-import { parse, isValid, addWeeks, subWeeks } from 'date-fns';
 
 Chart.register(...registerables, annotationPlugin);
 
@@ -17,28 +16,55 @@ interface SubscribersChartProps {
 }
 
 const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
+  const [timeZone, setTimeZone] = useState<string>('UTC');
+
+  useEffect(() => {
+    let isMounted = true;
+    const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    if (isMounted) setTimeZone(detectedTimeZone);
+  
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+  
   const currentDate = new Date();
+  console.log(timeZone);
+
+  // Parse date string into a Date object
+  const parseDate = (dateString: string) => {
+    // Adjust this format to match the received data
+    const [day, month, year, hour, minute, second] = dateString.split(/[\s:.]+/);
+    const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
+    return new Date(date.toLocaleString('en-US', { timeZone }));
+  };
 
   // Ensure the data is valid, unique, and not in the future
   const filteredData = data.reduce((acc, item) => {
-    const exists = acc.filter((i) => i.day === item.day);
-    const itemDate = parse(item.day, 'dd.MM.yyyy HH:mm:ss', new Date());
-    if (
-      exists &&
-      isValid(itemDate) &&
-      itemDate <= currentDate &&
-      typeof item.count === 'number'
-    ) {
+    const itemDate = parseDate(item.day);
+    const isValidDate = !isNaN(itemDate.getTime());
+    const isNotFuture = itemDate <= currentDate;
+    const isValidCount = typeof item.count === 'number';
+
+    console.log(`Checking item: ${item.day} ---> Date: ${itemDate}, isValidDate: ${isValidDate}, isNotFuture: ${isNotFuture}, isValidCount: ${isValidCount}`);
+
+    if (isValidDate && isNotFuture && isValidCount) {
       acc.push(item);
     }
     return acc;
   }, [] as SubscriberData[]);
 
+  console.log("props data: ", data);
+  console.log(navigator.language);
+  console.log("filtered data: ", filteredData);
+
   const sortedData = filteredData.sort((a, b) => {
-    const dateA = parse(a.day, 'dd.MM.yyyy HH:mm:ss', new Date());
-    const dateB = parse(b.day, 'dd.MM.yyyy HH:mm:ss', new Date());
+    const dateA = parseDate(a.day);
+    const dateB = parseDate(b.day);
     return dateA.getTime() - dateB.getTime();
   });
+
+  console.log("sorted data: ", sortedData);
 
   const isValidData = sortedData.length > 0 && sortedData[0].count !== 0;
 
@@ -52,7 +78,7 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
       {
         label: 'Subscribers',
         data: sortedData.map((item) => ({
-          x: parse(item.day, 'dd.MM.yyyy HH:mm:ss', new Date()),
+          x: parseDate(item.day),
           y: item.count,
         })),
         borderColor: '#435AAC',
@@ -64,12 +90,14 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
   };
 
   // Calculate the minimum date (1 week before the first date in the data)
-  const firstDate = parse(sortedData[0].day, 'dd.MM.yyyy HH:mm:ss', new Date());
-  const minDate = subWeeks(new Date(firstDate), 1);
+  const firstDate = parseDate(sortedData[0].day);
+  const minDate = new Date(firstDate);
+  minDate.setDate(firstDate.getDate() - 7);
 
   // Calculate the maximum date (1 week after the first date in the data)
-  const lastDate = parse(sortedData[sortedData.length - 1].day, 'dd.MM.yyyy HH:mm:ss', new Date());
-  const maxDate = addWeeks(new Date(lastDate), 1);
+  const lastDate = parseDate(sortedData[sortedData.length - 1].day);
+  const maxDate = new Date(lastDate);
+  maxDate.setDate(lastDate.getDate() + 7);
 
   const maxCount = Math.max(...sortedData.map((item) => item.count)) + 1;
 
