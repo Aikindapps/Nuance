@@ -105,25 +105,23 @@
             margin-bottom: 20px;
           }
 
-          .read-article-subscription{
+          .read-article-subscription {
             display: flex;
             flex-direction: row;
             align-items: center;
             margin: 20px 0px;
-            
 
-            .read-article-subscription-icon{
+            .read-article-subscription-icon {
               width: 24px;
               margin: 0px 10px 0px 0px;
             }
 
-            .read-article-subscription-text{
+            .read-article-subscription-text {
               font-family: Roboto;
               font-size: 14px;
               line-height: 32px;
               font-weight: 400;
               color: currentColor;
-              
             }
           }
 
@@ -367,6 +365,26 @@
       .not-found {
         margin-bottom: 150px;
         font-size: 1.5rem;
+      }
+
+      .more-articles {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 120px;
+        a:link{
+          color: unset;
+        }
+        .more-articles-title {
+          color: #999;
+          font-family: Roboto;
+          font-size: 12px;
+          font-style: normal;
+          font-weight: 700;
+          line-height: 18px;
+          /* 150% */
+          text-transform: uppercase;
+        }
       }
     }
   }

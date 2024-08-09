@@ -296,6 +296,8 @@ service : {
   getList: (vec text) -> (vec PostKeyProperties) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
+  getMoreArticlesFromUsers: (text, vec text) ->
+   (vec vec PostKeyProperties) query;
   getMoreLatestPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMyAllPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMyDailyPostsStatus: () -> (bool) query;

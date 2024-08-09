@@ -255,6 +255,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
+    'getMoreArticlesFromUsers' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Text)],
+        [IDL.Vec(IDL.Vec(PostKeyProperties))],
+        ['query'],
+      ),
     'getMoreLatestPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [IDL.Vec(PostKeyProperties)],

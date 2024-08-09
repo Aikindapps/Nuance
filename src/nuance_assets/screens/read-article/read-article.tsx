@@ -28,7 +28,11 @@ import ClapButton from '../../UI/clap-button/clap-button';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import Linkify from 'react-linkify';
 import { Context } from '../../contextes/Context';
-import { PublicationStylingObject } from '../../types/types';
+import {
+  MoreFromThisAuthor,
+  PostType,
+  PublicationStylingObject,
+} from '../../types/types';
 import PostInformation from '../../components/post-information/post-information';
 import EmailOptIn from '../../components/email-opt-in/email-opt-in';
 import { useTheme } from '../../contextes/ThemeContext';
@@ -42,6 +46,7 @@ import { Tooltip } from 'react-tooltip';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
+import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -55,7 +60,6 @@ const ReadArticle = () => {
   const [bio, setBio] = useState('');
   const [socialUrls, setSocialUrls] = useState<string[]>([]);
   const [modalType, setModalType] = useState('');
-
 
   // Publication Feature Context
   const publicationFeatureIsLive = useContext(Context).publicationFeature;
@@ -75,23 +79,14 @@ const ReadArticle = () => {
   const {
     getPost,
     clearPost,
-    setSearchText,
     clapPost,
-    clearSearchBar,
-    isTagScreen,
     post,
     author,
     loadingError,
     clearWordCount,
-    getOwnedNfts,
-    getPremiumPostError,
-    ownedPremiumPosts,
     getPostComments,
-    saveComment,
-    upVoteComment,
-    downVoteComment,
-    deleteComment,
     comments,
+    getMoreFromThisAuthor,
   } = usePostStore((state) => ({
     getPost: state.getPost,
     clearPost: state.clearPost,
@@ -112,6 +107,7 @@ const ReadArticle = () => {
     upVoteComment: state.upVoteComment,
     downVoteComment: state.downVoteComment,
     deleteComment: state.deleteComment,
+    getMoreFromThisAuthor: state.getMoreFromThisAuthor,
   }));
 
   const { user, getUsersByHandlesReturnOnly } = useUserStore((state) => ({
@@ -145,7 +141,7 @@ const ReadArticle = () => {
   const onSubsriptionComplete = () => {
     modalContext?.closeModal();
     load();
-  }
+  };
 
   const openSubscriptionModal = async () => {
     setModalType('Subscription');
@@ -225,7 +221,7 @@ const ReadArticle = () => {
     return () => {
       clearPost();
     };
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     setPublicationHandle(publication?.publicationHandle!);
@@ -254,9 +250,9 @@ const ReadArticle = () => {
   }, [post]);
 
   useEffect(() => {
-    if (post?.isMembersOnly && post?.content === "" && isLoggedIn) {
+    if (post?.isMembersOnly && post?.content === '' && isLoggedIn) {
       openSubscriptionModal();
-    } else if (post?.isMembersOnly && post?.content === "" && !isLoggedIn) {
+    } else if (post?.isMembersOnly && post?.content === '' && !isLoggedIn) {
       modalContext?.openModal('Login');
     }
   }, [post, user]);
@@ -264,6 +260,7 @@ const ReadArticle = () => {
   useEffect(() => {
     if (post) {
       getPostComments(postId, post?.bucketCanisterId);
+      getMoreFromThisAuthorAndPublication(post);
     }
   }, [post?.postId]);
 
@@ -313,6 +310,18 @@ const ReadArticle = () => {
   const [buttoncount, setButtonCount] = useState(0);
   const [mousedown, setMouseDown] = useState(false);
   const [clapDisabled, setClapDisabled] = useState(false);
+
+  //more articles from the author and the publication
+  const [moreArticles, setMoreArticles] = useState<
+    MoreFromThisAuthor | undefined
+  >(undefined);
+
+  const getMoreFromThisAuthorAndPublication = async (post: PostType) => {
+    let moreArticles = await getMoreFromThisAuthor(post);
+    setMoreArticles(moreArticles);
+  };
+
+  console.log(moreArticles);
 
   //disabled for null user and on authored posts
   useEffect(() => {
@@ -527,8 +536,9 @@ const ReadArticle = () => {
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/user/${post.isPublication ? post.creatorHandle : author.handle
-                    }`}
+                  to={`/user/${
+                    post.isPublication ? post.creatorHandle : author.handle
+                  }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -602,7 +612,6 @@ const ReadArticle = () => {
           )}
 
           {!loading && post && author && (
-
             <div className='content'>
               <div className='title-post-info-wrapper'>
                 {post.isPremium ? (
@@ -618,7 +627,9 @@ const ReadArticle = () => {
                       src={icons.MEMBERS_ONLY}
                       style={{ filter: darkTheme ? 'contrast(0.5)' : '' }}
                     />
-                    <p className='read-article-subscription-text'>Members Only</p>
+                    <p className='read-article-subscription-text'>
+                      Members Only
+                    </p>
                   </div>
                 ) : null}
 
@@ -626,9 +637,9 @@ const ReadArticle = () => {
                   style={
                     post.isPublication
                       ? {
-                        fontFamily: publication?.styling.fontType,
-                        color: darkOptionsAndColors.color,
-                      }
+                          fontFamily: publication?.styling.fontType,
+                          color: darkOptionsAndColors.color,
+                        }
                       : { color: darkOptionsAndColors.color }
                   }
                   className='title'
@@ -669,7 +680,7 @@ const ReadArticle = () => {
                       load();
                     }}
                   />
-                ) : post.isMembersOnly && post.content === "" && isLoggedIn ? (
+                ) : post.isMembersOnly && post.content === '' && isLoggedIn ? (
                   <>
                     {modalType === 'Subscription' && modalContext?.isModalOpen && (
                       <SubscriptionModal
@@ -677,30 +688,30 @@ const ReadArticle = () => {
                         authorPrincipalId={post.principal || ''}
                         profileImage={author.avatar}
                         isPublication={post.isPublication || false}
-                        onSubscriptionComplete={() => { onSubsriptionComplete() }}
+                        onSubscriptionComplete={() => {
+                          onSubsriptionComplete();
+                        }}
                       />
                     )}
 
-                    {modalType === 'cancelSubscription' && modalContext?.isModalOpen && (
-                      <CancelSubscriptionModal
-                        handle={author.handle || ''}
-                        profileImage={author.avatar}
-                        isPublication={post.isPublication || false}
-                        authorPrincipalId={post.principal || ''}
-                        onCancelComplete={() => { }}
-                      />
-                    )}
+                    {modalType === 'cancelSubscription' &&
+                      modalContext?.isModalOpen && (
+                        <CancelSubscriptionModal
+                          handle={author.handle || ''}
+                          profileImage={author.avatar}
+                          isPublication={post.isPublication || false}
+                          authorPrincipalId={post.principal || ''}
+                          onCancelComplete={() => {}}
+                        />
+                      )}
                   </>
-                ) :
-                  null}
+                ) : null}
 
-
-
-                {post.premiumArticleSaleInfo || (post.isMembersOnly && post.content === "") ? (
+                {post.premiumArticleSaleInfo ||
+                (post.isMembersOnly && post.content === '') ? (
                   <div className='text text-not-allowed'>
                     {parse(premiumArticlePlaceHolder)}
                   </div>
-
                 ) : (
                   <div className={darkTheme ? 'dark-text' : 'text'}>
                     {parse(post.content)}
@@ -762,8 +773,9 @@ const ReadArticle = () => {
                     className='profile-picture'
                   />
                   <Link
-                    to={`/user/${post.isPublication ? post.creatorHandle : author.handle
-                      }`}
+                    to={`/user/${
+                      post.isPublication ? post.creatorHandle : author.handle
+                    }`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
@@ -777,7 +789,7 @@ const ReadArticle = () => {
                           onClick={() => {
                             let urlWithProtocol =
                               url.startsWith('https://') ||
-                                url.startsWith('http://')
+                              url.startsWith('http://')
                                 ? url
                                 : 'https://' + url;
                             window.open(urlWithProtocol, '_blank');
@@ -806,8 +818,8 @@ const ReadArticle = () => {
                     style={
                       darkTheme
                         ? {
-                          color: darkOptionsAndColors.secondaryColor,
-                        }
+                            color: darkOptionsAndColors.secondaryColor,
+                          }
                         : {}
                     }
                   >
@@ -853,6 +865,28 @@ const ReadArticle = () => {
                       />
                     ))}
                 </div>
+                {moreArticles && moreArticles.authorArticles.length > 0 && (
+                  <div className='more-articles'>
+                    <p className='more-articles-title'>MORE FROM THIS AUTHOR</p>
+                    <div className='article-list-items-wrapper'>
+                      {moreArticles.authorArticles.map((post) => (
+                        <CardPublishedArticles post={post} key={post.postId} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {moreArticles && moreArticles.publicationArticles.length > 0 && (
+                  <div className='more-articles'>
+                    <p className='more-articles-title'>
+                      MORE FROM THIS PUBLICATION
+                    </p>
+                    <div className='article-list-items-wrapper'>
+                      {moreArticles.publicationArticles.map((post) => (
+                        <CardPublishedArticles post={post} key={post.postId} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
