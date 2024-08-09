@@ -91,4 +91,4 @@ export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE extends Storage {}
 export declare const idlFactory: IDL.InterfaceFactory;
-export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

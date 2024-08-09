@@ -270,8 +270,8 @@ actor PostCore {
       Cycles.add(5_000_000_000_000);
       let bucketCanister = await PostBucket.PostBucket();
       let canisterId = Principal.toText(Principal.fromActor(bucketCanister));
-      let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
-      switch (await PostIndexCanister.registerCanister(canisterId)) {
+      let PostIndexCanister = CanisterDeclarations.getPostRelationsCanister();
+      switch (await PostIndexCanister.registerCanister(Principal.fromText(canisterId))) {
         case (#err(err)) {
           return #err("An error occured while registering the bucket canister as admin in PostIndex canister.");
         };
@@ -312,7 +312,7 @@ actor PostCore {
         Debug.print("update settings error");
       };
 
-      switch (await bucketCanister.initializeBucketCanister(List.toArray(admins), List.toArray(nuanceCanisters), List.toArray(cgusers), [], Principal.toText(Principal.fromActor(PostCore)), ENV.NUANCE_ASSETS_CANISTER_ID, ENV.POST_INDEX_CANISTER_ID, ENV.USER_CANISTER_ID)) {
+      switch (await bucketCanister.initializeBucketCanister(List.toArray(nuanceCanisters), List.toArray(cgusers), Principal.toText(Principal.fromActor(PostCore)))) {
         case (#ok(cai)) {
           activeBucketCanisterId := canisterId;
           bucketCanisterIdsHashMap.put(canisterId, Nat.toText(postId + 1));
@@ -364,14 +364,14 @@ actor PostCore {
     };
 
     //👀👀👀 warning IC.countInstructions executes the functions passed to it
-    let preupgradeCount = ICexperimental.countInstructions(func() { preupgrade() });
-    let postupgradeCount = ICexperimental.countInstructions(func() { postupgrade() });
+    //let preupgradeCount = ICexperimental.countInstructions(func() { preupgrade() });
+    //let postupgradeCount = ICexperimental.countInstructions(func() { postupgrade() });
 
     // "the limit for a canister install and upgrade is 200 billion instructions."
     // "the limit for an update message is 20 billion instructions"
 
-    return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
-
+    //return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
+    return "Retired for now!";
   };
 
   public shared query func getBucketCanisters() : async [(Text, Text)] {
@@ -583,6 +583,21 @@ actor PostCore {
         //caller is a bucket canister
         postId += 1;
         #ok(Nat.toText(postId));
+      };
+      case (null) {
+        return #err(Unauthorized);
+      };
+    };
+
+  };
+
+  public shared ({ caller }) func getNextPostIdsDebug(count: Nat) : async Result.Result<Text, Text> {
+    switch (bucketCanisterIdsHashMap.get(Principal.toText(caller))) {
+      case (?value) {
+        //caller is a bucket canister
+        let oldPostId = postId;
+        postId += count;
+        #ok(Nat.toText(oldPostId + 1));
       };
       case (null) {
         return #err(Unauthorized);
@@ -1373,21 +1388,14 @@ actor PostCore {
 
         // TODO: should we move indexing to the modclub callback function when content is approved?
         // returns UnauthorizedError if this canister is not registered as an admin in the PostIndex canister
-        let handle = postBucketReturn.handle;
-        let prevTitle = postBucketReturn.title;
-        let prevSubtitle = postBucketReturn.subtitle;
-        let prevContent = postBucketReturn.content;
-        let previous = handle # " " # prevTitle # " " # prevSubtitle;
-        let current = handle # " " # postModel.title # " " # postModel.subtitle;
-        let prevTags = getTagNamesByPostId(postBucketReturn.postId);
-        let currentTags = getTagNamesByTagIds(postModel.tagIds);
-        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
-        var indexResult = await PostIndexCanister.indexPost(postBucketReturn.postId, previous, current, prevTags, currentTags);
-
-        switch (indexResult) {
-          case (#ok(id)) Debug.print("indexed post id: " # id);
-          case (#err(msg)) return #err(msg);
-        };
+        let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
+        await PostRelationsCanister.indexPost({
+          postId = postBucketReturn.postId;
+          content = postBucketReturn.content;
+          subtitle = postBucketReturn.subtitle;
+          title = postBucketReturn.title;
+          tags = getTagNamesByTagIds(postModel.tagIds);
+        });
 
         ignore submitPostToModclub(postBucketReturn.postId, postBucketReturn, postVersion);
 
@@ -1424,6 +1432,133 @@ actor PostCore {
       };
     };
 
+  };
+
+  public shared ({ caller }) func debugSaveMultiplePosts(postModels : [PostSaveModel]) : async [Result.Result<Post, Text>] {
+    Debug.print("PostCore debugSaveMultiplePosts input: " # debug_show(postModels));
+    if (not isPlatformOperator(caller)) {
+      return [#err(Unauthorized)];
+    };
+   
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return [#err("Canister reached the maximum memory threshold. Please try again later.")];
+    };
+
+    let callerPrincipalId = Principal.toText(caller);
+    let bucketActorSaveArguments = Buffer.Buffer<CanisterDeclarations.PostSaveModelBucket>(0);
+    for(postModel in postModels.vals()){
+      let postIdTrimmed = U.trim(postModel.postId);
+      let isNew = (postIdTrimmed == "");
+
+      //if publication post, owner is the publication canister id, else owner is caller
+      let postOwnerPrincipalId = callerPrincipalId;
+
+      let bucketCanisterId = activeBucketCanisterId;
+
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+
+
+      var tagNamesBuffer = Buffer.Buffer<Text>(0);
+      for (tagId in postModel.tagIds.vals()) {
+        let tagName = U.safeGet(tagsHashMap, tagId, { value = ""; id = ""; createdDate = 0 }).value;
+        if (tagName != "") {
+          tagNamesBuffer.add(tagName);
+        };
+      };
+
+      // retrieve user handle if it's not already mapped to the principalId
+      var userHandle = U.safeGet(handleHashMap, callerPrincipalId, "");
+
+      Debug.print("PostCore-> calling the bucket actor save method.");
+      bucketActorSaveArguments.add({
+        caller = caller;
+        handle = userHandle;
+        postOwnerPrincipalId = postOwnerPrincipalId;
+        category = postModel.category;
+        content = postModel.content;
+        creatorHandle = postModel.creatorHandle;
+        headerImage = postModel.headerImage;
+        isDraft = postModel.isDraft;
+        premium = null;
+        isMembersOnly = postModel.isMembersOnly;
+        isPublication = false;
+        postId = postModel.postId;
+        subtitle = postModel.subtitle;
+        tagNames = Buffer.toArray(tagNamesBuffer);
+        title = postModel.title;
+        scheduledPublishedDate = postModel.scheduledPublishedDate
+      });
+    };
+
+    let bucketActor = CanisterDeclarations.getPostBucketCanister(activeBucketCanisterId);
+    let multipleSaveResults = await bucketActor.saveMultiple(Buffer.toArray(bucketActorSaveArguments));
+    let results = Buffer.Buffer<Result.Result<Post, Text>>(0);
+    let indexPostsArguments = Buffer.Buffer<CanisterDeclarations.IndexPostModel>(0);
+    var counter = 0;
+    for(saveResult in multipleSaveResults.vals()){
+      switch (saveResult) {
+        case (#ok(postBucketReturn)) {
+          //if the bucket canister saved the post succesfully, change the internal state (tagIds, modclub - postVersion - indexing- user post ids)
+
+          addOrUpdatePostDebugMultiple(true, callerPrincipalId, postModels[counter].tagIds, activeBucketCanisterId, postBucketReturn);
+
+          // add this postId to the user's posts if not already added
+          addPostIdToUser(callerPrincipalId, postBucketReturn.postId);
+        
+          //store version
+          var postVersion = 1;
+          postVersionMap.put(postBucketReturn.postId, postVersion);
+
+
+          let keyProperties = buildPostKeyProperties(postBucketReturn.postId);
+          results.add(#ok({
+            bucketCanisterId = activeBucketCanisterId;
+            category = postBucketReturn.category;
+            claps = keyProperties.claps;
+            content = postBucketReturn.content;
+            created = postBucketReturn.created;
+            creatorHandle = postBucketReturn.creatorHandle;
+            creatorPrincipal = postBucketReturn.creatorPrincipal;
+            handle = postBucketReturn.handle;
+            headerImage = postBucketReturn.headerImage;
+            isDraft = postBucketReturn.isDraft;
+            isPremium = postBucketReturn.isPremium;
+            isMembersOnly = postBucketReturn.isMembersOnly;
+            nftCanisterId = postBucketReturn.nftCanisterId;
+            isPublication = postBucketReturn.isPublication;
+            modified = postBucketReturn.modified;
+            postId = postBucketReturn.postId;
+            publishedDate = postBucketReturn.publishedDate;
+            subtitle = postBucketReturn.subtitle;
+            tags = keyProperties.tags;
+            title = postBucketReturn.title;
+            url = postBucketReturn.url;
+            wordCount = postBucketReturn.wordCount;
+            views = keyProperties.views;
+          }));
+
+          indexPostsArguments.add({
+            postId = postBucketReturn.postId;
+            content = postBucketReturn.content;
+            subtitle = postBucketReturn.subtitle;
+            title = postBucketReturn.title;
+            tags = getTagNamesByTagIds(postModels[counter].tagIds);
+          });
+        };
+        case (#err(err)) {
+          //if the bucket canister returns an error, return the same error
+          results.add(#err(err));
+        };
+      };
+      counter += 1;
+    };
+
+    //index all the posts
+    let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
+    await PostRelationsCanister.indexPosts(Buffer.toArray(indexPostsArguments));
+
+    Buffer.toArray(results);
   };
 
   //migration function for new nft canister architecture
@@ -1607,6 +1742,43 @@ actor PostCore {
       isDraftHashMap.put(saveReturn.postId, saveReturn.isDraft);
       //remove the post from popularity sorted arrays
       removePostFromPopularityArrays(saveReturn.postId);
+      //delete the publishedDate value if exists
+      publishedDateHashMap.delete(saveReturn.postId);
+    } else {
+      isDraftHashMap.delete(saveReturn.postId);
+    };
+
+    if (saveReturn.category == "") {
+      categoryHashMap.delete(saveReturn.postId);
+    } else {
+      categoryHashMap.put(saveReturn.postId, saveReturn.category);
+    };
+  };
+
+  private func addOrUpdatePostDebugMultiple(isNew : Bool, principal : Text, tagIds : [Text], bucketCanisterId : Text, saveReturn : PostBucketType) : () {
+
+    principalIdHashMap.put(saveReturn.postId, principal);
+    postIdsToBucketCanisterIdsHashMap.put(saveReturn.postId, bucketCanisterId);
+    modifiedHashMap.put(saveReturn.postId, U.textToNat(saveReturn.modified));
+    if (isNew) {
+      createdHashMap.put(saveReturn.postId, U.textToNat(saveReturn.created));
+    };
+    let post = buildPostKeyProperties(saveReturn.postId);
+    if (not saveReturn.isDraft) {
+      publishedDateHashMap.put(saveReturn.postId, U.textToNat(saveReturn.publishedDate));
+      if(not U.arrayContains(Iter.toArray(latestPostsHashmap.vals()), saveReturn.postId)){
+        latestPostsHashmap.put(Int.toText(latestPostsHashmap.size()), saveReturn.postId);
+      }
+    };
+
+    //publishedDate
+    addOrUpdatePostTag(saveReturn.postId, tagIds);
+
+    //draft
+    if (saveReturn.isDraft) {
+      isDraftHashMap.put(saveReturn.postId, saveReturn.isDraft);
+      //remove the post from popularity sorted arrays
+      //removePostFromPopularityArrays(saveReturn.postId);
       //delete the publishedDate value if exists
       publishedDateHashMap.delete(saveReturn.postId);
     } else {
@@ -2529,33 +2701,8 @@ actor PostCore {
       return #err("Canister reached the maximum memory threshold. Please try again later.");
     };
 
-    let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
-    var result = await PostIndexCanister.clearIndex();
-
-    switch (result) {
-      case (#ok(wordCount)) Debug.print("PostBucket->reindex: Cleared " # Nat.toText(wordCount) # " words from the index");
-      case (#err(msg)) return #err(msg);
-    };
-
-    var counter = 0;
-    var errorCanisterIds = " ";
-    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
-      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
-      switch (await bucketActor.reindex()) {
-        case (#ok(c)) {
-          counter += U.textToNat(c);
-        };
-        case (#err(err)) {
-          errorCanisterIds #= " " # bucketCanisterId;
-        };
-      };
-    };
-
-    if (errorCanisterIds == " ") {
-      return #err(errorCanisterIds);
-    } else {
-      return #ok(Nat.toText(counter));
-    };
+    //retired for now
+    return #err("Retired");
   };
 
   //#region popularity
@@ -3219,14 +3366,8 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
 
     switch (await bucketActor.get(postId)) {
       case (#ok(post)) {
-        let handle = post.handle;
-        let prevTitle = post.title;
-        let prevSubtitle = post.subtitle;
-        let prevContent = post.content;
-        let previous = handle # " " # prevTitle # " " # prevSubtitle;
-        let prevTags = getTagNamesByPostId(postId);
-        let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
-        var indexResult = await PostIndexCanister.indexPost(postId, previous, "", prevTags, [""]);
+        let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
+        await PostRelationsCanister.removePost(postId);
       };
       case (_) {};
     };
@@ -3428,7 +3569,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
       func(tagId) {
         switch (tagsHashMap.get(tagId)) {
           case (null) "";
-          case (?tag) tag.value;
+          case (?tag) U.lowerCase(tag.value);
         };
       },
     );
@@ -3587,26 +3728,25 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
       };
     };
   };
-
   public shared composite query ({caller}) func getMyFollowingTagsPostKeyProperties(indexFrom: Nat32, indexTo: Nat32) : async GetPostsByFollowers {
     let userPrincipalId = Principal.toText(caller);
     let userTags = getTagsByPrincipal(userPrincipalId);
-    let formattedTagNames = Array.map<PostTagModel, Text>(
+    let tagNames = Array.map<PostTagModel, Text>(
       userTags,
       func(userTag) {
-        "#" # U.upperCase(userTag.tagName);
+        U.lowerCase(userTag.tagName)
       },
     );
-    let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
-    let postIndexCanisterResponse = await PostIndexCanister.populateTags(formattedTagNames, indexFrom, indexTo);
-    let postIds = postIndexCanisterResponse.postIds;
+    let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
+    let postRelationsCanisterResponse = await PostRelationsCanister.searchByTags(tagNames, indexFrom, indexTo);
+    let postIds = postRelationsCanisterResponse.postIds;
     let postsBuffer = Buffer.Buffer<PostKeyProperties>(0);
     for(postId in postIds.vals()){
       postsBuffer.add(buildPostKeyProperties(postId));
     };
     return {
       posts = Buffer.toArray(postsBuffer);
-      totalCount = postIndexCanisterResponse.totalCount;
+      totalCount = postRelationsCanisterResponse.totalCount;
     }
   };
 
@@ -4241,7 +4381,7 @@ public shared ({caller}) func getTagFollowers(tagName : Text) : async Result.Res
       return #err("Anonymous user cannot run this method");
     };
 
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     MAX_MEMORY_SIZE := newValue;
@@ -4369,7 +4509,7 @@ public shared ({caller}) func getTagFollowers(tagName : Text) : async Result.Res
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 

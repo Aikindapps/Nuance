@@ -174,6 +174,10 @@ export interface _SERVICE {
   'currentId' : ActorMethod<[], bigint>,
   'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
+  'debugSaveMultiplePosts' : ActorMethod<
+    [Array<PostSaveModel>],
+    Array<Result_4>
+  >,
   'delete' : ActorMethod<[string], Result_3>,
   'deletePostFromUserDebug' : ActorMethod<[string, string], Result_8>,
   'deleteUserPosts' : ActorMethod<[string], Result_3>,
@@ -233,6 +237,7 @@ export interface _SERVICE {
   >,
   'getMyTags' : ActorMethod<[], Array<PostTagModel__1>>,
   'getNextPostId' : ActorMethod<[], Result_2>,
+  'getNextPostIdsDebug' : ActorMethod<[bigint], Result_2>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPopular' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularThisMonth' : ActorMethod<[number, number], GetPostsByFollowers>,
@@ -337,4 +342,4 @@ export interface _SERVICE {
   'viewPost' : ActorMethod<[string], undefined>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
-export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

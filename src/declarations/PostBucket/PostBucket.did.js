@@ -270,16 +270,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'initializeBucketCanister' : IDL.Func(
-        [
-          IDL.Vec(IDL.Text),
-          IDL.Vec(IDL.Text),
-          IDL.Vec(IDL.Text),
-          IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-        ],
+        [IDL.Vec(IDL.Text), IDL.Vec(IDL.Text), IDL.Text],
         [Result_2],
         [],
       ),
@@ -310,6 +301,11 @@ export const idlFactory = ({ IDL }) => {
     'reviewComment' : IDL.Func([IDL.Text, IDL.Bool], [Result_5], []),
     'save' : IDL.Func([PostSaveModel], [SaveResult], []),
     'saveComment' : IDL.Func([SaveCommentModel], [Result], []),
+    'saveMultiple' : IDL.Func(
+        [IDL.Vec(PostSaveModel)],
+        [IDL.Vec(SaveResult)],
+        [],
+      ),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_4], []),
     'storeHandlesAndPrincipals' : IDL.Func(
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],

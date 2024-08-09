@@ -1,0 +1,31 @@
+type SearchByTagsResponse = 
+ record {
+   postIds: vec text;
+   totalCount: text;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: vec principal;
+ };
+type IndexPostModel = 
+ record {
+   content: text;
+   postId: text;
+   subtitle: text;
+   tags: vec text;
+   title: text;
+ };
+service : {
+  debug_print_everything: () -> () query;
+  getRelatedPosts: (text) -> (vec text) query;
+  indexPost: (IndexPostModel) -> ();
+  indexPosts: (vec IndexPostModel) -> ();
+  registerCanister: (principal) -> (Result);
+  removePost: (text) -> ();
+  searchByTag: (text) -> (vec text) query;
+  searchByTagWithinPublication: (text, text) -> (vec text) composite_query;
+  searchByTags: (vec text, nat32, nat32) -> (SearchByTagsResponse) query;
+  searchPost: (text) -> (vec text) query;
+  searchPublicationPosts: (text, text) -> (vec text) composite_query;
+}

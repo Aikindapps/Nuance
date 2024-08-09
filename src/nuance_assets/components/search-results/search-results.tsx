@@ -13,6 +13,7 @@ import Dropdown from '../../UI/dropdown/dropdown';
 import { TagModel } from '../../../declarations/PostCore/PostCore.did';
 import { searchTextToTag } from '../../shared/utils';
 import Loader from '../../UI/loader/Loader';
+import Button from '../../UI/Button/Button';
 
 type Counts = {
   articlesCount: number;
@@ -29,6 +30,7 @@ export const SearchResults = (props: {
   users: UserListItem[];
   counts: Counts;
   allTags: TagModel[];
+  loadMoreArticles: () => Promise<void>;
 }) => {
   const darkTheme = useTheme();
 
@@ -36,6 +38,8 @@ export const SearchResults = (props: {
     useState<FilterType>('All');
 
   const [sortType, setSortType] = useState<SortType>('Relevance');
+
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
 
   //userStore
   const { isLoggedIn } = useAuthStore((state) => ({
@@ -67,17 +71,18 @@ export const SearchResults = (props: {
   const [followTagLoading, setFollowTagLoading] = useState(false);
 
   const getDisplayingUiElement = (
-    element: PostType | PublicationType | UserListItem,
-    key: number
+    element: PostType | PublicationType | UserListItem
   ) => {
     if ('postId' in element) {
       //article
-      return <CardPublishedArticles key={key} post={element} />;
+      return (
+        <CardPublishedArticles key={'post-' + element.postId} post={element} />
+      );
     } else if ('publicationHandle' in element) {
       //publication
       return (
         <UserListElement
-          key={key}
+          key={'publication-' + element.publicationHandle}
           isPublication={true}
           handle={element.publicationHandle}
           displayName={element.publicationTitle}
@@ -91,7 +96,7 @@ export const SearchResults = (props: {
       //user
       return (
         <UserListElement
-          key={key}
+          key={'user-' + element.handle}
           isPublication={false}
           handle={element.handle}
           displayName={element.displayName}
@@ -116,8 +121,9 @@ export const SearchResults = (props: {
           case 'Most recent':
             //sort the articles by date on top of the list
             //sort the publications/users by relevance
-            let articlesSorted = props.articles.sort((article_1, article_2) => {
-              return parseInt(article_1.created) - parseInt(article_2.created);
+            let articles = Array.from(props.articles); //copy the articles into another array first
+            let articlesSorted = articles.sort((article_1, article_2) => {
+              return parseInt(article_2.created) - parseInt(article_1.created);
             });
             let publicationsAndUsers = [...props.publications, ...props.users];
             publicationsAndUsers = publicationsAndUsers.sort(
@@ -144,6 +150,17 @@ export const SearchResults = (props: {
               ...props.publications,
               ...props.users,
             ].sort((element_1, element_2) => {
+              if ('postId' in element_1 && 'postId' in element_2) {
+                //both articles
+                //keep the current placement
+                let first_el_index = props.articles.findIndex((post) => {
+                  return post.postId === element_1.postId;
+                });
+                let second_el_index = props.articles.findIndex((post) => {
+                  return post.postId === element_2.postId;
+                });
+                return first_el_index - second_el_index;
+              }
               let comparing_text_1 =
                 'postId' in element_1
                   ? element_1.title
@@ -164,16 +181,14 @@ export const SearchResults = (props: {
         }
 
       case 'Articles':
-        return props.articles.sort((article_1, article_2) => {
-          if (sortType === 'Most recent') {
-            return parseInt(article_1.created) - parseInt(article_2.created);
-          } else {
-            return (
-              levenshteinDistance(article_1.title, props.term) -
-              levenshteinDistance(article_2.title, props.term)
-            );
-          }
-        });
+        if (sortType === 'Most recent') {
+          let articles = Array.from(props.articles);
+          return articles.sort((article_1, article_2) => {
+            return parseInt(article_2.created) - parseInt(article_1.created);
+          });
+        } else {
+          return props.articles;
+        }
 
       case 'People':
         return props.users.sort((user_1, user_2) => {
@@ -191,13 +206,15 @@ export const SearchResults = (props: {
         });
     }
   };
-
   const darkOptionsAndColors = {
     background: darkTheme
       ? colors.primaryTextColor
       : colors.primaryBackgroundColor,
     color: darkTheme
       ? colors.darkModePrimaryTextColor
+      : colors.primaryTextColor,
+    buttonBackgroundColor: darkTheme
+      ? colors.accentColor
       : colors.primaryTextColor,
   };
 
@@ -339,9 +356,34 @@ export const SearchResults = (props: {
       </div>
       <div className='article-list-items-wrapper'>
         {getDisplayingElements().map((element, index) =>
-          getDisplayingUiElement(element, index)
+          getDisplayingUiElement(element)
         )}
       </div>
+      {/* Display the load more icon if there're more articles */}
+      {props.counts.articlesCount > props.articles.length &&
+        (selectedFilterType === 'All' || selectedFilterType === 'Articles') && (
+          <Button
+            styleType='secondary'
+            style={
+              darkTheme
+                ? {
+                    backgroundColor: darkOptionsAndColors.buttonBackgroundColor,
+                    width: '152px',
+                    marginBottom: '56px',
+                  }
+                : { width: '152px', marginBottom: '56px' }
+            }
+            onClick={async () => {
+              setLoadMoreLoading(true);
+              await props.loadMoreArticles();
+              setLoadMoreLoading(false);
+            }}
+            icon={loadMoreLoading ? images.loaders.BUTTON_SPINNER : ''}
+            dark={darkTheme}
+          >
+            <span>Load More</span>
+          </Button>
+        )}
     </div>
   );
 };

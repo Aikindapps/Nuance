@@ -15,12 +15,10 @@ import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Nat32 "mo:base/Nat32";
 import Bool "mo:base/Bool";
-import ICexp "mo:base/ExperimentalInternetComputer";
 import IC "../PostCore/IC";
 import Nat64 "mo:base/Nat64";
 import Prelude "mo:base/Prelude";
 import Cycles "mo:base/ExperimentalCycles";
-import Option "mo:base/Option";
 import Float "mo:base/Float";
 import Blob "mo:base/Blob";
 import Time "mo:base/Time";
@@ -276,7 +274,7 @@ actor class PostBucket() = this {
     };
   };
 
-  public shared ({ caller }) func initializeBucketCanister(adminsInitial : [Text], nuanceCanistersInitial : [Text], cgUsersInitial : [Text], nftCanistersInitial : [(Text, Text)], initPostCoreCanisterId : Text, initFrontendCanisterId : Text, initPostIndexCanisterId : Text, initUserCanisterId : Text) : async Result.Result<Text, Text> {
+  public shared ({ caller }) func initializeBucketCanister(nuanceCanistersInitial : [Text], cgUsersInitial : [Text], initPostCoreCanisterId : Text) : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
       return #err("Anonymous user cannot initialize bucket canister");
     };
@@ -314,7 +312,7 @@ actor class PostBucket() = this {
   };
 
   //memory management
-  public shared ({ caller }) func testInstructionSize() : async Text {
+  public shared ({ caller }) func testInstructionSize<system>() : async Text {
 
     if (isAnonymous(caller)) {
       return "Anonymous user cannot run this method";
@@ -325,13 +323,13 @@ actor class PostBucket() = this {
     };
 
     //👀👀👀 warning IC.countInstructions executes the functions passed to it
-    let preupgradeCount = ICexp.countInstructions(func() { preupgrade() });
-    let postupgradeCount = ICexp.countInstructions(func() { postupgrade() });
+    //let preupgradeCount = ICexp.countInstructions(func() { preupgrade() });
+    //let postupgradeCount = ICexp.countInstructions(func() { postupgrade() });
 
     // "the limit for a canister install and upgrade is 200 billion instructions."
     // "the limit for an update message is 20 billion instructions"
 
-    return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
+    return "Retired for now."
 
   };
 
@@ -388,7 +386,7 @@ actor class PostBucket() = this {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 
@@ -598,28 +596,22 @@ actor class PostBucket() = this {
             let size = postIdsArray.size();
             let chunkCount = size / 20 + 1;
             var iter = 0;
-            let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
+            let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
             var indexingArguments = Buffer.Buffer<CanisterDeclarations.IndexPostModel>(0);
             while (iter < chunkCount) {
               let chunkPostIds = U.filterArrayByIndexes(iter * 20, (iter + 1) * 20, postIdsArray);
               for (postId in chunkPostIds.vals()) {
                 let post = buildPost(postId);
-                let prevTitle = U.safeGet(titleHashMap, postId, "");
-                let prevSubtitle = U.safeGet(subtitleHashMap, postId, "");
-                let prevContent = U.safeGet(contentHashMap, postId, "");
-                let previous = post.handle # " " # prevTitle # " " # prevSubtitle;
-                let current = post.handle # " " # post.title # " " # post.subtitle;
-                let prevTags = U.safeGet(tagNamesHashMap, postId, []);
-                let currentTags = U.safeGet(tagNamesHashMap, postId, []);
+                let tags = U.safeGet(tagNamesHashMap, postId, []);
                 indexingArguments.add({
                   postId = postId;
-                  oldHtml = previous;
-                  newHtml = current;
-                  oldTags = prevTags;
-                  newTags = currentTags;
+                  content = post.content;
+                  title = post.title;
+                  subtitle = post.subtitle;
+                  tags;
                 });
               };
-              ignore await PostIndexCanister.indexPosts(Buffer.toArray(indexingArguments));
+              await PostRelationsCanister.indexPosts(Buffer.toArray(indexingArguments));
               indexingArguments.clear();
               iter += 1;
             };
@@ -1524,6 +1516,63 @@ actor class PostBucket() = this {
     #ok(buildPost(postId));
   };
 
+  public shared (msg) func saveMultiple(postModels : [PostSaveModel]) : async [SaveResult] {
+    Debug.print("PostBucket saveMultiple input: " # debug_show(postModels));
+
+    if (not isNuanceCanister(msg.caller) and not isAdmin(msg.caller)) {
+      Debug.print("PostBucket-> " # Unauthorized);
+      return [#err(Unauthorized)];
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return [#err("Canister reached the maximum memory threshold. Please try again later.")];
+    };
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
+    var postIdsStart = 0;
+    switch(await postCoreActor.getNextPostIdsDebug(postModels.size())) {
+      case(#ok(value)) {
+        postIdsStart := U.textToNat(value);
+      };
+      case(#err(error)) {
+        return [#err(error)]
+      };
+    };
+
+    var counter = 0;
+    let results = Buffer.Buffer<SaveResult>(0);
+    for(postModel in postModels.vals()){
+
+      let caller = postModel.caller;
+      let postOwnerPrincipalId = postModel.postOwnerPrincipalId;
+
+      var savedCreatedDate : Int = 0;
+      var postId = Nat.toText(postIdsStart + counter);
+
+      let a = addOrUpdatePost(
+        true,
+        postId,
+        postOwnerPrincipalId,
+        postModel.title,
+        postModel.subtitle,
+        postModel.headerImage,
+        postModel.content,
+        postModel.isDraft,
+        postModel.tagNames,
+        "",
+        false,
+        postModel.category,
+        postModel.isMembersOnly,
+        postModel.scheduledPublishedDate
+      );
+      // add this postId to the user's posts if not already added
+      addPostIdToUser(postOwnerPrincipalId, postId);
+
+      results.add(#ok(buildPost(postId)));
+      counter += 1;
+    };
+    Buffer.toArray(results)
+  };
+
   //premium articles migration functions
   public shared query func getNotMigratedPremiumArticlePostIds() : async [Text] {
     let resultBuffer = Buffer.Buffer<Text>(0);
@@ -2122,6 +2171,7 @@ actor class PostBucket() = this {
     };
 
     // loop through each post and call indexPost function
+    /*
     var i : Nat = 0;
     var count = principalIdHashMap.size();
     for (postId in principalIdHashMap.keys()) {
@@ -2140,6 +2190,9 @@ actor class PostBucket() = this {
     };
 
     #ok(Nat.toText(count));
+    */
+    //retired for now
+    #ok("Retired.")
   };
 
   //#region dump
