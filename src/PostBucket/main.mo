@@ -1977,6 +1977,32 @@ actor class PostBucket() = this {
     Buffer.toArray(postsBuffer);
   };
 
+  //Allows getting posts by postIds
+  //only accessible to platform operators
+  //returns the full posts
+  public shared query ({ caller }) func getPostsByPostIdsMigration(postIds : [Text]) : async [PostBucketType] {
+    Debug.print("PostBucket->getPostsByPostIdsMigration");
+    if(not isPlatformOperator(caller)){
+      return [];
+    };
+
+    var postsBuffer : Buffer.Buffer<PostBucketType> = Buffer.Buffer<PostBucketType>(userPostsHashMap.size());
+    let givenPostIds = List.fromArray(postIds);
+
+    List.iterate(
+      givenPostIds,
+      func(postId : Text) : () {
+        let isDraft = U.safeGet(isDraftHashMap, postId, false);
+        if (not isDraft and not rejectedByModClub(postId)) {
+          let post = buildPost(postId);
+          postsBuffer.add(post);
+        };
+      },
+    );
+
+    Buffer.toArray(postsBuffer);
+  };
+
   public shared ({ caller }) func generatePublishedDates() : async () {
     if (not isThereEnoughMemoryPrivate() or not isAdmin(caller)) {
       assert false;

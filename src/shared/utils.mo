@@ -25,7 +25,7 @@ import Hex "./Hex";
 import ENV "../shared/env";
 import NotificationTypes "../Notifications/types";
 import CanisterDeclarations "CanisterDeclarations";
-
+import {STOP_WORDS} "stopwords";
 module {
 
   private func trimPattern(char : Char) : Bool {
@@ -542,11 +542,24 @@ module {
         };
       };
     };
+
+    let { thash;} = Map;
+
+    //create a map to check if the words are stopwords first
+    let entries: [(Text, Text)] = Array.map<Text, (Text, Text)>(STOP_WORDS, func (word: Text) : (Text, Text) {
+      (word, word)
+    });
+    let stopWordsMap = Map.fromIter<Text, Text>(entries.vals(), thash);
+
     var result = Map.new<Text, Nat>();
     var counter = 0;
-    let { thash;} = Map;
+    
     for (word in words.vals()) {
-      if (word.size() > 0) {
+      let isStopWord = switch(Map.get(stopWordsMap, thash, word)) {
+        case(?value) {true};
+        case(null) {false};
+      };
+      if (word.size() > 0 and not isStopWord) {
         switch(Map.get(result, thash, word)) {
           case(?value) {
             Map.set(result, thash, word, value + 1);
@@ -562,7 +575,11 @@ module {
     //add the words in the title
     let titleWords = getWordsFromText(title);
     for(titleWord in titleWords.vals()){
-      if (titleWord.size() > 0) {
+      let isStopWord = switch(Map.get(stopWordsMap, thash, titleWord)) {
+        case(?value) {true};
+        case(null) {false};
+      };
+      if (titleWord.size() > 0 and not isStopWord) {
         switch(Map.get(result, thash, titleWord)) {
           case(?value) {
             Map.set(result, thash, titleWord, value + 1);
@@ -578,7 +595,11 @@ module {
     //add the words in the subtitle
     let subtitleWords = getWordsFromText(subtitle);
     for(subtitleWord in subtitleWords.vals()){
-      if (subtitleWord.size() > 0) {
+      let isStopWord = switch(Map.get(stopWordsMap, thash, subtitleWord)) {
+        case(?value) {true};
+        case(null) {false};
+      };
+      if (subtitleWord.size() > 0 and not isStopWord) {
         switch(Map.get(result, thash, subtitleWord)) {
           case(?value) {
             Map.set(result, thash, subtitleWord, value + 1);
@@ -590,7 +611,6 @@ module {
         counter += 1;
       };
     };
-
     return (result, counter)
   };
 

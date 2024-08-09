@@ -14,7 +14,10 @@ import Result "mo:base/Result";
 import Debug "mo:base/Debug";
 import Nat32 "mo:base/Nat32";
 import Text "mo:base/Text";
+import Cycles "mo:base/ExperimentalCycles";
 import CanisterDeclarations "../shared/CanisterDeclarations";
+import Prim "mo:prim";
+import Versions "../shared/versions";
 
 actor PostRelations {
     let {nhash; thash; } = Map;
@@ -31,9 +34,6 @@ actor PostRelations {
         totalCount: Text;
         postIds: [Text];
     };
-
-    //registered canisters -> only these canisters and admins can call indexing functions
-    stable var registeredCanisters : [Principal] = [];
 
     //key: postId, value: [key: word, value: total number of the word in the post]
     stable var postIdToWordsMap = Map.new<Text, Map.Map<Text, Nat>>();
@@ -52,29 +52,13 @@ actor PostRelations {
         U.arrayContains(ENV.POST_RELATIONS_CANISTER_ADMINS, c);
     };
 
-    private func isRegisteredCanister(caller: Principal) : Bool {
-        for(registeredId in registeredCanisters.vals()){
-            if(Principal.equal(caller, registeredId)){
-                return true;
-            };
-        };
-        return false;
-    };
-
-    public shared ({caller}) func registerCanister(id: Principal) : async Result.Result<[Principal], Text>{
-        if(not (isAdmin(caller) or isRegisteredCanister(caller) or ENV.isPlatformOperator(caller))){
-            return #err("Unauthorized!");
-        };
-        if(not U.arrayContainsGeneric(registeredCanisters, id, Principal.equal)){
-            let registeredCanistersBuffer = Buffer.fromArray<Principal>(registeredCanisters);
-            registeredCanistersBuffer.add(id);
-            registeredCanisters := Buffer.toArray(registeredCanistersBuffer);
-        };
-        #ok(registeredCanisters)
-    };
     //indexes a post using the IndexPostModel
     public shared ({caller}) func indexPost(indexPostModel: IndexPostModel) : async () {
         if(not isAdmin(caller)){
+            return;
+        };
+
+        if (not isThereEnoughMemoryPrivate()) {
             return;
         };
 
@@ -126,7 +110,10 @@ actor PostRelations {
     };
     //indexes more than one posts with a single call
     public shared ({caller}) func indexPosts(indexPostModels: [IndexPostModel]) : async () {
-        if(not isAdmin(caller)){
+        if(not isAdmin(caller) and not isPlatformOperator(caller)){
+            return;
+        };
+        if (not isThereEnoughMemoryPrivate()) {
             return;
         };
         for(indexPostModel in indexPostModels.vals()){
@@ -522,11 +509,10 @@ actor PostRelations {
         
     };
 
-    system func preupgrade() : () {
-
-    };
-
-    public shared query func debug_print_everything() : async () {
+    public shared query ({caller}) func debug_print_everything() : async () {
+        if(not isPlatformOperator(caller)){
+            return;
+        };
         Debug.print("postIdToWordsMap:");
         for((postId, wordsMap) in Map.entries(postIdToWordsMap)){
             Debug.print("--wordsMap");
@@ -575,4 +561,60 @@ actor PostRelations {
             };
         };
     };
+
+    //generic functions which needs to be implemented in all Nuance canisters
+    public func acceptCycles() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept<system>(available);
+        assert (accepted == available);
+    };
+
+    public shared query func availableCycles() : async Nat {
+        Cycles.balance();
+    };
+
+    private func isPlatformOperator(caller: Principal) : Bool {
+        ENV.isPlatformOperator(caller)
+    };
+
+
+    //memory management
+    //2GB default
+    stable var MAX_MEMORY_SIZE = 2000000000;
+
+    public shared ({ caller }) func setMaxMemorySize(newValue : Nat) : async Result.Result<Nat, Text> {
+
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+            return #err("Unauthorized");
+        };
+        MAX_MEMORY_SIZE := newValue;
+
+        #ok(MAX_MEMORY_SIZE);
+    };
+
+    public shared query func getMaxMemorySize() : async Nat {
+        MAX_MEMORY_SIZE;
+    };
+
+    public shared query func isThereEnoughMemory() : async Bool {
+        isThereEnoughMemoryPrivate();
+    };
+
+    private func isThereEnoughMemoryPrivate() : Bool {
+        MAX_MEMORY_SIZE > getMemorySizePrivate();
+    };
+
+    public shared query func getMemorySize() : async Nat {
+        getMemorySizePrivate();
+    };
+
+    private func getMemorySizePrivate() : Nat {
+        Prim.rts_memory_size();
+    };
+
+    public shared query func getCanisterVersion() : async Text {
+        Versions.POST_RELATIONS_VERSION;
+    };
+
+
 }

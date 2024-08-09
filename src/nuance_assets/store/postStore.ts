@@ -477,6 +477,7 @@ export interface PostStore {
   getUserDailyPostStatus: () => Promise<boolean>;
   getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
   getMoreFromThisAuthor: (post: PostType) => Promise<MoreFromThisAuthor>;
+  getRelatedArticles: (post: string) => Promise<PostType[]>;
   saveComment: (
     commentModel: SaveCommentModel,
     bucketCanisterId: string,
@@ -619,6 +620,27 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         authorArticles: [],
         publicationArticles: [],
       };
+    }
+  },
+
+  getRelatedArticles: async (postId: string): Promise<PostType[]> => {
+    try {
+      let postCoreActor = await getPostCoreActor();
+      let postRelationsActor = await getPostRelationsActor();
+      let postIds = await postRelationsActor.getRelatedPosts(postId);
+      //remove the post's itself from the array
+      postIds = postIds.filter((pId) => {
+        return postId !== pId;
+      });
+      //use the first 50 elements only
+      postIds = postIds.slice(0, 50);
+      //get the key properties
+      let keyProperties = await postCoreActor.getPostsByPostIds(postIds);
+      let posts = await fetchPostsByBuckets(keyProperties.slice(0, 5), false);
+      return posts;
+    } catch (err) {
+      handleError(err, Unexpected);
+      return [];
     }
   },
 

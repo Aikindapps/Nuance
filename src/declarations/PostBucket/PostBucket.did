@@ -203,6 +203,7 @@ type PostBucket =
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
    getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
+   getPostsByPostIdsMigration: (vec text) -> (vec PostBucketType__1) query;
    getPublicationPosts: (vec text, text) ->
     (vec PostBucketType__1) composite_query;
    getReportedCommentIds: () -> (vec text);

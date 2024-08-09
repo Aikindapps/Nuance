@@ -342,6 +342,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
+    'getPostsByPostIdsMigration' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
     'getPostsPerHourLast24Hours' : IDL.Func(
         [],
         [IDL.Nat, IDL.Vec(IDL.Tuple(IDL.Int, IDL.Nat))],

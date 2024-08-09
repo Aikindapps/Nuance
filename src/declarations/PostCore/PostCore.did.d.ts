@@ -262,6 +262,10 @@ export interface _SERVICE {
     GetPostsByFollowers
   >,
   'getPostsByPostIds' : ActorMethod<[Array<string>], Array<PostKeyProperties>>,
+  'getPostsByPostIdsMigration' : ActorMethod<
+    [Array<string>],
+    Array<PostKeyProperties>
+  >,
   'getPostsPerHourLast24Hours' : ActorMethod<
     [],
     [bigint, Array<[bigint, bigint]>]

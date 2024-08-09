@@ -127,6 +127,10 @@ export interface PostBucket {
     [Array<string>, boolean],
     Array<PostBucketType__1>
   >,
+  'getPostsByPostIdsMigration' : ActorMethod<
+    [Array<string>],
+    Array<PostBucketType__1>
+  >,
   'getPublicationPosts' : ActorMethod<
     [Array<string>, string],
     Array<PostBucketType__1>

@@ -270,13 +270,6 @@ actor PostCore {
       Cycles.add(5_000_000_000_000);
       let bucketCanister = await PostBucket.PostBucket();
       let canisterId = Principal.toText(Principal.fromActor(bucketCanister));
-      let PostIndexCanister = CanisterDeclarations.getPostRelationsCanister();
-      switch (await PostIndexCanister.registerCanister(Principal.fromText(canisterId))) {
-        case (#err(err)) {
-          return #err("An error occured while registering the bucket canister as admin in PostIndex canister.");
-        };
-        case (_) {};
-      };
 
       let CyclesDispenserCanister = CanisterDeclarations.getCyclesDispenserCanister();
       switch (await CyclesDispenserCanister.addCanister({ canisterId = canisterId; minimumThreshold = 10_000_000_000_000; topUpAmount = 5_000_000_000_000; isStorageBucket = false; })) {
@@ -1389,13 +1382,21 @@ actor PostCore {
         // TODO: should we move indexing to the modclub callback function when content is approved?
         // returns UnauthorizedError if this canister is not registered as an admin in the PostIndex canister
         let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
-        await PostRelationsCanister.indexPost({
-          postId = postBucketReturn.postId;
-          content = postBucketReturn.content;
-          subtitle = postBucketReturn.subtitle;
-          title = postBucketReturn.title;
-          tags = getTagNamesByTagIds(postModel.tagIds);
-        });
+        if(postBucketReturn.isDraft){
+          //if draft, remove the post from PostRelationsCanister
+          await PostRelationsCanister.removePost(postBucketReturn.postId);
+        }
+        else{
+          //index the post
+          await PostRelationsCanister.indexPost({
+            postId = postBucketReturn.postId;
+            content = postBucketReturn.content;
+            subtitle = postBucketReturn.subtitle;
+            title = postBucketReturn.title;
+            tags = getTagNamesByTagIds(postModel.tagIds);
+          });
+        };
+        
 
         ignore submitPostToModclub(postBucketReturn.postId, postBucketReturn, postVersion);
 
@@ -1909,9 +1910,46 @@ actor PostCore {
         if (not U.isTextLengthValid(postId, 20)) {
           return;
         };
-
         let isDraft = isDraftOrFutureArticle(postId);
-        if (not isDraft and not rejectedByModClub(postId)) {
+        let postExists = switch(postIdsToBucketCanisterIdsHashMap.get(postId)) {
+          case(?value) {true};
+          case(null) {false};
+        };
+        if (not isDraft and not rejectedByModClub(postId) and postExists) {
+          let postListItem = buildPostKeyProperties(postId);
+          postsBuffer.add(postListItem);
+        };
+      },
+    );
+
+    Buffer.toArray(postsBuffer);
+  };
+
+  //returns the posts of given postIds excluding the drafts
+  //includes the scheduled articles
+  public shared query ({caller}) func getPostsByPostIdsMigration(postIds : [Text]) : async [PostKeyProperties] {
+    Debug.print("PostCore->getPostsByPostIdsMigration");
+    if(not isPlatformOperator(caller)){
+      return [];
+    };
+
+    var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(0);
+
+    let givenPostIds = List.fromArray(postIds);
+
+    List.iterate(
+      givenPostIds,
+      func(postId : Text) : () {
+        //validate input
+        if (not U.isTextLengthValid(postId, 20)) {
+          return;
+        };
+        let isDraft = U.safeGet(isDraftHashMap, postId, false);
+        let postExists = switch(postIdsToBucketCanisterIdsHashMap.get(postId)) {
+          case(?value) {true};
+          case(null) {false};
+        };
+        if (not isDraft and not rejectedByModClub(postId) and postExists) {
           let postListItem = buildPostKeyProperties(postId);
           postsBuffer.add(postListItem);
         };

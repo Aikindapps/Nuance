@@ -249,6 +249,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostBucketType__1)],
         ['query'],
       ),
+    'getPostsByPostIdsMigration' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(PostBucketType__1)],
+        ['query'],
+      ),
     'getPublicationPosts' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Text],
         [IDL.Vec(PostBucketType__1)],

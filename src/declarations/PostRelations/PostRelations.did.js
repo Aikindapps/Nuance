@@ -6,20 +6,22 @@ export const idlFactory = ({ IDL }) => {
     'subtitle' : IDL.Text,
     'postId' : IDL.Text,
   });
-  const Result = IDL.Variant({
-    'ok' : IDL.Vec(IDL.Principal),
-    'err' : IDL.Text,
-  });
   const SearchByTagsResponse = IDL.Record({
     'postIds' : IDL.Vec(IDL.Text),
     'totalCount' : IDL.Text,
   });
+  const Result = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   return IDL.Service({
+    'acceptCycles' : IDL.Func([], [], []),
+    'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'debug_print_everything' : IDL.Func([], [], ['query']),
+    'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
+    'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
+    'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getRelatedPosts' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
     'indexPost' : IDL.Func([IndexPostModel], [], []),
     'indexPosts' : IDL.Func([IDL.Vec(IndexPostModel)], [], []),
-    'registerCanister' : IDL.Func([IDL.Principal], [Result], []),
+    'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'removePost' : IDL.Func([IDL.Text], [], []),
     'searchByTag' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
     'searchByTagWithinPublication' : IDL.Func(
@@ -38,6 +40,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Text)],
         ['composite_query'],
       ),
+    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

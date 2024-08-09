@@ -11,7 +11,6 @@ export { idlFactory } from "./User.did.js";
  */
 export const canisterId =
   process.env.CANISTER_ID_USER;
-console.log(process.env)
 
 export const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });

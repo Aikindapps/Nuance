@@ -6,7 +6,7 @@ type SearchByTagsResponse =
 type Result = 
  variant {
    err: text;
-   ok: vec principal;
+   ok: nat;
  };
 type IndexPostModel = 
  record {
@@ -17,15 +17,21 @@ type IndexPostModel =
    title: text;
  };
 service : {
+  acceptCycles: () -> ();
+  availableCycles: () -> (nat) query;
   debug_print_everything: () -> () query;
+  getCanisterVersion: () -> (text) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
   getRelatedPosts: (text) -> (vec text) query;
   indexPost: (IndexPostModel) -> ();
   indexPosts: (vec IndexPostModel) -> ();
-  registerCanister: (principal) -> (Result);
+  isThereEnoughMemory: () -> (bool) query;
   removePost: (text) -> ();
   searchByTag: (text) -> (vec text) query;
   searchByTagWithinPublication: (text, text) -> (vec text) composite_query;
   searchByTags: (vec text, nat32, nat32) -> (SearchByTagsResponse) query;
   searchPost: (text) -> (vec text) query;
   searchPublicationPosts: (text, text) -> (vec text) composite_query;
+  setMaxMemorySize: (nat) -> (Result);
 }

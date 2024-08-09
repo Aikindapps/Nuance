@@ -327,6 +327,7 @@ service : {
   getPostsByFollowers: (vec text, nat32, nat32) ->
    (GetPostsByFollowers) query;
   getPostsByPostIds: (vec text) -> (vec PostKeyProperties) query;
+  getPostsByPostIdsMigration: (vec text) -> (vec PostKeyProperties) query;
   getPostsPerHourLast24Hours: () -> (nat, vec record {
                                                 int;
                                                 nat;
