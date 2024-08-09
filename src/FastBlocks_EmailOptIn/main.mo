@@ -141,7 +141,7 @@ actor FastBlocks_EmailOptIn {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 

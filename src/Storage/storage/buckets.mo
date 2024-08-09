@@ -155,7 +155,7 @@ actor class Bucket () = this {
 
   public func wallet_receive() : async { accepted: Nat64 } {
     let available = Cycles.available();
-    let accepted = Cycles.accept(Nat.min(available, limit));
+    let accepted = Cycles.accept<system>(Nat.min(available, limit));
     { accepted = Nat64.fromNat(accepted) };
   };
 

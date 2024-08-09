@@ -20,9 +20,11 @@ export type Result = { 'ok' : WriterSubscriptionDetails } |
   { 'err' : string };
 export type Result_1 = { 'ok' : ReaderSubscriptionDetails } |
   { 'err' : string };
-export type Result_2 = { 'ok' : PaymentRequest } |
+export type Result_2 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_3 = { 'ok' : null } |
+export type Result_3 = { 'ok' : PaymentRequest } |
+  { 'err' : string };
+export type Result_4 = { 'ok' : null } |
   { 'err' : string };
 export interface SubscriptionEvent {
   'startTime' : bigint,
@@ -56,23 +58,30 @@ export interface WriterSubscriptionDetails {
   'monthlyFee' : [] | [string],
 }
 export interface _SERVICE {
+  'acceptCycles' : ActorMethod<[], undefined>,
+  'availableCycles' : ActorMethod<[], bigint>,
   'checkMyExpiredSubscriptionsNotifications' : ActorMethod<[], undefined>,
   'completeSubscriptionEvent' : ActorMethod<[string], Result_1>,
   'createPaymentRequestAsReader' : ActorMethod<
     [string, SubscriptionTimeInterval, bigint],
-    Result_2
+    Result_3
   >,
-  'disperseTokensForSuccessfulSubscription' : ActorMethod<[string], Result_3>,
+  'disperseTokensForSuccessfulSubscription' : ActorMethod<[string], Result_4>,
   'expiredNotificationsHeartbeatExternal' : ActorMethod<[], undefined>,
+  'getCanisterVersion' : ActorMethod<[], string>,
   'getLatestTimerCall' : ActorMethod<[], [string, string]>,
-  'getPaymentRequestBySubscriptionEventId' : ActorMethod<[string], Result_2>,
+  'getMaxMemorySize' : ActorMethod<[], bigint>,
+  'getMemorySize' : ActorMethod<[], bigint>,
+  'getPaymentRequestBySubscriptionEventId' : ActorMethod<[string], Result_3>,
   'getReaderSubscriptionDetails' : ActorMethod<[], Result_1>,
   'getWriterSubscriptionDetails' : ActorMethod<[[] | [string]], Result>,
   'getWriterSubscriptionDetailsByPrincipalId' : ActorMethod<[string], Result>,
   'isReaderSubscriber' : ActorMethod<[string, string], boolean>,
+  'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'isWriterActivatedSubscription' : ActorMethod<[string], boolean>,
   'pendingStuckTokensHeartbeatExternal' : ActorMethod<[], undefined>,
   'pendingTokensHeartbeatExternal' : ActorMethod<[], undefined>,
+  'setMaxMemorySize' : ActorMethod<[bigint], Result_2>,
   'stopSubscription' : ActorMethod<[string], Result_1>,
   'updateSubscriptionDetails' : ActorMethod<
     [UpdateSubscriptionDetailsModel],
@@ -80,4 +89,4 @@ export interface _SERVICE {
   >,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
-export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

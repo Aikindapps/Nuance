@@ -127,6 +127,10 @@ export interface PostBucket {
     [Array<string>, boolean],
     Array<PostBucketType__1>
   >,
+  'getPostsByPostIdsMigration' : ActorMethod<
+    [Array<string>],
+    Array<PostBucketType__1>
+  >,
   'getPublicationPosts' : ActorMethod<
     [Array<string>, string],
     Array<PostBucketType__1>
@@ -139,16 +143,7 @@ export interface PostBucket {
   'getUserPostIds' : ActorMethod<[string], Array<string>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
   'initializeBucketCanister' : ActorMethod<
-    [
-      Array<string>,
-      Array<string>,
-      Array<string>,
-      Array<[string, string]>,
-      string,
-      string,
-      string,
-      string,
-    ],
+    [Array<string>, Array<string>, string],
     Result_2
   >,
   'initializeCanister' : ActorMethod<[string, string], Result_2>,
@@ -173,6 +168,7 @@ export interface PostBucket {
   'reviewComment' : ActorMethod<[string, boolean], Result_5>,
   'save' : ActorMethod<[PostSaveModel], SaveResult>,
   'saveComment' : ActorMethod<[SaveCommentModel], Result>,
+  'saveMultiple' : ActorMethod<[Array<PostSaveModel>], Array<SaveResult>>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_4>,
   'storeHandlesAndPrincipals' : ActorMethod<
     [Array<[string, string]>],
@@ -297,4 +293,4 @@ export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE extends PostBucket {}
 export declare const idlFactory: IDL.InterfaceFactory;
-export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

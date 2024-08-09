@@ -258,6 +258,7 @@ service : {
                                         text;
                                         nat;
                                       }) query;
+  debugSaveMultiplePosts: (vec PostSaveModel) -> (vec Result_4);
   delete: (text) -> (Result_3);
   deletePostFromUserDebug: (text, text) -> (Result_8);
   deleteUserPosts: (text) -> (Result_3);
@@ -309,6 +310,7 @@ service : {
    (vec PostKeyProperties) query;
   getMyTags: () -> (vec PostTagModel__1) query;
   getNextPostId: () -> (Result_2);
+  getNextPostIdsDebug: (nat) -> (Result_2);
   getPlatformOperators: () -> (List) query;
   getPopular: (nat32, nat32) -> (GetPostsByFollowers) query;
   getPopularThisMonth: (nat32, nat32) -> (GetPostsByFollowers) query;
@@ -325,6 +327,7 @@ service : {
   getPostsByFollowers: (vec text, nat32, nat32) ->
    (GetPostsByFollowers) query;
   getPostsByPostIds: (vec text) -> (vec PostKeyProperties) query;
+  getPostsByPostIdsMigration: (vec text) -> (vec PostKeyProperties) query;
   getPostsPerHourLast24Hours: () -> (nat, vec record {
                                                 int;
                                                 nat;

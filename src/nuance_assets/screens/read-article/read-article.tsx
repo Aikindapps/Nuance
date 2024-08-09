@@ -87,6 +87,7 @@ const ReadArticle = () => {
     getPostComments,
     comments,
     getMoreFromThisAuthor,
+    getRelatedArticles,
   } = usePostStore((state) => ({
     getPost: state.getPost,
     clearPost: state.clearPost,
@@ -108,6 +109,7 @@ const ReadArticle = () => {
     downVoteComment: state.downVoteComment,
     deleteComment: state.deleteComment,
     getMoreFromThisAuthor: state.getMoreFromThisAuthor,
+    getRelatedArticles: state.getRelatedArticles,
   }));
 
   const { user, getUsersByHandlesReturnOnly } = useUserStore((state) => ({
@@ -261,6 +263,7 @@ const ReadArticle = () => {
     if (post) {
       getPostComments(postId, post?.bucketCanisterId);
       getMoreFromThisAuthorAndPublication(post);
+      fetchRelatedArticles(post.postId);
     }
   }, [post?.postId]);
 
@@ -321,7 +324,12 @@ const ReadArticle = () => {
     setMoreArticles(moreArticles);
   };
 
-  console.log(moreArticles);
+  const [relatedArticles, setRelatedArticles] = useState<PostType[]>([]);
+
+  const fetchRelatedArticles = async (postId: string) => {
+    let relatedArticles = await getRelatedArticles(postId);
+    setRelatedArticles(relatedArticles);
+  };
 
   //disabled for null user and on authored posts
   useEffect(() => {
@@ -597,6 +605,83 @@ const ReadArticle = () => {
               </div>
             </>
           }
+          <div className='desktop-only-flex left-sidebar-more-articles-wrapper'>
+            {relatedArticles.length > 0 && (
+              <div className='left-sidebar-more-articles'>
+                <p className='left-sidebar-more-articles-title'>
+                  RELATED ARTICLES
+                </p>
+                <div className='left-sidebar-article-list-items-wrapper'>
+                  {relatedArticles.map((post) => (
+                    <Link
+                      style={
+                        darkTheme
+                          ? {
+                              color: darkOptionsAndColors.color,
+                            }
+                          : {}
+                      }
+                      className='article-link'
+                      to={post.url}
+                    >
+                      {post.title.slice(0, 50)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {moreArticles && moreArticles.authorArticles.length > 0 && (
+              <div className='left-sidebar-more-articles'>
+                <p className='left-sidebar-more-articles-title'>
+                  BY @
+                  {moreArticles.authorArticles[0].isPublication
+                    ? moreArticles.authorArticles[0].creatorHandle
+                    : moreArticles.authorArticles[0].handle}
+                </p>
+                <div className='left-sidebar-article-list-items-wrapper'>
+                  {moreArticles.authorArticles.map((post) => (
+                    <Link
+                      style={
+                        darkTheme
+                          ? {
+                              color: darkOptionsAndColors.color,
+                            }
+                          : {}
+                      }
+                      className='article-link'
+                      to={post.url}
+                    >
+                      {post.title.slice(0, 50)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {moreArticles && moreArticles.publicationArticles.length > 0 && (
+              <div className='left-sidebar-more-articles'>
+                <p className='left-sidebar-more-articles-title'>
+                  BY @{moreArticles.publicationArticles[0].handle}
+                </p>
+                <div className='left-sidebar-article-list-items-wrapper'>
+                  {moreArticles.publicationArticles.map((post) => (
+                    <Link
+                      style={
+                        darkTheme
+                          ? {
+                              color: darkOptionsAndColors.color,
+                            }
+                          : {}
+                      }
+                      className='article-link'
+                      to={post.url}
+                    >
+                      {post.title.slice(0, 50)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           {!user && context.width > 768 ? (
             <LoggedOutSidebar style={{ alignItems: 'end' }} />
           ) : (
@@ -865,6 +950,17 @@ const ReadArticle = () => {
                       />
                     ))}
                 </div>
+                <div style={{ height: '100px' }} />
+                {relatedArticles.length > 0 && (
+                  <div className='more-articles'>
+                    <p className='more-articles-title'>RELATED ARTICLES</p>
+                    <div className='article-list-items-wrapper'>
+                      {relatedArticles.map((post) => (
+                        <CardPublishedArticles post={post} key={post.postId} />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {moreArticles && moreArticles.authorArticles.length > 0 && (
                   <div className='more-articles'>
                     <p className='more-articles-title'>MORE FROM THIS AUTHOR</p>

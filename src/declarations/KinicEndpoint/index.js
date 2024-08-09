@@ -10,8 +10,7 @@ export { idlFactory } from "./KinicEndpoint.did.js";
  * beginning in dfx 0.15.0
  */
 export const canisterId =
-  process.env.CANISTER_ID_KINICENDPOINT ||
-  process.env.KINICENDPOINT_CANISTER_ID;
+  process.env.CANISTER_ID_KINICENDPOINT;
 
 export const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });

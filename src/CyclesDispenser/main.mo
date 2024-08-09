@@ -469,7 +469,7 @@ actor CyclesDispenser {
 
       //try to add cycles
       try {
-        Cycles.add(registeredCanister.topUpAmount);
+        Cycles.add<system>(registeredCanister.topUpAmount);
         if(registeredCanister.isStorageBucket){
           let uselessVar = await registeredCanisterActor.wallet_receive();
         }

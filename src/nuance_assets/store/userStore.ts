@@ -285,7 +285,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   getUser: async (): Promise<UserType | undefined> => {
     try {
+      console.log('getUser here: ')
       const result = await (await getUserActor()).getUser();
+      console.log('getUser result: ', result)
       if (Err in result) {
         set({
           user: undefined,

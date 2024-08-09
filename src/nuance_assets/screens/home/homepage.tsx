@@ -144,7 +144,7 @@ const HomePage = () => {
         left: 0,
         behavior: 'smooth',
       });
-      loadSearchResults(searchText);
+      loadSearchResults(searchText, page);
       //scrollToSearch();
       //setLoadingSearchResults(true);
       //handleSearch(false);
@@ -220,7 +220,7 @@ const HomePage = () => {
             navigationUrl += '&page=' + parseInt(queryParams.page);
           }
         }
-      } catch (error) { }
+      } catch (error) {}
     }
     loadWritersPosts(page, true);
     loadFollowingTagsPosts(page, true);
@@ -230,10 +230,10 @@ const HomePage = () => {
     loadPopularPostsEver(page, true);
     loadLatestPosts(page, true);
     if (search_text) {
-      loadSearchResults(search_text);
+      loadSearchResults(search_text, page);
     }
     if (search_tag) {
-      loadSearchResults(search_tag);
+      loadSearchResults(search_tag, page);
     }
     if (search_text || search_tag) {
       window.scrollTo({
@@ -395,7 +395,7 @@ const HomePage = () => {
   const [searchPublicationResults, setSearchPublicationResults] = useState<
     PublicationType[]
   >([]);
-  const loadSearchResults = async (searchText: string) => {
+  const loadSearchResults = async (searchText: string, page: number) => {
     setSearchLoading(true);
     let all_tags: TagModel[] = [];
     //load the allTags only once
@@ -422,7 +422,7 @@ const HomePage = () => {
       });
     }
     let [{ totalCount, posts }, publications, users] = await Promise.all([
-      search(phrase, isTagSearch, 0, 10000, user),
+      search(phrase, isTagSearch, 0, 20 * (page + 1), user),
       searchPublications(phrase),
       searchUsers(phrase),
     ]);
@@ -436,6 +436,47 @@ const HomePage = () => {
       setLastSearchTerm(phrase);
     }
     setSearchLoading(false);
+  };
+
+  const loadMoreSearchResults = async () => {
+    const start = (page + 1) * 20;
+    const end = (page + 2) * 20;
+    setPage(page + 1);
+
+    let phrase = searchText.trim();
+
+    let all_tags: TagModel[] = [];
+    //load the allTags only once
+    if (allTags.length === 0) {
+      all_tags = await getAllTags();
+      setAllTags(all_tags);
+    } else {
+      all_tags = allTags;
+    }
+    // If search starts with #, it's a tag search like #sports
+    const tags = searchTextToTag(searchText, all_tags);
+    let isTagSearch = tags.length > 0;
+    if (isTagSearch) {
+      //setSearchedTag(tags[0]);
+      phrase = tags[0].value;
+    } else {
+      //setSearchedTag(undefined);
+    }
+    let { totalCount, posts } = await search(
+      phrase,
+      isTagSearch,
+      start,
+      end,
+      undefined
+    );
+    navigate(
+      `?tab=search&phrase=${encodeURIComponent(searchText)}&page=${page + 1}`,
+      {
+        replace: true,
+      }
+    );
+    setSearchPostResultsTotalCount(totalCount);
+    setSearchPostResults([...searchPostResults, ...posts]);
   };
 
   //load more
@@ -575,8 +616,8 @@ const HomePage = () => {
                       ? 'button'
                       : 'button selected'
                     : darkTheme
-                      ? 'button selected'
-                      : 'button'
+                    ? 'button selected'
+                    : 'button'
                 }
                 onClick={() => {
                   setSelectedTab('About');
@@ -591,8 +632,8 @@ const HomePage = () => {
                       ? 'button'
                       : 'button selected'
                     : darkTheme
-                      ? 'button selected'
-                      : 'button'
+                    ? 'button selected'
+                    : 'button'
                 }
                 onClick={() => {
                   setSelectedTab('Articles');
@@ -728,8 +769,8 @@ const HomePage = () => {
                   ? 'button'
                   : 'button selected'
                 : darkTheme
-                  ? 'button selected'
-                  : 'button'
+                ? 'button selected'
+                : 'button'
             }
             onClick={() => {
               setSelectedTab('About');
@@ -744,8 +785,8 @@ const HomePage = () => {
                   ? 'button'
                   : 'button selected'
                 : darkTheme
-                  ? 'button selected'
-                  : 'button'
+                ? 'button selected'
+                : 'button'
             }
             onClick={() => {
               setSelectedTab('Articles');
@@ -795,11 +836,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '224px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '224px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '224px' }
                 }
                 styleType='primary-1'
@@ -814,11 +855,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '224px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '224px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '224px' }
                 }
                 styleType='primary-1'
@@ -836,11 +877,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '185px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '185px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '185px' }
                 }
                 styleType='primary-1'
@@ -887,11 +928,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '224px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '224px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '224px' }
                 }
                 styleType='primary-1'
@@ -906,11 +947,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '224px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '224px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '224px' }
                 }
                 styleType='primary-1'
@@ -928,11 +969,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '185px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '185px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '185px' }
                 }
                 styleType='primary-1'
@@ -993,11 +1034,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '224px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '224px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '224px' }
                 }
                 styleType='primary-1'
@@ -1012,11 +1053,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '224px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '224px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '224px' }
                 }
                 styleType='primary-1'
@@ -1034,11 +1075,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '185px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '185px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '185px' }
                 }
                 styleType='primary-1'
@@ -1063,8 +1104,8 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.color,
-                      }
+                          color: darkOptionsAndColors.color,
+                        }
                       : {}
                   }
                 >
@@ -1130,11 +1171,11 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
+                          width: '224px',
+                          backgroundColor:
+                            darkOptionsAndColors.buttonBackgroundColor,
+                          color: darkOptionsAndColors.background,
+                        }
                       : { width: '224px' }
                   }
                   styleType='primary-1'
@@ -1149,11 +1190,11 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
+                          width: '224px',
+                          backgroundColor:
+                            darkOptionsAndColors.buttonBackgroundColor,
+                          color: darkOptionsAndColors.background,
+                        }
                       : { width: '224px' }
                   }
                   styleType='primary-1'
@@ -1172,11 +1213,11 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      width: '185px',
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      color: darkOptionsAndColors.background,
-                    }
+                        width: '185px',
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        color: darkOptionsAndColors.background,
+                      }
                     : { width: '185px' }
                 }
                 styleType='primary-1'
@@ -1212,47 +1253,47 @@ const HomePage = () => {
               </div>
               {(user.website.length !== 0 ||
                 user.socialChannels.length !== 0) && (
-                  <div className='social-channels'>
-                    {[user.website, ...user.socialChannels].map((url, index) => {
-                      return (
-                        <div
-                          key={index}
-                          onClick={() => {
-                            let urlWithProtocol =
-                              url.startsWith('https://') ||
-                                url.startsWith('http://')
-                                ? url
-                                : 'https://' + url;
-                            window.open(urlWithProtocol, '_blank');
-                          }}
+                <div className='social-channels'>
+                  {[user.website, ...user.socialChannels].map((url, index) => {
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          let urlWithProtocol =
+                            url.startsWith('https://') ||
+                            url.startsWith('http://')
+                              ? url
+                              : 'https://' + url;
+                          window.open(urlWithProtocol, '_blank');
+                        }}
+                      >
+                        <Tooltip
+                          clickable={true}
+                          className='tooltip-wrapper'
+                          anchorSelect={'#my-social-channel-' + index}
+                          place='top'
+                          noArrow={true}
                         >
-                          <Tooltip
-                            clickable={true}
-                            className='tooltip-wrapper'
-                            anchorSelect={'#my-social-channel-' + index}
-                            place='top'
-                            noArrow={true}
-                          >
-                            {url}
-                          </Tooltip>
-                          <img
-                            className='social-channel-icon'
-                            src={getIconForSocialChannel(url, darkTheme)}
-                            id={'my-social-channel-' + index}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                          {url}
+                        </Tooltip>
+                        <img
+                          className='social-channel-icon'
+                          src={getIconForSocialChannel(url, darkTheme)}
+                          id={'my-social-channel-' + index}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div
                 className='articles'
                 style={
                   darkTheme
                     ? {
-                      color: darkOptionsAndColors.color,
-                    }
+                        color: darkOptionsAndColors.color,
+                      }
                     : {}
                 }
               >
@@ -1261,8 +1302,8 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.color,
-                      }
+                          color: darkOptionsAndColors.color,
+                        }
                       : {}
                   }
                 >{`${counts?.publishedCount || 0} articles published`}</Link>
@@ -1272,8 +1313,8 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.color,
-                      }
+                          color: darkOptionsAndColors.color,
+                        }
                       : {}
                   }
                 >{`${counts?.draftCount || 0} articles in draft`}</Link>
@@ -1284,15 +1325,15 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      width: '146px',
-                      margin: '0',
-                    }
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        width: '146px',
+                        margin: '0',
+                      }
                     : {
-                      width: '146px',
-                      margin: '0',
-                    }
+                        width: '146px',
+                        margin: '0',
+                      }
                 }
                 onClick={() => {
                   navigate('/article/new');
@@ -1330,12 +1371,12 @@ const HomePage = () => {
                     style={
                       darkTheme
                         ? {
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          color: darkOptionsAndColors.background,
-                          width: '176px',
-                          margin: '0',
-                        }
+                            backgroundColor:
+                              darkOptionsAndColors.buttonBackgroundColor,
+                            color: darkOptionsAndColors.background,
+                            width: '176px',
+                            margin: '0',
+                          }
                         : { width: '176px', margin: '0' }
                     }
                     onClick={() => {
@@ -1359,12 +1400,12 @@ const HomePage = () => {
                     style={
                       darkTheme
                         ? {
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          color: darkOptionsAndColors.background,
-                          width: '176px',
-                          margin: '0',
-                        }
+                            backgroundColor:
+                              darkOptionsAndColors.buttonBackgroundColor,
+                            color: darkOptionsAndColors.background,
+                            width: '176px',
+                            margin: '0',
+                          }
                         : { width: '176px', margin: '0' }
                     }
                     onClick={() => {
@@ -1404,8 +1445,9 @@ const HomePage = () => {
                 }}
               >
                 <div
-                  className={`burger-menu-icon ${mobileMenuOpen ? 'active' : ''
-                    }`}
+                  className={`burger-menu-icon ${
+                    mobileMenuOpen ? 'active' : ''
+                  }`}
                 >
                   {[0, 0, 0].map(() => (
                     <span
@@ -1433,42 +1475,42 @@ const HomePage = () => {
               </div>
               {(user.website.length !== 0 ||
                 user.socialChannels.length !== 0) && (
-                  <div
-                    className='social-channels'
-                    style={mobileMenuOpen ? {} : { display: 'none' }}
-                  >
-                    {[user.website, ...user.socialChannels].map((url, index) => {
-                      return (
-                        <div
-                          key={index}
-                          onClick={() => {
-                            let urlWithProtocol =
-                              url.startsWith('https://') ||
-                                url.startsWith('http://')
-                                ? url
-                                : 'https://' + url;
-                            window.open(urlWithProtocol, '_blank');
-                          }}
+                <div
+                  className='social-channels'
+                  style={mobileMenuOpen ? {} : { display: 'none' }}
+                >
+                  {[user.website, ...user.socialChannels].map((url, index) => {
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          let urlWithProtocol =
+                            url.startsWith('https://') ||
+                            url.startsWith('http://')
+                              ? url
+                              : 'https://' + url;
+                          window.open(urlWithProtocol, '_blank');
+                        }}
+                      >
+                        <Tooltip
+                          clickable={true}
+                          className='tooltip-wrapper'
+                          anchorSelect={'#my-social-channel-' + index}
+                          place='top'
+                          noArrow={true}
                         >
-                          <Tooltip
-                            clickable={true}
-                            className='tooltip-wrapper'
-                            anchorSelect={'#my-social-channel-' + index}
-                            place='top'
-                            noArrow={true}
-                          >
-                            {url}
-                          </Tooltip>
-                          <img
-                            className='social-channel-icon'
-                            src={getIconForSocialChannel(url, darkTheme)}
-                            id={'my-social-channel-' + index}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                          {url}
+                        </Tooltip>
+                        <img
+                          className='social-channel-icon'
+                          src={getIconForSocialChannel(url, darkTheme)}
+                          id={'my-social-channel-' + index}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div
                 className='articles'
@@ -1479,8 +1521,8 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.color,
-                      }
+                          color: darkOptionsAndColors.color,
+                        }
                       : {}
                   }
                 >{`${counts?.publishedCount || 0} articles published`}</Link>
@@ -1490,8 +1532,8 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        color: darkOptionsAndColors.color,
-                      }
+                          color: darkOptionsAndColors.color,
+                        }
                       : {}
                   }
                 >{`${counts?.draftCount || 0} articles in draft`}</Link>
@@ -1502,17 +1544,17 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      backgroundColor:
-                        darkOptionsAndColors.buttonBackgroundColor,
-                      width: '146px',
-                      margin: '0',
-                      display: mobileMenuOpen ? '' : 'none',
-                    }
+                        backgroundColor:
+                          darkOptionsAndColors.buttonBackgroundColor,
+                        width: '146px',
+                        margin: '0',
+                        display: mobileMenuOpen ? '' : 'none',
+                      }
                     : {
-                      width: '146px',
-                      margin: '0',
-                      display: mobileMenuOpen ? '' : 'none',
-                    }
+                        width: '146px',
+                        margin: '0',
+                        display: mobileMenuOpen ? '' : 'none',
+                      }
                 }
                 onClick={() => {
                   navigate('/article/new');
@@ -1533,8 +1575,9 @@ const HomePage = () => {
                 }}
               >
                 <div
-                  className={`burger-menu-icon ${mobileMenuOpen ? 'active' : ''
-                    }`}
+                  className={`burger-menu-icon ${
+                    mobileMenuOpen ? 'active' : ''
+                  }`}
                 >
                   {[0, 0, 0].map(() => (
                     <span
@@ -1554,9 +1597,9 @@ const HomePage = () => {
                 style={
                   darkTheme
                     ? {
-                      color: darkOptionsAndColors.color,
-                      display: mobileMenuOpen ? 'flex' : 'none',
-                    }
+                        color: darkOptionsAndColors.color,
+                        display: mobileMenuOpen ? 'flex' : 'none',
+                      }
                     : { display: mobileMenuOpen ? 'flex' : 'none' }
                 }
               >
@@ -1578,12 +1621,12 @@ const HomePage = () => {
                     style={
                       darkTheme
                         ? {
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          color: darkOptionsAndColors.background,
-                          width: '176px',
-                          margin: '0',
-                        }
+                            backgroundColor:
+                              darkOptionsAndColors.buttonBackgroundColor,
+                            color: darkOptionsAndColors.background,
+                            width: '176px',
+                            margin: '0',
+                          }
                         : { width: '176px', margin: '0' }
                     }
                     onClick={() => {
@@ -1607,12 +1650,12 @@ const HomePage = () => {
                     style={
                       darkTheme
                         ? {
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          color: darkOptionsAndColors.background,
-                          width: '176px',
-                          margin: '0',
-                        }
+                            backgroundColor:
+                              darkOptionsAndColors.buttonBackgroundColor,
+                            color: darkOptionsAndColors.background,
+                            width: '176px',
+                            margin: '0',
+                          }
                         : { width: '176px', margin: '0' }
                     }
                     onClick={() => {
@@ -1806,11 +1849,12 @@ const HomePage = () => {
                       publications={searchPublicationResults}
                       users={searchUserResults}
                       counts={{
-                        articlesCount: searchPostResults.length,
+                        articlesCount: searchPostResultsTotalCount,
                         publicationsCount: searchPublicationResults.length,
                         usersCount: searchUserResults.length,
                       }}
                       allTags={allTags}
+                      loadMoreArticles={loadMoreSearchResults}
                     />
                   </div>
                 ))}
@@ -1820,11 +1864,11 @@ const HomePage = () => {
                   style={
                     darkTheme
                       ? {
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        width: '152px',
-                        marginBottom: '56px',
-                      }
+                          backgroundColor:
+                            darkOptionsAndColors.buttonBackgroundColor,
+                          width: '152px',
+                          marginBottom: '56px',
+                        }
                       : { width: '152px', marginBottom: '56px' }
                   }
                   onClick={() => {

@@ -182,6 +182,7 @@ module{
         updatePostDraft : (postId : Text, isDraft : Bool, time : Int, writerPrincipalId : Text) -> async PostKeyProperties;
         makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) -> async ();
         getNextPostId : () -> async Result.Result<Text, Text>;
+        getNextPostIdsDebug : (count: Nat) -> async Result.Result<Text, Text>;
         addPostCategory : (postId : Text, category : Text, time : Int) -> async ();
         incrementApplauds : (postId: Text, applauds: Nat) -> async ();
         isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
@@ -201,33 +202,30 @@ module{
         return canister;
     };
 
-
-    //****************POSTINDEX CANISTER*****************
-    public type IndexPostResult = Result.Result<Text, Text>;
-    public type ClearIndexResult = Result.Result<Nat, Text>;
+    //****************POST_RELATIONS_CANISTER*****************
     public type IndexPostModel = {
-        postId : Text;
-        oldHtml : Text; 
-        newHtml : Text; 
-        oldTags: [Text]; 
-        newTags: [Text];
+        postId: Text;
+        content: Text;
+        title: Text;
+        subtitle: Text;
+        tags: [Text];
     };
-    public type SearchResultData = {
+
+    public type SearchByTagsResponse = {
         totalCount: Text;
         postIds: [Text];
     };
 
-    public type PostIndexCanisterInterface = actor{
-        indexPost : (postId : Text, oldHtml : Text, newHtml : Text, oldTags: [Text], newTags: [Text]) -> async IndexPostResult;
-        indexPosts : (indexPostModels: [IndexPostModel]) -> async [IndexPostResult];
-        clearIndex : () -> async ClearIndexResult;
-        registerAdmin : (id : Text) -> async Result.Result<(), Text>;
-        registerCanister : (id : Text) -> async Result.Result<(), Text>;
-        populateTags : query (tags : [Text], indexFrom : Nat32, indexTo : Nat32) -> async SearchResultData;
+    public type PostRelationsCanisterInterface = actor{
+        indexPost : (indexPostModel: IndexPostModel) -> async ();
+        indexPosts : (indexPostModels: [IndexPostModel]) -> async ();
+        removePost : (postId: Text) -> async ();
+        registerCanister : (id: Principal) -> async Result.Result<[Principal], Text>;
+        searchByTags : query (tagNames: [Text], indexFrom: Nat32, indexTo: Nat32) -> async SearchByTagsResponse;
     };
 
-    public func getPostIndexCanister() : PostIndexCanisterInterface {
-        let canister : PostIndexCanisterInterface = actor(ENV.POST_INDEX_CANISTER_ID);
+    public func getPostRelationsCanister() : PostRelationsCanisterInterface {
+        let canister : PostRelationsCanisterInterface = actor(ENV.POST_RELATIONS_CANISTER_ID);
         return canister;
     };
 
@@ -436,6 +434,7 @@ module{
         unRejectPostByModclub : (postId : Text) -> async ();
         reindex : () -> async Result.Result<Text, Text>;
         save : (postModel : PostSaveModelBucket) -> async SaveResultBucket;
+        saveMultiple : (postModels : [PostSaveModelBucket]) -> async [SaveResultBucket];
         getPostUrls : query () -> async Result.Result<Text, Text>;
         updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
         deleteUserPosts : (principalId : Text) -> async Result.Result<Nat, Text>;

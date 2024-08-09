@@ -12,4 +12,6 @@ module {
   public let PUBLICATION_VERSION = "Bijou-v4";
   public let NFTFACTORY_VERSION = "Bijou-v4";
   public let NOTIFICATIONS_VERSION = "Bijou-v4";
+  public let POST_RELATIONS_VERSION = "Bijou-v4";
+  public let SUBSCRIPTION_VERSION = "Bijou-v4";
 };

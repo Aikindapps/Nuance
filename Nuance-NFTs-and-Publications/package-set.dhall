@@ -1,5 +1,5 @@
-let upstream =
-      https://github.com/dfinity/vessel-package-set/releases/download/mo-0.10.4-20240112/package-set.dhall
+let upstream = https://github.com/dfinity/vessel-package-set/releases/download/mo-0.12.0-20240726/package-set.dhall
+
 let Package =
     { name : Text, version : Text, repo : Text, dependencies : List Text }
 
@@ -20,6 +20,13 @@ let
   , repo = "https://github.com/aviate-labs/array.mo"
   , version = "v0.1.1"
   , dependencies = [ "base" ]
-  },] : List Package
+  },
+  { 
+    name = "hashmap",
+    repo = "https://github.com/ZhenyaUsenko/motoko-hash-map",
+    version = "master", 
+    dependencies = [] : List Text
+  }
+  ] : List Package
 
 in  upstream # additions
