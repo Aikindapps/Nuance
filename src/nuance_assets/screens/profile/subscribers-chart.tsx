@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
@@ -16,27 +16,11 @@ interface SubscribersChartProps {
 }
 
 const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
-  const [timeZone, setTimeZone] = useState<string>('UTC');
-
-  useEffect(() => {
-    let isMounted = true;
-    const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    if (isMounted) setTimeZone(detectedTimeZone);
-  
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-  
   const currentDate = new Date();
-  console.log(timeZone);
 
-  // Parse date string into a Date object
   const parseDate = (dateString: string) => {
-    // Adjust this format to match the received data
-    const [day, month, year, hour, minute, second] = dateString.split(/[\s:.]+/);
-    const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
-    return new Date(date.toLocaleString('en-US', { timeZone }));
+    const date = new Date(dateString); // Parsing the date string directly
+    return date;
   };
 
   // Ensure the data is valid, unique, and not in the future
