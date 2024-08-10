@@ -54,7 +54,7 @@ const SubscribersTab: React.FC = () => {
             setChartData(
               details.numberOfSubscribersHistoricalData.map(
                 ([timestamp, count]: [number, number]) => ({
-                  day: new Date(timestamp).toLocaleString(),
+                  day: new Date(timestamp).toISOString(),
                   count,
                 })
               )

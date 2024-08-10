@@ -74,7 +74,7 @@ const PublicationSubscribersTab: React.FC<PublicationSubscribersTabProps> = ({
               setChartData(
                 details.numberOfSubscribersHistoricalData.map(
                   ([timestamp, count]) => ({
-                    day: new Date(timestamp).toLocaleString(),
+                    day: new Date(timestamp).toISOString(),
                     count,
                   })
                 )

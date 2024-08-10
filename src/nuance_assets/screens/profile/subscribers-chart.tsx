@@ -30,25 +30,17 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     const isNotFuture = itemDate <= currentDate;
     const isValidCount = typeof item.count === 'number';
 
-    console.log(`Checking item: ${item.day} ---> Date: ${itemDate}, isValidDate: ${isValidDate}, isNotFuture: ${isNotFuture}, isValidCount: ${isValidCount}`);
-
     if (isValidDate && isNotFuture && isValidCount) {
       acc.push(item);
     }
     return acc;
   }, [] as SubscriberData[]);
 
-  console.log("props data: ", data);
-  console.log(navigator.language);
-  console.log("filtered data: ", filteredData);
-
   const sortedData = filteredData.sort((a, b) => {
     const dateA = parseDate(a.day);
     const dateB = parseDate(b.day);
     return dateA.getTime() - dateB.getTime();
   });
-
-  console.log("sorted data: ", sortedData);
 
   const isValidData = sortedData.length > 0 && sortedData[0].count !== 0;
 
