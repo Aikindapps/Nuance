@@ -536,9 +536,8 @@ const ReadArticle = () => {
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/user/${
-                    post.isPublication ? post.creatorHandle : author.handle
-                  }`}
+                  to={`/user/${post.isPublication ? post.creatorHandle : author.handle
+                    }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
@@ -604,12 +603,12 @@ const ReadArticle = () => {
           )}
         </div>
 
-        <div className='right'>
-          {loading && (
+        <div className={darkTheme ? "right dark-mode" : "right"}>
+          {/* {loading && (
             <div style={{ marginTop: '-50px' }}>
               <Loader />
             </div>
-          )}
+          )} */}
 
           {!loading && post && author && (
             <div className='content'>
@@ -633,27 +632,40 @@ const ReadArticle = () => {
                   </div>
                 ) : null}
 
-                <h1
-                  style={
-                    post.isPublication
-                      ? {
+                {loading ? (
+                  <div className='skeleton-title'></div>
+                ) : (
+                  <h1
+                    style={
+                      post.isPublication
+                        ? {
                           fontFamily: publication?.styling.fontType,
                           color: darkOptionsAndColors.color,
                         }
-                      : { color: darkOptionsAndColors.color }
-                  }
-                  className='title'
-                >
-                  {post.title}
-                </h1>
-                <PostInformation
-                  post={post}
-                  readTime={getReadTime()}
-                  publication={publication}
-                  isMobile={context.width <= 768}
-                  handle={handle}
-                />
-                <h2 className='subtitle'>{post.subtitle}</h2>
+                        : { color: darkOptionsAndColors.color }
+                    }
+                    className='title'
+                  >
+                    {post.title}
+                  </h1>
+                )}
+                {loading ? (
+                  <div className='skeleton-post-info'></div>
+                ) : (
+
+                  <PostInformation
+                    post={post}
+                    readTime={getReadTime()}
+                    publication={publication}
+                    isMobile={context.width <= 768}
+                    handle={handle}
+                  />
+                )}
+                {loading ? (
+                  <div className='skeleton-subtitle'></div>
+                ) : (
+                  <h2 className='subtitle'>{post.subtitle}</h2>
+                )}
               </div>
 
               <div
@@ -664,15 +676,20 @@ const ReadArticle = () => {
                     : {}
                 }
               >
-                <img
-                  className='header-image'
-                  src={post.headerImage || images.NUANCE_LOGO}
-                  style={{
-                    background: darkTheme
-                      ? darkOptionsAndColors.background
-                      : '',
-                  }}
-                />
+                {loading ? (
+                  <div className={darkTheme ? 'skeleton-header dark-mode' : "skeleton-header"}></div>
+
+                ) : (
+                  <img
+                    className='header-image'
+                    src={post.headerImage || images.NUANCE_LOGO}
+                    style={{
+                      background: darkTheme
+                        ? darkOptionsAndColors.background
+                        : '',
+                    }}
+                  />
+                )}
                 {post.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
                     post={post}
@@ -701,14 +718,14 @@ const ReadArticle = () => {
                           profileImage={author.avatar}
                           isPublication={post.isPublication || false}
                           authorPrincipalId={post.principal || ''}
-                          onCancelComplete={() => {}}
+                          onCancelComplete={() => { }}
                         />
                       )}
                   </>
                 ) : null}
 
-                {post.premiumArticleSaleInfo ||
-                (post.isMembersOnly && post.content === '') ? (
+                {loading || post.premiumArticleSaleInfo ||
+                  (post.isMembersOnly && post.content === '') ? (
                   <div className='text text-not-allowed'>
                     {parse(premiumArticlePlaceHolder)}
                   </div>
@@ -773,9 +790,8 @@ const ReadArticle = () => {
                     className='profile-picture'
                   />
                   <Link
-                    to={`/user/${
-                      post.isPublication ? post.creatorHandle : author.handle
-                    }`}
+                    to={`/user/${post.isPublication ? post.creatorHandle : author.handle
+                      }`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
@@ -789,7 +805,7 @@ const ReadArticle = () => {
                           onClick={() => {
                             let urlWithProtocol =
                               url.startsWith('https://') ||
-                              url.startsWith('http://')
+                                url.startsWith('http://')
                                 ? url
                                 : 'https://' + url;
                             window.open(urlWithProtocol, '_blank');
@@ -818,8 +834,8 @@ const ReadArticle = () => {
                     style={
                       darkTheme
                         ? {
-                            color: darkOptionsAndColors.secondaryColor,
-                          }
+                          color: darkOptionsAndColors.secondaryColor,
+                        }
                         : {}
                     }
                   >
