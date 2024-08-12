@@ -19,10 +19,6 @@ import {
   UserNotificationSettings,
   getSubscriptionActor,
 } from '../services/actorService';
-import UserListElement from '../components/user-list-item/user-list-item';
-import { ReaderSubscriptionDetailsConverted } from './subscriptionStore';
-import { Principal } from '@dfinity/principal';
-import { NotificationsExtended } from 'src/declarations/User/User.did';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -285,7 +281,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   getUser: async (): Promise<UserType | undefined> => {
     try {
+      console.log('getUser here: ')
       const result = await (await getUserActor()).getUser();
+      console.log('getUser result: ', result)
       if (Err in result) {
         set({
           user: undefined,

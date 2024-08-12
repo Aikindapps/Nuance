@@ -15,9 +15,10 @@ import {
   TransactionListItem,
   UserListItem,
   ClaimTransactionHistoryItem,
+  MoreFromThisAuthor,
 } from '../types/types';
 import {
-  getPostIndexActor,
+  getPostRelationsActor,
   getPostCoreActor,
   getPostBucketActor,
   getUserActor,
@@ -399,12 +400,7 @@ export interface PostStore {
     indexTo: number,
     publicationHandle: string,
     user: UserType | undefined
-  ) => Promise<void>;
-  populateTags: (
-    tags: Array<string>,
-    indexFrom: number,
-    indexTo: number
-  ) => Promise<void>;
+  ) => Promise<{ totalCount: number; posts: PostType[] }>;
   getFollowingTagsPosts: (
     indexStart: number,
     indexEnd: number
@@ -480,6 +476,8 @@ export interface PostStore {
 
   getUserDailyPostStatus: () => Promise<boolean>;
   getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
+  getMoreFromThisAuthor: (post: PostType) => Promise<MoreFromThisAuthor>;
+  getRelatedArticles: (post: string) => Promise<PostType[]>;
   saveComment: (
     commentModel: SaveCommentModel,
     bucketCanisterId: string,
@@ -585,6 +583,64 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       }
     } catch (err) {
       handleError(err, Unexpected);
+    }
+  },
+
+  getMoreFromThisAuthor: async (
+    post: PostType
+  ): Promise<MoreFromThisAuthor> => {
+    try {
+      let postCoreActor = await getPostCoreActor();
+      if (post.isPublication) {
+        let result = await postCoreActor.getMoreArticlesFromUsers(post.postId, [
+          post.creatorHandle.toLowerCase(),
+          post.handle.toLowerCase(),
+        ]);
+        let posts = await fetchPostsByBuckets(
+          [...result[0], ...result[1]],
+          false
+        );
+        return {
+          authorArticles: posts.slice(0, result[0].length),
+          publicationArticles: posts.slice(result[0].length),
+        };
+      } else {
+        let result = await postCoreActor.getMoreArticlesFromUsers(post.postId, [
+          post.handle.toLowerCase(),
+        ]);
+        let posts = await fetchPostsByBuckets(result[0], false);
+        return {
+          authorArticles: posts,
+          publicationArticles: [],
+        };
+      }
+    } catch (err) {
+      handleError(err, Unexpected);
+      return {
+        authorArticles: [],
+        publicationArticles: [],
+      };
+    }
+  },
+
+  getRelatedArticles: async (postId: string): Promise<PostType[]> => {
+    try {
+      let postCoreActor = await getPostCoreActor();
+      let postRelationsActor = await getPostRelationsActor();
+      let postIds = await postRelationsActor.getRelatedPosts(postId);
+      //remove the post's itself from the array
+      postIds = postIds.filter((pId) => {
+        return postId !== pId;
+      });
+      //use the first 50 elements only
+      postIds = postIds.slice(0, 50);
+      //get the key properties
+      let keyProperties = await postCoreActor.getPostsByPostIds(postIds);
+      let posts = await fetchPostsByBuckets(keyProperties.slice(0, 5), false);
+      return posts;
+    } catch (err) {
+      handleError(err, Unexpected);
+      return [];
     }
   },
 
@@ -1537,67 +1593,35 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     user: UserType | undefined
   ): Promise<{ totalCount: number; posts: PostType[] }> => {
     try {
-      const actor = await getPostIndexActor();
-      const results = await actor.search(
-        phrase,
-        isTagSearch,
-        indexFrom,
-        indexTo
+      console.log('searching...');
+      console.log('arguments: ', phrase, isTagSearch, indexFrom, indexTo, user);
+      const actor = await getPostRelationsActor();
+      let postIds: string[] = [];
+      if (isTagSearch) {
+        postIds = await actor.searchByTag(phrase.toLowerCase());
+      } else {
+        postIds = await actor.searchPost(phrase);
+      }
+      console.log('postIds: ', postIds);
+      const coreActor = await getPostCoreActor();
+      const keyProperties = await coreActor.getPostsByPostIds(
+        postIds.slice(indexFrom, indexTo)
       );
+      console.log('keyProperties: ', keyProperties);
+      const posts = await fetchPostsByBuckets(keyProperties, false);
+      console.log('posts: ', posts);
+      if (posts?.length) {
+        const postsWithAvatars = await mergeAuthorAvatars(posts);
 
-      const postIds = results.postIds;
-      if (results.totalCount === 'Search term is too long') {
-        toastError('Search term is too long');
+        set({
+          searchTotalCount: postIds.length,
+          searchResults: postsWithAvatars,
+        });
+        return {
+          totalCount: postIds.length,
+          posts: postsWithAvatars,
+        };
       }
-      if (postIds?.length) {
-        const coreActor = await getPostCoreActor();
-        const keyProperties = await coreActor.getList(postIds);
-        const posts = await fetchPostsByBuckets(keyProperties, false);
-        if (posts?.length) {
-          var draftCounter = 0;
-          const postsWithAvatars = await mergeAuthorAvatars(
-            posts.filter((post) => {
-              if (post.isDraft) {
-                if (post.isPublication) {
-                  const userPublications = user?.publicationsArray.map(
-                    (publicationObj) => {
-                      if (publicationObj.isEditor) {
-                        return publicationObj.publicationName;
-                      }
-                    }
-                  );
-                  const result = userPublications?.includes(post.handle);
-                  if (!result) {
-                    draftCounter = draftCounter + 1;
-                  }
-                  return result;
-                } else {
-                  const result = post.handle === user?.handle;
-                  if (!result) {
-                    draftCounter = draftCounter + 1;
-                  }
-                  return result;
-                }
-              } else {
-                return true;
-              }
-            })
-          );
-          set({
-            searchTotalCount: Number(results.totalCount || 0) - draftCounter,
-            searchResults: postsWithAvatars,
-          });
-          return {
-            totalCount: Number(results.totalCount || 0) - draftCounter,
-            posts: postsWithAvatars,
-          };
-        }
-      }
-
-      set({
-        searchTotalCount: 0,
-        searchResults: [],
-      });
     } catch (err) {
       handleError(err, Unexpected);
     }
@@ -1611,101 +1635,45 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     indexTo: number,
     publicationHandle: string,
     user: UserType | undefined
-  ): Promise<void> => {
+  ): Promise<{ totalCount: number; posts: PostType[] }> => {
     try {
-      const actor = await getPostIndexActor();
-      const results = await actor.searchWithinPublication(
+      console.log(
+        'searchWithinPublication arguments: ',
         phrase,
         isTagSearch,
         indexFrom,
         indexTo,
         publicationHandle
       );
-      const postIds = results.postIds;
-      if (postIds?.length) {
-        const coreActor = await getPostCoreActor();
-        const keyProperties = await coreActor.getList(postIds);
-        const posts = await fetchPostsByBuckets(keyProperties, false);
-
-        if (posts?.length) {
-          var draftCounter = 0;
-          const postsWithAvatars = await mergeAuthorAvatars(
-            posts.filter((post) => {
-              if (post.isDraft) {
-                if (post.isPublication) {
-                  const userPublications = user?.publicationsArray.map(
-                    (publicationObj) => {
-                      if (publicationObj.isEditor) {
-                        return publicationObj.publicationName;
-                      }
-                    }
-                  );
-                  const result = userPublications?.includes(post.handle);
-                  if (!result) {
-                    draftCounter = draftCounter + 1;
-                  }
-                  return result;
-                } else {
-                  const result = post.handle === user?.handle;
-                  if (!result) {
-                    draftCounter = draftCounter + 1;
-                  }
-                  return result;
-                }
-              } else {
-                return true;
-              }
-            })
-          );
-          set({
-            searchTotalCount: Number(results.totalCount || 0) - draftCounter,
-            searchResults: postsWithAvatars,
-          });
-          return;
-        }
+      const actor = await getPostRelationsActor();
+      let postIds: string[] = [];
+      if (isTagSearch) {
+        postIds = await actor.searchByTagWithinPublication(
+          phrase.toLowerCase(),
+          publicationHandle
+        );
+      } else {
+        postIds = await actor.searchPublicationPosts(phrase, publicationHandle);
       }
+      const coreActor = await getPostCoreActor();
+      const keyProperties = await coreActor.getList(
+        postIds.slice(indexFrom, indexTo)
+      );
+      const posts = await fetchPostsByBuckets(keyProperties, false);
 
+      const postsWithAvatars = await mergeAuthorAvatars(posts);
       set({
-        searchTotalCount: 0,
-        searchResults: [],
+        searchTotalCount: postIds.length,
+        searchResults: postsWithAvatars,
       });
+      return {
+        totalCount: postIds.length,
+        posts: postsWithAvatars,
+      };
     } catch (err) {
       handleError(err, Unexpected);
     }
-  },
-
-  populateTags: async (
-    tags: Array<string>,
-    indexFrom: number,
-    indexTo: number
-  ): Promise<void> => {
-    try {
-      const actor = await getPostIndexActor();
-      const results = await actor.populateTags(tags, indexFrom, indexTo);
-      const postIds = results.postIds;
-
-      if (postIds?.length) {
-        const coreActor = await getPostCoreActor();
-        const keyProperties = await coreActor.getList(postIds);
-        const posts = await fetchPostsByBuckets(keyProperties, true);
-
-        if (posts?.length) {
-          const postsWithAvatars = await mergeAuthorAvatars(posts);
-          set({
-            postTotalCount: Number(results.totalCount || 0),
-            postResults: postsWithAvatars,
-          });
-          return;
-        }
-      }
-
-      set({
-        postTotalCount: 0,
-        postResults: [],
-      });
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
+    return { totalCount: 0, posts: [] };
   },
 
   getFollowingTagsPosts: async (
@@ -1935,7 +1903,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         promises.push(extActor.tokens_ext(userAccountId));
       }
       let result: PremiumPostActivityListItem[] = [];
-      console.log('right before getting the responses');
       let responses = await Promise.all(promises);
       var index = 0;
       for (const response of responses) {
@@ -2266,17 +2233,26 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       archivedTransactionsResults.forEach((archived) => {
         transactions = [...archived.transactions, ...transactions];
       });
-      console.log('subscriptionCanisterId: ', subscriptionCanisterId);
       //filter the transactions to just include user's transactions
       transactions = transactions.filter((transaction) => {
         if (transaction.transfer.length !== 0) {
+          let memo = '';
+          if (transaction.transfer[0].memo.length !== 0) {
+            memo = new TextDecoder().decode(
+              (transaction.transfer[0].memo as [Uint8Array])[0]
+            );
+          }
+
           return (
             (transaction.transfer[0].from.owner.toText() ===
               userWallet.principal ||
               transaction.transfer[0].to.owner.toText() ===
                 userWallet.principal) &&
-            transaction.transfer[0].from.owner.toText() !==
+            ((transaction.transfer[0].from.owner.toText() ===
               subscriptionCanisterId &&
+              memo !== 'sub_' + userWallet.principal.slice(0, 20)) ||
+              transaction.transfer[0].from.owner.toText() !==
+                subscriptionCanisterId) &&
             transaction.transfer[0].to.owner.toText() !== subscriptionCanisterId
           );
         }

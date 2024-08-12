@@ -10,8 +10,7 @@ export { idlFactory } from "./Storage.did.js";
  * beginning in dfx 0.15.0
  */
 export const canisterId =
-  process.env.CANISTER_ID_STORAGE ||
-  process.env.STORAGE_CANISTER_ID;
+  process.env.CANISTER_ID_STORAGE;
 
 export const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });

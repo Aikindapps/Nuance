@@ -203,6 +203,7 @@ type PostBucket =
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
    getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
+   getPostsByPostIdsMigration: (vec text) -> (vec PostBucketType__1) query;
    getPublicationPosts: (vec text, text) ->
     (vec PostBucketType__1) composite_query;
    getReportedCommentIds: () -> (vec text);
@@ -212,11 +213,7 @@ type PostBucket =
    getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
    getUserPostIds: (text) -> (vec text) query;
    getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
-   initializeBucketCanister: (vec text, vec text, vec text,
-    vec record {
-          text;
-          text;
-        }, text, text, text, text) -> (Result_2);
+   initializeBucketCanister: (vec text, vec text, text) -> (Result_2);
    initializeCanister: (text, text) -> (Result_2);
    isBucketCanisterActivePublic: () -> (bool) query;
    makeBucketCanisterNonActive: () -> (Result_8);
@@ -236,6 +233,8 @@ type PostBucket =
    reviewComment: (text, bool) -> (Result_5);
    save: (PostSaveModel) -> (SaveResult);
    saveComment: (SaveCommentModel) -> (Result);
+   saveMultiple: (vec PostSaveModel) -> (vec SaveResult);
+   sendNewCommentNotification: (text) -> ();
    setMaxMemorySize: (nat) -> (Result_4);
    storeHandlesAndPrincipals: (vec record {
                                      text;

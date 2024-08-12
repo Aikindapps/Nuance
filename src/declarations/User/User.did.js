@@ -123,125 +123,6 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Opt(IDL.Text),
     'err' : IDL.Text,
   });
-  const NotificationContent = IDL.Variant({
-    'TipRecievedNotificationContent' : IDL.Record({
-      'token' : IDL.Text,
-      'postUrl' : IDL.Text,
-      'recieverIsPublication' : IDL.Bool,
-      'tipAmount' : IDL.Text,
-      'receiverPrincipal' : IDL.Principal,
-      'articleId' : IDL.Text,
-      'senderPrincipal' : IDL.Principal,
-      'articleTitle' : IDL.Text,
-    }),
-    'NewFollowerNotificationContent' : IDL.Record({
-      'followerPrincipal' : IDL.Principal,
-      'followerUrl' : IDL.Text,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'AuthorExpiredSubscriptionNotificationContent' : IDL.Record({
-      'time' : IDL.Text,
-      'subscriberPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'NewArticleNotificationContent' : IDL.Record({
-      'url' : IDL.Text,
-      'tags' : IDL.Vec(IDL.Text),
-      'articleId' : IDL.Text,
-      'isAuthorPublication' : IDL.Bool,
-      'articleTitle' : IDL.Text,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'PostNotificationContent' : IDL.Record({
-      'url' : IDL.Text,
-      'tags' : IDL.Vec(IDL.Text),
-      'receiverPrincipal' : IDL.Principal,
-      'articleId' : IDL.Text,
-      'isAuthorPublication' : IDL.Bool,
-      'articleTitle' : IDL.Text,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'CommentNotificationContent' : IDL.Record({
-      'url' : IDL.Text,
-      'tags' : IDL.Vec(IDL.Text),
-      'comment' : IDL.Text,
-      'articleId' : IDL.Text,
-      'isReply' : IDL.Bool,
-      'isAuthorPublication' : IDL.Bool,
-      'articleTitle' : IDL.Text,
-      'commenterPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'AuthorLosesSubscriberNotificationContent' : IDL.Record({
-      'time' : IDL.Text,
-      'subscriberPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'FaucetClaimAvailableNotificationContent' : IDL.Record({
-      'receiverPrincipal' : IDL.Principal,
-    }),
-    'YouUnsubscribedFromAuthorNotificationContent' : IDL.Record({
-      'time' : IDL.Text,
-      'subscriberPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'AuthorGainsNewSubscriberNotificationContent' : IDL.Record({
-      'time' : IDL.Text,
-      'subscriberPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'YouSubscribedToAuthorNotificationContent' : IDL.Record({
-      'time' : IDL.Text,
-      'subscriberPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'PremiumArticleSoldNotificationContent' : IDL.Record({
-      'url' : IDL.Text,
-      'purchaserPrincipal' : IDL.Principal,
-      'articleId' : IDL.Text,
-      'isAuthorPublication' : IDL.Bool,
-      'articleTitle' : IDL.Text,
-      'authorPrincipal' : IDL.Principal,
-    }),
-    'ReaderExpiredSubscriptionNotificationContent' : IDL.Record({
-      'time' : IDL.Text,
-      'subscriberPrincipal' : IDL.Principal,
-      'authorPrincipal' : IDL.Principal,
-    }),
-  });
-  const NotificationType = IDL.Variant({
-    'UnknownNotificationType' : IDL.Null,
-    'FaucetClaimAvailable' : IDL.Null,
-    'TipReceived' : IDL.Null,
-    'NewArticleByFollowedWriter' : IDL.Null,
-    'AuthorLosesSubscriber' : IDL.Null,
-    'YouSubscribedToAuthor' : IDL.Null,
-    'AuthorExpiredSubscription' : IDL.Null,
-    'NewCommentOnMyArticle' : IDL.Null,
-    'YouUnsubscribedFromAuthor' : IDL.Null,
-    'NewFollower' : IDL.Null,
-    'ReaderExpiredSubscription' : IDL.Null,
-    'PremiumArticleSold' : IDL.Null,
-    'NewCommentOnFollowedArticle' : IDL.Null,
-    'NewArticleByFollowedTag' : IDL.Null,
-    'AuthorGainsNewSubscriber' : IDL.Null,
-  });
-  const Notifications = IDL.Record({
-    'id' : IDL.Text,
-    'content' : NotificationContent,
-    'notificationType' : NotificationType,
-    'read' : IDL.Bool,
-    'timestamp' : IDL.Text,
-  });
-  const NotificationsExtended = IDL.Record({
-    'id' : IDL.Text,
-    'content' : NotificationContent,
-    'notificationType' : NotificationType,
-    'read' : IDL.Bool,
-    'senderHandle' : IDL.Text,
-    'receiverHandle' : IDL.Text,
-    'timestamp' : IDL.Text,
-  });
   const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const Result_8 = IDL.Variant({
     'ok' : IDL.Vec(UserListItem),
@@ -341,6 +222,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getFollowersCount' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
+    'getFollowersPrincipalIdsByPrincipalId' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getHandleByPrincipal' : IDL.Func(
         [IDL.Text],
         [GetHandleByPrincipalReturn],
@@ -354,11 +240,6 @@ export const idlFactory = ({ IDL }) => {
     'getHandlesByPrincipals' : IDL.Func(
         [IDL.Vec(IDL.Text)],
         [IDL.Vec(IDL.Text)],
-        ['query'],
-      ),
-    'getHandlesFromNotifications' : IDL.Func(
-        [IDL.Vec(Notifications)],
-        [IDL.Vec(NotificationsExtended)],
         ['query'],
       ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),

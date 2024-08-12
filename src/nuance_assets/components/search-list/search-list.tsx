@@ -16,7 +16,7 @@ type SearchListProps = {
   totalCount: Number;
   searchedTag: TagModel | undefined;
   lastSearchPhrase: string;
-  setShowResults: Function;
+  setShowResults: () => void;
   user: UserType | undefined;
   publicationName: string | undefined;
   publicationHandle: string | undefined;

@@ -5,171 +5,143 @@ import Int "mo:base/Int";
 import Result "mo:base/Result";
 
 module {
- 
-  public type NotificationType = {
-  #NewCommentOnMyArticle; //x
-  #NewCommentOnFollowedArticle;//x
-  #NewArticleByFollowedWriter;//x
-  #NewArticleByFollowedTag;// x
-  #NewFollower;//x
-  #TipReceived;// ? ?
-  #PremiumArticleSold;//
-  #AuthorGainsNewSubscriber;//
-  #AuthorLosesSubscriber;//
-  #YouSubscribedToAuthor; // Reader subscribes to author, notification to reader
-  #YouUnsubscribedFromAuthor; // Reader unsubscribes from author, notification to reader
-  #AuthorExpiredSubscription; // Author loses subscriber
-  #ReaderExpiredSubscription; // Reader loses subscription
-  #FaucetClaimAvailable;// User can collect tokens from faucet x
-  #UnknownNotificationType; //error x
-};
 
-
-public type Notifications = {
-  id: Text;
-  notificationType: NotificationType;
-  content: NotificationContent;
-  timestamp: Text;
-  read: Bool;
-};
-
-public type NotificationsExtended = {
-  id: Text;
-  notificationType: NotificationType;
-  content: NotificationContent;
-  timestamp: Text;
-  read: Bool;
-
-  //additional fields that can be populated by other canisters
-  senderHandle: Text;
-  receiverHandle: Text;
-};
-
-
-
-public type NotificationContent =  {
-  #PostNotificationContent : {
-      url: Text;
-      receiverPrincipal: Principal;
-      tags: [Text];
-      articleId: Text;
-      articleTitle: Text;
-      authorPrincipal: Principal;
-      isAuthorPublication: Bool;
-    };
-    #PremiumArticleSoldNotificationContent : {
-      url: Text;
-      purchaserPrincipal: Principal;
-      articleId: Text;
-      articleTitle: Text;
-      authorPrincipal: Principal;
-      isAuthorPublication: Bool;
-    };
-    #CommentNotificationContent : {
-      url: Text;
-      articleId: Text;
-      articleTitle: Text;
-      authorPrincipal: Principal;
-      isAuthorPublication: Bool;
-      comment: Text;
-      isReply: Bool;
-      commenterPrincipal: Principal;
-      tags: [Text];
-    };
-    #NewFollowerNotificationContent : {
-      followerUrl: Text;
-      followerPrincipal: Principal;
-      authorPrincipal: Principal;
-    };
-    
-    #NewArticleNotificationContent : {
-      url: Text;
-      articleId: Text;
-      articleTitle: Text;
-      authorPrincipal: Principal;
-      isAuthorPublication: Bool;
-      tags: [Text];
-    
-    };
-
-    #TipRecievedNotificationContent : {
-      postUrl: Text;
-      articleId: Text;
-      articleTitle: Text;
-      receiverPrincipal: Principal;
-      recieverIsPublication: Bool;
-      senderPrincipal: Principal;
-      tipAmount: Text;
-      token: Text;
-    };
-
-    #AuthorGainsNewSubscriberNotificationContent : {
-      authorPrincipal: Principal;
-      subscriberPrincipal: Principal;
-      time: Text;
-    };
-
-    #AuthorLosesSubscriberNotificationContent : {
-      authorPrincipal: Principal;
-      subscriberPrincipal: Principal;
-      time: Text;
-    };
-
-    #YouSubscribedToAuthorNotificationContent : {
-      authorPrincipal: Principal;
-      subscriberPrincipal: Principal;
-      time: Text;
-    };
-
-    #YouUnsubscribedFromAuthorNotificationContent : {
-      authorPrincipal: Principal;
-      subscriberPrincipal: Principal;
-      time: Text;
-    };
-    
-    #AuthorExpiredSubscriptionNotificationContent : {
-      authorPrincipal: Principal;
-      subscriberPrincipal: Principal;
-      time: Text;
-    };
-
-    #ReaderExpiredSubscriptionNotificationContent : {
-      authorPrincipal: Principal;
-      subscriberPrincipal: Principal;
-      time: Text;
-    };
-
-    #FaucetClaimAvailableNotificationContent : {
-      receiverPrincipal: Principal;
-      //claimed: ?ClaimStatus;
-    };
-};
-
-public type ClaimStatus = {
-  #Claimed : {
-    claimTime: Text;
-    amount: Int;
+  public type NotificationTypeInternal = {
+    #NewCommentOnMyArticle;
+    #ReplyToMyComment;
+    #NewArticleByFollowedWriter;
+    #NewArticleByFollowedTag;
+    #NewFollower;
+    #TipReceived;
+    #PremiumArticleSold;
+    #AuthorGainsNewSubscriber;
+    #AuthorLosesSubscriber;
+    #YouSubscribedToAuthor;
+    #YouUnsubscribedFromAuthor;
+    #ReaderExpiredSubscription;
+    #FaucetClaimAvailable;
   };
-  #NotClaimed;
-};
+
+  public type GetUserNotificationsResponse = {
+    notifications: [Notification];
+    totalCount: Text;
+  };
+
+  public type Notification = {
+    id: Text;
+    notificationReceiverPrincipalId: Text;
+    content: NotificationContent;
+    timestamp: Text;
+    read: Bool;
+  };
 
 
+  public type NotificationContent = {
+    #NewCommentOnMyArticle : {
+      postId: Text;
+      bucketCanisterId: Text;
+      commenterPrincipal: Text;
+      commentContent: Text;
+      commentId: Text;
+      isReply: Bool;
+    };
+    #ReplyToMyComment: {
+      postId: Text;
+      bucketCanisterId: Text;
+      postWriterPrincipal: Text;
+      myCommentId: Text;
+      myCommentContent: Text;
+      replyCommentId: Text;
+      replyCommentContent: Text;
+      replyCommenterPrincipal: Text;
+    };
+    #NewArticleByFollowedWriter: {
+      postId: Text;
+      bucketCanisterId: Text;
+      postWriterPrincipal: Text;
+    };
+    #NewArticleByFollowedTag: {
+      postId: Text;
+      bucketCanisterId: Text;
+      postWriterPrincipal: Text;
+      tagName: Text;
+    };
+    #NewFollower: {
+      followerPrincipalId: Text;
+    };
+    #TipReceived: {
+      postId: Text;
+      bucketCanisterId: Text;
+      publicationPrincipalId: ?Text; //if the tip is received for a publication canister, need to have this on frontend to build the url
+      tipSenderPrincipal: Text;
+      tippedTokenSymbol: Text;
+      numberOfApplauds: Text;
+      amountOfTokens: Text;
+    };
+    #PremiumArticleSold: {
+      postId: Text;
+      bucketCanisterId: Text;
+      publicationPrincipalId: ?Text; //if the sold article was a publication article, need to have this on frontend to build the url
+      purchaserPrincipal: Text;
+      purchasedTokenSymbol: Text;
+      amountOfTokens: Text;
+    };
+    #AuthorGainsNewSubscriber: {
+      subscriberPrincipalId: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+      amountOfTokens: Text;
+      subscriptionStartTime: Text;
+      subscriptionEndTime: Text;
+    };
+    #AuthorLosesSubscriber: {
+      subscriberPrincipalId: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+    #YouSubscribedToAuthor: {
+      subscribedWriterPrincipalId: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+      subscriptionStartTime: Text;
+      subscriptionEndTime: Text;
+      amountOfTokens: Text;
+      isPublication: Bool;
+    };
+    #YouUnsubscribedFromAuthor: {
+      subscribedWriterPrincipalId: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+      isPublication: Bool;
+    };
+    #ReaderExpiredSubscription: {
+      subscribedWriterPrincipalId: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+      subscriptionStartTime: Text;
+      subscriptionEndTime: Text;
+      amountOfTokens: Text;
+      isPublication: Bool;
+    };
+    #FaucetClaimAvailable;
+  };
 
-public type UserNotificationSettings = {
-  newCommentOnMyArticle: Bool;
-  newCommentOnFollowedArticle: Bool;
-  newArticleByFollowedWriter: Bool;
-  newArticleByFollowedTag: Bool;
-  newFollower: Bool;
-  tipReceived: Bool;
-  premiumArticleSold: Bool;
-  authorGainsNewSubscriber: Bool;
-  authorLosesSubscriber: Bool;
-  youSubscribedToAuthor: Bool;
-  youUnsubscribedFromAuthor: Bool;
-  expiredSubscription: Bool;
-  authorExpiredSubscription: Bool;
-  readerExpiredSubscription: Bool;
-  faucetClaimAvailable: Bool;
-};
+
+  public type UserNotificationSettings = {
+    newCommentOnMyArticle: Bool;
+    replyToMyComment: Bool;
+    newArticleByFollowedWriter: Bool;
+    newArticleByFollowedTag: Bool;
+    newFollower: Bool;
+    tipReceived: Bool;
+    premiumArticleSold: Bool;
+    authorGainsNewSubscriber: Bool;
+    authorLosesSubscriber: Bool;
+    youSubscribedToAuthor: Bool;
+    youUnsubscribedFromAuthor: Bool;
+    readerExpiredSubscription: Bool;
+    faucetClaimAvailable: Bool;
+  };
+
+  public type SubscriptionTimeInterval = {
+    #Weekly;
+    #Monthly;
+    #Annually;
+    #LifeTime;
+  };
 };

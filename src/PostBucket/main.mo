@@ -15,12 +15,10 @@ import Buffer "mo:base/Buffer";
 import Array "mo:base/Array";
 import Nat32 "mo:base/Nat32";
 import Bool "mo:base/Bool";
-import ICexp "mo:base/ExperimentalInternetComputer";
 import IC "../PostCore/IC";
 import Nat64 "mo:base/Nat64";
 import Prelude "mo:base/Prelude";
 import Cycles "mo:base/ExperimentalCycles";
-import Option "mo:base/Option";
 import Float "mo:base/Float";
 import Blob "mo:base/Blob";
 import Time "mo:base/Time";
@@ -276,7 +274,7 @@ actor class PostBucket() = this {
     };
   };
 
-  public shared ({ caller }) func initializeBucketCanister(adminsInitial : [Text], nuanceCanistersInitial : [Text], cgUsersInitial : [Text], nftCanistersInitial : [(Text, Text)], initPostCoreCanisterId : Text, initFrontendCanisterId : Text, initPostIndexCanisterId : Text, initUserCanisterId : Text) : async Result.Result<Text, Text> {
+  public shared ({ caller }) func initializeBucketCanister(nuanceCanistersInitial : [Text], cgUsersInitial : [Text], initPostCoreCanisterId : Text) : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
       return #err("Anonymous user cannot initialize bucket canister");
     };
@@ -314,7 +312,7 @@ actor class PostBucket() = this {
   };
 
   //memory management
-  public shared ({ caller }) func testInstructionSize() : async Text {
+  public shared ({ caller }) func testInstructionSize<system>() : async Text {
 
     if (isAnonymous(caller)) {
       return "Anonymous user cannot run this method";
@@ -325,13 +323,13 @@ actor class PostBucket() = this {
     };
 
     //👀👀👀 warning IC.countInstructions executes the functions passed to it
-    let preupgradeCount = ICexp.countInstructions(func() { preupgrade() });
-    let postupgradeCount = ICexp.countInstructions(func() { postupgrade() });
+    //let preupgradeCount = ICexp.countInstructions(func() { preupgrade() });
+    //let postupgradeCount = ICexp.countInstructions(func() { postupgrade() });
 
     // "the limit for a canister install and upgrade is 200 billion instructions."
     // "the limit for an update message is 20 billion instructions"
 
-    return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
+    return "Retired for now."
 
   };
 
@@ -388,7 +386,7 @@ actor class PostBucket() = this {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 
@@ -598,28 +596,22 @@ actor class PostBucket() = this {
             let size = postIdsArray.size();
             let chunkCount = size / 20 + 1;
             var iter = 0;
-            let PostIndexCanister = CanisterDeclarations.getPostIndexCanister();
+            let PostRelationsCanister = CanisterDeclarations.getPostRelationsCanister();
             var indexingArguments = Buffer.Buffer<CanisterDeclarations.IndexPostModel>(0);
             while (iter < chunkCount) {
               let chunkPostIds = U.filterArrayByIndexes(iter * 20, (iter + 1) * 20, postIdsArray);
               for (postId in chunkPostIds.vals()) {
                 let post = buildPost(postId);
-                let prevTitle = U.safeGet(titleHashMap, postId, "");
-                let prevSubtitle = U.safeGet(subtitleHashMap, postId, "");
-                let prevContent = U.safeGet(contentHashMap, postId, "");
-                let previous = post.handle # " " # prevTitle # " " # prevSubtitle;
-                let current = post.handle # " " # post.title # " " # post.subtitle;
-                let prevTags = U.safeGet(tagNamesHashMap, postId, []);
-                let currentTags = U.safeGet(tagNamesHashMap, postId, []);
+                let tags = U.safeGet(tagNamesHashMap, postId, []);
                 indexingArguments.add({
                   postId = postId;
-                  oldHtml = previous;
-                  newHtml = current;
-                  oldTags = prevTags;
-                  newTags = currentTags;
+                  content = post.content;
+                  title = post.title;
+                  subtitle = post.subtitle;
+                  tags;
                 });
               };
-              ignore await PostIndexCanister.indexPosts(Buffer.toArray(indexingArguments));
+              await PostRelationsCanister.indexPosts(Buffer.toArray(indexingArguments));
               indexingArguments.clear();
               iter += 1;
             };
@@ -812,13 +804,12 @@ actor class PostBucket() = this {
     category : Text,
     isMembersOnly: Bool,
     scheduledPublishedDate: ?Int
-  ) : (firstPublish: Bool) {
+  ) : () {
 
     // posts are not saved as single objects
     // the fields are fragmented across multiple hashtables (1 per field)
     // this allows us to change the schema without losing data during upgrades
 
-    var firstPublish = false;
 
     let now = U.epochTime();
     principalIdHashMap.put(postId, principalId);
@@ -851,10 +842,6 @@ actor class PostBucket() = this {
           }
         };
       };
-      
-      if(post.publishedDate == "0"){
-        firstPublish := true;
-      }
     };
 
     addOrUpdatePostCategory(postId, category);
@@ -869,8 +856,6 @@ actor class PostBucket() = this {
     else{
       isMembersOnlyHashMap.delete(postId);
     };
-
-    return (firstPublish);
   };
 
   private func addOrUpdatePostCategory(postId : Text, category : Text) : () {
@@ -1468,9 +1453,8 @@ actor class PostBucket() = this {
       };
     };
 
-    var isFirstPublish = false;
 
-    switch(addOrUpdatePost(
+    addOrUpdatePost(
       isNew,
       postId,
       postOwnerPrincipalId,
@@ -1485,28 +1469,7 @@ actor class PostBucket() = this {
       postModel.category,
       postModel.isMembersOnly,
       postModel.scheduledPublishedDate
-    )) {
-      case (firstPublish) {
-        if (not postModel.isDraft) {
-          isFirstPublish := firstPublish;
-        };
-      };
-      
-      };
-
-    if (isFirstPublish and not postModel.isDraft) {
-      
-      ignore await U.newArticle( #PostNotificationContent{
-        url = buildPostUrl(postId, postModel.handle, postModel.title);
-        receiverPrincipal = Principal.fromText("2vxsx-fae");
-        articleId = postId;
-        articleTitle = postModel.title;
-        authorPrincipal = Principal.fromText(postModel.postOwnerPrincipalId);
-        isAuthorPublication = isPublication;
-        tags = postModel.tagNames;
-    })
-
-    };
+    );
 
     // add this postId to the user's posts if not already added
     addPostIdToUser(postOwnerPrincipalId, postId);
@@ -1517,6 +1480,63 @@ actor class PostBucket() = this {
     };
 
     #ok(buildPost(postId));
+  };
+
+  public shared (msg) func saveMultiple(postModels : [PostSaveModel]) : async [SaveResult] {
+    Debug.print("PostBucket saveMultiple input: " # debug_show(postModels));
+
+    if (not isNuanceCanister(msg.caller) and not isAdmin(msg.caller)) {
+      Debug.print("PostBucket-> " # Unauthorized);
+      return [#err(Unauthorized)];
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return [#err("Canister reached the maximum memory threshold. Please try again later.")];
+    };
+    let postCoreActor = CanisterDeclarations.getPostCoreCanister();
+    var postIdsStart = 0;
+    switch(await postCoreActor.getNextPostIdsDebug(postModels.size())) {
+      case(#ok(value)) {
+        postIdsStart := U.textToNat(value);
+      };
+      case(#err(error)) {
+        return [#err(error)]
+      };
+    };
+
+    var counter = 0;
+    let results = Buffer.Buffer<SaveResult>(0);
+    for(postModel in postModels.vals()){
+
+      let caller = postModel.caller;
+      let postOwnerPrincipalId = postModel.postOwnerPrincipalId;
+
+      var savedCreatedDate : Int = 0;
+      var postId = Nat.toText(postIdsStart + counter);
+
+      let a = addOrUpdatePost(
+        true,
+        postId,
+        postOwnerPrincipalId,
+        postModel.title,
+        postModel.subtitle,
+        postModel.headerImage,
+        postModel.content,
+        postModel.isDraft,
+        postModel.tagNames,
+        "",
+        false,
+        postModel.category,
+        postModel.isMembersOnly,
+        postModel.scheduledPublishedDate
+      );
+      // add this postId to the user's posts if not already added
+      addPostIdToUser(postOwnerPrincipalId, postId);
+
+      results.add(#ok(buildPost(postId)));
+      counter += 1;
+    };
+    Buffer.toArray(results)
   };
 
   //premium articles migration functions
@@ -1923,6 +1943,32 @@ actor class PostBucket() = this {
     Buffer.toArray(postsBuffer);
   };
 
+  //Allows getting posts by postIds
+  //only accessible to platform operators
+  //returns the full posts
+  public shared query ({ caller }) func getPostsByPostIdsMigration(postIds : [Text]) : async [PostBucketType] {
+    Debug.print("PostBucket->getPostsByPostIdsMigration");
+    if(not isPlatformOperator(caller)){
+      return [];
+    };
+
+    var postsBuffer : Buffer.Buffer<PostBucketType> = Buffer.Buffer<PostBucketType>(userPostsHashMap.size());
+    let givenPostIds = List.fromArray(postIds);
+
+    List.iterate(
+      givenPostIds,
+      func(postId : Text) : () {
+        let isDraft = U.safeGet(isDraftHashMap, postId, false);
+        if (not isDraft and not rejectedByModClub(postId)) {
+          let post = buildPost(postId);
+          postsBuffer.add(post);
+        };
+      },
+    );
+
+    Buffer.toArray(postsBuffer);
+  };
+
   public shared ({ caller }) func generatePublishedDates() : async () {
     if (not isThereEnoughMemoryPrivate() or not isAdmin(caller)) {
       assert false;
@@ -2117,6 +2163,7 @@ actor class PostBucket() = this {
     };
 
     // loop through each post and call indexPost function
+    /*
     var i : Nat = 0;
     var count = principalIdHashMap.size();
     for (postId in principalIdHashMap.keys()) {
@@ -2135,6 +2182,9 @@ actor class PostBucket() = this {
     };
 
     #ok(Nat.toText(count));
+    */
+    //retired for now
+    #ok("Retired.")
   };
 
   //#region dump
@@ -2659,29 +2709,6 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
         //map the comment with the content
         commentIdToContentHashMap.put(validCommentId, content);
 
-        //send notification for new comments only
-    
-        if (not isEdit) {
-          //send notification for new comments only
-          let author = U.safeGet(principalIdHashMap, postId, "");
-        
-        
-            ignore U.createNotification(#NewCommentOnFollowedArticle, #CommentNotificationContent {
-              url = buildPostUrl(postId, U.safeGet(handleHashMap, author, ""), U.safeGet(titleHashMap, postId, "")) # "?comment=" # validCommentId;
-              articleId = postId;
-              articleTitle = U.safeGet(titleHashMap, postId, "");
-              authorPrincipal = Principal.fromText(author);
-              authorHandle = U.safeGet(handleHashMap, author, "");
-              isAuthorPublication = post.isPublication;
-              comment = content;
-              isReply = isReply;
-              commenterPrincipal = caller;
-              commenterHandle = U.safeGet(handleHashMap, userPrincipalId, "");
-              tags = [];
-            });
-        };
-
-
         let now = U.epochTime();
         if (isReply) {
           if (isEdit) {
@@ -2714,11 +2741,87 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
           };
         };
 
+        //send notification for new comments only
+        if (not isEdit) {
+          ignore sendNewCommentNotification(validCommentId);
+        };
+
         return #ok(buildPostComments(postId));
 
       };
       case (null) {
         return #err(ArticleNotFound);
+      };
+    };
+  };
+
+  public shared ({caller}) func sendNewCommentNotification(commentId: Text) : async () {
+    if(not Principal.equal(caller, Principal.fromActor(this))){
+      return;
+    };
+    let comment = buildComment(commentId);
+    switch(comment.repliedCommentId) {
+      case(?repliedCommentId) {
+        //this is a reply
+        //send the notification to both the writer and the creator of the replied comment
+        let notifications = Buffer.Buffer<(Text, CanisterDeclarations.NotificationContent)>(0);
+
+        
+        switch(principalIdHashMap.get(comment.postId)) {
+          case(?writerPrincipalId) {
+            //add the writer notification first
+            notifications.add(writerPrincipalId, #NewCommentOnMyArticle({
+              postId = comment.postId;
+              bucketCanisterId = comment.bucketCanisterId;
+              commenterPrincipal = comment.creator;
+              commentContent = comment.content;
+              commentId = comment.commentId;
+              isReply = true;
+            }));
+
+            //add the notification for the creator of the replied comment
+            let repliedComment = buildComment(repliedCommentId);
+            notifications.add(repliedComment.creator, #ReplyToMyComment({
+              postId = comment.postId;
+              bucketCanisterId = comment.bucketCanisterId;
+              postWriterPrincipal = writerPrincipalId;
+              myCommentId = repliedComment.commentId;
+              myCommentContent = repliedComment.content;
+              replyCommentId = comment.commentId;
+              replyCommentContent = comment.content;
+              replyCommenterPrincipal = comment.creator;
+            }));
+
+            let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+            await NotificationsCanister.createNotifications(Buffer.toArray(notifications));
+          };
+          case(null) {
+            //shouldn't happen
+          };
+        };
+
+        
+      };
+      case(null) {
+        //this comment is not a reply
+        //just send the notification to the writer of the post
+        switch(principalIdHashMap.get(comment.postId)) {
+          case(?writerPrincipalId) {
+            let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+            await NotificationsCanister.createNotification(writerPrincipalId, #NewCommentOnMyArticle({
+              postId = comment.postId;
+              bucketCanisterId = comment.bucketCanisterId;
+              commenterPrincipal = comment.creator;
+              commentContent = comment.content;
+              commentId = comment.commentId;
+              isReply = false;
+            }));
+          };
+          case(null) {
+            //shouldn't happen
+          };
+        };
+        
       };
     };
   };
@@ -3209,17 +3312,16 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       //if needed, we can create a function to get the info from the bucket canisters and refill the hashmap in the PostCore canister
       return #err("Incrementing the number of applauds failed.");
     };
-
-     ignore U.createNotification(#TipReceived,#TipRecievedNotificationContent {
-      postUrl = buildPostUrl(postId, post.handle, U.safeGet(titleHashMap, postId, ""));
-      receiverPrincipal = Principal.fromText(receiverPrincipalId);
-      recieverIsPublication = U.safeGet(isPublicationHashMap, postId, false);
-      senderPrincipal = Principal.fromText(sender);
-      articleId = postId;
-      articleTitle = U.safeGet(titleHashMap, postId, "");
-      tipAmount = Nat.toText(balance / 100000000);
-      token = symbol;
-    });
+    let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+    ignore NotificationsCanister.createNotification(receiverPrincipalId,#TipReceived({
+      postId;
+      bucketCanisterId = Principal.toText(Principal.fromActor(this));
+      publicationPrincipalId = ?""; //if the tip is received for a publication canister, need to have this on frontend to build the url
+      tipSenderPrincipal = sender;
+      tippedTokenSymbol = symbol;
+      numberOfApplauds = Nat.toText(nuaEquivalent);
+      amountOfTokens = Nat.toText(balance);
+    }));
 
     return #ok(buildApplaud(applaudId));
   };

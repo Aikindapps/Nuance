@@ -30,9 +30,12 @@ import SubscriptionCta from '../../components/subscription-cta/subscription-cta'
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
-import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
-
-
+import {
+  ReaderSubscriptionDetailsConverted,
+  WriterSubscriptionDetailsConverted,
+  useSubscriptionStore,
+} from '../../store/subscriptionStore';
+import { searchTextToTag } from '../../shared/utils';
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -82,50 +85,45 @@ function PublicationLanding() {
     getUserFollowersCount: state.getUserFollowersCount,
   }));
 
-  const { getPublication, publication, clearAll, getPublicationError, getCanisterIdByHandle } =
-    usePublisherStore((state) => ({
-      getPublication: state.getPublication,
-      publication: state.publication,
-      clearAll: state.clearAll,
-      getPublicationError: state.getPublicationError,
-      getCanisterIdByHandle: state.getCanisterIdByHandle,
-    }));
+  const {
+    getPublication,
+    publication,
+    clearAll,
+    getPublicationError,
+    getCanisterIdByHandle,
+  } = usePublisherStore((state) => ({
+    getPublication: state.getPublication,
+    publication: state.publication,
+    clearAll: state.clearAll,
+    getPublicationError: state.getPublicationError,
+    getCanisterIdByHandle: state.getCanisterIdByHandle,
+  }));
 
   const {
     getPostsByFollowers,
-    postsByFollowers,
     clearPostsByFollowers,
-    searchText,
-    setSearchText,
     searchWithinPublication,
-    searchResults,
-    searchTotalCount,
-    clearSearch,
     getAllTags,
-    allTags,
     myTags,
     followTag,
     unfollowTag,
   } = usePostStore((state) => ({
     getPostsByFollowers: state.getPostsByFollowers,
-    postsByFollowers: state.postsByFollowers,
     clearPostsByFollowers: state.clearPostsByFollowers,
-    searchText: state.searchText,
-    setSearchText: state.setSearchText,
     searchWithinPublication: state.searchWithinPublication,
-    searchResults: state.searchResults,
-    searchTotalCount: state.searchTotalCount,
-    clearSearch: state.clearSearch,
     getAllTags: state.getAllTags,
-    allTags: state.allTags,
     myTags: state.myTags,
     followTag: state.followTag,
     unfollowTag: state.unfollowTag,
   }));
 
-  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+  const {
+    getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId,
+  } = useSubscriptionStore((state) => ({
     getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
-    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
   }));
 
   const featureIsLive = useContext(Context).publicationFeature;
@@ -141,18 +139,19 @@ function PublicationLanding() {
   const [isSidebarToggled, setSidebarToggle] = useState(false);
   const [loadingPublication, setLoadingPublication] = useState(true);
   const [publicationDoesNotExist, setPublicationDoesNotExist] = useState(false);
-  const [publicationPostIds, setPublicationPostIds] = useState<string[]>([]);
   const [isBlur, setIsBlur] = useState(false);
   const [loadingSearchResults, setLoadingSearchResults] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [searchLoadMoreCounter, setSearchLoadMoreCounter] = useState(0);
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
+  const [searchText, setSearchText] = useState('');
   const [lastSearchPhrase, setLastSearchPhrase] = useState('');
+  const [searchTotalCount, setSearchTotalCount] = useState(0);
+  const [allTags, setAllTags] = useState<TagModel[]>([]);
   const [searchedTag, setSearchedTag] = useState<TagModel>();
   const [searchedPosts, setSearchedPosts] = useState<PostType[]>([]);
   const [updatingFollow, setUpdatingFollow] = useState(false);
   const [isFollowingTag, setIsFollowingTag] = useState(false);
-  const [EmailOptInScroll, setEmailOptInScroll] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
 
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
@@ -172,7 +171,6 @@ function PublicationLanding() {
     }
   }, [publication]);
 
-
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
 
   const handleSubscriptionComplete = () => {
@@ -180,27 +178,31 @@ function PublicationLanding() {
   };
 
   const handleCancelSubscription = () => {
-    console.log("cancel")
-  }
+    console.log('cancel');
+  };
 
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
       if (isLoggedIn) {
         try {
           let history = await getMySubscriptionHistoryAsReader();
-          console.log('history', history);
 
           if (history) {
-            let isSubscribed = history.activeSubscriptions.some((subscription) => {
-              console.log('subscription', subscription);
-              return subscription.userListItem.handle === author?.handle;
-
-            });
+            let isSubscribed = history.activeSubscriptions.some(
+              (subscription) => {
+                return subscription.userListItem.handle === author?.handle;
+              }
+            );
 
             if (!isSubscribed) {
-              isSubscribed = history.expiredSubscriptions.some((subscription) => {
-                return subscription.userListItem.handle === author?.handle && subscription.subscriptionEndDate > Date.now();
-              });
+              isSubscribed = history.expiredSubscriptions.some(
+                (subscription) => {
+                  return (
+                    subscription.userListItem.handle === author?.handle &&
+                    subscription.subscriptionEndDate > Date.now()
+                  );
+                }
+              );
             }
 
             setSubscribed(isSubscribed);
@@ -212,37 +214,54 @@ function PublicationLanding() {
     };
 
     fetchSubscriptionHistory();
-  }, [isLoggedIn, author?.handle, user?.handle, handleSubscriptionComplete, handleCancelSubscription]);
+  }, [
+    isLoggedIn,
+    author?.handle,
+    user?.handle,
+    handleSubscriptionComplete,
+    handleCancelSubscription,
+  ]);
 
-
-  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] =
+    useState<boolean>(false);
   //get subscription details
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
       if (publicationCanisterId) {
         try {
-          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(publicationCanisterId);
-          if (subscriptionDetails && subscriptionDetails?.weeklyFee.length > 0 || subscriptionDetails && subscriptionDetails?.monthlyFee.length > 0 || subscriptionDetails && subscriptionDetails?.annuallyFee.length > 0 || subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) {
+          let subscriptionDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(
+              publicationCanisterId
+            );
+          if (
+            (subscriptionDetails &&
+              subscriptionDetails?.weeklyFee.length > 0) ||
+            (subscriptionDetails &&
+              subscriptionDetails?.monthlyFee.length > 0) ||
+            (subscriptionDetails &&
+              subscriptionDetails?.annuallyFee.length > 0) ||
+            (subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0)
+          ) {
             setHasValidSubscriptionOptions(true);
-            console.log('Subscription details:', subscriptionDetails);
           } else {
             setHasValidSubscriptionOptions(false);
-            console.log('No valid subscription options');
           }
         } catch (error) {
           console.log('Error fetching subscription details', error);
         }
       }
-    }
+    };
     fetchSubscriptionDetails();
-  }
-    , [publicationCanisterId]);
+  }, [publicationCanisterId]);
 
-  function checkExpiringSubscriptions(subscriptionHistory: ReaderSubscriptionDetailsConverted, authorHandle: string) {
+  function checkExpiringSubscriptions(
+    subscriptionHistory: ReaderSubscriptionDetailsConverted,
+    authorHandle: string
+  ) {
     const currentTime = Date.now();
     const { expiredSubscriptions } = subscriptionHistory;
 
-    const isExpiring = expiredSubscriptions.some(subscription => {
+    const isExpiring = expiredSubscriptions.some((subscription) => {
       return (
         subscription.userListItem.handle === authorHandle &&
         subscription.subscriptionEndDate > currentTime
@@ -251,7 +270,6 @@ function PublicationLanding() {
 
     return isExpiring;
   }
-
 
   const getPublicationHandleFromUrl = () => {
     if (
@@ -282,7 +300,6 @@ function PublicationLanding() {
     loadInitial(handleName);
     clearPostsByFollowers();
     getAllTags();
-    clearSearch();
     getCanisterIdByHandle(handleName).then((canisterId) => {
       setPublicationCanisterId(canisterId || '');
     });
@@ -295,14 +312,6 @@ function PublicationLanding() {
       }),
     [screenWidth]
   );
-
-  useEffect(() => {
-    if (searchResults) {
-      setSearchedPosts([...searchedPosts, ...searchResults]);
-      setLoadingSearchResults(false);
-      setSearchLoadingMore(false);
-    }
-  }, [searchResults]);
 
   useEffect(() => {
     if (searchText !== lastSearchPhrase) {
@@ -355,90 +364,65 @@ function PublicationLanding() {
     if (e.key === 'Enter') {
       setIsBlur(false);
       scrollToSearch();
-      setLoadingSearchResults(true);
-      handleSearch(false);
+      handleSearch();
     }
   };
 
-  const searchTextToTag = (s: string) => {
-    const tagNames = [...s.matchAll(/#[^#]+/gm)].map((x) =>
-      x[0].trim().replace(/ +/g, ' ')
-    );
-    let validTagNames: TagModel[] = [];
-    for (const tagName of tagNames) {
-      if (tagName.startsWith('#') && tagName.length > 1) {
-        const found = allTags?.find(
-          (t: any) =>
-            t.value.toUpperCase() === tagName.substring(1).toUpperCase()
-        );
-        if (found) {
-          validTagNames.push(found);
-        }
-      }
-    }
-    return validTagNames;
-  };
-
-  const handleSearch = async (loadingMore: boolean) => {
+  const handleSearch = async () => {
     if (loadingSearchResults || !publication) {
       return;
     }
-    if (!loadingMore) {
-      setSearchedPosts([]);
+    if (
+      searchTotalCount <= searchedPosts.length &&
+      lastSearchPhrase === searchText &&
+      showSearchResults
+    ) {
+      return;
+    }
+    setLoadingSearchResults(true);
+    let all_tags: TagModel[] = [];
+    //load the allTags only once
+    if (allTags.length === 0) {
+      all_tags = await getAllTags();
+      setAllTags(all_tags);
+    } else {
+      all_tags = allTags;
     }
     let phrase = searchText.trim();
+    // If search starts with #, it's a tag search like #sports
+    const tags = searchTextToTag(phrase, all_tags);
+    let isTagSearch = tags.length > 0;
+    if (isTagSearch) {
+      //setSearchedTag(tags[0]);
+      phrase = tags[0].value;
+    } else {
+      //setSearchedTag(undefined);
+    }
     if (phrase) {
-      // If search starts with #, it's a tag search like #sports
-      const tags = searchTextToTag(phrase);
-      let isTagSearch = tags.length > 0;
-      if (isTagSearch) {
-        setSearchedTag(tags[0]);
-        phrase = tags[0].value;
+      let { totalCount, posts } = await searchWithinPublication(
+        phrase,
+        isTagSearch,
+        searchLoadMoreCounter * 20,
+        (searchLoadMoreCounter + 1) * 20,
+        publication.publicationHandle,
+        undefined
+      );
+      setLastSearchPhrase(searchText);
+      setSearchLoadMoreCounter(searchLoadMoreCounter + 1);
+      setSearchTotalCount(totalCount);
+      if (lastSearchPhrase === searchText) {
+        setSearchedPosts([...searchedPosts, ...posts]);
       } else {
-        setSearchedTag(undefined);
+        setSearchedPosts(posts);
       }
 
-      if (loadingMore) {
-        searchWithinPublication(
-          phrase,
-          isTagSearch,
-          searchLoadMoreCounter * 20,
-          (searchLoadMoreCounter + 1) * 20,
-          publication.publicationHandle,
-          user
-        );
-        setSearchLoadMoreCounter(searchLoadMoreCounter + 1);
-      } else {
-        searchWithinPublication(
-          phrase,
-          isTagSearch,
-          0,
-          20,
-          publication.publicationHandle,
-          user
-        );
-        setSearchLoadMoreCounter(1);
-      }
-      setLastSearchPhrase(searchText);
       setShowSearchResults(true);
     } else {
       setShowSearchResults(false);
       setSearchedTag(undefined);
-      clearSearch();
     }
+    setLoadingSearchResults(false);
   };
-
-  const handleSearchMore = () => {
-    setSearchLoadingMore(true);
-    handleSearch(true);
-  };
-
-  const handleShowSearchResults = () => {
-    clearSearch();
-    setShowSearchResults(false);
-  };
-
-
 
   const closeMenus = () => {
     setSidebarToggle(false);
@@ -501,7 +485,7 @@ function PublicationLanding() {
   if (
     !publication?.publicationHandle ||
     publication.publicationHandle.toLowerCase() !==
-    getPublicationHandleFromUrl().toLowerCase()
+      getPublicationHandleFromUrl().toLowerCase()
   ) {
     return (
       <div style={{ background: darkOptionsAndColors.background }}>
@@ -555,13 +539,13 @@ function PublicationLanding() {
                 style={
                   !isSidebarToggled && screenWidth <= 1089
                     ? {
-                      display: 'none',
-                    }
+                        display: 'none',
+                      }
                     : {
-                      marginRight: '15px',
-                      width: '150px',
-                      height: '47.5px',
-                    }
+                        marginRight: '15px',
+                        width: '150px',
+                        height: '47.5px',
+                      }
                 }
                 className='brand-logo-left'
                 src={publication?.styling.logo}
@@ -627,11 +611,11 @@ function PublicationLanding() {
                   primaryColor={publication?.styling.primaryColor}
                 />
               </div>
-              {!subscribed && hasValidSubscriptionOptions && isLoggedIn &&
+              {!subscribed && hasValidSubscriptionOptions && isLoggedIn && (
                 <div className='Subscription-container'>
                   <SubscriptionCta onOpen={() => closeMenus()} />
                 </div>
-              }
+              )}
 
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
                 {/* Change to FB handle when FB publication is established */}
@@ -646,27 +630,31 @@ function PublicationLanding() {
           </div>
         </div>
         <div className='right'>
-          {modalContext?.isModalOpen && modalContext?.modalType === 'Subscription' && (
+          {modalContext?.isModalOpen &&
+            modalContext?.modalType === 'Subscription' && (
+              <SubscriptionModal
+                handle={publication?.publicationHandle}
+                authorPrincipalId={publicationCanisterId}
+                profileImage={publication?.avatar}
+                isPublication={true}
+                onSubscriptionComplete={() => {
+                  handleSubscriptionComplete();
+                }}
+              />
+            )}
 
-            <SubscriptionModal
-              handle={publication?.publicationHandle}
-              authorPrincipalId={publicationCanisterId}
-              profileImage={publication?.avatar}
-              isPublication={true}
-              onSubscriptionComplete={() => { handleSubscriptionComplete() }}
-            />
-          )}
-
-          {modalContext?.isModalOpen && modalContext?.modalType === 'cancelSubscription' && (
-
-            <CancelSubscriptionModal
-              handle={publication?.publicationHandle}
-              profileImage={publication?.avatar}
-              isPublication={true}
-              onCancelComplete={() => { handleSubscriptionComplete() }}
-              authorPrincipalId={publicationCanisterId}
-            />
-          )}
+          {modalContext?.isModalOpen &&
+            modalContext?.modalType === 'cancelSubscription' && (
+              <CancelSubscriptionModal
+                handle={publication?.publicationHandle}
+                profileImage={publication?.avatar}
+                isPublication={true}
+                onCancelComplete={() => {
+                  handleSubscriptionComplete();
+                }}
+                authorPrincipalId={publicationCanisterId}
+              />
+            )}
 
           <div className='header-image-container'>
             <img src={`${publication?.headerImage}`} className='header-img' />
@@ -698,11 +686,16 @@ function PublicationLanding() {
                 posts={searchedPosts}
                 loading={loadingSearchResults}
                 loadingMore={searchLoadingMore}
-                loadMoreHandler={handleSearchMore}
+                loadMoreHandler={handleSearch}
                 totalCount={searchTotalCount}
                 searchedTag={searchedTag}
                 lastSearchPhrase={lastSearchPhrase}
-                setShowResults={handleShowSearchResults}
+                setShowResults={() => {
+                  setShowSearchResults(false);
+                  setLoadMoreCounter(0);
+                  setSearchText('');
+                  setSearchedPosts([]);
+                }}
                 user={user}
                 publicationName={publication?.publicationTitle}
                 publicationHandle={publication?.publicationHandle}

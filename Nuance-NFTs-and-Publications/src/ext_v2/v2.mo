@@ -741,16 +741,15 @@ actor class EXTNFT() = this {
                           _paymentSettlements.delete(paymentaddress);
 
                           //send notification
-                          ignore U.createNotification(#PremiumArticleSold, #PremiumArticleSoldNotificationContent {
-                            url = "";
-                            articleId = postId;
-                            articleTitle = "";
-                            authorPrincipal = writer_principal_id;
-                            authorHandle = "";
-                            isAuthorPublication = false;//should be checked in Notifications backend
-                            purchaserPrincipal = msg.caller;
-                            purchaserHandle = "";
-                          });
+                          try{
+                            if(token_owner == seller_account){
+                              ignore sendNotification(Principal.toText(msg.caller));
+                            }
+                          }
+                          catch(_){
+                            //the call failed
+                            //nothing to do
+                          };
 
                           //nuance addition
                           //once any marketplace purchase happens, call the mint_and_list_next
@@ -2340,5 +2339,31 @@ actor class EXTNFT() = this {
       postId = postId;
       icpPrice = icp_price_e8s;
     }
+  };
+  //sends the notification to the Notifications canister
+  public shared ({caller}) func sendNotification(purchaserPrincipalId: Text) : async () {
+    if(not Principal.equal(caller, Principal.fromActor(this))){
+      return;
+    };
+    let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+    let postKeyProperties = await PostCoreCanister.getPostKeyProperties(postId);
+    switch(postKeyProperties) {
+      case(#ok(value)) {
+        let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+        await NotificationCanister.createNotification(Principal.toText(writer_principal_id), #PremiumArticleSold {
+          amountOfTokens = Nat.toText(icp_price_e8s);
+          bucketCanisterId = value.bucketCanisterId;
+          postId = value.postId;
+          publicationPrincipalId = ?value.principal;
+          purchasedTokenSymbol = "ICP";
+          purchaserPrincipal = purchaserPrincipalId;
+        });
+      };
+      case(#err(error)) {
+        //not possible
+      };
+    };
+    
+    
   };
 }

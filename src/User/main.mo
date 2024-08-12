@@ -52,10 +52,6 @@ actor User {
   type NftCanisterEntry = Types.NftCanisterEntry;
   type UserClaimInfo = Types.UserClaimInfo;
   type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
-  type Notifications = NotificationTypes.Notifications;
-  type NotificationsExtended = NotificationTypes.NotificationsExtended;
-  type NotificationContent = NotificationTypes.NotificationContent;
-  type NotificationType = NotificationTypes.NotificationType;
 
   type List<T> = List.List<T>;
 
@@ -1002,12 +998,10 @@ actor User {
     myFollowersHashMap.put(followingPrincipalId, Buffer.toArray(myFollowersBuffer));
 
     Debug.print("User->followAuthor:" # author);
-
-    ignore U.createNotification(#NewFollower, #NewFollowerNotificationContent {
-      followerUrl = "";
-      authorPrincipal = Principal.fromText(followingPrincipalId);
-      followerPrincipal = Principal.fromText(principalId);
-    });
+    let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+    ignore NotificationsCanister.createNotification(followingPrincipalId, #NewFollower({
+      followerPrincipalId = principalId
+    }));
     
     #ok(buildUser(principalId));
   };
@@ -1108,6 +1102,11 @@ actor User {
     };
     Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
     Buffer.toArray(users);
+  };
+
+  public shared query func getFollowersPrincipalIdsByPrincipalId(principalId: Text) : async [Text] {
+    Debug.print("getFollowersPrincipalIdsByPrincipalIds");
+    return U.safeGet(myFollowersHashMap, principalId, []);
   };
 
 
@@ -1685,10 +1684,9 @@ actor User {
     lastClaimNotificationDateHashMap.put(principal, now);
 
     let user = buildUser(principal);
-    //ToDo: send the notification to the user
-    ignore U.createNotification(#FaucetClaimAvailable, #FaucetClaimAvailableNotificationContent{
-      receiverPrincipal = Principal.fromText(principal);
-    });
+    
+    let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+    ignore NotificationsCanister.createNotification(principal, #FaucetClaimAvailable);
   };
 
   public shared ({caller}) func spendRestrictedTokensForTipping(bucketCanisterId: Text, postId: Text, amount: Nat) : async Result.Result<(), Text> {
@@ -2095,66 +2093,6 @@ actor User {
   };
 
 
-//Each notification gets a receiver and a sender, with the variety of notifications they are not always straightforward, sometimes its the author, sometimes its the receiver, sometimes its the commenter etc.
-//90% of the notifications have a receiver and a sender, some only have one of them, some have none.
-//These functions should alleviate the burden of figuring out who is the receiver and who is the sender for each notification type.
-  private func getReciever(notification: Notifications) : Principal {
-      let receiver = switch (notification.content) {
-        case (#PostNotificationContent {receiverPrincipal = rp}) { rp };
-        case (#PremiumArticleSoldNotificationContent {authorPrincipal = ap}) { ap };
-        case (#NewFollowerNotificationContent {authorPrincipal = ap}) { ap };
-        case (#FaucetClaimAvailableNotificationContent {receiverPrincipal = rp}) { rp };
-        case (#TipRecievedNotificationContent {receiverPrincipal = rp}) { rp };
-        case (#CommentNotificationContent {authorPrincipal = ap}) {switch (notification.notificationType) {
-          case (#NewCommentOnMyArticle) { ap };
-          case (#NewCommentOnFollowedArticle) { ANONYMOUS_PRINCIPAL }; // shouldn't need in this context
-          case _ {return ANONYMOUS_PRINCIPAL; };
-        };};
-        
-        case (#AuthorGainsNewSubscriberNotificationContent {authorPrincipal = ap}) { ap };
-        case (#YouSubscribedToAuthorNotificationContent {subscriberPrincipal = sp}) { sp };
-        case (#AuthorLosesSubscriberNotificationContent {authorPrincipal = ap}) { ap };
-        case (#YouUnsubscribedFromAuthorNotificationContent {subscriberPrincipal = sp}) { sp };
-        case (#AuthorExpiredSubscriptionNotificationContent {authorPrincipal = ap}) { ap };
-        case (#ReaderExpiredSubscriptionNotificationContent {subscriberPrincipal = sp}) { sp };
-        case (#NewArticleNotificationContent {} ) {return ANONYMOUS_PRINCIPAL; };
-      };
-    };
-
-private func getSenderPrincipal(notification: NotificationContent) : Principal {
-    switch (notification) {
-        case (#PremiumArticleSoldNotificationContent {purchaserPrincipal = pp}) { pp };
-        case (#CommentNotificationContent {commenterPrincipal = cp}) { cp };
-        case (#NewFollowerNotificationContent {followerPrincipal = fp}) { fp };
-        case (#NewArticleNotificationContent {authorPrincipal = ap}) { ap };
-        case (#PostNotificationContent {authorPrincipal = ap}) { ap };
-        case (#AuthorExpiredSubscriptionNotificationContent {subscriberPrincipal = sp}) { sp };
-        case (#TipRecievedNotificationContent {senderPrincipal = sp}) { sp };
-        case _ { ANONYMOUS_PRINCIPAL };
-    }
-};
-
-
-  public shared query func getHandlesFromNotifications(notifications : [Notifications]) : async [NotificationsExtended] {
-    var newNotificationsBuffer = Buffer.Buffer<NotificationsExtended>(0);
-    for (notification in notifications.vals()) {
-
-          let extendedNotification : NotificationsExtended = {
-            id = notification.id;
-            notificationType = notification.notificationType;
-            content = notification.content;
-            timestamp = notification.timestamp;
-            read = notification.read;
-
-            //you can add other fields here
-            senderHandle = U.safeGet(handleHashMap, Principal.toText(getSenderPrincipal(notification.content)), "");
-            receiverHandle = U.safeGet(handleHashMap, Principal.toText(getReciever(notification)), "");
-          };
-          newNotificationsBuffer.add(extendedNotification);
-    };
-    Buffer.toArray(newNotificationsBuffer);
-  };
-
   public shared query ({ caller }) func getUserInternal(userPrincipalId : Text) : async ?User {
 
     //validate input
@@ -2280,7 +2218,7 @@ private func getSenderPrincipal(notification: NotificationContent) : Principal {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 
@@ -2428,14 +2366,14 @@ private func getSenderPrincipal(notification: NotificationContent) : Principal {
     };
 
     //👀👀👀 warning IC.countInstructions executes the functions passed to it
-    let preupgradeCount = IC.countInstructions(func() { preupgrade() });
-    let postupgradeCount = IC.countInstructions(func() { postupgrade() });
+    //let preupgradeCount = IC.countInstructions(func() { preupgrade() });
+    //let postupgradeCount = IC.countInstructions(func() { postupgrade() });
 
     // "the limit for a canister install and upgrade is 200 billion instructions."
     // "the limit for an update message is 20 billion instructions"
 
-    return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
-
+    //return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
+    return "Retired for now!";
   };
 
 };

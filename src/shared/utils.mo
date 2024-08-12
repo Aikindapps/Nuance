@@ -16,19 +16,36 @@ import Option "mo:base/Option";
 import Array "mo:base/Array";
 import List "mo:base/List";
 import Result "mo:base/Result";
-import Debug "mo:base/Debug";
-import Canister "mo:matchers/Canister";
+import Map "mo:hashmap/Map";
 import SHA224 "./SHA224";
 import CRC32 "./CRC32";
 import Hex "./Hex";
 import ENV "../shared/env";
-import NotificationTypes "../NotificationsV3/types";
+import {STOP_WORDS} "stopwords";
 import CanisterDeclarations "CanisterDeclarations";
-
 module {
 
   private func trimPattern(char : Char) : Bool {
     Char.equal(' ', char) or Char.equal('\r', char) or Char.equal('\n', char);
+  };
+
+  public func getTextFromSubscriptionTimeInterval(timeInterval: CanisterDeclarations.SubscriptionTimeInterval) : Text {
+    switch(timeInterval) {
+      case(#Annually) {"Annually"};
+      case(#LifeTime) {"Life time"};
+      case(#Monthly) {"Monthly"};
+      case(#Weekly) {"Weekly"}
+    };
+  };
+
+  public func getSubscriptionTimeIntervalFromText(timeIntervalText: Text) : CanisterDeclarations.SubscriptionTimeInterval {
+    switch(timeIntervalText) {
+      case("Annually") {#Annually};
+      case("Life time") {#LifeTime};
+      case("Monthly") {#Monthly};
+      case("Weekly") {#Weekly};
+      case(_) {getSubscriptionTimeIntervalFromText("")}
+    };
   };
 
   // Gets the epoch time in milliseconds,
@@ -357,6 +374,19 @@ module {
     };
   };
 
+  public func getTextFirstChars(txt: Text, n: Nat) : Text {
+    var counter = 0;
+    var result = "";
+    for(char in Text.toIter(txt)){
+      if(counter < n){
+        result #= Char.toText(char);
+      };
+      counter += 1;
+    };
+    
+    result
+  };
+
 
   public func arrayContains(array : [Text], element : Text) : Bool {
     for (el in array.vals()) {
@@ -467,6 +497,158 @@ module {
     return totalWordCount;
   };
 
+  public func extract_words_from_html(content : Text, title: Text, subtitle: Text) : (Map.Map<Text, Nat>, Nat) {
+    var i = 0;
+    let space = Char.fromNat32(32);
+    let lessThan = Char.fromNat32(60);
+    let greaterThan = Char.fromNat32(62);
+    let charsBuffer = Buffer.Buffer<Char>(0);
+    for (content_iter in content.chars()) {
+      charsBuffer.add(content_iter);
+    };
+    let charSize = charsBuffer.size();
+    let elementsPositionsBuffer = Buffer.Buffer<({ startingPoint : Nat; endingPoint : Nat })>(0);
+    let words = Buffer.Buffer<Text>(0);
+    switch (charsBuffer.getOpt(0)) {
+      case (null) return (Map.new<Text, Nat>(), 0);
+      case (?firstEl) {
+        if (not Char.equal(lessThan, firstEl)) {
+          return (Map.new<Text, Nat>(), 0);
+        };
+      };
+    };
+    while (i +1 < charSize) {
+      if (Char.equal(charsBuffer.get(i), greaterThan) and not Char.equal(charsBuffer.get(i +1), lessThan)) {
+        i := i +1;
+        let startingIndex = i;
+        while (not Char.equal(charsBuffer.get(i), lessThan)) {
+          i := i +1;
+        };
+        let endIndex = i;
+        elementsPositionsBuffer.add({
+          startingPoint = startingIndex;
+          endingPoint = endIndex;
+        });
+      } else {
+        i := i +1;
+      };
+    };
+    for (elementPositionObject in elementsPositionsBuffer.vals()) {
+      var start = elementPositionObject.startingPoint;
+      let end = elementPositionObject.endingPoint;
+      var value = "";
+      while (start < end) {
+        let char = Char.toNat32(charsBuffer.get(start));
+        if((char >= 65 and char <= 90) or (char >= 97 and char <= 122) or char == 32){
+          //only use the alphabeth
+          if(char >= 65 and char <= 90){
+            value := value # Char.toText(Char.fromNat32(char + 32));
+          }
+          else{
+            value := value # Char.toText(Char.fromNat32(char));
+          }
+          
+        };
+        start := start + 1;
+      };
+      let wordsInValue = Text.split(value, #char(space));
+      for (word in wordsInValue) {
+        if (word != "") {
+          words.add(word);
+        };
+      };
+    };
+
+    let { thash;} = Map;
+
+    //create a map to check if the words are stopwords first
+    let entries: [(Text, Text)] = Array.map<Text, (Text, Text)>(STOP_WORDS, func (word: Text) : (Text, Text) {
+      (word, word)
+    });
+    let stopWordsMap = Map.fromIter<Text, Text>(entries.vals(), thash);
+
+    var result = Map.new<Text, Nat>();
+    var counter = 0;
+    
+    for (word in words.vals()) {
+      let isStopWord = switch(Map.get(stopWordsMap, thash, word)) {
+        case(?value) {true};
+        case(null) {false};
+      };
+      if (word.size() > 0 and not isStopWord) {
+        switch(Map.get(result, thash, word)) {
+          case(?value) {
+            Map.set(result, thash, word, value + 1);
+          };
+          case(null) {
+            Map.set(result, thash, word, 1);
+          };
+        };
+        counter += 1;
+      };
+    };
+
+    //add the words in the title
+    let titleWords = getWordsFromText(title);
+    for(titleWord in titleWords.vals()){
+      let isStopWord = switch(Map.get(stopWordsMap, thash, titleWord)) {
+        case(?value) {true};
+        case(null) {false};
+      };
+      if (titleWord.size() > 0 and not isStopWord) {
+        switch(Map.get(result, thash, titleWord)) {
+          case(?value) {
+            Map.set(result, thash, titleWord, value + 1);
+          };
+          case(null) {
+            Map.set(result, thash, titleWord, 1);
+          };
+        };
+        counter += 1;
+      };
+    };
+
+    //add the words in the subtitle
+    let subtitleWords = getWordsFromText(subtitle);
+    for(subtitleWord in subtitleWords.vals()){
+      let isStopWord = switch(Map.get(stopWordsMap, thash, subtitleWord)) {
+        case(?value) {true};
+        case(null) {false};
+      };
+      if (subtitleWord.size() > 0 and not isStopWord) {
+        switch(Map.get(result, thash, subtitleWord)) {
+          case(?value) {
+            Map.set(result, thash, subtitleWord, value + 1);
+          };
+          case(null) {
+            Map.set(result, thash, subtitleWord, 1);
+          };
+        };
+        counter += 1;
+      };
+    };
+    return (result, counter)
+  };
+
+  public func getWordsFromText(phrase : Text) : [Text] {
+    let lowercase = Text.map(phrase, Prim.charToLower);
+    let words = Text.split(lowercase, #text(" "));
+    //for every word, only keep the alphabetic chars
+    let result = Buffer.Buffer<Text>(0);
+    for(word in words){
+      var value = "";
+      for(char in word.chars()){
+        let charNat32 = Char.toNat32(char);
+        if(charNat32 >= 97 and charNat32 <= 122){
+          //only use the alphabeth
+          value := value # Char.toText(char);
+        };
+      };
+      result.add(value)
+    };
+    Buffer.toArray(result)
+  };
+
   public func principalToAID(principal : Text) : Text {
     return fromText(principal, null);
   };
@@ -501,28 +683,6 @@ module {
 
   public func logMetrics(commandName : Text, operator : Text) : async Result.Result<(), Text> {
     await MetricsActor.logCommand(commandName, operator);
-  };
-
-  
-
-  //notification
-  
-  let NotificationCanisterId : Text = ENV.NOTIFICATIONS_CANISTER_ID;
-  type NotificationType = NotificationTypes.NotificationType;
-  type NotificationContent = NotificationTypes.NotificationContent;
-  let NotificationActor = CanisterDeclarations.getNotificationCanister;
-
-  public func createNotification(notificationType : NotificationType, content : NotificationContent) : async Result.Result<(), Text> {
-    await NotificationActor().createNotification(notificationType, content);
-  };
-
-  public func disperseBulkSubscriptionNotifications(notifications : [(NotificationType, NotificationContent)]) : async Result.Result<(), Text> {
-    await NotificationActor().disperseBulkSubscriptionNotifications(notifications);
-  };
-
-  public func newArticle(content : NotificationContent) : async Result.Result<(), Text> {
-    Debug.print("newArticle notification sent");
-    await NotificationActor().newArticle(content);
   };
 
 

@@ -12,7 +12,6 @@ import {
 } from '../types/types';
 import {
   getPublisherActor,
-  getPostIndexActor,
   getUserActor,
   User,
   Publication,

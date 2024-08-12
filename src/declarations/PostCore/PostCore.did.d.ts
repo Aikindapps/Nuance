@@ -46,6 +46,29 @@ export interface Post {
   'isPublication' : boolean,
   'postId' : string,
 }
+export interface PostBucketType {
+  'url' : string,
+  'bucketCanisterId' : string,
+  'title' : string,
+  'created' : string,
+  'modified' : string,
+  'content' : string,
+  'wordCount' : string,
+  'isPremium' : boolean,
+  'publishedDate' : string,
+  'nftCanisterId' : [] | [string],
+  'isDraft' : boolean,
+  'creatorPrincipal' : string,
+  'category' : string,
+  'handle' : string,
+  'postOwnerPrincipal' : string,
+  'creatorHandle' : string,
+  'headerImage' : string,
+  'isMembersOnly' : boolean,
+  'subtitle' : string,
+  'isPublication' : boolean,
+  'postId' : string,
+}
 export interface PostKeyProperties {
   'bucketCanisterId' : string,
   'created' : string,
@@ -174,6 +197,10 @@ export interface _SERVICE {
   'currentId' : ActorMethod<[], bigint>,
   'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
+  'debugSaveMultiplePosts' : ActorMethod<
+    [Array<PostSaveModel>],
+    Array<Result_4>
+  >,
   'delete' : ActorMethod<[string], Result_3>,
   'deletePostFromUserDebug' : ActorMethod<[string, string], Result_8>,
   'deleteUserPosts' : ActorMethod<[string], Result_3>,
@@ -211,6 +238,10 @@ export interface _SERVICE {
   'getList' : ActorMethod<[Array<string>], Array<PostKeyProperties>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
+  'getMoreArticlesFromUsers' : ActorMethod<
+    [string, Array<string>],
+    Array<Array<PostKeyProperties>>
+  >,
   'getMoreLatestPosts' : ActorMethod<
     [number, number],
     Array<PostKeyProperties>
@@ -233,6 +264,7 @@ export interface _SERVICE {
   >,
   'getMyTags' : ActorMethod<[], Array<PostTagModel__1>>,
   'getNextPostId' : ActorMethod<[], Result_2>,
+  'getNextPostIdsDebug' : ActorMethod<[bigint], Result_2>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPopular' : ActorMethod<[number, number], GetPostsByFollowers>,
   'getPopularThisMonth' : ActorMethod<[number, number], GetPostsByFollowers>,
@@ -253,6 +285,10 @@ export interface _SERVICE {
     GetPostsByFollowers
   >,
   'getPostsByPostIds' : ActorMethod<[Array<string>], Array<PostKeyProperties>>,
+  'getPostsByPostIdsMigration' : ActorMethod<
+    [Array<string>],
+    Array<PostKeyProperties>
+  >,
   'getPostsPerHourLast24Hours' : ActorMethod<
     [],
     [bigint, Array<[bigint, bigint]>]
@@ -307,6 +343,7 @@ export interface _SERVICE {
   'removePostIdToUserDebug' : ActorMethod<[string, string], Result_1>,
   'resetWasmChunks' : ActorMethod<[], undefined>,
   'save' : ActorMethod<[PostSaveModel], Result_4>,
+  'sendNewArticleNotification' : ActorMethod<[PostBucketType], undefined>,
   'setFrontendCanisterId' : ActorMethod<[string], Result_2>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_3>,
   'setUpModClub' : ActorMethod<[string], undefined>,
@@ -337,4 +374,4 @@ export interface _SERVICE {
   'viewPost' : ActorMethod<[string], undefined>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
-export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

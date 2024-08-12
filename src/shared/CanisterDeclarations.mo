@@ -82,7 +82,8 @@ module{
         updateHandle : (existingHandle : Text, newHandle : Text, postCanisterId : Text, publicationWritersEditorsPrincipals : ?[Text]) -> async Result.Result<User, Text>;
         registerCanister : (id : Text) -> async Result.Result<(), Text>;
         getTrustedCanisters : () -> async Result.Result<[Text], Text>;
-        getUsersByPrincipals : query (principals : [Text]) -> async [UserListItem]
+        getUsersByPrincipals : query (principals : [Text]) -> async [UserListItem];
+        getFollowersPrincipalIdsByPrincipalId : query (principalId: Text) -> async [Text];
     };
 
     public func getUserCanister() : UserCanisterInterface {
@@ -183,6 +184,7 @@ module{
         updatePostDraft : (postId : Text, isDraft : Bool, time : Int, writerPrincipalId : Text) -> async PostKeyProperties;
         makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) -> async ();
         getNextPostId : () -> async Result.Result<Text, Text>;
+        getNextPostIdsDebug : (count: Nat) -> async Result.Result<Text, Text>;
         addPostCategory : (postId : Text, category : Text, time : Int) -> async ();
         incrementApplauds : (postId: Text, applauds: Nat) -> async ();
         isWriterPublic : query (publicationCanisterId: Text, caller: Principal) -> async Bool;
@@ -194,7 +196,7 @@ module{
         updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
         registerCanister : (id : Text) -> async Result.Result<(), Text>;
         getTrustedCanisters : () -> async Result.Result<[Text], Text>;
-
+        getPublicationCanisters : query () -> async [(Text, Text)]
     };
 
     public func getPostCoreCanister() : PostCoreCanisterInterface {
@@ -202,33 +204,30 @@ module{
         return canister;
     };
 
-
-    //****************POSTINDEX CANISTER*****************
-    public type IndexPostResult = Result.Result<Text, Text>;
-    public type ClearIndexResult = Result.Result<Nat, Text>;
+    //****************POST_RELATIONS_CANISTER*****************
     public type IndexPostModel = {
-        postId : Text;
-        oldHtml : Text; 
-        newHtml : Text; 
-        oldTags: [Text]; 
-        newTags: [Text];
+        postId: Text;
+        content: Text;
+        title: Text;
+        subtitle: Text;
+        tags: [Text];
     };
-    public type SearchResultData = {
+
+    public type SearchByTagsResponse = {
         totalCount: Text;
         postIds: [Text];
     };
 
-    public type PostIndexCanisterInterface = actor{
-        indexPost : (postId : Text, oldHtml : Text, newHtml : Text, oldTags: [Text], newTags: [Text]) -> async IndexPostResult;
-        indexPosts : (indexPostModels: [IndexPostModel]) -> async [IndexPostResult];
-        clearIndex : () -> async ClearIndexResult;
-        registerAdmin : (id : Text) -> async Result.Result<(), Text>;
-        registerCanister : (id : Text) -> async Result.Result<(), Text>;
-        populateTags : query (tags : [Text], indexFrom : Nat32, indexTo : Nat32) -> async SearchResultData;
+    public type PostRelationsCanisterInterface = actor{
+        indexPost : (indexPostModel: IndexPostModel) -> async ();
+        indexPosts : (indexPostModels: [IndexPostModel]) -> async ();
+        removePost : (postId: Text) -> async ();
+        registerCanister : (id: Principal) -> async Result.Result<[Principal], Text>;
+        searchByTags : query (tagNames: [Text], indexFrom: Nat32, indexTo: Nat32) -> async SearchByTagsResponse;
     };
 
-    public func getPostIndexCanister() : PostIndexCanisterInterface {
-        let canister : PostIndexCanisterInterface = actor(ENV.POST_INDEX_CANISTER_ID);
+    public func getPostRelationsCanister() : PostRelationsCanisterInterface {
+        let canister : PostRelationsCanisterInterface = actor(ENV.POST_RELATIONS_CANISTER_ID);
         return canister;
     };
 
@@ -437,6 +436,7 @@ module{
         unRejectPostByModclub : (postId : Text) -> async ();
         reindex : () -> async Result.Result<Text, Text>;
         save : (postModel : PostSaveModelBucket) -> async SaveResultBucket;
+        saveMultiple : (postModels : [PostSaveModelBucket]) -> async [SaveResultBucket];
         getPostUrls : query () -> async Result.Result<Text, Text>;
         updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
         deleteUserPosts : (principalId : Text) -> async Result.Result<Nat, Text>;
@@ -453,7 +453,7 @@ module{
     };
 
     //#########################__SUBSCRIPTION__CANISTER__#############################
-    type SubscriptionTimeInterval = {
+    public type SubscriptionTimeInterval = {
         #Weekly;
         #Monthly;
         #Annually;
@@ -717,28 +717,96 @@ module{
 
     ////////////////////////___NOTIFICATION$__CANISTER___////////////////////////
 
-    // let NotificationCanisterId : Text = ENV.NOTIFICATIONS_CANISTER_ID;
-    // type NotificationType = NotificationTypes.NotificationType;
-    // type NotificationContent = NotificationTypes.NotificationContent;
+public type NotificationContent = {
+    #NewCommentOnMyArticle : {
+      postId: Text;
+      bucketCanisterId: Text;
+      commenterPrincipal: Text;
+      commentContent: Text;
+      commentId: Text;
+      isReply: Bool;
+    };
+    #ReplyToMyComment: {
+      postId: Text;
+      bucketCanisterId: Text;
+      postWriterPrincipal: Text;
+      myCommentId: Text;
+      myCommentContent: Text;
+      replyCommentId: Text;
+      replyCommentContent: Text;
+      replyCommenterPrincipal: Text;
+    };
+    #NewArticleByFollowedWriter: {
+      postId: Text;
+      bucketCanisterId: Text;
+      postWriterPrincipal: Text;
+    };
+    #NewArticleByFollowedTag: {
+      postId: Text;
+      bucketCanisterId: Text;
+      postWriterPrincipal: Text;
+      tagName: Text;
+    };
+    #NewFollower: {
+      followerPrincipalId: Text;
+    };
+    #TipReceived: {
+      postId: Text;
+      bucketCanisterId: Text;
+      publicationPrincipalId: ?Text; //if the tip is received for a publication canister, need to have this on frontend to build the url
+      tipSenderPrincipal: Text;
+      tippedTokenSymbol: Text;
+      numberOfApplauds: Text;
+      amountOfTokens: Text;
+    };
+    #PremiumArticleSold: {
+      postId: Text;
+      bucketCanisterId: Text;
+      publicationPrincipalId: ?Text; //if the sold article was a publication article, need to have this on frontend to build the url
+      purchaserPrincipal: Text;
+      purchasedTokenSymbol: Text;
+      amountOfTokens: Text;
+    };
+    #AuthorGainsNewSubscriber: {
+      subscriberPrincipalId: Text;
+      subscriptionTimeInterval: Text;
+      amountOfTokens: Text;
+      subscriptionStartTime: Text;
+      subscriptionEndTime: Text;
+    };
+    #AuthorLosesSubscriber: {
+      subscriberPrincipalId: Text;
+      subscriptionTimeInterval: Text;
+    };
+    #YouSubscribedToAuthor: {
+      subscribedWriterPrincipalId: Text;
+      subscriptionTimeInterval: Text;
+      subscriptionStartTime: Text;
+      subscriptionEndTime: Text;
+      amountOfTokens: Text;
+      isPublication: Bool;
+    };
+    #YouUnsubscribedFromAuthor: {
+      subscribedWriterPrincipalId: Text;
+      subscriptionTimeInterval: Text;
+      isPublication: Bool;
+    };
+    #ReaderExpiredSubscription: {
+      subscribedWriterPrincipalId: Text;
+      subscriptionTimeInterval: Text;
+      subscriptionStartTime: Text;
+      subscriptionEndTime: Text;
+      amountOfTokens: Text;
+      isPublication: Bool;
+    };
+    #FaucetClaimAvailable;
+  };
 
-    // let NotificationActor = actor (NotificationCanisterId) : actor {
-    // createNotification : (notificationType : NotificationType, content : NotificationContent) -> async Result.Result<(), Text>;
-    // newArticle : (content : NotificationContent) -> async Result.Result<(), Text>;
 
-  
-//   public type PublicationCanisterInterface = actor {
-//         getEditorAndWriterPrincipalIds : query () -> async ([Text], [Text]);
-//     };
-
-//     public func getPublicationCanister(canisterId: Text) : PublicationCanisterInterface {
-//         let canister : PublicationCanisterInterface = actor(canisterId);
-//         return canister;
-//     };
 
     public type NotificationCanisterInterface = actor {
-        createNotification : (notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
-        newArticle : (content : NotificationTypes.NotificationContent) -> async Result.Result<(), Text>;
-        disperseBulkSubscriptionNotifications : [(notificationType : NotificationTypes.NotificationType, content : NotificationTypes.NotificationContent)] -> async Result.Result<(), Text>;
+        createNotification : (notificationReceiverPrincipalId: Text, notificationContent : NotificationContent) -> async ();
+        createNotifications : (notifications: [(notificationReceiverPrincipalId: Text, notificationContent : NotificationContent)]) -> async ();
     };
     public func getNotificationCanister() : NotificationCanisterInterface {
         let canister : NotificationCanisterInterface = actor(ENV.NOTIFICATIONS_CANISTER_ID);
