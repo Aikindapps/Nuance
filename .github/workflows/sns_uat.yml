@@ -18,8 +18,8 @@ jobs:
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
         run: |
-          dfxvm install 0.17.0
-          dfxvm default 0.17.0
+          dfxvm install 0.22.0
+          dfxvm default 0.22.0
           dfx --version
 
       - name: Start DFX background
@@ -94,7 +94,8 @@ jobs:
             "PostCore": { "ic": "'"$POSTCORE"'" },
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
             "Metrics": { "ic": "'"$METRICS"'" },
-            "Notifcations": { "ic": "'"$NOTIFICATIONS"'" }
+            "Notifcations": { "ic": "'"$NOTIFICATIONS"'" },
+            "Subscription": { "ic": "'"$SUBSCRIPTION"'" }
 
           }' > canister_ids.json
 
@@ -132,6 +133,7 @@ jobs:
             public let PUBLICATION_MANAGEMENT_CANISTER_ID = "'"$PUBLICATIONMANAGEMENT"'";
             public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
             public let NOTIFICATIONS_CANISTER_ID = "'"$NOTIFICATIONS"'";
+            public let SUBSCRIPTION_CANISTER_ID = "'"$SUBSCRIPTION"'";
           };' > src/shared/canisterIds.mo
 
         env:
@@ -154,6 +156,7 @@ jobs:
           PUBLICATIONMANAGEMENT: ${{ secrets.SNS_UAT_PUBLICATIONMANAGEMENT }}
           PUBLISHER: ${{ secrets.SNS_UAT_PUBLISHER }}
           NOTIFICATIONS: ${{ secrets.SNS_UAT_NOTIFICATIONS }}
+          SUBSCRIPTION: ${{ secrets.SNS_UAT_SUBSCRIPTION }}
 
       - name: Deploy SNS UAT --network ic
         run: bash ./scripts/deployment/SNS_UAT_Deploy.sh
