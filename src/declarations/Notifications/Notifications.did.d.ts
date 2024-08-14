@@ -20,6 +20,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'amountOfTokens' : string,
       'tipSenderPrincipal' : string,
       'publicationPrincipalId' : [] | [string],
+      'postTitle' : string,
       'numberOfApplauds' : string,
       'tippedTokenSymbol' : string,
       'postId' : string,
@@ -29,6 +30,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
     'NewArticleByFollowedWriter' : {
       'bucketCanisterId' : string,
       'postWriterPrincipal' : string,
+      'postTitle' : string,
       'postId' : string,
     }
   } |
@@ -54,6 +56,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'commentId' : string,
       'isReply' : boolean,
       'commentContent' : string,
+      'postTitle' : string,
       'commenterPrincipal' : string,
       'postId' : string,
     }
@@ -83,6 +86,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'myCommentId' : string,
       'myCommentContent' : string,
       'replyCommentContent' : string,
+      'postTitle' : string,
       'replyCommenterPrincipal' : string,
       'replyCommentId' : string,
       'postId' : string,
@@ -95,6 +99,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'publicationPrincipalId' : [] | [string],
       'purchasedTokenSymbol' : string,
       'purchaserPrincipal' : string,
+      'postTitle' : string,
       'postId' : string,
     }
   } |
@@ -103,6 +108,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'bucketCanisterId' : string,
       'tagName' : string,
       'postWriterPrincipal' : string,
+      'postTitle' : string,
       'postId' : string,
     }
   } |
@@ -122,6 +128,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'amountOfTokens' : string,
       'tipSenderPrincipal' : string,
       'publicationPrincipalId' : [] | [string],
+      'postTitle' : string,
       'numberOfApplauds' : string,
       'tippedTokenSymbol' : string,
       'postId' : string,
@@ -131,6 +138,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
     'NewArticleByFollowedWriter' : {
       'bucketCanisterId' : string,
       'postWriterPrincipal' : string,
+      'postTitle' : string,
       'postId' : string,
     }
   } |
@@ -156,6 +164,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'commentId' : string,
       'isReply' : boolean,
       'commentContent' : string,
+      'postTitle' : string,
       'commenterPrincipal' : string,
       'postId' : string,
     }
@@ -185,6 +194,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'myCommentId' : string,
       'myCommentContent' : string,
       'replyCommentContent' : string,
+      'postTitle' : string,
       'replyCommenterPrincipal' : string,
       'replyCommentId' : string,
       'postId' : string,
@@ -197,6 +207,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'publicationPrincipalId' : [] | [string],
       'purchasedTokenSymbol' : string,
       'purchaserPrincipal' : string,
+      'postTitle' : string,
       'postId' : string,
     }
   } |
@@ -205,6 +216,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'bucketCanisterId' : string,
       'tagName' : string,
       'postWriterPrincipal' : string,
+      'postTitle' : string,
       'postId' : string,
     }
   } |

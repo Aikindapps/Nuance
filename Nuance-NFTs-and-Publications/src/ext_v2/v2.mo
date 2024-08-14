@@ -2347,17 +2347,28 @@ actor class EXTNFT() = this {
     };
     let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
     let postKeyProperties = await PostCoreCanister.getPostKeyProperties(postId);
+    
     switch(postKeyProperties) {
       case(#ok(value)) {
-        let NotificationCanister = CanisterDeclarations.getNotificationCanister();
-        await NotificationCanister.createNotification(Principal.toText(writer_principal_id), #PremiumArticleSold {
-          amountOfTokens = Nat.toText(icp_price_e8s);
-          bucketCanisterId = value.bucketCanisterId;
-          postId = value.postId;
-          publicationPrincipalId = ?value.principal;
-          purchasedTokenSymbol = "ICP";
-          purchaserPrincipal = purchaserPrincipalId;
-        });
+        let PostBucketCanister = CanisterDeclarations.getPostBucketCanister(value.bucketCanisterId);
+        switch(await PostBucketCanister.getPost(value.postId)) {
+          case(#ok(fullPostResponse)) {
+            let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+            await NotificationCanister.createNotification(Principal.toText(writer_principal_id), #PremiumArticleSold {
+              amountOfTokens = Nat.toText(icp_price_e8s);
+              bucketCanisterId = value.bucketCanisterId;
+              postTitle = fullPostResponse.title;
+              postId = value.postId;
+              publicationPrincipalId = ?value.principal;
+              purchasedTokenSymbol = "ICP";
+              purchaserPrincipal = purchaserPrincipalId;
+            });
+          };
+          case(#err(error)) {
+            //not possible
+          };
+        };
+        
       };
       case(#err(error)) {
         //not possible

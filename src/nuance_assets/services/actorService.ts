@@ -122,9 +122,8 @@ export type { Content } from '../../declarations/Storage/Storage.did';
 export type { OperationLog } from '../../declarations/Metrics/Metrics.did';
 
 export type {
-  Notifications,
+  Notification,
   NotificationContent,
-  NotificationType,
   UserNotificationSettings, 
 } from '../../declarations/Notifications/Notifications.did';
 

@@ -10,5 +10,5 @@ export const NUANCE_ASSETS_CANISTER_ID = 'exwqn-uaaaa-aaaaf-qaeaa-cai';
 export const METRICS_CANISTER_ID = 'xjlvo-hyaaa-aaaam-qbcga-cai';
 export const NFT_FACTORY_CANISTER_ID = 'kc4mb-myaaa-aaaaf-qajpq-cai';
 export const PUBLICATION_MANAGEMENT_CANISTER_ID = 'kq23y-aiaaa-aaaaf-qajmq-cai';
-export const NOTIFICATIONS_CANISTER_ID = '55qxh-qqaaa-aaaap-qhfia-cai';
+export const NOTIFICATIONS_CANISTER_ID = 'a3shf-5eaaa-aaaaa-qaafa-cai';
 export const SUBSCRIPTION_CANISTER_ID = 's6qib-6qaaa-aaaaf-qalwa-cai';

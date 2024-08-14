@@ -40,6 +40,7 @@ module {
     #NewCommentOnMyArticle : {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       commenterPrincipal: Text;
       commentContent: Text;
       commentId: Text;
@@ -48,6 +49,7 @@ module {
     #ReplyToMyComment: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       postWriterPrincipal: Text;
       myCommentId: Text;
       myCommentContent: Text;
@@ -58,11 +60,13 @@ module {
     #NewArticleByFollowedWriter: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       postWriterPrincipal: Text;
     };
     #NewArticleByFollowedTag: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       postWriterPrincipal: Text;
       tagName: Text;
     };
@@ -72,6 +76,7 @@ module {
     #TipReceived: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       publicationPrincipalId: ?Text; //if the tip is received for a publication canister, need to have this on frontend to build the url
       tipSenderPrincipal: Text;
       tippedTokenSymbol: Text;
@@ -81,6 +86,7 @@ module {
     #PremiumArticleSold: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       publicationPrincipalId: ?Text; //if the sold article was a publication article, need to have this on frontend to build the url
       purchaserPrincipal: Text;
       purchasedTokenSymbol: Text;

@@ -721,6 +721,7 @@ public type NotificationContent = {
     #NewCommentOnMyArticle : {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       commenterPrincipal: Text;
       commentContent: Text;
       commentId: Text;
@@ -729,6 +730,7 @@ public type NotificationContent = {
     #ReplyToMyComment: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       postWriterPrincipal: Text;
       myCommentId: Text;
       myCommentContent: Text;
@@ -739,11 +741,13 @@ public type NotificationContent = {
     #NewArticleByFollowedWriter: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       postWriterPrincipal: Text;
     };
     #NewArticleByFollowedTag: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       postWriterPrincipal: Text;
       tagName: Text;
     };
@@ -753,6 +757,7 @@ public type NotificationContent = {
     #TipReceived: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       publicationPrincipalId: ?Text; //if the tip is received for a publication canister, need to have this on frontend to build the url
       tipSenderPrincipal: Text;
       tippedTokenSymbol: Text;
@@ -762,6 +767,7 @@ public type NotificationContent = {
     #PremiumArticleSold: {
       postId: Text;
       bucketCanisterId: Text;
+      postTitle: Text;
       publicationPrincipalId: ?Text; //if the sold article was a publication article, need to have this on frontend to build the url
       purchaserPrincipal: Text;
       purchasedTokenSymbol: Text;
@@ -769,18 +775,18 @@ public type NotificationContent = {
     };
     #AuthorGainsNewSubscriber: {
       subscriberPrincipalId: Text;
-      subscriptionTimeInterval: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
       amountOfTokens: Text;
       subscriptionStartTime: Text;
       subscriptionEndTime: Text;
     };
     #AuthorLosesSubscriber: {
       subscriberPrincipalId: Text;
-      subscriptionTimeInterval: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
     };
     #YouSubscribedToAuthor: {
       subscribedWriterPrincipalId: Text;
-      subscriptionTimeInterval: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
       subscriptionStartTime: Text;
       subscriptionEndTime: Text;
       amountOfTokens: Text;
@@ -788,12 +794,12 @@ public type NotificationContent = {
     };
     #YouUnsubscribedFromAuthor: {
       subscribedWriterPrincipalId: Text;
-      subscriptionTimeInterval: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
       isPublication: Bool;
     };
     #ReaderExpiredSubscription: {
       subscribedWriterPrincipalId: Text;
-      subscriptionTimeInterval: Text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
       subscriptionStartTime: Text;
       subscriptionEndTime: Text;
       amountOfTokens: Text;

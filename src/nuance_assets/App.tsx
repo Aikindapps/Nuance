@@ -1,8 +1,12 @@
 import React, { useEffect, useState, useContext, Suspense, lazy } from 'react';
 import { usePostStore } from './store';
-import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  useNavigate,
+  useRoutes,
+} from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { RenderToaster } from './services/toastService'
+import { RenderToaster } from './services/toastService';
 import Loader from './UI/loader/Loader';
 import { useAuthStore } from './store';
 import { useIdleTimer } from 'react-idle-timer';
@@ -29,8 +33,12 @@ const CreateEditPublication = lazy(
 const ReadArticle = lazy(() => import('./screens/read-article/read-article'));
 const ProfileSidebar = lazy(() => import('./screens/profile/profileSidebar'));
 const MyProfile = lazy(() => import('./screens/profile/my-profile/myProfile'));
-const EditProfile = lazy(() => import('./screens/profile/edit-profile/editProfile'));
-const PersonalArticles = lazy(() => import('./screens/profile/personal-articles/personalArticles'));
+const EditProfile = lazy(
+  () => import('./screens/profile/edit-profile/editProfile')
+);
+const PersonalArticles = lazy(
+  () => import('./screens/profile/personal-articles/personalArticles')
+);
 const PublishedArticles = lazy(
   () => import('./screens/profile/publishedArticles')
 );
@@ -114,9 +122,9 @@ function App() {
   };
   useEffect(() => {
     window.addEventListener('resize', handleResize);
-    fetchTokenBalances()
-    handleResize()
-    setTimeout(handleResize, 200)
+    fetchTokenBalances();
+    handleResize();
+    setTimeout(handleResize, 200);
   }, []);
 
   useEffect(() => {
@@ -124,7 +132,6 @@ function App() {
       ? 'var(--dark-primary-background-color)'
       : colors.primaryBackgroundColor;
   }, [darkTheme]);
-
 
   const inactivityTimeout: number = //process.env.II_INACTIVITY_TIMEOUT
     //   ? // configuration is in minutes, but API expects milliseconds
@@ -135,7 +142,7 @@ function App() {
   const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
     logout: state.logout,
-    fetchTokenBalances: state.fetchTokenBalances
+    fetchTokenBalances: state.fetchTokenBalances,
   }));
 
   const onIdle = () => {
@@ -148,7 +155,6 @@ function App() {
   };
 
   useEffect(() => {
-
     const handleMessage = (event: any) => {
       if (event.data.type === 'logout') {
         console.log('Logout initiated from another tab');
@@ -158,9 +164,7 @@ function App() {
       if (event.data.type === 'login') {
         window.location.reload();
       }
-
     };
-
 
     authChannel.onmessage = handleMessage;
 
@@ -169,10 +173,8 @@ function App() {
     };
   }, []);
 
-
   return (
     <ModalContextProvider>
-
       <div className='App'>
         <Helmet>
           <meta charSet='utf-8' />
@@ -229,15 +231,12 @@ function App() {
               </div>
             }
           >
+            <ModalsWrapper />
             <Routes />
           </Suspense>
         </Router>
         <RenderToaster />
-
-        <ModalsWrapper />
       </div>
-
-      <NotificationsSidebar />
     </ModalContextProvider>
   );
 }

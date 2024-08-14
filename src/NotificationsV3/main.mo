@@ -78,6 +78,8 @@ actor Notifications {
   stable var notificationIdToPostWriterPrincipalId = Map.new<Text, Text>();
   // key: notificationId, value: bucket canister id
   stable var notificationIdToBucketCanisterId = Map.new<Text, Text>();
+  // key: notificationId, value: post title
+  stable var notificationIdToPostTitle = Map.new<Text, Text>();
   // key: notificationId, value: tag name 
   stable var notificationIdToTagName = Map.new<Text, Text>();
 
@@ -140,6 +142,7 @@ actor Notifications {
       if(not (await isAllowedToSendNotifications(caller))){
         //if here, caller is not an admin and not a bucket canister
         //just return without doing anything
+        Debug.print("Not allowed to send notifications.");
         return;
       }
     };
@@ -251,7 +254,6 @@ actor Notifications {
         };
         
         let notifications = Buffer.Buffer<Notification>(0);
-
         for (i in Iter.range(indexStart, indexEnd)) {
           let notification = buildNotification(callerNotificationIdsArrayFiltered[i]);
           notifications.add(notification);
@@ -326,6 +328,51 @@ actor Notifications {
       };
     };
   }; 
+
+  private func getTextFromNotificationType(notificationType: NotificationTypeInternal) : Text {
+    switch(notificationType) {
+      case(#NewCommentOnMyArticle) {
+        return "newCommentOnMyArticle"
+      };
+      case(#ReplyToMyComment) {
+        return "replyToMyComment"
+      };
+      case(#NewArticleByFollowedWriter) {
+        return "newArticleByFollowedWriter"
+      };
+      case(#NewArticleByFollowedTag) {
+        return "newArticleByFollowedTag"
+      };
+      case(#NewFollower) {
+        return "newFollower"
+      };
+      case(#TipReceived) {
+        return "tipReceived"
+      };
+      case(#PremiumArticleSold) {
+        return "premiumArticleSold"
+      };
+      case(#AuthorGainsNewSubscriber) {
+        return "authorGainsNewSubscriber"
+      };
+      case(#AuthorLosesSubscriber) {
+        return "authorLosesSubscriber"
+      };
+      case(#YouSubscribedToAuthor) {
+        return "youSubscribedToAuthor"
+      };
+      case(#YouUnsubscribedFromAuthor) {
+        return "youUnsubscribedFromAuthor"
+      };
+      case(#ReaderExpiredSubscription) {
+        return "readerExpiredSubscription"
+      };
+      case(#FaucetClaimAvailable) {
+        return "faucetClaimAvailable"
+      };
+    };
+  };
+
   //increase the notificationId stable var and return the new val
   private func getNextNotificationId() : Text {
     notificationId += 1;
@@ -339,20 +386,24 @@ actor Notifications {
     existingNotificationIdsBuffer.add(id);
     Map.set(principalToNotificationIds, thash, userPrincipalId, Buffer.toArray(existingNotificationIdsBuffer));
     Map.set(notificationIdToNotificationReceiverPrincipalId, thash, id, userPrincipalId);
-    Map.set(notificationIdToTimestamp, thash, userPrincipalId, Int.toText(U.epochTime()));
+    Map.set(notificationIdToTimestamp, thash, id, Int.toText(U.epochTime()));
     switch(notificationContent) {
       case(#NewCommentOnMyArticle(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#NewCommentOnMyArticle));
         Map.set(notificationIdToPostId, thash, id, content.postId);
         Map.set(notificationIdToBucketCanisterId, thash, id, content.bucketCanisterId);
+        Map.set(notificationIdToPostTitle, thash, id, content.postTitle);
         Map.set(notificationIdToCommentContent, thash, id, content.commentContent);
         Map.set(notificationIdToCommentId, thash, id, content.commentId);
         Map.set(notificationIdToCommenterPrincipalId, thash, id, content.commenterPrincipal);
         Map.set(notificationIdToIsReply, thash, id, content.isReply);
       };
       case(#ReplyToMyComment(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#ReplyToMyComment));
         Map.set(notificationIdToPostId, thash, id, content.postId);
         Map.set(notificationIdToPostWriterPrincipalId, thash, id, content.postWriterPrincipal);
         Map.set(notificationIdToBucketCanisterId, thash, id, content.bucketCanisterId);
+        Map.set(notificationIdToPostTitle, thash, id, content.postTitle);
         Map.set(notificationIdToCommentContent, thash, id, content.myCommentContent);
         Map.set(notificationIdToCommentId, thash, id, content.myCommentId);
         Map.set(notificationIdToReplyCommentContent, thash, id, content.replyCommentContent);
@@ -360,22 +411,29 @@ actor Notifications {
         Map.set(notificationIdToReplyCommenterPrincipalId, thash, id, content.replyCommenterPrincipal);
       };
       case(#NewArticleByFollowedWriter(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#NewArticleByFollowedWriter));
         Map.set(notificationIdToPostId, thash, id, content.postId);
         Map.set(notificationIdToPostWriterPrincipalId, thash, id, content.postWriterPrincipal);
         Map.set(notificationIdToBucketCanisterId, thash, id, content.bucketCanisterId);
+        Map.set(notificationIdToPostTitle, thash, id, content.postTitle);
       };
       case(#NewArticleByFollowedTag(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#NewArticleByFollowedTag));
         Map.set(notificationIdToPostId, thash, id, content.postId);
         Map.set(notificationIdToPostWriterPrincipalId, thash, id, content.postWriterPrincipal);
         Map.set(notificationIdToBucketCanisterId, thash, id, content.bucketCanisterId);
+        Map.set(notificationIdToPostTitle, thash, id, content.postTitle);
         Map.set(notificationIdToTagName, thash, id, content.tagName);
       };
       case(#NewFollower(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#NewFollower));
         Map.set(notificationIdToFollowerPrincipalId, thash, id, content.followerPrincipalId);
       };
       case(#TipReceived(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#TipReceived));
         Map.set(notificationIdToPostId, thash, id, content.postId);
         Map.set(notificationIdToBucketCanisterId, thash, id, content.bucketCanisterId);
+        Map.set(notificationIdToPostTitle, thash, id, content.postTitle);
         Map.set(notificationIdToTipSenderPrincipalId, thash, id, content.tipSenderPrincipal);
         Map.set(notificationIdToTippedTokenSymbol, thash, id, content.tippedTokenSymbol);
         Map.set(notificationIdToAmountOfTokens, thash, id, content.amountOfTokens);
@@ -388,8 +446,10 @@ actor Notifications {
         };
       };
       case(#PremiumArticleSold(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#PremiumArticleSold));
         Map.set(notificationIdToPostId, thash, id, content.postId);
         Map.set(notificationIdToBucketCanisterId, thash, id, content.bucketCanisterId);
+        Map.set(notificationIdToPostTitle, thash, id, content.postTitle);
         Map.set(notificationIdToPurchaserPrincipalId, thash, id, content.purchaserPrincipal);
         Map.set(notificationIdToPurchasedTokenSymbol, thash, id, content.purchasedTokenSymbol);
         Map.set(notificationIdToAmountOfTokens, thash, id, content.amountOfTokens);
@@ -401,6 +461,7 @@ actor Notifications {
         };
       };
       case(#AuthorGainsNewSubscriber(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#AuthorGainsNewSubscriber));
         Map.set(notificationIdToSubscriberPrincipalId, thash, id, content.subscriberPrincipalId);
         Map.set(notificationIdToSubscriptionTimeInterval, thash, id, U.getTextFromSubscriptionTimeInterval(content.subscriptionTimeInterval));
         Map.set(notificationIdToSubscriptionStartTime, thash, id, content.subscriptionStartTime);
@@ -408,10 +469,12 @@ actor Notifications {
         Map.set(notificationIdToAmountOfTokens, thash, id, content.amountOfTokens);
       };
       case(#AuthorLosesSubscriber(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#AuthorLosesSubscriber));
         Map.set(notificationIdToSubscriberPrincipalId, thash, id, content.subscriberPrincipalId);
         Map.set(notificationIdToSubscriptionTimeInterval, thash, id, U.getTextFromSubscriptionTimeInterval(content.subscriptionTimeInterval));
       };
       case(#YouSubscribedToAuthor(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#YouSubscribedToAuthor));
         Map.set(notificationIdToSubscribedWriterPrincipalId, thash, id, content.subscribedWriterPrincipalId);
         Map.set(notificationIdToSubscriptionTimeInterval, thash, id, U.getTextFromSubscriptionTimeInterval(content.subscriptionTimeInterval));
         Map.set(notificationIdToSubscriptionStartTime, thash, id, content.subscriptionStartTime);
@@ -420,11 +483,13 @@ actor Notifications {
         Map.set(notificationIdToIsPublication, thash, id, content.isPublication);
       };
       case(#YouUnsubscribedFromAuthor(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#YouUnsubscribedFromAuthor));
         Map.set(notificationIdToSubscribedWriterPrincipalId, thash, id, content.subscribedWriterPrincipalId);
         Map.set(notificationIdToSubscriptionTimeInterval, thash, id, U.getTextFromSubscriptionTimeInterval(content.subscriptionTimeInterval));
         Map.set(notificationIdToIsPublication, thash, id, content.isPublication);
       };
       case(#ReaderExpiredSubscription(content)) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#ReaderExpiredSubscription));
         Map.set(notificationIdToSubscribedWriterPrincipalId, thash, id, content.subscribedWriterPrincipalId);
         Map.set(notificationIdToSubscriptionTimeInterval, thash, id, U.getTextFromSubscriptionTimeInterval(content.subscriptionTimeInterval));
         Map.set(notificationIdToSubscriptionStartTime, thash, id, content.subscriptionStartTime);
@@ -433,7 +498,7 @@ actor Notifications {
         Map.set(notificationIdToIsPublication, thash, id, content.isPublication);
       };
       case(#FaucetClaimAvailable) {
-        //nothing to store here
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#FaucetClaimAvailable));
       };
     };
   };
@@ -450,6 +515,7 @@ actor Notifications {
           content = #NewCommentOnMyArticle({
             postId = Option.get(Map.get(notificationIdToPostId, thash, id), "");
             bucketCanisterId = Option.get(Map.get(notificationIdToBucketCanisterId, thash, id), "");
+            postTitle = Option.get(Map.get(notificationIdToPostTitle, thash, id), "");
             commentContent = Option.get(Map.get(notificationIdToCommentContent, thash, id), "");
             commentId = Option.get(Map.get(notificationIdToCommentId, thash, id), "");
             commenterPrincipal = Option.get(Map.get(notificationIdToCommenterPrincipalId, thash, id), "");
@@ -467,6 +533,7 @@ actor Notifications {
             postId = Option.get(Map.get(notificationIdToPostId, thash, id), "");
             postWriterPrincipal = Option.get(Map.get(notificationIdToPostWriterPrincipalId, thash, id), "");
             bucketCanisterId = Option.get(Map.get(notificationIdToBucketCanisterId, thash, id), "");
+            postTitle = Option.get(Map.get(notificationIdToPostTitle, thash, id), "");
             myCommentContent = Option.get(Map.get(notificationIdToCommentContent, thash, id), "");
             myCommentId = Option.get(Map.get(notificationIdToCommentId, thash, id), "");
             replyCommentContent = Option.get(Map.get(notificationIdToReplyCommentContent, thash, id), "");
@@ -485,6 +552,7 @@ actor Notifications {
             postId = Option.get(Map.get(notificationIdToPostId, thash, id), "");
             postWriterPrincipal = Option.get(Map.get(notificationIdToPostWriterPrincipalId, thash, id), "");
             bucketCanisterId = Option.get(Map.get(notificationIdToBucketCanisterId, thash, id), "");
+            postTitle = Option.get(Map.get(notificationIdToPostTitle, thash, id), "");
           })
         }
       };
@@ -498,6 +566,7 @@ actor Notifications {
             postId = Option.get(Map.get(notificationIdToPostId, thash, id), "");
             postWriterPrincipal = Option.get(Map.get(notificationIdToPostWriterPrincipalId, thash, id), "");
             bucketCanisterId = Option.get(Map.get(notificationIdToBucketCanisterId, thash, id), "");
+            postTitle = Option.get(Map.get(notificationIdToPostTitle, thash, id), "");
             tagName = Option.get(Map.get(notificationIdToTagName, thash, id), "");
           })
         }
@@ -522,6 +591,7 @@ actor Notifications {
           content = #TipReceived({
             postId = Option.get(Map.get(notificationIdToPostId, thash, id), "");
             bucketCanisterId = Option.get(Map.get(notificationIdToBucketCanisterId, thash, id), "");
+            postTitle = Option.get(Map.get(notificationIdToPostTitle, thash, id), "");
             tipSenderPrincipal = Option.get(Map.get(notificationIdToTipSenderPrincipalId, thash, id), "");
             tippedTokenSymbol = Option.get(Map.get(notificationIdToTippedTokenSymbol, thash, id), "");
             amountOfTokens = Option.get(Map.get(notificationIdToAmountOfTokens, thash, id), "");
@@ -539,6 +609,7 @@ actor Notifications {
           content = #PremiumArticleSold({
             postId = Option.get(Map.get(notificationIdToPostId, thash, id), "");
             bucketCanisterId = Option.get(Map.get(notificationIdToBucketCanisterId, thash, id), "");
+            postTitle = Option.get(Map.get(notificationIdToPostTitle, thash, id), "");
             purchaserPrincipal = Option.get(Map.get(notificationIdToPurchaserPrincipalId, thash, id), "");
             purchasedTokenSymbol = Option.get(Map.get(notificationIdToPurchasedTokenSymbol, thash, id), "");
             amountOfTokens = Option.get(Map.get(notificationIdToAmountOfTokens, thash, id), "");
@@ -735,7 +806,7 @@ actor Notifications {
     //check if it's a PostBucket canister
     let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
     let bucketCanisterIds = Array.map(await postCoreCanister.getBucketCanisters(), func(bucketCanisterEntry: (Text, Text)) : Text {
-      bucketCanisterEntry.1
+      bucketCanisterEntry.0
     });
     //add all the bucketCanisterId values into nuanceCanisters map to not need any inter-canister call next time
     for(bucketCanisterId in bucketCanisterIds.vals()){

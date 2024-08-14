@@ -2773,6 +2773,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
             notifications.add(writerPrincipalId, #NewCommentOnMyArticle({
               postId = comment.postId;
               bucketCanisterId = comment.bucketCanisterId;
+              postTitle = U.safeGet(titleHashMap, comment.postId, "");
               commenterPrincipal = comment.creator;
               commentContent = comment.content;
               commentId = comment.commentId;
@@ -2784,6 +2785,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
             notifications.add(repliedComment.creator, #ReplyToMyComment({
               postId = comment.postId;
               bucketCanisterId = comment.bucketCanisterId;
+              postTitle = U.safeGet(titleHashMap, comment.postId, "");
               postWriterPrincipal = writerPrincipalId;
               myCommentId = repliedComment.commentId;
               myCommentContent = repliedComment.content;
@@ -2811,6 +2813,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
             await NotificationsCanister.createNotification(writerPrincipalId, #NewCommentOnMyArticle({
               postId = comment.postId;
               bucketCanisterId = comment.bucketCanisterId;
+              postTitle = U.safeGet(titleHashMap, comment.postId, "");
               commenterPrincipal = comment.creator;
               commentContent = comment.content;
               commentId = comment.commentId;
@@ -3316,6 +3319,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     ignore NotificationsCanister.createNotification(receiverPrincipalId,#TipReceived({
       postId;
       bucketCanisterId = Principal.toText(Principal.fromActor(this));
+      postTitle = U.safeGet(titleHashMap, postId, "");
       publicationPrincipalId = ?""; //if the tip is received for a publication canister, need to have this on frontend to build the url
       tipSenderPrincipal = sender;
       tippedTokenSymbol = symbol;

@@ -1464,6 +1464,7 @@ actor PostCore {
       notifications.add(followerPrincipalId, #NewArticleByFollowedWriter({
         postId = postBucketResponse.postId;
         bucketCanisterId = postBucketResponse.bucketCanisterId;
+        postTitle = postBucketResponse.title;
         postWriterPrincipal = postBucketResponse.postOwnerPrincipal;
       }));
       //for every notification, store the principal id in the local map so that they don't get 
@@ -1488,6 +1489,7 @@ actor PostCore {
             notifications.add(tagFollower, #NewArticleByFollowedTag({
               postId= postBucketResponse.postId;
               bucketCanisterId = postBucketResponse.bucketCanisterId;
+              postTitle = postBucketResponse.title;
               postWriterPrincipal = postBucketResponse.postOwnerPrincipal;
               tagName = tagNames[i];
             }))

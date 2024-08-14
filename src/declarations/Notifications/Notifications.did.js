@@ -12,6 +12,7 @@ export const idlFactory = ({ IDL }) => {
       'amountOfTokens' : IDL.Text,
       'tipSenderPrincipal' : IDL.Text,
       'publicationPrincipalId' : IDL.Opt(IDL.Text),
+      'postTitle' : IDL.Text,
       'numberOfApplauds' : IDL.Text,
       'tippedTokenSymbol' : IDL.Text,
       'postId' : IDL.Text,
@@ -19,6 +20,7 @@ export const idlFactory = ({ IDL }) => {
     'NewArticleByFollowedWriter' : IDL.Record({
       'bucketCanisterId' : IDL.Text,
       'postWriterPrincipal' : IDL.Text,
+      'postTitle' : IDL.Text,
       'postId' : IDL.Text,
     }),
     'AuthorLosesSubscriber' : IDL.Record({
@@ -38,6 +40,7 @@ export const idlFactory = ({ IDL }) => {
       'commentId' : IDL.Text,
       'isReply' : IDL.Bool,
       'commentContent' : IDL.Text,
+      'postTitle' : IDL.Text,
       'commenterPrincipal' : IDL.Text,
       'postId' : IDL.Text,
     }),
@@ -61,6 +64,7 @@ export const idlFactory = ({ IDL }) => {
       'myCommentId' : IDL.Text,
       'myCommentContent' : IDL.Text,
       'replyCommentContent' : IDL.Text,
+      'postTitle' : IDL.Text,
       'replyCommenterPrincipal' : IDL.Text,
       'replyCommentId' : IDL.Text,
       'postId' : IDL.Text,
@@ -71,12 +75,14 @@ export const idlFactory = ({ IDL }) => {
       'publicationPrincipalId' : IDL.Opt(IDL.Text),
       'purchasedTokenSymbol' : IDL.Text,
       'purchaserPrincipal' : IDL.Text,
+      'postTitle' : IDL.Text,
       'postId' : IDL.Text,
     }),
     'NewArticleByFollowedTag' : IDL.Record({
       'bucketCanisterId' : IDL.Text,
       'tagName' : IDL.Text,
       'postWriterPrincipal' : IDL.Text,
+      'postTitle' : IDL.Text,
       'postId' : IDL.Text,
     }),
     'AuthorGainsNewSubscriber' : IDL.Record({
@@ -109,6 +115,7 @@ export const idlFactory = ({ IDL }) => {
       'amountOfTokens' : IDL.Text,
       'tipSenderPrincipal' : IDL.Text,
       'publicationPrincipalId' : IDL.Opt(IDL.Text),
+      'postTitle' : IDL.Text,
       'numberOfApplauds' : IDL.Text,
       'tippedTokenSymbol' : IDL.Text,
       'postId' : IDL.Text,
@@ -116,6 +123,7 @@ export const idlFactory = ({ IDL }) => {
     'NewArticleByFollowedWriter' : IDL.Record({
       'bucketCanisterId' : IDL.Text,
       'postWriterPrincipal' : IDL.Text,
+      'postTitle' : IDL.Text,
       'postId' : IDL.Text,
     }),
     'AuthorLosesSubscriber' : IDL.Record({
@@ -135,6 +143,7 @@ export const idlFactory = ({ IDL }) => {
       'commentId' : IDL.Text,
       'isReply' : IDL.Bool,
       'commentContent' : IDL.Text,
+      'postTitle' : IDL.Text,
       'commenterPrincipal' : IDL.Text,
       'postId' : IDL.Text,
     }),
@@ -158,6 +167,7 @@ export const idlFactory = ({ IDL }) => {
       'myCommentId' : IDL.Text,
       'myCommentContent' : IDL.Text,
       'replyCommentContent' : IDL.Text,
+      'postTitle' : IDL.Text,
       'replyCommenterPrincipal' : IDL.Text,
       'replyCommentId' : IDL.Text,
       'postId' : IDL.Text,
@@ -168,12 +178,14 @@ export const idlFactory = ({ IDL }) => {
       'publicationPrincipalId' : IDL.Opt(IDL.Text),
       'purchasedTokenSymbol' : IDL.Text,
       'purchaserPrincipal' : IDL.Text,
+      'postTitle' : IDL.Text,
       'postId' : IDL.Text,
     }),
     'NewArticleByFollowedTag' : IDL.Record({
       'bucketCanisterId' : IDL.Text,
       'tagName' : IDL.Text,
       'postWriterPrincipal' : IDL.Text,
+      'postTitle' : IDL.Text,
       'postId' : IDL.Text,
     }),
     'AuthorGainsNewSubscriber' : IDL.Record({

@@ -51,6 +51,7 @@ type NotificationContent__1 =
     record {
       bucketCanisterId: text;
       postId: text;
+      postTitle: text;
       postWriterPrincipal: text;
       tagName: text;
     };
@@ -58,6 +59,7 @@ type NotificationContent__1 =
     record {
       bucketCanisterId: text;
       postId: text;
+      postTitle: text;
       postWriterPrincipal: text;
     };
    NewCommentOnMyArticle:
@@ -68,6 +70,7 @@ type NotificationContent__1 =
       commenterPrincipal: text;
       isReply: bool;
       postId: text;
+      postTitle: text;
     };
    NewFollower: record {followerPrincipalId: text;};
    PremiumArticleSold:
@@ -75,6 +78,7 @@ type NotificationContent__1 =
       amountOfTokens: text;
       bucketCanisterId: text;
       postId: text;
+      postTitle: text;
       publicationPrincipalId: opt text;
       purchasedTokenSymbol: text;
       purchaserPrincipal: text;
@@ -94,6 +98,7 @@ type NotificationContent__1 =
       myCommentContent: text;
       myCommentId: text;
       postId: text;
+      postTitle: text;
       postWriterPrincipal: text;
       replyCommentContent: text;
       replyCommentId: text;
@@ -105,6 +110,7 @@ type NotificationContent__1 =
       bucketCanisterId: text;
       numberOfApplauds: text;
       postId: text;
+      postTitle: text;
       publicationPrincipalId: opt text;
       tipSenderPrincipal: text;
       tippedTokenSymbol: text;
@@ -145,6 +151,7 @@ type NotificationContent =
     record {
       bucketCanisterId: text;
       postId: text;
+      postTitle: text;
       postWriterPrincipal: text;
       tagName: text;
     };
@@ -152,6 +159,7 @@ type NotificationContent =
     record {
       bucketCanisterId: text;
       postId: text;
+      postTitle: text;
       postWriterPrincipal: text;
     };
    NewCommentOnMyArticle:
@@ -162,6 +170,7 @@ type NotificationContent =
       commenterPrincipal: text;
       isReply: bool;
       postId: text;
+      postTitle: text;
     };
    NewFollower: record {followerPrincipalId: text;};
    PremiumArticleSold:
@@ -169,6 +178,7 @@ type NotificationContent =
       amountOfTokens: text;
       bucketCanisterId: text;
       postId: text;
+      postTitle: text;
       publicationPrincipalId: opt text;
       purchasedTokenSymbol: text;
       purchaserPrincipal: text;
@@ -188,6 +198,7 @@ type NotificationContent =
       myCommentContent: text;
       myCommentId: text;
       postId: text;
+      postTitle: text;
       postWriterPrincipal: text;
       replyCommentContent: text;
       replyCommentId: text;
@@ -199,6 +210,7 @@ type NotificationContent =
       bucketCanisterId: text;
       numberOfApplauds: text;
       postId: text;
+      postTitle: text;
       publicationPrincipalId: opt text;
       tipSenderPrincipal: text;
       tippedTokenSymbol: text;

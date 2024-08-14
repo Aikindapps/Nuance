@@ -567,7 +567,7 @@ actor Subscription {
                             subscribedWriterPrincipalId = event.writerPrincipalId;
                             subscriptionEndTime = Int.toText(event.endTime);
                             subscriptionStartTime = Int.toText(event.startTime);
-                            subscriptionTimeInterval = U.getTextFromSubscriptionTimeInterval(event.subscriptionTimeInterval);
+                            subscriptionTimeInterval = event.subscriptionTimeInterval;
                         }));
 
                         //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
@@ -888,7 +888,7 @@ actor Subscription {
 
         notifications.add(event.readerPrincipalId, #YouSubscribedToAuthor({
             subscribedWriterPrincipalId = event.writerPrincipalId;
-            subscriptionTimeInterval = U.getTextFromSubscriptionTimeInterval(event.subscriptionTimeInterval);
+            subscriptionTimeInterval = event.subscriptionTimeInterval;
             subscriptionStartTime = Int.toText(event.startTime);
             subscriptionEndTime = Int.toText(event.endTime);
             amountOfTokens = event.paymentFee;
@@ -900,7 +900,7 @@ actor Subscription {
             subscriberPrincipalId = event.readerPrincipalId;
             subscriptionStartTime = Int.toText(event.startTime);
             subscriptionEndTime = Int.toText(event.endTime);
-            subscriptionTimeInterval = U.getTextFromSubscriptionTimeInterval(event.subscriptionTimeInterval);
+            subscriptionTimeInterval = event.subscriptionTimeInterval;
         }));
 
         let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
@@ -941,7 +941,7 @@ actor Subscription {
                 await NotificationsCanister.createNotification(readerPrincipalId, #YouUnsubscribedFromAuthor({
                     isPublication = U.arrayContainsGeneric(allPublisherIds, writerPrincipalId, Text.equal);
                     subscribedWriterPrincipalId = writerPrincipalId;
-                    subscriptionTimeInterval = U.getTextFromSubscriptionTimeInterval(event.subscriptionTimeInterval)
+                    subscriptionTimeInterval = event.subscriptionTimeInterval
                 }));
             };
             case(null) {
@@ -1100,7 +1100,7 @@ actor Subscription {
                                 subscribedWriterPrincipalId = event.writerPrincipalId;
                                 subscriptionEndTime = Int.toText(event.endTime);
                                 subscriptionStartTime = Int.toText(event.startTime);
-                                subscriptionTimeInterval = U.getTextFromSubscriptionTimeInterval(event.subscriptionTimeInterval);
+                                subscriptionTimeInterval = event.subscriptionTimeInterval;
                             }));
 
                             //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map

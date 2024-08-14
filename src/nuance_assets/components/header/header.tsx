@@ -165,16 +165,21 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     unreadNotificationCount,
     markAllNotificationsAsRead,
     resetUnreadNotificationCount,
+    getUserNotifications,
   } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
     resetUnreadNotificationCount: state.resetUnreadNotificationCount,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
+    getUserNotifications: state.getUserNotifications,
   }));
 
   useEffect(() => {
     verifyBitfinityWallet();
     updateLastLogin();
+    setInterval(() => {
+      getUserNotifications(0, 20);
+    }, 10000);
   }, []);
 
   const getLogoOrBreadCrumb = () => {

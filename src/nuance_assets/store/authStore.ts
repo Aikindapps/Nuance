@@ -29,9 +29,9 @@ import {
   SUPPORTED_TOKENS,
   TokenBalance,
 } from '../shared/constants';
-import { canisterId as userCanisterId } from '../../declarations/User';
 import { PairInfoExt } from '../services/sonic/Sonic.did';
 import { getPriceBetweenTokens, truncateToDecimalPlace } from '../shared/utils';
+import { USER_CANISTER_ID } from '../shared/canister_ids';
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
   window.location.origin.includes('127.0.0.1');
@@ -205,7 +205,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         : (
             await getIcrc1Actor(NUA_CANISTER_ID)
           ).icrc1_balance_of({
-            owner: Principal.fromText(userCanisterId),
+            owner: Principal.fromText(USER_CANISTER_ID),
             subaccount: [new Uint8Array(user.claimInfo.subaccount[0])],
           }),
     ]);

@@ -5,21 +5,30 @@ import { useUserStore } from '../../store/userStore';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme, useThemeUpdate } from '../../contextes/ThemeContext';
 import { Context } from '../../../nuance_assets/contextes/ModalContext';
-import { timeAgo } from '../../../nuance_assets/shared/utils';
 import {
-  Notifications,
+  convertSubscriptionTimeInterval,
+  textToUrlSegment,
+  timeAgo,
+} from '../../../nuance_assets/shared/utils';
+import {
+  Notification,
   NotificationContent,
-  NotificationType,
+  UserNotificationSettings,
 } from '../../../../src/declarations/Notifications/Notifications.did';
-import { NotificationsExtended } from '../../../../src/declarations/User/User.did';
 import { icons } from '../../shared/constants';
 import Toggle from '../../../nuance_assets/UI/toggle/toggle';
 import { colors } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import { get } from 'lodash';
-type NotificationsSidebarProps = {};
+import { UserListItem } from 'src/nuance_assets/types/types';
+import { NavigateFunction } from 'react-router-dom';
+type NotificationsSidebarProps = {
+  navigate: NavigateFunction;
+};
 
-const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
+const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
+  navigate,
+}) => {
   const darkTheme = useTheme();
   const darkOptionsAndColors = {
     background: darkTheme
@@ -29,54 +38,13 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
       ? colors.darkModePrimaryTextColor
       : colors.primaryTextColor,
   };
-
-  // States for each of the notification settings
-  const [commentsReplies, setCommentsReplies] = useState(true);
-  const [applauseForMe, setApplauseForMe] = useState(true);
-  const [newArticleByAuthor, setNewArticleByAuthor] = useState(true);
-  const [newArticleOnTopic, setNewArticleOnTopic] = useState(true);
-  const [newFollower, setNewFollower] = useState(true);
-  const [premiumArticleSold, setPremiumArticleSold] = useState(true);
-  const [isSettingsSaving, setIsSettingsSaving] = useState(false);
-
-  const saveNotificationSettings = () => {
-    setIsSettingsSaving(true);
-    const settings = {
-      newCommentOnMyArticle: commentsReplies,
-      newCommentOnFollowedArticle: commentsReplies,
-      newArticleByFollowedWriter: newArticleByAuthor,
-      newArticleByFollowedTag: newArticleOnTopic,
-      newFollower: newFollower,
-      tipReceived: applauseForMe,
-      premiumArticleSold: premiumArticleSold,
-      authorGainsNewSubscriber: false,
-      authorLosesSubscriber: false,
-      youSubscribedToAuthor: false,
-      youUnsubscribedFromAuthor: false,
-      authorExpiredSubscription: false,
-      readerExpiredSubscription: false,
-      expiredSubscription: false,
-      faucetClaimAvailable: false,
-    };
-
-    try {
-      updateUserNotificationSettings(settings).then(() => {
-        setIsSettingsSaving(false);
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setIsSettingsSaving(false);
-    }
-  };
-
   const {
     user,
     getUserNotifications,
-    markNotificationAsRead,
+    markNotificationsAsRead,
     notifications,
-    resetUnreadNotificationCount,
+    notificationsUserListItems,
     unreadNotificationCount,
-    loadMoreNotifications,
     totalNotificationCount,
     markAllNotificationsAsRead,
     updateUserNotificationSettings,
@@ -84,106 +52,37 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
   } = useUserStore((state) => ({
     user: state.user,
     getUserNotifications: state.getUserNotifications,
-    markNotificationAsRead: state.markNotificationAsRead,
+    markNotificationsAsRead: state.markNotificationsAsRead,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
     notifications: state.notifications || [],
+    notificationsUserListItems: state.notificationUserListItems,
     unreadNotificationCount: state.unreadNotificationCount,
-    resetUnreadNotificationCount: state.resetUnreadNotificationCount,
-    loadMoreNotifications: state.loadMoreNotifications,
     totalNotificationCount: state.totalNotificationCount,
     updateUserNotificationSettings: state.updateUserNotificationSettings,
     getUserNotificationSettings: state.getUserNotificationSettings,
   }));
 
-  const { isLoggedIn } = useAuthStore((state) => ({
-    isLoggedIn: state.isLoggedIn,
-  }));
+  console.log(notifications);
 
-  const [selectedNotificationId, setSelectedNotificationId] = useState<
-    string | null
-  >(null);
   const [currentView, setCurrentView] = useState('notifications'); // 'notifications' or 'settings'
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const modalContext = useContext(Context);
 
+  //user notification settings
+  const [notificationSettings, setNotificationSettings] =
+    useState<UserNotificationSettings>();
+  const [savingNotificationSettings, setSavingNotificationSettings] =
+    useState(false);
+
   // Load more notifications
-  const [currentFrom, setCurrentFrom] = useState(0);
-  const [currentTo, setCurrentTo] = useState(9);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  const loadMore = () => {
-    if (!isLoadingMore) {
-      setIsLoadingMore(true);
-
-      // Calculate new indices
-      const newFrom = currentTo + 1;
-      const newTo = currentTo + 10; // Load next 10 notifications
-
-      // Fetch more notifications
-      loadMoreNotifications(newFrom, newTo)
-        .then(() => {
-          // Update state based on successful fetch
-          setCurrentFrom(newFrom);
-          setCurrentTo(newTo);
-          setIsLoadingMore(false);
-        })
-        .catch((error) => {
-          console.error('Error loading more notifications:', error);
-          setIsLoadingMore(false);
-        });
-    }
-  };
-
-  useEffect(() => {
-    const fetchNotifications = () => {
-      if (
-        isLoggedIn &&
-        !isSidebarOpen &&
-        !modalContext?.isSidebarOpen &&
-        user
-      ) {
-        getUserNotifications(0, currentTo, isLoggedIn);
-      }
-    };
-
-    fetchNotifications();
-
-    const intervalId = setInterval(fetchNotifications, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [isLoggedIn, isSidebarOpen, modalContext?.isSidebarOpen, user]);
-
-  //get user notification settings
-  async function populateUserNotificationSettings() {
-    if (isLoggedIn) {
-
-      const settings = await getUserNotificationSettings();
-      try {
-        setCommentsReplies(get(settings, 'newCommentOnMyArticle', true));
-        setApplauseForMe(get(settings, 'tipReceived', true));
-        setNewArticleByAuthor(get(settings, 'newArticleByFollowedWriter', true));
-        setNewArticleOnTopic(get(settings, 'newArticleByFollowedTag', true));
-        setNewFollower(get(settings, 'newFollower', true));
-        setPremiumArticleSold(get(settings, 'premiumArticleSold', true));
-      } catch (error) {
-        console.error('Error populating user notification settings:', error);
-      }
-    }
-  }
-
-
-  useEffect(() => {
-    if (user) {
-      //initial settings, on login/load
-      populateUserNotificationSettings();
-    }
-  }, [user]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-
     //toggle notification modal
     if (
       modalContext?.isModalOpen &&
@@ -195,15 +94,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     } else {
       modalContext?.openModal('Notifications');
     }
-    setCurrentFrom(0);
-    setCurrentTo(9);
   };
-
-  //when context changes, reset load more
-  useEffect(() => {
-    setCurrentFrom(0);
-    setCurrentTo(9);
-  }, [modalContext]);
 
   const handleSettingsClick = () => {
     setCurrentView((currentView) =>
@@ -215,171 +106,35 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
     setCurrentView('notifications');
   };
 
-  //mark notification as read
-  const handleNotificationClick = (notification: NotificationsExtended) => {
-    setSelectedNotificationId(notification.id);
-
-    if (!notification.read) {
-      markNotificationAsRead([notification.id])
-        .then(() => {
-          getUserNotifications(0, currentTo, isLoggedIn);
-          console.log(`Notification ${notification.id} marked as read`);
-        })
-        .catch((error) => {
-          console.error(`Error marking notification as read: ${error}`);
-        });
+  const firstLoad = async () => {
+    setIsLoading(true);
+    const [_, userNotificationSettings] = await Promise.all([
+      getUserNotifications(0, 20),
+      getUserNotificationSettings(),
+    ]);
+    if (userNotificationSettings) {
+      setNotificationSettings(userNotificationSettings);
     }
+    setIsLoading(false);
   };
 
-  const handleSubscriptionClick = () => {
-    window.location.href = '/my-profile/subscriptions';
+  useEffect(() => {
+    firstLoad();
+  }, []);
+
+  const getHandleFromPrincipal = (principal: string) => {
+    let listItem = notificationsUserListItems.find((userListItem) => {
+      return userListItem.principal === principal;
+    });
+    return listItem;
   };
-  const handleSubscriberClick = () => {
-    window.location.href = '/my-profile/subscribers';
-  }
 
-  function getNotificationTypeKey(notificationType: NotificationType): string {
-    return Object.keys(notificationType)[0];
-  }
-
-  function handleResubscription(handle: string) {
-    modalContext?.openModal('Subscription');
-    window.history.pushState({}, '', `/user/${handle}`);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }
-
-  // Type guards
-  function isTipReceived(content: NotificationContent): content is { TipRecievedNotificationContent: any } {
-
-    return 'TipRecievedNotificationContent' in content;
-  }
-
-  function isNewFollower(content: NotificationContent): content is { NewFollowerNotificationContent: any } {
-    return 'NewFollowerNotificationContent' in content;
-  }
-
-  function isAuthorExpiredSubscription(content: NotificationContent): content is { AuthorExpiredSubscriptionNotificationContent: any } {
-    return 'AuthorExpiredSubscriptionNotificationContent' in content;
-  }
-
-  function isNewArticle(content: NotificationContent): content is { NewArticleNotificationContent: any } {
-    return 'NewArticleNotificationContent' in content;
-  }
-
-  function isPost(content: NotificationContent): content is { PostNotificationContent: any } {
-    return 'PostNotificationContent' in content;
-  }
-
-  function isAuthorLosesSubscriber(content: NotificationContent): content is { AuthorLosesSubscriberNotificationContent: any } {
-    return 'AuthorLosesSubscriberNotificationContent' in content;
-  }
-
-  function isFaucetClaimAvailable(content: NotificationContent): content is { FaucetClaimAvailableNotificationContent: any } {
-    return 'FaucetClaimAvailableNotificationContent' in content;
-  }
-
-  function isYouUnsubscribedFromAuthor(content: NotificationContent): content is { YouUnsubscribedFromAuthorNotificationContent: any } {
-    return 'YouUnsubscribedFromAuthorNotificationContent' in content;
-  }
-
-  function isAuthorGainsNewSubscriber(content: NotificationContent): content is { AuthorGainsNewSubscriberNotificationContent: any } {
-    return 'AuthorGainsNewSubscriberNotificationContent' in content;
-  }
-
-  function isYouSubscribedToAuthor(content: NotificationContent): content is { YouSubscribedToAuthorNotificationContent: any } {
-    return 'YouSubscribedToAuthorNotificationContent' in content;
-  }
-
-  function isNewCommentOnFollowedArticle(content: NotificationContent): content is { CommentNotificationContent: any } {
-    return 'CommentNotificationContent' in content;
-  }
-
-  function isPremiumArticleSold(content: NotificationContent): content is { PremiumArticleSoldNotificationContent: any } {
-    return 'PremiumArticleSoldNotificationContent' in content;
-  }
-
-  function isReaderExpiredSubscription(content: NotificationContent): content is { ReaderExpiredSubscriptionNotificationContent: any } {
-    return 'ReaderExpiredSubscriptionNotificationContent' in content;
-  }
-
-  function handleUrl(handle: string, isPublication: boolean = false) {
-    return (
-      <a href={`/${isPublication ? "publication" : "user"}/${handle}`}>@{handle} </a>
-    );
-  }
-
-  function tagHandleUrl(handle: string) {
-    return (
-      <a href={`/${handle}`}>@{handle} </a>
-    );
-  }
-
-  function authorHandleUrl(handle: string, isPublication: boolean = false) {
-    return (
-      <a href={`/${isPublication ? "publication" : "user"}/${handle}`}>@{handle} </a>
-    );
-  }
-
-  function articleUrl(originalUrl: string, title: string, newHandle: string) {
-    // Extract the initial part of the URL before the first slash after the handle
-    const firstSlashIndex = originalUrl.indexOf('/', 1);
-    const urlPrefix = originalUrl.slice(0, firstSlashIndex);
-
-    // Construct the new URL with the fresh handle just in case handle has changed
-    const updatedUrl = `/${newHandle}${originalUrl.slice(firstSlashIndex)}`;
-
-
-    return (
-      <a href={updatedUrl}>{title}</a>
-    );
-  }
-
-  function formatNotificationMessage(notification: NotificationsExtended) {
-    const notificationTypeKey = getNotificationTypeKey(notification.notificationType);
-
-    if (isTipReceived(notification.content)) {
-      const content = notification.content.TipRecievedNotificationContent;
-      const senderHandle = notification.senderHandle;
-      return (
-        <span>
-          Excellent! {handleUrl(senderHandle!, content.recieverIsPublication)} has <b>applauded</b> +
-          {content.tipAmount} {content.token} on "{articleUrl(content.postUrl, content.articleTitle, notification.receiverHandle)}"
-        </span>
-      );
-    } else if (isNewFollower(notification.content)) {
-      const content = notification.content.NewFollowerNotificationContent;
-      const senderHandle = notification.senderHandle
-      return (
-        <span>
-          {handleUrl(senderHandle!)} is now <b>following</b> you. Well done!
-        </span>
-      );
-    } else if (isNewArticle(notification.content)) {
-      const content = notification.content.NewArticleNotificationContent;
-      const senderHandle = notification.senderHandle;
-      return (
-        <span>
-          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
-        </span>
-      );
-    } else if (isPost(notification.content)) {
-      const content = notification.content.PostNotificationContent;
-      const senderHandle = notification.senderHandle;
-      return (
-        <span>
-          {authorHandleUrl(senderHandle!, content.isAuthorPublication)} posted a <b>new article</b>: "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
-        </span>
-      );
-    } else if (isAuthorLosesSubscriber(notification.content)) {
-      const content = notification.content.AuthorLosesSubscriberNotificationContent;
-      const senderHandle = notification.senderHandle;
-      const receiverHandle = notification.receiverHandle;
-      return (
-        <span>
-          {content.time} - {handleUrl(senderHandle!)} has unsubscribed from {authorHandleUrl(receiverHandle!)}.
-        </span>
-      );
-    } else if (isFaucetClaimAvailable(notification.content)) {
+  const formatNotificationMessage = (notification: Notification) => {
+    if (notificationsUserListItems.length === 0) {
+      return;
+    }
+    let notificationContent = notification.content;
+    if ('FaucetClaimAvailable' in notificationContent) {
       return (
         <span>
           You are allowed to request new Free NUA refill up to a total of 50
@@ -387,7 +142,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           <Button
             styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
             onClick={() => {
-              window.location.pathname = '/my-profile/wallet';
+              navigate('/my-profile/wallet');
             }}
             loading={false}
             dark={darkTheme}
@@ -402,80 +157,319 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           </Button>
         </span>
       );
-    } else if (isYouUnsubscribedFromAuthor(notification.content)) {
-      const content = notification.content.YouUnsubscribedFromAuthorNotificationContent;
-      const authorHandle = notification.senderHandle;
+    } else if ('TipReceived' in notificationContent) {
+      let content = notificationContent.TipReceived;
+      //post related fields
+      let postOwnerHandle =
+        content.publicationPrincipalId.length === 0
+          ? user?.handle
+          : getHandleFromPrincipal(content.publicationPrincipalId[0])?.handle;
+      let postUrl = `/${postOwnerHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}`;
+      //tipper related fields
+      let tipSenderPrincipal = content.tipSenderPrincipal;
+      let tipSenderHandle = getHandleFromPrincipal(tipSenderPrincipal);
+
+      <span>
+        Excellent!{' '}
+        <strong
+          onClick={() => {
+            navigate('/user/' + tipSenderHandle);
+          }}
+        >
+          @{tipSenderHandle}
+        </strong>{' '}
+        has <b>applauded</b> +{content.numberOfApplauds} on{' '}
+        {content.tippedTokenSymbol} for the article{' '}
+        <strong
+          onClick={() => {
+            navigate(postUrl);
+          }}
+        >
+          "{content.postTitle.slice(0, 20)}
+          {content.postTitle.length > 20 && '...'}"
+        </strong>
+      </span>;
+    } else if ('NewArticleByFollowedWriter' in notificationContent) {
+      let content = notificationContent.NewArticleByFollowedWriter;
+      let postWriterHandle =
+        getHandleFromPrincipal(content.postWriterPrincipal)?.handle ||
+        content.postWriterPrincipal;
       return (
         <span>
-          {content.time} - You have unsubscribed from <b className='subscription-notification-text' onClick={handleSubscriptionClick}>{authorHandle!}</b>.
-        </span>
-      );
-    } else if (isAuthorGainsNewSubscriber(notification.content)) {
-      const content = notification.content.AuthorGainsNewSubscriberNotificationContent;
-      const senderHandle = notification.senderHandle;
-      return (
-        <span>
-          🎉 You have a <b className='subscription-notification-text' onClick={handleSubscriberClick}>new subscriber</b>!
-        </span>
-      );
-    } else if (isYouSubscribedToAuthor(notification.content)) {
-      const content = notification.content.YouSubscribedToAuthorNotificationContent;
-      const authorHandle = notification.senderHandle;
-      return (
-        <span>
-          You <b className='subscription-notification-text' onClick={handleSubscriptionClick}>subscribed</b> to a writer. Enjoy!
-        </span>
-      );
-    } else if (isNewCommentOnFollowedArticle(notification.content)) {
-      const content = notification.content.CommentNotificationContent;
-      const senderHandle = notification.senderHandle;
-      return (
-        <span>
-          {handleUrl(senderHandle!, content.isAuthorPublication)} {content.isReply ? <b>replied</b> : <b>commented</b>} on "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
-        </span>
-      );
-    } else if (isPremiumArticleSold(notification.content)) {
-      const content = notification.content.PremiumArticleSoldNotificationContent;
-      const senderHandle = notification.senderHandle;
-      return (
-        <span>
-          K-ching! {handleUrl(senderHandle!, content.isAuthorPublication)} bought an <b>NFT access</b> key for your article "{articleUrl(content.url, content.articleTitle, senderHandle!)}"
-        </span>
-      );
-    } else if (isReaderExpiredSubscription(notification.content)) {
-      const content = notification.content.ReaderExpiredSubscriptionNotificationContent;
-      const authorHandle = notification.senderHandle;
-      return (
-        <span>
-          Your subscription to <b className='subscription-notification-text' onClick={handleSubscriptionClick}>{authorHandle!}</b> has expired.
-          <Button
-            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
-            onClick={() =>
-              handleResubscription(authorHandle ? authorHandle : '')
-            }
-            loading={false}
-            dark={darkTheme}
-            style={{
-              display: 'flex',
-              flexDirection: 'row-reverse',
-              marginTop: '10px',
-              float: 'right',
+          <strong
+            onClick={() => {
+              navigate('/user/' + postWriterHandle);
             }}
           >
-            Extend now
-          </Button>
+            @{postWriterHandle}
+          </strong>{' '}
+          posted a <b>new article!</b>
         </span>
       );
-    } else {
-      return 'You have a new notification!';
-    }
-  }
+    } else if ('AuthorLosesSubscriber' in notificationContent) {
+      let content = notificationContent.AuthorLosesSubscriber;
+      let subscriberPrincipal = content.subscriberPrincipalId;
+      let subscriberHandle =
+        getHandleFromPrincipal(subscriberPrincipal)?.handle;
+      let subscriptionTimeInterval = convertSubscriptionTimeInterval(
+        content.subscriptionTimeInterval
+      );
+      return (
+        <span>
+          <strong
+            onClick={() => {
+              navigate('/user/' + subscriberHandle);
+            }}
+          >
+            @{subscriberHandle}
+          </strong>{' '}
+          has cancelled the {subscriptionTimeInterval} subscription to your
+          account.
+        </span>
+      );
+    } else if ('YouSubscribedToAuthor' in notificationContent) {
+      let content = notificationContent.YouSubscribedToAuthor;
+      let subscribedAccountPrincipal = content.subscribedWriterPrincipalId;
+      let subscribedAccountHandle = getHandleFromPrincipal(
+        subscribedAccountPrincipal
+      )?.handle;
+      let subscriptionTimeInterval = convertSubscriptionTimeInterval(
+        content.subscriptionTimeInterval
+      );
+      return (
+        <span>
+          You subscribed to the{' '}
+          {content.isPublication ? 'publication ' : 'account '}{' '}
+          {
+            <strong
+              onClick={() => {
+                if (content.isPublication) {
+                  navigate('/publication/' + subscribedAccountHandle);
+                } else {
+                  navigate('/user/' + subscribedAccountHandle);
+                }
+              }}
+            >
+              @{subscribedAccountHandle}
+            </strong>
+          }{' '}
+          ({subscriptionTimeInterval})
+        </span>
+      );
+    } else if ('NewCommentOnMyArticle' in notificationContent) {
+      let content = notificationContent.NewCommentOnMyArticle;
+      let postOwnerHandle = user?.handle;
+      let postUrl = `/${postOwnerHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}?comment=${content.commentId}`;
+      let isReply = content.isReply;
+      let commenterPrincipal = content.commenterPrincipal;
+      let commenterHandle = getHandleFromPrincipal(commenterPrincipal)?.handle;
+      let commentContent = content.commentContent;
+      return (
+        <span>
+          <strong
+            onClick={() => {
+              navigate('/user/' + commenterHandle);
+            }}
+          >
+            @{commenterHandle}
+          </strong>{' '}
+          has {isReply ? 'added a reply ' : 'commented'} on your article:{' '}
+          <strong
+            onClick={() => {
+              navigate(postUrl);
+            }}
+          >
+            "{content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}"
+          </strong>
+        </span>
+      );
+    } else if ('YouUnsubscribedFromAuthor' in notificationContent) {
+      let content = notificationContent.YouUnsubscribedFromAuthor;
+      let subscribedAccountPrincipal = content.subscribedWriterPrincipalId;
+      let subscribedAccountHandle = getHandleFromPrincipal(
+        subscribedAccountPrincipal
+      )?.handle;
+      let subscriptionTimeInterval = convertSubscriptionTimeInterval(
+        content.subscriptionTimeInterval
+      );
+      return (
+        <span>
+          You unsubscribed from the{' '}
+          {content.isPublication ? 'publication ' : 'account '}{' '}
+          {
+            <strong
+              onClick={() => {
+                if (content.isPublication) {
+                  navigate('/publication/' + subscribedAccountHandle);
+                } else {
+                  navigate('/user/' + subscribedAccountHandle);
+                }
+              }}
+            >
+              @{subscribedAccountHandle}
+            </strong>
+          }{' '}
+          ({subscriptionTimeInterval})
+        </span>
+      );
+    } else if ('NewFollower' in notificationContent) {
+      let content = notificationContent.NewFollower;
+      let followerPrincipal = content.followerPrincipalId;
+      let followerHandle = getHandleFromPrincipal(followerPrincipal)?.handle;
+      return (
+        <span>
+          <strong
+            onClick={() => {
+              navigate('/user/' + followerHandle);
+            }}
+          >
+            @{followerHandle}
+          </strong>{' '}
+          has followed you!
+        </span>
+      );
+    } else if ('ReaderExpiredSubscription' in notificationContent) {
+      let content = notificationContent.ReaderExpiredSubscription;
+      let subscribedPrincipalId = content.subscribedWriterPrincipalId;
+      let subscribedHandle = getHandleFromPrincipal(
+        subscribedPrincipalId
+      )?.handle;
+      return (
+        <span>
+          Your{' '}
+          {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)}{' '}
+          subscription to the account{' '}
+          <strong
+            onClick={() => {
+              if (content.isPublication) {
+                navigate('/publication/' + subscribedHandle);
+              } else {
+                navigate('/user/' + subscribedHandle);
+              }
+            }}
+          >
+            @{subscribedHandle}
+          </strong>{' '}
+          has expired!
+        </span>
+      );
+    } else if ('ReplyToMyComment' in notificationContent) {
+      let content = notificationContent.ReplyToMyComment;
+      let replierPrincipal = content.replyCommenterPrincipal;
+      let replierHandle = getHandleFromPrincipal(replierPrincipal)?.handle;
+      let postOwnerHandle = getHandleFromPrincipal(
+        content.postWriterPrincipal
+      )?.handle;
+      let commentUrl = `/${postOwnerHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}?comment=${
+        content.replyCommentId
+      }`;
+      return (
+        <span>
+          <strong>@{replierHandle}</strong> has replied to your{' '}
+          <strong
+            onClick={() => {
+              navigate(commentUrl);
+            }}
+          >
+            comment
+          </strong>
+          !
+        </span>
+      );
+    } else if ('PremiumArticleSold' in notificationContent) {
+      let content = notificationContent.PremiumArticleSold;
+      let purchaserPrincipal = content.purchaserPrincipal;
+      let purchaserHandle = getHandleFromPrincipal(purchaserPrincipal)?.handle;
+      let postOwnerHandle =
+        content.publicationPrincipalId.length === 0
+          ? user?.handle
+          : getHandleFromPrincipal(content.publicationPrincipalId[0])?.handle;
+      let postUrl = `/${postOwnerHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}`;
+      return (
+        <span>
+          <strong
+            onClick={() => {
+              navigate('/user/' + purchaserHandle);
+            }}
+          >
+            @{purchaserHandle}
+          </strong>{' '}
+          has purchased your premium article:{' '}
+          <strong
+            onClick={() => {
+              navigate(postUrl);
+            }}
+          >
+            "{content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}"
+          </strong>{' '}
+          for {(Number(content.amountOfTokens) / Math.pow(10, 8)).toFixed(4)}{' '}
+          {content.purchasedTokenSymbol}s
+        </span>
+      );
+    } else if ('NewArticleByFollowedTag' in notificationContent) {
+      let content = notificationContent.NewArticleByFollowedTag;
+      let postWriterPrincipal = content.postWriterPrincipal;
+      let postOwnerHandle = getHandleFromPrincipal(postWriterPrincipal)?.handle;
+      let postUrl = `/${postOwnerHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}`;
+      return (
+        <span>
+          <strong
+            onClick={() => {
+              navigate('/user/' + postOwnerHandle);
+            }}
+          >
+            @{postOwnerHandle}
+          </strong>{' '}
+          has posted a new article in the topic ({content.tagName}) you follow:{' '}
+          <strong
+            onClick={() => {
+              navigate(postUrl);
+            }}
+          >
+            "{content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}"
+          </strong>
+        </span>
+      );
+    } else if ('AuthorGainsNewSubscriber' in notificationContent) {
+      let content = notificationContent.AuthorGainsNewSubscriber;
+      let subscriberPrincipal = content.subscriberPrincipalId;
+      let subscriberHandle =
+        getHandleFromPrincipal(subscriberPrincipal)?.handle;
 
+      return (
+        <span>
+          <strong
+            onClick={() => {
+              navigate('/user/' + subscriberHandle);
+            }}
+          >
+            @{subscriberHandle}
+          </strong>{' '}
+          has subscribed you! (
+          {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)})
+        </span>
+      );
+    }
+  };
   return (
     <aside
       ref={sidebarRef}
-      className={`notifications-sidebar ${modalContext?.isSidebarOpen ? 'open' : ''
-        }`}
+      className={`notifications-sidebar ${
+        modalContext?.isSidebarOpen ? 'open' : ''
+      }`}
       style={darkTheme ? { background: darkOptionsAndColors.background } : {}}
     >
       <div className='exit-icon' onClick={toggleSidebar}>
@@ -491,8 +485,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
         <h2>NOTIFICATIONS ({unreadNotificationCount} NEW)</h2>
         <div className='header-right'>
           <div
-            className={`notification-bell ${currentView === 'notifications' ? 'selected' : ''
-              }`}
+            className={`notification-bell ${
+              currentView === 'notifications' ? 'selected' : ''
+            }`}
             onClick={handleNotificationsClick}
           >
             <img
@@ -506,8 +501,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           </div>
 
           <div
-            className={`settings-icon ${currentView === 'settings' ? 'selected' : ''
-              }`}
+            className={`settings-icon ${
+              currentView === 'settings' ? 'selected' : ''
+            }`}
             onClick={handleSettingsClick}
           >
             <img
@@ -517,7 +513,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           </div>
         </div>
       </div>
-      {currentView === 'settings' ? (
+      {currentView === 'settings' && notificationSettings ? (
         <div
           className='notification-settings'
           style={
@@ -525,71 +521,257 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           }
         >
           <div
-            className={`notification-settings-content ${darkTheme ? 'dark' : ''
-              }`}
+            className={`notification-settings-content ${
+              darkTheme ? 'dark' : ''
+            }`}
           >
             <p>
               Please activate or de-activate the notifications of your choice:
             </p>
-            <div className='toggle-row'>
-              <label className={`${darkTheme ? 'dark' : ''}`}>
-                Comments / Replies
-              </label>
-              <Toggle
-                toggled={commentsReplies}
-                callBack={() => setCommentsReplies(!commentsReplies)}
-              />
-            </div>
-            <div className='toggle-row'>
-              <label className={`${darkTheme ? 'dark' : ''}`}>
-                Applause for me
-              </label>
-              <Toggle
-                toggled={applauseForMe}
-                callBack={() => setApplauseForMe(!applauseForMe)}
-              />
-            </div>
-            <div className='toggle-row'>
-              <label className={`${darkTheme ? 'dark' : ''}`}>
-                New article from author I follow
-              </label>
-              <Toggle
-                toggled={newArticleByAuthor}
-                callBack={() => setNewArticleByAuthor(!newArticleByAuthor)}
-              />
-            </div>
-            <div className='toggle-row'>
-              <label className={`${darkTheme ? 'dark' : ''}`}>
-                New article on Topic I follow
-              </label>
-              <Toggle
-                toggled={newArticleOnTopic}
-                callBack={() => setNewArticleOnTopic(!newArticleOnTopic)}
-              />
-            </div>
-            <div className='toggle-row'>
-              <label className={`${darkTheme ? 'dark' : ''}`}>
-                New follower
-              </label>
-              <Toggle
-                toggled={newFollower}
-                callBack={() => setNewFollower(!newFollower)}
-              />
-            </div>
-            <div className='toggle-row'>
-              <label className={`${darkTheme ? 'dark' : ''}`}>
-                Premium Article Sold
-              </label>
-              <Toggle
-                toggled={premiumArticleSold}
-                callBack={() => setPremiumArticleSold(!premiumArticleSold)}
-              />
-            </div>
+            {Object.keys(notificationSettings).map((key) => {
+              if (key === 'authorGainsNewSubscriber') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      New subscribers
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.authorGainsNewSubscriber}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          authorGainsNewSubscriber:
+                            !notificationSettings.authorGainsNewSubscriber,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'authorLosesSubscriber') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Losing subscribers
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.authorLosesSubscriber}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          authorLosesSubscriber:
+                            !notificationSettings.authorLosesSubscriber,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'faucetClaimAvailable') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Losing subscribers
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.authorLosesSubscriber}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          authorLosesSubscriber:
+                            !notificationSettings.authorLosesSubscriber,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'newArticleByFollowedTag') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      New article on Topic I follow
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.newArticleByFollowedTag}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          newArticleByFollowedTag:
+                            !notificationSettings.newArticleByFollowedTag,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'newArticleByFollowedWriter') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      New article on Author I follow
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.newArticleByFollowedWriter}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          newArticleByFollowedWriter:
+                            !notificationSettings.newArticleByFollowedWriter,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'newCommentOnMyArticle') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      New comments on my articles
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.newCommentOnMyArticle}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          newCommentOnMyArticle:
+                            !notificationSettings.newCommentOnMyArticle,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'newFollower') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      New followers
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.newFollower}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          newFollower: !notificationSettings.newFollower,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'premiumArticleSold') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Premium Article Sales
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.premiumArticleSold}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          premiumArticleSold:
+                            !notificationSettings.premiumArticleSold,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'readerExpiredSubscription') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Expiring subscriptions
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.readerExpiredSubscription}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          readerExpiredSubscription:
+                            !notificationSettings.readerExpiredSubscription,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'replyToMyComment') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Reply to my comments
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.replyToMyComment}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          replyToMyComment:
+                            !notificationSettings.replyToMyComment,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'tipReceived') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Applauds received
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.tipReceived}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          tipReceived: !notificationSettings.tipReceived,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'youSubscribedToAuthor') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Your subscriptions
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.youSubscribedToAuthor}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          youSubscribedToAuthor:
+                            !notificationSettings.youSubscribedToAuthor,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              } else if (key === 'youUnsubscribedFromAuthor') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Cancelling subscriptions
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.youUnsubscribedFromAuthor}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          youUnsubscribedFromAuthor:
+                            !notificationSettings.youUnsubscribedFromAuthor,
+                        });
+                      }}
+                    />
+                  </div>
+                );
+              }
+            })}
           </div>
           <Button
             styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
-            onClick={saveNotificationSettings}
-            loading={isSettingsSaving}
+            onClick={async () => {
+              setSavingNotificationSettings(true);
+              await updateUserNotificationSettings(notificationSettings);
+              setSavingNotificationSettings(false);
+            }}
+            loading={savingNotificationSettings}
             dark={darkTheme}
             style={{
               width: '272px',
@@ -602,59 +784,68 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({ }) => {
           </Button>
         </div>
       ) : (
-        <ul>
-          {notifications.map((notification) => (
-            <li
-              key={notification.id}
-              className={`notification ${darkTheme ? 'dark' : ''} ${notification.read ? 'read' : ''
-                } ${selectedNotificationId === notification.id ? 'selected' : ''
-                }`}
-              onClick={() => handleNotificationClick(notification)}
-            >
-              <div className='notification-details'>
-                <div className='notification-top-row'>
-                  <div className='notification-icon'>
-                    {notification.read ? (
-                      ''
-                    ) : (
-                      <img
-                        src={
-                          darkTheme
-                            ? icons.NOTIFICATION_BELL_DARK
-                            : icons.NOTIFICATION_BELL
-                        }
-                        alt='Notification'
-                      />
-                    )}
-                  </div>
-                  <span className='notification-timestamp'>
-                    {timeAgo(
-                      new Date(parseInt(notification.timestamp) / 1000000)
-                    )}
-                  </span>
-                </div>
-                <span
-                  className={`notification-action ${notification.read ? 'read' : ''
-                    }`}
+        !isLoading && (
+          <ul>
+            {notifications
+              .sort((n_1, n_2) => Number(n_2.timestamp) - Number(n_1.timestamp))
+              .map((notification) => (
+                <li
+                  key={notification.id}
+                  className={`notification ${darkTheme ? 'dark' : ''} ${
+                    notification.read ? 'read' : ''
+                  }`}
+                  onClick={async () => {
+                    markNotificationsAsRead([notification.id]);
+                  }}
                 >
-                  {formatNotificationMessage(notification)}
-                </span>
-              </div>
-            </li>
-          ))}
-          {notifications.length < totalNotificationCount && (
-            <Button
-              styleType={'load-more'}
-              onClick={loadMore}
-              loading={isLoadingMore}
-              primaryColor={colors.accentColor}
-              dark={darkTheme}
-              disabled={isLoadingMore}
-            >
-              Load More
-            </Button>
-          )}
-        </ul>
+                  <div className='notification-details'>
+                    <div className='notification-top-row'>
+                      <div className='notification-icon'>
+                        {notification.read ? (
+                          ''
+                        ) : (
+                          <img
+                            src={
+                              darkTheme
+                                ? icons.NOTIFICATION_BELL_DARK
+                                : icons.NOTIFICATION_BELL
+                            }
+                            alt='Notification'
+                          />
+                        )}
+                      </div>
+                      <span className='notification-timestamp'>
+                        {timeAgo(new Date(parseInt(notification.timestamp)))}
+                      </span>
+                    </div>
+                    <span
+                      className={`notification-action ${
+                        notification.read ? 'read' : ''
+                      }`}
+                    >
+                      {formatNotificationMessage(notification)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            {notifications.length < totalNotificationCount && (
+              <Button
+                styleType={'load-more'}
+                onClick={async () => {
+                  setIsLoadingMore(true);
+                  getUserNotifications(page * 20, (page + 1) * 20);
+                  setIsLoadingMore(false);
+                }}
+                loading={isLoadingMore}
+                primaryColor={colors.accentColor}
+                dark={darkTheme}
+                disabled={isLoadingMore}
+              >
+                Load More
+              </Button>
+            )}
+          </ul>
+        )
       )}
     </aside>
   );
