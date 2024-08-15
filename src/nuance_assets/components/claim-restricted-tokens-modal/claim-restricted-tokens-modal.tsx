@@ -29,12 +29,11 @@ export const ClaimRestrictedTokensModal = () => {
   const [page, setPage] = useState<ClaimModalPage>('claim');
 
   const [allowedToRequest, setAllowedToRequest] = useState(0);
+
   const getAllowedToRequest = () => {
-    return (
-      (50 * Math.pow(10, 8) - restrictedTokenBalance / Math.pow(10, 8)) /
-      Math.pow(10, 8)
-    );
+    return 50 - restrictedTokenBalance;
   };
+
 
   if (page === 'claim') {
     return (
@@ -54,8 +53,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             loading
               ? {
-                  cursor: 'not-allowed',
-                }
+                cursor: 'not-allowed',
+              }
               : {}
           }
           className='close-modal-icon'
@@ -64,8 +63,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkModePrimaryTextColor,
-                }
+                color: colors.darkModePrimaryTextColor,
+              }
               : {}
           }
           className='modal-title'
@@ -76,8 +75,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkSecondaryTextColor,
-                }
+                color: colors.darkSecondaryTextColor,
+              }
               : {}
           }
           className='information-text'
@@ -118,7 +117,7 @@ export const ClaimRestrictedTokensModal = () => {
               type='checkbox'
               className='terms-checkbox'
               checked={termsAccepted}
-              onChange={() => {}}
+              onChange={() => { }}
             />
             <p
               className='terms-text'
@@ -143,8 +142,8 @@ export const ClaimRestrictedTokensModal = () => {
               style={
                 loading
                   ? {
-                      cursor: 'not-allowed',
-                    }
+                    cursor: 'not-allowed',
+                  }
                   : {}
               }
             >
@@ -156,11 +155,11 @@ export const ClaimRestrictedTokensModal = () => {
                 termsAccepted && !loading
                   ? { minWidth: '170px' }
                   : {
-                      cursor: 'not-allowed',
-                      background: 'gray',
-                      borderColor: 'gray',
-                      minWidth: '170px',
-                    }
+                    cursor: 'not-allowed',
+                    background: 'gray',
+                    borderColor: 'gray',
+                    minWidth: '170px',
+                  }
               }
               type='button'
               onClick={async () => {
@@ -204,8 +203,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkModePrimaryTextColor,
-                }
+                color: colors.darkModePrimaryTextColor,
+              }
               : {}
           }
           className='modal-title'
@@ -216,8 +215,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkSecondaryTextColor,
-                }
+                color: colors.darkSecondaryTextColor,
+              }
               : {}
           }
           className='information-text'
