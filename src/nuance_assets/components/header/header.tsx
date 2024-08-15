@@ -166,12 +166,14 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     markAllNotificationsAsRead,
     resetUnreadNotificationCount,
     getUserNotifications,
+    checkMyClaimNotification,
   } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
     resetUnreadNotificationCount: state.resetUnreadNotificationCount,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
     getUserNotifications: state.getUserNotifications,
+    checkMyClaimNotification: state.checkMyClaimNotification,
   }));
 
   useEffect(() => {
@@ -179,6 +181,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     updateLastLogin();
     setInterval(() => {
       getUserNotifications(0, 20);
+    }, 10000);
+    setInterval(() => {
+      checkMyClaimNotification();
     }, 10000);
   }, []);
 
