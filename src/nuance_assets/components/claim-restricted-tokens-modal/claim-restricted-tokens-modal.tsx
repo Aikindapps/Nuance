@@ -31,8 +31,9 @@ export const ClaimRestrictedTokensModal = () => {
   const [allowedToRequest, setAllowedToRequest] = useState(0);
 
   const getAllowedToRequest = () => {
-    return 50 - restrictedTokenBalance;
+    return 50 - (restrictedTokenBalance / Math.pow(10, 8));
   };
+
 
 
   if (page === 'claim') {
@@ -81,7 +82,7 @@ export const ClaimRestrictedTokensModal = () => {
           }
           className='information-text'
         >
-          You are allowed to request free NUA up until a total of 50 Free NUA in
+          You are allowed to request free NUA up until a total of {getAllowedToRequest().toFixed(0)} Free NUA in
           your wallet. These Free NUA tokens first need to be ‘spent’ on the
           Nuance platform like applauding or membership access before you can
           trade them. They will be added to your wallet immediately.
