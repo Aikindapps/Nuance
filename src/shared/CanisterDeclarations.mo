@@ -193,6 +193,7 @@ module{
         updateHandle : (principalId : Text, newHandle : Text) -> async Result.Result<Text, Text>;
         registerCanister : (id : Text) -> async Result.Result<(), Text>;
         getTrustedCanisters : () -> async Result.Result<[Text], Text>;
+        getPublicationCanisters : query () -> async [(Text, Text)];
 
     };
 
