@@ -13,8 +13,56 @@ export const idlFactory = ({ IDL }) => {
     'createdDate' : IDL.Text,
   });
   const Result_9 = IDL.Variant({ 'ok' : TagModel, 'err' : IDL.Text });
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const PostSaveModel = IDL.Record({
+    'title' : IDL.Text,
+    'content' : IDL.Text,
+    'premium' : IDL.Opt(
+      IDL.Record({
+        'thumbnail' : IDL.Text,
+        'icpPrice' : IDL.Nat,
+        'maxSupply' : IDL.Nat,
+      })
+    ),
+    'isDraft' : IDL.Bool,
+    'tagIds' : IDL.Vec(IDL.Text),
+    'category' : IDL.Text,
+    'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
+    'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
+    'scheduledPublishedDate' : IDL.Opt(IDL.Int),
+    'subtitle' : IDL.Text,
+    'isPublication' : IDL.Bool,
+    'postId' : IDL.Text,
+  });
   const PostTagModel = IDL.Record({ 'tagId' : IDL.Text, 'tagName' : IDL.Text });
+  const Post = IDL.Record({
+    'url' : IDL.Text,
+    'bucketCanisterId' : IDL.Text,
+    'title' : IDL.Text,
+    'created' : IDL.Text,
+    'modified' : IDL.Text,
+    'content' : IDL.Text,
+    'views' : IDL.Text,
+    'wordCount' : IDL.Text,
+    'isPremium' : IDL.Bool,
+    'publishedDate' : IDL.Text,
+    'claps' : IDL.Text,
+    'tags' : IDL.Vec(PostTagModel),
+    'nftCanisterId' : IDL.Opt(IDL.Text),
+    'isDraft' : IDL.Bool,
+    'creatorPrincipal' : IDL.Text,
+    'category' : IDL.Text,
+    'handle' : IDL.Text,
+    'creatorHandle' : IDL.Text,
+    'headerImage' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
+    'subtitle' : IDL.Text,
+    'isPublication' : IDL.Bool,
+    'postId' : IDL.Text,
+  });
+  const Result_4 = IDL.Variant({ 'ok' : Post, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const PostKeyProperties = IDL.Record({
     'bucketCanisterId' : IDL.Text,
     'created' : IDL.Text,
@@ -104,54 +152,6 @@ export const idlFactory = ({ IDL }) => {
     'violatedRules' : IDL.Vec(ViolatedRules),
     'rejectedCount' : IDL.Nat,
   });
-  const PostSaveModel = IDL.Record({
-    'title' : IDL.Text,
-    'content' : IDL.Text,
-    'premium' : IDL.Opt(
-      IDL.Record({
-        'thumbnail' : IDL.Text,
-        'icpPrice' : IDL.Nat,
-        'maxSupply' : IDL.Nat,
-      })
-    ),
-    'isDraft' : IDL.Bool,
-    'tagIds' : IDL.Vec(IDL.Text),
-    'category' : IDL.Text,
-    'handle' : IDL.Text,
-    'creatorHandle' : IDL.Text,
-    'headerImage' : IDL.Text,
-    'isMembersOnly' : IDL.Bool,
-    'scheduledPublishedDate' : IDL.Opt(IDL.Int),
-    'subtitle' : IDL.Text,
-    'isPublication' : IDL.Bool,
-    'postId' : IDL.Text,
-  });
-  const Post = IDL.Record({
-    'url' : IDL.Text,
-    'bucketCanisterId' : IDL.Text,
-    'title' : IDL.Text,
-    'created' : IDL.Text,
-    'modified' : IDL.Text,
-    'content' : IDL.Text,
-    'views' : IDL.Text,
-    'wordCount' : IDL.Text,
-    'isPremium' : IDL.Bool,
-    'publishedDate' : IDL.Text,
-    'claps' : IDL.Text,
-    'tags' : IDL.Vec(PostTagModel),
-    'nftCanisterId' : IDL.Opt(IDL.Text),
-    'isDraft' : IDL.Bool,
-    'creatorPrincipal' : IDL.Text,
-    'category' : IDL.Text,
-    'handle' : IDL.Text,
-    'creatorHandle' : IDL.Text,
-    'headerImage' : IDL.Text,
-    'isMembersOnly' : IDL.Bool,
-    'subtitle' : IDL.Text,
-    'isPublication' : IDL.Bool,
-    'postId' : IDL.Text,
-  });
-  const Result_4 = IDL.Variant({ 'ok' : Post, 'err' : IDL.Text });
   const PostModerationStatusV2 = IDL.Variant({
     'new' : IDL.Null,
     'approved' : IDL.Null,
@@ -193,6 +193,11 @@ export const idlFactory = ({ IDL }) => {
         [],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         ['query'],
+      ),
+    'debugSaveMultiplePosts' : IDL.Func(
+        [IDL.Vec(PostSaveModel)],
+        [IDL.Vec(Result_4)],
+        [],
       ),
     'delete' : IDL.Func([IDL.Text], [Result_3], []),
     'deletePostFromUserDebug' : IDL.Func([IDL.Text, IDL.Text], [Result_8], []),
@@ -293,6 +298,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMyTags' : IDL.Func([], [IDL.Vec(PostTagModel__1)], ['query']),
     'getNextPostId' : IDL.Func([], [Result_2], []),
+    'getNextPostIdsDebug' : IDL.Func([IDL.Nat], [Result_2], []),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPopular' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
@@ -332,6 +338,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPostsByPostIds' : IDL.Func(
+        [IDL.Vec(IDL.Text)],
+        [IDL.Vec(PostKeyProperties)],
+        ['query'],
+      ),
+    'getPostsByPostIdsMigration' : IDL.Func(
         [IDL.Vec(IDL.Text)],
         [IDL.Vec(PostKeyProperties)],
         ['query'],

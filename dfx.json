@@ -26,11 +26,6 @@
       "type": "motoko",
       "specified_id": "322sd-3iaaa-aaaaf-qakgq-cai"
     },
-    "PostIndex": {
-      "main": "src/PostIndex/main.mo",
-      "type": "motoko",
-      "specified_id": "r5sjg-7iaaa-aaaaf-qaama-cai"
-    },
     "Storage": {
       "main": "src/Storage/main.mo",
       "type": "motoko",
@@ -55,6 +50,11 @@
       "main": "src/Subscription/main.mo",
       "type": "motoko",
       "specified_id": "s6qib-6qaaa-aaaaf-qalwa-cai"
+    },
+    "PostRelations": {
+      "main": "src/PostRelations/main.mo",
+      "type": "motoko",
+      "specified_id": "ajuq4-ruaaa-aaaaa-qaaga-cai"
     },
     "nuance_assets": {
       "frontend": {

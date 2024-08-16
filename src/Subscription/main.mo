@@ -4,8 +4,6 @@ import Result "mo:base/Result";
 import Bool "mo:base/Bool";
 import Option "mo:base/Option";
 import Array "mo:base/Array";
-import Nat32 "mo:base/Nat32";
-import Time "mo:base/Time";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
@@ -17,12 +15,12 @@ import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
-import Iter "mo:base/Iter";
-import Debug "mo:base/Debug";
 import Notifications "../Notifications/types";
+import Versions "../shared/versions";
+import Prim "mo:prim";
 
 actor Subscription {
-    let { ihash; nhash; thash; phash; calcHash } = Map;
+    let {thash; } = Map;
     //the time interval for subscription events
     type SubscriptionTimeInterval = {
         #Weekly;
@@ -173,7 +171,7 @@ actor Subscription {
                     //caller is the editor of the given publication
                     //if there exists any subscription detail, return the object
                     switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, publicationCanisterId)) {
-                        case(?value) {
+                        case(?_) {
                             return #ok(buildWriterSubscriptionDetails(publicationCanisterId))
                         };
                         case(null) {
@@ -188,7 +186,7 @@ actor Subscription {
                 //if there exists any subscription detail for the writer, return it
                 let principal = Principal.toText(caller);
                 switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-                    case(?value) {
+                    case(?_) {
                         return #ok(buildWriterSubscriptionDetails(principal))
                     };
                     case(null) {
@@ -202,7 +200,7 @@ actor Subscription {
     //a function to query the details of a pending subscription payment request
     public shared query func getPaymentRequestBySubscriptionEventId(eventId: Text) : async Result.Result<PaymentRequest, Text> {
         switch(Map.get(subscriptionEventIdToPaymentRequestWriterPrincipalId, thash, eventId)) {
-            case(?value) {
+            case(?_) {
                 //the payment request exists
                 return #ok(buildPaymentRequest(eventId))
             };
@@ -216,7 +214,7 @@ actor Subscription {
     //can be called by anyone - doesn't return the subscription history
     public shared query func getWriterSubscriptionDetailsByPrincipalId(principal: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
         switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-            case(?value) {
+            case(?_) {
                 return #ok(buildWriterSubscriptionDetailsLighter(principal))
             };
             case(null) {
@@ -230,7 +228,7 @@ actor Subscription {
     public shared query ({caller}) func getReaderSubscriptionDetails() : async Result.Result<ReaderSubscriptionDetails, Text> {
         let principal = Principal.toText(caller);
         switch(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, principal)) {
-            case(?value) {
+            case(?_) {
                 return #ok(buildReaderSubscriptionDetails(principal))
             };
             case(null) {
@@ -242,6 +240,10 @@ actor Subscription {
     //#region - public update functions
     //a function that allows writers to update their subscription details
     public shared ({caller}) func updateSubscriptionDetails(subscriptionDetails: UpdateSubscriptionDetailsModel) : async Result.Result<WriterSubscriptionDetails, Text> {
+        if (not isThereEnoughMemoryPrivate()) {
+            return #err("Canister reached the maximum memory threshold. Please try again later.");
+        };
+
         let callerPrincipalId = Principal.toText(caller);
         var writerPrincipalId = callerPrincipalId;
         var paymentReceiverPrincipalId = caller;
@@ -269,8 +271,8 @@ actor Subscription {
                 //check if the caller is a Nuance user
                 let UserCanister = CanisterDeclarations.getUserCanister();
                 switch(await UserCanister.getUserByPrincipalId(callerPrincipalId)) {
-                    case(#ok(value)) {};
-                    case(#err(error)) {
+                    case(#ok(_)) {};
+                    case(#err(_)) {
                         //caller doesn't exist in User canister
                         return #err("No Nuance account found!")
                     };
@@ -381,6 +383,10 @@ actor Subscription {
         //before any payment request creation, make sure there is no expired request
         deleteExpiredPaymentRequests();
 
+        if (not isThereEnoughMemoryPrivate()) {
+            return #err("Canister reached the maximum memory threshold. Please try again later.");
+        };
+
         //check if the writer and the given time interval exists as a subscription option
         let callerPrincipalId = Principal.toText(caller);
         let writerSubscriptionDetails = buildWriterSubscriptionDetails(writerPrincipalId);
@@ -443,8 +449,8 @@ actor Subscription {
         //check if the caller is a Nuance user
         let UserCanister = CanisterDeclarations.getUserCanister();
         switch(await UserCanister.getUserByPrincipalId(callerPrincipalId)) {
-            case(#ok(value)) {};
-            case(#err(error)) {
+            case(#ok(_)) {};
+            case(#err(_)) {
                 //caller doesn't exist in User canister
                 return #err("Caller is not a Nuance user.")
             };
@@ -469,10 +475,13 @@ actor Subscription {
     //reader should call this function after sending the tokens to the subaccount returned by the createPaymentRequestAsReader function
     //this function will complete the subscription event if the reader has sent the tokens to the subaccount and then add the
     //token disbursement entry to pendingTokenDisbursements map
-    public shared ({caller}) func completeSubscriptionEvent(eventId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
+    public shared func completeSubscriptionEvent(eventId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
         deleteExpiredPaymentRequests();
+        if (not isThereEnoughMemoryPrivate()) {
+            return #err("Canister reached the maximum memory threshold. Please try again later.");
+        };
         switch(Map.get(subscriptionEventIdToPaymentRequestExpireTime, thash, eventId)) {
-            case(?expireTime) {
+            case(?_) {
                 //if here, there is an active request with the given id
                 let paymentRequestDetails = buildPaymentRequest(eventId);
                 //get the balance of the token receiver subaccount from the NUA token canister
@@ -510,6 +519,9 @@ actor Subscription {
 
     //the reader can always call this function to get the notifications for the expired subscriptions
     public shared ({caller}) func checkMyExpiredSubscriptionsNotifications() : async () {
+        if (not isThereEnoughMemoryPrivate()) {
+            return;
+        };
         let readerPrincipalId = Principal.toText(caller);
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
         let now = U.epochTime();
@@ -599,6 +611,9 @@ actor Subscription {
 
     //stop the existing subscription
     public shared ({caller}) func stopSubscription(writerPrincipalId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
+        if (not isThereEnoughMemoryPrivate()) {
+            return #err("Canister reached the maximum memory threshold. Please try again later.");
+        };
         let readerPrincipalId = Principal.toText(caller);
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
 
@@ -777,7 +792,7 @@ actor Subscription {
             //if here, there're some tokens stuck
             //send the tokens back
             try{
-                let transferResult = await NuaCanister.icrc1_transfer({
+                let _ = await NuaCanister.icrc1_transfer({
                     amount = balance - nuaTokenFee;
                     created_at_time = null;
                     fee = ?nuaTokenFee;
@@ -792,7 +807,7 @@ actor Subscription {
                 //delete the pending disbursement
                 Map.delete(pendingStuckTokenDisbursements, thash, eventId);
             }
-            catch(e){
+            catch(_){
                 //the inter canister call failed
                 //don't delete the disbursement
             }
@@ -817,7 +832,7 @@ actor Subscription {
         var counter = 0;
         for(disbursement in disbursements.vals()) {
             try{
-                let transferResult = await NuaCanister.icrc1_transfer({
+                let _ = await NuaCanister.icrc1_transfer({
                     amount = disbursement.2;
                     created_at_time = null;
                     fee = ?nuaTokenFee;
@@ -831,7 +846,7 @@ actor Subscription {
                 //if here, transfer is successful if the logic is correct
                 successfulDisbursementIndexes.add(counter);
             }
-            catch(e){
+            catch(_){
                 //if here, transfer is not successful
                 //don't add the index to successfulDisbursementIndexes buffer -> do nothing
             };
@@ -1125,17 +1140,17 @@ actor Subscription {
     system func timer(setGlobalTimer : Nat64 -> ()) : async () {
         try {
             ignore pendingStuckTokensHeartbeatExternal();
-        } catch (e) {
+        } catch (_) {
         };
 
         try {
             ignore pendingTokensHeartbeatExternal();
-        } catch (e) {
+        } catch (_) {
         };
 
         try {
             ignore expiredNotificationsHeartbeatExternal();
-        } catch (e) {
+        } catch (_) {
         };
 
         let now = U.epochTime();
@@ -1145,5 +1160,63 @@ actor Subscription {
         //call every minute
         let next = Nat64.fromIntWrap(now) + 60_000_000_000;
         setGlobalTimer(next); // absolute time in nanoseconds
+    };
+
+    //generic functions which needs to be implemented in all Nuance canisters
+    public func acceptCycles() : async () {
+        let available = Cycles.available();
+        let accepted = Cycles.accept<system>(available);
+        assert (accepted == available);
+    };
+
+    public shared query func availableCycles() : async Nat {
+        Cycles.balance();
+    };
+
+    private func isPlatformOperator(caller: Principal) : Bool {
+        ENV.isPlatformOperator(caller)
+    };
+
+    private func isAdmin(caller : Principal) : Bool {
+        var c = Principal.toText(caller);
+        U.arrayContains(ENV.SUBSCRIPTION_CANISTER_ADMINS, c);
+    };
+
+
+    //memory management
+    //2GB default
+    stable var MAX_MEMORY_SIZE = 2000000000;
+
+    public shared ({ caller }) func setMaxMemorySize(newValue : Nat) : async Result.Result<Nat, Text> {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+            return #err("Unauthorized");
+        };
+        MAX_MEMORY_SIZE := newValue;
+
+        #ok(MAX_MEMORY_SIZE);
+    };
+
+    public shared query func getMaxMemorySize() : async Nat {
+        MAX_MEMORY_SIZE;
+    };
+
+    public shared query func isThereEnoughMemory() : async Bool {
+        isThereEnoughMemoryPrivate();
+    };
+
+    private func isThereEnoughMemoryPrivate() : Bool {
+        MAX_MEMORY_SIZE > getMemorySizePrivate();
+    };
+
+    public shared query func getMemorySize() : async Nat {
+        getMemorySizePrivate();
+    };
+
+    private func getMemorySizePrivate() : Nat {
+        Prim.rts_memory_size();
+    };
+
+    public shared query func getCanisterVersion() : async Text {
+        Versions.SUBSCRIPTION_VERSION;
     };
 };

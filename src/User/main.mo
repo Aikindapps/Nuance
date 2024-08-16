@@ -2211,7 +2211,7 @@ actor User {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 
@@ -2359,14 +2359,14 @@ actor User {
     };
 
     //👀👀👀 warning IC.countInstructions executes the functions passed to it
-    let preupgradeCount = IC.countInstructions(func() { preupgrade() });
-    let postupgradeCount = IC.countInstructions(func() { postupgrade() });
+    //let preupgradeCount = IC.countInstructions(func() { preupgrade() });
+    //let postupgradeCount = IC.countInstructions(func() { postupgrade() });
 
     // "the limit for a canister install and upgrade is 200 billion instructions."
     // "the limit for an update message is 20 billion instructions"
 
-    return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
-
+    //return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
+    return "Retired for now!";
   };
 
 };

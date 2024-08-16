@@ -6,7 +6,7 @@ module {
   public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
   public let KINIC_ENDPOINT_CANISTER_ID = CanisterIds.KINIC_ENDPOINT_CANISTER_ID;
   public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID = CanisterIds.FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID;
-  public let POST_INDEX_CANISTER_ID = CanisterIds.POST_INDEX_CANISTER_ID;
+  public let POST_RELATIONS_CANISTER_ID = CanisterIds.POST_RELATIONS_CANISTER_ID;
   public let STORAGE_CANISTER_ID = CanisterIds.STORAGE_CANISTER_ID;
   public let CYCLES_DISPENSER_CANISTER_ID = CanisterIds.CYCLES_DISPENSER_CANISTER_ID;
   public let NUANCE_ASSETS_CANISTER_ID = CanisterIds.NUANCE_ASSETS_CANISTER_ID;
@@ -24,6 +24,7 @@ module {
   public let BARAN_PRINCIPAL_ID = "p5x7e-xqqb3-orerc-tmqof-rnhhy-5y7r7-vpoog-bpqrf-6cuki-bwdpd-3ae";
   public let BARAN_DASHBOARD_PRINCIPAL_ID = "cy7n3-o7lpm-lij55-yisew-ubfjf-bjq5a-46vej-2xw3d-5hjxs-znnvm-eae";
   public let BARAN_DASHBOARD_PRINCIPAL_ID_LOCAL = "z6siy-nz3zx-njbew-yoypf-fn2ti-nkfej-zz2vy-zmy5f-kdzez-ojapo-bqe";
+  public let BARAN_SCRIPT_PRINCIPAL_ID = "yjpjj-m6anm-dbwm6-7yfe7-obrap-57qso-4sozk-sqzxt-3k2x7-x3lh7-sqe";
   public let ILYAS_PRINCIPAL_ID = "c3ex3-xqejx-wbada-ly2rt-j4djv-w6hp6-lcv4j-jm7wy-mg23w-vqzya-lqe";
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
   public let NICK_DASHBOARD_PRINCIPAL_ID = "67owo-lqhq6-2vsvz-ne4qm-g4e2q-2kasi-at36g-zppj6-obsdc-d32rg-jqe";
@@ -43,6 +44,7 @@ module {
     BARAN_PRINCIPAL_ID,
     BARAN_DASHBOARD_PRINCIPAL_ID,
     BARAN_DASHBOARD_PRINCIPAL_ID_LOCAL,
+    BARAN_SCRIPT_PRINCIPAL_ID,
 
     ILYAS_PRINCIPAL_ID,
 
@@ -79,6 +81,11 @@ module {
   ];
 
   public let KINIC_ENDPOINT_CANISTER_ADMINS = [
+    SNS_GOVERNANCE_CANISTER,
+    CYCLES_DISPENSER_CANISTER_ID,
+  ];
+
+  public let SUBSCRIPTION_CANISTER_ADMINS = [
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
   ];
@@ -127,6 +134,11 @@ module {
     CYCLES_DISPENSER_CANISTER_ID,
     POST_CORE_CANISTER_ID,
     USER_CANISTER_ID,
+  ];
+
+  public let POST_RELATIONS_CANISTER_ADMINS = [
+    SNS_GOVERNANCE_CANISTER,
+    POST_CORE_CANISTER_ID,
   ];
 
   //publication canisters

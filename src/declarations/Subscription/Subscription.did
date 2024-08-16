@@ -38,15 +38,20 @@ type SubscriptionEvent =
    subscriptionTimeInterval: SubscriptionTimeInterval;
    writerPrincipalId: text;
  };
-type Result_3 = 
+type Result_4 = 
  variant {
    err: text;
    ok;
  };
-type Result_2 = 
+type Result_3 = 
  variant {
    err: text;
    ok: PaymentRequest;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
  };
 type Result_1 = 
  variant {
@@ -75,21 +80,28 @@ type PaymentRequest =
    writerPrincipalId: text;
  };
 service : {
+  acceptCycles: () -> ();
+  availableCycles: () -> (nat) query;
   checkMyExpiredSubscriptionsNotifications: () -> ();
   completeSubscriptionEvent: (text) -> (Result_1);
   createPaymentRequestAsReader: (text, SubscriptionTimeInterval, nat) ->
-   (Result_2);
-  disperseTokensForSuccessfulSubscription: (text) -> (Result_3);
+   (Result_3);
+  disperseTokensForSuccessfulSubscription: (text) -> (Result_4);
   expiredNotificationsHeartbeatExternal: () -> ();
+  getCanisterVersion: () -> (text) query;
   getLatestTimerCall: () -> (text, text) query;
-  getPaymentRequestBySubscriptionEventId: (text) -> (Result_2) query;
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  getPaymentRequestBySubscriptionEventId: (text) -> (Result_3) query;
   getReaderSubscriptionDetails: () -> (Result_1) query;
   getWriterSubscriptionDetails: (opt text) -> (Result) composite_query;
   getWriterSubscriptionDetailsByPrincipalId: (text) -> (Result) query;
   isReaderSubscriber: (text, text) -> (bool) query;
+  isThereEnoughMemory: () -> (bool) query;
   isWriterActivatedSubscription: (text) -> (bool) query;
   pendingStuckTokensHeartbeatExternal: () -> ();
   pendingTokensHeartbeatExternal: () -> ();
+  setMaxMemorySize: (nat) -> (Result_2);
   stopSubscription: (text) -> (Result_1);
   updateSubscriptionDetails: (UpdateSubscriptionDetailsModel) -> (Result);
 }
