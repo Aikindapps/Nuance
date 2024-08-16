@@ -15,6 +15,7 @@ import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
+import Debug "mo:base/Debug";
 import Notifications "../NotificationsV3/types";
 import Versions "../shared/versions";
 import Prim "mo:prim";
@@ -133,7 +134,7 @@ actor Subscription {
     stable var pendingStuckTokenDisbursements = Map.new<Text, Text>();
     //a map to hold the regular token disbursements for each subscription event - to writer and the Nuance DAO
     //key: subscriptionEventId, value: [(receiver account principal id, receiver subaccount, amount, memo)]
-    stable var pendingTokenDisbursements = Map.new<Text, [(Text, ?Blob, Nat, ?Blob)]>();
+    stable var pendingTokenDisbursementsArray = Map.new<Text, [(Text, ?Blob, Nat, ?Blob)]>();
 
     //#region - public query functions
 
@@ -474,7 +475,7 @@ actor Subscription {
 
     //reader should call this function after sending the tokens to the subaccount returned by the createPaymentRequestAsReader function
     //this function will complete the subscription event if the reader has sent the tokens to the subaccount and then add the
-    //token disbursement entry to pendingTokenDisbursements map
+    //token disbursement entry to pendingTokenDisbursementsArray map
     public shared func completeSubscriptionEvent(eventId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
         deleteExpiredPaymentRequests();
         if (not isThereEnoughMemoryPrivate()) {
@@ -695,7 +696,7 @@ actor Subscription {
     };
 
     //updates the corresponding hashmaps to complete the subscription
-    //also adds the token disbursements to the pendingTokenDisbursements map
+    //also adds the token disbursements to the pendingTokenDisbursementsArray map
     private func completePaymentRequest(paymentRequest: PaymentRequest) : () {
         let subscriptionEventId = paymentRequest.subscriptionEventId;
         let MINUTE = 60000;
@@ -726,7 +727,7 @@ actor Subscription {
         Map.set(subscriptionEventIdToStartTime, thash, subscriptionEventId, now);
         Map.set(subscriptionEventIdToEndTime, thash, subscriptionEventId, getSubscriptionEndTimeByTimeInterval(now, paymentRequest.subscriptionTimeInterval));
 
-        //add the token disbursements to pendingTokenDisbursements map
+        //add the token disbursements to pendingTokenDisbursementsArray map
         let nuaTokenFeeFloat = Float.fromInt(ENV.NUA_TOKEN_FEE);
         let totalPaymentAmountFloat = Float.fromInt(U.textToNat(paymentRequest.paymentFee)) - 2 * nuaTokenFeeFloat;
         let nuanceDaoShareFloat = totalPaymentAmountFloat * ENV.SUBSCRIPTION_FEE_AMOUNT / 100;
@@ -738,7 +739,7 @@ actor Subscription {
             (Principal.toText(paymentReceiverPrincipalId), null, writerShareNat, ?Text.encodeUtf8("sub_" # U.getTextFirstChars(paymentRequest.writerPrincipalId, 20))),
             (ENV.TIP_FEE_RECEIVER_PRINCIPAL_ID, ?Blob.fromArray(ENV.TIP_FEE_RECEIVER_SUBACCOUNT), nuanceDaoShareNat, null)
         ];
-        Map.set(pendingTokenDisbursements, thash, subscriptionEventId, disbursements);
+        Map.set(pendingTokenDisbursementsArray, thash, subscriptionEventId, disbursements);
         //add the notifications
     };
 
@@ -815,7 +816,7 @@ actor Subscription {
         let nuaTokenFee = ENV.NUA_TOKEN_FEE;
         let NuaCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
 
-        let disbursements = Option.get(Map.get(pendingTokenDisbursements, thash, eventId), []);
+        let disbursements = Option.get(Map.get(pendingTokenDisbursementsArray, thash, eventId), []);
         let successfulDisbursementIndexes = Buffer.Buffer<Nat>(0);
         var counter = 0;
         for(disbursement in disbursements.vals()) {
@@ -854,7 +855,7 @@ actor Subscription {
         if(filteredDisbursements.size() == 0){
             //all the disbursements were successful
             //delete the value with the eventId
-            Map.delete(pendingTokenDisbursements, thash, eventId);
+            Map.delete(pendingTokenDisbursementsArray, thash, eventId);
             //#AuthorGainsNewSubscriber and #YouSubscribedToAuthor            
             try{
                 let event = buildSubscriptionEvent(eventId);
@@ -870,7 +871,7 @@ actor Subscription {
             //the size is not equal to 0
             //there were some unsuccessful disbursements
             //update the value with the filtered array
-            Map.set(pendingTokenDisbursements, thash, eventId, Buffer.toArray(filteredDisbursements));
+            Map.set(pendingTokenDisbursementsArray, thash, eventId, Buffer.toArray(filteredDisbursements));
         }
     };
 
@@ -1044,7 +1045,7 @@ actor Subscription {
     //this function will periodically be called to make sure both writers and the Nuance DAO gets the tokens from the subscriptions
     public shared func pendingTokensHeartbeatExternal() : async () {
         var counter = 0;
-        for(eventId in Map.keys(pendingTokenDisbursements)){
+        for(eventId in Map.keys(pendingTokenDisbursementsArray)){
             if(counter < 10){
                 await disperseTokens(eventId);
             }
@@ -1128,7 +1129,7 @@ actor Subscription {
     };
  
     public shared func disperseTokensForSuccessfulSubscription(eventId: Text) : async Result.Result<(), Text> {
-        switch(Map.get(pendingTokenDisbursements, thash, eventId)) {
+        switch(Map.get(pendingTokenDisbursementsArray, thash, eventId)) {
             case(?disbursement) {
                 //there exist a pending disbursement
                 //trigger the helper private function
