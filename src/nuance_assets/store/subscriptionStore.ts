@@ -19,7 +19,9 @@ import { NUA_CANISTER_ID } from '../shared/constants';
 import { Toast } from 'react-bootstrap';
 import { useAuthStore } from './authStore';
 import { User } from '../services/ext-service/ext_v2.did';
-import { SUBSCRIPTION_CANISTER_ID } from '../shared/canister_ids';
+
+const SUBSCRIPTION_CANISTER_ID = process.env.SUBSCRIPTION_CANISTER_ID || '';
+
 
 export type SubscribedWriterItem = {
   userListItem: UserListItem;
