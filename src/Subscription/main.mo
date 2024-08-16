@@ -4,6 +4,8 @@ import Result "mo:base/Result";
 import Bool "mo:base/Bool";
 import Option "mo:base/Option";
 import Array "mo:base/Array";
+import Nat32 "mo:base/Nat32";
+import Time "mo:base/Time";
 import Nat "mo:base/Nat";
 import Blob "mo:base/Blob";
 import Buffer "mo:base/Buffer";
@@ -15,12 +17,12 @@ import U "../shared/utils";
 import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
+import Iter "mo:base/Iter";
 import Debug "mo:base/Debug";
-import Versions "../shared/versions";
-import Prim "mo:prim";
+import Notifications "../Notifications/types";
 
 actor Subscription {
-    let {thash; } = Map;
+    let { ihash; nhash; thash; phash; calcHash } = Map;
     //the time interval for subscription events
     type SubscriptionTimeInterval = {
         #Weekly;
@@ -171,7 +173,7 @@ actor Subscription {
                     //caller is the editor of the given publication
                     //if there exists any subscription detail, return the object
                     switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, publicationCanisterId)) {
-                        case(?_) {
+                        case(?value) {
                             return #ok(buildWriterSubscriptionDetails(publicationCanisterId))
                         };
                         case(null) {
@@ -186,7 +188,7 @@ actor Subscription {
                 //if there exists any subscription detail for the writer, return it
                 let principal = Principal.toText(caller);
                 switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-                    case(?_) {
+                    case(?value) {
                         return #ok(buildWriterSubscriptionDetails(principal))
                     };
                     case(null) {
@@ -200,7 +202,7 @@ actor Subscription {
     //a function to query the details of a pending subscription payment request
     public shared query func getPaymentRequestBySubscriptionEventId(eventId: Text) : async Result.Result<PaymentRequest, Text> {
         switch(Map.get(subscriptionEventIdToPaymentRequestWriterPrincipalId, thash, eventId)) {
-            case(?_) {
+            case(?value) {
                 //the payment request exists
                 return #ok(buildPaymentRequest(eventId))
             };
@@ -214,7 +216,7 @@ actor Subscription {
     //can be called by anyone - doesn't return the subscription history
     public shared query func getWriterSubscriptionDetailsByPrincipalId(principal: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
         switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-            case(?_) {
+            case(?value) {
                 return #ok(buildWriterSubscriptionDetailsLighter(principal))
             };
             case(null) {
@@ -228,7 +230,7 @@ actor Subscription {
     public shared query ({caller}) func getReaderSubscriptionDetails() : async Result.Result<ReaderSubscriptionDetails, Text> {
         let principal = Principal.toText(caller);
         switch(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, principal)) {
-            case(?_) {
+            case(?value) {
                 return #ok(buildReaderSubscriptionDetails(principal))
             };
             case(null) {
@@ -240,10 +242,6 @@ actor Subscription {
     //#region - public update functions
     //a function that allows writers to update their subscription details
     public shared ({caller}) func updateSubscriptionDetails(subscriptionDetails: UpdateSubscriptionDetailsModel) : async Result.Result<WriterSubscriptionDetails, Text> {
-        if (not isThereEnoughMemoryPrivate()) {
-            return #err("Canister reached the maximum memory threshold. Please try again later.");
-        };
-
         let callerPrincipalId = Principal.toText(caller);
         var writerPrincipalId = callerPrincipalId;
         var paymentReceiverPrincipalId = caller;
@@ -271,8 +269,8 @@ actor Subscription {
                 //check if the caller is a Nuance user
                 let UserCanister = CanisterDeclarations.getUserCanister();
                 switch(await UserCanister.getUserByPrincipalId(callerPrincipalId)) {
-                    case(#ok(_)) {};
-                    case(#err(_)) {
+                    case(#ok(value)) {};
+                    case(#err(error)) {
                         //caller doesn't exist in User canister
                         return #err("No Nuance account found!")
                     };
@@ -383,10 +381,6 @@ actor Subscription {
         //before any payment request creation, make sure there is no expired request
         deleteExpiredPaymentRequests();
 
-        if (not isThereEnoughMemoryPrivate()) {
-            return #err("Canister reached the maximum memory threshold. Please try again later.");
-        };
-
         //check if the writer and the given time interval exists as a subscription option
         let callerPrincipalId = Principal.toText(caller);
         let writerSubscriptionDetails = buildWriterSubscriptionDetails(writerPrincipalId);
@@ -449,8 +443,8 @@ actor Subscription {
         //check if the caller is a Nuance user
         let UserCanister = CanisterDeclarations.getUserCanister();
         switch(await UserCanister.getUserByPrincipalId(callerPrincipalId)) {
-            case(#ok(_)) {};
-            case(#err(_)) {
+            case(#ok(value)) {};
+            case(#err(error)) {
                 //caller doesn't exist in User canister
                 return #err("Caller is not a Nuance user.")
             };
@@ -475,13 +469,10 @@ actor Subscription {
     //reader should call this function after sending the tokens to the subaccount returned by the createPaymentRequestAsReader function
     //this function will complete the subscription event if the reader has sent the tokens to the subaccount and then add the
     //token disbursement entry to pendingTokenDisbursementsArray map
-    public shared func completeSubscriptionEvent(eventId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
+    public shared ({caller}) func completeSubscriptionEvent(eventId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
         deleteExpiredPaymentRequests();
-        if (not isThereEnoughMemoryPrivate()) {
-            return #err("Canister reached the maximum memory threshold. Please try again later.");
-        };
         switch(Map.get(subscriptionEventIdToPaymentRequestExpireTime, thash, eventId)) {
-            case(?_) {
+            case(?expireTime) {
                 //if here, there is an active request with the given id
                 let paymentRequestDetails = buildPaymentRequest(eventId);
                 //get the balance of the token receiver subaccount from the NUA token canister
@@ -519,25 +510,11 @@ actor Subscription {
 
     //the reader can always call this function to get the notifications for the expired subscriptions
     public shared ({caller}) func checkMyExpiredSubscriptionsNotifications() : async () {
-        if (not isThereEnoughMemoryPrivate()) {
-            return;
-        };
-
-        //get all the publication canister ids to decide the isPublication field
-        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
-        let allPublisherIds = Array.map(await PostCoreCanister.getPublicationCanisters(), func(entry: (Text, Text)) : Text {
-            entry.1
-        });
-        let publicationCanisterIdsMap = Map.new<Text, Text>();
-        for(publicationCanisterId in allPublisherIds.vals()){
-            Map.set(publicationCanisterIdsMap, thash, publicationCanisterId, publicationCanisterId);
-        };
-
         let readerPrincipalId = Principal.toText(caller);
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
         let now = U.epochTime();
         let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
-        let notifications = Buffer.Buffer<(Text, CanisterDeclarations.NotificationContent)>(0);
+        let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
         for(writerPrincipalId in writerPrincipalIds.vals()){
             var latestSubscriptionEvent : ?SubscriptionEvent = null;
             //find the latest subscription event to the writer
@@ -561,14 +538,41 @@ actor Subscription {
             switch(latestSubscriptionEvent) {
                 case(?event) {
                     if(event.endTime < now){
-                        notifications.add(event.readerPrincipalId, #ReaderExpiredSubscription({
-                            amountOfTokens = event.paymentFee;
-                            isPublication = Map.get(publicationCanisterIdsMap, thash, event.writerPrincipalId) != null;
-                            subscribedWriterPrincipalId = event.writerPrincipalId;
-                            subscriptionEndTime = Int.toText(event.endTime);
-                            subscriptionStartTime = Int.toText(event.startTime);
-                            subscriptionTimeInterval = event.subscriptionTimeInterval;
-                        }));
+                        //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
+                        //canister
+                        notifications.add(#AuthorExpiredSubscription, {
+                            url = "";
+                            articleId = "";
+                            articleTitle = "";
+                            authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                            authorHandle = "";
+                            comment = "";
+                            isReply = false;
+                            receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                            receiverHandle = "";
+                            senderPrincipal = Principal.fromText("2vxsx-fae");
+                            senderHandle = "";
+                            tags = [];
+                            tipAmount = "0";
+                            token = "";
+                        });
+
+                        notifications.add(#ReaderExpiredSubscription, {
+                            url = "";
+                            articleId = "";
+                            articleTitle = "";
+                            authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                            authorHandle = "";
+                            comment = "";
+                            isReply = false;
+                            receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                            receiverHandle = "";
+                            senderPrincipal = Principal.fromText("2vxsx-fae");
+                            senderHandle = "";
+                            tags = [];
+                            tipAmount = "0";
+                            token = "";
+                        });
 
                         //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
                         let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
@@ -590,14 +594,11 @@ actor Subscription {
         };
         //ToDo: Send all the notifications to the Notifications canister with a single call here
         let NotificationCanister = CanisterDeclarations.getNotificationCanister();
-        let response = await NotificationCanister.createNotifications(Buffer.toArray(notifications));
+        let response = await NotificationCanister.disperseBulkSubscriptionNotifications(Buffer.toArray(notifications));
     };
 
     //stop the existing subscription
     public shared ({caller}) func stopSubscription(writerPrincipalId: Text) : async Result.Result<ReaderSubscriptionDetails, Text> {
-        if (not isThereEnoughMemoryPrivate()) {
-            return #err("Canister reached the maximum memory threshold. Please try again later.");
-        };
         let readerPrincipalId = Principal.toText(caller);
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
 
@@ -606,10 +607,6 @@ actor Subscription {
                 writerPrincipalId != principalId
             });
             Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
-
-            //send the notification to the user
-            ignore sendStopSubscriptionNotification(readerPrincipalId, writerPrincipalId);
-
             return #ok(buildReaderSubscriptionDetails(readerPrincipalId));
         }
         else{
@@ -780,7 +777,7 @@ actor Subscription {
             //if here, there're some tokens stuck
             //send the tokens back
             try{
-                let _ = await NuaCanister.icrc1_transfer({
+                let transferResult = await NuaCanister.icrc1_transfer({
                     amount = balance - nuaTokenFee;
                     created_at_time = null;
                     fee = ?nuaTokenFee;
@@ -795,7 +792,7 @@ actor Subscription {
                 //delete the pending disbursement
                 Map.delete(pendingStuckTokenDisbursements, thash, eventId);
             }
-            catch(_){
+            catch(e){
                 //the inter canister call failed
                 //don't delete the disbursement
             }
@@ -820,7 +817,7 @@ actor Subscription {
         var counter = 0;
         for(disbursement in disbursements.vals()) {
             try{
-                let _ = await NuaCanister.icrc1_transfer({
+                let transferResult = await NuaCanister.icrc1_transfer({
                     amount = disbursement.2;
                     created_at_time = null;
                     fee = ?nuaTokenFee;
@@ -834,7 +831,7 @@ actor Subscription {
                 //if here, transfer is successful if the logic is correct
                 successfulDisbursementIndexes.add(counter);
             }
-            catch(_){
+            catch(e){
                 //if here, transfer is not successful
                 //don't add the index to successfulDisbursementIndexes buffer -> do nothing
             };
@@ -855,10 +852,49 @@ actor Subscription {
             //all the disbursements were successful
             //delete the value with the eventId
             Map.delete(pendingTokenDisbursementsArray, thash, eventId);
-            //#AuthorGainsNewSubscriber and #YouSubscribedToAuthor            
+            //ToDo: send the new subscription notifications to both writer and the reader
+            //#AuthorGainsNewSubscriber and #YouSubscribedToAuthor
+            let event = buildSubscriptionEvent(eventId);
+
+            let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
+
+            notifications.add(#YouSubscribedToAuthor, {
+                url = "";
+                articleId = "";
+                articleTitle = "";
+                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                authorHandle = "";
+                comment = "";
+                isReply = false;
+                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                receiverHandle = "";
+                senderPrincipal = Principal.fromText("2vxsx-fae"); 
+                senderHandle = "";
+                tags = [];
+                tipAmount = "0";
+                token = "";
+            });
+
+            notifications.add(#AuthorGainsNewSubscriber, {
+                url = "";
+                articleId = "";
+                articleTitle = "";
+                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                authorHandle = "";
+                comment = "";
+                isReply = false;
+                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                receiverHandle = "";
+                senderPrincipal = Principal.fromText(event.readerPrincipalId);
+                senderHandle = "";
+                tags = [];
+                tipAmount = "0";
+                token = "";
+            });
+
             try{
-                let event = buildSubscriptionEvent(eventId);
-                ignore sendNewSubscriptionNotifications(event);
+                let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+                ignore NotificationCanister.disperseBulkSubscriptionNotifications(Buffer.toArray(notifications));
             }
             catch(error){
                 //inter canister call for distributing the notifications has failed
@@ -872,84 +908,6 @@ actor Subscription {
             //update the value with the filtered array
             Map.set(pendingTokenDisbursementsArray, thash, eventId, Buffer.toArray(filteredDisbursements));
         }
-    };
-
-    public shared ({caller}) func sendNewSubscriptionNotifications(event: SubscriptionEvent) : async () {
-        if(not Principal.equal(caller, Principal.fromActor(Subscription))){
-            return;
-        };
-        //get all the publication canister ids to decide the isPublication field
-        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
-        let allPublisherIds = Array.map(await PostCoreCanister.getPublicationCanisters(), func(entry: (Text, Text)) : Text {
-            entry.1
-        });
-
-        let notifications = Buffer.Buffer<(Text, CanisterDeclarations.NotificationContent)>(0);
-
-        notifications.add(event.readerPrincipalId, #YouSubscribedToAuthor({
-            subscribedWriterPrincipalId = event.writerPrincipalId;
-            subscriptionTimeInterval = event.subscriptionTimeInterval;
-            subscriptionStartTime = Int.toText(event.startTime);
-            subscriptionEndTime = Int.toText(event.endTime);
-            amountOfTokens = event.paymentFee;
-            isPublication = U.arrayContainsGeneric(allPublisherIds, event.writerPrincipalId, Text.equal);    
-        }));
-
-        notifications.add(event.writerPrincipalId, #AuthorGainsNewSubscriber({
-            amountOfTokens = event.paymentFee;
-            subscriberPrincipalId = event.readerPrincipalId;
-            subscriptionStartTime = Int.toText(event.startTime);
-            subscriptionEndTime = Int.toText(event.endTime);
-            subscriptionTimeInterval = event.subscriptionTimeInterval;
-        }));
-
-        let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
-        await NotificationsCanister.createNotifications(Buffer.toArray(notifications));
-    };
-
-    public shared ({caller}) func sendStopSubscriptionNotification(readerPrincipalId: Text, writerPrincipalId: Text) : async () {
-        if(not Principal.equal(caller, Principal.fromActor(Subscription))){
-            return;
-        };
-        
-        let readerSubscriptionDetails = buildReaderSubscriptionDetails(readerPrincipalId);
-        var latestSubscriptionEvent : ?SubscriptionEvent = null;
-        for(subscriptionEvent in readerSubscriptionDetails.readerSubscriptions.vals()){
-            if(subscriptionEvent.writerPrincipalId == writerPrincipalId){
-                switch(latestSubscriptionEvent) {
-                    case(?value) {
-                        if(subscriptionEvent.endTime > value.endTime){
-                            latestSubscriptionEvent := ?subscriptionEvent;
-                        };
-                    };
-                    case(null) {
-                        latestSubscriptionEvent := ?subscriptionEvent;
-                    };
-                };
-            }
-        };
-
-        switch(latestSubscriptionEvent) {
-            case(?event) {
-                //get all the publication canister ids to decide the isPublication field
-                let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
-                let allPublisherIds = Array.map(await PostCoreCanister.getPublicationCanisters(), func(entry: (Text, Text)) : Text {
-                    entry.1
-                });
-
-                let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
-                await NotificationsCanister.createNotification(readerPrincipalId, #YouUnsubscribedFromAuthor({
-                    isPublication = U.arrayContainsGeneric(allPublisherIds, writerPrincipalId, Text.equal);
-                    subscribedWriterPrincipalId = writerPrincipalId;
-                    subscriptionTimeInterval = event.subscriptionTimeInterval
-                }));
-            };
-            case(null) {
-                //if here, there has been no subscription to the given writer
-                //do nothing
-            };
-        };
-        
     };
 
     //#region - private functions to build data types
@@ -1057,18 +1015,8 @@ actor Subscription {
     };
 
     public shared func expiredNotificationsHeartbeatExternal() : async () {
-        //get all the publication canister ids to decide the isPublication field
-        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
-        let allPublisherIds = Array.map(await PostCoreCanister.getPublicationCanisters(), func(entry: (Text, Text)) : Text {
-            entry.1
-        });
-        let publicationCanisterIdsMap = Map.new<Text, Text>();
-        for(publicationCanisterId in allPublisherIds.vals()){
-            Map.set(publicationCanisterIdsMap, thash, publicationCanisterId, publicationCanisterId);
-        };
-
         let now = U.epochTime();
-        let notifications = Buffer.Buffer<(Text, CanisterDeclarations.NotificationContent)>(0);
+        let notifications = Buffer.Buffer<(Notifications.NotificationType, Notifications.NotificationContent)>(0);
         for((readerPrincipalId, writerPrincipalIds) in Map.entries(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds)){
             let readerDetails = buildReaderSubscriptionDetails(readerPrincipalId);
             for(writerPrincipalId in writerPrincipalIds.vals()){
@@ -1094,14 +1042,42 @@ actor Subscription {
                 switch(latestSubscriptionEvent) {
                     case(?event) {
                         if(event.endTime < now){
-                            notifications.add(event.readerPrincipalId, #ReaderExpiredSubscription({
-                                amountOfTokens = event.paymentFee;
-                                isPublication = Map.get(publicationCanisterIdsMap, thash, event.writerPrincipalId) != null;
-                                subscribedWriterPrincipalId = event.writerPrincipalId;
-                                subscriptionEndTime = Int.toText(event.endTime);
-                                subscriptionStartTime = Int.toText(event.startTime);
-                                subscriptionTimeInterval = event.subscriptionTimeInterval;
-                            }));
+                            //ToDo: Add all the #ExpiredNotification notifications to a local notifications array and then send them all to the Notifications
+                            //canister 
+                            // #AuthorExpiredSubscription and #ReaderExpiredSubscription;
+                            notifications.add(#AuthorExpiredSubscription, {
+                                url = "";
+                                articleId = "";
+                                articleTitle = "";
+                                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                                authorHandle = "";
+                                comment = "";
+                                isReply = false;
+                                receiverPrincipal = Principal.fromText(event.writerPrincipalId);
+                                receiverHandle = "";
+                                senderPrincipal = Principal.fromText("2vxsx-fae");
+                                senderHandle = "";
+                                tags = [];
+                                tipAmount = "0";
+                                token = "";
+                            });
+
+                            notifications.add(#ReaderExpiredSubscription, {
+                                url = "";
+                                articleId = "";
+                                articleTitle = "";
+                                authorPrincipal = Principal.fromText(event.writerPrincipalId);
+                                authorHandle = "";
+                                comment = "";
+                                isReply = false;
+                                receiverPrincipal = Principal.fromText(event.readerPrincipalId);
+                                receiverHandle = "";
+                                senderPrincipal = Principal.fromText("2vxsx-fae");
+                                senderHandle = "";
+                                tags = [];
+                                tipAmount = "0";
+                                token = "";
+                            });
 
                             //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
                             let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
@@ -1124,7 +1100,7 @@ actor Subscription {
         };
         //ToDo: Send all the notifications to the Notifications canister
         let NotificationCanister = CanisterDeclarations.getNotificationCanister();
-        let response = await NotificationCanister.createNotifications(Buffer.toArray(notifications));
+        let response = await NotificationCanister.disperseBulkSubscriptionNotifications(Buffer.toArray(notifications));
     };
  
     public shared func disperseTokensForSuccessfulSubscription(eventId: Text) : async Result.Result<(), Text> {
@@ -1149,17 +1125,17 @@ actor Subscription {
     system func timer(setGlobalTimer : Nat64 -> ()) : async () {
         try {
             ignore pendingStuckTokensHeartbeatExternal();
-        } catch (_) {
+        } catch (e) {
         };
 
         try {
             ignore pendingTokensHeartbeatExternal();
-        } catch (_) {
+        } catch (e) {
         };
 
         try {
             ignore expiredNotificationsHeartbeatExternal();
-        } catch (_) {
+        } catch (e) {
         };
 
         let now = U.epochTime();
@@ -1171,7 +1147,6 @@ actor Subscription {
         setGlobalTimer(next); // absolute time in nanoseconds
     };
 
-    //generic functions which needs to be implemented in all Nuance canisters
     public func acceptCycles() : async () {
         let available = Cycles.available();
         let accepted = Cycles.accept(available);
@@ -1180,52 +1155,5 @@ actor Subscription {
 
     public shared query func availableCycles() : async Nat {
         Cycles.balance();
-    };
-
-    private func isPlatformOperator(caller: Principal) : Bool {
-        ENV.isPlatformOperator(caller)
-    };
-
-    private func isAdmin(caller : Principal) : Bool {
-        var c = Principal.toText(caller);
-        U.arrayContains(ENV.SUBSCRIPTION_CANISTER_ADMINS, c);
-    };
-
-
-    //memory management
-    //2GB default
-    stable var MAX_MEMORY_SIZE = 2000000000;
-
-    public shared ({ caller }) func setMaxMemorySize(newValue : Nat) : async Result.Result<Nat, Text> {
-        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
-            return #err("Unauthorized");
-        };
-        MAX_MEMORY_SIZE := newValue;
-
-        #ok(MAX_MEMORY_SIZE);
-    };
-
-    public shared query func getMaxMemorySize() : async Nat {
-        MAX_MEMORY_SIZE;
-    };
-
-    public shared query func isThereEnoughMemory() : async Bool {
-        isThereEnoughMemoryPrivate();
-    };
-
-    private func isThereEnoughMemoryPrivate() : Bool {
-        MAX_MEMORY_SIZE > getMemorySizePrivate();
-    };
-
-    public shared query func getMemorySize() : async Nat {
-        getMemorySizePrivate();
-    };
-
-    private func getMemorySizePrivate() : Nat {
-        Prim.rts_memory_size();
-    };
-
-    public shared query func getCanisterVersion() : async Text {
-        Versions.SUBSCRIPTION_VERSION;
     };
 };
