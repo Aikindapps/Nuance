@@ -2,11 +2,9 @@ import _toast, { Toast } from 'react-hot-toast';
 import React, { useContext } from 'react';
 import { Toaster } from 'react-hot-toast';
 import '../components/notifications/_notifications.scss';
-import { NotificationContent, Notification } from './actorService';
 import { UserListItem } from 'src/nuance_assets/types/types';
 import { Context } from '../../nuance_assets/contextes/ModalContext';
 import { useTheme } from '../contextes/ThemeContext';
-import { useState } from 'react';
 import './../components/notifications/_notifications.scss';
 import {
   convertSubscriptionTimeInterval,
@@ -14,7 +12,7 @@ import {
   timeAgo,
 } from '../../nuance_assets/shared/utils';
 import { icons, colors } from '../shared/constants';
-import Button from '../UI/Button/Button';
+import { Notification } from '../../declarations/Notifications/Notifications.did';
 
 export enum ToastType {
   Plain,
