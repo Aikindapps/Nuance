@@ -16,7 +16,6 @@ import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
-import Notifications "../NotificationsV3/types";
 import Versions "../shared/versions";
 import Prim "mo:prim";
 
