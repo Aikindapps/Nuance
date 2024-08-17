@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useContext, lazy, useRef } from 'react';
 import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import parse from 'html-react-parser';
-import Header from '../../components/header/header';
-import Footer from '../../components/footer/footer';
-import ReadArticleSidebar from '../../UI/read-article-sidebar/read-article-sidebar';
+const Header = lazy(() => import('../../components/header/header'));
+const Footer = lazy(() => import('../../components/footer/footer'));
+const ReadArticleSidebar = lazy(() => import('../../UI/read-article-sidebar/read-article-sidebar'));
 import CopyArticle from '../../UI/copy-article/copy-article';
 import ReportArticle from '../../UI/report-article/report-article';
 import {
@@ -61,12 +61,10 @@ const ReadArticle = () => {
   const [socialUrls, setSocialUrls] = useState<string[]>([]);
   const [modalType, setModalType] = useState('');
 
-  // Publication Feature Context
   const publicationFeatureIsLive = useContext(Context).publicationFeature;
   const [publicationHandle, setPublicationHandle] = useState('');
   const refEmailOptIn = useRef<HTMLDivElement>(null);
 
-  //NFT feature toggle
   const nftFeatureIsLive = useContext(Context).nftFeature;
 
   const navigate = useNavigate();
@@ -127,6 +125,32 @@ const ReadArticle = () => {
     redirect: state.redirect,
     redirectScreen: state.redirectScreen,
   }));
+
+  const defaultPost: PostType = {
+    postId: "loading-post-id",
+    handle: "loading-handle",
+    title: "Blogging to the people!",
+    url: "",
+    subtitle: "Loading the subtitle",
+    headerImage: images.NUANCE_LOGO,
+    content: "<p>Loading content...</p>",
+    isDraft: false,
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+    publishedDate: new Date().toISOString(),
+    views: "0",
+    tags: [],
+    claps: "0",
+    category: "",
+    isPremium: false,
+    isMembersOnly: false,
+    bucketCanisterId: "default-bucket-canister-id",
+    wordCount: "0",
+    creatorHandle: "loading-creator-handle",
+    creatorPrincipal: "loading-creator-principal",
+  };
+
+
   const load = () => {
     if (handle && id) {
       if (publication?.publicationHandle !== handle) {
@@ -154,15 +178,9 @@ const ReadArticle = () => {
   };
 
   const separateIds = (input: string) => {
-    // Split the input string by the '-' character
     let parts = input.split('-');
-
-    // The first part is the post ID
     let postId = parts[0];
-
-    // The rest of the parts make up the canister ID
     let bucketCanisterId = parts.slice(1).join('-');
-    // Return the IDs in an object
     return { postId, bucketCanisterId };
   };
 
@@ -175,12 +193,9 @@ const ReadArticle = () => {
   };
 
   const searchTag = (tag: string) => {
-    //setSearchText('#' + tag);
-    //clearSearchBar(false);
     navigate('/?tab=search&tag=' + encodeURIComponent(tag.toUpperCase()));
   };
 
-  //comment scrolling
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const commentId = queryParams.get('comment');
@@ -266,7 +281,6 @@ const ReadArticle = () => {
 
   useEffect(() => {
     if (post) {
-      setLoading(false);
       if (post.creatorHandle) {
         handleWriterFields(post.creatorHandle);
       }
@@ -276,6 +290,7 @@ const ReadArticle = () => {
       ) {
         getPublication(post.handle);
       }
+      setLoading(false);
     }
   }, [post]);
 
@@ -311,7 +326,6 @@ const ReadArticle = () => {
   const [mousedown, setMouseDown] = useState(false);
   const [clapDisabled, setClapDisabled] = useState(false);
 
-  //more articles from the author and the publication
   const [moreArticles, setMoreArticles] = useState<
     MoreFromThisAuthor | undefined
   >(undefined);
@@ -321,9 +335,6 @@ const ReadArticle = () => {
     setMoreArticles(moreArticles);
   };
 
-  console.log(moreArticles);
-
-  //disabled for null user and on authored posts
   useEffect(() => {
     if (!user) {
       setClapDisabled(true);
@@ -448,37 +459,40 @@ const ReadArticle = () => {
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
+
+  const postToRender = post || defaultPost;
+
   return (
     <div style={darkOptionsAndColors} className='read-article-wrapper'>
       <Helmet>
         <link rel='canonical' href={url} />
 
         {/* HTML Meta Tags */}
-        <title>{post?.title}</title>
-        <meta name='title' content={post?.title} />
-        <meta name='description' content={post?.subtitle}></meta>
-        <meta name='author' content={post?.handle}></meta>
+        <title>{postToRender.title}</title>
+        <meta name='title' content={postToRender.title} />
+        <meta name='description' content={postToRender.subtitle}></meta>
+        <meta name='author' content={postToRender.handle}></meta>
 
         {/* Google / Search Engine Tags */}
-        <meta itemProp='name' content={post?.title} />
-        <meta itemProp='description' content={post?.subtitle} />
-        <meta itemProp='image' content={post?.headerImage} />
+        <meta itemProp='name' content={postToRender.title} />
+        <meta itemProp='description' content={postToRender.subtitle} />
+        <meta itemProp='image' content={postToRender.headerImage} />
 
         {/* Facebook Meta Tags */}
-        <meta property='og:title' content={post?.title} />
-        <meta property='og:description' content={post?.subtitle} />
+        <meta property='og:title' content={postToRender.title} />
+        <meta property='og:description' content={postToRender.subtitle} />
         <meta property='og:url' content={url} />
         <meta property='og:type' content='article' />
         <meta
           property='og:image'
-          content={post?.headerImage || images.NUANCE_LOGO}
+          content={postToRender.headerImage || images.NUANCE_LOGO}
         />
 
         {/* Twitter Meta Tags */}
         <meta name='twitter:card' content='summary_large_image' />
-        <meta name='twitter:title' content={post?.title} />
-        <meta name='twitter:description' content={post?.subtitle} />
-        <meta name='twitter:image' content={post?.headerImage} />
+        <meta name='twitter:title' content={postToRender.title} />
+        <meta name='twitter:description' content={postToRender.subtitle} />
+        <meta name='twitter:image' content={postToRender.headerImage} />
         <meta name='twitter:creator' content='@nuancedapp' />
 
         <link
@@ -492,56 +506,56 @@ const ReadArticle = () => {
         isArticlePage={false}
         isReadArticlePage={true}
         ScreenWidth={context.width}
-        isPublicationPage={post?.isPublication}
-        category={post?.category}
+        isPublicationPage={postToRender.isPublication}
+        category={postToRender.category}
         publication={
           publication?.publicationHandle.toLowerCase() !== handle?.toLowerCase()
             ? undefined
             : publication
         }
-        postTitle={post?.title}
+        postTitle={postToRender.title}
       />
 
-      <div className='page'>
+      <div className={`page`}>
         <div className={isToggled ? 'left left-toggled' : 'left'}>
           <p className='date'>
-            {formatDate(post?.publishedDate) || formatDate(post?.created)}{' '}
+            {formatDate(postToRender.publishedDate) || formatDate(postToRender.created)}{' '}
           </p>
           <div className='left-content'>
             <div className='menus'>
-              {post?.url && (
+              {postToRender.url && (
                 <>
                   <CopyArticle
-                    url={post.url}
+                    url={postToRender.url}
                     shown={copyArticle}
                     setShown={setCopyArticle}
                     dark={darkTheme}
-                    postId={post?.postId}
+                    postId={postToRender.postId}
                   />
                   {/* ReportArticle also takes in parameters for edit button since they share a drop down menu*/}
                   <ReportArticle
                     id={postId || ''}
                     handle={author?.handle || ''}
-                    url={post?.url}
+                    url={postToRender.url}
                     shown={meatBall}
                     setShown={setMeatBall}
-                    isPremium={post.isPremium}
+                    isPremium={postToRender.isPremium}
                     dark={darkTheme}
                   />
                 </>
               )}
             </div>
             <div className='horizontal-divider'></div>
-            {post && author && (
+            {postToRender && author && (
               <div className='author'>
                 <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
                 <Link
-                  to={`/user/${post.isPublication ? post.creatorHandle : author.handle
+                  to={`/user/${postToRender.isPublication ? postToRender.creatorHandle : author.handle
                     }`}
                   className='handle'
                   style={{ color: darkOptionsAndColors.color }}
                 >
-                  @{post.isPublication ? post.creatorHandle : author.handle}
+                  @{postToRender.isPublication ? postToRender.creatorHandle : author.handle}
                 </Link>
               </div>
             )}
@@ -552,10 +566,10 @@ const ReadArticle = () => {
             <ReadArticleSidebar
               isSidebarToggle={isSidebarToggled}
               id={id}
-              url={post?.url || ''}
-              handle={post?.handle}
+              url={postToRender.url || ''}
+              handle={postToRender.handle}
               avatar={getAvatar()}
-              isPremium={post?.isPremium}
+              isPremium={postToRender.isPremium}
               dark={darkTheme}
             />
           </div>
@@ -583,7 +597,7 @@ const ReadArticle = () => {
                   onMouseUp={() => {
                     setMouseDown(false);
                   }}
-                  applaudingPost={post}
+                  applaudingPost={postToRender}
                 />
               </div>
               <div className='publication-email-opt-in' ref={refEmailOptIn}>
@@ -604,22 +618,17 @@ const ReadArticle = () => {
         </div>
 
         <div className={darkTheme ? "right dark-mode" : "right"}>
-          {/* {loading && (
-            <div style={{ marginTop: '-50px' }}>
-              <Loader />
-            </div>
-          )} */}
 
-          {!loading && post && author && (
-            <div className='content'>
+          {postToRender && (
+            <div className={`content ${postToRender === defaultPost ? 'blurred2' : ''}`}>
               <div className='title-post-info-wrapper'>
-                {post.isPremium ? (
+                {postToRender.isPremium ? (
                   <img
                     className='nft-lock-icon'
                     src={icons.NFT_LOCK_ICON}
                     style={{ filter: darkTheme ? 'contrast(0.5)' : '' }}
                   />
-                ) : post.isMembersOnly ? (
+                ) : postToRender.isMembersOnly ? (
                   <div className='read-article-subscription'>
                     <img
                       className='read-article-subscription-icon'
@@ -632,79 +641,62 @@ const ReadArticle = () => {
                   </div>
                 ) : null}
 
-                {loading ? (
-                  <div className='skeleton-title'></div>
-                ) : (
-                  <h1
-                    style={
-                      post.isPublication
-                        ? {
-                          fontFamily: publication?.styling.fontType,
-                          color: darkOptionsAndColors.color,
-                        }
-                        : { color: darkOptionsAndColors.color }
-                    }
-                    className='title'
-                  >
-                    {post.title}
-                  </h1>
-                )}
-                {loading ? (
-                  <div className='skeleton-post-info'></div>
-                ) : (
+                <h1
+                  style={
+                    postToRender.isPublication
+                      ? {
+                        fontFamily: publication?.styling.fontType,
+                        color: darkOptionsAndColors.color,
+                      }
+                      : { color: darkOptionsAndColors.color }
+                  }
+                  className='title'
+                >
+                  {postToRender.title}
+                </h1>
 
-                  <PostInformation
-                    post={post}
-                    readTime={getReadTime()}
-                    publication={publication}
-                    isMobile={context.width <= 768}
-                    handle={handle}
-                  />
-                )}
-                {loading ? (
-                  <div className='skeleton-subtitle'></div>
-                ) : (
-                  <h2 className='subtitle'>{post.subtitle}</h2>
-                )}
+                <PostInformation
+                  post={postToRender}
+                  readTime={getReadTime()}
+                  publication={publication}
+                  isMobile={context.width <= 768}
+                  handle={handle}
+                />
+                <h2 className='subtitle'>{postToRender.subtitle}</h2>
               </div>
 
               <div
                 className='header-content-wrapper'
                 style={
-                  post.premiumArticleSaleInfo
+                  postToRender.premiumArticleSaleInfo
                     ? { backgroundColor: 'rgba(67, 223, 186, 0.5)' }
                     : {}
                 }
               >
-                {loading ? (
-                  <div className={darkTheme ? 'skeleton-header dark-mode' : "skeleton-header"}></div>
-
-                ) : (
-                  <img
-                    className='header-image'
-                    src={post.headerImage || images.NUANCE_LOGO}
-                    style={{
-                      background: darkTheme
-                        ? darkOptionsAndColors.background
-                        : '',
-                    }}
-                  />
-                )}
-                {post.premiumArticleSaleInfo ? (
+                <img
+                  className='header-image'
+                  src={postToRender.headerImage || images.NUANCE_LOGO}
+                  style={{
+                    background: darkTheme
+                      ? darkOptionsAndColors.background
+                      : '',
+                  }}
+                />
+                {postToRender.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
-                    post={post}
+                    post={postToRender}
                     refreshPost={async () => {
                       load();
                     }}
                   />
-                ) : post.isMembersOnly && post.content === '' && isLoggedIn ? (
+                ) : postToRender.isMembersOnly && postToRender.content === '' && isLoggedIn ? (
                   <>
                     {modalType === 'Subscription' && modalContext?.isModalOpen && (
                       <SubscriptionModal
-                        handle={author.handle || ''}
-                        authorPrincipalId={post.principal || ''}
-                        profileImage={author.avatar}
-                        isPublication={post.isPublication || false}
+                        handle={author?.handle || ''}
+                        authorPrincipalId={postToRender.principal || ''}
+                        profileImage={author?.avatar || ''}
+                        isPublication={postToRender.isPublication || false}
                         onSubscriptionComplete={() => {
                           onSubsriptionComplete();
                         }}
@@ -714,24 +706,24 @@ const ReadArticle = () => {
                     {modalType === 'cancelSubscription' &&
                       modalContext?.isModalOpen && (
                         <CancelSubscriptionModal
-                          handle={author.handle || ''}
-                          profileImage={author.avatar}
-                          isPublication={post.isPublication || false}
-                          authorPrincipalId={post.principal || ''}
+                          handle={author?.handle || ''}
+                          profileImage={author?.avatar || ''}
+                          isPublication={postToRender.isPublication || false}
+                          authorPrincipalId={postToRender.principal || ''}
                           onCancelComplete={() => { }}
                         />
                       )}
                   </>
                 ) : null}
 
-                {loading || post.premiumArticleSaleInfo ||
-                  (post.isMembersOnly && post.content === '') ? (
+                {(postToRender.premiumArticleSaleInfo ||
+                  (postToRender.isMembersOnly && postToRender.content === '')) ? (
                   <div className='text text-not-allowed'>
                     {parse(premiumArticlePlaceHolder)}
                   </div>
                 ) : (
                   <div className={darkTheme ? 'dark-text' : 'text'}>
-                    {parse(post.content)}
+                    {parse(postToRender.content)}
                   </div>
                 )}
               </div>
@@ -763,14 +755,14 @@ const ReadArticle = () => {
                         onMouseUp={() => {
                           setMouseDown(false);
                         }}
-                        applaudingPost={post}
+                        applaudingPost={postToRender}
                       >
                         {parseInt(postclaps) + buttoncount}
                       </ClapButton>
                     </div>
                   }
                   <div className='tag-links'>
-                    {post.tags?.map((tag) => {
+                    {postToRender.tags?.map((tag) => {
                       return (
                         <span
                           key={tag.tagId}
@@ -790,12 +782,12 @@ const ReadArticle = () => {
                     className='profile-picture'
                   />
                   <Link
-                    to={`/user/${post.isPublication ? post.creatorHandle : author.handle
+                    to={`/user/${postToRender.isPublication ? postToRender.creatorHandle : author?.handle
                       }`}
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
-                    @{post.isPublication ? post.creatorHandle : author.handle}
+                    @{postToRender.isPublication ? postToRender.creatorHandle : author?.handle}
                   </Link>
                   <div className='social-channels'>
                     {getSocialChannelUrls().map((url, index) => {
@@ -860,8 +852,8 @@ const ReadArticle = () => {
                 </div>
                 <div className='comment-section'>
                   <WriteComment
-                    postId={post.postId}
-                    bucketCanisterId={post.bucketCanisterId}
+                    postId={postToRender.postId}
+                    bucketCanisterId={postToRender.bucketCanisterId}
                     label='WRITE A COMMENT..'
                     handle={user?.handle || ''}
                     avatar={user?.avatar || ''}
@@ -874,8 +866,8 @@ const ReadArticle = () => {
                         key={comment.commentId}
                         isReply={false}
                         comment={comment}
-                        bucketCanisterId={post.bucketCanisterId}
-                        postId={post.postId}
+                        bucketCanisterId={postToRender.bucketCanisterId}
+                        postId={postToRender.postId}
                         loggedInUser={user?.handle || ''}
                         avatar={user?.avatar || ''}
                       />
@@ -912,10 +904,12 @@ const ReadArticle = () => {
               <p className='not-found'>{loadingError}</p>
             </div>
           )}
-          <Footer />
+          {!loading &&
+            <Footer />
+          }
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
