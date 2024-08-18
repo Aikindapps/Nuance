@@ -145,7 +145,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
               navigate('/my-profile/wallet');
             }}
             loading={false}
-            dark={darkTheme}
             style={{
               display: 'flex',
               flexDirection: 'row-reverse',
@@ -772,7 +771,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
               setSavingNotificationSettings(false);
             }}
             loading={savingNotificationSettings}
-            dark={darkTheme}
             style={{
               width: '272px',
               marginTop: '40px',
@@ -837,8 +835,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                   setIsLoadingMore(false);
                 }}
                 loading={isLoadingMore}
-                primaryColor={colors.accentColor}
-                dark={darkTheme}
                 disabled={isLoadingMore}
               >
                 Load More

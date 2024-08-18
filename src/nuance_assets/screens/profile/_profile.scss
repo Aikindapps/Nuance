@@ -455,6 +455,35 @@
         align-items: center;
         justify-content: center;
         column-gap: 15px;
+
+        .wallet-deposit-button {
+          height: 36px;
+          width: 240px;
+
+          &:active {
+            border: 1px solid $accent-color;
+          }
+        }
+
+        .wallet-withdraw-button {
+          border: 1px solid $primary-color;
+          height: 36px;
+          width: 240px;
+
+          &:disabled {
+            border-color: gray;
+          }
+        }
+
+        .wallet-withdraw-button-dark {
+          color: $primary-color;
+          height: 36px;
+          width: 240px;
+
+          &:disabled {
+            border-color: gray;
+          }
+        }
       }
       .request-nua-wrapper {
         padding: 24px;
@@ -499,6 +528,19 @@
             line-height: 20px;
             text-align: center;
             text-wrap: nowrap;
+          }
+
+          .wallet-deposit-button {
+            height: 36px;
+            width: 240px;
+  
+            &:active {
+              border: 1px solid $accent-color;
+            }
+
+            &:disabled {
+              border-color: gray;
+            }
           }
         }
       }

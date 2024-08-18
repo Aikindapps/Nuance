@@ -379,7 +379,6 @@ export const SearchResults = (props: {
               setLoadMoreLoading(false);
             }}
             icon={loadMoreLoading ? images.loaders.BUTTON_SPINNER : ''}
-            dark={darkTheme}
           >
             <span>Load More</span>
           </Button>

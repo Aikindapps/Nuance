@@ -466,7 +466,8 @@ export const WithdrawModal = () => {
         </div>
         <div className='buttons-wrapper'>
           <Button
-            styleType='deposit'
+            className='withdraw-modal-deposit-button'
+            styleType='secondary'
             type='button'
             onClick={() => {
               if (loading) {
@@ -474,27 +475,18 @@ export const WithdrawModal = () => {
               }
               modalContext?.closeModal();
             }}
-            style={
-              loading
-                ? {
-                    cursor: 'not-allowed',
-                  }
-                : {}
-            }
+            disabled={loading}
           >
             Cancel
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
-            style={
-              !validateTransfer(false)
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                  }
-                : {}
+            className={
+              darkTheme
+                ? 'withdraw-modal-withdraw-button-dark'
+                : 'withdraw-modal-withdraw-button'
             }
+            styleType={darkTheme ? 'primary-dark' : 'primary'}
+            disabled={!validateTransfer(false)}
             type='button'
             onClick={() => {
               if (loading) {

@@ -291,7 +291,8 @@ export const EditArticlePremiumModal = (props: {
         </div>
         <div className='buttons-wrapper'>
           <Button
-            styleType='deposit'
+            className='edit-article-premium-modal-deposit-button'
+            styleType='secondary'
             type='button'
             onClick={() => {
               if (loading) {
@@ -299,27 +300,18 @@ export const EditArticlePremiumModal = (props: {
               }
               modalContext?.closeModal();
             }}
-            style={
-              loading
-                ? {
-                    cursor: 'not-allowed',
-                  }
-                : {}
-            }
+            disabled={loading}
           >
             Cancel
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
-            style={
-              !validateNft()
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                  }
-                : {}
+            className={
+              darkTheme
+                ? 'edit-article-premium-modal-withdraw-button-dark'
+                : 'edit-article-premium-modal-withdraw-button'
             }
+            styleType={darkTheme ? 'primary-dark' : 'primary'}
+            disabled={!validateNft()}
             type='button'
             onClick={() => {
               if (loading) {

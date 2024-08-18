@@ -80,7 +80,7 @@ const MeatBallSidebarArticles: React.FC<MeatballSidebarArticlesProps> = (
             <Button
               type='button'
               // icon={NONAME}
-              styleType='primary-1'
+              styleType='primary'
               style={{ width: '96px' }}
               onClick={() => props.onSave()}
               disabled={props.isDisabled}
@@ -95,7 +95,7 @@ const MeatBallSidebarArticles: React.FC<MeatballSidebarArticlesProps> = (
           <Button
             type='button'
             // icon={NONAME}
-            styleType='primary-1'
+            styleType='primary'
             style={{ width: '96px' }}
             onClick={() => props.onPublish()}
             disabled={props.isDisabled}

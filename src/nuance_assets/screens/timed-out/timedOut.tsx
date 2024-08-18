@@ -75,7 +75,7 @@ const TimedOut = () => {
             <p className='title'>SESSION TIMED OUT</p>
             <p>Your session has timed-out. Please login again.</p>
             <Button
-              styleType='primary-1'
+              styleType='primary'
               type='button'
               style={{ width: '96px' }}
               onClick={goToHomePage}

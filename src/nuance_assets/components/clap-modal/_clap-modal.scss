@@ -54,6 +54,42 @@
     justify-content: space-between;
     align-items: center;
     align-self: center;
+
+    .clap-modal-deposit-button {
+      height: 36px;
+      width: 240px;
+      text-wrap: nowrap;
+
+      &:active {
+        border: 1px solid $accent-color;
+      }
+
+      &:disabled {
+        border-color: gray;
+      }
+    }
+
+    .clap-modal-withdraw-button {
+      border: 1px solid $primary-color;
+      height: 36px;
+      width: 240px;
+      text-wrap: nowrap;
+
+      &:disabled {
+        border-color: gray;
+      }
+    }
+
+    .clap-modal-withdraw-button-dark {
+      color: $primary-color;
+      height: 36px;
+      width: 240px;
+      text-wrap: nowrap;
+
+      &:disabled {
+        border-color: gray;
+      }
+    }
   }
   .congratulations-image {
     min-width: 200px;
@@ -277,6 +313,39 @@
       justify-content: space-between;
       align-items: center;
       align-self: center;
+
+      .clap-modal-deposit-button {
+        height: 36px;
+        width: 240px;
+
+        &:active {
+          border: 1px solid $accent-color;
+        }
+
+        &:disabled {
+          border-color: gray;
+        }
+      }
+
+      .clap-modal-withdraw-button {
+        border: 1px solid $primary-color;
+        height: 36px;
+        width: 240px;
+
+        &:disabled {
+          border-color: gray;
+        }
+      }
+
+      .clap-modal-withdraw-button-dark {
+        color: $primary-color;
+        height: 36px;
+        width: 240px;
+
+        &:disabled {
+          border-color: gray;
+        }
+      }
     }
   }
 

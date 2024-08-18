@@ -324,7 +324,7 @@ const LoginRegistration = () => {
               </Button>
               <Button
                 type='button'
-                styleType='primary-1'
+                styleType='primary'
                 style={{ width: '96px', alignSelf: 'center' }}
                 onClick={onRegister}
               >

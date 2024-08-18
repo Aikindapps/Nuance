@@ -244,6 +244,39 @@
             justify-content: space-between;
             align-items: center;
             align-self: center;
+
+            .withdraw-modal-deposit-button {
+                height: 36px;
+                width: 240px;
+      
+                &:active {
+                  border: 1px solid $accent-color;
+                }
+    
+                &:disabled {
+                  border-color: gray;
+                }
+            }
+
+            .withdraw-modal-withdraw-button {
+                border: 1px solid $primary-color;
+                height: 36px;
+                width: 240px;
+
+                &:disabled {
+                    border-color: gray;
+                }
+            }
+            
+            .withdraw-modal-withdraw-button-dark {
+                color: $primary-color;
+                height: 36px;
+                width: 240px;
+
+                &:disabled {
+                    border-color: gray;
+                }
+            }
         }
     }
 

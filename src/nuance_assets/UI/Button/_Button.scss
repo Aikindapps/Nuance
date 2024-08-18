@@ -1,233 +1,86 @@
 @import '../../shared/styles/Colors';
 
-.button-attributes-primary-1 {
+.button-attributes-base {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 32px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: 0.1s ease-in-out all;
+  border: none;
+}
+
+.button-attributes-base:hover {
+  border-color: 1px solid $button-border-hover;
+}
+
+/* .button-attributes-base:active {
+  background-color: $active-background-color;
+} */
+
+.button-attributes-base:disabled,
+.button-attributes-base:disabled:hover {
   color: $primary-background-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $button-border-hover;
-  }
-
-  &:active {
-    background-color: $active-background-color;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
+  background-color: $primary-background-color;
+  cursor: default;
 }
 
-//primary 2 is primary 1 with a gray disabled state
-.button-attributes-primary-2 {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
+.button-attributes-primary {
   color: $primary-background-color;
-  border: none;
-  font-weight: 500;
   background-color: $primary-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $button-border-hover;
-  }
-
-  &:active {
-    background-color: $active-background-color;
-  }
-
-  &:disabled {
-    background-color: $medium-border-color;
-    color: $disabled-button-text;
-    cursor: not-allowed;
-
-    &:hover {
-      background-color: $medium-border-color;
-      color: $disabled-button-text;
-      cursor: not-allowed;
-    }
-  }
 }
 
-//primary-2 dark
-.button-attributes-primary-2-dark {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $dark-primary-text-color;
-  border: none;
-  font-weight: 500;
-  background-color: $dark-button-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $dark-button-hover-color;
-  }
-
-  &:active {
-    background-color: $dark-button-active-color;
-  }
-
-  &:disabled {
-    background-color: $medium-border-color;
-    color: $disabled-button-text;
-    cursor: not-allowed;
-
-    &:hover {
-      background-color: $medium-border-color;
-      color: $disabled-button-text;
-      cursor: not-allowed;
-    }
-  }
+.button-attributes-primary:hover {
+  background-color: $button-border-hover;
 }
 
-.button-attributes-comment-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $primary-background-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $primary-background-color;
-    color: $primary-color;
-    border: 1px solid $primary-color;
-    cursor: pointer;
-  }
-
-  &:active {
-    //make 10% lighter
-    background-color: $primary-color;
-    color: $primary-background-color;
-  }
-
-  &:disabled {
-
-    cursor: default;
-    color: $primary-background-color;
-    background-color: $primary-color;
-    border: 1px solid $primary-color;
-
-    &:hover {
-      background-color: $primary-background-color;
-      color: $primary-color;
-      border: 1px solid $primary-color;
-
-      cursor: not-allowed;
-    }
-  }
+.button-attributes-primary-dark:hover {
+  background-color: $dark-button-hover-color;
+  border: 1px solid $primary-color;
 }
 
-.button-attributes-comment-button-dark {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $dark-primary-text-color;
-  border: 1px solid $dark-button-color;
-  font-weight: 500;
-  background-color: $dark-button-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $dark-primary-background-color;
-    color: $dark-primary-text-color;
-    border: 1px solid $dark-button-color;
-  }
-
-  &:active {
-    //make 10% lighter
-    background-color: $dark-primary-background-color;
-    color: $dark-primary-text-color;
-  }
-
-  &:disabled {
-
-    cursor: default;
-    color: $dark-primary-text-color;
-    background-color: $dark-button-color;
-    border: 1px solid $dark-button-color;
-
-    &:hover {
-      background-color: $dark-primary-background-color;
-      color: $dark-primary-text-color;
-      border: 1px solid $dark-button-color;
-
-      cursor: not-allowed;
-    }
-  }
+.button-attributes-primary:active {
+  background-color: $active-background-color;
 }
 
+.button-attributes-primary-dark:active {
+  background-color: $dark-button-active-color;
+}
 
-.button-attributes-primary-1-dark {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $dark-primary-text-color;
-  border: none;
-  font-weight: 500;
+.button-attributes-primary:disabled,
+.button-attributes-primary:disabled:hover,
+.button-attributes-primary-dark:disabled,
+.button-attributes-primary-dark:disabled:hover,
+.button-attributes-secondary:disabled,
+.button-attributes-secondary:disabled:hover {
+  background-color: $medium-border-color;
+  color: $disabled-button-text;
+  cursor: not-allowed;
+}
+
+.button-attributes-primary-dark {
+  color: $primary-text-color;
   background-color: $second-accent-color;
+}
+
+.button-attributes-secondary {
+  color: $primary-color;
+  background-color: $primary-background-color;
+  border: 1px solid $medium-border-color;
+}
+
+.button-attributes-secondary:hover {
+  border: 1px solid $primary-color;
+}
+
+.button-attributes-secondary:active {
+  background-color: $primary-background-color;
+  color: $primary-color;
+  border: 1px solid $primary-color;
   cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $button-border-hover;
-  }
-
-  &:active {
-    background-color: $active-background-color;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
 }
 
 .button-attributes-email-opt-in {
@@ -253,108 +106,11 @@
   }
 }
 
-
-
-.button-attributes-secondary-1 {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $primary-background-color;
-  border: 1px solid $medium-border-color;
-  font-weight: 500;
-  color: $primary-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  margin: 0 20px;
-  transition: 0.1s ease-in-out all;
-  &:hover {
-    border: 1px solid $button-border-hover;
-  }
-
-  &:active {
-    border: 1px solid $button-border-hover;
-  }
-}
-
-.button-attributes-primary-3 {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $primary-background-color;
-  border: none;
-  font-weight: 500;
-  background-color: $accent-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $button-hover-background;
-  }
-
-  &:active {
-    background-color: $accent-color;
-  }
-}
-
-.button-attributes-secondary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  // width: 152px;
-  color: $primary-color;
-  border: 1px solid $medium-border-color;
-  font-weight: 500;
-  background-color: $primary-background-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-
-  &:hover {
-    border: 1px solid;
-    border-color: inherit;
-  }
-
-  &:active {
-    border: 1px solid $primary-color;
-  }
-}
-
-.button-attributes-secondary-NFT {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  // width: 152px;
-  color: $primary-color;
-  border: 1px solid $medium-border-color;
-  font-weight: 500;
-  background-color: $primary-background-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    border: 1px solid;
-    border-color: inherit;
-  }
-
-  &:active {
-    border: 1px solid $primary-color;
-  }
-}
-
 .plus-sign {
   margin: 0 15px 0 -15px;
 }
 
-button:disabled {
+/* button:disabled {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
@@ -364,90 +120,13 @@ button[disabled]:hover {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
-}
+} */
 
-.button-attributes-withdraw {
+.button-attributes-edit-article { // secondary
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 36px;
-  color: $primary-background-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-color;
-  border: 1px solid $primary-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 240px;
-  transition: 0.1s ease-in-out all;
-
-
-  &:hover {
-    background-color: $button-border-hover;
-  }
-
-  &:active {
-    background-color: $active-background-color;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-.button-attributes-withdraw-dark {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 36px;
-  color: $primary-color;
-  border: 1px solid $dark-button-color;
-  font-weight: 500;
-  background-color: $dark-button-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 240px;
-  transition: 0.1s ease-in-out all;
-
-
-  &:hover {
-    background-color: $dark-button-hover-color;
-  }
-
-  &:active {
-    background-color: $dark-button-active-color;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-
-
-.button-attributes-deposit {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 36px;
+  height: 36px; //
   color: $primary-color;
   border: none;
   font-weight: 500;
@@ -456,16 +135,15 @@ button[disabled]:hover {
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
-  width: 240px;
+  width: 240px; //
   transition: 0.1s ease-in-out all;
-
 
   &:hover {
     border: 1px solid $primary-color;
   }
 
   &:active {
-    border: 1px solid $accent-color;
+    border: 1px solid $accent-color; //
   }
 
   &:disabled {
@@ -481,99 +159,21 @@ button[disabled]:hover {
   }
 }
 
-.button-attributes-cancel {
+.button-attributes-edit-article-dark { // primary-dark
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 36px;
-  color: $primary-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-background-color;
-  border: 1px solid #b2b2b2;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 240px;
-  transition: 0.1s ease-in-out all;
-
-
-  &:hover {
-    border: 1px solid $primary-color;
-  }
-
-  &:active {
-    border: 1px solid $accent-color;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-
-.button-attributes-edit-article {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 36px;
-  color: $primary-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-background-color;
-  border: 1px solid #b2b2b2;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 240px;
-  transition: 0.1s ease-in-out all;
-
-
-  &:hover {
-    border: 1px solid $primary-color;
-  }
-
-  &:active {
-    border: 1px solid $accent-color;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-.button-attributes-edit-article-dark {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 36px;
+  height: 36px; //
   color: $primary-color;
   border: none;
   font-weight: 500;
   background-color: $second-accent-color;
-  border: 1px solid $second-accent-color;
+  border: 1px solid $second-accent-color; //
   cursor: pointer;
   border-radius: 5px;
   font-size: 14px;
-  width: 240px;
+  width: 240px; //
   transition: 0.1s ease-in-out all;
-
 
   &:hover {
     border: 1px solid $primary-color;
@@ -596,22 +196,21 @@ button[disabled]:hover {
   }
 }
 
-
 .button-attributes-load-more {
   background-color: #f0f0f0;
   color: #999;
   border-radius: 5px;
-  margin-top: 16px; 
+  margin-top: 16px;
   padding: 10px 0;
   font-weight: 700;
   border: none;
   cursor: pointer;
   width: 100%;
-  text-align: center; 
+  text-align: center;
 
-  &:hover{
-  border: none;
-  background-color: darken(#f0f0f0, 10%);
+  &:hover {
+    border: none;
+    background-color: darken(#f0f0f0, 10%);
   }
 
   &:disabled {
@@ -623,12 +222,12 @@ button[disabled]:hover {
     color: #999;
     cursor: default;
     border: none;
-   &:hover {
-    background-color: #f0f0f0;
-    color: #999;
-    cursor: default;
-    border: none;
-   }
+    &:hover {
+      background-color: #f0f0f0;
+      color: #999;
+      cursor: default;
+      border: none;
+    }
   }
 }
 
@@ -664,7 +263,6 @@ button[disabled]:hover {
       cursor: default;
     }
   }
-  
 }
 
 .button-attributes-primary-blue-dark {
@@ -696,5 +294,4 @@ button[disabled]:hover {
       cursor: default;
     }
   }
-  
 }

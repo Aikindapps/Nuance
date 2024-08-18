@@ -66,7 +66,6 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                     onClick={handleUnsubscribe}
                     disabled={loading}
                     icon={loading ? images.loaders.BUTTON_SPINNER : ''}
-                    primaryColor={props.primaryColor}
                 >
                     Unsubscribe
                 </Button>
@@ -81,7 +80,6 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                     onClick={handleSubscribe}
                     disabled={loading}
                     icon={loading ? images.loaders.BUTTON_SPINNER : ''}
-                    primaryColor={props.primaryColor}
                 >
                     {props.isPublication ? 'Subscribe to this Publication' : 'Subscribe'}
                 </Button>

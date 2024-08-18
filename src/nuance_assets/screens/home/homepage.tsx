@@ -652,7 +652,7 @@ const HomePage = () => {
                 <div className='title'>Login with:</div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -671,7 +671,7 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -713,7 +713,7 @@ const HomePage = () => {
               <div className='title'>Login with:</div>
               <div className='login-option-wrapper'>
                 <Button
-                  styleType='primary-1'
+                  styleType='primary'
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
@@ -732,7 +732,7 @@ const HomePage = () => {
               </div>
               <div className='login-option-wrapper'>
                 <Button
-                  styleType='primary-1'
+                  styleType='primary'
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
@@ -843,7 +843,7 @@ const HomePage = () => {
                       }
                     : { width: '224px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   login('NFID');
                 }}
@@ -862,7 +862,7 @@ const HomePage = () => {
                       }
                     : { width: '224px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   login('ii');
                 }}
@@ -884,7 +884,7 @@ const HomePage = () => {
                       }
                     : { width: '185px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -935,7 +935,7 @@ const HomePage = () => {
                       }
                     : { width: '224px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   login('NFID');
                 }}
@@ -954,7 +954,7 @@ const HomePage = () => {
                       }
                     : { width: '224px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   login('ii');
                 }}
@@ -976,7 +976,7 @@ const HomePage = () => {
                       }
                     : { width: '185px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1041,7 +1041,7 @@ const HomePage = () => {
                       }
                     : { width: '224px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   login('NFID');
                 }}
@@ -1060,7 +1060,7 @@ const HomePage = () => {
                       }
                     : { width: '224px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   login('ii');
                 }}
@@ -1082,7 +1082,7 @@ const HomePage = () => {
                       }
                     : { width: '185px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1178,7 +1178,7 @@ const HomePage = () => {
                         }
                       : { width: '224px' }
                   }
-                  styleType='primary-1'
+                  styleType='primary'
                   onClick={() => {
                     login('NFID');
                   }}
@@ -1197,7 +1197,7 @@ const HomePage = () => {
                         }
                       : { width: '224px' }
                   }
-                  styleType='primary-1'
+                  styleType='primary'
                   onClick={() => {
                     login('ii');
                   }}
@@ -1220,7 +1220,7 @@ const HomePage = () => {
                       }
                     : { width: '185px' }
                 }
-                styleType='primary-1'
+                styleType='primary'
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1366,7 +1366,7 @@ const HomePage = () => {
               <div className='login-options'>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={
                       darkTheme
@@ -1395,7 +1395,7 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={
                       darkTheme
@@ -1616,7 +1616,7 @@ const HomePage = () => {
               >
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={
                       darkTheme
@@ -1645,7 +1645,7 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={
                       darkTheme
@@ -1875,7 +1875,6 @@ const HomePage = () => {
                     loadMoreHandler();
                   }}
                   icon={loadMoreLoading ? images.loaders.BUTTON_SPINNER : ''}
-                  dark={darkTheme}
                 >
                   <span>Load More</span>
                 </Button>

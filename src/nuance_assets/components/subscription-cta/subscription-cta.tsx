@@ -25,7 +25,7 @@ const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ onOpen }) => {
                 <img src={icons.SUBSCRIPTION_STAR_ICON} alt="Star Icon" className="star-icon-cta" />
                 <p>Subscribe to this publication and get unlimited access to all <a href='/' >membership content</a> for a periodical fee!</p>
                 <Button
-                    styleType='primary-1'
+                    styleType='primary'
                     type='button'
                     style={
                         darkTheme

@@ -74,7 +74,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
       <div className='logged-out-sidebar-buttons'>
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary-1'
+            styleType='primary'
             type='button'
             style={
               darkTheme
@@ -89,7 +89,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
         </div>
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary-1'
+            styleType='primary'
             type='button'
             style={
               darkTheme
@@ -104,7 +104,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
         </div>
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary-1'
+            styleType='primary'
             type='button'
             style={
               darkTheme
@@ -120,7 +120,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
 
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary-1'
+            styleType='primary'
             type='button'
             style={
               darkTheme

@@ -357,7 +357,7 @@ const EditProfile = () => {
         <Button
           style={{ width: '96px', margin: '0 16px 0 0' }}
           type='button'
-          styleType='secondary-1'
+          styleType='secondary'
           onClick={() => navigate('/my-profile')}
         >
           Cancel
@@ -365,7 +365,7 @@ const EditProfile = () => {
         <Button
           onClick={onSave}
           type='button'
-          styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+          styleType={darkTheme ? 'primary-dark' : 'primary'}
           style={{ width: '96px' }}
         >
           Save

@@ -872,14 +872,14 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    className='create-edit-article-edit-article-button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Save as Draft
                   </Button>
@@ -895,7 +895,6 @@ const CreateEditArticle = () => {
                       await onSave(false);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Publish
                   </Button>
@@ -953,14 +952,14 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    className='create-edit-article-edit-article-button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Save as Draft
                   </Button>
@@ -976,7 +975,6 @@ const CreateEditArticle = () => {
                       await onSave(false);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Publish
                   </Button>
@@ -1010,7 +1008,6 @@ const CreateEditArticle = () => {
                       );
                     }
                   }}
-                  dark={darkTheme}
                 >
                   Submit to publication
                 </Button>
@@ -1024,14 +1021,14 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                    className='create-edit-article-edit-article-button'
+                    styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
                     style={{ width: '100%', marginTop: '20px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Save as Draft
                   </Button>
@@ -1047,7 +1044,6 @@ const CreateEditArticle = () => {
                       await onSave(false);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Publish
                   </Button>
@@ -1185,7 +1181,6 @@ const CreateEditArticle = () => {
                       await onSave(true);
                       setLoading(false);
                     }}
-                    dark={darkTheme}
                   >
                     Unpublish
                   </Button>
@@ -1214,7 +1209,6 @@ const CreateEditArticle = () => {
                   await onSave(true);
                   setLoading(false);
                 }}
-                dark={darkTheme}
               >
                 Unpublish
               </Button>
@@ -1250,7 +1244,6 @@ const CreateEditArticle = () => {
                   );
                 }
               }}
-              dark={darkTheme}
             >
               Submit to publication
             </Button>
@@ -1264,14 +1257,14 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
+                className='create-edit-article-edit-article-button'
+                styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
                 style={{ width: '100%', marginTop: '20px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(true);
                   setLoading(false);
                 }}
-                dark={darkTheme}
               >
                 Save as Draft
               </Button>
@@ -1287,7 +1280,6 @@ const CreateEditArticle = () => {
                   await onSave(false);
                   setLoading(false);
                 }}
-                dark={darkTheme}
               >
                 Publish
               </Button>
@@ -1341,14 +1333,14 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                style={{ width: '100%', marginTop: '20px' }}
+                //className='create-edit-article-edit-article-button'
+                styleType={darkTheme ? 'primary-dark' : 'secondary'}
+                style={{ width: '100%', marginTop: '20px', marginRight: '0px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(true);
                   setLoading(false);
                 }}
-                dark={darkTheme}
               >
                 Save as Draft
               </Button>
@@ -1364,7 +1356,6 @@ const CreateEditArticle = () => {
                   await onSave(false);
                   setLoading(false);
                 }}
-                dark={darkTheme}
               >
                 Publish
               </Button>
