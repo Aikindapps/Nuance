@@ -23,6 +23,7 @@ import {
   NotificationContent,
 } from '../services/actorService';
 import { removeDuplicatesFromArray } from '../shared/utils';
+import { NavigateFunction } from 'react-router-dom';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -247,7 +248,11 @@ export interface UserStore {
   ) => Promise<UserListItem[]>;
   getPrincipalByHandle: (handle: string) => Promise<string | undefined>;
   createEmailOptInAddress: (emailAddress: string) => Promise<void>;
-  getUserNotifications: (from: number, to: number) => Promise<void>;
+  getUserNotifications: (
+    from: number,
+    to: number,
+    navigate: NavigateFunction
+  ) => Promise<void>;
   checkMyClaimNotification: () => Promise<void>;
   markNotificationsAsRead: (notificationId: string[]) => Promise<void>;
   markAllNotificationsAsRead: () => void;
@@ -706,7 +711,11 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   //notifications
-  getUserNotifications: async (from: number, to: number): Promise<void> => {
+  getUserNotifications: async (
+    from: number,
+    to: number,
+    navigate: NavigateFunction
+  ): Promise<void> => {
     try {
       let notificationsActor = await getNotificationsActor();
       let result = await notificationsActor.getUserNotifications(
@@ -775,11 +784,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       let toToast = notificationsRemovedDuplicates.filter((val) => {
         return !alreadyToastedNotificationIds.includes(val.id) && !val.read;
       });
-      console.log('toToast: ', toToast)
-      if(toToast.length > 0){
-        toastNotification(toToast, userListItems);
+      console.log('toToast: ', toToast);
+      if (toToast.length > 0) {
+        toastNotification(toToast, userListItems, navigate);
       }
-      
 
       //set the value in the userStore
       set({

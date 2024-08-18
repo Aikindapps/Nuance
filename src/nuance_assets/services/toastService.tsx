@@ -13,6 +13,8 @@ import {
 } from '../../nuance_assets/shared/utils';
 import { icons, colors } from '../shared/constants';
 import { Notification } from '../../declarations/Notifications/Notifications.did';
+import Button from '../UI/Button/Button';
+import { NavigateFunction } from 'react-router-dom';
 
 export enum ToastType {
   Plain,
@@ -100,12 +102,14 @@ export const showBlockingToast = (message: any, resolve: any) => {
 const CustomNotificationContent = ({
   notifications,
   notificationsUserListItems,
+  navigate,
 }: {
   notifications: Notification[];
   notificationsUserListItems: UserListItem[];
+  navigate: NavigateFunction;
 }) => {
   const darkTheme = useTheme();
-  const getHandleFromPrincipal = (principal: string) => {
+  const getUserListItemFromPrincipal = (principal: string) => {
     let listItem = notificationsUserListItems.find((userListItem) => {
       return userListItem.principal === principal;
     });
@@ -122,6 +126,22 @@ const CustomNotificationContent = ({
         <span>
           You are allowed to request new Free NUA refill up to a total of 50
           Free NUA in your wallet!
+          <Button
+            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
+            onClick={() => {
+              navigate('/my-profile/wallet');
+            }}
+            loading={false}
+            dark={darkTheme}
+            style={{
+              display: 'flex',
+              flexDirection: 'row-reverse',
+              marginTop: '10px',
+              float: 'right',
+            }}
+          >
+            Request Free NUA
+          </Button>
         </span>
       );
     } else if ('TipReceived' in notificationContent) {
@@ -129,53 +149,100 @@ const CustomNotificationContent = ({
       //post related fields
       let postOwnerHandle =
         content.publicationPrincipalId.length === 0
-          ? getHandleFromPrincipal(notification.notificationReceiverPrincipalId)
-              ?.handle
-          : getHandleFromPrincipal(content.publicationPrincipalId[0])?.handle;
+          ? getUserListItemFromPrincipal(
+              notification.notificationReceiverPrincipalId
+            )?.handle
+          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+              ?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
       //tipper related fields
       let tipSenderPrincipal = content.tipSenderPrincipal;
-      let tipSenderHandle = getHandleFromPrincipal(tipSenderPrincipal);
+      let tipSenderHandle =
+        getUserListItemFromPrincipal(tipSenderPrincipal)?.handle;
 
-      <span>
-        Excellent! <strong>@{tipSenderHandle}</strong> has <b>applauded</b> +
-        {content.numberOfApplauds} on {content.tippedTokenSymbol} for the
-        article{' '}
-        <strong>
-          "{content.postTitle.slice(0, 20)}
-          {content.postTitle.length > 20 && '...'}"
-        </strong>
-      </span>;
+      return (
+        <span>
+          Excellent!{' '}
+          <span
+            onClick={() => {
+              navigate('/user/' + tipSenderHandle);
+            }}
+            className='link'
+          >
+            {tipSenderHandle}
+          </span>{' '}
+          <span className='bold'>applauded</span> +{content.numberOfApplauds}{' '}
+          using {content.tippedTokenSymbol} on "
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
+            {content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}
+          </span>
+          "
+        </span>
+      );
     } else if ('NewArticleByFollowedWriter' in notificationContent) {
       let content = notificationContent.NewArticleByFollowedWriter;
       let postWriterHandle =
-        getHandleFromPrincipal(content.postWriterPrincipal)?.handle ||
+        getUserListItemFromPrincipal(content.postWriterPrincipal)?.handle ||
         content.postWriterPrincipal;
+      let postUrl = `/${postWriterHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <strong>@{postWriterHandle}</strong> posted a <b>new article!</b>
+          <span
+            onClick={() => {
+              navigate('/user/' + postWriterHandle);
+            }}
+            className='link'
+          >
+            {postWriterHandle}
+          </span>{' '}
+          posted a <span className='bold'>new article: </span>"
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
+            {content.postTitle}
+          </span>
+          "
         </span>
       );
     } else if ('AuthorLosesSubscriber' in notificationContent) {
       let content = notificationContent.AuthorLosesSubscriber;
       let subscriberPrincipal = content.subscriberPrincipalId;
       let subscriberHandle =
-        getHandleFromPrincipal(subscriberPrincipal)?.handle;
+        getUserListItemFromPrincipal(subscriberPrincipal)?.handle;
       let subscriptionTimeInterval = convertSubscriptionTimeInterval(
         content.subscriptionTimeInterval
       );
       return (
         <span>
-          <strong>@{subscriberHandle}</strong> has cancelled the{' '}
-          {subscriptionTimeInterval} subscription to your account.
+          <span
+            onClick={() => {
+              navigate('/user/' + subscriberHandle);
+            }}
+            className='link'
+          >
+            {subscriberHandle}
+          </span>{' '}
+          has cancelled the {subscriptionTimeInterval} subscription to your
+          account.
         </span>
       );
     } else if ('YouSubscribedToAuthor' in notificationContent) {
       let content = notificationContent.YouSubscribedToAuthor;
       let subscribedAccountPrincipal = content.subscribedWriterPrincipalId;
-      let subscribedAccountHandle = getHandleFromPrincipal(
+      let subscribedAccountHandle = getUserListItemFromPrincipal(
         subscribedAccountPrincipal
       )?.handle;
       let subscriptionTimeInterval = convertSubscriptionTimeInterval(
@@ -183,38 +250,69 @@ const CustomNotificationContent = ({
       );
       return (
         <span>
-          You subscribed to the{' '}
+          You <span className='bold'>subscribed</span> to the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
-          {<strong>@{subscribedAccountHandle}</strong>} (
-          {subscriptionTimeInterval})
+          {
+            <span
+              onClick={() => {
+                if (content.isPublication) {
+                  navigate('/publication/' + subscribedAccountHandle);
+                } else {
+                  navigate('/user/' + subscribedAccountHandle);
+                }
+              }}
+              className='link'
+            >
+              {subscribedAccountHandle}
+            </span>
+          }{' '}
+          ({subscriptionTimeInterval})
         </span>
       );
     } else if ('NewCommentOnMyArticle' in notificationContent) {
       let content = notificationContent.NewCommentOnMyArticle;
-      let postOwnerHandle = getHandleFromPrincipal(
+      let postOwnerHandle = getUserListItemFromPrincipal(
         notification.notificationReceiverPrincipalId
       )?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
-      }/${textToUrlSegment(content.postTitle)}`;
+      }/${textToUrlSegment(content.postTitle)}?comment=${content.commentId}`;
       let isReply = content.isReply;
       let commenterPrincipal = content.commenterPrincipal;
-      let commenterHandle = getHandleFromPrincipal(commenterPrincipal)?.handle;
+      let commenterHandle =
+        getUserListItemFromPrincipal(commenterPrincipal)?.handle;
       let commentContent = content.commentContent;
       return (
         <span>
-          <strong>@{commenterHandle}</strong> has{' '}
-          {isReply ? 'added a reply ' : 'commented'} on your article:{' '}
-          <strong>
-            "{content.postTitle.slice(0, 20)}
-            {content.postTitle.length > 20 && '...'}"
-          </strong>
+          <span
+            onClick={() => {
+              navigate('/user/' + commenterHandle);
+            }}
+            className='link'
+          >
+            {commenterHandle}
+          </span>{' '}
+          has{' '}
+          <span className='bold'>
+            {isReply ? 'added a reply ' : 'commented'}
+          </span>{' '}
+          on your article: "
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
+            {content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}
+          </span>
+          "
         </span>
       );
     } else if ('YouUnsubscribedFromAuthor' in notificationContent) {
       let content = notificationContent.YouUnsubscribedFromAuthor;
       let subscribedAccountPrincipal = content.subscribedWriterPrincipalId;
-      let subscribedAccountHandle = getHandleFromPrincipal(
+      let subscribedAccountHandle = getUserListItemFromPrincipal(
         subscribedAccountPrincipal
       )?.handle;
       let subscriptionTimeInterval = convertSubscriptionTimeInterval(
@@ -222,98 +320,184 @@ const CustomNotificationContent = ({
       );
       return (
         <span>
-          You unsubscribed from the{' '}
+          You <span className='bold'>unsubscribed</span> from the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
-          {<strong>@{subscribedAccountHandle}</strong>} (
-          {subscriptionTimeInterval})
+          {
+            <span
+              onClick={() => {
+                if (content.isPublication) {
+                  navigate('/publication/' + subscribedAccountHandle);
+                } else {
+                  navigate('/user/' + subscribedAccountHandle);
+                }
+              }}
+              className='link'
+            >
+              {subscribedAccountHandle}
+            </span>
+          }{' '}
+          ({subscriptionTimeInterval})
         </span>
       );
     } else if ('NewFollower' in notificationContent) {
       let content = notificationContent.NewFollower;
       let followerPrincipal = content.followerPrincipalId;
-      let followerHandle = getHandleFromPrincipal(followerPrincipal)?.handle;
+      let followerHandle =
+        getUserListItemFromPrincipal(followerPrincipal)?.handle;
       return (
         <span>
-          <strong>@{followerHandle}</strong> has followed you!
+          <span
+            onClick={() => {
+              navigate('/user/' + followerHandle);
+            }}
+            className=''
+          >
+            {followerHandle}
+          </span>{' '}
+          is now <span className='bold'>following</span> you. Well done!
         </span>
       );
     } else if ('ReaderExpiredSubscription' in notificationContent) {
       let content = notificationContent.ReaderExpiredSubscription;
       let subscribedPrincipalId = content.subscribedWriterPrincipalId;
-      let subscribedHandle = getHandleFromPrincipal(
+      let subscribedHandle = getUserListItemFromPrincipal(
         subscribedPrincipalId
       )?.handle;
       return (
         <span>
           Your{' '}
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)}{' '}
-          subscription to the account <strong>@{subscribedHandle}</strong> has
-          expired!
+          subscription to the account{' '}
+          <span
+            onClick={() => {
+              if (content.isPublication) {
+                navigate('/publication/' + subscribedHandle);
+              } else {
+                navigate('/user/' + subscribedHandle);
+              }
+            }}
+            className='link'
+          >
+            {subscribedHandle}
+          </span>{' '}
+          has <span className='bold'>expired</span>!
         </span>
       );
     } else if ('ReplyToMyComment' in notificationContent) {
       let content = notificationContent.ReplyToMyComment;
       let replierPrincipal = content.replyCommenterPrincipal;
-      let replierHandle = getHandleFromPrincipal(replierPrincipal)?.handle;
-      let postOwnerHandle = getHandleFromPrincipal(
+      let replierHandle =
+        getUserListItemFromPrincipal(replierPrincipal)?.handle;
+      let postOwnerHandle = getUserListItemFromPrincipal(
         content.postWriterPrincipal
       )?.handle;
+      let commentUrl = `/${postOwnerHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}?comment=${
+        content.replyCommentId
+      }`;
       return (
         <span>
-          <strong>@{replierHandle}</strong> has replied to your{' '}
-          <strong>comment</strong>!
+          <span className='link'>{replierHandle}</span> has{' '}
+          <span className='bold'>replied</span> to your comment:
+          <span
+            onClick={() => {
+              navigate(commentUrl);
+            }}
+            className='link'
+          >
+            {content.myCommentContent.slice(0, 20)}
+          </span>
+          !
         </span>
       );
     } else if ('PremiumArticleSold' in notificationContent) {
       let content = notificationContent.PremiumArticleSold;
       let purchaserPrincipal = content.purchaserPrincipal;
-      let purchaserHandle = getHandleFromPrincipal(purchaserPrincipal)?.handle;
+      let purchaserHandle =
+        getUserListItemFromPrincipal(purchaserPrincipal)?.handle;
       let postOwnerHandle =
         content.publicationPrincipalId.length === 0
-          ? getHandleFromPrincipal(notification.notificationReceiverPrincipalId)
-              ?.handle
-          : getHandleFromPrincipal(content.publicationPrincipalId[0])?.handle;
+          ? getUserListItemFromPrincipal(
+              notification.notificationReceiverPrincipalId
+            )?.handle
+          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+              ?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <strong>@{purchaserHandle}</strong> has purchased your premium
-          article:{' '}
-          <strong>
+          K-ching!
+          <span
+            onClick={() => {
+              navigate('/user/' + purchaserHandle);
+            }}
+            className='link'
+          >
+            {purchaserHandle}
+          </span>{' '}
+          bought an <span className='bold'>NFT access</span> key for your
+          article: "
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
             "{content.postTitle.slice(0, 20)}
             {content.postTitle.length > 20 && '...'}"
-          </strong>{' '}
-          for {(Number(content.amountOfTokens) / Math.pow(10, 8)).toFixed(4)}{' '}
-          {content.purchasedTokenSymbol}s
+          </span>
+          "
         </span>
       );
     } else if ('NewArticleByFollowedTag' in notificationContent) {
       let content = notificationContent.NewArticleByFollowedTag;
-      let postWriterPrincipal = content.postWriterPrincipal;
-      let postOwnerHandle = getHandleFromPrincipal(postWriterPrincipal)?.handle;
-      let postUrl = `/${postOwnerHandle}/${content.postId}-${
+      let postWriterHandle =
+        getUserListItemFromPrincipal(content.postWriterPrincipal)?.handle ||
+        content.postWriterPrincipal;
+      let postUrl = `/${postWriterHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <strong>@{postOwnerHandle}</strong> has posted a new article in the
-          topic ({content.tagName}) you follow:{' '}
-          <strong>
-            "{content.postTitle.slice(0, 20)}
-            {content.postTitle.length > 20 && '...'}"
-          </strong>
+          <span
+            onClick={() => {
+              navigate('/user/' + postWriterHandle);
+            }}
+            className='link'
+          >
+            {postWriterHandle}
+          </span>{' '}
+          posted a <span className='bold'>new article: </span>"
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
+            {content.postTitle}
+          </span>
+          "
         </span>
       );
     } else if ('AuthorGainsNewSubscriber' in notificationContent) {
       let content = notificationContent.AuthorGainsNewSubscriber;
       let subscriberPrincipal = content.subscriberPrincipalId;
       let subscriberHandle =
-        getHandleFromPrincipal(subscriberPrincipal)?.handle;
+        getUserListItemFromPrincipal(subscriberPrincipal)?.handle;
 
       return (
         <span>
-          <strong>@{subscriberHandle}</strong> has subscribed you! (
+          <span
+            onClick={() => {
+              navigate('/user/' + subscriberHandle);
+            }}
+            className='link'
+          >
+            {subscriberHandle}
+          </span>{' '}
+          has <span className='bold'>subscribed</span> to you! (
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)})
         </span>
       );
@@ -355,7 +539,13 @@ const CustomNotificationContent = ({
                     {timeAgo(new Date(parseInt(notification.timestamp)))}
                   </span>
                 </div>
-                <span className={`notification-action`}>
+                <span
+                  className={
+                    darkTheme
+                      ? 'notification-action-dark'
+                      : `notification-action`
+                  }
+                >
                   {formatNotificationMessage(notification)}
                 </span>
               </div>
@@ -438,7 +628,8 @@ export const toast = (message: string, toastType: ToastType): void => {
 
 export const toastNotification = (
   notifications: Notification[],
-  userListItems: UserListItem[]
+  userListItems: UserListItem[],
+  navigate: NavigateFunction
 ): void => {
   // Use the custom component for Notification type because the styling is complicated
   _toast(
@@ -446,6 +637,7 @@ export const toastNotification = (
       <CustomNotificationContent
         notifications={notifications}
         notificationsUserListItems={userListItems}
+        navigate={navigate}
       />
     ),
     {

@@ -109,7 +109,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
   const firstLoad = async () => {
     setIsLoading(true);
     const [_, userNotificationSettings] = await Promise.all([
-      getUserNotifications(0, 20),
+      getUserNotifications(0, 20, navigate),
       getUserNotificationSettings(),
     ]);
     if (userNotificationSettings) {
@@ -122,7 +122,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     firstLoad();
   }, []);
 
-  const getHandleFromPrincipal = (principal: string) => {
+  const getUserListItemFromPrincipal = (principal: string) => {
     let listItem = notificationsUserListItems.find((userListItem) => {
       return userListItem.principal === principal;
     });
@@ -163,68 +163,89 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       let postOwnerHandle =
         content.publicationPrincipalId.length === 0
           ? user?.handle
-          : getHandleFromPrincipal(content.publicationPrincipalId[0])?.handle;
+          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+              ?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
       //tipper related fields
       let tipSenderPrincipal = content.tipSenderPrincipal;
-      let tipSenderHandle = getHandleFromPrincipal(tipSenderPrincipal);
+      let tipSenderHandle =
+        getUserListItemFromPrincipal(tipSenderPrincipal)?.handle;
 
-      <span>
-        Excellent!{' '}
-        <strong
-          onClick={() => {
-            navigate('/user/' + tipSenderHandle);
-          }}
-        >
-          @{tipSenderHandle}
-        </strong>{' '}
-        has <b>applauded</b> +{content.numberOfApplauds} on{' '}
-        {content.tippedTokenSymbol} for the article{' '}
-        <strong
-          onClick={() => {
-            navigate(postUrl);
-          }}
-        >
-          "{content.postTitle.slice(0, 20)}
-          {content.postTitle.length > 20 && '...'}"
-        </strong>
-      </span>;
+      return (
+        <span>
+          Excellent!{' '}
+          <span
+            onClick={() => {
+              navigate('/user/' + tipSenderHandle);
+            }}
+            className='link'
+          >
+            {tipSenderHandle}
+          </span>{' '}
+          <span className='bold'>applauded</span> +{content.numberOfApplauds}{' '}
+          using {content.tippedTokenSymbol} on "
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
+            {content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}
+          </span>
+          "
+        </span>
+      );
     } else if ('NewArticleByFollowedWriter' in notificationContent) {
       let content = notificationContent.NewArticleByFollowedWriter;
       let postWriterHandle =
-        getHandleFromPrincipal(content.postWriterPrincipal)?.handle ||
+        getUserListItemFromPrincipal(content.postWriterPrincipal)?.handle ||
         content.postWriterPrincipal;
+      let postUrl = `/${postWriterHandle}/${content.postId}-${
+        content.bucketCanisterId
+      }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <strong
+          <span
             onClick={() => {
               navigate('/user/' + postWriterHandle);
             }}
+            className='link'
           >
-            @{postWriterHandle}
-          </strong>{' '}
-          posted a <b>new article!</b>
+            {postWriterHandle}
+          </span>{' '}
+          posted a <span className='bold'>new article: </span>"
+          <span
+            onClick={() => {
+              navigate(postUrl);
+            }}
+            className='link'
+          >
+            {content.postTitle}
+          </span>
+          "
         </span>
       );
     } else if ('AuthorLosesSubscriber' in notificationContent) {
       let content = notificationContent.AuthorLosesSubscriber;
       let subscriberPrincipal = content.subscriberPrincipalId;
       let subscriberHandle =
-        getHandleFromPrincipal(subscriberPrincipal)?.handle;
+        getUserListItemFromPrincipal(subscriberPrincipal)?.handle;
       let subscriptionTimeInterval = convertSubscriptionTimeInterval(
         content.subscriptionTimeInterval
       );
       return (
         <span>
-          <strong
+          <span
             onClick={() => {
               navigate('/user/' + subscriberHandle);
             }}
+            className='link'
           >
-            @{subscriberHandle}
-          </strong>{' '}
+            {subscriberHandle}
+          </span>{' '}
           has cancelled the {subscriptionTimeInterval} subscription to your
           account.
         </span>
@@ -232,7 +253,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     } else if ('YouSubscribedToAuthor' in notificationContent) {
       let content = notificationContent.YouSubscribedToAuthor;
       let subscribedAccountPrincipal = content.subscribedWriterPrincipalId;
-      let subscribedAccountHandle = getHandleFromPrincipal(
+      let subscribedAccountHandle = getUserListItemFromPrincipal(
         subscribedAccountPrincipal
       )?.handle;
       let subscriptionTimeInterval = convertSubscriptionTimeInterval(
@@ -240,10 +261,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       );
       return (
         <span>
-          You subscribed to the{' '}
+          You <span className='bold'>subscribed</span> to the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
           {
-            <strong
+            <span
               onClick={() => {
                 if (content.isPublication) {
                   navigate('/publication/' + subscribedAccountHandle);
@@ -251,9 +272,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                   navigate('/user/' + subscribedAccountHandle);
                 }
               }}
+              className='link'
             >
-              @{subscribedAccountHandle}
-            </strong>
+              {subscribedAccountHandle}
+            </span>
           }{' '}
           ({subscriptionTimeInterval})
         </span>
@@ -266,32 +288,40 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       }/${textToUrlSegment(content.postTitle)}?comment=${content.commentId}`;
       let isReply = content.isReply;
       let commenterPrincipal = content.commenterPrincipal;
-      let commenterHandle = getHandleFromPrincipal(commenterPrincipal)?.handle;
+      let commenterHandle =
+        getUserListItemFromPrincipal(commenterPrincipal)?.handle;
       let commentContent = content.commentContent;
       return (
         <span>
-          <strong
+          <span
             onClick={() => {
               navigate('/user/' + commenterHandle);
             }}
+            className='link'
           >
-            @{commenterHandle}
-          </strong>{' '}
-          has {isReply ? 'added a reply ' : 'commented'} on your article:{' '}
-          <strong
+            {commenterHandle}
+          </span>{' '}
+          has{' '}
+          <span className='bold'>
+            {isReply ? 'added a reply ' : 'commented'}
+          </span>{' '}
+          on your article: "
+          <span
             onClick={() => {
               navigate(postUrl);
             }}
+            className='link'
           >
-            "{content.postTitle.slice(0, 20)}
-            {content.postTitle.length > 20 && '...'}"
-          </strong>
+            {content.postTitle.slice(0, 20)}
+            {content.postTitle.length > 20 && '...'}
+          </span>
+          "
         </span>
       );
     } else if ('YouUnsubscribedFromAuthor' in notificationContent) {
       let content = notificationContent.YouUnsubscribedFromAuthor;
       let subscribedAccountPrincipal = content.subscribedWriterPrincipalId;
-      let subscribedAccountHandle = getHandleFromPrincipal(
+      let subscribedAccountHandle = getUserListItemFromPrincipal(
         subscribedAccountPrincipal
       )?.handle;
       let subscriptionTimeInterval = convertSubscriptionTimeInterval(
@@ -299,10 +329,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       );
       return (
         <span>
-          You unsubscribed from the{' '}
+          You <span className='bold'>unsubscribed</span> from the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
           {
-            <strong
+            <span
               onClick={() => {
                 if (content.isPublication) {
                   navigate('/publication/' + subscribedAccountHandle);
@@ -310,9 +340,10 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                   navigate('/user/' + subscribedAccountHandle);
                 }
               }}
+              className='link'
             >
-              @{subscribedAccountHandle}
-            </strong>
+              {subscribedAccountHandle}
+            </span>
           }{' '}
           ({subscriptionTimeInterval})
         </span>
@@ -320,23 +351,25 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     } else if ('NewFollower' in notificationContent) {
       let content = notificationContent.NewFollower;
       let followerPrincipal = content.followerPrincipalId;
-      let followerHandle = getHandleFromPrincipal(followerPrincipal)?.handle;
+      let followerHandle =
+        getUserListItemFromPrincipal(followerPrincipal)?.handle;
       return (
         <span>
-          <strong
+          <span
             onClick={() => {
               navigate('/user/' + followerHandle);
             }}
+            className=''
           >
-            @{followerHandle}
-          </strong>{' '}
-          has followed you!
+            {followerHandle}
+          </span>{' '}
+          is now <span className='bold'>following</span> you. Well done!
         </span>
       );
     } else if ('ReaderExpiredSubscription' in notificationContent) {
       let content = notificationContent.ReaderExpiredSubscription;
       let subscribedPrincipalId = content.subscribedWriterPrincipalId;
-      let subscribedHandle = getHandleFromPrincipal(
+      let subscribedHandle = getUserListItemFromPrincipal(
         subscribedPrincipalId
       )?.handle;
       return (
@@ -344,7 +377,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
           Your{' '}
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)}{' '}
           subscription to the account{' '}
-          <strong
+          <span
             onClick={() => {
               if (content.isPublication) {
                 navigate('/publication/' + subscribedHandle);
@@ -352,17 +385,19 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                 navigate('/user/' + subscribedHandle);
               }
             }}
+            className='link'
           >
-            @{subscribedHandle}
-          </strong>{' '}
-          has expired!
+            {subscribedHandle}
+          </span>{' '}
+          has <span className='bold'>expired</span>!
         </span>
       );
     } else if ('ReplyToMyComment' in notificationContent) {
       let content = notificationContent.ReplyToMyComment;
       let replierPrincipal = content.replyCommenterPrincipal;
-      let replierHandle = getHandleFromPrincipal(replierPrincipal)?.handle;
-      let postOwnerHandle = getHandleFromPrincipal(
+      let replierHandle =
+        getUserListItemFromPrincipal(replierPrincipal)?.handle;
+      let postOwnerHandle = getUserListItemFromPrincipal(
         content.postWriterPrincipal
       )?.handle;
       let commentUrl = `/${postOwnerHandle}/${content.postId}-${
@@ -372,93 +407,104 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       }`;
       return (
         <span>
-          <strong>@{replierHandle}</strong> has replied to your{' '}
-          <strong
+          <span className='link'>{replierHandle}</span> has{' '}
+          <span className='bold'>replied</span> to your comment:
+          <span
             onClick={() => {
               navigate(commentUrl);
             }}
+            className='link'
           >
-            comment
-          </strong>
+            {content.myCommentContent.slice(0, 20)}
+          </span>
           !
         </span>
       );
     } else if ('PremiumArticleSold' in notificationContent) {
       let content = notificationContent.PremiumArticleSold;
       let purchaserPrincipal = content.purchaserPrincipal;
-      let purchaserHandle = getHandleFromPrincipal(purchaserPrincipal)?.handle;
+      let purchaserHandle =
+        getUserListItemFromPrincipal(purchaserPrincipal)?.handle;
       let postOwnerHandle =
         content.publicationPrincipalId.length === 0
           ? user?.handle
-          : getHandleFromPrincipal(content.publicationPrincipalId[0])?.handle;
+          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+              ?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <strong
+          K-ching!
+          <span
             onClick={() => {
               navigate('/user/' + purchaserHandle);
             }}
+            className='link'
           >
-            @{purchaserHandle}
-          </strong>{' '}
-          has purchased your premium article:{' '}
-          <strong
+            {purchaserHandle}
+          </span>{' '}
+          bought an <span className='bold'>NFT access</span> key for your
+          article: "
+          <span
             onClick={() => {
               navigate(postUrl);
             }}
+            className='link'
           >
             "{content.postTitle.slice(0, 20)}
             {content.postTitle.length > 20 && '...'}"
-          </strong>{' '}
-          for {(Number(content.amountOfTokens) / Math.pow(10, 8)).toFixed(4)}{' '}
-          {content.purchasedTokenSymbol}s
+          </span>
+          "
         </span>
       );
     } else if ('NewArticleByFollowedTag' in notificationContent) {
       let content = notificationContent.NewArticleByFollowedTag;
-      let postWriterPrincipal = content.postWriterPrincipal;
-      let postOwnerHandle = getHandleFromPrincipal(postWriterPrincipal)?.handle;
-      let postUrl = `/${postOwnerHandle}/${content.postId}-${
+      let postWriterHandle =
+        getUserListItemFromPrincipal(content.postWriterPrincipal)?.handle ||
+        content.postWriterPrincipal;
+      let postUrl = `/${postWriterHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <strong
+          <span
             onClick={() => {
-              navigate('/user/' + postOwnerHandle);
+              navigate('/user/' + postWriterHandle);
             }}
+            className='link'
           >
-            @{postOwnerHandle}
-          </strong>{' '}
-          has posted a new article in the topic ({content.tagName}) you follow:{' '}
-          <strong
+            {postWriterHandle}
+          </span>{' '}
+          posted a <span className='bold'>new article: </span>"
+          <span
             onClick={() => {
               navigate(postUrl);
             }}
+            className='link'
           >
-            "{content.postTitle.slice(0, 20)}
-            {content.postTitle.length > 20 && '...'}"
-          </strong>
+            {content.postTitle}
+          </span>
+          "
         </span>
       );
     } else if ('AuthorGainsNewSubscriber' in notificationContent) {
       let content = notificationContent.AuthorGainsNewSubscriber;
       let subscriberPrincipal = content.subscriberPrincipalId;
       let subscriberHandle =
-        getHandleFromPrincipal(subscriberPrincipal)?.handle;
+        getUserListItemFromPrincipal(subscriberPrincipal)?.handle;
 
       return (
         <span>
-          <strong
+          <span
             onClick={() => {
               navigate('/user/' + subscriberHandle);
             }}
+            className='link'
           >
-            @{subscriberHandle}
-          </strong>{' '}
-          has subscribed you! (
+            {subscriberHandle}
+          </span>{' '}
+          has <span className='bold'>subscribed</span> to you! (
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)})
         </span>
       );
@@ -819,9 +865,11 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                       </span>
                     </div>
                     <span
-                      className={`notification-action ${
-                        notification.read ? 'read' : ''
-                      }`}
+                      className={`${
+                        darkTheme
+                          ? 'notification-action-dark'
+                          : 'notification-action'
+                      } ${notification.read ? 'read' : ''}`}
                     >
                       {formatNotificationMessage(notification)}
                     </span>
@@ -833,7 +881,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                 styleType={'load-more'}
                 onClick={async () => {
                   setIsLoadingMore(true);
-                  getUserNotifications(page * 20, (page + 1) * 20);
+                  getUserNotifications(page * 20, (page + 1) * 20, navigate);
                   setIsLoadingMore(false);
                 }}
                 loading={isLoadingMore}
