@@ -476,6 +476,10 @@ const ReadArticle = () => {
       <Helmet>
         <link rel='canonical' href={url} />
 
+        {postToRender.headerImage && (
+          <link rel="preload" as="image" href={postToRender.headerImage} />
+        )}
+
         {/* HTML Meta Tags */}
         <title>{postToRender.title}</title>
         <meta name='title' content={postToRender.title} />
