@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-// Removed DuplicatePackageCheckerPlugin for better performance
+var DuplicatePackageCheckerPlugin = require("duplicate-package-checker-webpack-plugin");
 
 function initCanisterEnv() {
   let localCanisters, prodCanisters;
@@ -19,23 +19,30 @@ function initCanisterEnv() {
     console.log('No production canister_ids.json found. Continuing with local');
   }
 
-  const network = process.env.DFX_NETWORK || (process.env.NODE_ENV === 'production' ? 'ic' : 'local');
+  const network =
+    process.env.DFX_NETWORK ||
+    (process.env.NODE_ENV === 'production' ? 'ic' : 'local');
+
   const canisterConfig = network === 'local' ? localCanisters : prodCanisters;
 
   return Object.entries(canisterConfig).reduce((prev, current) => {
     const [canisterName, canisterDetails] = current;
-    prev[canisterName.toUpperCase() + '_CANISTER_ID'] = canisterDetails[network];
+    prev[canisterName.toUpperCase() + '_CANISTER_ID'] =
+      canisterDetails[network];
     return prev;
   }, {});
 }
 const canisterEnvVariables = initCanisterEnv();
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
+
 const frontendDirectory = 'nuance_assets';
 
 module.exports = {
   target: 'web',
-  devtool: isDevelopment ? 'cheap-module-source-map' : 'source-map', // Updated devtool for better balance
+  devtool: isDevelopment
+    ? 'eval' /* eval for fastest dev build or eval-source-map for slower build */
+    : 'source-map' /* recommended choice for production builds with high quality SourceMaps. */,
   mode: isDevelopment ? 'development' : 'production',
   entry: {
     index: path.join(__dirname, 'src', frontendDirectory, 'index.tsx'),
@@ -65,6 +72,7 @@ module.exports = {
     path: path.join(__dirname, `dist`),
     publicPath: '/',
   },
+
   module: {
     rules: [
       { test: /\.(js|ts)x?$/i, loader: 'ts-loader' },
@@ -74,15 +82,15 @@ module.exports = {
           'style-loader',
           {
             loader: 'css-loader',
-            options: { sourceMap: isDevelopment }, // Enable source maps only in development
+            options: { sourceMap: true },
           },
           {
             loader: 'resolve-url-loader',
-            options: { sourceMap: isDevelopment }, // Enable source maps only in development
+            options: { sourceMap: true },
           },
           {
             loader: 'sass-loader',
-            options: { sourceMap: isDevelopment }, // Enable source maps only in development
+            options: { sourceMap: true },
           },
         ],
       },
@@ -103,8 +111,7 @@ module.exports = {
     ],
   },
   plugins: [
-    // Removed the redundant TerserPlugin instance
-    new webpack.optimize.AggressiveMergingPlugin(), // Optional: Test this to see if it improves performance
+    new webpack.optimize.AggressiveMergingPlugin(),
     new Dotenv({
       path: `./.env${isDevelopment ? '.local' : ''}`,
     }),
@@ -121,7 +128,7 @@ module.exports = {
       ],
     }),
     new webpack.EnvironmentPlugin({
-      NODE_ENV: isDevelopment ? 'development' : 'production',
+      NODE_ENV: 'development',
       ...canisterEnvVariables,
     }),
     new webpack.ProvidePlugin({
@@ -139,10 +146,9 @@ module.exports = {
         },
       },
     },
-    hot: true, // Only use hot reload
-    // Limited watching to just the frontend directory to avoid unnecessary rebuilds
+    hot: true,
     watchFiles: [path.resolve(__dirname, 'src', frontendDirectory)],
-    liveReload: false, // Disable liveReload to prevent conflicts with hot
+    liveReload: true,
     historyApiFallback: true,
   },
 };
