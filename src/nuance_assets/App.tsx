@@ -26,7 +26,8 @@ const CreateEditArticle = lazy(
 const CreateEditPublication = lazy(
   () => import('./screens/create-edit-publication/create-edit-publication')
 );
-const ReadArticle = lazy(() => import('./screens/read-article/read-article'));
+//const ReadArticle = lazy(() => import('./screens/read-article/read-article'));
+import ReadArticle from './screens/read-article/read-article';
 const ProfileSidebar = lazy(() => import('./screens/profile/profileSidebar'));
 const MyProfile = lazy(() => import('./screens/profile/my-profile/myProfile'));
 const EditProfile = lazy(() => import('./screens/profile/edit-profile/editProfile'));
