@@ -126,13 +126,22 @@ const ReadArticle = () => {
     redirectScreen: state.redirectScreen,
   }));
 
+  const PlaceholderImage = () => (
+    <img
+      src="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAAAA="
+      alt="Placeholder"
+      style={{ width: "100%", height: "auto" }}
+    />
+  );
+
+
   const defaultPost: PostType = {
     postId: "loading-post-id",
     handle: "loading-handle",
-    title: "Blogging to the people!",
+    title: "...",
     url: "",
-    subtitle: "Loading the subtitle",
-    headerImage: images.NUANCE_LOGO,
+    subtitle: "...",
+    headerImage: "",
     content: "<p>Loading content...</p>",
     isDraft: false,
     created: new Date().toISOString(),
@@ -673,15 +682,18 @@ const ReadArticle = () => {
                     : {}
                 }
               >
-                <img
-                  className='header-image'
-                  src={postToRender.headerImage || images.NUANCE_LOGO}
-                  style={{
-                    background: darkTheme
-                      ? darkOptionsAndColors.background
-                      : '',
-                  }}
-                />
+                {postToRender.headerImage != defaultPost.headerImage ? (
+                  <img
+                    className="header-image"
+                    src={postToRender.headerImage}
+                    style={{
+                      background: darkTheme ? darkOptionsAndColors.background : '',
+                    }}
+                  />
+                ) : (
+                  <PlaceholderImage />
+                )}
+
                 {postToRender.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
                     post={postToRender}
