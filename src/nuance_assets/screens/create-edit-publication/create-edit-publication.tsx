@@ -1378,19 +1378,10 @@ const CreateEditPublication = () => {
                     handleScrolls();
                     setTimeout(onSave, 800);
                   }}
-                  disabled={saveBtnIsDisabled}
+                  disabled={saveBtnIsDisabled && !validateWebsiteAndSocialLinks()}
                   type='button'
-                  styleType={darkTheme ? 'primary-dark' : 'primary'}
-                  style={
-                    validateWebsiteAndSocialLinks()
-                      ? { width: '96px' }
-                      : {
-                        width: '96px',
-                        cursor: 'not-allowed',
-                        background: 'gray',
-                        borderColor: 'gray',
-                      }
-                  }
+                  styleType={{dark: 'navy-dark', light: 'navy'}}
+                  style={{ width: '96px' }}
                 >
                   Save
                 </Button>
@@ -2150,7 +2141,7 @@ const CreateEditPublication = () => {
                 <Button
                   style={{ width: '96px', margin: '0 16px 0 0' }}
                   type='button'
-                  styleType={darkTheme ? 'secondary' : 'secondary'}
+                  styleType={{dark: 'white', light: 'white'}}
                   onClick={() => navigate('/')}
                 >
                   Cancel
@@ -2165,19 +2156,10 @@ const CreateEditPublication = () => {
                     handleScrolls();
                     setTimeout(onSave, 800);
                   }}
-                  disabled={saveBtnIsDisabled}
+                  disabled={saveBtnIsDisabled && !validateWebsiteAndSocialLinks()}
                   type='button'
-                  styleType={darkTheme ? 'primary-dark' : 'primary'}
-                  style={
-                    validateWebsiteAndSocialLinks()
-                      ? { width: '96px' }
-                      : {
-                        width: '96px',
-                        cursor: 'not-allowed',
-                        background: 'gray',
-                        borderColor: 'gray',
-                      }
-                  }
+                  styleType={{dark: 'navy-dark', light: 'navy'}}
+                  style={{ width: '96px' }}
                 >
                   Save
                 </Button>

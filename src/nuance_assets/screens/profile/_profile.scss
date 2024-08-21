@@ -471,7 +471,7 @@
           width: 240px;
 
           &:disabled {
-            border-color: gray;
+            border-color: $medium-border-color;
           }
         }
 
@@ -481,7 +481,7 @@
           width: 240px;
 
           &:disabled {
-            border-color: gray;
+            border-color: $medium-border-color;
           }
         }
       }
@@ -539,7 +539,7 @@
             }
 
             &:disabled {
-              border-color: gray;
+              border-color: $medium-border-color;
             }
           }
         }

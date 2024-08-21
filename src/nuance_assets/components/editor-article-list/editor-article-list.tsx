@@ -110,10 +110,10 @@ const EditorArticleList: React.FC<EditorArticleListProps> = ({
       {articlesCount > displayingPosts.length ? (
         <div className='load-more-container'>
           <Button
-            styleType='secondary'
+            styleType={{dark: 'white', light: 'white'}}
             style={{ width: '152px' }}
             onClick={() => handleLoadMore()}
-            icon={loadingMore ? images.loaders.BUTTON_SPINNER : ''}
+            loading={loadingMore}
           >
             <span>Load More</span>
           </Button>

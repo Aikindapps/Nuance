@@ -192,7 +192,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               <Button
                 loading={openingBuyScreen}
                 type='button'
-                styleType={darkTheme ? 'primary-dark' : 'primary'}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 style={{
                   width: '120px',
                 }}
@@ -216,8 +216,8 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           <div className='buy-nft-modal-content'>
             <Button
               type='button'
-              className='premium-article-cancel-button'
-              styleType='secondary'
+              className={{dark: 'premium-article-cancel-button', light: 'premium-article-cancel-button'}}
+              styleType={{dark: 'white', light: 'white'}}
               onClick={() => {
                 if (!marketplacePurchaseLoading) {
                   setModalPage('locked');
@@ -274,7 +274,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
             <div className='buy-nft-modal-buttons-wrapper'>
               <Button
                 type='button'
-                styleType='secondary'
+                styleType={{dark: 'white', light: 'white'}}
                 style={{
                   width: '120px',
                 }}
@@ -289,7 +289,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               <Button
                 loading={marketplacePurchaseLoading}
                 type='button'
-                styleType={darkTheme ? 'primary-dark' : 'primary'}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 disabled={!userAccepted}
                 style={ {width: '120px'} }
                 onClick={() => {
@@ -391,7 +391,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
             <div className='buy-nft-modal-buttons-wrapper'>
               <Button
                 type='button'
-                styleType='secondary'
+                styleType={{dark: 'white', light: 'white'}}
                 style={{
                   width: '120px',
                 }}
@@ -404,7 +404,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               <Button
                 loading={marketplacePurchaseLoading}
                 type='button'
-                styleType={darkTheme ? 'primary-dark' : 'primary'}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 style={{ width: '120px' }}
                 onClick={async () => {
                   navigate('/my-profile/wallet');
@@ -450,7 +450,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
             <div className='buy-nft-modal-buttons-wrapper'>
               <Button
                 type='button'
-                styleType='secondary'
+                styleType={{dark: 'white', light: 'white'}}
                 style={{
                   width: '120px',
                 }}
@@ -465,7 +465,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               <Button
                 loading={marketplacePurchaseLoading}
                 type='button'
-                styleType={darkTheme ? 'primary-dark' : 'primary'}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 style={{ width: '120px' }}
                 onClick={async () => {
                   await props.refreshPost();
@@ -516,7 +516,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
             <div className='buy-nft-modal-buttons-wrapper'>
               <Button
                 type='button'
-                styleType='secondary'
+                styleType={{dark: 'white', light: 'white'}}
                 style={{
                   width: '120px',
                 }}
@@ -529,7 +529,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
               <Button
                 loading={marketplacePurchaseLoading}
                 type='button'
-                styleType={darkTheme ? 'primary-dark' : 'primary'}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 style={{ width: '120px' }}
                 onClick={async () => {
                   navigate('/my-profile/wallet');

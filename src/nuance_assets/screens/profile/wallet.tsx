@@ -285,8 +285,8 @@ const Wallet = () => {
 
       <div className='deposit-withdraw-buttons-wrapper'>
         <Button
-          className='wallet-deposit-button'
-          styleType='secondary'
+          className={{dark: 'wallet-deposit-button', light: 'wallet-deposit-button'}}
+          styleType={{dark: 'white', light: 'white'}}
           type='button'
           onClick={() => {
             modalContext?.openModal('Deposit');
@@ -295,8 +295,8 @@ const Wallet = () => {
           Deposit to your wallet
         </Button>
         <Button
-          className={darkTheme ? 'wallet-withdraw-button-dark' : 'wallet-withdraw-button'}
-          styleType={darkTheme ? 'primary-dark' : 'primary'}
+          className={{dark: 'wallet-withdraw-button-dark', light: 'wallet-withdraw-button'}}
+          styleType={{dark: 'navy-dark', light: 'navy'}}
           type='button'
           onClick={() => {
             modalContext?.openModal('WithdrawToken');
@@ -341,8 +341,8 @@ const Wallet = () => {
                 </div>
               ) : userAllowedToClaimByDate(user) ? (
                 <Button
-                  className='wallet-deposit-button'
-                  styleType='secondary'
+                  className={{dark: 'wallet-deposit-button', light: 'wallet-deposit-button'}}
+                  styleType={{dark: 'white', light: 'white'}}
                   type='button'
                   style={{ maxWidth: '180px', fontSize: '14px' }}
                   onClick={() => {

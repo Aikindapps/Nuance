@@ -4,6 +4,15 @@
   flex-direction: column;
   row-gap: 48px;
 
+  .search-results-navy-button-dark {
+    align-self: center;
+  }
+
+  .search-reults-white-button {
+    align-self: center;
+    margin: 0px;
+  }
+
   .search-results-info-wrapper {
     display: flex;
     flex-direction: column;

@@ -209,7 +209,7 @@
         }
 
         &:disabled {
-          border-color: gray;
+          border-color: $medium-border-color;
         }
       }
 
@@ -219,7 +219,7 @@
         width: 240px;
 
         &:disabled {
-          border-color: gray;
+          border-color: $medium-border-color;
         }
       }
 
@@ -229,7 +229,7 @@
         width: 240px;
 
         &:disabled {
-          border-color: gray;
+          border-color: $medium-border-color;
         }
       }
     }
@@ -287,12 +287,12 @@
   }
 }
 
-.button-loader-icon {
+/* .button-loader-icon {
   margin-right: 4px;
   width: 20px;
   height: 20px;
   animation: spin 1s linear infinite;
-}
+} */
 
 @keyframes spin {
   0% {

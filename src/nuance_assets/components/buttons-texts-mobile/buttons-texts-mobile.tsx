@@ -53,7 +53,7 @@ export const ButtonsTextsMobile: React.FC<Props> = ({
         <Button
           disabled={loading}
           type='button'
-          styleType='primary'
+          styleType={{dark: 'navy-dark', light: 'navy'}}
           style={{
             width: '96px',
             margin: '10px 0',
@@ -86,7 +86,7 @@ export const ButtonsTextsMobile: React.FC<Props> = ({
         <Button
           disabled={loading}
           type='button'
-          styleType={darkTheme ? 'primary-dark' : 'primary'}
+          styleType={{dark: 'navy-dark', light: 'navy'}}
           style={{ width: '96px' }}
           onClick={async () => {
             setLoading(true);
@@ -121,7 +121,7 @@ export const ButtonsTextsMobile: React.FC<Props> = ({
           <Button
             disabled={false}
             type='button'
-            styleType='secondary'
+            styleType={{dark: 'white', light: 'white'}}
             style={{ width: '190px' }}
             onClick={() => {
               setPremiumModalOpen(true);

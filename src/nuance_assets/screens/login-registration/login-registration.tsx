@@ -314,7 +314,7 @@ const LoginRegistration = () => {
             <div className='buttons'>
               <Button
                 type='button'
-                styleType='secondary'
+                styleType={{dark: 'white', light: 'white'}}
                 style={{ width: '96px' }}
                 onClick={async () => {
                   await handleCancel();
@@ -324,7 +324,7 @@ const LoginRegistration = () => {
               </Button>
               <Button
                 type='button'
-                styleType='primary'
+                styleType={{dark: 'navy', light: 'navy'}}
                 style={{ width: '96px', alignSelf: 'center' }}
                 onClick={onRegister}
               >

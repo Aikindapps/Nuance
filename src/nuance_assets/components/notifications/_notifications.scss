@@ -20,6 +20,59 @@
       transform: translateX(0);
     }
 
+    .notifications-navy-button {
+      display: flex;
+      flex-direction: row-reverse;
+      margin-top: 10px;
+      float: right;
+    }
+
+    .notifications-white-button {
+      display: flex;
+      flex-direction: row-reverse;
+      margin-top: 10px;
+      float: right;
+
+      &:hover {
+        border: 1px solid $button-border-hover;
+      }
+    }
+
+    .notifications-load-more-button {
+      background-color: #f0f0f0;
+      color: #999;
+      border-radius: 5px;
+      margin-top: 16px;
+      padding: 10px 0;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    
+      &:hover {
+        border: none;
+        background-color: darken(#f0f0f0, 10%);
+      }
+    
+      &:disabled {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: row-reverse;
+        background-color: #f0f0f0;
+        color: #999;
+        cursor: default;
+        border: none;
+        &:hover {
+          background-color: #f0f0f0;
+          color: #999;
+          cursor: default;
+          border: none;
+        }
+      }
+    }
+
     .exit-icon {
         position: absolute;
         top: 16px; 

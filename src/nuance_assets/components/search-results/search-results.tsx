@@ -363,22 +363,15 @@ export const SearchResults = (props: {
       {props.counts.articlesCount > props.articles.length &&
         (selectedFilterType === 'All' || selectedFilterType === 'Articles') && (
           <Button
-            styleType='secondary'
-            style={
-              darkTheme
-                ? {
-                    backgroundColor: darkOptionsAndColors.buttonBackgroundColor,
-                    width: '152px',
-                    marginBottom: '56px',
-                  }
-                : { width: '152px', marginBottom: '56px' }
-            }
+            className={{dark: 'search-results-navy-button-dark', light: 'search-reults-white-button'}}
+            styleType={{dark: 'navy-dark', light: 'white'}}
+            style={ { width: '152px', marginBottom: '56px' } }
             onClick={async () => {
               setLoadMoreLoading(true);
               await props.loadMoreArticles();
               setLoadMoreLoading(false);
             }}
-            icon={loadMoreLoading ? images.loaders.BUTTON_SPINNER : ''}
+            loading={loadMoreLoading}
           >
             <span>Load More</span>
           </Button>

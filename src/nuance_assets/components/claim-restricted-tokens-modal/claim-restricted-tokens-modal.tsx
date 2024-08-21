@@ -132,8 +132,11 @@ export const ClaimRestrictedTokensModal = () => {
           </div>
           <div className='buttons-wrapper'>
             <Button
-              className='claim-restricted-tokens-modal-deposit-button'
-              styleType='secondary'
+              className={{
+                dark: 'claim-restricted-tokens-modal-deposit-button',
+                light: 'claim-restricted-tokens-modal-deposit-button',
+              }}
+              styleType={{ dark: 'white', light: 'white' }}
               type='button'
               onClick={() => {
                 if (loading) {
@@ -146,15 +149,15 @@ export const ClaimRestrictedTokensModal = () => {
               Cancel
             </Button>
             <Button
-              className={
-                darkTheme
-                  ? 'claim-restricted-tokens-modal-withdraw-button-dark'
-                  : 'claim-restricted-tokens-modal-withdraw-button'
-              }
-              styleType={darkTheme ? 'primary-dark' : 'primary'}
+              className={{
+                dark: 'claim-restricted-tokens-modal-withdraw-button-dark',
+                light: 'claim-restricted-tokens-modal-withdraw-button',
+              }}
+              styleType={{ dark: 'navy-dark', light: 'navy' }}
               disabled={!termsAccepted && !loading}
               style={{ minWidth: '170px' }}
               type='button'
+              loading={loading}
               onClick={async () => {
                 if (termsAccepted && !loading) {
                   setLoading(true);
@@ -168,7 +171,6 @@ export const ClaimRestrictedTokensModal = () => {
                 }
               }}
             >
-              {loading && <LuLoader2 className='button-loader-icon' />}
               Request Free NUA
             </Button>
           </div>
@@ -221,8 +223,11 @@ export const ClaimRestrictedTokensModal = () => {
           <img className='congrats-image' src={icons.APPLAUD_ICON} />
           <div className='buttons-wrapper'>
             <Button
-              className='claim-restricted-tokens-modal-deposit-button'
-              styleType='secondary'
+              className={{
+                dark: 'claim-restricted-tokens-modal-deposit-button',
+                light: 'claim-restricted-tokens-modal-deposit-button',
+              }}
+              styleType={{ dark: 'white', light: 'white' }}
               type='button'
               onClick={() => {
                 modalContext?.closeModal();
@@ -231,12 +236,11 @@ export const ClaimRestrictedTokensModal = () => {
               Ok, close
             </Button>
             <Button
-              className={
-                darkTheme
-                  ? 'claim-restricted-tokens-modal-withdraw-button-dark'
-                  : 'claim-restricted-tokens-modal-withdraw-button'
-              }
-              styleType={darkTheme ? 'primary-dark' : 'primary'}
+              className={{
+                dark: 'claim-restricted-tokens-modal-withdraw-button-dark',
+                light: 'claim-restricted-tokens-modal-withdraw-button',
+              }}
+              styleType={{ dark: 'navy-dark', light: 'navy' }}
               type='button'
               onClick={() => {
                 modalContext?.closeModal();

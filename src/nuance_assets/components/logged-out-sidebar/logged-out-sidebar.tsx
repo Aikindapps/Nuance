@@ -74,13 +74,10 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
       <div className='logged-out-sidebar-buttons'>
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary'
+            className={{dark: 'logged-out-navy-button-dark', light: ''}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
             type='button'
-            style={
-              darkTheme
-                ? { background: colors.accentColor, width: '100%' }
-                : { width: '100%' }
-            }
+            style={ { width: '100%' } }
             // icon={NONAME}
             onClick={() => loginInternal('ii')}
           >
@@ -89,13 +86,10 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
         </div>
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary'
+            className={{dark: 'logged-out-navy-button-dark', light: ''}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
             type='button'
-            style={
-              darkTheme
-                ? { background: colors.accentColor, width: '100%' }
-                : { width: '100%' }
-            }
+            style={ { width: '100%' } }
             // icon={NONAME}
             onClick={() => loginInternal('NFID')}
           >
@@ -104,13 +98,10 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
         </div>
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary'
+            className={{dark: 'logged-out-navy-button-dark', light: ''}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
             type='button'
-            style={
-              darkTheme
-                ? { background: colors.accentColor, width: '100%' }
-                : { width: '100%' }
-            }
+            style={ { width: '100%' } }
             // icon={NONAME}
             onClick={() => loginInternal('stoic')}
           >
@@ -120,13 +111,10 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
 
         <div className='logged-out-sidebar-button'>
           <Button
-            styleType='primary'
+            className={{dark: 'logged-out-navy-button-dark', light: ''}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
             type='button'
-            style={
-              darkTheme
-                ? { background: colors.accentColor, width: '100%' }
-                : { width: '100%' }
-            }
+            style={ { width: '100%' } }
             // icon={NONAME}
             onClick={() => loginInternal('bitfinity')}
           >

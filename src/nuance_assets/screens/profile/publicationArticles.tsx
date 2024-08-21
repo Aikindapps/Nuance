@@ -505,7 +505,7 @@ const PublicationArticles = () => {
                   {publicationDisplayName}
                 </div>
                 <Button
-                  styleType='secondary'
+                  styleType={{dark: 'white', light: 'white'}}
                   type='button'
                   style={
                     context.width < 1089

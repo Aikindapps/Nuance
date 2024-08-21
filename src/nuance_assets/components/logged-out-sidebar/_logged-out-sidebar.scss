@@ -39,6 +39,11 @@
 
     .logged-out-sidebar-button{
       width: 100%;
+
+      .logged-out-navy-button-dark {
+        color: $primary-background-color;
+        background-color: $accent-color;
+      }
     }
 
     .logged-out-sidebar-identity {

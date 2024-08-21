@@ -872,9 +872,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className='create-edit-article-edit-article-button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
@@ -888,8 +888,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(false);
@@ -903,8 +904,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={() => {
                       let validationResult = validate();
                       if (!validationResult || savingPost.headerImage === '') {
@@ -952,9 +954,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className='create-edit-article-edit-article-button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
@@ -968,8 +970,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(false);
@@ -992,8 +995,9 @@ const CreateEditArticle = () => {
                 </div>
                 <Button
                   type='button'
-                  styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                  style={{ width: '100%', marginTop: '20px' }}
+                  className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                  styleType={{dark: 'navy-dark', light: 'white'}}
+                  style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                   onClick={async () => {
                     setLoading(true);
                     let response = await onSave(true);
@@ -1021,9 +1025,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className='create-edit-article-edit-article-button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
@@ -1037,8 +1041,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(false);
@@ -1052,8 +1057,9 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={() => {
                       let validationResult = validate();
                       if (!validationResult || savingPost.headerImage === '') {
@@ -1174,8 +1180,9 @@ const CreateEditArticle = () => {
                   </div>
                   <Button
                     type='button'
-                    styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                    style={{ width: '100%', marginTop: '20px' }}
+                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
                       await onSave(true);
@@ -1202,8 +1209,9 @@ const CreateEditArticle = () => {
               </div>
               <Button
                 type='button'
-                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                style={{ width: '100%', marginTop: '20px' }}
+                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                styleType={{dark: 'navy-dark', light: 'white'}}
+                style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(true);
@@ -1228,8 +1236,9 @@ const CreateEditArticle = () => {
             </div>
             <Button
               type='button'
-              styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-              style={{ width: '100%', marginTop: '20px' }}
+              className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+              styleType={{dark: 'navy-dark', light: 'white'}}
+              style={{ width: '100%', margin: '20px 0px 0px 0px' }}
               onClick={async () => {
                 setLoading(true);
                 let response = await onSave(true);
@@ -1257,9 +1266,9 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                className='create-edit-article-edit-article-button'
-                styleType={darkTheme ? 'edit-article-dark' : 'secondary'}
-                style={{ width: '100%', marginTop: '20px' }}
+                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                styleType={{dark: 'navy-dark', light: 'white'}}
+                style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(true);
@@ -1273,8 +1282,9 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                style={{ width: '100%', marginTop: '20px' }}
+                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                styleType={{dark: 'navy-dark', light: 'white'}}
+                style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(false);
@@ -1288,8 +1298,9 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                style={{ width: '100%', marginTop: '20px' }}
+                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                styleType={{dark: 'navy-dark', light: 'white'}}
+                style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={() => {
                   let validationResult = validate();
                   if (!validationResult || savingPost.headerImage === '') {
@@ -1333,9 +1344,9 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                //className='create-edit-article-edit-article-button'
-                styleType={darkTheme ? 'primary-dark' : 'secondary'}
-                style={{ width: '100%', marginTop: '20px', marginRight: '0px' }}
+                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                styleType={{dark: 'navy-dark', light: 'white'}}
+                style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(true);
@@ -1349,8 +1360,9 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                styleType={darkTheme ? 'edit-article-dark' : 'edit-article'}
-                style={{ width: '100%', marginTop: '20px' }}
+                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
+                styleType={{dark: 'navy-dark', light: 'white'}}
+                style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
                   await onSave(false);

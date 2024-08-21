@@ -130,6 +130,7 @@ export const icons = {
 export const colors = {
   primaryTextColor: '#151451',
   accentColor: '#02c3a1',
+  secondAccentColor: '#43dfba',
   highlightTwo: '#1bc0f2',
   primaryBackgroundColor: '#ffffff',
   tagTokenBackGround: '#f2f2f2',

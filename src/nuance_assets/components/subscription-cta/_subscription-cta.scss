@@ -26,9 +26,18 @@
         text-align: center;
         border:none;
 
+        .subscription-cta-navy-button {
+            font-family: Roboto;
+        }
+
         &.dark {
             background: $dark-primary-background-color;
             color: $dark-primary-text-color;
+
+            .subscription-cta-navy-button {
+                color: $primary-background-color;
+                background-color: $accent-color;
+            }
 
             a {
                 color: white;

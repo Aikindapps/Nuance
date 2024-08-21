@@ -268,7 +268,7 @@ const ProfileSidebar = () => {
                     </Link>
                     <div className='hr' />
                     <Button
-                      styleType='secondary'
+                      styleType={{dark: 'white', light: 'white'}}
                       type='button'
                       style={{ width: '130px' }}
                       onClick={() => {

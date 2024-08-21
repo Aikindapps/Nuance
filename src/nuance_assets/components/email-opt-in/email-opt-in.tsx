@@ -157,7 +157,7 @@ const EmailOptIn: React.FC<EmailOptInProps> = (props): JSX.Element => {
       <br></br>
       <Button
         type='button'
-        styleType='email-opt-in'
+        styleType={{dark: 'email-opt-in', light: 'email-opt-in'}}
         style={{
           width: '100%',
           display: emailOptInSuccess ? 'none' : 'inline',

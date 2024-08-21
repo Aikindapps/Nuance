@@ -23,60 +23,62 @@
 
 .button-attributes-base:disabled,
 .button-attributes-base:disabled:hover {
-  color: $primary-background-color;
-  background-color: $primary-background-color;
-  cursor: default;
-}
-
-.button-attributes-primary {
-  color: $primary-background-color;
-  background-color: $primary-color;
-}
-
-.button-attributes-primary:hover {
-  background-color: $button-border-hover;
-}
-
-.button-attributes-primary-dark:hover {
-  background-color: $dark-button-hover-color;
-  border: 1px solid $primary-color;
-}
-
-.button-attributes-primary:active {
-  background-color: $active-background-color;
-}
-
-.button-attributes-primary-dark:active {
-  background-color: $dark-button-active-color;
-}
-
-.button-attributes-primary:disabled,
-.button-attributes-primary:disabled:hover,
-.button-attributes-primary-dark:disabled,
-.button-attributes-primary-dark:disabled:hover,
-.button-attributes-secondary:disabled,
-.button-attributes-secondary:disabled:hover {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
 }
 
-.button-attributes-primary-dark {
-  color: $primary-text-color;
-  background-color: $second-accent-color;
+.button-attributes-navy {
+  color: $primary-background-color;
+  background-color: $primary-color;
 }
 
-.button-attributes-secondary {
+.button-attributes-navy:hover {
+  background-color: $button-border-hover;
+}
+
+.button-attributes-navy-dark:hover {
+  background-color: $dark-button-hover-color;
+  border: 1px solid $primary-color;
+}
+
+.button-attributes-navy:active {
+  background-color: $active-background-color;
+}
+
+.button-attributes-navy-dark:active {
+  background-color: $dark-button-active-color;
+}
+
+.button-attributes-navy:disabled,
+.button-attributes-navy:disabled:hover,
+.button-attributes-navy-dark:disabled,
+.button-attributes-navy-dark:disabled:hover,
+.button-attributes-white:disabled,
+.button-attributes-white:disabled:hover {
+  background-color: $medium-border-color;
+  border: 1px solid $medium-border-color;
+  color: $disabled-button-text;
+  cursor: not-allowed;
+}
+
+.button-attributes-navy-dark {
+  color: $primary-text-color;
+  background-color: $second-accent-color;
+  border: 1px solid $dark-button-hover-color
+}
+
+.button-attributes-white {
   color: $primary-color;
   background-color: $primary-background-color;
   border: 1px solid $medium-border-color;
 }
 
-.button-attributes-secondary:hover {
+.button-attributes-white:hover {
   border: 1px solid $primary-color;
 }
 
-.button-attributes-secondary:active {
+.button-attributes-white:active {
   background-color: $primary-background-color;
   color: $primary-color;
   border: 1px solid $primary-color;
@@ -110,7 +112,14 @@
   margin: 0 15px 0 -15px;
 }
 
-/* button:disabled {
+.button-loader-icon {
+  margin-right: 4px;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+}
+
+button:disabled {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
@@ -120,178 +129,4 @@ button[disabled]:hover {
   background-color: $medium-border-color;
   color: $disabled-button-text;
   cursor: not-allowed;
-} */
-
-.button-attributes-edit-article { // secondary
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 36px; //
-  color: $primary-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-background-color;
-  border: 1px solid #b2b2b2;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 240px; //
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    border: 1px solid $primary-color;
-  }
-
-  &:active {
-    border: 1px solid $accent-color; //
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-.button-attributes-edit-article-dark { // primary-dark
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 36px; //
-  color: $primary-color;
-  border: none;
-  font-weight: 500;
-  background-color: $second-accent-color;
-  border: 1px solid $second-accent-color; //
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 240px; //
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    border: 1px solid $primary-color;
-  }
-
-  &:active {
-    border: 1px solid #000000;
-  }
-
-  &:disabled {
-    background-color: $primary-background-color;
-    color: $primary-background-color;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-.button-attributes-load-more {
-  background-color: #f0f0f0;
-  color: #999;
-  border-radius: 5px;
-  margin-top: 16px;
-  padding: 10px 0;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  width: 100%;
-  text-align: center;
-
-  &:hover {
-    border: none;
-    background-color: darken(#f0f0f0, 10%);
-  }
-
-  &:disabled {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: row-reverse;
-    background-color: #f0f0f0;
-    color: #999;
-    cursor: default;
-    border: none;
-    &:hover {
-      background-color: #f0f0f0;
-      color: #999;
-      cursor: default;
-      border: none;
-    }
-  }
-}
-
-.button-attributes-primary-blue {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $primary-background-color;
-  border: none;
-  font-weight: 500;
-  background-color: $primary-color;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    background-color: $button-border-hover;
-  }
-
-  &:active {
-    background-color: $active-background-color;
-  }
-
-  &:disabled {
-    background-color: grey;
-    cursor: default;
-
-    &:hover {
-      color: $primary-background-color;
-      background-color: $primary-background-color;
-      cursor: default;
-    }
-  }
-}
-
-.button-attributes-primary-blue-dark {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  color: $primary-color;
-  border: none;
-  font-weight: 500;
-  background-color: white;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: 0.1s ease-in-out all;
-
-  &:hover {
-    border: 1px solid $button-border-hover;
-  }
-  &:active {
-    background-color: white;
-  }
-
-  &:disabled {
-    background-color: grey;
-    cursor: default;
-
-    &:hover {
-      cursor: default;
-    }
-  }
 }
