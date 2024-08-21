@@ -75,13 +75,13 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
         {props.user && props.searchedTag && (
           <div className='follow'>
             <Button
-              styleType='secondary'
+              styleType={{dark: 'white', light: 'white'}}
               type='button'
               style={{ width: '152px' }}
               onClick={() => {
                 props.handleFollowClicked();
               }}
-              icon={props.updatingFollow ? images.loaders.BUTTON_SPINNER : ''}
+              loading={props.updatingFollow}
             >
               {props.isFollowingTag ? 'Followed' : 'Follow this tag'}
             </Button>
@@ -101,10 +101,10 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
       {Number(props.totalCount) > props.posts.length ? (
         <div className='load-more-container'>
           <Button
-            styleType='secondary'
+            styleType={{dark: 'white', light: 'white'}}
             style={{ width: '152px' }}
             onClick={() => props.loadMoreHandler()}
-            icon={props.loadingMore ? images.loaders.BUTTON_SPINNER : ''}
+            loading={props.loadingMore}
           >
             <span>Load More</span>
           </Button>

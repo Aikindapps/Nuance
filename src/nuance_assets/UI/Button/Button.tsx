@@ -1,75 +1,58 @@
-import React, { useState } from 'react';
-import { hexShade, hexTint } from '../../shared/utils';
+import React, { CSSProperties, useState } from 'react';
+import { hexTint } from '../../shared/utils';
 import { colors } from '../../shared/constants';
 import { LuLoader2 } from 'react-icons/lu';
+import classNames from 'classnames';
+import { useTheme } from '../../contextes/ThemeContext';
 
 type ButtonProps = {
-  type?: String;
-  styleType?: String;
-  icon?: String;
+  type?: 'button' | 'submit';
+  styleType?: {
+    dark?: 'navy' | 'navy-dark' | 'white' | 'email-opt-in';
+    light?: 'navy' | 'navy-dark' | 'white' | 'email-opt-in';
+  };
+  icon?: string;
   style?: Object;
   onClick?: (event: any) => void;
   disabled?: boolean;
   loading?: boolean;
-  primaryColor?: string;
-  dark?: boolean;
+  className?: { dark?: string; light?: string };
 };
 
-const Button: React.FC<ButtonProps> = (props): JSX.Element => {
-  const {
-    styleType,
-    icon,
-    children,
-    type,
-    disabled,
-    style,
-    onClick,
-    primaryColor,
-    loading,
-  } = props;
-  const [displayingBorderColor, setDisplayingBorderColor] =
-    useState(primaryColor);
-  var hexTinted = '';
-  if (primaryColor) {
-    hexTinted = hexTint(primaryColor);
-  }
-  if (primaryColor) {
-    return (
-      <button
-        className={'button-attributes-' + styleType}
-        style={
-          primaryColor
-            ? { ...style, borderColor: displayingBorderColor }
-            : style
-        }
-        onClick={onClick}
-        disabled={disabled}
-        onMouseOver={() => {
-          setDisplayingBorderColor(hexTinted);
-        }}
-        onMouseOut={() => {
-          setDisplayingBorderColor(primaryColor);
-        }}
-      >
-        {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
-        {children}
-        {loading && <LuLoader2 className='button-loader-icon' />}
-      </button>
-    );
-  } else {
-    return (
-      <button
-        className={'button-attributes-' + styleType}
-        style={style}
-        onClick={onClick}
-        disabled={disabled}
-      >
-        {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
-        {children}
-        {loading && <LuLoader2 className='button-loader-icon' />}
-      </button>
-    );
-  }
+const Button: React.FC<ButtonProps> = ({
+  type,
+  styleType,
+  icon,
+  style,
+  onClick,
+  disabled,
+  loading,
+  children,
+  className,
+}) => {
+  const darkTheme = useTheme();
+
+  const themeStyle = darkTheme ? styleType?.dark : styleType?.light;
+  const localeClassNameStyle = darkTheme ? className?.dark : className?.light;
+
+  const buttonClasses = classNames(
+    'button-attributes-base', // base class
+    `button-attributes-${themeStyle}`, // specific class
+    localeClassNameStyle // custom class
+  );
+  return (
+    <button
+      className={buttonClasses}
+      type={type}
+      style={style}
+      onClick={onClick}
+      disabled={disabled || loading}
+    >
+      {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
+      {children}
+      {loading && <LuLoader2 className='button-loader-icon' />}
+    </button>
+  );
 };
 
 export default Button;

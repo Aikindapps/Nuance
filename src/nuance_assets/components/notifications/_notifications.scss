@@ -14,9 +14,9 @@
   transform: translateX(100%);
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 
-  &.open {
-    transform: translateX(0);
-  }
+    &.open {
+      transform: translateX(0);
+    }
 
   .exit-icon {
     position: absolute;

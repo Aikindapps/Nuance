@@ -117,7 +117,7 @@ const MyProfile = () => {
         }}
       >
         <Button
-          styleType='secondary'
+          styleType={{dark: 'white', light: 'white'}}
           type='button'
           style={{
             width: '96px',

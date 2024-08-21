@@ -501,10 +501,10 @@ const Profile = () => {
                     displayingPosts.length && (
                     <div className='load-more-container'>
                       <Button
-                        styleType='secondary'
+                        styleType={{dark: 'white', light: 'white'}}
                         style={{ width: '152px' }}
                         onClick={() => loadMoreHandler()}
-                        icon={loadingMore ? images.loaders.BUTTON_SPINNER : ''}
+                        loading={loadingMore}
                       >
                         <span>Load More</span>
                       </Button>

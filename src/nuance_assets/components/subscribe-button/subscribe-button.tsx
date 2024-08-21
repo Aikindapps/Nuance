@@ -57,7 +57,7 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
         <div className='followAuthor'>
             {props.isSubscribed ? (
                 <Button
-                    styleType='secondary'
+                    styleType={{dark: 'white', light: 'white'}}
                     type='button'
                     style={
                         props.isPublication ? { width: '180px', margin: '10px 0' }
@@ -65,14 +65,13 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                     }
                     onClick={handleUnsubscribe}
                     disabled={loading}
-                    icon={loading ? images.loaders.BUTTON_SPINNER : ''}
-                    primaryColor={props.primaryColor}
+                    loading={loading}
                 >
                     Unsubscribe
                 </Button>
             ) : (
                 <Button
-                    styleType='secondary'
+                    styleType={{dark: 'white', light: 'white'}}
                     type='button'
                     style={
                         props.isPublication ? { width: '180px', margin: '10px 0' }
@@ -80,8 +79,7 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                     }
                     onClick={handleSubscribe}
                     disabled={loading}
-                    icon={loading ? images.loaders.BUTTON_SPINNER : ''}
-                    primaryColor={props.primaryColor}
+                    loading={loading}
                 >
                     {props.isPublication ? 'Subscribe to this Publication' : 'Subscribe'}
                 </Button>

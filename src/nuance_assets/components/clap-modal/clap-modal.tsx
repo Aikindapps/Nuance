@@ -525,7 +525,8 @@ export const ClapModal = (props: { post: PostType }) => {
           </div>
           <div className='buttons-wrapper'>
             <Button
-              styleType='deposit'
+              className={{dark: 'clap-modal-deposit-button', light: 'clap-modal-deposit-button'}}
+              styleType={{dark: 'white', light: 'white'}}
               type='button'
               onClick={() => {
                 if (loading) {
@@ -533,28 +534,16 @@ export const ClapModal = (props: { post: PostType }) => {
                 }
                 modalContext?.closeModal();
               }}
-              style={
-                loading
-                  ? {
-                      cursor: 'not-allowed',
-                    }
-                  : {}
-              }
+              disabled={loading}
             >
               Cancel
             </Button>
             <Button
-              styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
-              style={
-                !validateApplaud()
-                  ? {
-                      cursor: 'not-allowed',
-                      background: 'gray',
-                      borderColor: 'gray',
-                    }
-                  : {}
-              }
+              className={{dark: 'clap-modal-withdraw-button-dark', light: 'clap-modal-withdraw-button'}}
+              styleType={{dark: 'navy-dark', light: 'navy'}}
+              disabled={!validateApplaud()}
               type='button'
+              loading={loading}
               onClick={() => {
                 if (loading) {
                   return;
@@ -565,7 +554,7 @@ export const ClapModal = (props: { post: PostType }) => {
                 }
               }}
             >
-              {loading && <LuLoader2 className='button-loader-icon' />}
+              {/* {loading && <LuLoader2 className='button-loader-icon' />} */}
               Applaud
             </Button>
           </div>
@@ -764,7 +753,8 @@ export const ClapModal = (props: { post: PostType }) => {
 
         <div className='buttons-wrapper'>
           <Button
-            styleType='deposit'
+            className={{dark: 'clap-modal-deposit-button', light: 'clap-modal-deposit-button'}}
+            styleType={{dark: 'white', light: 'white'}}
             type='button'
             onClick={() => {
               if (loading) {
@@ -772,27 +762,16 @@ export const ClapModal = (props: { post: PostType }) => {
               }
               setPage(0);
             }}
-            style={
-              loading
-                ? { cursor: 'not-allowed', textWrap: 'nowrap' }
-                : { textWrap: 'nowrap' }
-            }
+            disabled={loading}
           >
             Go back to amount
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
+            className={{dark: 'clap-modal-withdraw-button-dark', light: 'clap-modal-withdraw-button'}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
             type='button'
-            style={
-              loading
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                    textWrap: 'nowrap',
-                  }
-                : { textWrap: 'nowrap' }
-            }
+            disabled={loading}
+            loading={loading}
             onClick={() => {
               if (loading) {
                 return;
@@ -803,7 +782,7 @@ export const ClapModal = (props: { post: PostType }) => {
             }}
           >
             Yes, applaud
-            {loading && <LuLoader2 className='button-loader-icon' />}
+            {/* {loading && <LuLoader2 className='button-loader-icon' />} */}
           </Button>
         </div>
       </div>
@@ -865,7 +844,8 @@ export const ClapModal = (props: { post: PostType }) => {
         <img className='congratulations-image' src={icons.CLAP_ICON} />
         <div className='buttons-wrapper'>
           <Button
-            styleType='deposit'
+            className={{dark: 'clap-modal-deposit-button', light: 'clap-modal-deposit-button'}}
+            styleType={{dark: 'white', light: 'white'}}
             type='button'
             onClick={() => {
               modalContext?.closeModal();
@@ -880,7 +860,8 @@ export const ClapModal = (props: { post: PostType }) => {
             Close
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
+            className={{dark: 'clap-modal-withdraw-button-dark', light: 'clap-modal-withdraw-button'}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
             type='button'
             onClick={() => {
               window.location.href = '/my-profile/wallet';

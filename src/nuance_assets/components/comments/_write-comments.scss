@@ -1,71 +1,108 @@
 @import '../../shared/styles/Colors';
 
 .write-comment {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 10px;
+  margin: 30px 0px 16px 0px;
 
-
-
+  @media (max-width: 768px) {
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    padding: 10px;
-    margin: 30px 0px 16px 0px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .comment-input-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 10px;
+
+    .comment-title {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 18px;
+      margin-bottom: 5px;
+      color: $border-tags2;
+    }
+
+    .comment-input {
+      resize: none;
+      padding: 10px 10px 10px 0px;
+
+      height: 40px;
+      border: none;
+      border-bottom: 1px solid $accent-color;
+
+      &:focus {
+        outline: none;
+        border-bottom: 1px solid $highlight-two;
+      }
+
+      @media (max-width: 768px) {
+        width: 60vw;
+      }
+    }
+  }
+
+  .comment-reply {
+    margin-left: 38px;
+  }
+
+  .comment-button {
+    height: 34px;
+    align-self: center;
 
     @media (max-width: 768px) {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+      margin-top: 10px;
+    }
+  }
 
+  .comment-button:hover,
+  .comment-button:disabled:hover {
+    background-color: $primary-background-color;
+    color: $primary-color;
+    border: 1px solid $primary-color;
+    cursor: pointer;
+  }
+
+  .comment-button:disabled:hover {
+    cursor: not-allowed;
+  }
+
+  .comment-button:disabled {
+    cursor: default;
+    color: $primary-background-color;
+    background-color: $primary-color;
+    border: 1px solid $primary-color;
+  }
+
+  .comment-button-dark {
+    height: 34px;
+    align-self: center;
+
+    @media (max-width: 768px) {
+      margin-top: 10px;
     }
 
-    .comment-input-container {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        margin-right: 10px;
+    background-color: $dark-button-color;
+    border: 1px solid $dark-button-color;
+  }
 
-        .comment-title {
-            font-size: 12px;
-            font-weight: 700;
-            line-height: 18px;
-            margin-bottom: 5px;
-            color: $border-tags2;
-        }
+  .comment-button-dark:hover,
+  .comment-button-dark:active,
+  .comment-button-dark:disabled,
+  .comment-button-dark:disabled:hover {
+    background-color: $dark-primary-background-color;
+    color: $dark-primary-text-color;
+  }
 
-        .comment-input {
-            resize: none;
-            padding: 10px 10px 10px 0px;
+  .comment-button-dark:disabled {
+    cursor: default;
+  }
 
-            height: 40px;
-            border: none;
-            border-bottom: 1px solid $accent-color;
-
-            &:focus {
-                outline: none;
-                border-bottom: 1px solid $highlight-two;
-            }
-
-            @media (max-width: 768px) {
-                width: 60vw;
-
-
-            }
-
-
-
-
-        }
-    }
-
-    .comment-reply {
-        margin-left: 38px;
-    }
-
-    button {
-        height: 34px;
-        align-self: center;
-
-        @media (max-width: 768px) {
-            margin-top: 10px;
-        }
-    }
+  .comment-button-dark:disabled:hover {
+    cursor: not-allowed;
+  }
 }

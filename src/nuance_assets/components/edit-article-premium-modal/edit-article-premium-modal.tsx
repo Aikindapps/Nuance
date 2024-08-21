@@ -291,7 +291,8 @@ export const EditArticlePremiumModal = (props: {
         </div>
         <div className='buttons-wrapper'>
           <Button
-            styleType='deposit'
+            className={{dark: 'edit-article-premium-modal-deposit-button', light: 'edit-article-premium-modal-deposit-button'}}
+            styleType={{dark: 'white', light: 'white'}}
             type='button'
             onClick={() => {
               if (loading) {
@@ -299,28 +300,16 @@ export const EditArticlePremiumModal = (props: {
               }
               modalContext?.closeModal();
             }}
-            style={
-              loading
-                ? {
-                    cursor: 'not-allowed',
-                  }
-                : {}
-            }
+            disabled={loading}
           >
             Cancel
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
-            style={
-              !validateNft()
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                  }
-                : {}
-            }
+            className={{dark: 'edit-article-premium-modal-withdraw-button-dark', light: 'edit-article-premium-modal-withdraw-button'}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
+            disabled={!validateNft()}
             type='button'
+            loading={loading}
             onClick={() => {
               if (loading) {
                 return;
@@ -330,7 +319,6 @@ export const EditArticlePremiumModal = (props: {
               }
             }}
           >
-            {loading && <LuLoader2 className='button-loader-icon' />}
             Mint article
           </Button>
         </div>

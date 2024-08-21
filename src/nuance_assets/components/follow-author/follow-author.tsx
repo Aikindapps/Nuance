@@ -66,7 +66,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
     <div className='followAuthor'>
       {following ? (
         <Button
-          styleType='secondary'
+          styleType={{dark: 'white', light: 'white'}}
           type='button'
           style={
             props.isPublication
@@ -75,14 +75,13 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
           }
           onClick={handleUnfollow}
           disabled={loading}
-          icon={loading ? images.loaders.BUTTON_SPINNER : ''}
-          primaryColor={props.primaryColor}
+          loading={loading}
         >
           Following
         </Button>
       ) : (
         <Button
-          styleType={darkTheme ? 'secondary' : 'primary-1'}
+          styleType={{dark: 'navy-dark', light: 'navy'}}
           type='button'
           style={
             props.isPublication
@@ -91,8 +90,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
           }
           onClick={props.user ? handleFollow : handleRegister}
           disabled={loading}
-          icon={loading ? images.loaders.BUTTON_SPINNER : ''}
-          primaryColor={props.primaryColor}
+          loading={loading}
         >
           {props.isPublication ? 'Follow this Publication' : 'Follow'}
         </Button>
