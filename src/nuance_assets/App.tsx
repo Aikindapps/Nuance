@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext, Suspense, lazy } from 'react';
 import { usePostStore } from './store';
+import LoadPost from './components/load-post/loadPost';
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { RenderToaster } from './services/toastService'
@@ -170,6 +171,9 @@ function App() {
     };
   }, []);
 
+  const isReadArticleRoute = /^\/[^/]+\/[^/]+\/[^/]+$/.test(location.pathname);
+
+
 
   return (
     <ModalContextProvider>
@@ -212,6 +216,7 @@ function App() {
           <meta name='twitter:creator' content='@nuancedapp' />
         </Helmet>
         <Router>
+          {isReadArticleRoute && <LoadPost />} {/* LoadPost runs before anything else */}
           <Suspense
             fallback={
               <div

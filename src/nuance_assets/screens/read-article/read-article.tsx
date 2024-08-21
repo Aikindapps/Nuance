@@ -148,7 +148,7 @@ const ReadArticle = () => {
     modified: new Date().toISOString(),
     publishedDate: new Date().toISOString(),
     views: "0",
-    tags: [],
+    tags: [{ tagId: "0", tagName: "Accessibility" }],
     claps: "0",
     category: "",
     isPremium: false,
