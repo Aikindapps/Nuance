@@ -147,13 +147,12 @@ const CustomNotificationContent = ({
     } else if ('TipReceived' in notificationContent) {
       let content = notificationContent.TipReceived;
       //post related fields
-      let postOwnerHandle =
-        content.publicationPrincipalId.length === 0
-          ? getUserListItemFromPrincipal(
-              notification.notificationReceiverPrincipalId
-            )?.handle
-          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
-              ?.handle;
+      let postOwnerHandle = content.publicationPrincipalId[0]
+        ? getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+            ?.handle
+        : getUserListItemFromPrincipal(
+            notification.notificationReceiverPrincipalId
+          )?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
@@ -173,7 +172,8 @@ const CustomNotificationContent = ({
           >
             {tipSenderHandle}
           </span>{' '}
-          <span className='bold'>applauded</span> +{content.numberOfApplauds}{' '}
+          <span className='bold'>applauded</span> +
+          {(Number(content.numberOfApplauds) / Math.pow(10, 8)).toFixed(0)}{' '}
           using {content.tippedTokenSymbol} on "
           <span
             onClick={() => {
@@ -416,13 +416,12 @@ const CustomNotificationContent = ({
       let purchaserPrincipal = content.purchaserPrincipal;
       let purchaserHandle =
         getUserListItemFromPrincipal(purchaserPrincipal)?.handle;
-      let postOwnerHandle =
-        content.publicationPrincipalId.length === 0
-          ? getUserListItemFromPrincipal(
-              notification.notificationReceiverPrincipalId
-            )?.handle
-          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
-              ?.handle;
+      let postOwnerHandle = content.publicationPrincipalId[0]
+        ? getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+            ?.handle
+        : getUserListItemFromPrincipal(
+            notification.notificationReceiverPrincipalId
+          )?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
