@@ -62,8 +62,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     getUserNotificationSettings: state.getUserNotificationSettings,
   }));
 
-  console.log(notifications);
-
   const [currentView, setCurrentView] = useState('notifications'); // 'notifications' or 'settings'
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -121,7 +119,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
   useEffect(() => {
     firstLoad();
   }, []);
-
   const getUserListItemFromPrincipal = (principal: string) => {
     let listItem = notificationsUserListItems.find((userListItem) => {
       return userListItem.principal === principal;
@@ -160,11 +157,12 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     } else if ('TipReceived' in notificationContent) {
       let content = notificationContent.TipReceived;
       //post related fields
-      let postOwnerHandle =
-        content.publicationPrincipalId.length === 0
-          ? user?.handle
-          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
-              ?.handle;
+      let postOwnerHandle = content.publicationPrincipalId[0]
+        ? getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+            ?.handle
+        : getUserListItemFromPrincipal(
+            notification.notificationReceiverPrincipalId
+          )?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;
@@ -184,7 +182,8 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
           >
             {tipSenderHandle}
           </span>{' '}
-          <span className='bold'>applauded</span> +{content.numberOfApplauds}{' '}
+          <span className='bold'>applauded</span> +
+          {(Number(content.numberOfApplauds) / Math.pow(10, 8)).toFixed(0)}{' '}
           using {content.tippedTokenSymbol} on "
           <span
             onClick={() => {
@@ -282,7 +281,9 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       );
     } else if ('NewCommentOnMyArticle' in notificationContent) {
       let content = notificationContent.NewCommentOnMyArticle;
-      let postOwnerHandle = user?.handle;
+      let postOwnerHandle = getUserListItemFromPrincipal(
+        notification.notificationReceiverPrincipalId
+      )?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}?comment=${content.commentId}`;
@@ -425,11 +426,12 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       let purchaserPrincipal = content.purchaserPrincipal;
       let purchaserHandle =
         getUserListItemFromPrincipal(purchaserPrincipal)?.handle;
-      let postOwnerHandle =
-        content.publicationPrincipalId.length === 0
-          ? user?.handle
-          : getUserListItemFromPrincipal(content.publicationPrincipalId[0])
-              ?.handle;
+      let postOwnerHandle = content.publicationPrincipalId[0]
+        ? getUserListItemFromPrincipal(content.publicationPrincipalId[0])
+            ?.handle
+        : getUserListItemFromPrincipal(
+            notification.notificationReceiverPrincipalId
+          )?.handle;
       let postUrl = `/${postOwnerHandle}/${content.postId}-${
         content.bucketCanisterId
       }/${textToUrlSegment(content.postTitle)}`;

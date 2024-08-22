@@ -2770,15 +2770,19 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
         switch(principalIdHashMap.get(comment.postId)) {
           case(?writerPrincipalId) {
             //add the writer notification first
-            notifications.add(writerPrincipalId, #NewCommentOnMyArticle({
-              postId = comment.postId;
-              bucketCanisterId = comment.bucketCanisterId;
-              postTitle = U.safeGet(titleHashMap, comment.postId, "");
-              commenterPrincipal = comment.creator;
-              commentContent = comment.content;
-              commentId = comment.commentId;
-              isReply = true;
-            }));
+            //If the commenter is the writer of the post, don't send notification to the writer
+            if(writerPrincipalId != comment.creator){
+              notifications.add(writerPrincipalId, #NewCommentOnMyArticle({
+                postId = comment.postId;
+                bucketCanisterId = comment.bucketCanisterId;
+                postTitle = U.safeGet(titleHashMap, comment.postId, "");
+                commenterPrincipal = comment.creator;
+                commentContent = comment.content;
+                commentId = comment.commentId;
+                isReply = true;
+              }));
+            };
+            
 
             //add the notification for the creator of the replied comment
             let repliedComment = buildComment(repliedCommentId);
@@ -2800,25 +2804,26 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
           case(null) {
             //shouldn't happen
           };
-        };
-
-        
+        };        
       };
       case(null) {
         //this comment is not a reply
         //just send the notification to the writer of the post
         switch(principalIdHashMap.get(comment.postId)) {
           case(?writerPrincipalId) {
-            let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
-            await NotificationsCanister.createNotification(writerPrincipalId, #NewCommentOnMyArticle({
-              postId = comment.postId;
-              bucketCanisterId = comment.bucketCanisterId;
-              postTitle = U.safeGet(titleHashMap, comment.postId, "");
-              commenterPrincipal = comment.creator;
-              commentContent = comment.content;
-              commentId = comment.commentId;
-              isReply = false;
-            }));
+            //If the commenter is the writer of the post, don't send notification to the writer
+            if(writerPrincipalId != comment.creator){
+              let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+              await NotificationsCanister.createNotification(writerPrincipalId, #NewCommentOnMyArticle({
+                postId = comment.postId;
+                bucketCanisterId = comment.bucketCanisterId;
+                postTitle = U.safeGet(titleHashMap, comment.postId, "");
+                commenterPrincipal = comment.creator;
+                commentContent = comment.content;
+                commentId = comment.commentId;
+                isReply = false;
+              }));
+            };
           };
           case(null) {
             //shouldn't happen
