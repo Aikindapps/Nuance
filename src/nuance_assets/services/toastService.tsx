@@ -427,7 +427,7 @@ const CustomNotificationContent = ({
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          K-ching!
+          K-ching! {' '}
           <span
             onClick={() => {
               navigate('/user/' + purchaserHandle);
