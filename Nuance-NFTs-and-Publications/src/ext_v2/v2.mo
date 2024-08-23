@@ -354,6 +354,10 @@ actor class EXTNFT() = this {
   let ENTREPOT_MARKETPLACE_FEES_AMOUNT : Nat64 = 1000;
   let HTTP_NOT_FOUND : HttpResponse = {status_code = 404; headers = []; body = Blob.fromArray([]); streaming_strategy = null; upgrade = false};
   let HTTP_BAD_REQUEST : HttpResponse = {status_code = 400; headers = []; body = Blob.fromArray([]); streaming_strategy = null; upgrade = false};
+
+  public shared func testUpgrade() : async Text {
+    return "works"
+};
   
   
   //Services
