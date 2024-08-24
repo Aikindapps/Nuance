@@ -29,12 +29,12 @@ export const ClaimRestrictedTokensModal = () => {
   const [page, setPage] = useState<ClaimModalPage>('claim');
 
   const [allowedToRequest, setAllowedToRequest] = useState(0);
+
   const getAllowedToRequest = () => {
-    return (
-      (50 * Math.pow(10, 8) - restrictedTokenBalance / Math.pow(10, 8)) /
-      Math.pow(10, 8)
-    );
+    return 50 - (restrictedTokenBalance / Math.pow(10, 8));
   };
+
+
 
   if (page === 'claim') {
     return (
@@ -54,8 +54,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             loading
               ? {
-                  cursor: 'not-allowed',
-                }
+                cursor: 'not-allowed',
+              }
               : {}
           }
           className='close-modal-icon'
@@ -64,8 +64,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkModePrimaryTextColor,
-                }
+                color: colors.darkModePrimaryTextColor,
+              }
               : {}
           }
           className='modal-title'
@@ -76,13 +76,13 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkSecondaryTextColor,
-                }
+                color: colors.darkSecondaryTextColor,
+              }
               : {}
           }
           className='information-text'
         >
-          You are allowed to request free NUA up until a total of 50 Free NUA in
+          You are allowed to request free NUA up until a total of {getAllowedToRequest().toFixed(0)} Free NUA in
           your wallet. These Free NUA tokens first need to be ‘spent’ on the
           Nuance platform like applauding or membership access before you can
           trade them. They will be added to your wallet immediately.
@@ -118,7 +118,7 @@ export const ClaimRestrictedTokensModal = () => {
               type='checkbox'
               className='terms-checkbox'
               checked={termsAccepted}
-              onChange={() => {}}
+              onChange={() => { }}
             />
             <p
               className='terms-text'
@@ -143,8 +143,8 @@ export const ClaimRestrictedTokensModal = () => {
               style={
                 loading
                   ? {
-                      cursor: 'not-allowed',
-                    }
+                    cursor: 'not-allowed',
+                  }
                   : {}
               }
             >
@@ -156,11 +156,11 @@ export const ClaimRestrictedTokensModal = () => {
                 termsAccepted && !loading
                   ? { minWidth: '170px' }
                   : {
-                      cursor: 'not-allowed',
-                      background: 'gray',
-                      borderColor: 'gray',
-                      minWidth: '170px',
-                    }
+                    cursor: 'not-allowed',
+                    background: 'gray',
+                    borderColor: 'gray',
+                    minWidth: '170px',
+                  }
               }
               type='button'
               onClick={async () => {
@@ -204,8 +204,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkModePrimaryTextColor,
-                }
+                color: colors.darkModePrimaryTextColor,
+              }
               : {}
           }
           className='modal-title'
@@ -216,8 +216,8 @@ export const ClaimRestrictedTokensModal = () => {
           style={
             darkTheme
               ? {
-                  color: colors.darkSecondaryTextColor,
-                }
+                color: colors.darkSecondaryTextColor,
+              }
               : {}
           }
           className='information-text'
