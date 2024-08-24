@@ -354,6 +354,10 @@ actor class EXTNFT() = this {
   let ENTREPOT_MARKETPLACE_FEES_AMOUNT : Nat64 = 1000;
   let HTTP_NOT_FOUND : HttpResponse = {status_code = 404; headers = []; body = Blob.fromArray([]); streaming_strategy = null; upgrade = false};
   let HTTP_BAD_REQUEST : HttpResponse = {status_code = 400; headers = []; body = Blob.fromArray([]); streaming_strategy = null; upgrade = false};
+
+  public shared func testUpgrade() : async Text {
+    return "works"
+};
   
   
   //Services
@@ -452,7 +456,7 @@ actor class EXTNFT() = this {
   public shared(msg) func heartbeat_paymentSettlements() : async () {
     for((paymentAddress, settlement) in _expiredPaymentSettlements().vals()){
       switch(settlement.purchase) {
-        case(#nft t) ignore(ext_marketplaceSettle(paymentAddress));
+        case(#nft t) ignore(ext_marketplaceSettleCustom(paymentAddress, msg.caller));
         case(#sale q) ignore(ext_saleSettle(paymentAddress));
         case(_) {};
       };
@@ -739,24 +743,91 @@ actor class EXTNFT() = this {
                           }]);
                           _tokenListing.delete(token);
                           _paymentSettlements.delete(paymentaddress);
+
+                          //nuance addition
+                          //once any marketplace purchase happens, call the mint_and_list_next
+                          let r = mint_and_list_next();
+                          return #ok();
+                        };
+                        case (_) {};
+                      };
+                    };
+                  };
+                  case (_) {};
+                };
+                //If we are here, that means we need to refund the payment
+                //No listing, refund (to slow)	
+                _addDisbursement((0, settlement.payer, settlement.subaccount, (ledgerResponse.e8s-10000)));
+                _paymentSettlements.delete(paymentaddress);
+                return #err(#Other("NFT not for sale"));	
+              };
+              case(_) return #err(#Other("Not a payment for a single NFT"));
+            };
+          };
+          case(#err e) return #err(#Other(e));
+        };
+      };
+      case(_) return #err(#Other("Nothing to settle"));
+    };
+  };
+  public shared(msg) func ext_marketplaceSettleCustom(paymentaddress : AccountIdentifier, originalCaller: Principal) : async Result.Result<(), CommonError> {
+    if(not Principal.equal(msg.caller, Principal.fromActor(this))){
+      //not authorized to use this function
+      return #err(#Other("Unauthorized!"));	
+    };
+    switch(await ext_checkPayment(paymentaddress)) {
+      case(?(settlement, response)){
+        switch(response){
+          case(#ok ledgerResponse) {
+            switch(settlement.purchase){
+              case(#nft token) {
+                switch(_tokenListing.get(token)) {
+                  case (?listing) {
+                    if (settlement.amount >= listing.price) {
+                      switch (_registry.get(token)) {
+                        case (?token_owner) {
+                          var bal : Nat64 = settlement.amount - (10000 * Nat64.fromNat(_marketplaceFees().size() + 1));
+                          var rem = bal;
+                          for(f in _marketplaceFees().vals()){
+                            var _fee : Nat64 = bal * f.1 / 100000;
+                            _addDisbursement((token, f.0, settlement.subaccount, _fee));
+                            rem := rem -  _fee : Nat64;
+                          };
                           
+                          let seller_account = AID.fromPrincipal(Principal.fromActor(this), ?available_selling_token_subaccount);
+                          if(token_owner == seller_account){
+                            //if the sale is from the available_selling_token_subaccount address, add disbursment to the writer not the actual subaccount
+                            _addDisbursement((token, AID.fromPrincipal(writer_principal_id, null), settlement.subaccount, rem));
+                            //store the sender address into the buffer
+                            token_sender_accounts_buffer.add(AID.fromPrincipal(Principal.fromActor(this), ?settlement.subaccount));
+                          }
+                          else{
+                            //regular sale
+                            _addDisbursement((token, token_owner, settlement.subaccount, rem));  
+                          };
+                          
+                          _capAddSale(token, token_owner, settlement.payer, settlement.amount);
+                          _transferTokenToUser(token, settlement.payer);
+                          data_transactions := Array.append(data_transactions, [{
+                            token = token;
+                            seller = token_owner;
+                            price = settlement.amount;
+                            buyer = settlement.payer;
+                            time = Time.now();
+                          }]);
+                          _tokenListing.delete(token);
+                          _paymentSettlements.delete(paymentaddress);
+
                           //send notification
-                          ignore U.createNotification(#PremiumArticleSold, {
-                            url = "";
-                            articleId = postId;
-                            articleTitle = "";
-                            authorPrincipal = writer_principal_id;
-                            authorHandle = "";
-                            comment = "";
-                            isReply = false;
-                            receiverPrincipal = writer_principal_id;
-                            receiverHandle = "";
-                            senderPrincipal = msg.caller;
-                            senderHandle = "";
-                            tags = [];
-                            tipAmount = "";
-                            token = "";
-                          });
+                          try{
+                            if(token_owner == seller_account){
+                              ignore sendNotification(Principal.toText(originalCaller));
+                            }
+                          }
+                          catch(_){
+                            //the call failed
+                            //nothing to do
+                          };
 
                           //nuance addition
                           //once any marketplace purchase happens, call the mint_and_list_next
@@ -2039,7 +2110,7 @@ actor class EXTNFT() = this {
       return false;
     })){
       case(?a) {
-        return await ext_marketplaceSettle(a.0);
+        return await ext_marketplaceSettleCustom(a.0, msg.caller);
       };
       case(_){};
     };
@@ -2346,5 +2417,42 @@ actor class EXTNFT() = this {
       postId = postId;
       icpPrice = icp_price_e8s;
     }
+  };
+  //sends the notification to the Notifications canister
+  public shared ({caller}) func sendNotification(purchaserPrincipalId: Text) : async () {
+    if(not Principal.equal(caller, Principal.fromActor(this))){
+      return;
+    };
+    let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+    let postKeyProperties = await PostCoreCanister.getPostKeyProperties(postId);
+    
+    switch(postKeyProperties) {
+      case(#ok(value)) {
+        let PostBucketCanister = CanisterDeclarations.getPostBucketCanister(value.bucketCanisterId);
+        switch(await PostBucketCanister.getPost(value.postId)) {
+          case(#ok(fullPostResponse)) {
+            let NotificationCanister = CanisterDeclarations.getNotificationCanister();
+            await NotificationCanister.createNotification(Principal.toText(writer_principal_id), #PremiumArticleSold {
+              amountOfTokens = Nat.toText(icp_price_e8s);
+              bucketCanisterId = value.bucketCanisterId;
+              postTitle = fullPostResponse.title;
+              postId = value.postId;
+              publicationPrincipalId = ?value.principal;
+              purchasedTokenSymbol = "ICP";
+              purchaserPrincipal = purchaserPrincipalId;
+            });
+          };
+          case(#err(error)) {
+            //not possible
+          };
+        };
+        
+      };
+      case(#err(error)) {
+        //not possible
+      };
+    };
+    
+    
   };
 }

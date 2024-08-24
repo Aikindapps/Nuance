@@ -43,12 +43,13 @@ export const idlFactory = ({ IDL }) => {
     'paymentFee' : IDL.Text,
     'readerPrincipalId' : IDL.Text,
   });
-  const Result_2 = IDL.Variant({ 'ok' : PaymentRequest, 'err' : IDL.Text });
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : PaymentRequest, 'err' : IDL.Text });
+  const Result_4 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result = IDL.Variant({
     'ok' : WriterSubscriptionDetails,
     'err' : IDL.Text,
   });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const UpdateSubscriptionDetailsModel = IDL.Record({
     'weeklyFee' : IDL.Opt(IDL.Nat),
     'lifeTimeFee' : IDL.Opt(IDL.Nat),
@@ -57,23 +58,28 @@ export const idlFactory = ({ IDL }) => {
     'publicationInformation' : IDL.Opt(IDL.Tuple(IDL.Principal, IDL.Text)),
   });
   return IDL.Service({
+    'acceptCycles' : IDL.Func([], [], []),
+    'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'checkMyExpiredSubscriptionsNotifications' : IDL.Func([], [], []),
     'completeSubscriptionEvent' : IDL.Func([IDL.Text], [Result_1], []),
     'createPaymentRequestAsReader' : IDL.Func(
         [IDL.Text, SubscriptionTimeInterval, IDL.Nat],
-        [Result_2],
+        [Result_3],
         [],
       ),
     'disperseTokensForSuccessfulSubscription' : IDL.Func(
         [IDL.Text],
-        [Result_3],
+        [Result_4],
         [],
       ),
     'expiredNotificationsHeartbeatExternal' : IDL.Func([], [], []),
+    'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getLatestTimerCall' : IDL.Func([], [IDL.Text, IDL.Text], ['query']),
+    'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
+    'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPaymentRequestBySubscriptionEventId' : IDL.Func(
         [IDL.Text],
-        [Result_2],
+        [Result_3],
         ['query'],
       ),
     'getReaderSubscriptionDetails' : IDL.Func([], [Result_1], ['query']),
@@ -92,6 +98,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         ['query'],
       ),
+    'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'isWriterActivatedSubscription' : IDL.Func(
         [IDL.Text],
         [IDL.Bool],
@@ -99,6 +106,9 @@ export const idlFactory = ({ IDL }) => {
       ),
     'pendingStuckTokensHeartbeatExternal' : IDL.Func([], [], []),
     'pendingTokensHeartbeatExternal' : IDL.Func([], [], []),
+    'sendNewSubscriptionNotifications' : IDL.Func([SubscriptionEvent], [], []),
+    'sendStopSubscriptionNotification' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_2], []),
     'stopSubscription' : IDL.Func([IDL.Text], [Result_1], []),
     'updateSubscriptionDetails' : IDL.Func(
         [UpdateSubscriptionDetailsModel],

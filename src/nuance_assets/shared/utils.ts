@@ -13,6 +13,7 @@ import {
 } from './constants';
 import { PairInfo, PostType } from '../types/types';
 import { TagModel } from '../services/actorService';
+import { SubscriptionTimeInterval } from '../../declarations/Subscription/Subscription.did';
 
 export enum DateFormat {
   // Sep 16
@@ -220,7 +221,9 @@ export const hexShade = (hex: string) => {
   }
   return hex;
 };
-
+export const removeDuplicatesFromArray = (array: any[]) => {
+  return [...new Set(array)];
+};
 export const parseEmbeddedImage = (
   embeddedImage: string,
   index: number = 0
@@ -845,4 +848,42 @@ export const searchTextToTag = (input: string, allTags: TagModel[]) => {
     }
   }
   return validTagNames;
+};
+
+export const textToUrlSegment = (text: string) => {
+  var prevHypen = false;
+  var result = '';
+  for (const char of text) {
+    if (isDigit(char) || isAlphabetic(char)) {
+      result += char;
+      prevHypen = false;
+    } else if (char === '-' || char === ' ') {
+      if (!prevHypen) {
+        result += '-';
+        prevHypen = true;
+      }
+    }
+  }
+  return result;
+};
+
+const isDigit = (c: string) => {
+  return typeof c === 'string' && c.length === 1 && c >= '0' && c <= '9';
+};
+const isAlphabetic = (char: string) => {
+  return char.toUpperCase() != char.toLowerCase();
+};
+
+export const convertSubscriptionTimeInterval = (
+  timeInterval: SubscriptionTimeInterval
+) => {
+  if ('Weekly' in timeInterval) {
+    return 'Weekly';
+  } else if ('Monthly' in timeInterval) {
+    return 'Monthly';
+  } else if ('Annually' in timeInterval) {
+    return 'Annually';
+  } else {
+    return 'Lifetime';
+  }
 };

@@ -289,7 +289,9 @@ service : {
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_6) query;
   getDailyMaxRegistration: () -> (nat) query;
+  getFollowersByPrincipalId: (principal) -> (vec UserListItem) query;
   getFollowersCount: (text) -> (text) query;
+  getFollowersPrincipalIdsByPrincipalId: (text) -> (vec text) query;
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
   getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
   getHandlesByPrincipals: (vec text) -> (vec text) query;

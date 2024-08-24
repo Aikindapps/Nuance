@@ -108,11 +108,6 @@ export const idlFactory = ({ IDL }) => {
     'daily' : IDL.Vec(DailyMetricsData),
   });
   const CanisterMetrics = IDL.Record({ 'data' : CanisterMetricsData });
-  const GetHandleByPrincipalReturn = IDL.Variant({
-    'ok' : IDL.Opt(IDL.Text),
-    'err' : IDL.Text,
-  });
-  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const UserListItem = IDL.Record({
     'bio' : IDL.Text,
     'socialChannelsUrls' : IDL.Vec(IDL.Text),
@@ -124,6 +119,11 @@ export const idlFactory = ({ IDL }) => {
     'fontType' : IDL.Text,
     'avatar' : IDL.Text,
   });
+  const GetHandleByPrincipalReturn = IDL.Variant({
+    'ok' : IDL.Opt(IDL.Text),
+    'err' : IDL.Text,
+  });
+  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
   const Result_8 = IDL.Variant({
     'ok' : IDL.Vec(UserListItem),
     'err' : IDL.Text,
@@ -216,7 +216,17 @@ export const idlFactory = ({ IDL }) => {
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getCgUsers' : IDL.Func([], [Result_6], ['query']),
     'getDailyMaxRegistration' : IDL.Func([], [IDL.Nat], ['query']),
+    'getFollowersByPrincipalId' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(UserListItem)],
+        ['query'],
+      ),
     'getFollowersCount' : IDL.Func([IDL.Text], [IDL.Text], ['query']),
+    'getFollowersPrincipalIdsByPrincipalId' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getHandleByPrincipal' : IDL.Func(
         [IDL.Text],
         [GetHandleByPrincipalReturn],

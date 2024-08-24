@@ -92,6 +92,7 @@ export type UserListItem = {
   website: string;
   socialChannelsUrls: string[];
   followersCount: string;
+  principal: string;
   postCounts?: UserPostCounts;
 };
 

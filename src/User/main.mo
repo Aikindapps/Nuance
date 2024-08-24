@@ -25,6 +25,7 @@ import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
 import CanisterDeclarations "../shared/CanisterDeclarations";
+import NotificationTypes "../NotificationsV3/types";
 
 actor User {
   let Unauthorized = "Unauthorized";
@@ -142,6 +143,8 @@ actor User {
   stable var platformOperators : List.List<Text> = List.nil<Text>();
   stable var nuanceCanisters : List.List<Text> = List.nil<Text>();
   stable var cgusers : List.List<Text> = List.nil<Text>();
+
+  stable var ANONYMOUS_PRINCIPAL = Principal.fromText("2vxsx-fae");
 
   func isAnonymous(caller : Principal) : Bool {
     Principal.equal(caller, Principal.fromText("2vxsx-fae"));
@@ -995,23 +998,10 @@ actor User {
     myFollowersHashMap.put(followingPrincipalId, Buffer.toArray(myFollowersBuffer));
 
     Debug.print("User->followAuthor:" # author);
-
-    ignore U.createNotification(#NewFollower, {
-      url = "";
-      articleId = "";
-      articleTitle = "";
-      authorPrincipal = Principal.fromText(followingPrincipalId);
-      authorHandle = author;
-      comment = "";
-      isReply = false;
-      receiverPrincipal = Principal.fromText(followingPrincipalId);
-      receiverHandle = author;
-      senderHandle = user.handle;
-      senderPrincipal = Principal.fromText(principalId);
-      tags = [];
-      tipAmount = "";
-      token = "";
-    });
+    let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+    ignore NotificationsCanister.createNotification(followingPrincipalId, #NewFollower({
+      followerPrincipalId = principalId
+    }));
     
     #ok(buildUser(principalId));
   };
@@ -1087,6 +1077,36 @@ actor User {
     };
     Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
     Buffer.toArray(users);
+  };
+
+  public shared query func getFollowersByPrincipalId(principalId : Principal) : async [UserListItem] {
+    Debug.print("Get User Followers => " # Principal.toText(principalId));
+   
+
+    let followers = U.safeGet(myFollowersHashMap, Principal.toText(principalId), []);
+    let users = Buffer.Buffer<UserListItem>(0);
+
+    for (followerPrincipalId in followers.vals()) {
+      let user : UserListItem = {
+        handle = U.safeGet(handleHashMap, followerPrincipalId, "");
+        avatar = U.safeGet(avatarHashMap, followerPrincipalId, "");
+        displayName = U.safeGet(displayNameHashMap, followerPrincipalId, "");
+        fontType = U.safeGet(fontTypesHashmap, followerPrincipalId, "");
+        bio = U.safeGet(bioHashMap, followerPrincipalId, "");
+        principal = followerPrincipalId;
+        website = U.safeGet(websiteHashMap, followerPrincipalId, "");
+        socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
+        followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+      };
+      users.add(user);
+    };
+    Debug.print("Get User Followers => " # debug_show (Buffer.toArray(users)));
+    Buffer.toArray(users);
+  };
+
+  public shared query func getFollowersPrincipalIdsByPrincipalId(principalId: Text) : async [Text] {
+    Debug.print("getFollowersPrincipalIdsByPrincipalIds");
+    return U.safeGet(myFollowersHashMap, principalId, []);
   };
 
 
@@ -1664,23 +1684,9 @@ actor User {
     lastClaimNotificationDateHashMap.put(principal, now);
 
     let user = buildUser(principal);
-    //ToDo: send the notification to the user
-    ignore U.createNotification(#FaucetClaimAvailable, {
-      url = "";
-      articleId = "";
-      articleTitle = "";
-      authorPrincipal =  Principal.fromText("2vxsx-fae");
-      authorHandle = "";
-      comment = "";
-      isReply = false;
-      receiverPrincipal = Principal.fromText(principal);
-      receiverHandle = user.handle;
-      senderHandle = "User Canister";
-      senderPrincipal = Principal.fromActor(User);
-      tags = [];
-      tipAmount = "";
-      token = "NUA";
-    });
+    
+    let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+    ignore NotificationsCanister.createNotification(principal, #FaucetClaimAvailable);
   };
 
   public shared ({caller}) func spendRestrictedTokensForTipping(bucketCanisterId: Text, postId: Text, amount: Nat) : async Result.Result<(), Text> {
@@ -2086,6 +2092,7 @@ actor User {
     Buffer.toArray(handlesBuffer);
   };
 
+
   public shared query ({ caller }) func getUserInternal(userPrincipalId : Text) : async ?User {
 
     //validate input
@@ -2211,7 +2218,7 @@ actor User {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 
@@ -2359,14 +2366,14 @@ actor User {
     };
 
     //👀👀👀 warning IC.countInstructions executes the functions passed to it
-    let preupgradeCount = IC.countInstructions(func() { preupgrade() });
-    let postupgradeCount = IC.countInstructions(func() { postupgrade() });
+    //let preupgradeCount = IC.countInstructions(func() { preupgrade() });
+    //let postupgradeCount = IC.countInstructions(func() { postupgrade() });
 
     // "the limit for a canister install and upgrade is 200 billion instructions."
     // "the limit for an update message is 20 billion instructions"
 
-    return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
-
+    //return "Preupgrade Count: " # Nat64.toText(preupgradeCount) # "\n Postupgrade Count: " # Nat64.toText(postupgradeCount) # "\n Preupgrade remaining instructions: " # Nat64.toText(200000000000 - preupgradeCount) # "\n Postupgrade remaining instructions: " # Nat64.toText(200000000000 - postupgradeCount);
+    return "Retired for now!";
   };
 
 };

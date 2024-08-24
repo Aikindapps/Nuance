@@ -11,7 +11,9 @@
       "specified_id": "dgwwd-jaaaa-aaaaf-qai7a-cai"
     },
     "KinicEndpoint": {
-      "dependencies": ["PostCore"],
+      "dependencies": [
+        "PostCore"
+      ],
       "main": "src/KinicEndpoint/main.mo",
       "type": "motoko",
       "specified_id": "4m3sz-lqaaa-aaaaf-qagza-cai"
@@ -25,11 +27,6 @@
       "main": "src/PostCore/main.mo",
       "type": "motoko",
       "specified_id": "322sd-3iaaa-aaaaf-qakgq-cai"
-    },
-    "PostIndex": {
-      "main": "src/PostIndex/main.mo",
-      "type": "motoko",
-      "specified_id": "r5sjg-7iaaa-aaaaf-qaama-cai"
     },
     "Storage": {
       "main": "src/Storage/main.mo",
@@ -47,20 +44,29 @@
       "specified_id": "xjlvo-hyaaa-aaaam-qbcga-cai"
     },
     "Notifications": {
-      "main": "src/Notifications/main.mo",
+      "main": "src/NotificationsV3/main.mo",
       "type": "motoko",
-      "specified_id": "55qxh-qqaaa-aaaap-qhfia-cai"
+      "specified_id": "qrlrq-biaaa-aaaaf-qal2q-cai"
     },
     "Subscription": {
       "main": "src/Subscription/main.mo",
       "type": "motoko",
       "specified_id": "s6qib-6qaaa-aaaaf-qalwa-cai"
     },
+    "PostRelations": {
+      "main": "src/PostRelations/main.mo",
+      "type": "motoko",
+      "specified_id": "qyi2m-xaaaa-aaaaf-qal3a-cai"
+    },
     "nuance_assets": {
       "frontend": {
         "entrypoint": "dist/index.html"
       },
-      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "source": [
+        "dist/",
+        "src/well-known/",
+        "src/SEO/"
+      ],
       "type": "assets",
       "specified_id": "exwqn-uaaaa-aaaaf-qaeaa-cai"
     }

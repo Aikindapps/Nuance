@@ -1,39 +1,25 @@
 type UserNotificationSettings = 
  record {
-   authorExpiredSubscription: bool;
    authorGainsNewSubscriber: bool;
    authorLosesSubscriber: bool;
-   expiredSubscription: bool;
    faucetClaimAvailable: bool;
    newArticleByFollowedTag: bool;
    newArticleByFollowedWriter: bool;
-   newCommentOnFollowedArticle: bool;
    newCommentOnMyArticle: bool;
    newFollower: bool;
    premiumArticleSold: bool;
    readerExpiredSubscription: bool;
+   replyToMyComment: bool;
    tipReceived: bool;
    youSubscribedToAuthor: bool;
    youUnsubscribedFromAuthor: bool;
  };
-type UpdateCallsAggregatedData = vec nat64;
-type Result_4 = 
+type SubscriptionTimeInterval = 
  variant {
-   err: text;
-   ok: vec text;
- };
-type Result_3 = 
- variant {
-   err: text;
-   ok: UserNotificationSettings;
- };
-type Result_2 = 
- variant {
-   err: text;
-   ok: record {
-         vec Notifications;
-         nat;
-       };
+   Annually;
+   LifeTime;
+   Monthly;
+   Weekly;
  };
 type Result_1 = 
  variant {
@@ -43,162 +29,236 @@ type Result_1 =
 type Result = 
  variant {
    err: text;
-   ok;
+   ok: UserNotificationSettings;
  };
-type NumericEntity = 
- record {
-   avg: nat64;
-   first: nat64;
-   last: nat64;
-   max: nat64;
-   min: nat64;
+type NotificationContent__1 = 
+ variant {
+   AuthorGainsNewSubscriber:
+    record {
+      amountOfTokens: text;
+      subscriberPrincipalId: text;
+      subscriptionEndTime: text;
+      subscriptionStartTime: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   AuthorLosesSubscriber:
+    record {
+      subscriberPrincipalId: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   FaucetClaimAvailable;
+   NewArticleByFollowedTag:
+    record {
+      bucketCanisterId: text;
+      postId: text;
+      postTitle: text;
+      postWriterPrincipal: text;
+      tagName: text;
+    };
+   NewArticleByFollowedWriter:
+    record {
+      bucketCanisterId: text;
+      postId: text;
+      postTitle: text;
+      postWriterPrincipal: text;
+    };
+   NewCommentOnMyArticle:
+    record {
+      bucketCanisterId: text;
+      commentContent: text;
+      commentId: text;
+      commenterPrincipal: text;
+      isReply: bool;
+      postId: text;
+      postTitle: text;
+    };
+   NewFollower: record {followerPrincipalId: text;};
+   PremiumArticleSold:
+    record {
+      amountOfTokens: text;
+      bucketCanisterId: text;
+      postId: text;
+      postTitle: text;
+      publicationPrincipalId: opt text;
+      purchasedTokenSymbol: text;
+      purchaserPrincipal: text;
+    };
+   ReaderExpiredSubscription:
+    record {
+      amountOfTokens: text;
+      isPublication: bool;
+      subscribedWriterPrincipalId: text;
+      subscriptionEndTime: text;
+      subscriptionStartTime: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   ReplyToMyComment:
+    record {
+      bucketCanisterId: text;
+      myCommentContent: text;
+      myCommentId: text;
+      postId: text;
+      postTitle: text;
+      postWriterPrincipal: text;
+      replyCommentContent: text;
+      replyCommentId: text;
+      replyCommenterPrincipal: text;
+    };
+   TipReceived:
+    record {
+      amountOfTokens: text;
+      bucketCanisterId: text;
+      numberOfApplauds: text;
+      postId: text;
+      postTitle: text;
+      publicationPrincipalId: opt text;
+      tipSenderPrincipal: text;
+      tippedTokenSymbol: text;
+    };
+   YouSubscribedToAuthor:
+    record {
+      amountOfTokens: text;
+      isPublication: bool;
+      subscribedWriterPrincipalId: text;
+      subscriptionEndTime: text;
+      subscriptionStartTime: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   YouUnsubscribedFromAuthor:
+    record {
+      isPublication: bool;
+      subscribedWriterPrincipalId: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
  };
-type Notifications = 
+type NotificationContent = 
+ variant {
+   AuthorGainsNewSubscriber:
+    record {
+      amountOfTokens: text;
+      subscriberPrincipalId: text;
+      subscriptionEndTime: text;
+      subscriptionStartTime: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   AuthorLosesSubscriber:
+    record {
+      subscriberPrincipalId: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   FaucetClaimAvailable;
+   NewArticleByFollowedTag:
+    record {
+      bucketCanisterId: text;
+      postId: text;
+      postTitle: text;
+      postWriterPrincipal: text;
+      tagName: text;
+    };
+   NewArticleByFollowedWriter:
+    record {
+      bucketCanisterId: text;
+      postId: text;
+      postTitle: text;
+      postWriterPrincipal: text;
+    };
+   NewCommentOnMyArticle:
+    record {
+      bucketCanisterId: text;
+      commentContent: text;
+      commentId: text;
+      commenterPrincipal: text;
+      isReply: bool;
+      postId: text;
+      postTitle: text;
+    };
+   NewFollower: record {followerPrincipalId: text;};
+   PremiumArticleSold:
+    record {
+      amountOfTokens: text;
+      bucketCanisterId: text;
+      postId: text;
+      postTitle: text;
+      publicationPrincipalId: opt text;
+      purchasedTokenSymbol: text;
+      purchaserPrincipal: text;
+    };
+   ReaderExpiredSubscription:
+    record {
+      amountOfTokens: text;
+      isPublication: bool;
+      subscribedWriterPrincipalId: text;
+      subscriptionEndTime: text;
+      subscriptionStartTime: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   ReplyToMyComment:
+    record {
+      bucketCanisterId: text;
+      myCommentContent: text;
+      myCommentId: text;
+      postId: text;
+      postTitle: text;
+      postWriterPrincipal: text;
+      replyCommentContent: text;
+      replyCommentId: text;
+      replyCommenterPrincipal: text;
+    };
+   TipReceived:
+    record {
+      amountOfTokens: text;
+      bucketCanisterId: text;
+      numberOfApplauds: text;
+      postId: text;
+      postTitle: text;
+      publicationPrincipalId: opt text;
+      tipSenderPrincipal: text;
+      tippedTokenSymbol: text;
+    };
+   YouSubscribedToAuthor:
+    record {
+      amountOfTokens: text;
+      isPublication: bool;
+      subscribedWriterPrincipalId: text;
+      subscriptionEndTime: text;
+      subscriptionStartTime: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+   YouUnsubscribedFromAuthor:
+    record {
+      isPublication: bool;
+      subscribedWriterPrincipalId: text;
+      subscriptionTimeInterval: SubscriptionTimeInterval;
+    };
+ };
+type Notification = 
  record {
-   content: NotificationContent__1;
+   content: NotificationContent;
    id: text;
-   notificationType: NotificationType;
+   notificationReceiverPrincipalId: text;
    read: bool;
    timestamp: text;
  };
-type NotificationType__1 = 
- variant {
-   AuthorExpiredSubscription;
-   AuthorGainsNewSubscriber;
-   AuthorLosesSubscriber;
-   FaucetClaimAvailable;
-   NewArticleByFollowedTag;
-   NewArticleByFollowedWriter;
-   NewCommentOnFollowedArticle;
-   NewCommentOnMyArticle;
-   NewFollower;
-   PremiumArticleSold;
-   ReaderExpiredSubscription;
-   TipReceived;
-   YouSubscribedToAuthor;
-   YouUnsubscribedFromAuthor;
- };
-type NotificationType = 
- variant {
-   AuthorExpiredSubscription;
-   AuthorGainsNewSubscriber;
-   AuthorLosesSubscriber;
-   FaucetClaimAvailable;
-   NewArticleByFollowedTag;
-   NewArticleByFollowedWriter;
-   NewCommentOnFollowedArticle;
-   NewCommentOnMyArticle;
-   NewFollower;
-   PremiumArticleSold;
-   ReaderExpiredSubscription;
-   TipReceived;
-   YouSubscribedToAuthor;
-   YouUnsubscribedFromAuthor;
- };
-type NotificationContent__1 = 
+type GetUserNotificationsResponse = 
  record {
-   articleId: text;
-   articleTitle: text;
-   authorHandle: text;
-   authorPrincipal: principal;
-   comment: text;
-   isReply: bool;
-   receiverHandle: text;
-   receiverPrincipal: principal;
-   senderHandle: text;
-   senderPrincipal: principal;
-   tags: vec text;
-   tipAmount: text;
-   token: text;
-   url: text;
+   notifications: vec Notification;
+   totalCount: text;
  };
-type NotificationContent = 
- record {
-   articleId: text;
-   articleTitle: text;
-   authorHandle: text;
-   authorPrincipal: principal;
-   comment: text;
-   isReply: bool;
-   receiverHandle: text;
-   receiverPrincipal: principal;
-   senderHandle: text;
-   senderPrincipal: principal;
-   tags: vec text;
-   tipAmount: text;
-   token: text;
-   url: text;
- };
-type MetricsGranularity = 
- variant {
-   daily;
-   hourly;
- };
-type List = 
- opt record {
-       text;
-       List;
-     };
-type HourlyMetricsData = 
- record {
-   canisterCycles: CanisterCyclesAggregatedData;
-   canisterHeapMemorySize: CanisterHeapMemoryAggregatedData;
-   canisterMemorySize: CanisterMemoryAggregatedData;
-   timeMillis: int;
-   updateCalls: UpdateCallsAggregatedData;
- };
-type GetMetricsParameters = 
- record {
-   dateFromMillis: nat;
-   dateToMillis: nat;
-   granularity: MetricsGranularity;
- };
-type DailyMetricsData = 
- record {
-   canisterCycles: NumericEntity;
-   canisterHeapMemorySize: NumericEntity;
-   canisterMemorySize: NumericEntity;
-   timeMillis: int;
-   updateCalls: nat64;
- };
-type CanisterMetricsData = 
- variant {
-   daily: vec DailyMetricsData;
-   hourly: vec HourlyMetricsData;
- };
-type CanisterMetrics = record {data: CanisterMetricsData;};
-type CanisterMemoryAggregatedData = vec nat64;
-type CanisterHeapMemoryAggregatedData = vec nat64;
-type CanisterCyclesAggregatedData = vec nat64;
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
-  collectCanisterMetrics: () -> ();
-  createNotification: (NotificationType__1, NotificationContent) -> (Result);
-  createNotifications:
-   (vec record {
-          NotificationType__1;
-          NotificationContent;
-        }) -> (Result);
-  disperseBulkSubscriptionNotifications:
-   (vec record {
-          NotificationType__1;
-          NotificationContent;
-        }) -> (Result);
-  getAdmins: () -> (Result_4) query;
-  getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  createNotification: (text, NotificationContent__1) -> ();
+  createNotifications: (vec record {
+                              text;
+                              NotificationContent__1;
+                            }) -> ();
   getCanisterVersion: () -> (text) query;
-  getCgUsers: () -> (Result_4) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getPlatformOperators: () -> (List) query;
-  getUserNotificationSettings: () -> (Result_3) query;
-  getUserNotifications: (text, text) -> (Result_2) query;
+  getUserNotificationSettings: () -> (UserNotificationSettings) query;
+  getUserNotifications: (text, text) -> (GetUserNotificationsResponse) query;
   isThereEnoughMemory: () -> (bool) query;
-  markNotificationAsRead: (vec text) -> (Result);
-  newArticle: (NotificationContent) -> (Result);
-  registerCgUser: (text) -> (Result);
+  markNotificationsAsRead: (vec text) -> ();
   setMaxMemorySize: (nat) -> (Result_1);
-  unregisterCgUser: (text) -> (Result);
-  updateUserNotificationSettings: (UserNotificationSettings) -> (Result);
+  updateNotificationSettings: (UserNotificationSettings) -> (Result);
 }

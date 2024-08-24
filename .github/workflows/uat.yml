@@ -20,8 +20,8 @@ jobs:
       - name: Confirm successful installation
         run: |
           dfx --version
-          dfxvm install 0.17.0
-          dfxvm default 0.17.0
+          dfxvm install 0.22.0
+          dfxvm default 0.22.0
 
       - name: Start DFX background
         run: dfx start --background
@@ -57,6 +57,20 @@ jobs:
           DFX_NETWORK="ic"
           PUBLICATIONS_REPO_PATH=./Nuance-NFTs-and-Publications
           NUANCE_MAIN_REPO_PATH=./
+
+          USER_CANISTER_ID = "${{ secrets.UAT_USER }}"
+          POST_CORE_CANISTER_ID = "${{ secrets.UAT_POSTCORE }}"
+          KINIC_ENDPOINT_CANISTER_ID = "${{ secrets.UAT_KINICENDPOINT }}"
+          FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID = "${{ secrets.UAT_FASTBLOCKS_EMAILOPTIN }}"
+          POST_RELATIONS_CANISTER_ID = "${{ secrets.UAT_POSTRELATIONS }}"
+          STORAGE_CANISTER_ID = "${{ secrets.UAT_STORAGE }}"
+          CYCLES_DISPENSER_CANISTER_ID = "${{ secrets.UAT_CYCLESDISPENSER }}"
+          NUANCE_ASSETS_CANISTER_ID = "${{ secrets.UAT_NUANCE_ASSETS }}"
+          METRICS_CANISTER_ID =   "${{ secrets.UAT_METRICS }}"
+          NFT_FACTORY_CANISTER_ID =  "${{ secrets.UAT_NFTFACTORY }}"
+          PUBLICATION_MANAGEMENT_CANISTER_ID =  "${{ secrets.UAT_PUBLICATIONMANAGEMENT }}"
+          NOTIFICATIONS_CANISTER_ID = "${{ secrets.UAT_NOTIFICATIONS }}"
+          SUBSCRIPTION_CANISTER_ID =  "${{ secrets.UAT_SUBSCRIPTION }}"
           EOF
 
       - name: Generate canister_ids.json and canisterIds.mo
@@ -75,7 +89,9 @@ jobs:
             "PostBucket": { "ic": "'"$POSTBUCKET"'" },
             "Metrics": { "ic": "'"$METRICS"'" },
             "Notifications": { "ic": "'"$NOTIFICATIONS"'"},
-            "Subscription": { "ic": "'"$SUBSCRIPTION"'" }
+            "Subscription": { "ic": "'"$SUBSCRIPTION"'" },
+            "PostRelations": { "ic": "'"$POST_RELATIONS"'" }
+
           }' > canister_ids.json
           echo '{
             "governance_canister_id": "'"$GOVERNANCE_CANISTER_ID"'",
@@ -111,6 +127,7 @@ jobs:
             public let PUBLISHER_CANISTER_ID = "'"$PUBLISHER"'";
             public let NOTIFICATIONS_CANISTER_ID = "'"$NOTIFICATIONS"'";
             public let SUBSCRIPTION_CANISTER_ID = "'"$SUBSCRIPTION"'";
+            public let POST_RELATIONS_CANISTER_ID = "'"$POST_RELATIONS"'";
           };' > src/shared/canisterIds.mo
 
         env:
@@ -129,6 +146,7 @@ jobs:
           PUBLISHER: ${{ secrets.UAT_PUBLISHER }}
           NOTIFICATIONS: ${{ secrets.UAT_NOTIFICATIONS }}
           SUBSCRIPTION: ${{ secrets.UAT_SUBSCRIPTION }}
+          POST_RELATIONS: ${{ secrets.UAT_POSTRELATIONS }}
 
       - name: Generate canister_ids.json in for NFTs and Publications
         run: |

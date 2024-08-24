@@ -201,7 +201,12 @@ export interface _SERVICE {
   'getCanisterVersion' : ActorMethod<[], string>,
   'getCgUsers' : ActorMethod<[], Result_6>,
   'getDailyMaxRegistration' : ActorMethod<[], bigint>,
+  'getFollowersByPrincipalId' : ActorMethod<[Principal], Array<UserListItem>>,
   'getFollowersCount' : ActorMethod<[string], string>,
+  'getFollowersPrincipalIdsByPrincipalId' : ActorMethod<
+    [string],
+    Array<string>
+  >,
   'getHandleByPrincipal' : ActorMethod<[string], GetHandleByPrincipalReturn>,
   'getHandlesByAccountIdentifiers' : ActorMethod<
     [Array<string>],
@@ -282,4 +287,4 @@ export interface _SERVICE {
   'validate' : ActorMethod<[any], Validate>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
-export declare const init: ({ IDL }: { IDL: IDL }) => IDL.Type[];
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

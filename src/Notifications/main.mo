@@ -193,7 +193,7 @@ actor Notifications {
 
   public func acceptCycles() : async () {
     let available = Cycles.available();
-    let accepted = Cycles.accept(available);
+    let accepted = Cycles.accept<system>(available);
     assert (accepted == available);
   };
 
@@ -269,9 +269,6 @@ stable var userBroadcastNotifications = Map.new<Principal, BroadcastNotification
 //broadcasts
 // key: articleId, value: array of principalIds who've commented on the article. 
 stable var articleCommenters = Map.new<Text, [Principal]>();
-
-//writer and tag followers are derived from the user canister and postcore canister respectively
-//for single source of truth, we will not store them here. These notifications are also not time sensitive.
 
 
 ///////////////////////////////////////////events///////////////////////////////////////////

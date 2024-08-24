@@ -19,4 +19,11 @@ echo ""
 
 cd $PUBLICATIONS_REPO_PATH
 dfx deploy --network $NETWORK
+
+echo ""
+echo "Upgrading publication buckets..."
 node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
+
+echo ""
+echo "Upgrading NFT buckets..."
+node scripts/upgrade-nft-canisters.js --multi --$NETWORK

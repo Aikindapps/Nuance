@@ -4,7 +4,6 @@ import {
   getSubscriptionActor,
   getUserActor,
   getIcrc1Actor,
-  SUBSCRIPTION_CANISTER_ID,
   getPostCoreActor,
 } from '../services/actorService';
 import { SubscriptionHistoryItem, UserListItem } from '../types/types';
@@ -20,6 +19,9 @@ import { NUA_CANISTER_ID } from '../shared/constants';
 import { Toast } from 'react-bootstrap';
 import { useAuthStore } from './authStore';
 import { User } from '../services/ext-service/ext_v2.did';
+
+const SUBSCRIPTION_CANISTER_ID = process.env.SUBSCRIPTION_CANISTER_ID || '';
+
 
 export type SubscribedWriterItem = {
   userListItem: UserListItem;

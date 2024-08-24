@@ -39,6 +39,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const NotificationsModalOpen =
     modalContext?.isModalOpen && modalContext.modalType === 'Notifications';
@@ -165,16 +166,26 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     unreadNotificationCount,
     markAllNotificationsAsRead,
     resetUnreadNotificationCount,
+    getUserNotifications,
+    checkMyClaimNotification,
   } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
     resetUnreadNotificationCount: state.resetUnreadNotificationCount,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
+    getUserNotifications: state.getUserNotifications,
+    checkMyClaimNotification: state.checkMyClaimNotification,
   }));
 
   useEffect(() => {
     verifyBitfinityWallet();
     updateLastLogin();
+    setInterval(() => {
+      getUserNotifications(0, 20, navigate);
+    }, 10000);
+    setInterval(() => {
+      checkMyClaimNotification();
+    }, 10000);
   }, []);
 
   const getLogoOrBreadCrumb = () => {

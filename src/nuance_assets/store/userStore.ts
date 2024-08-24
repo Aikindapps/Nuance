@@ -1,6 +1,11 @@
 import create, { GetState, SetState, StateCreator, StoreApi } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { toastError, toast, ToastType } from '../services/toastService';
+import {
+  toastError,
+  toast,
+  ToastType,
+  toastNotification,
+} from '../services/toastService';
 import { ErrorType, getErrorType } from '../services/errorService';
 import { useAuthStore, useSubscriptionStore } from './';
 import { UserType, UserListItem, PublicationType } from '../types/types';
@@ -13,14 +18,12 @@ import {
   getPostCoreActor,
   getPublisherActor,
   getNotificationsActor,
-  Notifications,
-  NotificationType,
-  NotificationContent,
+  Notification,
   UserNotificationSettings,
-  getSubscriptionActor,
+  NotificationContent,
 } from '../services/actorService';
-import UserListElement from '../components/user-list-item/user-list-item';
-import { ReaderSubscriptionDetailsConverted } from './subscriptionStore';
+import { removeDuplicatesFromArray } from '../shared/utils';
+import { NavigateFunction } from 'react-router-dom';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -126,6 +129,58 @@ const mergePublicationsWithNumberOfPublishedArticlesAndUserListItem = async (
     };
   });
 };
+const getPrincipalIdsFromNotificationContent = (
+  notificationContent: NotificationContent
+): string[] => {
+  if ('FaucetClaimAvailable' in notificationContent) {
+    return [];
+  } else if ('TipReceived' in notificationContent) {
+    let content = notificationContent.TipReceived;
+    if (content.publicationPrincipalId.length === 0) {
+      return [content.tipSenderPrincipal];
+    } else {
+      return [content.publicationPrincipalId[0], content.tipSenderPrincipal];
+    }
+  } else if ('NewArticleByFollowedWriter' in notificationContent) {
+    let content = notificationContent.NewArticleByFollowedWriter;
+    return [content.postWriterPrincipal];
+  } else if ('AuthorLosesSubscriber' in notificationContent) {
+    let content = notificationContent.AuthorLosesSubscriber;
+    return [content.subscriberPrincipalId];
+  } else if ('YouSubscribedToAuthor' in notificationContent) {
+    let content = notificationContent.YouSubscribedToAuthor;
+    return [content.subscribedWriterPrincipalId];
+  } else if ('NewCommentOnMyArticle' in notificationContent) {
+    let content = notificationContent.NewCommentOnMyArticle;
+    return [content.commenterPrincipal];
+  } else if ('YouUnsubscribedFromAuthor' in notificationContent) {
+    let content = notificationContent.YouUnsubscribedFromAuthor;
+    return [content.subscribedWriterPrincipalId];
+  } else if ('NewFollower' in notificationContent) {
+    let content = notificationContent.NewFollower;
+    return [content.followerPrincipalId];
+  } else if ('ReaderExpiredSubscription' in notificationContent) {
+    let content = notificationContent.ReaderExpiredSubscription;
+    return [content.subscribedWriterPrincipalId];
+  } else if ('ReplyToMyComment' in notificationContent) {
+    let content = notificationContent.ReplyToMyComment;
+    return [content.postWriterPrincipal, content.replyCommenterPrincipal];
+  } else if ('PremiumArticleSold' in notificationContent) {
+    let content = notificationContent.PremiumArticleSold;
+    if (content.publicationPrincipalId.length === 0) {
+      return [content.purchaserPrincipal];
+    } else {
+      return [content.publicationPrincipalId[0], content.purchaserPrincipal];
+    }
+  } else if ('NewArticleByFollowedTag' in notificationContent) {
+    let content = notificationContent.NewArticleByFollowedTag;
+    return [content.postWriterPrincipal];
+  } else if ('AuthorGainsNewSubscriber' in notificationContent) {
+    let content = notificationContent.AuthorGainsNewSubscriber;
+    return [content.subscriberPrincipalId];
+  }
+  return [];
+};
 
 export interface UserStore {
   readonly user: UserType | undefined;
@@ -141,7 +196,8 @@ export interface UserStore {
   readonly searchUserResults: UserListItem[] | undefined;
   readonly searchPublicationResults: PublicationType[] | undefined;
   readonly myFollowers: UserListItem[] | undefined;
-  readonly notifications: Notifications[] | undefined;
+  readonly notifications: Notification[] | undefined;
+  readonly notificationUserListItems: UserListItem[];
   readonly totalNotificationCount: number;
   readonly unreadNotificationCount: number;
   readonly notificationsToasted: string[];
@@ -156,6 +212,7 @@ export interface UserStore {
   getAuthor: (handle: string) => Promise<UserType | undefined>;
   getAllUsersHandles: () => Promise<string[]>;
   getAllPublicationsHandles: () => Promise<[string, string][]>;
+  getHandlesByPrincipals: (principals: string[]) => Promise<string[]>;
   searchUsers: (input: string) => Promise<UserListItem[]>;
   searchPublications: (input: string) => Promise<PublicationType[]>;
   getUserPostCounts: (handle: string) => Promise<UserPostCounts | undefined>;
@@ -191,25 +248,21 @@ export interface UserStore {
   ) => Promise<UserListItem[]>;
   getPrincipalByHandle: (handle: string) => Promise<string | undefined>;
   createEmailOptInAddress: (emailAddress: string) => Promise<void>;
-
   getUserNotifications: (
     from: number,
     to: number,
-    isLoggedIn: boolean
+    navigate: NavigateFunction
   ) => Promise<void>;
   checkMyClaimNotification: () => Promise<void>;
-  loadMoreNotifications: (from: number, to: number) => Promise<void>;
-  createNotification: (
-    notificationType: NotificationType,
-    notificationContent: NotificationContent
-  ) => Promise<void>;
-  markNotificationAsRead: (notificationId: string[]) => Promise<void>;
+  markNotificationsAsRead: (notificationId: string[]) => Promise<void>;
   markAllNotificationsAsRead: () => void;
   resetUnreadNotificationCount: () => void;
   updateUserNotificationSettings: (
     notificationSettings: UserNotificationSettings
   ) => Promise<void>;
-  getUserNotificationSettings: () => void;
+  getUserNotificationSettings: () => Promise<
+    UserNotificationSettings | undefined
+  >;
   claimTokens: () => Promise<boolean | void>;
   spendRestrictedTokensForTipping: (
     postId: string,
@@ -256,6 +309,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   searchPublicationResults: undefined,
   myFollowers: undefined,
   notifications: undefined,
+  notificationUserListItems: [],
   unreadNotificationCount: 0,
   totalNotificationCount: 0,
   notificationsToasted: [],
@@ -332,6 +386,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       return result.ok[0];
     }
     return undefined;
+  },
+
+  getHandlesByPrincipals: async (principals: string[]): Promise<string[]> => {
+    const result = await (
+      await getUserActor()
+    ).getHandlesByPrincipals(principals);
+    if (!(Err in result)) {
+      return result;
+    }
+    return [];
   },
 
   getUserPostCounts: async (
@@ -650,45 +714,96 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   getUserNotifications: async (
     from: number,
     to: number,
-    isLoggedIn: boolean
+    navigate: NavigateFunction
   ): Promise<void> => {
-    if (isLoggedIn) {
-      try {
-        const result = await (
-          await getNotificationsActor()
-        ).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
-        var toToast = [];
-
-        if (Err in result) {
-          toastError(result.err);
-        } else {
-          set({ notifications: result.ok[0] });
-          set({ unreadNotificationCount: 0 });
-          set({ totalNotificationCount: Number(result.ok[1]) });
-          for (let i = 0; i < result.ok[0].length; i++) {
-            if (result.ok[0][i].read === false) {
-              set((state) => ({
-                unreadNotificationCount: state.unreadNotificationCount + 1,
-              }));
-              if (!get().notificationsToasted.includes(result.ok[0][i].id)) {
-                toToast.push(result.ok[0][i]);
-                set((state) => ({
-                  notificationsToasted: [
-                    ...state.notificationsToasted,
-                    result.ok[0][i].id,
-                  ],
-                }));
-              }
-            }
-          }
-        }
-
-        if (toToast?.length > 0) {
-          toast(JSON.stringify(toToast), ToastType.Notification);
-        }
-      } catch (err) {
-        console.error('getUserNotifications:', err);
+    try {
+      let notificationsActor = await getNotificationsActor();
+      let result = await notificationsActor.getUserNotifications(
+        JSON.stringify(from),
+        JSON.stringify(to)
+      );
+      //get all the principal ids used in all notifications as an array
+      let allPrincipalIds = result.notifications
+        .map((notification) => {
+          return getPrincipalIdsFromNotificationContent(notification.content);
+        })
+        .flat();
+      if (result.notifications.length > 0) {
+        //add the notificationReceiverPrincipalId
+        allPrincipalIds.push(
+          result.notifications[0].notificationReceiverPrincipalId
+        );
       }
+      //remove the duplicates
+      allPrincipalIds = [...new Set(allPrincipalIds)];
+      //get the user list items from the User canister
+      let userActor = await getUserActor();
+      let userListItems = await userActor.getUsersByPrincipals(allPrincipalIds);
+      let existingUserListItems = Array.from(get().notificationUserListItems);
+      existingUserListItems.forEach((userListItem) => {
+        //if it doesn exist in userListItems, add it
+        if (!allPrincipalIds.includes(userListItem.principal)) {
+          userListItems.push(userListItem);
+        }
+      });
+
+      let notifications: Notification[] = [];
+      let existingNotifications = get().notifications;
+      if (existingNotifications) {
+        if (result.notifications.length > 0) {
+          //make sure it's the same user
+          existingNotifications = existingNotifications.filter(
+            (existingNotification) =>
+              existingNotification.notificationReceiverPrincipalId ===
+              result.notifications[0].notificationReceiverPrincipalId
+          );
+        }
+        //set the notifications array
+        notifications = [...result.notifications, ...existingNotifications];
+      } else {
+        notifications = result.notifications;
+      }
+
+      //sort the notifications by the timestamp
+      notifications.sort((n_1, n_2) => {
+        return Number(n_2.timestamp) - Number(n_1.timestamp);
+      });
+      //remove the duplicates
+      let notificationIds = notifications.map((val) => val.id);
+      notificationIds = [...new Set(notificationIds)];
+      let notificationsRemovedDuplicates = notificationIds.map(
+        (notificationId) => {
+          return notifications.find(
+            (val) => val.id === notificationId
+          ) as Notification;
+        }
+      );
+
+      //handle toasting
+      let alreadyToastedNotificationIds = get().notificationsToasted;
+      let toToast = notificationsRemovedDuplicates.filter((val) => {
+        return !alreadyToastedNotificationIds.includes(val.id) && !val.read;
+      });
+      console.log('toToast: ', toToast);
+      if (toToast.length > 0) {
+        toastNotification(toToast, userListItems, navigate);
+      }
+
+      //set the value in the userStore
+      set({
+        notificationUserListItems: userListItems,
+        notifications: notificationsRemovedDuplicates,
+        totalNotificationCount: Number(result.totalCount),
+        unreadNotificationCount: result.notifications.filter(
+          (notification) => !notification.read
+        ).length,
+        notificationsToasted: [
+          ...alreadyToastedNotificationIds,
+          ...toToast.map((n) => n.id),
+        ],
+      });
+    } catch (err) {
+      console.error('getUserNotifications:', err);
     }
   },
 
@@ -702,50 +817,11 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  loadMoreNotifications: async (from: number, to: number): Promise<void> => {
+  markNotificationsAsRead: async (notificationIds: string[]): Promise<void> => {
     try {
       const result = await (
         await getNotificationsActor()
-      ).getUserNotifications(JSON.stringify(from), JSON.stringify(to));
-      if (Err in result) {
-        toastError(result.err);
-      } else {
-        let notifications = get().notifications || [];
-        set({ notifications: [...notifications, ...result.ok[0]] });
-      }
-    } catch (err) {
-      handleError(err, Unexpected);
-    }
-  },
-
-  createNotification: async (
-    notificationType: NotificationType,
-    notificationContent: NotificationContent
-  ): Promise<void> => {
-    try {
-      const result = await (
-        await getNotificationsActor()
-      ).createNotification(notificationType, notificationContent);
-      if (Err in result) {
-        console.log('createNotification:', result.err);
-      } else {
-        console.log('createNotification:', result.ok);
-      }
-    } catch (err) {
-      console.log('createNotification:', err);
-    }
-  },
-
-  markNotificationAsRead: async (notificationId: string[]): Promise<void> => {
-    try {
-      const result = await (
-        await getNotificationsActor()
-      ).markNotificationAsRead(notificationId);
-      if (Err in result) {
-        toastError(result.err);
-      } else {
-        console.log('markNotificationAsRead:', result.ok);
-      }
+      ).markNotificationsAsRead(notificationIds);
     } catch (err) {
       handleError(err, Unexpected);
     }
@@ -757,6 +833,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       .filter((notification) => !notification.read)
       .map((notification) => notification.id);
     if (notificationIds.length > 0) {
+      //optimistic update
       set({
         notifications: notifications.map((notification) => {
           return {
@@ -764,36 +841,27 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
             read: true,
           };
         }),
+        unreadNotificationCount: 0,
       });
-      set({ unreadNotificationCount: 0 });
-      try {
-        const result = await (
-          await getNotificationsActor()
-        ).markNotificationAsRead(notificationIds);
-        if (Err in result) {
-          console.error('markAllNotificationsAsRead:', result.err);
-        } else {
-          set({ unreadNotificationCount: 0 });
-        }
-      } catch (err) {
-        console.error('markAllNotificationsAsRead:', err);
-      }
+      //mark all as read
+      let notificationActor = await getNotificationsActor();
+      notificationActor.markNotificationsAsRead(notificationIds);
     }
   },
 
-  getUserNotificationSettings: async (): Promise<UserNotificationSettings | undefined> => {
-      try {
-        const result = await (await getNotificationsActor()).getUserNotificationSettings();
-        if (Err in result) {
-          toastError(result.err);
-        } else {
-          return result.ok;
-        }
-      } catch (err) {
-        handleError(err, Unexpected);
-      }
-      return undefined;
-    },
+  getUserNotificationSettings: async (): Promise<
+    UserNotificationSettings | undefined
+  > => {
+    try {
+      const result = await (
+        await getNotificationsActor()
+      ).getUserNotificationSettings();
+      return result;
+    } catch (err) {
+      handleError(err, Unexpected);
+    }
+    return undefined;
+  },
 
   //users can call this method to claim their restricted tokens
   claimTokens: async (): Promise<boolean | void> => {
@@ -851,11 +919,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     try {
       const result = await (
         await getNotificationsActor()
-      ).updateUserNotificationSettings(notificationSettings);
+      ).updateNotificationSettings(notificationSettings);
       if (Err in result) {
         toastError(result.err);
-      } else {
-        console.log('updateUserNotificationSettings:', result.ok);
       }
     } catch (err) {
       handleError(err, Unexpected);

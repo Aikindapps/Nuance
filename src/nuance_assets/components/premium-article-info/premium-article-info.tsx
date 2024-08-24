@@ -20,8 +20,6 @@ import { Context } from '../../contextes/Context';
 import { useUserStore } from '../../store';
 import { tokenIdentifier } from '../../shared/ext-utils';
 import { FaRegCopy } from 'react-icons/fa';
-import { NotificationType } from '../../../declarations/Notifications/Notifications.did';
-import { Principal } from '@dfinity/principal';
 
 type PremiumArticleInfoProps = {
   post: PostType | undefined;
@@ -79,10 +77,6 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
       getOwnedNfts: state.getOwnedNfts,
       getMyBalance: state.getMyBalance,
     }));
-  const { user, createNotification } = useUserStore((state) => ({
-    user: state.user,
-    createNotification: state.createNotification,
-  }));
 
   if (!props.post || !props.post.premiumArticleSaleInfo) {
     return <div />;

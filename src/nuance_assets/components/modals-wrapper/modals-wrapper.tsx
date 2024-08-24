@@ -10,8 +10,10 @@ import { EditArticlePremiumModal } from '../edit-article-premium-modal/edit-arti
 import { PostType } from 'src/nuance_assets/types/types';
 import NotificationsSidebar from '../notifications/notifications';
 import { ClaimRestrictedTokensModal } from '../claim-restricted-tokens-modal/claim-restricted-tokens-modal';
+import { useNavigate } from 'react-router-dom';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
+  const navigate = useNavigate();
   return (
     <div
       className='modals-wrapper'
@@ -54,7 +56,7 @@ export const ModalsWrapper = () => {
           numberOfEditors={modalContext.modalData.premiumPostNumberOfEditors}
         />
       ) : modalContext?.modalType === 'Notifications' ? (
-        <NotificationsSidebar />
+        <NotificationsSidebar navigate={navigate}/>
       ) : modalContext?.modalType === 'claim restricted tokens' ? (
         <ClaimRestrictedTokensModal />
       ) : null}
