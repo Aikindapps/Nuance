@@ -826,7 +826,7 @@ const HomePage = () => {
                 This includes anonymity, self-sovereignty, censorship
                 resistance, community governance, and tokenization. Ensuring a
                 decentralized and secure environment for writers and readers
-                alike. alike.
+                alike.
               </span>
             </div>
           </div>
