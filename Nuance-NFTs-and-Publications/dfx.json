@@ -13,6 +13,10 @@
     "Publisher": {
       "main": "src/Publisher/main.mo",
       "type": "motoko"
+    },
+    "NftBucket": {
+      "main": "src/ext_v2/v2.mo",
+      "type": "motoko"
     }
   },
   "defaults": {

@@ -22,5 +22,10 @@ cd $PUBLICATIONS_REPO_PATH
 dfx generate
 dfx deploy --network $NETWORK -y
 
-echo "Publication Buckets excluded for this deployment"
+echo ""
+echo "Upgrading publication buckets..."
 node scripts/upgrade-publication-canisters.js  --multi --$NETWORK
+
+echo ""
+echo "Upgrading NFT buckets..."
+node scripts/upgrade-nft-canisters.js --multi --$NETWORK
