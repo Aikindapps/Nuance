@@ -159,7 +159,7 @@ export const ClaimRestrictedTokensModal = () => {
               type='button'
               loading={loading}
               onClick={async () => {
-                if (termsAccepted) {
+                if (termsAccepted && !loading) {
                   setLoading(true);
                   setAllowedToRequest(getAllowedToRequest());
                   let response = await claimTokens();
