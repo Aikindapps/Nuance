@@ -668,7 +668,7 @@ const EditProfile = () => {
           <Button
             style={{ width: '96px', margin: '0 0 0 0' }}
             type='button'
-            styleType='secondary-1'
+            styleType={{dark: 'white', light: 'white'}}
             onClick={() => navigate('/my-profile')}
           >
             Cancel
@@ -680,17 +680,9 @@ const EditProfile = () => {
               }
             }}
             type='button'
-            styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
-            style={
-              !validate()
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                    width: '120px',
-                  }
-                : { width: '120px' }
-            }
+            styleType={{dark: 'navy-dark', light: 'navy'}}
+            disabled={!validate()}
+            style={{ width: '120px' }}
           >
             Save changes
           </Button>

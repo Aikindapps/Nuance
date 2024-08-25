@@ -297,6 +297,25 @@
     }
 }
 
+.create-edit-article-edit-article-button {
+    height: 36px;
+    width: 240px;
+
+    &:active {
+        border: 1px solid $accent-color;
+    }
+}
+
+.create-edit-article-edit-article-button-dark {
+    height: 36px;
+    width: 240px;
+    border: 1px solid $second-accent-color;
+
+    &:active {
+        border: 1px solid $primary-color;
+    }
+}
+
 .buttons-texts-wrapper {
     margin-top: 20px;
     display: flex;

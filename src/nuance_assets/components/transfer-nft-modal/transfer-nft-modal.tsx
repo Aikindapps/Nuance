@@ -111,7 +111,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             <Button
               disabled={false}
               type='button'
-              styleType='secondary-NFT'
+              styleType={{dark: 'white', light: 'white'}}
               style={{ width: '140px', marginLeft: '5px', marginRight: '5px' }}
               onClick={() => {
                 modalContext?.closeModal();
@@ -122,7 +122,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             <Button
               disabled={false}
               type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+              styleType={{dark: 'navy-dark', light: 'navy'}}
               style={{ width: '140px', marginLeft: '5px', marginRight: '5px' }}
               onClick={() => {
                 if (receiver.length) {
@@ -207,7 +207,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             <Button
               disabled={loading}
               type='button'
-              styleType='secondary-NFT'
+              styleType={{dark: 'white', light: 'white'}}
               style={{
                 width: '140px',
                 marginLeft: '5px',
@@ -222,7 +222,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             <Button
               disabled={loading}
               type='button'
-              styleType={darkTheme ? 'primary-1-dark' : 'primary-1'}
+              styleType={{dark: 'navy-dark', light: 'navy'}}
               style={{
                 width: '140px',
                 marginLeft: '5px',

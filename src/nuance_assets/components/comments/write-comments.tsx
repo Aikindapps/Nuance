@@ -134,9 +134,10 @@ const WriteComment: React.FC<WriteCommentProps> = ({
       )}
       {label === 'EDIT YOUR COMMENT' ? (
         <Button
+          className={{dark: 'comment-button-dark', light: 'comment-button'}}
           disabled={!commentText.trim() || isSaving || hasError}
           type='button'
-          styleType={darkTheme ? 'comment-button-dark' : 'comment-button'}
+          styleType={{dark: 'navy-dark', light: 'navy'}}
           style={{ width: '143px' }}
           onClick={() => handleSave(true)}
         >
@@ -145,9 +146,10 @@ const WriteComment: React.FC<WriteCommentProps> = ({
 
       ) : (
         <Button
+          className={{dark: 'comment-button-dark', light: 'comment-button'}}
           disabled={!commentText.trim() || isSaving || hasError || commentCountExceeded}
           type='button'
-          styleType={darkTheme ? 'comment-button-dark' : 'comment-button'}
+          styleType={{dark: 'navy-dark', light: 'navy'}}
           style={{ width: '124px' }}
           onClick={handleSave}
         >

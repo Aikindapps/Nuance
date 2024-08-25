@@ -60,10 +60,10 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
                         </p>
                     </div>
                     <div className='subscription-buttons'>
-                        <Button type='button' styleType='secondary' style={{ padding: '0px 16px', margin: '0px' }} onClick={() => modalContext?.closeModal()}>
+                        <Button type='button' styleType={{dark: 'white', light: 'white'}} style={{ padding: '0px 16px', margin: '0px' }} onClick={() => modalContext?.closeModal()}>
                             OK!
                         </Button>
-                        <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: '0px 16px' }} onClick={() => { modalContext?.openModal('Subscription'); }}>
+                        <Button type='button' styleType={{dark: 'navy-dark', light: 'navy'}} style={{ padding: '0px 16px' }} onClick={() => { modalContext?.openModal('Subscription'); }}>
                             Undo cancellation
                         </Button>
                     </div>
@@ -91,10 +91,10 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     <div className='subscription-modal-footer'>
                         {isLoading && <Loader />} {/* Display loader when loading */}
                         <div className='subscription-buttons'>
-                            <Button type='button' styleType={darkTheme ? 'primary-2-dark' : 'primary-2'} style={{ padding: '0px 16px', margin: '0px' }} onClick={() => modalContext?.closeModal()}>
+                            <Button type='button' styleType={{dark: 'navy-dark', light: 'navy'}} style={{ padding: '0px 16px', margin: '0px' }} onClick={() => modalContext?.closeModal()}>
                                 Keep subscription
                             </Button>
-                            <Button type='button' styleType='secondary' style={{ padding: '0px 16px' }} onClick={handleCancelSubscription} disabled={isLoading}>
+                            <Button type='button' styleType={{dark: 'white', light: 'white'}} style={{ padding: '0px 16px' }} onClick={handleCancelSubscription} disabled={isLoading}>
                                 Stop Subscription
                             </Button>
                         </div>

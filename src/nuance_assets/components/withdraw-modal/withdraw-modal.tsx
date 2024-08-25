@@ -466,7 +466,8 @@ export const WithdrawModal = () => {
         </div>
         <div className='buttons-wrapper'>
           <Button
-            styleType='deposit'
+            className={{dark: 'withdraw-modal-deposit-button', light: 'withdraw-modal-deposit-button'}}
+            styleType={{dark: 'white', light: 'white'}}
             type='button'
             onClick={() => {
               if (loading) {
@@ -474,28 +475,16 @@ export const WithdrawModal = () => {
               }
               modalContext?.closeModal();
             }}
-            style={
-              loading
-                ? {
-                    cursor: 'not-allowed',
-                  }
-                : {}
-            }
+            disabled={loading}
           >
             Cancel
           </Button>
           <Button
-            styleType={darkTheme ? 'withdraw-dark' : 'withdraw'}
-            style={
-              !validateTransfer(false)
-                ? {
-                    cursor: 'not-allowed',
-                    background: 'gray',
-                    borderColor: 'gray',
-                  }
-                : {}
-            }
+            className={{dark: 'withdraw-modal-withdraw-button-dark', light: 'withdraw-modal-withdraw-button'}}
+            styleType={{dark: 'navy-dark', light: 'navy'}}
+            disabled={!validateTransfer(false)}
             type='button'
+            loading={loading}
             onClick={() => {
               if (loading) {
                 return;
@@ -505,7 +494,6 @@ export const WithdrawModal = () => {
               }
             }}
           >
-            {loading && <LuLoader2 className='button-loader-icon' />}
             Withdraw
           </Button>
         </div>

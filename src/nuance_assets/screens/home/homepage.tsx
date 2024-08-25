@@ -652,7 +652,7 @@ const HomePage = () => {
                 <div className='title'>Login with:</div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType={{dark: 'navy', light: 'navy'}}
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -671,7 +671,7 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType={{dark: 'navy', light: 'navy'}}
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -713,7 +713,7 @@ const HomePage = () => {
               <div className='title'>Login with:</div>
               <div className='login-option-wrapper'>
                 <Button
-                  styleType='primary-1'
+                  styleType={{dark: 'navy', light: 'navy'}}
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
@@ -732,7 +732,7 @@ const HomePage = () => {
               </div>
               <div className='login-option-wrapper'>
                 <Button
-                  styleType='primary-1'
+                  styleType={{dark: 'navy', light: 'navy'}}
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
@@ -826,24 +826,16 @@ const HomePage = () => {
                 This includes anonymity, self-sovereignty, censorship
                 resistance, community governance, and tokenization. Ensuring a
                 decentralized and secure environment for writers and readers
-                alike. alike.
+                alike.
               </span>
             </div>
           </div>
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '224px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '224px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   login('NFID');
                 }}
@@ -852,17 +844,9 @@ const HomePage = () => {
               </Button>
 
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '224px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '224px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   login('ii');
                 }}
@@ -874,17 +858,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '185px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '185px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '185px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -925,17 +901,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '224px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '224px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   login('NFID');
                 }}
@@ -944,17 +912,9 @@ const HomePage = () => {
               </Button>
 
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '224px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '224px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   login('ii');
                 }}
@@ -966,17 +926,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '185px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '185px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '185px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1031,17 +983,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '224px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '224px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   login('NFID');
                 }}
@@ -1050,17 +994,9 @@ const HomePage = () => {
               </Button>
 
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '224px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '224px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '224px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   login('ii');
                 }}
@@ -1072,17 +1008,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '185px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '185px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '185px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1168,17 +1096,9 @@ const HomePage = () => {
               <div className='title'>Start writing now!</div>
               <div className='login-buttons-wrapper'>
                 <Button
-                  style={
-                    darkTheme
-                      ? {
-                          width: '224px',
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          color: darkOptionsAndColors.background,
-                        }
-                      : { width: '224px' }
-                  }
-                  styleType='primary-1'
+                  className={{dark: 'login-buttons-style', light: ''}}
+                  style={{ width: '224px' }}
+                  styleType={{dark: 'navy-dark', light: 'navy'}}
                   onClick={() => {
                     login('NFID');
                   }}
@@ -1187,17 +1107,9 @@ const HomePage = () => {
                 </Button>
 
                 <Button
-                  style={
-                    darkTheme
-                      ? {
-                          width: '224px',
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          color: darkOptionsAndColors.background,
-                        }
-                      : { width: '224px' }
-                  }
-                  styleType='primary-1'
+                  className={{dark: 'login-buttons-style', light: ''}}
+                  style={{ width: '224px' }}
+                  styleType={{dark: 'navy-dark', light: 'navy'}}
                   onClick={() => {
                     login('ii');
                   }}
@@ -1210,17 +1122,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                style={
-                  darkTheme
-                    ? {
-                        width: '185px',
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        color: darkOptionsAndColors.background,
-                      }
-                    : { width: '185px' }
-                }
-                styleType='primary-1'
+                className={{dark: 'login-buttons-style', light: ''}}
+                style={{ width: '185px' }}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1320,21 +1224,9 @@ const HomePage = () => {
                 >{`${counts?.draftCount || 0} articles in draft`}</Link>
               </div>
               <Button
-                styleType='secondary'
+                styleType={{dark: 'navy-dark', light: 'white'}}
                 type='button'
-                style={
-                  darkTheme
-                    ? {
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
-                        width: '146px',
-                        margin: '0',
-                      }
-                    : {
-                        width: '146px',
-                        margin: '0',
-                      }
-                }
+                style={{ width: '146px', margin: '0' }}
                 onClick={() => {
                   navigate('/article/new');
                 }}
@@ -1366,19 +1258,9 @@ const HomePage = () => {
               <div className='login-options'>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType={{dark: 'navy-dark', light: 'navy'}}
                     type='button'
-                    style={
-                      darkTheme
-                        ? {
-                            backgroundColor:
-                              darkOptionsAndColors.buttonBackgroundColor,
-                            color: darkOptionsAndColors.background,
-                            width: '176px',
-                            margin: '0',
-                          }
-                        : { width: '176px', margin: '0' }
-                    }
+                    style={ { width: '176px', margin: '0' } }
                     onClick={() => {
                       login('ii');
                     }}
@@ -1395,19 +1277,9 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    styleType={{dark: 'navy-dark', light: 'navy'}}
                     type='button'
-                    style={
-                      darkTheme
-                        ? {
-                            backgroundColor:
-                              darkOptionsAndColors.buttonBackgroundColor,
-                            color: darkOptionsAndColors.background,
-                            width: '176px',
-                            margin: '0',
-                          }
-                        : { width: '176px', margin: '0' }
-                    }
+                    style={ { width: '176px', margin: '0' } }
                     onClick={() => {
                       login('NFID');
                     }}
@@ -1539,23 +1411,14 @@ const HomePage = () => {
                 >{`${counts?.draftCount || 0} articles in draft`}</Link>
               </div>
               <Button
-                styleType='secondary'
+                styleType={{dark: 'navy-dark', light: 'white'}}
                 type='button'
-                style={
-                  darkTheme
-                    ? {
-                        backgroundColor:
-                          darkOptionsAndColors.buttonBackgroundColor,
+                style={ {
                         width: '146px',
                         margin: '0',
                         display: mobileMenuOpen ? '' : 'none',
+                        }
                       }
-                    : {
-                        width: '146px',
-                        margin: '0',
-                        display: mobileMenuOpen ? '' : 'none',
-                      }
-                }
                 onClick={() => {
                   navigate('/article/new');
                 }}
@@ -1616,19 +1479,10 @@ const HomePage = () => {
               >
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    className={{dark: 'login-buttons-style', light: ''}}
+                    styleType={{dark: 'navy-dark', light: 'navy'}}
                     type='button'
-                    style={
-                      darkTheme
-                        ? {
-                            backgroundColor:
-                              darkOptionsAndColors.buttonBackgroundColor,
-                            color: darkOptionsAndColors.background,
-                            width: '176px',
-                            margin: '0',
-                          }
-                        : { width: '176px', margin: '0' }
-                    }
+                    style={{ width: '176px', margin: '0' }}
                     onClick={() => {
                       login('ii');
                     }}
@@ -1645,19 +1499,10 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType='primary-1'
+                    className={{dark: 'login-buttons-style', light: ''}}
+                    styleType={{dark: 'navy-dark', light: 'navy'}}
                     type='button'
-                    style={
-                      darkTheme
-                        ? {
-                            backgroundColor:
-                              darkOptionsAndColors.buttonBackgroundColor,
-                            color: darkOptionsAndColors.background,
-                            width: '176px',
-                            margin: '0',
-                          }
-                        : { width: '176px', margin: '0' }
-                    }
+                    style={{ width: '176px', margin: '0' }}
                     onClick={() => {
                       login('NFID');
                     }}
@@ -1860,22 +1705,12 @@ const HomePage = () => {
                 ))}
               {getDisplayingPostsTotalCount() > getDisplayingPosts().length && (
                 <Button
-                  styleType='secondary'
-                  style={
-                    darkTheme
-                      ? {
-                          backgroundColor:
-                            darkOptionsAndColors.buttonBackgroundColor,
-                          width: '152px',
-                          marginBottom: '56px',
-                        }
-                      : { width: '152px', marginBottom: '56px' }
-                  }
+                  styleType={{dark: 'navy-dark', light: 'white'}}
+                  style={ { width: '152px', marginBottom: '56px' } }
                   onClick={() => {
                     loadMoreHandler();
                   }}
-                  icon={loadMoreLoading ? images.loaders.BUTTON_SPINNER : ''}
-                  dark={darkTheme}
+                  loading={loadMoreLoading}
                 >
                   <span>Load More</span>
                 </Button>

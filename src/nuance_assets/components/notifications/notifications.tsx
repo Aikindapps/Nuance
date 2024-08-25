@@ -137,18 +137,12 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
           You are allowed to request new Free NUA refill up to a total of 50
           Free NUA in your wallet!
           <Button
-            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
+            className={{dark: 'notifications-white-button', light: 'notifications-navy-button'}}
+            styleType={{dark: 'white', light: 'navy'}}
             onClick={() => {
               navigate('/my-profile/wallet');
             }}
             loading={false}
-            dark={darkTheme}
-            style={{
-              display: 'flex',
-              flexDirection: 'row-reverse',
-              marginTop: '10px',
-              float: 'right',
-            }}
           >
             Request Free NUA
           </Button>
@@ -813,19 +807,17 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
             })}
           </div>
           <Button
-            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
+            className={{dark: 'notifications-white-button', light: 'notifications-navy-button'}}
+            styleType={{dark: 'white', light: 'navy'}}
             onClick={async () => {
               setSavingNotificationSettings(true);
               await updateUserNotificationSettings(notificationSettings);
               setSavingNotificationSettings(false);
             }}
             loading={savingNotificationSettings}
-            dark={darkTheme}
             style={{
               width: '272px',
-              marginTop: '40px',
-              display: 'flex',
-              flexDirection: 'row-reverse',
+              marginTop: '40px'
             }}
           >
             Save Notification settings
@@ -880,15 +872,14 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
               ))}
             {notifications.length < totalNotificationCount && (
               <Button
-                styleType={'load-more'}
+                className={{dark: 'notifications-load-more-button', light: 'notifications-load-more-button'}}
+                styleType={{dark: 'white', light: 'white'}}
                 onClick={async () => {
                   setIsLoadingMore(true);
                   getUserNotifications(page * 20, (page + 1) * 20, navigate);
                   setIsLoadingMore(false);
                 }}
                 loading={isLoadingMore}
-                primaryColor={colors.accentColor}
-                dark={darkTheme}
                 disabled={isLoadingMore}
               >
                 Load More

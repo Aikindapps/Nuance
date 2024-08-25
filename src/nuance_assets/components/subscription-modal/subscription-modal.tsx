@@ -350,7 +350,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <div className='subscription-buttons'>
             <Button
               type='button'
-              styleType={darkTheme ? 'primary-2-dark' : 'primary-2'}
+              styleType={{dark: 'navy-dark', light: 'navy'}}
               style={{ padding: '0px 16px', margin: '0px' }}
               onClick={() => modalContext?.closeModal()}
             >
@@ -358,7 +358,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             </Button>
             <Button
               type='button'
-              styleType='secondary'
+              styleType={{dark: 'white', light: 'white'}}
               style={{ padding: '0px 16px' }}
               onClick={() => {
                 modalContext?.openModal('cancelSubscription');
@@ -402,7 +402,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <div className='subscription-buttons'>
             <Button
               type='button'
-              styleType='secondary'
+              styleType={{dark: 'white', light: 'white'}}
               style={{ padding: '0px 16px', margin: '0px' }}
               onClick={() => modalContext?.closeModal()}
             >
@@ -410,7 +410,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             </Button>
             <Button
               type='button'
-              styleType={darkTheme ? 'primary-2-dark' : 'primary-2'}
+              styleType={{dark: 'navy-dark', light: 'navy'}}
               style={{ padding: '0px 16px' }}
               onClick={() => setTermCheckWarning(false)}
             >
@@ -610,7 +610,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className='subscription-buttons'>
               <Button
                 type='button'
-                styleType='secondary'
+                styleType={{dark: 'white', light: 'white'}}
                 style={{ padding: '0px 16px', margin: '0px' }}
                 onClick={() => modalContext?.closeModal()}
               >
@@ -618,7 +618,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               </Button>
               <Button
                 type='button'
-                styleType={darkTheme ? 'primary-2-dark' : 'primary-2'}
+                styleType={{dark: 'navy-dark', light: 'navy'}}
                 style={{
                   padding: '0px 16px',
                   display: 'flex',

@@ -127,12 +127,11 @@ const CustomNotificationContent = ({
           You are allowed to request new Free NUA refill up to a total of 50
           Free NUA in your wallet!
           <Button
-            styleType={darkTheme ? 'primary-blue-dark' : 'primary-blue'}
+            styleType={{ dark: 'navy-dark', light: 'navy' }}
             onClick={() => {
               navigate('/my-profile/wallet');
             }}
             loading={false}
-            dark={darkTheme}
             style={{
               display: 'flex',
               flexDirection: 'row-reverse',
