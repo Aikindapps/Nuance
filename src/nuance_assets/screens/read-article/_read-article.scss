@@ -406,26 +406,6 @@
         margin-bottom: 150px;
         font-size: 1.5rem;
       }
-
-      .more-articles {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        margin-top: 20px;
-        a:link {
-          color: unset;
-        }
-        .more-articles-title {
-          color: #999;
-          font-family: Roboto;
-          font-size: 12px;
-          font-style: normal;
-          font-weight: 700;
-          line-height: 18px;
-          /* 150% */
-          text-transform: uppercase;
-        }
-      }
     }
   }
 }

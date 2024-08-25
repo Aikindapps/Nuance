@@ -46,7 +46,7 @@
     "Notifications": {
       "main": "src/NotificationsV3/main.mo",
       "type": "motoko",
-      "specified_id": "a3shf-5eaaa-aaaaa-qaafa-cai"
+      "specified_id": "qrlrq-biaaa-aaaaf-qal2q-cai"
     },
     "Subscription": {
       "main": "src/Subscription/main.mo",
@@ -56,7 +56,7 @@
     "PostRelations": {
       "main": "src/PostRelations/main.mo",
       "type": "motoko",
-      "specified_id": "ajuq4-ruaaa-aaaaa-qaaga-cai"
+      "specified_id": "qyi2m-xaaaa-aaaaf-qal3a-cai"
     },
     "nuance_assets": {
       "frontend": {

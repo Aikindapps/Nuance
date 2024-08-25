@@ -17,6 +17,9 @@ import U "../../../src/shared/utils";
 import ENV "../../../src/shared/env";
 import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import Buffer "mo:base/Buffer";
+import Blob "mo:base/Blob";
+import Array "mo:base/Array";
+import Debug "mo:base/Debug";
 
 
 actor NftFactory {
@@ -32,6 +35,12 @@ actor NftFactory {
 
     public type InitNftCanisterData = CanisterDeclarations.InitNftCanisterData;
 
+    func isNftFactoryCanister(caller : Principal) : Bool {
+        Principal.equal(caller, Principal.fromActor(NftFactory));
+    };
+
+   
+
     //publications can call this method to create an nft canister and get the canister id of the NFT canister
     public shared ({ caller }) func createNftCanister(initData: InitNftCanisterData) : async Result.Result<Text, Text> {
         var isCallerBucketCanister = false;
@@ -46,7 +55,7 @@ actor NftFactory {
         };
         ignore U.logMetrics("createNftCanister", Principal.toText(caller));
 
-        Cycles.add(10_000_000_000_000);
+        Cycles.add<system>(10_000_000_000_000);
         let nftCanister = await EXTNFT.EXTNFT();
 
         await nftCanister.acceptCycles();
@@ -115,6 +124,127 @@ actor NftFactory {
         List.toArray(allNuanceNftCanisterIds)
     };
 
+  //holds wasm for upgrade
+  private stable var wasmChunks : Blob = Blob.fromArray([]);
+
+  //adds wasm chunk to wasmChunks
+  public shared ({ caller }) func addWasmChunk(chunk : Blob) : async Result.Result<(), Text> {
+
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    // if (not isThereEnoughMemoryPrivate()) {
+    //   return #err("Canister reached the maximum memory threshold. Please try again later.");
+    // };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err("Unauthorized Caller")
+    };
+
+    wasmChunks := Blob.fromArray(Array.append(Blob.toArray(wasmChunks), Blob.toArray(chunk)));
+    #ok();
+  };
+
+  public shared ({ caller }) func getWasmChunks() : async Result.Result<Blob, Text> {
+
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err("Unauthorized Caller")
+    };
+    #ok(wasmChunks);
+  };
+
+  public shared ({ caller }) func upgradeBucket(canisterId : Text, arg : [Nat8]) : async Result.Result<(), Text> {
+
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    let wasm = wasmChunks;
+    if (not isAdmin(caller) and not isPlatformOperator(caller) and not isNftFactoryCanister(caller)) {
+      return #err("Unauthorized caller");
+    };
+     Debug.print("Upgrading canister: " # canisterId # " with wasm size: " # debug_show(Blob.toArray(wasm)));
+    switch (await ic.install_code { arg = arg; wasm_module = wasm; mode = #upgrade; canister_id = Principal.fromText(canisterId) }) {
+       
+      case ((_)) {
+        #ok();
+      };
+    };
+  };
+
+  public shared ({ caller }) func resetWasmChunks() {
+    if (isAnonymous(caller)) {
+      return;
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return;
+    };
+    wasmChunks := Blob.fromArray([]);
+  };
+
+  // 👋 if you need to clear buckets for local test, reactivate this function
+  // public shared ({caller}) func temporaryDeleteAllBuckets() : async Result.Result<(), Text> {
+  //     if (not isAdmin(caller)) {
+  //         return #err(Unauthorized);
+  //     };
+  //     let bucketCanisterIdsEntries =  Iter.toArray(bucketCanisterIdsHashMap.entries());
+  //     for (bucketCanisterId in bucketCanisterIdsEntries.vals()) {
+  //         await IC.IC.stop_canister{canister_id = Principal.fromText(bucketCanisterId.1)};
+  //         switch (await IC.IC.delete_canister{canister_id = Principal.fromText(bucketCanisterId.1)}) {
+  //             case(_) {
+  //                 bucketCanisterIdsHashMap.delete(bucketCanisterId.0);
+  //             };
+  //         };
+  //     };
+  //     #ok();
+  // };
+
+  public shared ({ caller }) func getAllBuckets() : async Result.Result<[Text], Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    var canisterBuffer = Buffer.Buffer<Text>(1);
+
+    let bucketCanisters = await getAllNftCanisterIds();
+
+
+    for (bucketCanisterId in Iter.fromArray(bucketCanisters)) {
+      canisterBuffer.add(bucketCanisterId.1);
+    };
+    #ok(Buffer.toArray(canisterBuffer));
+  };
+
+  public shared ({ caller }) func upgradeAllBuckets(canisterId : Text, arg : [Nat8]) : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err("Unauthorized caller");
+    };
+
+    //TODO: add indexing for large number of buckets
+
+    for (bucketCanisterId in Iter.fromArray(List.toArray(allNuanceNftCanisterIds))) {
+      switch (await upgradeBucket(bucketCanisterId.1, arg)) {
+        case (ok) {
+          //TODO: add logging
+          Debug.print("Upgrading bucket canister: " # bucketCanisterId.1);
+        };
+      };
+    };
+
+    #ok();
+  };
+
+
     private func isAnonymous(caller : Principal) : Bool {
         Principal.equal(caller, Principal.fromText("2vxsx-fae"));
     };
@@ -146,7 +276,7 @@ actor NftFactory {
 
     public func acceptCycles() : async () {
         let available = Cycles.available();
-        let accepted = Cycles.accept(available);
+        let accepted = Cycles.accept<system>(available);
         assert (accepted == available);
     };
 

@@ -20,8 +20,8 @@ jobs:
       - name: Confirm successful installation
         run: |
           dfx --version
-          dfxvm install 0.17.0
-          dfxvm default 0.17.0
+          dfxvm install 0.22.0
+          dfxvm default 0.22.0
 
       - name: Start DFX background
         run: dfx start --background

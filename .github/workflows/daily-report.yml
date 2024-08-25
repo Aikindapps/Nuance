@@ -22,8 +22,8 @@ jobs:
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
         run: |
-          dfxvm install 0.17.0
-          dfxvm default 0.17.0
+          dfxvm install 0.22.0
+          dfxvm default 0.22.0
           dfx --version
 
       - name: Start DFX background
@@ -134,14 +134,9 @@ jobs:
           POSTS_RAW=$(dfx canister call --network ic PostCore getTotalPostCount -qq)
           echo "DEBUG: Raw total posts output: $POSTS_RAW"
           POSTS=$(echo "$POSTS_RAW" | grep -oP '(?<=\()\d+(_\d+)?(?=\s*: nat\))')
-      
+
           echo "POSTS=$POSTS" >> $GITHUB_ENV
         shell: /usr/bin/bash -e {0}
-
-
-
-
-
 
       - name: Notify Slack
         run: |

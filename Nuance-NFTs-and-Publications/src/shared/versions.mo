@@ -1,5 +1,5 @@
 module{
-    public let PUBLICATIONMANAGEMENT_VERSION = "Bijou";
-    public let PUBLICATION_VERSION = "Bijou";
-    public let NFTFACTORY_VERSION = "Bijou";
+    public let PUBLICATIONMANAGEMENT_VERSION = "Black Velvet";
+    public let PUBLICATION_VERSION = "Black Velvet";
+    public let NFTFACTORY_VERSION = "Black Velvet";
 }

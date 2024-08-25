@@ -19,7 +19,7 @@ const { Principal } = require('@dfinity/principal');
 const IS_LOCAL = true;
 const [POST_CORE_CANISTER_ID, POST_RELATIONS_CANISTER_ID] = [
   '322sd-3iaaa-aaaaf-qakgq-cai',
-  'ajuq4-ruaaa-aaaaa-qaaga-cai',
+  'qyi2m-xaaaa-aaaaf-qal3a-cai',
 ];
 
 const mnemonicToId = (mnemonic) => {

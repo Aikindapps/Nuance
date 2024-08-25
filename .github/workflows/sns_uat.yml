@@ -18,8 +18,8 @@ jobs:
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
         run: |
-          dfxvm install 0.17.0
-          dfxvm default 0.17.0
+          dfxvm install 0.22.0
+          dfxvm default 0.22.0
           dfx --version
 
       - name: Start DFX background

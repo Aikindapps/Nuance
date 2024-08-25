@@ -18,22 +18,31 @@ interface SubscribersChartProps {
 const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
   const currentDate = new Date();
 
+  const parseDate = (dateString: string) => {
+    const date = new Date(dateString); // Parsing the date string directly
+    return date;
+  };
+
   // Ensure the data is valid, unique, and not in the future
   const filteredData = data.reduce((acc, item) => {
-    const exists = acc.find((i) => i.day === item.day);
-    const itemDate = new Date(item.day);
-    if (
-      !exists &&
-      item.day &&
-      typeof item.count === 'number' &&
-      itemDate <= currentDate
-    ) {
+    const itemDate = parseDate(item.day);
+    const isValidDate = !isNaN(itemDate.getTime());
+    const isNotFuture = itemDate <= currentDate;
+    const isValidCount = typeof item.count === 'number';
+
+    if (isValidDate && isNotFuture && isValidCount) {
       acc.push(item);
     }
     return acc;
   }, [] as SubscriberData[]);
 
-  const isValidData = filteredData.length > 0;
+  const sortedData = filteredData.sort((a, b) => {
+    const dateA = parseDate(a.day);
+    const dateB = parseDate(b.day);
+    return dateA.getTime() - dateB.getTime();
+  });
+
+  const isValidData = sortedData.length > 0 && sortedData[0].count !== 0;
 
   if (!isValidData) {
     return <div>You do not have any subscription data yet.</div>;
@@ -44,27 +53,29 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
     datasets: [
       {
         label: 'Subscribers',
-        data: filteredData.map((item) => ({
-          x: new Date(item.day),
+        data: sortedData.map((item) => ({
+          x: parseDate(item.day),
           y: item.count,
         })),
         borderColor: '#435AAC',
         backgroundColor: 'rgba(2, 195, 161, 0.2)',
         fill: false,
-        tension: 0.1,
+        tension: 0,
       },
     ],
   };
 
-  // Calculate the minimum date (3 months before the first date in the data)
-  const firstDate = new Date(filteredData[0].day);
+  // Calculate the minimum date (1 week before the first date in the data)
+  const firstDate = parseDate(sortedData[0].day);
   const minDate = new Date(firstDate);
-  minDate.setMonth(minDate.getMonth() - 3);
+  minDate.setDate(firstDate.getDate() - 7);
 
-  // Calculate the maximum date (1 month after the last date in the data)
-  const lastDate = new Date(filteredData[filteredData.length - 1].day);
+  // Calculate the maximum date (1 week after the first date in the data)
+  const lastDate = parseDate(sortedData[sortedData.length - 1].day);
   const maxDate = new Date(lastDate);
-  maxDate.setMonth(maxDate.getMonth() + 1);
+  maxDate.setDate(lastDate.getDate() + 7);
+
+  const maxCount = Math.max(...sortedData.map((item) => item.count)) + 1;
 
   const options: any = {
     responsive: true,
@@ -72,11 +83,11 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
       x: {
         type: 'time',
         time: {
-          unit: 'month',
+          unit: 'week',
           tooltipFormat: 'MMM dd, yyyy',
           displayFormats: {
             day: 'MMM dd',
-            week: 'MMM dd',
+            week: 'MMM dd yyyy',
             month: 'MMM yyyy',
             quarter: 'MMM yyyy',
             year: 'yyyy',
@@ -91,15 +102,23 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         grid: {
           display: false,
         },
+        ticks: {
+          stepSize: 1
+        }
       },
       y: {
         beginAtZero: true,
+        max: maxCount,
+
         title: {
           display: true,
           text: 'Count',
         },
         grid: {
           display: true,
+        },
+        ticks: {
+          stepSize: 1,
         },
       },
     },
@@ -112,16 +131,16 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
         callbacks: {
           label: (tooltipItem: TooltipItem<'line'>) => {
             const dataPoint = tooltipItem.raw as { x: Date; y: number };
-            return ` ${dataPoint.y}` + ' ';
+            return `Subscribers: ${dataPoint.y}`;
           },
           title: (tooltipItem: TooltipItem<'line'>[]) => {
             const dataPoint = tooltipItem[0].raw as { x: Date; y: number };
-            return '';
+            return ` ${dataPoint.x.toLocaleDateString()}` + ' ';
           },
         },
         backgroundColor: '#02C3A1',
-        titleFont: { size: 20 },
-        bodyFont: { size: 20 },
+        titleFont: { size: 12 },
+        bodyFont: { size: 12 },
         displayColors: false,
       },
       annotation: {
@@ -132,12 +151,13 @@ const SubscribersChart: React.FC<SubscribersChartProps> = ({ data }) => {
             xMax: new Date().toISOString(),
             borderColor: '#CC4747',
             borderWidth: 2,
+            display: false,
             label: {
               content: 'Today',
               enabled: true,
               position: 'top' as const,
             },
-          },
+          }
         },
       },
     },
