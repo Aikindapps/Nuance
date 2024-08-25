@@ -154,7 +154,7 @@ export const ClaimRestrictedTokensModal = () => {
                 light: 'claim-restricted-tokens-modal-withdraw-button',
               }}
               styleType={{ dark: 'navy-dark', light: 'navy' }}
-              disabled={!termsAccepted && !loading}
+              disabled={!termsAccepted}
               style={{ minWidth: '170px' }}
               type='button'
               loading={loading}
