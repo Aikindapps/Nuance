@@ -475,17 +475,17 @@ export interface PostStore {
   ) => Promise<string>;
 
   getUserDailyPostStatus: () => Promise<boolean>;
-  getPostComments: (postId: string, bucketCanisterId: string) => Promise<void>;
+  getPostComments: (
+    postId: string,
+    bucketCanisterId: string
+  ) => Promise<[Comment[], number]>;
   getMoreFromThisAuthor: (post: PostType) => Promise<MoreFromThisAuthor>;
   getRelatedArticles: (post: string) => Promise<PostType[]>;
   saveComment: (
     commentModel: SaveCommentModel,
     bucketCanisterId: string,
-    edited: Boolean,
-    handle: string,
-    avatar: string,
-    comment?: Comment
-  ) => Promise<void>;
+    edited: boolean
+  ) => Promise<[Comment[], number] | undefined>;
   upVoteComment: (commentId: string, bucketCanisterId: string) => Promise<void>;
   downVoteComment: (
     commentId: string,
@@ -562,7 +562,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getPostComments: async (
     postId: string,
     bucketCanisterId: string
-  ): Promise<void> => {
+  ): Promise<[Comment[], number]> => {
     try {
       const result = await (
         await getPostBucketActor(bucketCanisterId)
@@ -570,20 +570,15 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       if (Err in result) {
         toastError(result.err);
       } else {
-        mergeCommentsWithUsers(result.ok.comments)
-          .then((enrichedComments) => {
-            set({
-              comments: enrichedComments,
-              totalNumberOfComments: parseInt(result.ok.totalNumberOfComments),
-            });
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+        let commentsWithUsers = await mergeCommentsWithUsers(
+          result.ok.comments
+        );
+        return [commentsWithUsers, parseInt(result.ok.totalNumberOfComments)];
       }
     } catch (err) {
       handleError(err, Unexpected);
     }
+    return [[], 0];
   },
 
   getMoreFromThisAuthor: async (
@@ -666,101 +661,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   saveComment: async (
     commentModel: SaveCommentModel,
     bucketCanisterId: string,
-    edited: Boolean,
-    handle: string,
-    avatar: string,
-    comment?: Comment
-  ): Promise<void> => {
-    // Generate a temporary ID for the new comment
-    const tempId = Date.now().toString();
-
-    // Create a new comment object with the temporary ID and other properties
-    let newComment = {
-      creator: 'TEMP',
-      handle: handle,
-      avatar: avatar,
-      postId: commentModel.postId,
-      content: commentModel.content,
-      commentId: comment ? comment.commentId : tempId,
-      createdAt: comment ? comment.createdAt : '0',
-      downVotes: comment ? comment.downVotes : ([] as string[]),
-      upVotes: comment ? comment.upVotes : ([] as string[]),
-      replies: comment ? (comment.replies as Comment[]) : ([] as Comment[]),
-      repliedCommentId: [],
-      editedAt: comment ? comment.editedAt : [],
-    } as Comment;
-
-    // Optimistically update the state with the new comment before backend updates
-
-    function findAndUpdateComment(
-      comments: Comment[],
-      commentId: string,
-      updateFn: (comment: Comment) => Comment
-    ): Comment[] {
-      return comments.map((comment) => {
-        if (comment.commentId === commentId) {
-          return updateFn(comment);
-        } else if (comment.replies) {
-          return {
-            ...comment,
-            replies: findAndUpdateComment(comment.replies, commentId, updateFn),
-          };
-        }
-        return comment;
-      });
-    }
-
-    const replyToCommentId =
-      commentModel.replyToCommentId && commentModel.replyToCommentId.length > 0
-        ? commentModel.replyToCommentId[0]
-        : undefined;
-    const actualCommentId =
-      commentModel.commentId && commentModel.commentId.length > 0
-        ? commentModel.commentId[0]
-        : undefined;
-
-    if (replyToCommentId === undefined) {
-      if (actualCommentId) {
-        set((state) => ({
-          comments: findAndUpdateComment(
-            state.comments,
-            actualCommentId,
-            (oldComment) => ({
-              ...oldComment,
-              ...newComment,
-              commentId: comment?.commentId || tempId,
-            })
-          ),
-        }));
-      } else {
-        set((state) => ({ comments: [newComment, ...state.comments] }));
-      }
-    } else {
-      set((state) => ({
-        comments: findAndUpdateComment(
-          state.comments,
-          replyToCommentId,
-          (comment) => ({
-            ...comment,
-            replies: [newComment, ...comment.replies],
-          })
-        ),
-      }));
-    }
-
+    edited: boolean
+  ): Promise<[Comment[], number] | undefined> => {
     try {
       const result = await (
         await getPostBucketActor(bucketCanisterId)
       ).saveComment(commentModel);
       if (Err in result) {
-        // If there is an error, revert the optimistic update
-        set((state) => ({
-          comments: state.comments.filter(
-            (comment) => comment.commentId !== tempId
-          ),
-        }));
         toastError(result.err);
       } else {
+        //merge the comments with the users
+        let mergedComments = await mergeCommentsWithUsers(result.ok.comments);
+        //toast the messages
         if (
           edited ||
           (commentModel.commentId && commentModel.commentId.length > 0)
@@ -769,46 +681,13 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             'The changes on your comment have been saved.',
             ToastType.Success
           );
-          set((state) => ({
-            comments: state.comments.map((comment) =>
-              comment.commentId === tempId ? { ...comment } : comment
-            ),
-          }));
-          mergeCommentsWithUsers(result.ok.comments)
-            .then((enrichedComments) => {
-              set({
-                comments: enrichedComments,
-                totalNumberOfComments: parseInt(
-                  result.ok.totalNumberOfComments
-                ),
-              });
-            })
-            .catch((error) => {
-              console.error(error);
-            });
         } else {
-          mergeCommentsWithUsers(result.ok.comments)
-            .then((enrichedComments) => {
-              set({
-                comments: enrichedComments,
-                totalNumberOfComments: parseInt(
-                  result.ok.totalNumberOfComments
-                ),
-              });
-            })
-            .catch((error) => {
-              console.error(error);
-            });
           toast('You posted a comment!', ToastType.Success);
         }
+        //return the new comments
+        return [mergedComments, parseInt(result.ok.totalNumberOfComments)];
       }
     } catch (err) {
-      // If there is an exception, revert the optimistic update and handle the error
-      set((state) => ({
-        comments: state.comments.filter(
-          (comment) => comment.commentId !== tempId
-        ),
-      }));
       handleError(err, Unexpected);
     }
   },

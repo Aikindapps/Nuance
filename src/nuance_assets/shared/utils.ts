@@ -14,6 +14,10 @@ import {
 import { PairInfo, PostType } from '../types/types';
 import { TagModel } from '../services/actorService';
 import { SubscriptionTimeInterval } from '../../declarations/Subscription/Subscription.did';
+import {
+  Comment,
+  SaveCommentModel,
+} from '../../declarations/PostBucket/PostBucket.did';
 
 export enum DateFormat {
   // Sep 16
@@ -886,4 +890,29 @@ export const convertSubscriptionTimeInterval = (
   } else {
     return 'Lifetime';
   }
+};
+
+export const buildTempComment = (
+  bucketCanisterId: string,
+  commentModel: SaveCommentModel,
+  handle: string,
+  avatar: string,
+  comment?: Comment
+): Comment => {
+  return {
+    creator: 'TEMP',
+    handle,
+    avatar,
+    postId: commentModel.postId,
+    content: commentModel.content,
+    commentId: comment ? comment.commentId : new Date().getTime().toString(),
+    createdAt: comment ? comment.createdAt : '0',
+    downVotes: comment ? comment.downVotes : ([] as string[]),
+    upVotes: comment ? comment.upVotes : ([] as string[]),
+    replies: comment ? (comment.replies as Comment[]) : ([] as Comment[]),
+    repliedCommentId: commentModel.replyToCommentId,
+    editedAt: comment ? comment.editedAt : [],
+    bucketCanisterId,
+    isCensored: false,
+  };
 };

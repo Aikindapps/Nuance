@@ -3,8 +3,9 @@
 .write-comment {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   padding: 10px;
+  row-gap: 12px;
   margin: 30px 0px 16px 0px;
 
   @media (max-width: 768px) {
@@ -57,52 +58,5 @@
     @media (max-width: 768px) {
       margin-top: 10px;
     }
-  }
-
-  .comment-button:hover,
-  .comment-button:disabled:hover {
-    background-color: $primary-background-color;
-    color: $primary-color;
-    border: 1px solid $primary-color;
-    cursor: pointer;
-  }
-
-  .comment-button:disabled:hover {
-    cursor: not-allowed;
-  }
-
-  .comment-button:disabled {
-    cursor: default;
-    color: $primary-background-color;
-    background-color: $primary-color;
-    border: 1px solid $primary-color;
-  }
-
-  .comment-button-dark {
-    height: 34px;
-    align-self: center;
-
-    @media (max-width: 768px) {
-      margin-top: 10px;
-    }
-
-    background-color: $dark-button-color;
-    border: 1px solid $dark-button-color;
-  }
-
-  .comment-button-dark:hover,
-  .comment-button-dark:active,
-  .comment-button-dark:disabled,
-  .comment-button-dark:disabled:hover {
-    background-color: $dark-primary-background-color;
-    color: $dark-primary-text-color;
-  }
-
-  .comment-button-dark:disabled {
-    cursor: default;
-  }
-
-  .comment-button-dark:disabled:hover {
-    cursor: not-allowed;
   }
 }
