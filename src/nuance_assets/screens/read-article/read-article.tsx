@@ -40,8 +40,7 @@ import { useTheme } from '../../contextes/ThemeContext';
 import { PremiumArticleInfo } from '../../components/premium-article-info/premium-article-info';
 import Comments from '../../components/comments/comments';
 import WriteComment from '../../components/comments/write-comments';
-import { PostBucket } from 'src/declarations/PostBucket';
-import { get } from 'lodash';
+import { Comment } from '../../../declarations/PostBucket/PostBucket.did';
 import { Tooltip } from 'react-tooltip';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
@@ -85,7 +84,6 @@ const ReadArticle = () => {
     loadingError,
     clearWordCount,
     getPostComments,
-    comments,
     getMoreFromThisAuthor,
     getRelatedArticles,
   } = usePostStore((state) => ({
@@ -103,7 +101,6 @@ const ReadArticle = () => {
     ownedPremiumPosts: state.ownedPremiumPosts,
     getOwnedNfts: state.getOwnedNfts,
     getPostComments: state.getPostComments,
-    comments: state.comments,
     saveComment: state.saveComment,
     upVoteComment: state.upVoteComment,
     downVoteComment: state.downVoteComment,
@@ -180,6 +177,19 @@ const ReadArticle = () => {
     //setSearchText('#' + tag);
     //clearSearchBar(false);
     navigate('/?tab=search&tag=' + encodeURIComponent(tag.toUpperCase()));
+  };
+
+  //local vars for the comments
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [totalNumberOfComments, setTotalNumberOfComments] = useState(0);
+
+  const fetchComments = async (postId: string, bucketCanisterId: string) => {
+    let [comments, totalNumberOfComments] = await getPostComments(
+      postId,
+      bucketCanisterId
+    );
+    setComments(comments);
+    setTotalNumberOfComments(totalNumberOfComments);
   };
 
   //comment scrolling
@@ -261,7 +271,7 @@ const ReadArticle = () => {
 
   useEffect(() => {
     if (post) {
-      getPostComments(postId, post?.bucketCanisterId);
+      fetchComments(postId, post.bucketCanisterId);
       getMoreFromThisAuthorAndPublication(post);
       fetchRelatedArticles(post.postId);
     }
@@ -934,10 +944,16 @@ const ReadArticle = () => {
                     label='WRITE A COMMENT..'
                     handle={user?.handle || ''}
                     avatar={user?.avatar || ''}
+                    totalNumberOfComments={totalNumberOfComments}
+                    setComments={(newComments, totalNumber) => {
+                      setComments(newComments);
+                      setTotalNumberOfComments(totalNumber);
+                    }}
+                    comments={comments}
                   />
 
-                  {comments != undefined &&
-                    comments.length > 0 &&
+                  {comments.length > 0 &&
+                    comments[0].postId === post.postId &&
                     comments.map((comment) => (
                       <Comments
                         key={comment.commentId}
@@ -947,6 +963,12 @@ const ReadArticle = () => {
                         postId={post.postId}
                         loggedInUser={user?.handle || ''}
                         avatar={user?.avatar || ''}
+                        totalNumberOfComments={totalNumberOfComments}
+                        comments={comments}
+                        setComments={(newComments, totalNumber) => {
+                          setComments(newComments);
+                          setTotalNumberOfComments(totalNumber);
+                        }}
                       />
                     ))}
                 </div>
