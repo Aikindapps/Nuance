@@ -110,6 +110,9 @@ jobs:
             },
             "Publisher": {
               "ic": "'"$PUBLISHER"'"
+            },
+            "NftBucket": {
+              "ic": "'"$UAT_NFT_BUCKET"'"
             }
           }' > ./Nuance-NFTs-and-Publications/canister_ids.json
           echo 'module {
