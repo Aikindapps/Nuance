@@ -112,7 +112,7 @@ jobs:
               "ic": "'"$PUBLISHER"'"
             },
             "NftBucket": {
-              "ic": "'"$UAT_NFT_BUCKET"'"
+              "ic": "'"$NFT_BUCKET"'"
             }
           }' > ./Nuance-NFTs-and-Publications/canister_ids.json
           echo 'module {
@@ -150,6 +150,7 @@ jobs:
           NOTIFICATIONS: ${{ secrets.UAT_NOTIFICATIONS }}
           SUBSCRIPTION: ${{ secrets.UAT_SUBSCRIPTION }}
           POST_RELATIONS: ${{ secrets.UAT_POSTRELATIONS }}
+          NFT_BUCKET: ${{ secrets.UAT_NFT_BUCKET }}
 
       - name: Generate canister_ids.json in for NFTs and Publications
         run: |
