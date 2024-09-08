@@ -498,6 +498,15 @@ actor Subscription {
                     deletePaymentRequest(eventId);
                     //update the internal state and add the token disbursements
                     completePaymentRequest(paymentRequestDetails);
+                    //send the notifications to the writer & reader 
+                    try{
+                        let event = buildSubscriptionEvent(eventId);
+                        ignore sendNewSubscriptionNotifications(event);
+                    }
+                    catch(_){
+                        //inter canister call for distributing the notifications has failed
+                        //nothing to do
+                    };
                     return #ok(buildReaderSubscriptionDetails(paymentRequestDetails.readerPrincipalId));
 
                 }
@@ -856,16 +865,6 @@ actor Subscription {
             //all the disbursements were successful
             //delete the value with the eventId
             Map.delete(pendingTokenDisbursementsArray, thash, eventId);
-            //#AuthorGainsNewSubscriber and #YouSubscribedToAuthor            
-            try{
-                let event = buildSubscriptionEvent(eventId);
-                ignore sendNewSubscriptionNotifications(event);
-            }
-            catch(error){
-                //inter canister call for distributing the notifications has failed
-                //nothing to do
-            };
-
         }
         else{
             //the size is not equal to 0
