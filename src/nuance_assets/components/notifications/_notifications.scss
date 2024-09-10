@@ -1,5 +1,14 @@
 @import '../../shared/styles/Colors';
 
+.arrow-cursor {
+  cursor: default;
+}
+
+.arrow-cursor *:not(.notifications-sidebar):not(.notifications-sidebar *) {
+  cursor: default !important; /* outside the modal */
+  pointer-events: none; /* disable pointer events outside the modal */
+}
+
 .notifications-sidebar {
   background-color: $primary-background-color;
   padding: 24px 24px;
@@ -13,10 +22,12 @@
   transition: transform 0.3s ease-in-out;
   transform: translateX(100%);
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  cursor: auto;
+  pointer-events: auto;
 
-    &.open {
-      transform: translateX(0);
-    }
+  &.open {
+    transform: translateX(0);
+  }
 
   .exit-icon {
     position: absolute;

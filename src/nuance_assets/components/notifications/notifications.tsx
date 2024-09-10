@@ -79,6 +79,33 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  // close modal when clicked outside
+  const handleClickOutside = (e: MouseEvent) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+      setIsSidebarOpen(false);
+      modalContext?.closeModal();
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  };
+
+  // event listener to close the sidebar when clicked outside
+  useEffect(() => {
+    if (modalContext?.isModalOpen &&
+      modalContext.modalType === 'Notifications') {
+      document.body.classList.add('arrow-cursor');
+      document.addEventListener('click', handleClickOutside, true);
+    } else {
+      document.body.classList.remove('arrow-cursor');
+      document.removeEventListener('click', handleClickOutside, true);
+    }
+
+    return () => {
+      document.body.classList.remove('arrow-cursor');
+      document.removeEventListener('click', handleClickOutside, true);
+    };
+  }, [modalContext]); 
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
     //toggle notification modal

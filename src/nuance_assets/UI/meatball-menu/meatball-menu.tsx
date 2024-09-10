@@ -1,6 +1,6 @@
 import { faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../../contextes/ThemeContext';
 import { colors, icons } from '../../shared/constants';
@@ -22,7 +22,7 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
     props.setShown(false);
   };
 
-  const ref = React.createRef<HTMLDivElement>();
+  const ref = useRef<HTMLDivElement>(null);
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
 
@@ -105,7 +105,7 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
                   : colors.primaryTextColor,
                 backgroundColor: darkTheme ? colors.primaryTextColor : '',
               }
-            : { display: 'none' }
+            : { background: darkOptionsAndColors.background, display: 'none' }
         }
       >
         <ul style={props.shown ? darkOptionsAndColors : { display: 'none' }}>
