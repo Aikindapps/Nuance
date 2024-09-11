@@ -29,6 +29,7 @@ module {
   public let NICK_PRINCIPAL_ID = "lak3h-wosi7-pjqxd-fpluz-2etul-g7zza-fvm56-tz3sc-efctb-a3qp6-2qe";
   public let NICK_DASHBOARD_PRINCIPAL_ID = "67owo-lqhq6-2vsvz-ne4qm-g4e2q-2kasi-at36g-zppj6-obsdc-d32rg-jqe";
   public let RHIANNON_PRINCIPAL_ID = "cqt7v-ben4o-y335u-srt3v-nzd6e-wknuf-2t2mb-mji7i-ar3bf-7ysop-2qe";
+  public let RHIANNON_DASHBOARD_PRINCIPAL_ID = "osr2v-7p5yo-etfdt-uaoml-rjrzm-cqphs-4qejv-wf5gv-6anxi-3yxhf-xae";
   public let KYLE_PRINCIPAL_ID = "ftiej-pml6t-p3n5s-afoi2-ksnxp-3yyis-lzg6v-mwdwn-evzhq-6j56q-xqe";
   public let VM_1_PRINCIPAL_ID = "btrx2-makdj-pw2cp-u264a-cntkp-2mzjv-56oqc-6r7uu-ocexg-mf3sn-qqe";
   public let VM_2_PRINCIPAL_ID = "gs5lq-gst3q-56phb-4sxwu-eo4nu-fqe3z-k2euk-5okx7-tguxu-x7nkr-nae";
