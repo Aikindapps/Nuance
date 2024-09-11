@@ -3,8 +3,8 @@
 .meatball-menu {
   position: relative;
   margin-left: 12px;
-
   margin-right: 5px;
+  z-index: 4;
   .drop-down-content {
     position: absolute;
     margin-left: -180px;
@@ -16,7 +16,8 @@
     background-color: $primary-background-color;
     width: 208px;
     // height: 200px;
-    transition: 0.5s;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    z-index: 4;
   }
   a {
     width: 100%;

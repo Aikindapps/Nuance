@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore, useUserStore } from '../../store';
 import { icons, colors } from '../../shared/constants';
@@ -15,7 +15,7 @@ type ProfileMenuProps = {
 
 const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
   const logout = useAuthStore((state) => state.logout);
-  const ref = React.createRef<HTMLDivElement>();
+  const ref = useRef<HTMLDivElement>(null);
 
   const darkTheme = useTheme();
   const darkThemeHomepage = useTheme() && window.location.pathname !== '/';
