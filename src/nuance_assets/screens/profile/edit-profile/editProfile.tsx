@@ -582,6 +582,7 @@ const EditProfile = () => {
             fontFamily='Roboto'
             fontColor={colors.editProfileInputTextColor}
             hasError={user?.website !== '' && !validateURL(user?.website || '')}
+            noSpaces={true}
             onChange={onWebsiteChange}
             value={user?.website}
             maxLength={161}
@@ -612,6 +613,7 @@ const EditProfile = () => {
                 hasError={
                   socialChannelUrl !== '' && !validateURL(socialChannelUrl)
                 }
+                noSpaces={true}
                 onChange={(newVal) => {
                   onSocialChannelUrlChange(newVal, index);
                 }}

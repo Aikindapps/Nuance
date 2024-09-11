@@ -27,6 +27,7 @@ type InputProps = {
   classname: string;
   icon?: string;
   button?: { icon: string; onClick: () => void };
+  noSpaces?: boolean;
 };
 
 const InputField: React.FC<InputProps> = (props): JSX.Element => {
@@ -42,6 +43,17 @@ const InputField: React.FC<InputProps> = (props): JSX.Element => {
         ? colors.darkModePrimaryTextColor
         : colors.primaryTextColor,
   };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newValue = e.target.value
+    if (props.noSpaces) {
+      newValue = newValue.replace(/\s/g, '');
+    }
+    if (props.onChange) {
+      props.onChange(newValue);
+    }
+  };
+
   return (
     <div
       className={
@@ -74,7 +86,7 @@ const InputField: React.FC<InputProps> = (props): JSX.Element => {
         contentEditable
         maxLength={props.maxLength}
         value={props.value}
-        onChange={(e) => props.onChange && props.onChange(e.target.value)}
+        onChange={handleChange}
         type={props.isFloatInput || props.isNaturalNumberInput ? 'number' : ''}
         step={
           props.isFloatInput ? '0.001' : props.isNaturalNumberInput ? '1' : ''
