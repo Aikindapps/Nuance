@@ -1378,7 +1378,7 @@ const CreateEditPublication = () => {
                     handleScrolls();
                     setTimeout(onSave, 800);
                   }}
-                  disabled={saveBtnIsDisabled && !validateWebsiteAndSocialLinks()}
+                  disabled={saveBtnIsDisabled || !validateWebsiteAndSocialLinks()}
                   type='button'
                   styleType={{dark: 'navy-dark', light: 'navy'}}
                   style={{ width: '96px' }}
@@ -1724,6 +1724,7 @@ const CreateEditPublication = () => {
                     value={buttonLink}
                     background='#EFEFEF4D'
                     theme={darkTheme ? 'dark' : 'light'}
+                    noSpaces={true}
                     onChange={(val) => {
                       if (isCtaActive) {
                         onButtonLinkChange(val);
@@ -2032,6 +2033,7 @@ const CreateEditPublication = () => {
                 hasError={
                   publicationWebsite !== '' && !validateUrl(publicationWebsite)
                 }
+                noSpaces={true}
                 onChange={setPublicationWebsite}
                 value={publicationWebsite}
                 maxLength={161}
@@ -2069,6 +2071,7 @@ const CreateEditPublication = () => {
                         socialChannelUrl !== '' &&
                         !validateUrl(socialChannelUrl)
                       }
+                      noSpaces={true}
                       onChange={(newVal) => {
                         let allUrls = publicationSocialChannelUrls;
                         allUrls = allUrls.map((val, i) => {
@@ -2156,7 +2159,7 @@ const CreateEditPublication = () => {
                     handleScrolls();
                     setTimeout(onSave, 800);
                   }}
-                  disabled={saveBtnIsDisabled && !validateWebsiteAndSocialLinks()}
+                  disabled={saveBtnIsDisabled || !validateWebsiteAndSocialLinks()}
                   type='button'
                   styleType={{dark: 'navy-dark', light: 'navy'}}
                   style={{ width: '96px' }}
