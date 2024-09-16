@@ -44,7 +44,7 @@ jobs:
           dfx build Metrics
           dfx build PostBucket
           dfx build PostCore
-          dfx build PostIndex
+          dfx build PostRelations
           dfx build Storage
           dfx build User
           cd Nuance-NFTs-and-Publications
@@ -55,7 +55,7 @@ jobs:
 
       - name: Get wasm hash for all
         run: |
-          for canister in CyclesDispenser FastBlocks_EmailOptIn KinicEndpoint Metrics PostBucket PostCore PostIndex Storage User; do
+          for canister in CyclesDispenser FastBlocks_EmailOptIn KinicEndpoint Metrics PostBucket PostCore PostRelations Storage User; do
             sha256sum .dfx/local/canisters/$canister/$canister.wasm
           done
           cd Nuance-NFTs-and-Publications

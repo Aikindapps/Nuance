@@ -87,7 +87,7 @@ jobs:
             "FastBlocks_EmailOptIn": { "ic": "'"$FASTBLOCKS_EMAILOPTIN"'" },
             "KinicEndpoint": { "ic": "'"$KINICENDPOINT"'" },
             "CyclesDispenser": { "ic": "'"$CYCLESDISPENSER"'" },
-            "PostIndex": { "ic": "'"$POSTINDEX"'" },
+            "PostRelations": { "ic": "'"$POSTRELATIONS"'" },
             "Storage": { "ic": "'"$STORAGE"'" },
             "User": { "ic": "'"$USER"'" },
             "nuance_assets": { "ic": "'"$NUANCE_ASSETS"'" },
@@ -123,7 +123,7 @@ jobs:
             public let POST_CORE_CANISTER_ID = "'"$POSTCORE"'";
             public let KINIC_ENDPOINT_CANISTER_ID = "'"$KINICENDPOINT"'";
             public let FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID = "'"$FASTBLOCKS_EMAILOPTIN"'";
-            public let POST_INDEX_CANISTER_ID = "'"$POSTINDEX"'";
+            public let POST_RELATIONS_CANISTER_ID = "'"$POSTRELATIONS"'";
             public let STORAGE_CANISTER_ID = "'"$STORAGE"'";
             public let CYCLES_DISPENSER_CANISTER_ID = "'"$CYCLESDISPENSER"'";
             public let NUANCE_ASSETS_CANISTER_ID = "'"$NUANCE_ASSETS"'";
@@ -138,7 +138,7 @@ jobs:
           FASTBLOCKS_EMAILOPTIN: ${{ secrets.SNS_UAT_FASTBLOCKS_EMAILOPTIN }}
           KINICENDPOINT: ${{ secrets.SNS_UAT_KINICENDPOINT }}
           CYCLESDISPENSER: ${{ secrets.SNS_UAT_CYCLESDISPENSER }}
-          POSTINDEX: ${{ secrets.SNS_UAT_POSTINDEX }}
+          POSTRELATIONS: ${{ secrets.SNS_UAT_POSTRELATIONS }}
           STORAGE: ${{ secrets.SNS_UAT_STORAGE }}
           USER: ${{ secrets.SNS_UAT_USER }}
           NUANCE_ASSETS: ${{ secrets.SNS_UAT_NUANCE_ASSETS }}
