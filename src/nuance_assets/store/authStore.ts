@@ -31,9 +31,9 @@ import {
 } from '../shared/constants';
 import { PairInfoExt } from '../services/sonic/Sonic.did';
 import { getPriceBetweenTokens, truncateToDecimalPlace } from '../shared/utils';
+import { USER_CANISTER_ID } from '../services/canisterIds';
 
 
-const USER_CANISTER_ID = process.env.USER_CANISTER_ID || '';
 
 const isLocal: boolean =
   window.location.origin.includes('localhost') ||
