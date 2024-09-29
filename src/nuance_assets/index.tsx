@@ -41,4 +41,5 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   Usergeek.init({ apiKey: userGeekSecondaryApiKey });
   console.log('usergeek init in prod mode');
+  console.log(`fully decentralized :)`)
 }
