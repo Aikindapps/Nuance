@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, { useEffect, useState, useContext, useRef, Suspense, lazy } from 'react';
 import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import parse from 'html-react-parser';
@@ -464,6 +464,30 @@ const ReadArticle = () => {
       : colors.primaryTextColor,
   };
 
+  useEffect(() => {
+    const headerImage = post?.headerImage || images.NUANCE_LOGO;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.href = headerImage;
+    link.as = 'image';
+
+    document.head.appendChild(link);
+
+    // Clean up by removing the link on component unmount
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [post?.headerImage]);
+
+  //const SubscriptionModal = lazy(() => import('../../components/subscription-modal/subscription-modal'));
+  //const CancelSubscriptionModal = lazy(() => import('../../components/cancel-subscription-modal/cancel-subscription-modal'));
+  //const Comments = lazy(() => import('../../components/comments/comments'));
+  //const WriteComment = lazy(() => import('../../components/comments/write-comments'));
+  //const CopyArticle = lazy(() => import('../../UI/copy-article/copy-article'));
+  //const ReportArticle = lazy(() => import('../../UI/report-article/report-article'));
+  //const CardPublishedArticles = lazy(() => import('../../components/card-published-articles/card-published-articles'));
+  //const Helmet = lazy(() => import('react-helmet'));
+
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
   return (
@@ -759,15 +783,20 @@ const ReadArticle = () => {
                     : {}
                 }
               >
-                <img
-                  className='header-image'
-                  src={post.headerImage || images.NUANCE_LOGO}
-                  style={{
-                    background: darkTheme
-                      ? darkOptionsAndColors.background
-                      : '',
-                  }}
-                />
+                {!loading ? (
+                  <img
+                    className='header-image'
+                    src={post?.headerImage || images.NUANCE_LOGO}
+                    loading='eager'
+                    style={{
+                      background: darkTheme
+                        ? darkOptionsAndColors.background
+                        : '',
+                    }}
+                  />
+                ) : (
+                  <div className="header-image-skeleton" style={{ width: '100%', height: '300px', backgroundColor: '#e0e0e0' }}></div>
+                )}
                 {post.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
                     post={post}
