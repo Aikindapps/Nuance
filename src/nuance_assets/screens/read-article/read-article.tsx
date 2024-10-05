@@ -464,7 +464,7 @@ const ReadArticle = () => {
       : colors.primaryTextColor,
   };
 
-  useEffect(() => {
+  /* useEffect(() => {
     const headerImage = post?.headerImage || images.NUANCE_LOGO;
     const link = document.createElement('link');
     link.rel = 'preload';
@@ -477,7 +477,7 @@ const ReadArticle = () => {
     return () => {
       document.head.removeChild(link);
     };
-  }, [post?.headerImage]);
+  }, [post?.headerImage]); */
 
   //const SubscriptionModal = lazy(() => import('../../components/subscription-modal/subscription-modal'));
   //const CancelSubscriptionModal = lazy(() => import('../../components/cancel-subscription-modal/cancel-subscription-modal'));
@@ -487,6 +487,41 @@ const ReadArticle = () => {
   //const ReportArticle = lazy(() => import('../../UI/report-article/report-article'));
   //const CardPublishedArticles = lazy(() => import('../../components/card-published-articles/card-published-articles'));
   //const Helmet = lazy(() => import('react-helmet'));
+  //const Header = lazy(() => import('../../components/header/header'));
+
+  const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
+
+  // Preload the header image as soon as the component mounts
+  useEffect(() => {
+    if (post?.headerImage || images.NUANCE_LOGO) {
+      const headerImage = post?.headerImage || images.NUANCE_LOGO;
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = headerImage;
+      link.as = 'image';
+
+      document.head.appendChild(link);
+
+      // Clean up by removing the link on component unmount
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
+  }, [post?.headerImage]);
+
+  // Track when the header image has loaded
+  const handleImageLoad = () => {
+    setHeaderImageLoaded(true);
+  };
+
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Manually set the `fetchpriority` attribute using the ref
+  useEffect(() => {
+    if (imgRef.current) {
+      imgRef.current.setAttribute('fetchpriority', 'high');
+    }
+  }, []);
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
@@ -783,20 +818,24 @@ const ReadArticle = () => {
                     : {}
                 }
               >
-                {!loading ? (
-                  <img
-                    className='header-image'
-                    src={post?.headerImage || images.NUANCE_LOGO}
-                    loading='eager'
-                    style={{
-                      background: darkTheme
-                        ? darkOptionsAndColors.background
-                        : '',
-                    }}
-                  />
-                ) : (
+                {!headerImageLoaded && (
                   <div className="header-image-skeleton" style={{ width: '100%', height: '300px', backgroundColor: '#e0e0e0' }}></div>
                 )}
+
+                <img
+                  //ref={imgRef}
+                  className='header-image'
+                  src={post?.headerImage || images.NUANCE_LOGO}
+                  loading='eager'
+                  style={{
+                    background: darkTheme
+                      ? darkOptionsAndColors.background
+                      : '',
+                      display: headerImageLoaded ? 'block' : 'none',
+                  }}
+                  onLoad={handleImageLoad}
+                />
+
                 {post.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
                     post={post}
