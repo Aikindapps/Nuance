@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useRef, Suspense, lazy } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import parse from 'html-react-parser';
@@ -46,6 +46,8 @@ import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
+import HeaderImage from '../../components/header-image/header-image';
+import loadable from '@loadable/component';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -464,64 +466,12 @@ const ReadArticle = () => {
       : colors.primaryTextColor,
   };
 
-  /* useEffect(() => {
-    const headerImage = post?.headerImage || images.NUANCE_LOGO;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = headerImage;
-    link.as = 'image';
+  const HeaderImage = loadable(() => import( /* webpackPrefetch: true */ '../../components/header-image/header-image'));
 
-    document.head.appendChild(link);
-
-    // Clean up by removing the link on component unmount
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, [post?.headerImage]); */
-
-  //const SubscriptionModal = lazy(() => import('../../components/subscription-modal/subscription-modal'));
-  //const CancelSubscriptionModal = lazy(() => import('../../components/cancel-subscription-modal/cancel-subscription-modal'));
-  //const Comments = lazy(() => import('../../components/comments/comments'));
-  //const WriteComment = lazy(() => import('../../components/comments/write-comments'));
-  //const CopyArticle = lazy(() => import('../../UI/copy-article/copy-article'));
-  //const ReportArticle = lazy(() => import('../../UI/report-article/report-article'));
-  //const CardPublishedArticles = lazy(() => import('../../components/card-published-articles/card-published-articles'));
-  //const Helmet = lazy(() => import('react-helmet'));
-  //const Header = lazy(() => import('../../components/header/header'));
-
-  const [headerImageLoaded, setHeaderImageLoaded] = useState(false);
-
-  // Preload the header image as soon as the component mounts
   useEffect(() => {
-    if (post?.headerImage || images.NUANCE_LOGO) {
-      const headerImage = post?.headerImage || images.NUANCE_LOGO;
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.href = headerImage;
-      link.as = 'image';
-
-      document.head.appendChild(link);
-
-      // Clean up by removing the link on component unmount
-      return () => {
-        document.head.removeChild(link);
-      };
-    }
+    // Preload HeaderImage component
+    HeaderImage.preload();
   }, [post?.headerImage]);
-
-  // Track when the header image has loaded
-  const handleImageLoad = () => {
-    setHeaderImageLoaded(true);
-  };
-
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // Manually set the `fetchpriority` attribute using the ref
-  useEffect(() => {
-    if (imgRef.current) {
-      imgRef.current.setAttribute('fetchpriority', 'high');
-    }
-  }, []);
 
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
@@ -818,22 +768,12 @@ const ReadArticle = () => {
                     : {}
                 }
               >
-                {!headerImageLoaded && (
-                  <div className="header-image-skeleton" style={{ width: '100%', height: '300px', backgroundColor: '#e0e0e0' }}></div>
-                )}
-
-                <img
-                  //ref={imgRef}
-                  className='header-image'
+                <HeaderImage
                   src={post?.headerImage || images.NUANCE_LOGO}
-                  loading='eager'
-                  style={{
-                    background: darkTheme
-                      ? darkOptionsAndColors.background
-                      : '',
-                      display: headerImageLoaded ? 'block' : 'none',
+                  style={{background: darkTheme
+                    ? darkOptionsAndColors.background
+                    : '',
                   }}
-                  onLoad={handleImageLoad}
                 />
 
                 {post.premiumArticleSaleInfo ? (
