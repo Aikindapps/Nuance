@@ -46,6 +46,8 @@ import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
+import HeaderImage from '../../components/header-image/header-image';
+import loadable from '@loadable/component';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -464,6 +466,13 @@ const ReadArticle = () => {
       : colors.primaryTextColor,
   };
 
+  const HeaderImage = loadable(() => import( /* webpackPrefetch: true */ '../../components/header-image/header-image'));
+
+  useEffect(() => {
+    // Preload HeaderImage component
+    HeaderImage.preload();
+  }, [post?.headerImage]);
+
   let dashedTitle = post?.title.replace(/\s+/g, '-').toLowerCase();
   let url = `https://nuance.xyz${window.location.pathname}`;
   return (
@@ -759,15 +768,14 @@ const ReadArticle = () => {
                     : {}
                 }
               >
-                <img
-                  className='header-image'
-                  src={post.headerImage || images.NUANCE_LOGO}
-                  style={{
-                    background: darkTheme
-                      ? darkOptionsAndColors.background
-                      : '',
+                <HeaderImage
+                  src={post?.headerImage || images.NUANCE_LOGO}
+                  style={{background: darkTheme
+                    ? darkOptionsAndColors.background
+                    : '',
                   }}
                 />
+
                 {post.premiumArticleSaleInfo ? (
                   <PremiumArticleInfo
                     post={post}
