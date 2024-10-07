@@ -8,8 +8,8 @@ export const images = {
   AIKIN_LOGO: imagesPath + 'aikin_logo.png',
   AIKIN_LOGO_HORIZONTAL: imagesPath + 'aikin_logo_horiz.png',
   NUANCE_LOGO: imagesPath + 'nuance-logo.svg',
-  NUANCE_LOGO_BLUE_TEXT: imagesPath + 'nuance_logo_blue_text.png',
-  DEFAULT_AVATAR: imagesPath + 'default-avatar.jpeg',
+  NUANCE_LOGO_BLUE_TEXT: imagesPath + 'nuance_logo_blue_text.webp',
+  DEFAULT_AVATAR: imagesPath + 'default-avatar.webp',
   NUANCE_FLAG: imagesPath + 'nuance-flag.png',
   PHOTO_BACKGROUND: imagesPath + 'photo-bg.png',
   PHOTO_CAMERA: imagesPath + 'photo-camera.png',
@@ -29,12 +29,12 @@ export const images = {
     imagesPath + 'join-the-revolution-background.png',
   HOMEPAGE_LOGIN_OPTIONS_BACKGROUND:
     imagesPath + 'homepage-login-options-background.svg',
-  WELCOME_TO_BLOGGING: imagesPath + 'welcome_to_blogging.png',
-  HIGH_TECH_IMAGE: imagesPath + 'high_tech_image.png',
+  WELCOME_TO_BLOGGING: imagesPath + 'welcome_to_blogging.webp',
+  HIGH_TECH_IMAGE: imagesPath + 'high_tech_image.webp',
   MONETIZE_BACKGROUND: imagesPath + 'monetize_background.svg',
-  MONETIZE_IMAGE: imagesPath + 'monetize_image.png',
+  MONETIZE_IMAGE: imagesPath + 'monetize_image.webp',
   MONETIZE_MOBILE_IMAGE: imagesPath + 'monetize_mobile_image.svg',
-  START_ON_CHAIN_IMAGE: imagesPath + 'start-on-chain.png',
+  START_ON_CHAIN_IMAGE: imagesPath + 'start-on-chain.webp',
 };
 
 export const icons = {

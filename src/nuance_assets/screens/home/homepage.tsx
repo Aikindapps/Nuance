@@ -802,7 +802,7 @@ const HomePage = () => {
             <div className='title'>
               The world's first blogging platform built entirely on-chain!
             </div>
-            <img className='image' src={images.WELCOME_TO_BLOGGING} />
+            <img className='image' src={images.WELCOME_TO_BLOGGING} loading='lazy' />
             <div className='colorful-divider' />
           </div>
           <div className='read-write-earn-money'>
@@ -896,7 +896,7 @@ const HomePage = () => {
                 </span>
               </div>
             </div>
-            <img className='right-image' src={images.HIGH_TECH_IMAGE} />
+            <img className='right-image' src={images.HIGH_TECH_IMAGE} loading='lazy' />
           </div>
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
@@ -944,6 +944,7 @@ const HomePage = () => {
                 <img
                   className='mask-group'
                   src={images.NUANCE_LOGO_MASK_GROUP}
+                  loading='lazy'
                 />
                 {features_left.map((feature) => {
                   return (
@@ -1045,10 +1046,10 @@ const HomePage = () => {
                 </span>
               </div>
             </div>
-            <img className='monetize-image' src={images.MONETIZE_IMAGE} />
+            <img className='monetize-image' src={images.MONETIZE_IMAGE} loading='lazy' />
           </div>
           <div className='monetize-wrapper-mobile'>
-            <img className='monetize-image' src={images.MONETIZE_IMAGE} />
+            <img className='monetize-image' src={images.MONETIZE_IMAGE} loading='lazy' />
             <div className='content-inside'>
               <div className='title'>Monetize your writing effort</div>
               <div className='content'>
@@ -1089,7 +1090,7 @@ const HomePage = () => {
                 </span>
               </div>
             </div>
-            <img className='right-image' src={images.START_ON_CHAIN_IMAGE} />
+            <img className='right-image' src={images.START_ON_CHAIN_IMAGE} loading='lazy' />
           </div>
           {!isLoggedIn && (
             <div className='start-writing'>
@@ -1145,6 +1146,7 @@ const HomePage = () => {
                 <img
                   className='avatar'
                   src={user.avatar || images.DEFAULT_AVATAR}
+                  loading='lazy'
                 />
                 <div className='display-name'>{user.displayName}</div>
                 <Link
@@ -1184,6 +1186,7 @@ const HomePage = () => {
                           className='social-channel-icon'
                           src={getIconForSocialChannel(url, darkTheme)}
                           id={'my-social-channel-' + index}
+                          loading='lazy'
                         />
                       </div>
                     );
@@ -1240,6 +1243,7 @@ const HomePage = () => {
                 className='blue-logo'
                 style={{ filter: darkOptionsAndColors.filter }}
                 src={images.NUANCE_LOGO_BLUE_TEXT}
+                loading='lazy'
               />
               <div className='blogging-to-the-people'>
                 Blogging to the people!
@@ -1335,6 +1339,7 @@ const HomePage = () => {
                 <img
                   className='avatar'
                   src={user.avatar || images.DEFAULT_AVATAR}
+                  loading='lazy'
                 />
                 <div className='display-name'>{user.displayName}</div>
                 <Link
@@ -1377,6 +1382,7 @@ const HomePage = () => {
                           className='social-channel-icon'
                           src={getIconForSocialChannel(url, darkTheme)}
                           id={'my-social-channel-' + index}
+                          loading='lazy'
                         />
                       </div>
                     );
@@ -1529,7 +1535,7 @@ const HomePage = () => {
             </div>
           )}
           <div className='right'>
-            <img className='mask-group' src={images.NUANCE_LOGO_MASK_GROUP} />
+            <img className='mask-group' src={images.NUANCE_LOGO_MASK_GROUP} loading='lazy' />
             <div
               className='searchbar-wrapper'
               onFocus={() => setIsBlur(true)}
