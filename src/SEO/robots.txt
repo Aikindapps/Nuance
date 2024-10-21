@@ -1,4 +1,0 @@
-User-agent: * 
-Allow: / 
-Sitemap: https://nuance.xyz/sitemap2.xml
-Host: https://nuance.xyz
