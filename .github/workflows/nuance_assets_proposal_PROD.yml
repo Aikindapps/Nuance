@@ -72,7 +72,7 @@ jobs:
       - name: Get Principal
         run: dfx identity get-principal
 
-    #   - name: Create commit Proposal
-    #     run: |
-    #     echo "${{ secrets.PROD_IDENT }}" | base64 --decode > identity.pem
-    #     node scripts/sns/assetCanisterUpgrade.js --functionId=TODO --developerNeuronId=$PROD_NEURON_ID --pemFilePath=./identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}
+      - name: Create commit Proposal
+        run: |
+          echo "${{ secrets.PROD_IDENT }}" | base64 --decode > identity.pem
+          node scripts/sns/assetCanisterUpgrade.js --functionId=1010 --developerNeuronId=${{ secrets.PROD_NEURON_ID }} --pemFilePath=./identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}
