@@ -15,11 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ github.event.inputs.tag }}
 
       - name: Verify branch
         run: |
-          if [ "${{ github.ref }}" != "refs/tags/${{ github.event.inputs.branch }}" ]; then
+          if [ "${{ github.ref }}" != "refs/tags/${{ github.event.inputs.tag }}" ]; then
             echo "Error: The current branch does not match the input branch."
             exit 1
           fi
