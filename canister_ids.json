@@ -1,41 +1,11 @@
 {
-  "CyclesDispenser": {
-    "ic": "353ux-wqaaa-aaaaf-qakga-cai"
+  "backend": {
+    "ic": "vtrkc-hqaaa-aaaag-aburq-cai"
   },
-  "FastBlocks_EmailOptIn": {
-    "ic": "dgwwd-jaaaa-aaaaf-qai7a-cai"
-  },
-  "KinicEndpoint": {
-    "ic": "4m3sz-lqaaa-aaaaf-qagza-cai"
-  },
-  "Metrics": {
-    "ic": "xjlvo-hyaaa-aaaam-qbcga-cai"
-  },
-  "Notifications": {
-    "ic": "qrlrq-biaaa-aaaaf-qal2q-cai"
-  },
-  "PostBucket": {
-    "ic": "3uy7l-ayaaa-aaaaf-qakhq-cai"
-  },
-  "PostCore": {
-    "ic": "322sd-3iaaa-aaaaf-qakgq-cai"
-  },
-  "PostIndex": {
-    "ic": "r5sjg-7iaaa-aaaaf-qaama-cai"
-  },
-  "PostRelations": {
-    "ic": "qyi2m-xaaaa-aaaaf-qal3a-cai"
-  },
-  "Storage": {
-    "ic": "y2pkg-ciaaa-aaaaf-qagbq-cai"
-  },
-  "Subscription": {
-    "ic": "s6qib-6qaaa-aaaaf-qalwa-cai"
-  },
-  "User": {
-    "ic": "rtqeo-eyaaa-aaaaf-qaana-cai"
+  "backend_2": {
+    "ic": "e6dzb-jiaaa-aaaap-qbjua-cai"
   },
   "nuance_assets": {
-    "ic": "exwqn-uaaaa-aaaaf-qaeaa-cai"
+    "ic": "q5gt5-niaaa-aaaak-qciba-cai"
   }
 }

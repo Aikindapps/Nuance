@@ -1,7 +1,10 @@
 [
-    {
-        "match": ".well-known*",
-        "ignore": false
+  {
+    "match": ".well-known*",
+    "ignore": false,
+    "headers": {
+      "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json"
     }
-
+  }
 ]

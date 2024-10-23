@@ -1,0 +1,6 @@
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
+service : {
+  hello: () -> (text) query;
+  hello_update: () -> (text);
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
+}

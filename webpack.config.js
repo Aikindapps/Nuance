@@ -1,11 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
-const TerserPlugin = require('terser-webpack-plugin');
-var DuplicatePackageCheckerPlugin = require("duplicate-package-checker-webpack-plugin");
 
+const frontendDirectory = 'nuance_assets'; // Set your frontend directory name
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 function initCanisterEnv() {
   let localCanisters, prodCanisters;
@@ -39,142 +38,59 @@ function initCanisterEnv() {
 }
 const canisterEnvVariables = initCanisterEnv();
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
-const frontendDirectory = 'nuance_assets';
-
 module.exports = {
-  target: 'web',
-  devtool: isDevelopment
-    ? 'eval' /* eval for fastest dev build or eval-source-map for slower build */
-    : 'source-map' /* recommended choice for production builds with high quality SourceMaps. */,
-  mode: isDevelopment ? 'development' : 'production',
-  entry: {
-    index: path.join(__dirname, 'src', frontendDirectory, 'index.tsx'),
-  },
-  optimization: {
-    minimize: !isDevelopment,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          safari10: true,
-        },
-      }),
-    ],
-  },
-  resolve: {
-    extensions: ['.js', '.ts', '.jsx', '.tsx'],
-    fallback: {
-      assert: require.resolve('assert/'),
-      buffer: require.resolve('buffer/'),
-      events: require.resolve('events/'),
-      stream: require.resolve('stream-browserify/'),
-      util: require.resolve('util/'),
-    },
-  },
+  entry: path.join(__dirname, 'src', frontendDirectory, 'index.tsx'), // Set the entry point of your application
   output: {
-    filename: isDevelopment ? '[name].js' : '[name].[contenthash].js',
-    path: path.join(__dirname, `dist`),
-    publicPath: '/',
+    filename: 'bundle.js', // Name of the output bundle
+    path: path.resolve(__dirname, 'dist'), // Output directory
+    publicPath: '/', // Public URL of the output directory when referenced in a browser
   },
-
-  // Depending in the language or framework you are using for
-  // front-end development, add module loaders to the default
-  // webpack configuration. For example, if you are using React
-  // modules and CSS as described in the "Adding a stylesheet"
-  // tutorial, uncomment the following lines:
-  // module: {
-  //  rules: [
-  //    { test: /\.(ts|tsx|jsx)$/, loader: "ts-loader" },
-  //    { test: /\.css$/, use: ['style-loader','css-loader'] }
-  //  ]
-  // },
+  mode: isDevelopment ? 'development' : 'production', // Set the mode to 'development' or 'production'
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx'], // File extensions to resolve
+  },
   module: {
     rules: [
-      { test: /\.(js|ts)x?$/i, loader: 'ts-loader' },
       {
-        test: /\.(css|s[ac]ss)$/i,
-        use: [
-          // Creates `style` nodes from JS strings
-          'style-loader',
-          // Translates CSS into CommonJS
-          {
-            loader: 'css-loader',
-            options: { sourceMap: true },
-          },
-          //resolve background-image urls
-          {
-            loader: 'resolve-url-loader',
-            options: { sourceMap: true },
-          },
-          // Compiles Sass to CSS
-          {
-            loader: 'sass-loader',
-            options: { sourceMap: true },
-          },
-        ],
+        test: /\.(js|ts)x?$/, // Match .js, .jsx, .ts, and .tsx files
+        exclude: /node_modules/, // Exclude files in node_modules directory
+        use: 'ts-loader', // Use ts-loader to transpile TypeScript files
       },
       {
-        test: /\.(png|jpe?g|gif|eot|ttf|woff|woff2)$/i,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/[hash][ext][query]',
-        },
+        test: /\.css$/, // Match .css files
+        use: ['style-loader', 'css-loader'], // Use style-loader and css-loader for CSS files
       },
-      {
-        test: /\.svg$/i,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/[hash][ext][query]',
-        },
-      },
+      // Add loaders for other file types as needed
     ],
   },
   plugins: [
-    new TerserPlugin({
-      terserOptions: {
-        safari10: true,
-      },
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, 'src', frontendDirectory, 'index.html'), // Path to your HTML template
     }),
-    new webpack.optimize.AggressiveMergingPlugin(),
     new Dotenv({
       path: `./.env${isDevelopment ? '.local' : ''}`,
     }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'src', frontendDirectory, 'index.html'),
-      cache: false,
-    }),
-  (new CopyPlugin({
-      patterns: [
-        {
-          from: path.join(__dirname, 'src', frontendDirectory, 'assets'),
-          to: path.join(__dirname, 'dist'),
-        },
-      ],
-    })),
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
       ...canisterEnvVariables,
     }),
-    new webpack.ProvidePlugin({
-      Buffer: [require.resolve('buffer/'), 'Buffer'],
-      process: require.resolve('process/browser'),
-    }),
   ],
-// proxy /api to port 4943 during development
   devServer: {
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:8080",
+    proxy: [{
+      '/api': {
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
         pathRewrite: {
-          "^/api": "/api",
+          '^/api': '/api',
         },
       },
+    }],
+    static: {
+      directory: path.join(__dirname, 'dist'), // Directory to serve static files from
     },
-    hot: true,
-    watchFiles: [path.resolve(__dirname, 'src', frontendDirectory)],
-    liveReload: true,
-    historyApiFallback: true,
+    compress: true, // Enable gzip compression for everything served
+    port: 8081, // Port number for the dev server
+    historyApiFallback: true, // Fallback to index.html for Single Page Applications
+    hot: true
   },
 };

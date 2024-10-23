@@ -1,22 +1,24 @@
 {
   "canisters": {
+    "backend": {
+      "main": "src/hello-world/main.mo",
+      "type": "motoko"
+    },
+    "backend_2": {
+      "main": "src/hello-world/main.mo",
+      "type": "motoko"
+    },
     "nuance_assets": {
       "frontend": {
         "entrypoint": "dist/index.html"
       },
-      "source": [
-        "dist/",
-        "src/well-known/",
-        "src/SEO/"
-      ],
-      "type": "assets",
-      "specified_id": "exwqn-uaaaa-aaaaf-qaeaa-cai"
+      "source": ["dist/", "src/well-known/", "src/SEO/"],
+      "type": "assets"
     }
   },
   "defaults": {
     "build": {
-      "args": "",
-      "packtool": "vessel sources"
+      "args": ""
     }
   },
   "version": 1
