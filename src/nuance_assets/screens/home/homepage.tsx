@@ -89,12 +89,12 @@ const HomePage = () => {
     {
       title: 'Subscription',
       content:
-        'A subscription to publications provides unlimited access to all premium content',
+        'A subscription provides unlimited access to all members-only content',
     },
     {
       title: 'Publications',
       content:
-        'Publications provide a branded landing page showcasing your articles - including a concierge migration service',
+        'Publications provide a branded home page showcasing your articles + advanced publishing features',
     },
     {
       title: 'Premium Articles',
@@ -102,11 +102,6 @@ const HomePage = () => {
     },
   ];
   const features_right = [
-    {
-      title: 'Notifications',
-      content:
-        'Get notifications regarding your community so you are always in the loop',
-    },
     {
       title: 'Tipping',
       content:
@@ -120,16 +115,14 @@ const HomePage = () => {
       title: 'Social',
       content: 'Social links to cross-pollinate your audience',
     },
+    {
+      title: 'Notifications',
+      content:
+        'Get notifications regarding your community so you are always in the loop',
+    },
   ];
   //topics in about tab
-  const topics = [
-    'BITCOIN',
-    'ICP',
-    'CRYPTO',
-    'DDDM',
-    'INTERNET IDENTITY',
-    'RIPPLE',
-  ];
+  const topics = ['BITCOIN', 'NFT', 'CRYPTO', 'PRIVACY', 'SCI-FI', 'ANIME'];
 
   const onKeyDown = (e: any) => {
     if (e.key === 'Enter') {
@@ -646,13 +639,13 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='right'>
               <div className='title'>
-                Join the on-chain blogging revolution!
+                Join the decentralized blogging revolution!
               </div>
               <div className='login-options'>
                 <div className='title'>Login with:</div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType={{dark: 'navy', light: 'navy'}}
+                    styleType={{ dark: 'navy', light: 'navy' }}
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -671,7 +664,7 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType={{dark: 'navy', light: 'navy'}}
+                    styleType={{ dark: 'navy', light: 'navy' }}
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -708,12 +701,14 @@ const HomePage = () => {
         </div>
         {!isLoggedIn && (
           <div className='login-options-mobile-wrapper'>
-            <div className='title'>Join the on-chain blogging revolution!</div>
+            <div className='title'>
+              Join the decentralized blogging revolution!
+            </div>
             <div className='login-options'>
               <div className='title'>Login with:</div>
               <div className='login-option-wrapper'>
                 <Button
-                  styleType={{dark: 'navy', light: 'navy'}}
+                  styleType={{ dark: 'navy', light: 'navy' }}
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
@@ -732,7 +727,7 @@ const HomePage = () => {
               </div>
               <div className='login-option-wrapper'>
                 <Button
-                  styleType={{dark: 'navy', light: 'navy'}}
+                  styleType={{ dark: 'navy', light: 'navy' }}
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
@@ -799,10 +794,12 @@ const HomePage = () => {
       {selectedTab === 'About' && (
         <div className='about-nuance-wrapper'>
           <div className='welcome-to-blogging'>
-            <div className='title'>
-              The world's first blogging platform built entirely on-chain!
-            </div>
-            <img className='image' src={images.WELCOME_TO_BLOGGING} loading='lazy' />
+            <div className='title'>Community Owned</div>
+            <img
+              className='image'
+              src={images.WELCOME_TO_BLOGGING}
+              loading='lazy'
+            />
             <div className='colorful-divider' />
           </div>
           <div className='read-write-earn-money'>
@@ -833,9 +830,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '224px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   login('NFID');
                 }}
@@ -844,9 +841,9 @@ const HomePage = () => {
               </Button>
 
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '224px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   login('ii');
                 }}
@@ -858,9 +855,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '185px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -883,27 +880,40 @@ const HomePage = () => {
                 className='title'
                 style={darkTheme ? { color: darkOptionsAndColors.color } : {}}
               >
-                High tech made easy
+                Decentralization matters
               </div>
               <div className='content'>
                 <span>
-                  Nuance prioritizes user experience, offering a sleek UX,
-                  invisible technology, smooth performance, search indexing, and
-                  familiar features such as login with Google and custom
-                  domains. This ensures that users enjoy all the conveniences
-                  they're accustomed to in Web 2 while benefiting from the
-                  transformative capabilities of blockchain technology.
+                  The advertisement driven business models of web 2 has left
+                  control of the internet in the hands of a just a few
+                  companies. Advertising dollars drive click-bait and polarises
+                  communities where everything is black or white. But we all
+                  know that the truth is always somewhere in the middle. The
+                  truth is nuanced.
+                  <br />
+                  <br />
+                  Nuance is built on and for the new web.
+                  <br />
+                  <br />
+                  Nuance is for decentralised opinions.
+                  <br />
+                  <br />
+                  Make your opinion unstoppable.
                 </span>
               </div>
             </div>
-            <img className='right-image' src={images.HIGH_TECH_IMAGE} loading='lazy' />
+            <img
+              className='right-image'
+              src={images.HIGH_TECH_IMAGE}
+              loading='lazy'
+            />
           </div>
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '224px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   login('NFID');
                 }}
@@ -912,9 +922,9 @@ const HomePage = () => {
               </Button>
 
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '224px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   login('ii');
                 }}
@@ -926,9 +936,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '185px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -938,7 +948,7 @@ const HomePage = () => {
             </div>
           )}
           <div className='features-wrapper'>
-            <div className='title'>Features</div>
+            <div className='title'>All the features you know</div>
             <div className='features-content-wrapper'>
               <div className='features-left'>
                 <img
@@ -984,9 +994,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-buttons-wrapper'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '224px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   login('NFID');
                 }}
@@ -995,9 +1005,9 @@ const HomePage = () => {
               </Button>
 
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '224px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   login('ii');
                 }}
@@ -1009,9 +1019,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '185px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1022,11 +1032,13 @@ const HomePage = () => {
           )}
           <div className='monetize-wrapper'>
             <div className='left'>
-              <div className='title'>Monetize your writing effort</div>
+              <div className='title'>
+                Honest days pay for an honest days work
+              </div>
               <div className='content'>
                 <span>
-                  One key feature of Nuance is its ability to enable writers to
-                  form a direct financial relationship with their readers
+                  One key focus of Nuance is to enable writers to form a{' '}
+                  <b>direct financial relationship with their readers</b>{' '}
                   without the platform risk.
                 </span>
                 <span
@@ -1038,32 +1050,50 @@ const HomePage = () => {
                       : {}
                   }
                 >
-                  With Nuance, writers can monetize their content in ways not
-                  possible on traditional web2 platforms.
-                  <li>Real time tips in crypto</li>
-                  <li>NFT gated paywalls</li>
-                  <li>Subscriptions</li>
+                  With Nuance, writers can <b>monetize</b> their content in ways
+                  not possible on traditional web 2 platforms:
+                  <br />
+                  <br />
+                  <li className='list-nowrap'>Tips</li>
+                  <li className='list-nowrap'>
+                    Premium articles (limited edition NFT)
+                  </li>
+                  <li className='list-nowrap'>Subscriptions</li>
                 </span>
               </div>
             </div>
-            <img className='monetize-image' src={images.MONETIZE_IMAGE} loading='lazy' />
+            <img
+              className='monetize-image'
+              src={images.MONETIZE_IMAGE}
+              loading='lazy'
+            />
           </div>
           <div className='monetize-wrapper-mobile'>
-            <img className='monetize-image' src={images.MONETIZE_IMAGE} loading='lazy' />
+            <img
+              className='monetize-image'
+              src={images.MONETIZE_IMAGE}
+              loading='lazy'
+            />
             <div className='content-inside'>
-              <div className='title'>Monetize your writing effort</div>
+              <div className='title'>
+                Honest days pay for an honest days work
+              </div>
               <div className='content'>
-                One key feature of Nuance is its ability to enable writers to
-                form a direct financial relationship with their readers without
+                One key focus of Nuance is to enable writers to form a{' '}
+                <b>direct financial relationship with their readers</b> without
                 the platform risk.
               </div>
             </div>
             <div className='content-outside'>
-              With Nuance, writers can monetize their content in ways not
-              possible on traditional web2 platforms.
-              <li>Real time tips in crypto</li>
-              <li>NFT gated paywalls</li>
-              <li>Subscriptions</li>
+              With Nuance, writers can <b>monetize</b> their content in ways not
+              possible on traditional web 2 platforms:
+              <br />
+              <br />
+              <li className='list-nowrap'>Tips</li>
+              <li className='list-nowrap'>
+                Premium articles (limited edition NFT)
+              </li>
+              <li className='list-nowrap'>Subscriptions</li>
             </div>
           </div>
 
@@ -1073,33 +1103,37 @@ const HomePage = () => {
                 className='title'
                 style={darkTheme ? { color: darkOptionsAndColors.color } : {}}
               >
-                Start building your web3 audience today!
+                Start your own decentralised community
               </div>
               <div className='content'>
                 <span>
-                  Nuance provides a publication feature that enables projects
-                  and writers to have their own branding, a landing page, and
-                  writer management features, allowing teams to establish their
-                  own unique presence and identity on the platform.
+                  Nuance provides a publication feature that enables companies,
+                  projects and writers to have their own branding, a landing
+                  page, and writer management features, allowing teams to
+                  establish their own identity on the platform.
                 </span>
                 <span>
                   Log in with Google or Internet Identity (or Stoic or
-                  Bitfinity) and Join Nuance today to experience the future of
-                  online blogging. Where creators are empowered, content is
-                  secure, and communities thrive.
+                  Bitfinity) and join Nuance today to experience the future of
+                  decentralized publishing. Where creators are empowered,
+                  content is secure, and communities thrive.
                 </span>
               </div>
             </div>
-            <img className='right-image' src={images.START_ON_CHAIN_IMAGE} loading='lazy' />
+            <img
+              className='right-image'
+              src={images.START_ON_CHAIN_IMAGE}
+              loading='lazy'
+            />
           </div>
           {!isLoggedIn && (
             <div className='start-writing'>
-              <div className='title'>Start writing now!</div>
+              <div className='title'>Start writing today!</div>
               <div className='login-buttons-wrapper'>
                 <Button
-                  className={{dark: 'login-buttons-style', light: ''}}
+                  className={{ dark: 'login-buttons-style', light: '' }}
                   style={{ width: '224px' }}
-                  styleType={{dark: 'navy-dark', light: 'navy'}}
+                  styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
                     login('NFID');
                   }}
@@ -1108,9 +1142,9 @@ const HomePage = () => {
                 </Button>
 
                 <Button
-                  className={{dark: 'login-buttons-style', light: ''}}
+                  className={{ dark: 'login-buttons-style', light: '' }}
                   style={{ width: '224px' }}
-                  styleType={{dark: 'navy-dark', light: 'navy'}}
+                  styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
                     login('ii');
                   }}
@@ -1123,9 +1157,9 @@ const HomePage = () => {
           {!isLoggedIn && (
             <div className='login-button-mobile'>
               <Button
-                className={{dark: 'login-buttons-style', light: ''}}
+                className={{ dark: 'login-buttons-style', light: '' }}
                 style={{ width: '185px' }}
-                styleType={{dark: 'navy-dark', light: 'navy'}}
+                styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
                   modalContext?.openModal('Login');
                 }}
@@ -1227,7 +1261,7 @@ const HomePage = () => {
                 >{`${counts?.draftCount || 0} articles in draft`}</Link>
               </div>
               <Button
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 type='button'
                 style={{ width: '146px', margin: '0' }}
                 onClick={() => {
@@ -1262,9 +1296,9 @@ const HomePage = () => {
               <div className='login-options'>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType={{dark: 'navy-dark', light: 'navy'}}
+                    styleType={{ dark: 'navy-dark', light: 'navy' }}
                     type='button'
-                    style={ { width: '176px', margin: '0' } }
+                    style={{ width: '176px', margin: '0' }}
                     onClick={() => {
                       login('ii');
                     }}
@@ -1281,9 +1315,9 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    styleType={{dark: 'navy-dark', light: 'navy'}}
+                    styleType={{ dark: 'navy-dark', light: 'navy' }}
                     type='button'
-                    style={ { width: '176px', margin: '0' } }
+                    style={{ width: '176px', margin: '0' }}
                     onClick={() => {
                       login('NFID');
                     }}
@@ -1417,14 +1451,13 @@ const HomePage = () => {
                 >{`${counts?.draftCount || 0} articles in draft`}</Link>
               </div>
               <Button
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 type='button'
-                style={ {
-                        width: '146px',
-                        margin: '0',
-                        display: mobileMenuOpen ? '' : 'none',
-                        }
-                      }
+                style={{
+                  width: '146px',
+                  margin: '0',
+                  display: mobileMenuOpen ? '' : 'none',
+                }}
                 onClick={() => {
                   navigate('/article/new');
                 }}
@@ -1485,8 +1518,8 @@ const HomePage = () => {
               >
                 <div className='login-option-wrapper'>
                   <Button
-                    className={{dark: 'login-buttons-style', light: ''}}
-                    styleType={{dark: 'navy-dark', light: 'navy'}}
+                    className={{ dark: 'login-buttons-style', light: '' }}
+                    styleType={{ dark: 'navy-dark', light: 'navy' }}
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -1505,8 +1538,8 @@ const HomePage = () => {
                 </div>
                 <div className='login-option-wrapper'>
                   <Button
-                    className={{dark: 'login-buttons-style', light: ''}}
-                    styleType={{dark: 'navy-dark', light: 'navy'}}
+                    className={{ dark: 'login-buttons-style', light: '' }}
+                    styleType={{ dark: 'navy-dark', light: 'navy' }}
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
@@ -1535,7 +1568,11 @@ const HomePage = () => {
             </div>
           )}
           <div className='right'>
-            <img className='mask-group' src={images.NUANCE_LOGO_MASK_GROUP} loading='lazy' />
+            <img
+              className='mask-group'
+              src={images.NUANCE_LOGO_MASK_GROUP}
+              loading='lazy'
+            />
             <div
               className='searchbar-wrapper'
               onFocus={() => setIsBlur(true)}
@@ -1711,8 +1748,8 @@ const HomePage = () => {
                 ))}
               {getDisplayingPostsTotalCount() > getDisplayingPosts().length && (
                 <Button
-                  styleType={{dark: 'navy-dark', light: 'white'}}
-                  style={ { width: '152px', marginBottom: '56px' } }
+                  styleType={{ dark: 'navy-dark', light: 'white' }}
+                  style={{ width: '152px', marginBottom: '56px' }}
                   onClick={() => {
                     loadMoreHandler();
                   }}

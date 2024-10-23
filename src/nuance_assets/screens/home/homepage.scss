@@ -6,7 +6,7 @@
   width: 100%;
   overflow-x: hidden;
   .login-buttons-style {
-    background-color: $accent-color
+    background-color: $accent-color;
   }
   .join-revolution {
     margin-top: -64px;
@@ -443,6 +443,11 @@
           flex-direction: column;
           align-items: start;
           row-gap: 24px;
+
+          .list-nowrap {
+            white-space: nowrap;
+            padding-left: 15px;
+          }
         }
       }
       .monetize-image {
@@ -806,7 +811,7 @@
         .content-inside {
           background: linear-gradient(180deg, #25f68d 0%, #1bc0f2 100%);
           width: 100%;
-          padding-top: 95px;
+          padding-top: 15px;
           height: 290px;
           padding-left: 43px;
           row-gap: 29px;
@@ -835,7 +840,7 @@
         }
         .content-outside {
           font-family: Roboto;
-          font-size: 18px;
+          font-size: 16px;
           font-style: normal;
           font-weight: 400;
           line-height: 26px;
@@ -843,6 +848,10 @@
           width: calc(100% - 25px);
           padding-left: 25px;
           margin-top: 12px;
+
+          .list-nowrap {
+            white-space: nowrap;
+          }
         }
       }
     }
