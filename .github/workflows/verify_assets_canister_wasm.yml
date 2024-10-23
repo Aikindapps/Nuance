@@ -66,6 +66,7 @@ jobs:
 
       - name: Compute evidence for frontend canister
         run: |
-          dfx generate
           dfx canister create --all
+          dfx build --all
+          dfx generate
           dfx deploy nuance_assets --network ic --compute-evidence
