@@ -110,4 +110,5 @@ jobs:
 
       - name: Get batch id and evidence
         run: |
+          dfx generate
           dfx deploy --network ic nuance_assets --by-proposal
