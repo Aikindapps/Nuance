@@ -952,6 +952,9 @@ actor class PostBucket() = this {
 
     var post = buildPost(postId);
 
+    let callerPrincipalText = Principal.toText(caller);
+    let isReaderAuthor = callerPrincipalText == post.creatorPrincipal or isAuthor(caller, postId);
+
     switch(post.nftCanisterId) {
       case(?nftCanisterId) {
         //premium post
@@ -994,6 +997,12 @@ actor class PostBucket() = this {
       };
       case(null) {
         if(post.isMembersOnly){
+          //check if the caller is the author
+          if(isReaderAuthor) {
+            //caller is the author
+            //return the full post
+            return #ok(post);
+          };
           //members only post
           //check if the caller is a subscriber
           let SubscriptionCanister = CanisterDeclarations.getSubscriptionCanister();
