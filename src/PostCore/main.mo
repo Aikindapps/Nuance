@@ -2565,7 +2565,7 @@ actor PostCore {
   public shared query func getPostsByFollowers(handles : [Text], indexFrom : Nat32, indexTo : Nat32) : async GetPostsByFollowers {
     Debug.print("PostCore->getPostsByFollowers");
     var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(10);
-    var postIdsBuffer : Buffer.Buffer<Text> = Buffer.Buffer<Text>(10);
+    var postIdsMap = HashMap.fromIter<Text, Text>([].vals(), initCapacity, Text.equal, Text.hash);
 
     if (handles.size() > 0) {
       label l for (handle in Iter.fromArray(handles)) {
@@ -2585,8 +2585,8 @@ actor PostCore {
             func(postId : Text) : () {
               //check if draft
               let isDraft = isDraftOrFutureArticle(postId);
-              if (not isDraft and not rejectedByModClub(postId) and not U.arrayContains(Buffer.toArray(postIdsBuffer), postId)) {
-                postIdsBuffer.add(postId);
+              if (not isDraft and not rejectedByModClub(postId) and postIdsMap.get(postId) == null) {
+                postIdsMap.put(postId, postId);
               };
             },
           );
@@ -2594,7 +2594,7 @@ actor PostCore {
       };
       //page the results from newest to oldest
       let postIds = Array.sort(
-        Iter.toArray(postIdsBuffer.vals()),
+        Iter.toArray(postIdsMap.keys()),
         func(postId_1 : Text, postId_2 : Text) : { #less; #equal; #greater } {
           let post_1_created = U.safeGet(createdHashMap, postId_1, 0);
           let post_2_created = U.safeGet(createdHashMap, postId_2, 0);
@@ -2632,7 +2632,7 @@ actor PostCore {
       };
 
       {
-        totalCount = Nat.toText(postIdsBuffer.size());
+        totalCount = Nat.toText(postIds.size());
         posts = Buffer.toArray(postsBuffer);
       };
     } else {
