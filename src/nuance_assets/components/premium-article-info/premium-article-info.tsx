@@ -151,7 +151,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           <div className='buy-nft-modal-content'>
             <img
               className='buy-nft-modal-logo'
-              src={images.NUANCE_LOGO_NFT}
+              src={images.NUANCE_LOGO_NFT_BLACK}
               style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
             />
             <div className='buy-nft-modal-article-info-wrapper'>
@@ -228,7 +228,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
             </Button>
             <img
               className='buy-nft-modal-logo'
-              src={images.NUANCE_LOGO_NFT}
+              src={images.NUANCE_LOGO_NFT_BLACK}
               style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
             />
             <div className='buy-nft-modal-article-info-wrapper'>
@@ -318,7 +318,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           <div className='buy-nft-modal-content'>
             <img
               className='buy-nft-modal-logo'
-              src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
+              src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE_BLACK}
               style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
             />
             <div className='buy-nft-modal-article-info-wrapper'>
@@ -422,7 +422,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           <div className='buy-nft-modal-content'>
             <img
               className='buy-nft-modal-logo'
-              src={images.NUANCE_LOGO_NFT}
+              src={images.NUANCE_LOGO_NFT_BLACK}
               style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
             />
             <div className='buy-nft-modal-article-info-wrapper'>
@@ -483,7 +483,7 @@ export const PremiumArticleInfo: React.FC<PremiumArticleInfoProps> = (
           <div className='buy-nft-modal-content'>
             <img
               className='buy-nft-modal-logo'
-              src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
+              src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE_BLACK}
               style={{ filter: darkTheme ? 'contrast(0.5)' : 'none' }}
             />
             <div className='buy-nft-modal-article-info-wrapper'>

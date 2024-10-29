@@ -598,7 +598,7 @@ const HomePage = () => {
             <div className='nuance-logo-blue-text'>
               <img
                 className='image-container'
-                src={images.NUANCE_LOGO_BLUE_TEXT}
+                src={images.NUANCE_LOGO_BLACK_TEXT}
               />
             </div>
             <div className='buttons-wrapper'>
@@ -697,7 +697,7 @@ const HomePage = () => {
       </div>
       <div className='join-revolution-mobile'>
         <div className='nuance-logo-blue-text'>
-          <img className='image-container' src={images.NUANCE_LOGO_BLUE_TEXT} />
+          <img className='image-container' src={images.NUANCE_LOGO_BLACK_TEXT} />
         </div>
         {!isLoggedIn && (
           <div className='login-options-mobile-wrapper'>
@@ -904,7 +904,7 @@ const HomePage = () => {
             </div>
             <img
               className='right-image'
-              src={images.HIGH_TECH_IMAGE}
+              src={images.HIGH_TECH_IMAGE_NEW}
               loading='lazy'
             />
           </div>
@@ -1276,7 +1276,7 @@ const HomePage = () => {
               <img
                 className='blue-logo'
                 style={{ filter: darkOptionsAndColors.filter }}
-                src={images.NUANCE_LOGO_BLUE_TEXT}
+                src={images.NUANCE_LOGO_BLACK_TEXT}
                 loading='lazy'
               />
               <div className='blogging-to-the-people'>

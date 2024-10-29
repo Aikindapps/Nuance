@@ -197,7 +197,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
               <img
                 className='icon'
                 onClick={clearSearch}
-                src={images.NUANCE_LOGO_PUBLICATION}
+                src={images.NUANCE_LOGO}
                 alt=''
               />
             </Link>
@@ -244,13 +244,8 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
               <img
                 className='icon'
                 onClick={clearSearch}
-                src={
-                  darkTheme
-                    ? images.NUANCE_LOGO
-                    : images.NUANCE_LOGO_PUBLICATION
-                }
+                src={images.NUANCE_LOGO}
                 alt=''
-                style={{ filter: darkTheme ? 'opacity(0.3' : 'none' }}
               />
             </Link>
             {props.publication?.styling.logo.length ? (

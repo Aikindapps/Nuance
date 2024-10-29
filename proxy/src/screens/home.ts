@@ -5,7 +5,7 @@ import { Post } from "../../declarations/PostCore/PostCore.did";
 function buildHomeSEO(latestPosts: Post[], popularPosts: Post[]) {
     const title = 'Nuance';
     const description = 'Blogging to the people';
-    const logoUrl = 'https://nuance.xyz/assets/images/nuance-logo.svg';
+    const logoUrl = 'https://nuance.xyz/assets/images/nuance-logo-black.svg';
     const canonicalUrl = 'https://nuance.xyz';
 
     const staticKeywords = ['nuance', 'blog', 'blogging', 'publish', 'publishing', 'crypto', 'blockchain', 'web3', 'web3.0', 'decentralized', 'dapp', 'dapps', 'canister', 'ic', 'internet computer', 'icp', 'dfinity'];
@@ -60,8 +60,8 @@ function buildHomeSEO(latestPosts: Post[], popularPosts: Post[]) {
               </ul>
 
     <h1>Decentralization matters</h1>
-    <p>Nuance prioritizes user experience, offering a sleek UX, invisible technology, smooth performance, search indexing, and familiar features such as login with Google and custom domains. This ensures that users enjoy all the conveniences they're accustomed to in Web 2 while benefiting from the transformative capabilities of blockchain technology.</p>
-    <img src="https://nuance.xyz/assets/images/high_tech_image.png" alt="Blockchain UI UX on Nuance" width="300" height="300">
+    <p>The advertisement driven business models of web 2 has left control of the internet in the hands of a just a few companies. Advertising dollars drive click-bait and polarises communities where everything is black or white. But we all know that the truth is always somewhere in the middle. The truth is nuanced. Nuance is built on and for the new web. Nuance is for decentralised opinions. Make your opinion unstoppable.</p>
+    <img src="https://nuance.xyz/assets/images/high_tech_image_new.svg" alt="Blockchain UI UX on Nuance" width="300" height="300">
 
 
     <h1>All the features you know</h1>
@@ -72,19 +72,15 @@ function buildHomeSEO(latestPosts: Post[], popularPosts: Post[]) {
         </div>
         <div>
             <h2>Subscription</h2>
-            <p>A subscription to publications provides unlimited access to all premium content</p>
+            <p>A subscription provides unlimited access to all members-only content</p>
         </div>
         <div>
             <h2>Publications</h2>
-            <p>Publications provide a branded landing page showcasing your articles - including a concierge migration service</p>
+            <p>Publications provide a branded home page showcasing your articles + advanced publishing features</p>
         </div>
         <div>
             <h2>Premium Articles</h2>
             <p>Publish Premium articles behind an NFT gated firewall</p>
-        </div>
-        <div>
-            <h2>Notifications</h2>
-            <p>Get notifications regarding your community so you are always in the loop</p>
         </div>
         <div>
             <h2>Tipping</h2>
@@ -98,10 +94,14 @@ function buildHomeSEO(latestPosts: Post[], popularPosts: Post[]) {
             <h2>Social</h2>
             <p>Social links to cross-pollinate your audience</p>
         </div>
+        <div>
+            <h2>Notifications</h2>
+            <p>Get notifications regarding your community so you are always in the loop</p>
+        </div>
     </div>
 
     <h1>Honest days pay for an honest days work</h1>
-    <p>One key feature of Nuance is its ability to enable writers to form a direct financial relationship with their readers without the platform risk. With Nuance, writers can monetize their content in ways not possible on traditional web2 platforms.</p>
+    <p>One key focus of Nuance is to enable writers to form a direct financial relationship with their readers without the platform risk. With Nuance, writers can monetize their content in ways not possible on traditional web 2 platforms: Tips Premium articles (limited edition NFT) Subscriptions</p>
     <ul>
         <li>Real time tips in crypto</li>
         <li>NFT gated paywalls</li>
@@ -110,7 +110,7 @@ function buildHomeSEO(latestPosts: Post[], popularPosts: Post[]) {
     <img src="https://nuance.xyz/assets/images/monetize_image.png" alt="Honest days pay for an honest days work on Nuance" width="300" height="300">
 
     <h1>Start your own decentralised community</h1>
-    <p>Nuance provides a publication feature that enables projects and writers to have their own branding, a landing page, and writer management features, allowing teams to establish their own unique presence and identity on the platform. Log in with Google or Internet Identity (or Stoic or Bitfinity) and Join Nuance today to experience the future of online blogging. Where creators are empowered, content is secure, and communities thrive.</p>
+    <p>Nuance provides a publication feature that enables companies, projects and writers to have their own branding, a landing page, and writer management features, allowing teams to establish their own identity on the platform. Log in with Google or Internet Identity (or Stoic or Bitfinity) and join Nuance today to experience the future of decentralized publishing. Where creators are empowered, content is secure, and communities thrive.</p>
     <img src="https://nuance.xyz/assets/images/start_on_chain_image.png" alt="Nuance, Start your own decentralised community" width="300" height="300">
 
                   <section>

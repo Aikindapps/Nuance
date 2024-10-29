@@ -145,7 +145,7 @@ export const EditArticlePremiumModal = (props: {
       />
       <img
         className='nuance-logo-and-nft-icon'
-        src={images.NUANCE_LOGO_AND_NFT_ICON}
+        src={images.NUANCE_LOGO_AND_NFT_ICON_BLACK}
       />
       <p
         style={
