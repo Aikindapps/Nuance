@@ -133,7 +133,10 @@ const getAllPrincipalIdsInComments = (comments: Comment[]) => {
   comments.forEach((comment) => {
     creators.add(comment.creator);
     if (comment.replies.length > 0) {
-      getAllPrincipalIdsInComments(comment.replies);
+      let replyPrincipals = getAllPrincipalIdsInComments(comment.replies);
+      replyPrincipals.forEach(replyPrincipal => {
+        creators.add(replyPrincipal)
+      })
     }
   });
   return Array.from(creators);
@@ -1729,7 +1732,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             ).toString(),
             accessKeyIndex: Number(
               allOwnedPremiumArticlesTransactions[index].currentSupply +
-                BigInt(1)
+              BigInt(1)
             ).toString(),
             ownedByUser: false,
             canisterId:
@@ -1747,7 +1750,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
                   (allOwnedPremiumArticlesTransactions[index].currentSupply -
                     BigInt(1) -
                     allOwnedPremiumArticlesTransactions[index].initialSupply) *
-                    allOwnedPremiumArticlesTransactions[index].icpPrice
+                  allOwnedPremiumArticlesTransactions[index].icpPrice
                 ) *
                   0.89) /
                 Math.pow(10, 8)
@@ -1835,18 +1838,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
           date: lastTransaction
             ? Math.round(Number(lastTransaction.time) / 1000000).toString() //if found in transactions, use it
             : postIfOwned
-            ? postIfOwned.created //if not found in transactions but the user is the creator, use the created date
-            : Date.now().toString(), //if there is no transaction found and the user is not the creator, use now
+              ? postIfOwned.created //if not found in transactions but the user is the creator, use the created date
+              : Date.now().toString(), //if there is no transaction found and the user is not the creator, use now
           totalSupply: Number(
             transactionsResponses[index].maxSupply
           ).toString(),
           activity: lastTransaction
             ? `-${(Number(lastTransaction.price) / Math.pow(10, 8)).toFixed(
-                4
-              )} ICP` //if found in transactions, use the val
+              4
+            )} ICP` //if found in transactions, use the val
             : postIfOwned
-            ? 'Minted' //if not found in transactions but the user is the creator, activity is a mint
-            : 'Received', //if not both, it's a transfer
+              ? 'Minted' //if not found in transactions but the user is the creator, activity is a mint
+              : 'Received', //if not both, it's a transfer
           sellerAddresses: transactionsResponses[index].tokenSenderAccounts,
         };
       });
@@ -2053,9 +2056,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
                 t.transaction.created_at_time.length === 0
                   ? ''
                   : (
-                      Number(t.transaction.created_at_time[0].timestamp_nanos) /
-                      1000000
-                    ).toString(),
+                    Number(t.transaction.created_at_time[0].timestamp_nanos) /
+                    1000000
+                  ).toString(),
               currency: 'ICP' as SupportedTokenSymbol,
               receiver: operation.Transfer.to,
               sender: operation.Transfer.from,
@@ -2126,12 +2129,12 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
             (transaction.transfer[0].from.owner.toText() ===
               userWallet.principal ||
               transaction.transfer[0].to.owner.toText() ===
-                userWallet.principal) &&
+              userWallet.principal) &&
             ((transaction.transfer[0].from.owner.toText() ===
               subscriptionCanisterId &&
               memo !== 'sub_' + userWallet.principal.slice(0, 20)) ||
               transaction.transfer[0].from.owner.toText() !==
-                subscriptionCanisterId) &&
+              subscriptionCanisterId) &&
             transaction.transfer[0].to.owner.toText() !== subscriptionCanisterId
           );
         }
