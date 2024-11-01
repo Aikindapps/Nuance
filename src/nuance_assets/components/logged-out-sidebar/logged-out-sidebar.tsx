@@ -52,7 +52,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
         <div className='logged-out-sidebar-nuance-info'>
           <img
             className='nuance-logo-blue'
-            src={images.NUANCE_LOGO_BLACK_TEXT}
+            src={darkTheme ? images.NUANCE_LOGO_BLUE_TEXT : images.NUANCE_LOGO_BLACK_TEXT}
             style={{
               filter: darkOptionsAndColors.filter,
             }}

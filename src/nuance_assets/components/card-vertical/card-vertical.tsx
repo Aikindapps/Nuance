@@ -19,11 +19,12 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
   });
 
   //updates imgSrc when the image is intersecting for the first time
+  // or when changing dark mode option if its using default header image
   useEffect(() => {
-    if (isIntersecting && imgSrc === '') {
-      setImgSrc(post.headerImage || images.NUANCE_LOGO);
+    if ((isIntersecting && imgSrc === '') || imgSrc == images.NUANCE_LOGO || imgSrc == images.NUANCE_LOGO_BLACK) {
+      setImgSrc(post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK));
     }
-  }, [isIntersecting, imgSrc, post.headerImage]);
+  }, [isIntersecting, imgSrc, post.headerImage, darkTheme]);
 
   const darkOptionsAndColors = {
     background: darkTheme

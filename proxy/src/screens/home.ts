@@ -36,7 +36,7 @@ function buildHomeSEO(latestPosts: Post[], popularPosts: Post[]) {
       <body>
           <div id="app">
               <header>
-                  <h1> Join the web3 revolution</h1>
+                  <h1> Join the decentralized blogging revolution!</h1>
                   <img src="${logoUrl}" alt="Nuance Logo" width="300" height="300">
                   </header>
               <main>

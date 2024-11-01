@@ -44,7 +44,7 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
             {isCancelComplete ? (
                 <>
                     <div className='modal-top-row'>
-                        <img src={images.NUANCE_LOGO} alt='logo' className='nuance-logo-subscription' />
+                        <img src={darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK} alt='logo' className='nuance-logo-subscription' />
                         <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
                             <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt='Close modal' />
                         </div>
@@ -71,7 +71,7 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
             ) : (
                 <>
                     <div className='modal-top-row'>
-                        <img src={images.NUANCE_LOGO} alt='logo' className='nuance-logo-subscription' />
+                        <img src={darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK} alt='logo' className='nuance-logo-subscription' />
                         <div className='subscription-exit-icon' onClick={modalContext?.closeModal}>
                             <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt='Close subscriptions modal' />
                         </div>

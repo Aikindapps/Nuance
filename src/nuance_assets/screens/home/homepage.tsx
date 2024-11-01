@@ -1276,7 +1276,7 @@ const HomePage = () => {
               <img
                 className='blue-logo'
                 style={{ filter: darkOptionsAndColors.filter }}
-                src={images.NUANCE_LOGO_BLACK_TEXT}
+                src={darkTheme ? images.NUANCE_LOGO_BLUE_TEXT : images.NUANCE_LOGO_BLACK_TEXT}
                 loading='lazy'
               />
               <div className='blogging-to-the-people'>
