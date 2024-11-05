@@ -61,7 +61,7 @@ export const StaticArticleView = (props: {
           src={post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
         />
         <div
-          className={darkTheme ? 'text-dark' : 'text'}
+          className={darkTheme ? 'dark-text' : 'text'}
           style={{ color: darkOptionsAndColors.color }}
         >
           {parse(post.content)}

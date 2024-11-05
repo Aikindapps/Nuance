@@ -137,7 +137,9 @@ function App() {
     //   ? // configuration is in minutes, but API expects milliseconds
     //     Number(process.env.II_INACTIVITY_TIMEOUT) * 60 * 1_000
     //   : // default = 1 hour
-    480 * 60 * 1_000;
+    //30 days in milliseconds
+    43200 * 60 * 1_000;
+
 
   const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,

@@ -60,7 +60,9 @@ const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
   //   ? // configuration is in minutes, but API expects nanoseconds
   //     BigInt(process.env.II_SESSION_TIMEOUT) * BigInt(60) * BigInt(1_000_000_000)
   //   : // default = 8 hours
-  BigInt(480) * BigInt(60) * BigInt(1_000_000_000);
+  
+  //30 days in nanoseconds
+  BigInt(480)* BigInt(60) * BigInt(1000000000) * BigInt(91)
 
 const fakeProvider: boolean = process.env.II_PROVIDER_USE_FAKE == 'true';
 
