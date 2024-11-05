@@ -152,7 +152,7 @@ const CardDraftArticles: React.FC<CardVerticalProps> = ({ post }) => {
       <Link className='card-draft-articles-image-wrapper' to={post.url}>
         <img
           className='card-draft-articles-image'
-          src={post.headerImage !== '' ? post.headerImage : images.NUANCE_LOGO}
+          src={post.headerImage !== '' ? post.headerImage : (dark ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
         />
       </Link>
 

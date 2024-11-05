@@ -152,7 +152,7 @@ const CardEditorPublication: React.FC<CardEditorPublicationProps> = ({
       <Link className='field-article field-general' to={post.url}>
         <img
           className='article-image'
-          src={post.headerImage || images.NUANCE_LOGO}
+          src={post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
           style={
             !isToggled
               ? {

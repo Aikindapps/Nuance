@@ -118,7 +118,7 @@ const MeatBallMenu: React.FC<MeatBallMenuProps> = (props): JSX.Element => {
             </a>
           )}
           <a
-            href='https://aikin.gitbook.io/nuance/'
+            href='https://wiki.nuance.xyz/'
             target='_blank'
             style={darkOptionsAndColors}
           >

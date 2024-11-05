@@ -489,7 +489,7 @@ const ReadArticle = () => {
         <meta property='og:type' content='article' />
         <meta
           property='og:image'
-          content={post?.headerImage || images.NUANCE_LOGO}
+          content={post?.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
         />
 
         {/* Twitter Meta Tags */}
@@ -761,7 +761,7 @@ const ReadArticle = () => {
               >
                 <img
                   className='header-image'
-                  src={post.headerImage || images.NUANCE_LOGO}
+                  src={post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
                   style={{
                     background: darkTheme
                       ? darkOptionsAndColors.background

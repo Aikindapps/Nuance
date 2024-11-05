@@ -25,7 +25,7 @@ const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
     <div className='card-wrapper-large'>
       <img
         className='main-pic-large'
-        src={post.headerImage || images.NUANCE_LOGO}
+        src={post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
         alt='Article header image'
         onClick={() => {
           navigate(post.url);

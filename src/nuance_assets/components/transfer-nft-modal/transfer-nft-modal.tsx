@@ -75,7 +75,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
         >
           <img
             className='nuance-logo'
-            src={images.NUANCE_LOGO_UNSUFFICIENT_BALANCE}
+            src={darkTheme ? images.NUANCE_LOGO_UNSUFFICIENT_BALANCE : images.NUANCE_LOGO_UNSUFFICIENT_BALANCE_BLACK}
           />
           <p className='warning-text'>
             {`You're about to transfer your article access key. You will not be able to see the content of the article if you proceed!`}
@@ -154,7 +154,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
                 ? darkTheme
                   ? images.loaders.NUANCE_LOADER_DARK
                   : images.loaders.NUANCE_LOADER
-                : images.NUANCE_LOGO_UNSUFFICIENT_BALANCE
+                : darkTheme ? images.NUANCE_LOGO_UNSUFFICIENT_BALANCE : images.NUANCE_LOGO_UNSUFFICIENT_BALANCE_BLACK
             }
           />
 

@@ -45,7 +45,7 @@ const identityProvider: string = isLocal
 
 //NFID
 const APPLICATION_NAME = 'Nuance';
-const APPLICATION_LOGO_URL = 'https://nuance.xyz/assets/images/nuance-logo.svg';
+const APPLICATION_LOGO_URL = 'https://nuance.xyz/assets/images/nuance-logo-black.svg';
 const AUTH_PATH =
   '/authenticate/?applicationName=' +
   APPLICATION_NAME +

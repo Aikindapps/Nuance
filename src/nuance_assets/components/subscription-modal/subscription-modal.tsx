@@ -310,7 +310,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <>
           <div className='modal-top-row'>
             <img
-              src={images.NUANCE_LOGO}
+              src={darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK}
               alt='logo'
               className='nuance-logo-subscription'
             />
@@ -372,7 +372,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <>
           <div className='modal-top-row'>
             <img
-              src={images.NUANCE_LOGO}
+              src={darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK}
               alt='logo'
               className='nuance-logo-subscription'
             />
@@ -422,7 +422,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <>
           <div className='modal-top-row'>
             <img
-              src={images.NUANCE_LOGO}
+              src={darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK}
               alt='logo'
               className='nuance-logo-subscription'
             />

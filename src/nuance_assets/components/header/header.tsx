@@ -14,7 +14,6 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { GoTriangleDown } from 'react-icons/go';
 
 import './_header.scss';
-import { get } from 'lodash';
 
 type HeaderProps = {
   loggedIn: boolean;
@@ -40,6 +39,22 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const modalContext = useContext(ModalContext);
   const location = useLocation();
   const navigate = useNavigate();
+
+  let logoSrc: string;
+
+  if (props.isReadArticlePage) {
+    logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
+  } else if (props.transparentBackground) {
+    logoSrc = images.NUANCE_LOGO_BLACK;
+  } else if (props.isPublicationPage) {
+    logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
+  } else if (!props.isArticlePage && !props.isPublicationPage && !props.isUserAdminScreen) {
+    logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
+  } else if(props.isUserAdminScreen) {
+    logoSrc = darkTheme ? images.NUANCE_LOGO_BLACK : images.NUANCE_LOGO;
+  } else {
+    logoSrc = darkTheme ? images.NUANCE_LOGO_BLACK : images.NUANCE_LOGO;
+  }
 
   const NotificationsModalOpen =
     modalContext?.isModalOpen && modalContext.modalType === 'Notifications';
@@ -197,7 +212,8 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
               <img
                 className='icon'
                 onClick={clearSearch}
-                src={images.NUANCE_LOGO_PUBLICATION}
+                src={logoSrc}
+                style={{filter: darkTheme ? 'opacity(0.3)' : 'none'}}
                 alt=''
               />
             </Link>
@@ -244,13 +260,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
               <img
                 className='icon'
                 onClick={clearSearch}
-                src={
-                  darkTheme
-                    ? images.NUANCE_LOGO
-                    : images.NUANCE_LOGO_PUBLICATION
-                }
+                src={logoSrc}
+                style={{filter: darkTheme ? 'opacity(0.3)' : 'none'}}
                 alt=''
-                style={{ filter: darkTheme ? 'opacity(0.3' : 'none' }}
               />
             </Link>
             {props.publication?.styling.logo.length ? (
@@ -308,7 +320,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
             <img
               className='icon'
               onClick={clearSearch}
-              src={images.NUANCE_LOGO}
+              src={logoSrc}
               alt=''
             />
           </Link>
@@ -319,7 +331,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
             <img
               className='icon'
               onClick={clearSearch}
-              src={images.NUANCE_LOGO}
+              src={logoSrc}
               alt=''
             />
           </Link>
