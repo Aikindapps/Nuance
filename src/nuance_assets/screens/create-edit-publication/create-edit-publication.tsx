@@ -410,6 +410,12 @@ const CreateEditPublication = () => {
     }
   }, [publication]);
 
+  const subscriptionFeesEnabled =
+      subscriptionDetails.weeklyFeeEnabled ||
+      subscriptionDetails.monthlyFeeEnabled ||
+      subscriptionDetails.annuallyFeeEnabled ||
+      subscriptionDetails.lifeTimeFeeEnabled;
+
   const handleScrolls = () => {
     if (publicationBannerImage === '') {
       let el = document.getElementById('banner-image');
@@ -444,6 +450,10 @@ const CreateEditPublication = () => {
       return;
     }
     if (!validatePrincipal()) {
+      if (!subscriptionFeesEnabled) {
+        window.scrollTo(0, 0);
+        return;
+      }
       let el = document.getElementById('principal');
       if (el) {
         console.log(0, el.offsetTop);
@@ -463,12 +473,6 @@ const CreateEditPublication = () => {
   };
 
   function validate() {
-    const subscriptionFeesEnabled =
-      subscriptionDetails.weeklyFeeEnabled ||
-      subscriptionDetails.monthlyFeeEnabled ||
-      subscriptionDetails.annuallyFeeEnabled ||
-      subscriptionDetails.lifeTimeFeeEnabled;
-
     const isValid =
       !loading &&
       publicationTitle.trim() !== '' &&
