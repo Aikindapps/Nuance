@@ -82,6 +82,9 @@
     font-weight: 400;
     line-height: 26px;
     width: 200px;
+    hyphens: auto;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .publication-stats {
