@@ -364,7 +364,6 @@ const HomePage = () => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
     const { posts, totalCount } = await getLatestPosts(start, end);
-    console.log(posts);
     if (initial) {
       setLatestPosts(posts);
     } else {
