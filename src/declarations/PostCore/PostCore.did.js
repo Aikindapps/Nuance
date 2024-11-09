@@ -433,7 +433,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'makePostPublication' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Int],
         [],
         [],
       ),

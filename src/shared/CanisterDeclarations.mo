@@ -182,7 +182,7 @@ module{
         getPostKeyProperties : (postId : Text) -> async Result.Result<PostKeyProperties, Text>;
         addCanisterToCyclesDispenser : (canisterId : Text, minimumThreshold : Nat, topUpAmount : Nat) -> async Result.Result<(), Text>;
         updatePostDraft : (postId : Text, isDraft : Bool, time : Int, writerPrincipalId : Text) -> async PostKeyProperties;
-        makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) -> async ();
+        makePostPublication : (postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool, now : Int) -> async ();
         getNextPostId : () -> async Result.Result<Text, Text>;
         getNextPostIdsDebug : (count: Nat) -> async Result.Result<Text, Text>;
         addPostCategory : (postId : Text, category : Text, time : Int) -> async ();

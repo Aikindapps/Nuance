@@ -1206,8 +1206,9 @@ actor class PostBucket() = this {
     Debug.print("PostBucket->MigratePostToPublication: " # postId);
     let postCoreActor = CanisterDeclarations.getPostCoreCanister();
     //make the post publication post in PostCore canister
-    await postCoreActor.makePostPublication(postId, publicationHandle, userHandle, isDraft);
-    await makePostPublication(postId, publicationHandle, userHandle, isDraft);
+    let now = U.epochTime();
+    await postCoreActor.makePostPublication(postId, publicationHandle, userHandle, isDraft, now);
+    await makePostPublication(postId, publicationHandle, userHandle, isDraft, now);
 
     let keyProperties = await postCoreActor.updatePostDraft(postId, isDraft, U.epochTime(), Principal.toText(caller));
 
@@ -1242,7 +1243,7 @@ actor class PostBucket() = this {
 
 
   //a private method that makes a draft post a publication post
-  private func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) : async () {
+  private func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool, now : Int) : async () {
     var publicationPrincipalId = U.safeGet(handleReverseHashMap, publicationHandle, "");
     let userPrincipalId = U.safeGet(handleReverseHashMap, userHandle, "");
 
@@ -1282,8 +1283,9 @@ actor class PostBucket() = this {
       isDraftHashMap.put(postId, isDraft);
       if (isDraft) {
         publishedDateHashMap.delete(postId);
+      } else {
+        publishedDateHashMap.put(postId, now);
       };
-      let now = U.epochTime();
       modifiedHashMap.put(postId, now);
     };
   };

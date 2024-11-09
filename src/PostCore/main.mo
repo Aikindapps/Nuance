@@ -1667,7 +1667,7 @@ actor PostCore {
     };
   };
 
-  public shared ({ caller }) func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool) : async () {
+  public shared ({ caller }) func makePostPublication(postId : Text, publicationHandle : Text, userHandle : Text, isDraft : Bool, now : Int) : async () {
     if (isAnonymous(caller)) {
       return;
     };
@@ -1726,7 +1726,7 @@ actor PostCore {
         removePostFromPopularityArrays(postId);
         //ToDo: remove the post from latest posts if it's draft
       } else {
-        let now = U.epochTime();
+        publishedDateHashMap.put(postId, now);
         modifiedHashMap.put(postId, now);
         isDraftHashMap.put(postId, isDraft);
       };
