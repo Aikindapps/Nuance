@@ -325,7 +325,7 @@ export interface _SERVICE {
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'isWriterPublic' : ActorMethod<[string, Principal], boolean>,
   'makePostPublication' : ActorMethod<
-    [string, string, string, boolean],
+    [string, string, string, boolean, bigint],
     undefined
   >,
   'migrateAllPublicationEditorsAndWriters' : ActorMethod<[], Result_6>,

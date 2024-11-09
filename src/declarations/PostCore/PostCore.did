@@ -384,7 +384,7 @@ service : {
   isEditorPublic: (text, principal) -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
   isWriterPublic: (text, principal) -> (bool) query;
-  makePostPublication: (text, text, text, bool) -> ();
+  makePostPublication: (text, text, text, bool, int) -> ();
   migrateAllPublicationEditorsAndWriters: () -> (Result_6);
   migrateModclubInterface: () -> (Result_2);
   migratePremiumArticleFromOldArch: () -> (Result_5);
