@@ -2497,9 +2497,10 @@ actor PostCore {
       indexEnd := lastIndex;
     };
 
-    var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(10);
+    let desiredCount = indexEnd - indexStart + 1;
+    var postsBuffer : Buffer.Buffer<PostKeyProperties> = Buffer.Buffer<PostKeyProperties>(desiredCount);
 
-    for (i in Iter.range(indexStart, indexEnd)) {
+    /* for (i in Iter.range(indexStart, indexEnd)) {
       //get the post id from latestPostsHashmap to build post
       let post = buildPostKeyProperties(U.safeGet(latestPostsHashmap, Nat.toText((latestPostsHashmap.size() - 1) - i), ""));
       let isDraft = isDraftOrFutureArticle(post.postId);
@@ -2514,6 +2515,30 @@ actor PostCore {
         postsBuffer.add(post);
         Debug.print("Post is successfully added");
       };
+    }; */
+
+    var validPostsCollected : Nat = 0;
+    var i : Nat = 0;
+
+    while ((i < totalCount) and (postsBuffer.size() < desiredCount)) {
+        let post = buildPostKeyProperties(U.safeGet(latestPostsHashmap, Nat.toText((latestPostsHashmap.size() - 1) - i), ""));
+        let isDraft = isDraftOrFutureArticle(post.postId);
+
+        if (rejectedByModClub(post.postId)) {
+            Debug.print("rejected");
+            // skip this post
+        } else if (isDraft) {
+            Debug.print("Post is draft");
+            // skip this post
+        } else {
+            if (validPostsCollected >= indexStart) {
+              postsBuffer.add(post);
+              Debug.print("Post is successfully added");
+            };
+            validPostsCollected += 1;
+        };
+        // move to the next post
+        i += 1;
     };
 
     {
