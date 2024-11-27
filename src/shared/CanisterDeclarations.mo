@@ -1,10 +1,34 @@
 import Result "mo:base/Result";
 import List "mo:base/List";
 import Time "mo:base/Time";
+import Principal "mo:base/Principal";
 import ENV "env";
 import NotificationTypes "../NotificationsV3/types";
 module{
 
+    //****************VERIFY_POH_CANISTER****************
+    public type VerifyResult = {
+    #Ok: UniquePersonProof;
+    #Err: Text;
+    };
+
+    public type UniquePersonProofProvider = {
+        #DecideAI;
+    };
+
+    public type UniquePersonProof = {
+    provider: UniquePersonProofProvider;
+    timestamp: Nat64;
+    };
+
+    public type VerifyPohCanisterInterface = actor {
+        verify_proof_of_unique_personhood : query (principal : Principal, credential_jwt : Text, now : Nat64) -> async VerifyResult;
+    };
+
+    public func getVerifyPohCanister() : VerifyPohCanisterInterface {
+        let canister : VerifyPohCanisterInterface = actor("aovwi-4maaa-aaaaa-qaagq-cai");
+        return canister;
+    };
 
     //****************USER CANISTER*****************
     public type User = {

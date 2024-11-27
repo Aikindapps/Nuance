@@ -1,7 +1,7 @@
 import Principal "mo:base/Principal";
 import CanisterIds "canisterIds";
 module {
-  public let IS_LOCAL = false;
+  public let IS_LOCAL = true;
   public let USER_CANISTER_ID = CanisterIds.USER_CANISTER_ID;
   public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
   public let KINIC_ENDPOINT_CANISTER_ID = CanisterIds.KINIC_ENDPOINT_CANISTER_ID;

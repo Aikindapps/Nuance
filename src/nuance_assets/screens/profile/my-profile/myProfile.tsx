@@ -16,6 +16,8 @@ import { useTheme } from '../../../contextes/ThemeContext';
 import { Tooltip } from 'react-tooltip';
 import { getIconForSocialChannel } from '../../../shared/utils';
 import { Context as ModalContext } from '../../../contextes/ModalContext';
+import GradientMdVerified from '../../../components/verified-icon/verified-icon';
+import { MdVerified } from "react-icons/md";
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ const MyProfile = () => {
     usersByHandles,
     getUserFollowersCount,
     userFollowersCount,
+    verifyUserHumanity,
   } = useUserStore((state) => ({
     user: state.user,
     getUser: state.getUser,
@@ -39,6 +42,7 @@ const MyProfile = () => {
     usersByHandles: state.usersByHandles,
     getUserFollowersCount: state.getUserFollowersCount,
     userFollowersCount: state.userFollowersCount,
+    verifyUserHumanity: state.verifyUserHumanity,
   }));
 
   useEffect(() => {
@@ -126,14 +130,29 @@ const MyProfile = () => {
         >
           Edit Profile
         </Button>
+        {!user?.isVerified && <Button
+          styleType={{dark: 'white', light: 'white'}}
+          type='button'
+          style={{
+            width: '96px',
+            marginTop: '5px'
+          }}
+          onClick={verifyUserHumanity}
+        >
+          Verify Profile
+        </Button>}
       </div>
       <div className='content'>
         <img
           src={user?.avatar || images.DEFAULT_AVATAR}
           alt='background'
           className='profile-picture'
+          style={user?.isVerified ? {
+            background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+            padding: "0.2em",
+           } : {borderRadius: "50%"}}
         />
-        <p className='name'>{user?.displayName}</p>
+        <p className='name'>{user?.displayName} {user?.isVerified && <MdVerified className='verified'/>}</p>
         <p
           style={
             darkTheme

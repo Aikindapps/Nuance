@@ -52,6 +52,7 @@ actor User {
   type NftCanisterEntry = Types.NftCanisterEntry;
   type UserClaimInfo = Types.UserClaimInfo;
   type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
+  type VerifyResult = CanisterDeclarations.VerifyResult;
 
   type List<T> = List.List<T>;
 
@@ -89,6 +90,7 @@ actor User {
   stable var lastClaimNotificationDate : [(Text, Int)] = [];
   stable var claimSubaccountIndexes : [(Text, Nat)] = [];
   stable var claimBlockedUsers : [(Text, Text)] = [];
+  stable var isVerifiedUsers : [(Text, Bool)] = [];
 
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
 
@@ -117,6 +119,7 @@ actor User {
   var lastClaimDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var lastClaimNotificationDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var claimBlockedUsersHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var isVerifiedUsersHashMap = HashMap.HashMap<Text, Bool>(initCapacity, isEq, Text.hash);
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
   stable var accountIdsToHandleEntries : [(Text, Text)] = [];
@@ -337,6 +340,7 @@ actor User {
         subaccount = null;
         isUserBlocked = false;
       };
+      isVerified = false;
     };
   };
 
@@ -362,6 +366,7 @@ actor User {
         nuaTokens = U.safeGet(nuaTokensHashMap, principalId, 0.0);
         followersCount = Nat32.fromNat(U.safeGet(myFollowersHashMap, userPrincipalId, []).size());
         claimInfo = buildClaimInfo(principalId);
+        isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
       };
     };
     user;
@@ -559,6 +564,7 @@ actor User {
         subaccount = null;
         isUserBlocked = false;
       };
+      isVerified = false;
     };
   };
 
@@ -603,6 +609,76 @@ actor User {
       putUser(principalId, user);
       userCount += 1;
       #ok(buildUser(principalId));
+    };
+  };
+
+  public shared func getVerificationStatus(principalId: Text) : async Result.Result<Bool, Text> {
+
+    if (principalIdHashMap.get(principalId) == null) {
+      return #err(UserNotFound);
+    };
+
+    let isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
+
+    return #ok(isVerified);
+  };
+
+  private func updateVerificationStatus(principalId: Principal, isVerified: Bool) : Result.Result<User, Text> {
+    let callerPrincipal = Principal.toText(principalId);
+
+    if (principalIdHashMap.get(callerPrincipal) == null) {
+      return #err(UserNotFound);
+    };
+
+    isVerifiedUsersHashMap.put(callerPrincipal, isVerified);
+
+    return #ok(buildUser(callerPrincipal));
+  };
+
+  public shared ({ caller }) func verifyPoh(credentialJWT: Text) : async VerifyResult {
+
+      //let callerPrincipal = Principal.fromText("cvehj-bmdlv-q4zaa-6wp6v-rzg3r-ga7bd-apjro-mdi6x-wgx5y-5l4wg-fqe");
+
+      /* let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
+
+      let result = await VerifyPohCanister.verify_proof_of_unique_personhood( // actual code
+          callerPrincipal,
+          credentialJWT,
+          Nat64.fromIntWrap(Time.now() / 1_000_000)
+      ); */
+
+      var result : VerifyResult = #Ok({
+          provider = #DecideAI;
+          timestamp = 1_732_561_876_730;
+        });
+
+      if (ENV.IS_LOCAL) {
+        // Assign the hardcoded success result to 'result'
+        result := #Ok({
+          provider = #DecideAI;
+          timestamp = 1_732_561_876_735;
+        });
+      } else {
+        let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
+
+        // Perform the actual canister call and assign the result
+        result := await VerifyPohCanister.verify_proof_of_unique_personhood(
+          caller,
+          credentialJWT,
+          Nat64.fromIntWrap(Time.now() / 1_000_000)
+        );
+      };
+
+      switch (result) {
+        case (#Ok(uniquePersonProof)) {
+          // handle the success case
+          let user = updateVerificationStatus(caller, true);
+          return #Ok(uniquePersonProof);
+        };
+        case (#Err(errMessage)) {
+          // handle the error case
+          return #Err(errMessage);
+        };
     };
   };
 
@@ -1522,6 +1598,19 @@ actor User {
           };
           case(null) {};
         };
+        switch (isVerifiedUsersHashMap.get(principal)) {
+          case (?isVerified) {
+            if (isVerified) {} 
+            else {
+                // user is not verified
+                return #err("User is not verified. Cannot claim restricted tokens.");
+            };
+          };
+          case null {
+              // user's verification status is not set (not verified)
+              return #err("User is not verified. Cannot claim restricted tokens.");
+          };
+        };
         //check if it's the first time user claims the tokens
         var callerSubaccountIndex = 1;
         switch(claimSubaccountIndexesHashMap.get(principal)) {
@@ -2300,7 +2389,7 @@ actor User {
     lastClaimNotificationDate := Iter.toArray(lastClaimNotificationDateHashMap.entries());
     claimBlockedUsers := Iter.toArray(claimBlockedUsersHashMap.entries());
     claimSubaccountIndexes := Iter.toArray(claimSubaccountIndexesHashMap.entries());
-
+    isVerifiedUsers := Iter.toArray(isVerifiedUsersHashMap.entries());
   };
 
   system func postupgrade() {
@@ -2332,6 +2421,7 @@ actor User {
     lastClaimNotificationDateHashMap := HashMap.fromIter(lastClaimNotificationDate.vals(), initCapacity, isEq, Text.hash);
     claimBlockedUsersHashMap := HashMap.fromIter(claimBlockedUsers.vals(), initCapacity, isEq, Text.hash);
     claimSubaccountIndexesHashMap := HashMap.fromIter(claimSubaccountIndexes.vals(), initCapacity, isEq, Text.hash);
+    isVerifiedUsersHashMap := HashMap.fromIter(isVerifiedUsers.vals(), initCapacity, isEq, Text.hash);
 
     principalId := [];
     handle := [];
@@ -2350,6 +2440,7 @@ actor User {
     lastClaimNotificationDate := [];
     claimBlockedUsers := [];
     claimSubaccountIndexes := [];
+    isVerifiedUsers := [];
   };
 
   //#endregion

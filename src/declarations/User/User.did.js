@@ -29,6 +29,7 @@ export const idlFactory = ({ IDL }) => {
     'publicationsArray' : IDL.Vec(PublicationObject),
     'claimInfo' : UserClaimInfo,
     'website' : IDL.Text,
+    'isVerified' : IDL.Bool,
     'handle' : IDL.Text,
     'followersPrincipals' : FollowersPrincipals,
     'followers' : Followers,
@@ -51,6 +52,7 @@ export const idlFactory = ({ IDL }) => {
     'publicationsArray' : IDL.Vec(PublicationObject),
     'claimInfo' : UserClaimInfo,
     'website' : IDL.Text,
+    'isVerified' : IDL.Bool,
     'handle' : IDL.Text,
     'followersPrincipals' : FollowersPrincipals,
     'followers' : Followers,
@@ -134,6 +136,7 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const Result_7 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
+  const Result_4 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const Result_5 = IDL.Variant({
     'ok' : IDL.Tuple(IDL.Nat, IDL.Nat),
     'err' : IDL.Text,
@@ -143,7 +146,6 @@ export const idlFactory = ({ IDL }) => {
     'ok' : User__1,
     'err' : IDL.Text,
   });
-  const Result_4 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const SubscriptionTimeInterval = IDL.Variant({
     'LifeTime' : IDL.Null,
     'Weekly' : IDL.Null,
@@ -180,6 +182,15 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
+  const UniquePersonProofProvider = IDL.Variant({ 'DecideAI' : IDL.Null });
+  const UniquePersonProof = IDL.Record({
+    'provider' : UniquePersonProofProvider,
+    'timestamp' : IDL.Nat64,
+  });
+  const VerifyResult = IDL.Variant({
+    'Ok' : UniquePersonProof,
+    'Err' : IDL.Text,
+  });
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'addNuaBalance' : IDL.Func([IDL.Text], [], ['oneway']),
@@ -287,6 +298,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(UserListItem)],
         ['query'],
       ),
+    'getVerificationStatus' : IDL.Func([IDL.Text], [Result_4], []),
     'handleClap' : IDL.Func([IDL.Text, IDL.Text], [], ['oneway']),
     'isRegistrationOpen' : IDL.Func([], [IDL.Bool], ['query']),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
@@ -348,6 +360,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'validate' : IDL.Func([IDL.Reserved], [Validate], []),
+    'verifyPoh' : IDL.Func([IDL.Text], [VerifyResult], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

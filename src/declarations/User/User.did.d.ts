@@ -108,6 +108,11 @@ export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
   { 'Monthly' : null } |
   { 'Annually' : null };
+export interface UniquePersonProof {
+  'provider' : UniquePersonProofProvider,
+  'timestamp' : bigint,
+}
+export type UniquePersonProofProvider = { 'DecideAI' : null };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
   'bio' : string,
@@ -120,6 +125,7 @@ export interface User {
   'publicationsArray' : Array<PublicationObject>,
   'claimInfo' : UserClaimInfo,
   'website' : string,
+  'isVerified' : boolean,
   'handle' : string,
   'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
@@ -154,12 +160,15 @@ export interface User__1 {
   'publicationsArray' : Array<PublicationObject>,
   'claimInfo' : UserClaimInfo,
   'website' : string,
+  'isVerified' : boolean,
   'handle' : string,
   'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
 }
 export type Validate = { 'Ok' : string } |
+  { 'Err' : string };
+export type VerifyResult = { 'Ok' : UniquePersonProof } |
   { 'Err' : string };
 export interface WriterSubscriptionDetails {
   'writerSubscriptions' : Array<SubscriptionEvent>,
@@ -234,6 +243,7 @@ export interface _SERVICE {
   'getUsersBlockedFromClaiming' : ActorMethod<[], Result_6>,
   'getUsersByHandles' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
+  'getVerificationStatus' : ActorMethod<[string], Result_4>,
   'handleClap' : ActorMethod<[string, string], undefined>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
@@ -285,6 +295,7 @@ export interface _SERVICE {
     Result
   >,
   'validate' : ActorMethod<[any], Validate>,
+  'verifyPoh' : ActorMethod<[string], VerifyResult>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

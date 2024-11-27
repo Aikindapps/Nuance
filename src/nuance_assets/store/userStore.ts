@@ -24,6 +24,8 @@ import {
 } from '../services/actorService';
 import { removeDuplicatesFromArray } from '../shared/utils';
 import { NavigateFunction } from 'react-router-dom';
+import { requestVerifiablePresentation, VerifiablePresentationResponse } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
+import { Principal } from '@dfinity/principal';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -202,6 +204,7 @@ export interface UserStore {
   readonly unreadNotificationCount: number;
   readonly notificationsToasted: string[];
 
+  verifyUserHumanity: () => Promise<void>;
   registerUser: (
     handle: string,
     displayName: string,
@@ -285,6 +288,7 @@ const toUserModel = (user: User): UserType => {
           ? []
           : [Number(user.claimInfo.lastClaimDate[0])],
     },
+    isVerified: user.isVerified || false,
   } as UserType;
 };
 
@@ -313,6 +317,78 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   unreadNotificationCount: 0,
   totalNotificationCount: 0,
   notificationsToasted: [],
+
+  verifyUserHumanity: async (): Promise<void> => {
+    try {
+      const userWallet = await useAuthStore.getState().getUserWallet();
+      const userPrincipal = Principal.fromText(userWallet.principal);
+
+      const jwt: string = await new Promise((resolve, reject) => {
+        requestVerifiablePresentation({
+          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
+            if ('Ok' in verifiablePresentation) {
+              resolve(verifiablePresentation.Ok);
+            } else {
+              reject(new Error(verifiablePresentation.Err));
+            }
+          },
+          onError(err) {
+            reject(new Error(err));
+          },
+          issuerData: {
+            origin: 'https://a4tbr-q4aaa-aaaaa-qaafq-cai.localhost:5173/', // Replace with your issuer's origin
+            canisterId: Principal.fromText('a4tbr-q4aaa-aaaaa-qaafq-cai'), // Replace with your issuer's canister ID
+          },
+          credentialData: {
+            credentialSpec: {
+              credentialType: 'VerifiedEmployee', // Or 'ProofOfHumanity' based on your issuer
+              arguments: {
+                employerName: "DFINITY Foundation"
+              },
+            },
+            credentialSubject: userPrincipal,
+          },
+          identityProvider: new URL('http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/'), // Replace with your Identity Provider URL
+          //derivationOrigin: window.location.origin, // Use if necessary
+        });
+      });
+
+      console.log("JWT: ", jwt);
+
+      // verify the JWT credentials
+      const userActor = await getUserActor();
+      const result = await userActor.verifyPoh(jwt);
+
+      if ('Ok' in result) {
+        // verification successful
+        const uniquePersonProof = result.Ok;
+        console.log(uniquePersonProof);
+
+        // fetch the updated user from the backend
+        const userResult = await userActor.getUser();
+
+        if ('ok' in userResult) {
+          // update the user state in the frontend
+          const user = toUserModel(userResult.ok);
+          set({ user });
+
+          toast('Verification successful!', ToastType.Success);
+        } else {
+          console.error('Failed to fetch updated user:', userResult.err);
+          toastError('Verification succeeded, but failed to update user information.');
+        }
+      } else {
+        // verification failed
+        console.error('Verification failed:', result.Err);
+        toastError('Verification failed: ' + result.Err);
+      }
+      
+    } catch (error) {
+      console.error('Error during PoH verification:', error);
+      handleError(error, Unexpected);
+    }
+  },
+
 
   registerUser: async (
     handle: string,
@@ -869,7 +945,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       let userActor = await getUserActor();
       let response = await userActor.claimRestrictedTokens();
       if ('err' in response) {
-        handleError(response.err);
+        toastError("You need to verify your profile to request free NUA.");
       } else {
         //claim successful
         //refresh the balances

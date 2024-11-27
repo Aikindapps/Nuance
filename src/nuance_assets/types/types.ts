@@ -61,6 +61,7 @@ export type UserType = {
   nuaTokens: number;
   followersCount: number;
   claimInfo: UserClaimInfoType;
+  isVerified: boolean;
 };
 
 type UserClaimInfoType = {

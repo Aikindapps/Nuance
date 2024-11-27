@@ -323,7 +323,7 @@ const Wallet = () => {
         </div>
         {user && (
           <div className='request-nua-right'>
-            {user.claimInfo.isClaimActive ? (
+            {user.claimInfo.isClaimActive && user.isVerified ? (
               user.claimInfo.isUserBlocked ? (
                 <div
                   className='request-nua-info'

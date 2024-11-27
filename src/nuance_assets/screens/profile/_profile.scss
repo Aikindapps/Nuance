@@ -223,6 +223,10 @@
           font-style: normal;
           font-weight: 300;
           line-height: 34px;
+
+          .verified {
+            background: "linear-gradient(to bottom, #1FDCBD, #23F295)"
+          }
         }
 
         .username {

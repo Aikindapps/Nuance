@@ -9,6 +9,11 @@ type WriterSubscriptionDetails =
    writerPrincipalId: text;
    writerSubscriptions: vec SubscriptionEvent;
  };
+type VerifyResult = 
+ variant {
+   Err: text;
+   Ok: UniquePersonProof;
+ };
 type Validate = 
  variant {
    Err: text;
@@ -26,6 +31,7 @@ type User__1 =
    followersCount: nat32;
    followersPrincipals: FollowersPrincipals;
    handle: text;
+   isVerified: bool;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
    socialChannels: vec text;
@@ -63,12 +69,19 @@ type User =
    followersCount: nat32;
    followersPrincipals: FollowersPrincipals;
    handle: text;
+   isVerified: bool;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
    socialChannels: vec text;
    website: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
+type UniquePersonProofProvider = variant {DecideAI;};
+type UniquePersonProof = 
+ record {
+   provider: UniquePersonProofProvider;
+   timestamp: nat64;
+ };
 type SubscriptionTimeInterval = 
  variant {
    Annually;
@@ -316,6 +329,7 @@ service : {
   getUsersBlockedFromClaiming: () -> (Result_6) query;
   getUsersByHandles: (vec text) -> (vec UserListItem) query;
   getUsersByPrincipals: (vec text) -> (vec UserListItem) query;
+  getVerificationStatus: (text) -> (Result_4);
   handleClap: (text, text) -> () oneway;
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
@@ -350,4 +364,5 @@ service : {
   updateSocialLinks: (text, vec text) -> (Result);
   updateUserDetails: (text, text, text, text, vec text) -> (Result);
   validate: (reserved) -> (Validate);
+  verifyPoh: (text) -> (VerifyResult);
 }
