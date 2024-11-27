@@ -38,6 +38,7 @@
     justify-content: stretch;
     align-items: center;
     margin: 0 5px 0 0;
+    gap: 6px;
 
     .about-nuance-text {
       font-family: Roboto;
@@ -46,7 +47,7 @@
       line-height: 40px;
       text-align: left;
       color: #4c4c52;
-      margin-right: 10px;
+      margin-right: 5px;
       &:hover {
         color: $primary-text-color;
       }
@@ -103,6 +104,22 @@
         position: absolute;
       }
     }
+    
+    .profile-icon-wrapper, .meatball-icon-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      row-gap: 2px;
+      position: relative;
+      border-radius: 2px;
+      height: 32px;
+      width: 32px;
+      padding: 4px;
+      padding-left: 0;
+      padding-right: 8px;
+      cursor: pointer;
+    }
   }
 }
 
@@ -135,7 +152,7 @@
 }
 
 .dark-mode-toggle {
-  margin-right: 10px;
+  margin-right: 5px;
   padding: 10px;
   border-right: #b2b2b2 1px solid;
 }
