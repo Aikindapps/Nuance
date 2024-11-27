@@ -471,25 +471,29 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
         )}
 
         {props.loggedIn && user ? (
-          <ProfileMenu
-            shown={shownProfile}
-            isArticle={props.isArticlePage}
-            setShown={setShownProfile}
-            setShownMeatball={setShownMeatball}
-            screenWidth={props.ScreenWidth}
-            isUserAdminScreen={props.isUserAdminScreen}
-          />
+          <div className='profile-icon-wrapper' onClick={() => setShownProfile(!shownProfile)}>
+            <ProfileMenu
+              shown={shownProfile}
+              isArticle={props.isArticlePage}
+              setShown={setShownProfile}
+              setShownMeatball={setShownMeatball}
+              screenWidth={props.ScreenWidth}
+              isUserAdminScreen={props.isUserAdminScreen}
+            />
+          </div>
         ) : (
           ''
         )}
 
-        <MeatBallMenu
-          shown={shownMeatball}
-          isArticle={props.isArticlePage}
-          setShown={setShownMeatball}
-          setShownProfile={setShownProfile}
-          isUserAdminScreen={props.isUserAdminScreen}
-        />
+        <div className='meatball-icon-wrapper' onClick={() => setShownMeatball(!shownMeatball)}>
+          <MeatBallMenu
+            shown={shownMeatball}
+            isArticle={props.isArticlePage}
+            setShown={setShownMeatball}
+            setShownProfile={setShownProfile}
+            isUserAdminScreen={props.isUserAdminScreen}
+          />
+        </div>
       </div>
     </div>
   );
