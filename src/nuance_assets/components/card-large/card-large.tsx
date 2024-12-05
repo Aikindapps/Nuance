@@ -4,6 +4,7 @@ import { CardLargeProps } from './types';
 import { DateFormat, formatDate } from '../../shared/utils';
 import { images, icons, colors } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
   const navigate = useNavigate();
@@ -40,6 +41,10 @@ const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
                 className='profile-pic'
                 src={post.avatar || images.DEFAULT_AVATAR}
                 alt='Author image'
+                style={post.isVerified ? {
+                  background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                  padding: "0.1em",
+                } : {borderRadius: "50%"}}
               />
               <div>
                 {post.isPublication ? (
@@ -58,6 +63,7 @@ const CardLarge: React.FC<CardLargeProps> = ({ post }) => {
                   </Link>
                 )}
               </div>
+              {post.isVerified && <div className='verified-badge'><GradientMdVerified width={'12'} height={'12'} /></div>}
             </>
           )}
         </div>

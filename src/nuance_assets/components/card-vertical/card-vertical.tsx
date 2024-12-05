@@ -6,7 +6,7 @@ import { images, icons, colors } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
 import './_card-vertical.scss';
 import { useIntersectionObserver } from '../../shared/useIntersectionObserver';
-import GradientMdVerified from '../verified-icon/verified-icon';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
   const navigate = useNavigate();
@@ -66,12 +66,12 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
                 className='profile-pic'
                 src={post.avatar || images.DEFAULT_AVATAR}
                 alt='Author image'
-                style={{
+                style={post.isVerified ? {
                   background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
                   padding: "0.1em",
-                 }}
+                 } : {borderRadius: "50%"}}
               />
-              <div style={{marginRight: '10'}}>
+              <div>
                 {post.isPublication ? (
                   <Link
                     style={{ color: darkOptionsAndColors.secondaryColor }}
@@ -88,7 +88,7 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
                   </Link>
                 )}
               </div>
-              <div style={{marginLeft: '5px'}}><GradientMdVerified width={'12'} height={'12'} /></div>
+              {post.isVerified && <div className='verified-badge'><GradientMdVerified width={'12'} height={'12'} /></div>}
             </>
           )}
         </div>

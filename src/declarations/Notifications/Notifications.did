@@ -11,6 +11,7 @@ type UserNotificationSettings =
    readerExpiredSubscription: bool;
    replyToMyComment: bool;
    tipReceived: bool;
+   verifyProfile: bool;
    youSubscribedToAuthor: bool;
    youUnsubscribedFromAuthor: bool;
  };
@@ -115,6 +116,7 @@ type NotificationContent__1 =
       tipSenderPrincipal: text;
       tippedTokenSymbol: text;
     };
+   VerifyProfile;
    YouSubscribedToAuthor:
     record {
       amountOfTokens: text;
@@ -215,6 +217,7 @@ type NotificationContent =
       tipSenderPrincipal: text;
       tippedTokenSymbol: text;
     };
+   VerifyProfile;
    YouSubscribedToAuthor:
     record {
       amountOfTokens: text;
@@ -252,6 +255,7 @@ service : {
                               text;
                               NotificationContent__1;
                             }) -> ();
+  createVerifyNotificationTest: () -> ();
   getCanisterVersion: () -> (text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;

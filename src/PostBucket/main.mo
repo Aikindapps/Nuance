@@ -2494,6 +2494,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
       replies = Buffer.toArray(replies);
       repliedCommentId = replyCommentIdToCommentIdHashMap.get(commentId);
       isCensored = censored;
+      isVerified = false; //doesn't need to be set or stored, but its useful to have so the frontend can populate the avatar
     };
   };
 

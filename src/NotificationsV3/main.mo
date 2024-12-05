@@ -54,6 +54,7 @@ actor Notifications {
   stable var notificationSettingsYouUnsubscribedFromAuthor = Map.new<Text, Bool>();
   stable var notificationSettingsReaderExpiredSubscription = Map.new<Text, Bool>();
   stable var notificationSettingsFaucetClaimAvailable = Map.new<Text, Bool>();
+  stable var notificationSettingsVerifyProfile = Map.new<Text, Bool>();
     
   //a map to store the notification ids as an array mapped to the principal ids of the users
   // key: principalId, value: array of notificationIds
@@ -135,6 +136,25 @@ actor Notifications {
 
   //public update functions
 
+  public shared ({caller}) func createVerifyNotificationTest() : async () {
+    if(not isAdmin(caller)){
+      //if here, not an admin
+      if(not (await isAllowedToSendNotifications(caller))){
+        //if here, caller is not an admin and not a bucket canister
+        //just return without doing anything
+        Debug.print("Not allowed to send notifications.");
+        return;
+      }
+    };
+    if(not isThereEnoughMemoryPrivate()){
+      return;
+    };
+    //after the authorization, just create the notification by calling the internal func
+    let notificationReceiverPrincipalId = "iqymw-ul54v-mywdo-w2ojn-5pwu5-nqb6d-npwda-f5xli-ektb6-acgxa-jqe";
+    let content1: NotificationContent = #VerifyProfile;
+    createNotificationInternal(notificationReceiverPrincipalId, content1);
+  };
+
   //creates the notification after the authorization
   public shared ({caller}) func createNotification(notificationReceiverPrincipalId: Text, content: NotificationContent) : async () {
     if(not isAdmin(caller)){
@@ -197,6 +217,7 @@ actor Notifications {
         Map.set(notificationSettingsYouUnsubscribedFromAuthor, thash, callerPrincipalId, newNotificationSettings.youUnsubscribedFromAuthor);
         Map.set(notificationSettingsReaderExpiredSubscription, thash, callerPrincipalId, newNotificationSettings.readerExpiredSubscription);
         Map.set(notificationSettingsFaucetClaimAvailable, thash, callerPrincipalId, newNotificationSettings.faucetClaimAvailable);
+        Map.set(notificationSettingsVerifyProfile, thash, callerPrincipalId, newNotificationSettings.verifyProfile);
         //return the UserNotificationSettings object
         #ok(buildUserNotificationSettings(callerPrincipalId))
       };
@@ -322,6 +343,9 @@ actor Notifications {
       case("faucetClaimAvailable") {
         #FaucetClaimAvailable
       };
+      case("verifyProfile") {
+        #VerifyProfile
+      };
       case(_) {
         //not possible to reach here
         getNotificationTypeInternal("<some-funny-joke-here>");
@@ -369,6 +393,9 @@ actor Notifications {
       };
       case(#FaucetClaimAvailable) {
         return "faucetClaimAvailable"
+      };
+      case(#VerifyProfile) {
+        return "verifyProfile"
       };
     };
   };
@@ -499,6 +526,9 @@ actor Notifications {
       };
       case(#FaucetClaimAvailable) {
         Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#FaucetClaimAvailable));
+      };
+      case(#VerifyProfile) {
+        Map.set(notificationIdToNotificationType, thash, id, getTextFromNotificationType(#VerifyProfile));
       };
     };
   };
@@ -698,6 +728,15 @@ actor Notifications {
           content = #FaucetClaimAvailable;
         }
       };
+      case(#VerifyProfile) {
+        return {
+          id;
+          read = Option.get(Map.get(notificationIdToRead, thash, id), false);
+          timestamp = Option.get(Map.get(notificationIdToTimestamp, thash, id), "");
+          notificationReceiverPrincipalId = Option.get(Map.get(notificationIdToNotificationReceiverPrincipalId, thash, id), "");
+          content = #VerifyProfile;
+        }
+      };
     };
   };
   //builds the UserNotificationSettings using the principal id
@@ -716,6 +755,7 @@ actor Notifications {
       youUnsubscribedFromAuthor = Option.get(Map.get(notificationSettingsYouUnsubscribedFromAuthor, thash, userPrincipalId), true);
       readerExpiredSubscription = Option.get(Map.get(notificationSettingsReaderExpiredSubscription, thash, userPrincipalId), true);
       faucetClaimAvailable = Option.get(Map.get(notificationSettingsFaucetClaimAvailable, thash, userPrincipalId), true);
+      verifyProfile = Option.get(Map.get(notificationSettingsVerifyProfile, thash, userPrincipalId), true);
     }
   };
 
@@ -762,6 +802,9 @@ actor Notifications {
       };
       case(#FaucetClaimAvailable) {
         userNotificationSettings.faucetClaimAvailable
+      };
+      case(#VerifyProfile) {
+        userNotificationSettings.verifyProfile
       };
     };
   };

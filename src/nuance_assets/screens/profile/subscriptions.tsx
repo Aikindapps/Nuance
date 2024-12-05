@@ -205,7 +205,10 @@ const Subscriptions = () => {
                         <tbody>
                             {filteredSubscriptions.map((sub) => (
                                 <tr key={sub.subscriptionStartDate}>
-                                    <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" /> </Link></td>
+                                    <td><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`}><img className={activeTab === "expired" ? 'subscription-avatar expired' : "subscription-avatar"} src={sub.userListItem.avatar || images.DEFAULT_AVATAR} alt="Avatar" style={sub.userListItem.isVerified ? {
+                                        background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                                        padding: "0.1em",
+                                    } : {borderRadius: "50%"}} /> </Link></td>
                                     <td className='subscribers-tab-chart-handle'><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`} style={{ color: "currentcolor" }}>@{sub.userListItem.handle}</Link></td>
                                     <td className='subscribers-tab-chart-info'>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td className='subscribers-tab-chart-info'>{sub.period}</td>

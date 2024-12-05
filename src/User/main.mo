@@ -91,6 +91,8 @@ actor User {
   stable var claimSubaccountIndexes : [(Text, Nat)] = [];
   stable var claimBlockedUsers : [(Text, Text)] = [];
   stable var isVerifiedUsers : [(Text, Bool)] = [];
+  stable var pendingLinkingRequests: [(Text, Text)] =[];
+  stable var confirmedLinkingRequests: [(Text, Text)] = [];
 
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
 
@@ -120,6 +122,8 @@ actor User {
   var lastClaimNotificationDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var claimBlockedUsersHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   var isVerifiedUsersHashMap = HashMap.HashMap<Text, Bool>(initCapacity, isEq, Text.hash);
+  var pendingLinkingRequestsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var confirmedLinkingRequestsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
   stable var accountIdsToHandleEntries : [(Text, Text)] = [];
@@ -594,6 +598,12 @@ actor User {
 
     var principalId = Principal.toText(caller);
 
+    for (principal in confirmedLinkingRequestsHashMap.vals()) {
+      if (principal == principalId) {
+        return #err("This internet identity is linked with an existing account.");
+      };
+    };
+
     if (principalIdHashMap.get(principalId) != null) {
       #err(UserExists);
     } else if (not isValidHandle(handle)) {
@@ -608,11 +618,73 @@ actor User {
       var user = createNewUser(principalId, Text.trimStart(handle, #char('@')), displayName, avatar);
       putUser(principalId, user);
       userCount += 1;
+      let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+      ignore NotificationsCanister.createNotification(principalId, #VerifyProfile);
       #ok(buildUser(principalId));
     };
   };
 
-  public shared func getVerificationStatus(principalId: Text) : async Result.Result<Bool, Text> {
+  public query func getLinkedPrincipal(walletPrincipal: Text) : async Result.Result<Text, Text> {
+    switch(confirmedLinkingRequestsHashMap.get(walletPrincipal)) {
+      case(?value) {
+        return #ok(value);
+      };
+      case(null) {
+        return #err("The user doesn't have any linked principal.");
+      };
+    };
+
+  };
+
+  public shared ({ caller }) func linkInternetIdentityRequest(walletPrincipal: Text, iiPrincipal: Text) : async Result.Result<(), Text> {
+    let callerPrincipal = Principal.toText(caller);
+
+    if (principalIdHashMap.get(walletPrincipal) == null) {
+      return #err(UserNotFound);
+    };
+
+    if (principalIdHashMap.get(iiPrincipal) != null) {
+      return #err("The internet identity requested to be linked already has an account.");
+    };
+
+    if(confirmedLinkingRequestsHashMap.get(walletPrincipal) != null) {
+      return #err("User is already linked");
+    };
+
+    if (callerPrincipal != walletPrincipal) {
+      return #err("Unauthorized request.");
+    };
+
+    pendingLinkingRequestsHashMap.put(walletPrincipal, iiPrincipal);
+
+    return #ok();
+  };
+
+  public shared ({ caller }) func linkInternetIdentityConfirm(walletPrincipal: Text) : async Result.Result<(), Text> {
+    let callerPrincipal = Principal.toText(caller);
+
+    switch(pendingLinkingRequestsHashMap.get(walletPrincipal)) {
+      case(?pendingRequest) {
+        if (callerPrincipal != pendingRequest) {
+          return #err("Unauthorized confirmation.");
+        } else {
+          for (principal in confirmedLinkingRequestsHashMap.vals()) {
+            if (principal == callerPrincipal) {
+              return #err("This internet identity is linked with another account.");
+            };
+          };
+          confirmedLinkingRequestsHashMap.put(walletPrincipal, pendingRequest);
+          pendingLinkingRequestsHashMap.delete(walletPrincipal);
+          return #ok();
+        };
+      };
+      case(null) {
+        return #err("There is no request for linking this principal.");
+      };
+    };
+  };
+
+  public query func getVerificationStatus(principalId: Text) : async Result.Result<Bool, Text> {
 
     if (principalIdHashMap.get(principalId) == null) {
       return #err(UserNotFound);
@@ -1148,6 +1220,7 @@ actor User {
         website = U.safeGet(websiteHashMap, followerPrincipalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, followerPrincipalId, false);
       };
       users.add(user);
     };
@@ -1173,6 +1246,7 @@ actor User {
         website = U.safeGet(websiteHashMap, followerPrincipalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, followerPrincipalId, false);
       };
       users.add(user);
     };
@@ -1210,6 +1284,7 @@ actor User {
         website = U.safeGet(websiteHashMap, followerPrincipalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, followerPrincipalId, false);
       };
       users.add(user);
     };
@@ -2098,6 +2173,7 @@ actor User {
       website = U.safeGet(websiteHashMap, principalId, "");
       socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
       followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+      isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
     };
 
     #ok(user);
@@ -2124,6 +2200,7 @@ actor User {
           website = U.safeGet(websiteHashMap, principalId, "");
           socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
           followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+          isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
         };
         users := List.push<UserListItem>(user, users);
       };
@@ -2149,6 +2226,7 @@ actor User {
         website = U.safeGet(websiteHashMap, principalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
       };
       users := List.push<UserListItem>(user, users);
     };
@@ -2390,6 +2468,8 @@ actor User {
     claimBlockedUsers := Iter.toArray(claimBlockedUsersHashMap.entries());
     claimSubaccountIndexes := Iter.toArray(claimSubaccountIndexesHashMap.entries());
     isVerifiedUsers := Iter.toArray(isVerifiedUsersHashMap.entries());
+    pendingLinkingRequests := Iter.toArray(pendingLinkingRequestsHashMap.entries());
+    confirmedLinkingRequests := Iter.toArray(confirmedLinkingRequestsHashMap.entries());
   };
 
   system func postupgrade() {
@@ -2422,6 +2502,8 @@ actor User {
     claimBlockedUsersHashMap := HashMap.fromIter(claimBlockedUsers.vals(), initCapacity, isEq, Text.hash);
     claimSubaccountIndexesHashMap := HashMap.fromIter(claimSubaccountIndexes.vals(), initCapacity, isEq, Text.hash);
     isVerifiedUsersHashMap := HashMap.fromIter(isVerifiedUsers.vals(), initCapacity, isEq, Text.hash);
+    pendingLinkingRequestsHashMap := HashMap.fromIter(pendingLinkingRequests.vals(), initCapacity, isEq, Text.hash);
+    confirmedLinkingRequestsHashMap := HashMap.fromIter(confirmedLinkingRequests.vals(), initCapacity, isEq, Text.hash);
 
     principalId := [];
     handle := [];

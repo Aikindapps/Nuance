@@ -74,9 +74,9 @@ export type Result = { 'ok' : User } |
   { 'err' : string };
 export type Result_1 = { 'ok' : null } |
   { 'err' : string };
-export type Result_10 = { 'ok' : Array<[string, bigint]> } |
+export type Result_10 = { 'ok' : string } |
   { 'err' : string };
-export type Result_11 = { 'ok' : string } |
+export type Result_11 = { 'ok' : Array<[string, bigint]> } |
   { 'err' : string };
 export type Result_2 = { 'ok' : ReaderSubscriptionDetails } |
   { 'err' : string };
@@ -145,6 +145,7 @@ export interface UserListItem {
   'displayName' : string,
   'followersCount' : string,
   'website' : string,
+  'isVerified' : boolean,
   'handle' : string,
   'fontType' : string,
   'avatar' : string,
@@ -187,7 +188,7 @@ export interface _SERVICE {
     [PublicationObject__1, string],
     AddPublicationReturn
   >,
-  'adminAirDrop' : ActorMethod<[number], Result_11>,
+  'adminAirDrop' : ActorMethod<[number], Result_10>,
   'availableCycles' : ActorMethod<[], bigint>,
   'blockUserFromClaiming' : ActorMethod<[string], Result_1>,
   'checkMyClaimNotification' : ActorMethod<[], undefined>,
@@ -201,7 +202,7 @@ export interface _SERVICE {
   'generateLowercaseHandles' : ActorMethod<[], [string, Array<string>]>,
   'getActiveUsersByRange' : ActorMethod<[Date], bigint>,
   'getAdmins' : ActorMethod<[], Result_6>,
-  'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_10>,
+  'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_11>,
   'getAllHandles' : ActorMethod<[], Array<string>>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
@@ -222,6 +223,7 @@ export interface _SERVICE {
     Array<string>
   >,
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
+  'getLinkedPrincipal' : ActorMethod<[string], Result_10>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_9>,
@@ -247,6 +249,8 @@ export interface _SERVICE {
   'handleClap' : ActorMethod<[string, string], undefined>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
+  'linkInternetIdentityConfirm' : ActorMethod<[string], Result_1>,
+  'linkInternetIdentityRequest' : ActorMethod<[string, string], Result_1>,
   'migrateFollowersHashmapsFromHandlesToPrincipalIds' : ActorMethod<
     [],
     Result_5

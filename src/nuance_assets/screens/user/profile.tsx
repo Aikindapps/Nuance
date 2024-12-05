@@ -34,6 +34,7 @@ import {
   useSubscriptionStore,
 } from '../../store/subscriptionStore';
 import { set } from 'lodash';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -353,8 +354,12 @@ const Profile = () => {
                   src={author?.avatar || images.DEFAULT_AVATAR}
                   alt='background'
                   className='profile-picture'
+                  style={author?.isVerified ? {
+                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                    padding: "0.2em",
+                  } : {borderRadius: "50%"}}
                 />
-                <p className='name'>{author?.displayName}</p>
+                <p className='name'>{author?.displayName} {author?.isVerified && <div className='verified-badge'><GradientMdVerified width={'24'} height={'24'} /></div>}</p>
                 <p
                   style={
                     darkTheme

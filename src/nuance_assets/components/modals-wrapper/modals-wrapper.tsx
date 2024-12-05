@@ -11,6 +11,8 @@ import { PostType } from 'src/nuance_assets/types/types';
 import NotificationsSidebar from '../notifications/notifications';
 import { ClaimRestrictedTokensModal } from '../claim-restricted-tokens-modal/claim-restricted-tokens-modal';
 import { useNavigate } from 'react-router-dom';
+import { VerifyProfileModal } from '../verify-profile-modal/verify-profile-modal';
+import { LinkIIModal } from '../link-ii-modal/link-ii-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   const navigate = useNavigate();
@@ -59,6 +61,10 @@ export const ModalsWrapper = () => {
         <NotificationsSidebar navigate={navigate}/>
       ) : modalContext?.modalType === 'claim restricted tokens' ? (
         <ClaimRestrictedTokensModal />
+      ) : modalContext?.modalType === 'verify profile' ? (
+        <VerifyProfileModal />
+      ) : modalContext?.modalType === 'link ii' ? (
+        <LinkIIModal />
       ) : null}
     </div>
   );

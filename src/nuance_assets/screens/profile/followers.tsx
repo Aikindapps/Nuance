@@ -8,6 +8,7 @@ import Loader from '../../UI/loader/Loader';
 import { useTheme } from '../../contextes/ThemeContext';
 import Button from '../../UI/Button/Button';
 import { UserListItem } from 'src/nuance_assets/types/types';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const Followers = () => {
   // This component is a child of profileSidebar
@@ -85,7 +86,13 @@ const Followers = () => {
                     <img
                       src={user.avatar || images.DEFAULT_AVATAR}
                       className='profile-picture user-image-search'
-                      style={{
+                      style={user.isVerified ? {
+                        background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                        padding: "0.2em",
+                        width: '100px',
+                        height: '100px',
+                        transition: 'none',
+                      } : {borderRadius: "50%",
                         width: '100px',
                         height: '100px',
                         transition: 'none',
@@ -104,7 +111,7 @@ const Followers = () => {
                         navigate('/user/' + user.handle);
                       }}
                     >
-                      {user.displayName}
+                      {user.displayName} {user.isVerified && <div className='verified-badge'><GradientMdVerified width={'16'} height={'16'} /></div>}
                     </p>
 
                     <p

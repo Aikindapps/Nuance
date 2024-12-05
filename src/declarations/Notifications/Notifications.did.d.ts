@@ -61,6 +61,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'postId' : string,
     }
   } |
+  { 'VerifyProfile' : null } |
   {
     'YouUnsubscribedFromAuthor' : {
       'subscriptionTimeInterval' : SubscriptionTimeInterval,
@@ -169,6 +170,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'postId' : string,
     }
   } |
+  { 'VerifyProfile' : null } |
   {
     'YouUnsubscribedFromAuthor' : {
       'subscriptionTimeInterval' : SubscriptionTimeInterval,
@@ -239,6 +241,7 @@ export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Annually' : null };
 export interface UserNotificationSettings {
   'premiumArticleSold' : boolean,
+  'verifyProfile' : boolean,
   'tipReceived' : boolean,
   'authorGainsNewSubscriber' : boolean,
   'authorLosesSubscriber' : boolean,
@@ -263,6 +266,7 @@ export interface _SERVICE {
     [Array<[string, NotificationContent__1]>],
     undefined
   >,
+  'createVerifyNotificationTest' : ActorMethod<[], undefined>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,

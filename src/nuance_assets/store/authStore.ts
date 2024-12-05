@@ -21,6 +21,7 @@ import {
   getIcrc1TokenActorAnonymous,
   getSonicActor,
   getUserActor,
+  getCustomUserActor,
 } from '../services/actorService';
 import {
   ckUSDC_CANISTER_ID,
@@ -130,6 +131,7 @@ export interface AuthStore {
   fetchTokenBalances: () => Promise<void>;
   clearAll: () => void;
   clearLoginMethod: () => void;
+  requestLinkInternetIdentity: () => Promise<Principal | null>;
 }
 
 // Encapsulates and abstracts AuthClient
@@ -551,6 +553,65 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
       window_any.ic.bitfinityWallet.disconnect();
     } catch (err) {}
+  },
+
+  requestLinkInternetIdentity: async (): Promise<Principal | null> => {
+    return new Promise(async (resolve, reject) => {
+    
+
+      /* if (currentLoginMethod == "ii") {
+        toast('You are already logged in with Internet Identity.', ToastType.Notification);
+        return;
+      } */
+      
+      try {
+        const currentLoginMethod = await get().loginMethod;
+        // get the current user's principal
+        const currentUserPrincipal = (await get().getUserWallet()).principal;
+
+        // create a separate AuthClient instance
+        const linkAuthClient = await AuthClient.create();
+
+        await linkAuthClient.login({
+          identityProvider,
+          maxTimeToLive: sessionTimeout as bigint,
+          onSuccess: async () => {
+            const iiIdentity = linkAuthClient.getIdentity();
+            const iiPrincipal = iiIdentity.getPrincipal().toText();
+
+            const userActor = await getUserActor();
+            const request = await userActor.linkInternetIdentityRequest(currentUserPrincipal, iiPrincipal);
+
+            if ('ok' in request) {
+              // create an actor with the II identity
+              const customUserActor = await getCustomUserActor(iiIdentity);
+              const confirmation = await customUserActor.linkInternetIdentityConfirm(currentUserPrincipal);
+
+              if ('ok' in confirmation) {
+                toast('Internet Identity linked successfully!', ToastType.Success);
+                resolve(Principal.fromText(iiPrincipal));
+              } else {
+                toastError(' Failed to confirm linking process.', confirmation.err);
+                resolve(null);
+              }
+            } else {
+              toastError(' Failed to initiate linking process.', request.err);
+              resolve(null);
+            }
+
+            // logout from the temporary AuthClient to prevent session conflicts
+            await linkAuthClient.logout();
+          },
+          onError: (error) => {
+            toastError(`Failed to link Internet Identity: ${error}`);
+            resolve(null);
+          },
+        });
+      } catch (error) {
+        toastError(`An error occurred: ${error}`);
+        resolve(null);
+      }
+    })
   },
 });
 

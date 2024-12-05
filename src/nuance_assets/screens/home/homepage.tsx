@@ -18,7 +18,7 @@ import { TagModel } from '../../../declarations/PostCore/PostCore.did';
 import Loader from '../../UI/loader/Loader';
 import SearchResults from '../../components/search-results/search-results';
 import Dropdown from '../../UI/dropdown/dropdown';
-import GradientMdVerified from '../../components/verified-icon/verified-icon';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const HomePage = () => {
   //darkTheme
@@ -1187,7 +1187,7 @@ const HomePage = () => {
                     padding: "0.15em",
                    } : {borderRadius: "50%"}}
                 />
-                <div className='display-name'>{user.displayName} {user.isVerified}</div>
+                <div className='display-name'>{user.displayName} {user.isVerified && <GradientMdVerified width='16' height='16' gradientKey='left' />}</div>
                 <Link
                   to='/my-profile'
                   className='handle'
@@ -1384,7 +1384,7 @@ const HomePage = () => {
                     padding: "0.15em",
                    } : {borderRadius: "50%"}}
                 />
-                <div className='display-name'>{user.displayName} {<GradientMdVerified width={'12'} height={'12'} />}</div>
+                <div className='display-name'>{user.displayName} {<GradientMdVerified width='12' height='12' gradientKey='left-mobile' />}</div>
                 <Link
                   to='/my-profile'
                   className='handle'

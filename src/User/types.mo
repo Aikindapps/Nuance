@@ -54,6 +54,7 @@ module {
         website: Text;
         socialChannelsUrls: [Text];
         followersCount: Text;
+        isVerified: Bool;
     };
 
     public type PublicationObject = {

@@ -39,7 +39,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : User__1,
     'err' : IDL.Text,
   });
-  const Result_11 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const User = IDL.Record({
     'bio' : IDL.Text,
@@ -67,7 +67,7 @@ export const idlFactory = ({ IDL }) => {
     'year' : IDL.Nat,
   });
   const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
-  const Result_10 = IDL.Variant({
+  const Result_11 = IDL.Variant({
     'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
     'err' : IDL.Text,
   });
@@ -117,6 +117,7 @@ export const idlFactory = ({ IDL }) => {
     'displayName' : IDL.Text,
     'followersCount' : IDL.Text,
     'website' : IDL.Text,
+    'isVerified' : IDL.Bool,
     'handle' : IDL.Text,
     'fontType' : IDL.Text,
     'avatar' : IDL.Text,
@@ -199,7 +200,7 @@ export const idlFactory = ({ IDL }) => {
         [AddPublicationReturn],
         [],
       ),
-    'adminAirDrop' : IDL.Func([IDL.Float64], [Result_11], []),
+    'adminAirDrop' : IDL.Func([IDL.Float64], [Result_10], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'blockUserFromClaiming' : IDL.Func([IDL.Text], [Result_1], []),
     'checkMyClaimNotification' : IDL.Func([], [], []),
@@ -217,7 +218,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getActiveUsersByRange' : IDL.Func([Date], [IDL.Nat], ['query']),
     'getAdmins' : IDL.Func([], [Result_6], ['query']),
-    'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_10], ['query']),
+    'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_11], ['query']),
     'getAllHandles' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
@@ -253,6 +254,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Text)],
         ['query'],
       ),
+    'getLinkedPrincipal' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMultipleUsersByPrincipalId' : IDL.Func(
@@ -298,10 +300,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(UserListItem)],
         ['query'],
       ),
-    'getVerificationStatus' : IDL.Func([IDL.Text], [Result_4], []),
+    'getVerificationStatus' : IDL.Func([IDL.Text], [Result_4], ['query']),
     'handleClap' : IDL.Func([IDL.Text, IDL.Text], [], ['oneway']),
     'isRegistrationOpen' : IDL.Func([], [IDL.Bool], ['query']),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
+    'linkInternetIdentityConfirm' : IDL.Func([IDL.Text], [Result_1], []),
+    'linkInternetIdentityRequest' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [Result_1],
+        [],
+      ),
     'migrateFollowersHashmapsFromHandlesToPrincipalIds' : IDL.Func(
         [],
         [Result_5],

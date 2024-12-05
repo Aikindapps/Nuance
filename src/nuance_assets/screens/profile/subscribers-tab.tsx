@@ -138,6 +138,10 @@ const SubscribersTab: React.FC = () => {
                               sub.userListItem.avatar || images.DEFAULT_AVATAR
                             }
                             alt='Avatar'
+                            style={sub.userListItem.isVerified ? {
+                              background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                              padding: "0.1em",
+                            } : {borderRadius: "50%"}}
                           />
                         </Link>{' '}
                         <Link

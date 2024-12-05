@@ -31,6 +31,21 @@ const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const UserNotFound = 'User not found';
 
+//check derivation origin is PROD or UAT
+const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
+const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
+const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+
+const derivationOrigin: string = window.location.origin.includes(
+  NuanceUATCanisterId
+)
+  ? NuanceUAT
+  : NuancePROD;
+
+const isLocal: boolean =
+window.location.origin.includes('localhost') ||
+window.location.origin.includes('127.0.0.1');
+
 const handleError = (err: any, preText?: string) => {
   const errorType = getErrorType(err);
 
@@ -203,8 +218,8 @@ export interface UserStore {
   readonly totalNotificationCount: number;
   readonly unreadNotificationCount: number;
   readonly notificationsToasted: string[];
+  readonly linkedPrincipal: string;
 
-  verifyUserHumanity: () => Promise<void>;
   registerUser: (
     handle: string,
     displayName: string,
@@ -272,6 +287,9 @@ export interface UserStore {
     bucketCanisterId: string,
     amount: number
   ) => Promise<boolean | void>;
+  proceedWithVerification: (userPrincipal: Principal) => Promise<void>;
+  getLinkedPrincipal: (principal: string) => Promise<string | undefined>;
+  verifyPoh: (jwt: string) => Promise<void>;
   clearAll: () => void;
 }
 
@@ -317,12 +335,22 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   unreadNotificationCount: 0,
   totalNotificationCount: 0,
   notificationsToasted: [],
+  linkedPrincipal: '',
 
-  verifyUserHumanity: async (): Promise<void> => {
+  getLinkedPrincipal: async (principal: string): Promise<string | undefined> => {
+    const userWallet = await useAuthStore.getState().getUserWallet();
+
+    const result = await (
+      await getUserActor()
+    ).getLinkedPrincipal(userWallet.principal);
+    if (!(Err in result)) {
+      return result.ok;
+    }
+    return undefined;
+  },
+
+  /* proceedWithVerification: async (userPrincipal: Principal): Promise<void> => {
     try {
-      const userWallet = await useAuthStore.getState().getUserWallet();
-      const userPrincipal = Principal.fromText(userWallet.principal);
-
       const jwt: string = await new Promise((resolve, reject) => {
         requestVerifiablePresentation({
           onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
@@ -382,13 +410,80 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         console.error('Verification failed:', result.Err);
         toastError('Verification failed: ' + result.Err);
       }
-      
+
+    } catch (error) {
+      console.error('Error during PoH verification:', error);
+      handleError(error, Unexpected);
+    }
+  }, */
+
+  verifyPoh: async (jwt: string): Promise<void> => {
+    try {
+      const result = await (await getUserActor()).verifyPoh(jwt);
+
+      if ('Ok' in result) {
+        const userResult = await (await getUserActor()).getUser();
+
+        if ('ok' in userResult) {
+          const user = toUserModel(userResult.ok);
+          set ({ user });
+
+          toast('Verification successful!', ToastType.Success);
+        } else {
+          console.error('Failed to fetch updated user:', userResult.err);
+          toastError('Verification succeeded, but failed to update user information.');
+        }
+      } else {
+        console.error('Verification failed:', result.Err);
+        toastError('Verification failed: ' + result.Err);
+      }
     } catch (error) {
       console.error('Error during PoH verification:', error);
       handleError(error, Unexpected);
     }
   },
 
+  proceedWithVerification: async (verifyPrincipal: Principal): Promise<void> => {
+    try {
+      const jwt: string = await new Promise((resolve, reject) => {
+        requestVerifiablePresentation({
+          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
+            if ('Ok' in verifiablePresentation) {
+              resolve(verifiablePresentation.Ok);
+            } else {
+              reject(new Error(verifiablePresentation.Err));
+            }
+          },
+          onError(err) {
+            reject(new Error(err));
+          },
+          issuerData: {
+            origin: 'https://id.decideai.xyz/',
+            canisterId: Principal.fromText('qgxyr-pyaaa-aaaah-qdcwq-cai'),
+          },
+          credentialData: {
+            credentialSpec: {
+              credentialType: 'ProofOfUniqueness',
+              arguments: {},
+            },
+            credentialSubject: verifyPrincipal,
+          },
+          identityProvider: new URL('https://identity.ic0.app/'),
+          derivationOrigin: isLocal ? undefined : derivationOrigin,
+        });
+      });
+
+      console.log("JWT: ", jwt);
+
+      // verify the JWT credentials
+      await get().verifyPoh(jwt);
+
+    } catch (error) {
+      console.error('Error during PoH verification:', error);
+      handleError(error, Unexpected);
+      // handle error appropriately
+    }
+  },
 
   registerUser: async (
     handle: string,

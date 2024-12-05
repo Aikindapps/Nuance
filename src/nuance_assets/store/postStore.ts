@@ -121,7 +121,7 @@ const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
           };
         }
       }
-      return { ...p, avatar: author.avatar };
+      return { ...p, avatar: author.avatar, isVerified: author.isVerified };
     }
 
     return p;
@@ -155,12 +155,14 @@ const enrichComments = (
         ...comment,
         avatar: userListItem.avatar,
         handle: userListItem.handle,
+        isVerified: userListItem.isVerified,
       });
     } else {
       result.push({
         ...comment,
         avatar: userListItem.avatar,
         handle: userListItem.handle,
+        isVerified: userListItem.isVerified,
         replies: enrichComments(comment.replies, userListItemsMap),
       });
     }
@@ -177,7 +179,6 @@ async function mergeCommentsWithUsers(comments: Comment[]): Promise<Comment[]> {
   for (const userListItem of userListItems) {
     usersCache.set(userListItem.principal, userListItem);
   }
-
   //now, rebuild the comments array
   let result = enrichComments(comments, usersCache);
   return result;

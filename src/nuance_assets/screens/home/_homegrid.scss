@@ -232,6 +232,9 @@
     }
 
     .display-name-search-item {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
       margin: 0 0 10px 0;
       font-family: Georgia, "Times New Roman", Times, serif;
       color: #00113e;
@@ -250,6 +253,10 @@
 
     .bio:hover {
       text-decoration: none !important;
+    }
+
+    .verified-badge {
+      margin-left: 5px;
     }
   }
 
@@ -583,6 +590,9 @@
       }
 
       .display-name-search-item {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
         margin: 0 0 10px 0;
         font-family: Georgia, "Times New Roman", Times, serif;
         color: #00113e;

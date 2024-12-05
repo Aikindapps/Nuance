@@ -830,6 +830,7 @@ public type NotificationContent = {
       isPublication: Bool;
     };
     #FaucetClaimAvailable;
+    #VerifyProfile
   };
 
 

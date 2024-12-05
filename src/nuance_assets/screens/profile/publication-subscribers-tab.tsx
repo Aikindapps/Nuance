@@ -10,6 +10,7 @@ import {
 import { usePublisherStore } from '../../store/publisherStore';
 import './_publication-subscribers-tab.scss';
 import { Link } from 'react-router-dom';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 interface Subscriber {
   id: number;
@@ -157,6 +158,10 @@ const PublicationSubscribersTab: React.FC<PublicationSubscribersTabProps> = ({
                       className='subscribers-tab-avatar'
                       src={sub.userListItem.avatar || images.DEFAULT_AVATAR}
                       alt='Avatar'
+                      style={sub.userListItem.isVerified ? {
+                        background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                        padding: "0.1em",
+                      } : {borderRadius: "50%"}}
                     />
                   </Link>{' '}
                   <Link

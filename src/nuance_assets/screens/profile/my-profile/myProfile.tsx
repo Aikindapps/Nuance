@@ -16,8 +16,9 @@ import { useTheme } from '../../../contextes/ThemeContext';
 import { Tooltip } from 'react-tooltip';
 import { getIconForSocialChannel } from '../../../shared/utils';
 import { Context as ModalContext } from '../../../contextes/ModalContext';
-import GradientMdVerified from '../../../components/verified-icon/verified-icon';
-import { MdVerified } from "react-icons/md";
+import GradientMdVerified from '../../../UI/verified-icon/verified-icon';
+import { Principal } from '@dfinity/principal';
+import { requestVerifiablePresentation, VerifiablePresentationResponse } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -33,7 +34,9 @@ const MyProfile = () => {
     usersByHandles,
     getUserFollowersCount,
     userFollowersCount,
-    verifyUserHumanity,
+    getLinkedPrincipal,
+    verifyPoh,
+    proceedWithVerification,
   } = useUserStore((state) => ({
     user: state.user,
     getUser: state.getUser,
@@ -42,8 +45,95 @@ const MyProfile = () => {
     usersByHandles: state.usersByHandles,
     getUserFollowersCount: state.getUserFollowersCount,
     userFollowersCount: state.userFollowersCount,
-    verifyUserHumanity: state.verifyUserHumanity,
+    getLinkedPrincipal: state.getLinkedPrincipal,
+    verifyPoh: state.verifyPoh,
+    proceedWithVerification: state.proceedWithVerification,
   }));
+
+  const {
+    loginMethod,
+    getUserWallet,
+  } = useAuthStore((state) => ({
+    loginMethod: state.loginMethod,
+    getUserWallet: state.getUserWallet,
+  }))
+
+  const verifyUserHumanity = async () => {
+    try {
+      const userWallet = getUserWallet();
+      //const userActor = await getUserActor();
+
+      const currentLoginMethod = loginMethod;
+      let principalToUse: Principal;
+
+      if (currentLoginMethod === 'ii') {
+        // User is logged in via II
+        principalToUse = Principal.fromText((await userWallet).principal);
+        await proceedWithVerification(principalToUse);
+      } else {
+        // User is not logged in via II
+        // Check if they have linked II principal
+        const linkedPrincipalResult = await getLinkedPrincipal((await userWallet).principal);
+
+        if (linkedPrincipalResult === undefined) {
+          // No linked II principal
+          // Open custom link-ii-modal
+          modalContext?.openModal('link ii');
+          return;
+        } else {
+          // User has linked II principal
+          principalToUse = Principal.fromText(linkedPrincipalResult);
+          await proceedWithVerification(principalToUse);
+        }
+      }
+    } catch (error) {
+      console.error('Error during PoH verification:', error);
+      // Handle error appropriately
+    }
+  };
+
+  /* const proceedWithVerification = async (verifyPrincipal: Principal) => {
+    try {
+      const jwt: string = await new Promise((resolve, reject) => {
+        requestVerifiablePresentation({
+          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
+            if ('Ok' in verifiablePresentation) {
+              resolve(verifiablePresentation.Ok);
+            } else {
+              reject(new Error(verifiablePresentation.Err));
+            }
+          },
+          onError(err) {
+            reject(new Error(err));
+          },
+          issuerData: {
+            origin: 'https://a4tbr-q4aaa-aaaaa-qaafq-cai.localhost:5173/',
+            canisterId: Principal.fromText('a4tbr-q4aaa-aaaaa-qaafq-cai'),
+          },
+          credentialData: {
+            credentialSpec: {
+              credentialType: 'VerifiedEmployee',
+              arguments: {
+                employerName: "DFINITY Foundation"
+              },
+            },
+            credentialSubject: verifyPrincipal,
+          },
+          identityProvider: new URL('http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/'),
+          derivationOrigin: window.location.origin,
+        });
+      });
+
+      console.log("JWT: ", jwt);
+
+      // verify the JWT credentials
+      await verifyPoh(jwt);
+
+    } catch (error) {
+      console.error('Error during PoH verification:', error);
+      // handle error appropriately
+    }
+  }; */
 
   useEffect(() => {
     getUser();
@@ -87,6 +177,8 @@ const MyProfile = () => {
       return [];
     }
   };
+
+  console.log("WINDOW: ", window.location.origin);
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -152,7 +244,7 @@ const MyProfile = () => {
             padding: "0.2em",
            } : {borderRadius: "50%"}}
         />
-        <p className='name'>{user?.displayName} {user?.isVerified && <MdVerified className='verified'/>}</p>
+        <p className='name'>{user?.displayName} {user?.isVerified && <GradientMdVerified width='24' height='24'/>}</p>
         <p
           style={
             darkTheme

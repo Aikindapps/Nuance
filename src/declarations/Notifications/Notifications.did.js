@@ -44,6 +44,7 @@ export const idlFactory = ({ IDL }) => {
       'commenterPrincipal' : IDL.Text,
       'postId' : IDL.Text,
     }),
+    'VerifyProfile' : IDL.Null,
     'YouUnsubscribedFromAuthor' : IDL.Record({
       'subscriptionTimeInterval' : SubscriptionTimeInterval,
       'subscribedWriterPrincipalId' : IDL.Text,
@@ -95,6 +96,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const UserNotificationSettings = IDL.Record({
     'premiumArticleSold' : IDL.Bool,
+    'verifyProfile' : IDL.Bool,
     'tipReceived' : IDL.Bool,
     'authorGainsNewSubscriber' : IDL.Bool,
     'authorLosesSubscriber' : IDL.Bool,
@@ -147,6 +149,7 @@ export const idlFactory = ({ IDL }) => {
       'commenterPrincipal' : IDL.Text,
       'postId' : IDL.Text,
     }),
+    'VerifyProfile' : IDL.Null,
     'YouUnsubscribedFromAuthor' : IDL.Record({
       'subscriptionTimeInterval' : SubscriptionTimeInterval,
       'subscribedWriterPrincipalId' : IDL.Text,
@@ -221,6 +224,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'createVerifyNotificationTest' : IDL.Func([], [], []),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),

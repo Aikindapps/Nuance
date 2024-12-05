@@ -951,7 +951,6 @@ const ReadArticle = () => {
                     }}
                     comments={comments}
                   />
-
                   {comments.length > 0 &&
                     comments[0].postId === post.postId &&
                     comments.map((comment) => (
@@ -965,6 +964,7 @@ const ReadArticle = () => {
                         avatar={user?.avatar || ''}
                         totalNumberOfComments={totalNumberOfComments}
                         comments={comments}
+                        isVerified={comment.isVerified}
                         setComments={(newComments, totalNumber) => {
                           setComments(newComments);
                           setTotalNumberOfComments(totalNumber);

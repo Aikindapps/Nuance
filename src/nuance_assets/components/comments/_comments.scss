@@ -40,8 +40,13 @@
     }
 
     .username {
+        display: flex;
         font-weight: bold;
         color: $primary-text-color;
+
+        .verified-badge {
+            margin-left: 5px;
+        }
     }
 
     .username-dark {
