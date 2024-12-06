@@ -204,6 +204,7 @@ export interface _SERVICE {
   'getAdmins' : ActorMethod<[], Result_6>,
   'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_11>,
   'getAllHandles' : ActorMethod<[], Array<string>>,
+  'getAllUserPrincipals' : ActorMethod<[], Result_6>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]

@@ -143,6 +143,28 @@ const CustomNotificationContent = ({
           </Button>
         </span>
       );
+    } else if ('VerifyProfile' in notificationContent) {
+      return (
+        <span>
+          Your profile is not verified. You can verify yourself on your profile
+          page.
+          <Button
+            styleType={{ dark: 'navy-dark', light: 'navy' }}
+            onClick={() => {
+              navigate('/my-profile');
+            }}
+            loading={false}
+            style={{
+              display: 'flex',
+              flexDirection: 'row-reverse',
+              marginTop: '10px',
+              float: 'right',
+            }}
+          >
+            Verify Profile
+          </Button>
+        </span>
+      );
     } else if ('TipReceived' in notificationContent) {
       let content = notificationContent.TipReceived;
       //post related fields
@@ -426,7 +448,7 @@ const CustomNotificationContent = ({
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          K-ching! {' '}
+          K-ching!{' '}
           <span
             onClick={() => {
               navigate('/user/' + purchaserHandle);

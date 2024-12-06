@@ -295,6 +295,16 @@ actor User {
     #ok();
   };
 
+  public shared query ({ caller }) func getAllUserPrincipals() : async Result.Result<[Text], Text> {
+    if (caller != Principal.fromText(ENV.NOTIFICATIONS_CANISTER_ID)) {
+      return #err(Unauthorized);
+    };
+
+    let usersPrincipals = Iter.toArray(principalIdHashMap.keys());
+
+    return #ok(usersPrincipals);
+  };
+
   //#endregion
 
   //#region User Management
@@ -732,11 +742,18 @@ actor User {
         });
       } else {
         let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
+        var effectiveDerivationOrigin : Text = "";
 
+        if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+          effectiveDerivationOrigin := "https://nuance.xyz";
+        } else {
+          effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".icp0.io"
+        };
         // Perform the actual canister call and assign the result
         result := await VerifyPohCanister.verify_proof_of_unique_personhood(
           caller,
           credentialJWT,
+          effectiveDerivationOrigin,
           Nat64.fromIntWrap(Time.now() / 1_000_000)
         );
       };

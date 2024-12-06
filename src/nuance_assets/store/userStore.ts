@@ -458,7 +458,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
             reject(new Error(err));
           },
           issuerData: {
-            origin: 'https://id.decideai.xyz/',
+            origin: 'https://id.decideai.xyz',
             canisterId: Principal.fromText('qgxyr-pyaaa-aaaah-qdcwq-cai'),
           },
           credentialData: {

@@ -22,6 +22,11 @@ type SubscriptionTimeInterval =
    Monthly;
    Weekly;
  };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
 type Result_1 = 
  variant {
    err: text;
@@ -250,12 +255,12 @@ type GetUserNotificationsResponse =
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
+  broadcastNotification: (NotificationContent__1) -> (Result_2);
   createNotification: (text, NotificationContent__1) -> ();
   createNotifications: (vec record {
                               text;
                               NotificationContent__1;
                             }) -> ();
-  createVerifyNotificationTest: () -> ();
   getCanisterVersion: () -> (text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;

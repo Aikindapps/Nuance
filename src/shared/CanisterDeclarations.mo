@@ -22,7 +22,7 @@ module{
     };
 
     public type VerifyPohCanisterInterface = actor {
-        verify_proof_of_unique_personhood : query (principal : Principal, credential_jwt : Text, now : Nat64) -> async VerifyResult;
+        verify_proof_of_unique_personhood : query (principal : Principal, credential_jwt : Text, effectiveDerivationOrigin : Text, now : Nat64) -> async VerifyResult;
     };
 
     public func getVerifyPohCanister() : VerifyPohCanisterInterface {
@@ -108,6 +108,7 @@ module{
         getTrustedCanisters : () -> async Result.Result<[Text], Text>;
         getUsersByPrincipals : query (principals : [Text]) -> async [UserListItem];
         getFollowersPrincipalIdsByPrincipalId : query (principalId: Text) -> async [Text];
+        getAllUserPrincipals : query () -> async Result.Result<[Text], Text>;
     };
 
     public func getUserCanister() : UserCanisterInterface {

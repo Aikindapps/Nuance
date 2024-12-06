@@ -299,6 +299,7 @@ service : {
   getAdmins: () -> (Result_6) query;
   getAllClaimSubaccountIndexes: () -> (Result_11) query;
   getAllHandles: () -> (vec text) query;
+  getAllUserPrincipals: () -> (Result_6) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_6) query;

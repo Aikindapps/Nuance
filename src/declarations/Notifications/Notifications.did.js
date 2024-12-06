@@ -94,6 +94,7 @@ export const idlFactory = ({ IDL }) => {
       'subscriberPrincipalId' : IDL.Text,
     }),
   });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const UserNotificationSettings = IDL.Record({
     'premiumArticleSold' : IDL.Bool,
     'verifyProfile' : IDL.Bool,
@@ -218,13 +219,17 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
+    'broadcastNotification' : IDL.Func(
+        [NotificationContent__1],
+        [Result_2],
+        [],
+      ),
     'createNotification' : IDL.Func([IDL.Text, NotificationContent__1], [], []),
     'createNotifications' : IDL.Func(
         [IDL.Vec(IDL.Tuple(IDL.Text, NotificationContent__1))],
         [],
         [],
       ),
-    'createVerifyNotificationTest' : IDL.Func([], [], []),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),

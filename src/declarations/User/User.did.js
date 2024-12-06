@@ -220,6 +220,7 @@ export const idlFactory = ({ IDL }) => {
     'getAdmins' : IDL.Func([], [Result_6], ['query']),
     'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_11], ['query']),
     'getAllHandles' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'getAllUserPrincipals' : IDL.Func([], [Result_6], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
         [IDL.Opt(CanisterMetrics)],

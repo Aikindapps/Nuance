@@ -92,49 +92,6 @@ const MyProfile = () => {
     }
   };
 
-  /* const proceedWithVerification = async (verifyPrincipal: Principal) => {
-    try {
-      const jwt: string = await new Promise((resolve, reject) => {
-        requestVerifiablePresentation({
-          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
-            if ('Ok' in verifiablePresentation) {
-              resolve(verifiablePresentation.Ok);
-            } else {
-              reject(new Error(verifiablePresentation.Err));
-            }
-          },
-          onError(err) {
-            reject(new Error(err));
-          },
-          issuerData: {
-            origin: 'https://a4tbr-q4aaa-aaaaa-qaafq-cai.localhost:5173/',
-            canisterId: Principal.fromText('a4tbr-q4aaa-aaaaa-qaafq-cai'),
-          },
-          credentialData: {
-            credentialSpec: {
-              credentialType: 'VerifiedEmployee',
-              arguments: {
-                employerName: "DFINITY Foundation"
-              },
-            },
-            credentialSubject: verifyPrincipal,
-          },
-          identityProvider: new URL('http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/'),
-          derivationOrigin: window.location.origin,
-        });
-      });
-
-      console.log("JWT: ", jwt);
-
-      // verify the JWT credentials
-      await verifyPoh(jwt);
-
-    } catch (error) {
-      console.error('Error during PoH verification:', error);
-      // handle error appropriately
-    }
-  }; */
-
   useEffect(() => {
     getUser();
   }, []);
@@ -229,7 +186,7 @@ const MyProfile = () => {
             width: '96px',
             marginTop: '5px'
           }}
-          onClick={verifyUserHumanity}
+          onClick={() => modalContext?.openModal('verify profile')}
         >
           Verify Profile
         </Button>}

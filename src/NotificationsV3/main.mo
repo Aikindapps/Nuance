@@ -136,24 +136,30 @@ actor Notifications {
 
   //public update functions
 
-  public shared ({caller}) func createVerifyNotificationTest() : async () {
-    if(not isAdmin(caller)){
-      //if here, not an admin
-      if(not (await isAllowedToSendNotifications(caller))){
-        //if here, caller is not an admin and not a bucket canister
-        //just return without doing anything
-        Debug.print("Not allowed to send notifications.");
-        return;
-      }
+  public shared ({caller}) func broadcastNotification(notificationContent: NotificationContent) : async Result.Result<[Text], Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+        return #err("Unauthorized");
     };
-    if(not isThereEnoughMemoryPrivate()){
-      return;
+
+    if (not isThereEnoughMemoryPrivate()) {
+        return #err("Not enough memory");
     };
-    //after the authorization, just create the notification by calling the internal func
-    let notificationReceiverPrincipalId = "iqymw-ul54v-mywdo-w2ojn-5pwu5-nqb6d-npwda-f5xli-ektb6-acgxa-jqe";
-    let content1: NotificationContent = #VerifyProfile;
-    createNotificationInternal(notificationReceiverPrincipalId, content1);
+
+    let UserCanister = CanisterDeclarations.getUserCanister();
+    switch (await UserCanister.getAllUserPrincipals()) {
+        case (#ok(allUserPrincipals)) {
+            // iterate over all principals and create the notification
+            for (userPrincipalId in allUserPrincipals.vals()) {
+                createNotificationInternal(userPrincipalId, notificationContent);
+            };
+            return #ok(allUserPrincipals);
+        };
+        case (#err(err)) {
+            return #err("error");
+        };
+    };
   };
+
 
   //creates the notification after the authorization
   public shared ({caller}) func createNotification(notificationReceiverPrincipalId: Text, content: NotificationContent) : async () {

@@ -235,6 +235,8 @@ export type Result = { 'ok' : UserNotificationSettings } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
+export type Result_2 = { 'ok' : Array<string> } |
+  { 'err' : string };
 export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
   { 'Monthly' : null } |
@@ -258,6 +260,7 @@ export interface UserNotificationSettings {
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'broadcastNotification' : ActorMethod<[NotificationContent__1], Result_2>,
   'createNotification' : ActorMethod<
     [string, NotificationContent__1],
     undefined
@@ -266,7 +269,6 @@ export interface _SERVICE {
     [Array<[string, NotificationContent__1]>],
     undefined
   >,
-  'createVerifyNotificationTest' : ActorMethod<[], undefined>,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,

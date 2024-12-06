@@ -8,10 +8,6 @@ import { colors, icons, images } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
 import { LuLoader2 } from 'react-icons/lu';
 import { Principal } from '@dfinity/principal';
-import {
-  requestVerifiablePresentation,
-  VerifiablePresentationResponse,
-} from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 
 export const VerifyProfileModal = () => {
   const modalContext = useContext(ModalContext);
@@ -52,7 +48,7 @@ export const VerifyProfileModal = () => {
 
         if (linkedPrincipalResult === undefined) {
           // no linked II principal
-          // open custom link-ii-modal
+          // open link ii
           modalContext?.openModal('link ii');
           return;
         } else {
@@ -63,58 +59,14 @@ export const VerifyProfileModal = () => {
       }
     } catch (error) {
       console.error('Error during PoH verification:', error);
-      // handle error appropriately
     }
   };
-
-  /* const proceedWithVerification = async (verifyPrincipal: Principal) => {
-    try {
-      const jwt: string = await new Promise((resolve, reject) => {
-        requestVerifiablePresentation({
-          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
-            if ('Ok' in verifiablePresentation) {
-              resolve(verifiablePresentation.Ok);
-            } else {
-              reject(new Error(verifiablePresentation.Err));
-            }
-          },
-          onError(err) {
-            reject(new Error(err));
-          },
-          issuerData: {
-            origin: 'https://a4tbr-q4aaa-aaaaa-qaafq-cai.localhost:5173/',
-            canisterId: Principal.fromText('a4tbr-q4aaa-aaaaa-qaafq-cai'),
-          },
-          credentialData: {
-            credentialSpec: {
-              credentialType: 'VerifiedEmployee',
-              arguments: {
-                employerName: "DFINITY Foundation"
-              },
-            },
-            credentialSubject: verifyPrincipal,
-          },
-          identityProvider: new URL('http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/'),
-          derivationOrigin: window.location.origin,
-        });
-      });
-
-      console.log("JWT: ", jwt);
-
-      // verify the JWT credentials
-      await verifyPoh(jwt);
-
-    } catch (error) {
-      console.error('Error during PoH verification:', error);
-      // handle error appropriately
-    }
-  }; */
 
   const [loading, setLoading] = useState(false);
 
   return (
     <div
-      className='claim-restricted-tokens-modal'
+      className='verify-profile-modal'
       style={
         darkTheme ? { background: colors.darkModePrimaryBackgroundColor } : {}
       }
@@ -157,15 +109,13 @@ export const VerifyProfileModal = () => {
         }
         className='information-text'
       >
-        To be able claim your free NUA tokens, you need to verify your profile
-        first. Please ensure that you have verified your unique personhood via
-        the
+        Please ensure that you have verified your unique personhood via the
         <a
           href='https://decideai.xyz/'
           target='_blank'
           rel='noopener noreferrer'
         >
-          DecideAI website
+          DecideAI
         </a>
         before proceeding. If you have not done so, please follow these steps:
         <ol>
@@ -176,26 +126,49 @@ export const VerifyProfileModal = () => {
               target='_blank'
               rel='noopener noreferrer'
             >
-              DecideAI website
+              DecideAI.
             </a>
-            .
           </li>
           <li>
-            Sign in using the same Internet Identity that you use to access this
-            app.
+            Sign in using the same Internet Identity that you use to access
+            Nuance.
+            <p
+              style={
+                darkTheme
+                  ? {
+                      color: colors.darkSecondaryTextColor,
+                    }
+                  : {}
+              }
+              className='note-text'
+            >
+              Note: If you are not logged in via Internet Identity and have
+              linked an Internet Identity to your Nuance account, please sign in
+              with the linked Internet Identity.
+            </p>
           </li>
           <li>
             Follow the instructions on the DecideAI platform to complete the
             verification process.
           </li>
-          <li>
-            Once verified, return to this page and confirm below to proceed.
-          </li>
+          <li>Once verified, return to this page and proceed.</li>
         </ol>
       </p>
-      <div className='token-amounts-and-terms-wrapper'>
+      <p
+        style={
+          darkTheme
+            ? {
+                color: colors.darkSecondaryTextColor,
+              }
+            : {}
+        }
+        className='information-text'
+      >
+        You can claim your Free NUA tokens after you have verified yourself.
+      </p>
+      <div className='verify-profile-wrapper'>
         <div
-          className='terms-wrapper'
+          className='verify-wrapper'
           onClick={() => {
             if (loading) {
               return;
@@ -205,8 +178,8 @@ export const VerifyProfileModal = () => {
         <div className='buttons-wrapper'>
           <Button
             className={{
-              dark: 'claim-restricted-tokens-modal-deposit-button',
-              light: 'claim-restricted-tokens-modal-deposit-button',
+              dark: 'verify-profile-modal-cancel-button',
+              light: 'verify-profile-modal-cancel-button',
             }}
             styleType={{ dark: 'white', light: 'white' }}
             type='button'
@@ -222,8 +195,8 @@ export const VerifyProfileModal = () => {
           </Button>
           <Button
             className={{
-              dark: 'claim-restricted-tokens-modal-withdraw-button-dark',
-              light: 'claim-restricted-tokens-modal-withdraw-button',
+              dark: 'verify-profile-modal-ok-button-dark',
+              light: 'verify-profile-modal-ok-button',
             }}
             styleType={{ dark: 'navy-dark', light: 'navy' }}
             type='button'
