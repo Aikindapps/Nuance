@@ -26,7 +26,7 @@ module{
     };
 
     public func getVerifyPohCanister() : VerifyPohCanisterInterface {
-        let canister : VerifyPohCanisterInterface = actor("aovwi-4maaa-aaaaa-qaagq-cai");
+        let canister : VerifyPohCanisterInterface = actor("l72yd-3qaaa-aaaai-aqj7a-cai");
         return canister;
     };
 

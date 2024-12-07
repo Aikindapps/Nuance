@@ -733,6 +733,14 @@ actor User {
       } else {
         let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
         var effectiveDerivationOrigin : Text = "";
+        var credentialSubject : Principal = caller;
+
+        switch(confirmedLinkingRequestsHashMap.get(Principal.toText(caller))) {
+          case(?linkedPrincipal) {
+            credentialSubject := Principal.fromText(linkedPrincipal);
+          };
+          case(null) {};
+        };
 
         if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
           effectiveDerivationOrigin := "https://nuance.xyz";
@@ -741,7 +749,7 @@ actor User {
         };
         // perform the actual canister call and assign the result
         result := await VerifyPohCanister.verify_proof_of_unique_personhood(
-          caller,
+          credentialSubject,
           credentialJWT,
           effectiveDerivationOrigin,
           Nat64.fromIntWrap(Time.now() / 1_000_000)

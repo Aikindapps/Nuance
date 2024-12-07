@@ -498,7 +498,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           let isLoggedIn = await authClient.isAuthenticated();
           set({ isInitialized: true, isLoggedIn });
           if (isLoggedIn) {
-            set({ loginMethod: 'ii' });
+            //set({ loginMethod: 'ii' });
           }
           //no need to await and block the thread while app loads
           useUserStore.getState().getUser();

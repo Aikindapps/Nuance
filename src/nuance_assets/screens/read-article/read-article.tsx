@@ -578,7 +578,11 @@ const ReadArticle = () => {
                 >
                   @{post.isPublication ? post.creatorHandle : author.handle}
                 </Link>
-                <div className='verified-badge'><GradientMdVerified width={'16'} height={'16'} /></div>
+                {author?.isVerified && (
+                  <div className='verified-badge'>
+                    <GradientMdVerified width={'16'} height={'16'} />
+                  </div>
+                )}
               </div>
             )}
             <div className='horizontal-divider'></div>
@@ -906,7 +910,11 @@ const ReadArticle = () => {
                     @{post.isPublication ? post.creatorHandle : author.handle}
                     {author?.isVerified && (
                       <div className='verified-badge'>
-                        <GradientMdVerified width={'20'} height={'20'} gradientKey='bottom' />
+                        <GradientMdVerified
+                          width={'20'}
+                          height={'20'}
+                          gradientKey='bottom'
+                        />
                       </div>
                     )}
                   </Link>
