@@ -43,8 +43,8 @@ const derivationOrigin: string = window.location.origin.includes(
   : NuancePROD;
 
 const isLocal: boolean =
-window.location.origin.includes('localhost') ||
-window.location.origin.includes('127.0.0.1');
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 const handleError = (err: any, preText?: string) => {
   const errorType = getErrorType(err);
@@ -358,7 +358,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
         if ('ok' in userResult) {
           const user = toUserModel(userResult.ok);
-          set ({ user });
+          set({ user });
 
           toast('Verification successful!', ToastType.Success);
         } else {
@@ -396,7 +396,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           credentialData: {
             credentialSpec: {
               credentialType: 'ProofOfUniqueness',
-              arguments: {},
+              arguments: {
+                "minimumVerificationDate": "2024-12-01T00:00:00Z",
+              },
             },
             credentialSubject: verifyPrincipal,
           },
