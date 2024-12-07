@@ -30,7 +30,8 @@ export const images = {
     imagesPath + 'nuance_unsufficient_balance_black.svg',
   NUANCE_LOGO_MASK_GROUP: imagesPath + 'backgrounds/mask-group.svg',
   NUANCE_LOGO_AND_NFT_ICON: imagesPath + 'nuance_logo_and_nft_icon.svg',
-  NUANCE_LOGO_AND_NFT_ICON_BLACK: imagesPath + 'nuance_logo_and_nft_icon_black.svg',
+  NUANCE_LOGO_AND_NFT_ICON_BLACK:
+    imagesPath + 'nuance_logo_and_nft_icon_black.svg',
   JOIN_THE_REVOLUTION_BACKGROUND:
     imagesPath + 'join-the-revolution-background.png',
   HOMEPAGE_LOGIN_OPTIONS_BACKGROUND:
@@ -201,6 +202,24 @@ export const SUPPORTED_CANISTER_IDS = [
   ICP_CANISTER_ID,
   ckBTC_CANISTER_ID,
   NUA_CANISTER_ID,
+];
+
+export const SONIC_POOLS = [
+  {
+    inputTokenSymbol: 'ckUSDC',
+    outputTokenSymbol: 'ICP',
+    canisterId: 'drywa-daaaa-aaaak-qlsbq-cai',
+  },
+  {
+    inputTokenSymbol: 'ICP',
+    outputTokenSymbol: 'NUA',
+    canisterId: 'ng4fu-zaaaa-aaaak-qtsaq-cai',
+  },
+  {
+    inputTokenSymbol: 'ICP',
+    outputTokenSymbol: 'ckBTC',
+    canisterId: 'uluvj-yiaaa-aaaak-qlr6a-cai',
+  },
 ];
 
 export const SUPPORTED_TOKENS: SupportedToken[] = [

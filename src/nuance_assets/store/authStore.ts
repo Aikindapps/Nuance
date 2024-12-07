@@ -13,7 +13,7 @@ import {
 } from '../services/toastService';
 import { useUserStore, usePostStore } from './';
 import { StoicIdentity } from 'ic-stoic-identity';
-import { PairInfo, UserWallet } from '../types/types';
+import { TokenPrice, UserWallet } from '../types/types';
 import { AccountIdentifier } from '@dfinity/ledger-icp';
 import {
   getAllCanisterIds,
@@ -26,13 +26,11 @@ import {
 import {
   ckUSDC_CANISTER_ID,
   NUA_CANISTER_ID,
+  SONIC_POOLS,
   SUPPORTED_CANISTER_IDS,
   SUPPORTED_TOKENS,
   TokenBalance,
 } from '../shared/constants';
-import { PairInfoExt } from '../services/sonic/Sonic.did';
-import { getPriceBetweenTokens, truncateToDecimalPlace } from '../shared/utils';
-
 
 const USER_CANISTER_ID = process.env.USER_CANISTER_ID || '';
 
@@ -46,7 +44,8 @@ const identityProvider: string = isLocal
 
 //NFID
 const APPLICATION_NAME = 'Nuance';
-const APPLICATION_LOGO_URL = 'https://nuance.xyz/assets/images/nuance-logo-black.svg';
+const APPLICATION_LOGO_URL =
+  'https://nuance.xyz/assets/images/nuance-logo-black.svg';
 const AUTH_PATH =
   '/authenticate/?applicationName=' +
   APPLICATION_NAME +
@@ -61,9 +60,9 @@ const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
   //   ? // configuration is in minutes, but API expects nanoseconds
   //     BigInt(process.env.II_SESSION_TIMEOUT) * BigInt(60) * BigInt(1_000_000_000)
   //   : // default = 8 hours
-  
+
   //30 days in nanoseconds
-  BigInt(480)* BigInt(60) * BigInt(1000000000) * BigInt(91)
+  BigInt(480) * BigInt(60) * BigInt(1000000000) * BigInt(91);
 
 const fakeProvider: boolean = process.env.II_PROVIDER_USE_FAKE == 'true';
 
@@ -120,7 +119,7 @@ export interface AuthStore {
   readonly userWallet: UserWallet | undefined;
   readonly tokenBalances: TokenBalance[];
   readonly restrictedTokenBalance: number;
-  readonly sonicTokenPairs: PairInfo[];
+  readonly tokenPrices: TokenPrice[];
   login: (loginMethod: string) => Promise<void>;
   logout: () => Promise<void>;
   getIdentity: () => Promise<Identity | undefined>;
@@ -149,7 +148,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   userWallet: undefined,
   tokenBalances: [],
   restrictedTokenBalance: 0,
-  sonicTokenPairs: [],
+  tokenPrices: [],
 
   redirect: (_screen: string) => {
     set((state) => ({ redirectScreen: _screen }));
@@ -182,29 +181,24 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       );
     }
 
-    let sonicTokenPairsPromises = [];
-    for (const supportedTokenCanisterId of SUPPORTED_CANISTER_IDS) {
-      sonicTokenPairsPromises.push(
-        (await getSonicActor()).getPair(
-          Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
-          Principal.fromText(supportedTokenCanisterId)
-        )
+    let tokenPricesPromises = [];
+    for (const sonicPool of SONIC_POOLS) {
+      tokenPricesPromises.push(
+        (await getSonicActor(sonicPool.canisterId)).quote({
+          amountIn: Math.pow(10, 8).toString(),
+          zeroForOne: sonicPool.inputTokenSymbol !== 'ICP',
+          amountOutMinimum: '',
+        })
       );
     }
-    //add the ICP / ckUSDC pair
-    sonicTokenPairsPromises.push(
-      (await getSonicActor()).getPair(
-        Principal.fromText('ryjl3-tyaaa-aaaaa-aaaba-cai'),
-        Principal.fromText(ckUSDC_CANISTER_ID) //ckUSDC canister id
-      )
-    );
+
     let [
       tokenBalancesResponses,
-      sonicTokenPairsResponses,
+      tokenPricesResponses,
       restrictedTokenBalance,
     ] = await Promise.all([
       Promise.all(tokenBalancesPromises),
-      Promise.all(sonicTokenPairsPromises),
+      Promise.all(tokenPricesPromises),
       user.claimInfo.subaccount.length === 0
         ? 0
         : new Uint8Array(user.claimInfo.subaccount[0]).length === 0
@@ -224,24 +218,20 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         };
       }
     );
-    let sonicTokenPairsIncludingUndefined = sonicTokenPairsResponses.map(
-      (val) => {
-        return val[0];
-      }
-    );
-    let sonicTokenPairs: PairInfo[] = [];
-    sonicTokenPairsIncludingUndefined.forEach((val) => {
-      if (val) {
-        sonicTokenPairs.push({
-          token0: val.token0,
-          token1: val.token1,
-          reserve0: Number(val.reserve0),
-          reserve1: Number(val.reserve1),
-          id: val.id,
+
+    let tokenPrices: TokenPrice[] = [];
+    tokenPricesResponses.forEach((response, index) => {
+      if ('ok' in response) {
+        tokenPrices.push({
+          tokenSymbol:
+            SONIC_POOLS[index].inputTokenSymbol === 'ICP'
+              ? SONIC_POOLS[index].outputTokenSymbol
+              : SONIC_POOLS[index].inputTokenSymbol,
+          icpEquivalence: Number(response.ok),
         });
       }
     });
-    set({ tokenBalances, sonicTokenPairs });
+    set({ tokenBalances, tokenPrices });
 
     //if the subaccount value is not empty, set the restricted token balance value
     if (user.claimInfo.subaccount.length !== 0) {
@@ -557,7 +547,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {
     return new Promise(async (resolve, reject) => {
-      
       try {
         const currentLoginMethod = await get().loginMethod;
         // get the current user's principal
@@ -574,18 +563,30 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
             const iiPrincipal = iiIdentity.getPrincipal().toText();
 
             const userActor = await getUserActor();
-            const request = await userActor.linkInternetIdentityRequest(currentUserPrincipal, iiPrincipal);
+            const request = await userActor.linkInternetIdentityRequest(
+              currentUserPrincipal,
+              iiPrincipal
+            );
 
             if ('ok' in request) {
               // create an actor with the II identity
               const customUserActor = await getCustomUserActor(iiIdentity);
-              const confirmation = await customUserActor.linkInternetIdentityConfirm(currentUserPrincipal);
+              const confirmation =
+                await customUserActor.linkInternetIdentityConfirm(
+                  currentUserPrincipal
+                );
 
               if ('ok' in confirmation) {
-                toast('Internet Identity linked successfully!', ToastType.Success);
+                toast(
+                  'Internet Identity linked successfully!',
+                  ToastType.Success
+                );
                 resolve(Principal.fromText(iiPrincipal));
               } else {
-                toastError(' Failed to confirm linking process.', confirmation.err);
+                toastError(
+                  ' Failed to confirm linking process.',
+                  confirmation.err
+                );
                 resolve(null);
               }
             } else {
@@ -605,7 +606,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         toastError(`An error occurred: ${error}`);
         resolve(null);
       }
-    })
+    });
   },
 });
 

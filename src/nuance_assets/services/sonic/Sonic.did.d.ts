@@ -1,262 +1,323 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
-export interface CanisterSettings {
-  'freezing_threshold' : [] | [bigint],
-  'controllers' : [] | [Array<Principal>],
-  'memory_allocation' : [] | [bigint],
-  'compute_allocation' : [] | [bigint],
+export interface AccountBalance { 'balance0' : bigint, 'balance1' : bigint }
+export interface ClaimArgs { 'positionId' : bigint }
+export interface CycleInfo { 'balance' : bigint, 'available' : bigint }
+export interface DecreaseLiquidityArgs {
+  'liquidity' : string,
+  'positionId' : bigint,
 }
-export interface CanisterStatus {
-  'status' : Status,
-  'memory_size' : bigint,
-  'cycles' : bigint,
-  'settings' : CanisterSettings,
-  'module_hash' : [] | [Uint8Array | number[]],
+export interface DepositAndMintArgs {
+  'tickUpper' : bigint,
+  'fee0' : bigint,
+  'fee1' : bigint,
+  'amount0' : bigint,
+  'amount1' : bigint,
+  'positionOwner' : Principal,
+  'amount0Desired' : string,
+  'amount1Desired' : string,
+  'tickLower' : bigint,
 }
-export interface CapDetails {
-  'CapV2RootBucketId' : [] | [string],
-  'CapV1Status' : boolean,
-  'CapV2Status' : boolean,
-  'CapV1RootBucketId' : [] | [string],
+export interface DepositArgs {
+  'fee' : bigint,
+  'token' : string,
+  'amount' : bigint,
 }
-export interface DepositSubAccounts {
-  'depositAId' : string,
-  'subaccount' : Uint8Array | number[],
-  'created_at' : Time,
-  'transactionOwner' : Principal,
+export type Error = { 'CommonError' : null } |
+  { 'InternalError' : string } |
+  { 'UnsupportedToken' : string } |
+  { 'InsufficientFunds' : null };
+export interface GetPositionArgs { 'tickUpper' : bigint, 'tickLower' : bigint }
+export interface IncreaseLiquidityArgs {
+  'positionId' : bigint,
+  'amount0Desired' : string,
+  'amount1Desired' : string,
 }
-export type ICRC1SubAccountBalance = { 'ok' : bigint } |
-  { 'err' : string };
-export type ICRCTxReceipt = { 'Ok' : Uint8Array | number[] } |
-  { 'Err' : string };
-export interface MonitorMetrics {
-  'tokenBalancesSize' : bigint,
-  'canisterStatus' : CanisterStatus,
-  'blocklistedUsersCount' : bigint,
-  'rewardTokensSize' : bigint,
-  'lptokensSize' : bigint,
-  'cycles' : bigint,
-  'tokenAllowanceSize' : bigint,
-  'rewardInfo' : bigint,
-  'lpTokenAllowanceSize' : bigint,
-  'rewardPairsSize' : bigint,
-  'tokenCount' : bigint,
-  'lpTokenBalancesSize' : bigint,
-  'pairsCount' : bigint,
-  'depositTransactionSize' : bigint,
-}
-export interface PairInfoExt {
-  'id' : string,
-  'price0CumulativeLast' : bigint,
-  'creator' : Principal,
-  'reserve0' : bigint,
-  'reserve1' : bigint,
-  'lptoken' : string,
-  'totalSupply' : bigint,
+export interface MintArgs {
+  'fee' : bigint,
+  'tickUpper' : bigint,
   'token0' : string,
   'token1' : string,
-  'price1CumulativeLast' : bigint,
-  'kLast' : bigint,
-  'blockTimestampLast' : bigint,
+  'amount0Desired' : string,
+  'amount1Desired' : string,
+  'tickLower' : bigint,
 }
-export type Result = { 'ok' : boolean } |
-  { 'err' : string };
-export type Result_1 = { 'ok' : [bigint, bigint] } |
-  { 'err' : string };
-export interface RewardInfo { 'tokenId' : string, 'amount' : bigint }
-export type Status = { 'stopped' : null } |
-  { 'stopping' : null } |
-  { 'running' : null };
-export interface SwapInfo {
-  'owner' : Principal,
-  'cycles' : bigint,
-  'tokens' : Array<TokenInfoExt>,
-  'pairs' : Array<PairInfoExt>,
-  'feeOn' : boolean,
-  'feeTo' : Principal,
+export interface Page {
+  'content' : Array<UserPositionInfoWithId>,
+  'offset' : bigint,
+  'limit' : bigint,
+  'totalElements' : bigint,
 }
-export interface SwapInfoExt {
-  'owner' : Principal,
-  'txcounter' : bigint,
-  'depositCounter' : bigint,
-  'feeOn' : boolean,
-  'feeTo' : Principal,
+export interface Page_1 {
+  'content' : Array<UserPositionInfoWithTokenAmount>,
+  'offset' : bigint,
+  'limit' : bigint,
+  'totalElements' : bigint,
 }
-export type SwapLastTransaction = {
-    'RemoveLiquidityOutAmount' : [bigint, bigint]
+export interface Page_2 {
+  'content' : Array<TickInfoWithId>,
+  'offset' : bigint,
+  'limit' : bigint,
+  'totalElements' : bigint,
+}
+export interface Page_3 {
+  'content' : Array<TickLiquidityInfo>,
+  'offset' : bigint,
+  'limit' : bigint,
+  'totalElements' : bigint,
+}
+export interface Page_4 {
+  'content' : Array<PositionInfoWithId>,
+  'offset' : bigint,
+  'limit' : bigint,
+  'totalElements' : bigint,
+}
+export interface Page_5 {
+  'content' : Array<[Principal, AccountBalance]>,
+  'offset' : bigint,
+  'limit' : bigint,
+  'totalElements' : bigint,
+}
+export interface PoolMetadata {
+  'fee' : bigint,
+  'key' : string,
+  'sqrtPriceX96' : bigint,
+  'tick' : bigint,
+  'liquidity' : bigint,
+  'token0' : Token,
+  'token1' : Token,
+  'maxLiquidityPerTick' : bigint,
+  'nextPositionId' : bigint,
+}
+export interface PositionInfo {
+  'tokensOwed0' : bigint,
+  'tokensOwed1' : bigint,
+  'feeGrowthInside1LastX128' : bigint,
+  'liquidity' : bigint,
+  'feeGrowthInside0LastX128' : bigint,
+}
+export interface PositionInfoWithId {
+  'id' : string,
+  'tokensOwed0' : bigint,
+  'tokensOwed1' : bigint,
+  'feeGrowthInside1LastX128' : bigint,
+  'liquidity' : bigint,
+  'feeGrowthInside0LastX128' : bigint,
+}
+export type Result = { 'ok' : bigint } |
+  { 'err' : Error };
+export type Result_1 = { 'ok' : string } |
+  { 'err' : Error };
+export type Result_10 = { 'ok' : Page_1 } |
+  { 'err' : Error };
+export type Result_11 = { 'ok' : Array<bigint> } |
+  { 'err' : Error };
+export type Result_12 = { 'ok' : Array<[string, Array<bigint>]> } |
+  { 'err' : Error };
+export type Result_13 = { 'ok' : UserPositionInfo } |
+  { 'err' : Error };
+export type Result_14 = { 'ok' : Array<TransferLog> } |
+  { 'err' : Error };
+export type Result_15 = {
+    'ok' : {
+      'swapFee0Repurchase' : bigint,
+      'token0Amount' : bigint,
+      'swapFeeReceiver' : string,
+      'token1Amount' : bigint,
+      'swapFee1Repurchase' : bigint,
+    }
   } |
-  { 'SwapOutAmount' : bigint } |
-  { 'NotFound' : boolean };
-export type Time = bigint;
-export interface TokenAnalyticsInfo {
-  'fee' : bigint,
-  'decimals' : number,
-  'name' : string,
-  'totalSupply' : bigint,
-  'symbol' : string,
+  { 'err' : Error };
+export type Result_16 = { 'ok' : Page_2 } |
+  { 'err' : Error };
+export type Result_17 = { 'ok' : Page_3 } |
+  { 'err' : Error };
+export type Result_18 = { 'ok' : Page_4 } |
+  { 'err' : Error };
+export type Result_19 = { 'ok' : PositionInfo } |
+  { 'err' : Error };
+export type Result_2 = { 'ok' : boolean } |
+  { 'err' : Error };
+export type Result_20 = { 'ok' : CycleInfo } |
+  { 'err' : Error };
+export type Result_21 = { 'ok' : { 'amount0' : bigint, 'amount1' : bigint } } |
+  { 'err' : Error };
+export type Result_22 = {
+    'ok' : {
+      'tokenIncome' : Array<
+        [bigint, { 'tokensOwed0' : bigint, 'tokensOwed1' : bigint }]
+      >,
+      'totalTokensOwed0' : bigint,
+      'totalTokensOwed1' : bigint,
+    }
+  } |
+  { 'err' : Error };
+export type Result_23 = { 'ok' : Page_5 } |
+  { 'err' : Error };
+export type Result_3 = { 'ok' : bigint } |
+  { 'err' : Error };
+export type Result_4 = {
+    'ok' : { 'tokensOwed0' : bigint, 'tokensOwed1' : bigint }
+  } |
+  { 'err' : Error };
+export type Result_5 = { 'ok' : PoolMetadata } |
+  { 'err' : Error };
+export type Result_6 = { 'ok' : Array<[bigint, WithdrawErrorLog]> } |
+  { 'err' : Error };
+export type Result_7 = { 'ok' : { 'balance0' : bigint, 'balance1' : bigint } } |
+  { 'err' : Error };
+export type Result_8 = { 'ok' : Array<UserPositionInfoWithId> } |
+  { 'err' : Error };
+export type Result_9 = { 'ok' : Page } |
+  { 'err' : Error };
+export interface SwapArgs {
+  'amountIn' : string,
+  'zeroForOne' : boolean,
+  'amountOutMinimum' : string,
 }
-export interface TokenInfoExt {
+export interface TickInfoWithId {
   'id' : string,
+  'initialized' : boolean,
+  'feeGrowthOutside1X128' : bigint,
+  'secondsPerLiquidityOutsideX128' : bigint,
+  'liquidityNet' : bigint,
+  'secondsOutside' : bigint,
+  'liquidityGross' : bigint,
+  'feeGrowthOutside0X128' : bigint,
+  'tickCumulativeOutside' : bigint,
+}
+export interface TickLiquidityInfo {
+  'tickIndex' : bigint,
+  'price0Decimal' : bigint,
+  'liquidityNet' : bigint,
+  'price0' : bigint,
+  'price1' : bigint,
+  'liquidityGross' : bigint,
+  'price1Decimal' : bigint,
+}
+export interface Token { 'address' : string, 'standard' : string }
+export interface TransferLog {
+  'to' : Principal,
   'fee' : bigint,
-  'decimals' : number,
-  'name' : string,
-  'totalSupply' : bigint,
-  'symbol' : string,
+  'result' : string,
+  'token' : Token,
+  'action' : string,
+  'daysFrom19700101' : bigint,
+  'owner' : Principal,
+  'from' : Principal,
+  'fromSubaccount' : [] | [Uint8Array | number[]],
+  'timestamp' : bigint,
+  'index' : bigint,
+  'amount' : bigint,
+  'errorMsg' : string,
 }
-export interface TokenInfoWithType {
-  'id' : string,
+export interface UserPositionInfo {
+  'tickUpper' : bigint,
+  'tokensOwed0' : bigint,
+  'tokensOwed1' : bigint,
+  'feeGrowthInside1LastX128' : bigint,
+  'liquidity' : bigint,
+  'feeGrowthInside0LastX128' : bigint,
+  'tickLower' : bigint,
+}
+export interface UserPositionInfoWithId {
+  'id' : bigint,
+  'tickUpper' : bigint,
+  'tokensOwed0' : bigint,
+  'tokensOwed1' : bigint,
+  'feeGrowthInside1LastX128' : bigint,
+  'liquidity' : bigint,
+  'feeGrowthInside0LastX128' : bigint,
+  'tickLower' : bigint,
+}
+export interface UserPositionInfoWithTokenAmount {
+  'id' : bigint,
+  'tickUpper' : bigint,
+  'tokensOwed0' : bigint,
+  'tokensOwed1' : bigint,
+  'feeGrowthInside1LastX128' : bigint,
+  'liquidity' : bigint,
+  'feeGrowthInside0LastX128' : bigint,
+  'token0Amount' : bigint,
+  'token1Amount' : bigint,
+  'tickLower' : bigint,
+}
+export type Value = { 'Int' : bigint } |
+  { 'Nat' : bigint } |
+  { 'Blob' : Uint8Array | number[] } |
+  { 'Text' : string };
+export interface WithdrawArgs {
   'fee' : bigint,
-  'decimals' : number,
-  'name' : string,
-  'totalSupply' : bigint,
-  'tokenType' : string,
-  'symbol' : string,
+  'token' : string,
+  'amount' : bigint,
 }
-export type TxReceipt = { 'ok' : bigint } |
-  { 'err' : string };
-export interface UserInfo {
-  'lpBalances' : Array<[string, bigint]>,
-  'balances' : Array<[string, bigint]>,
-}
-export interface UserInfoPage {
-  'lpBalances' : [Array<[string, bigint]>, bigint],
-  'balances' : [Array<[string, bigint]>, bigint],
-}
-export type ValidateFunctionReturnType = { 'Ok' : string } |
-  { 'Err' : string };
-export type WithdrawRefundReceipt = { 'Ok' : boolean } |
-  { 'Err' : string };
-export interface WithdrawState {
-  'tokenId' : string,
-  'refundStatus' : boolean,
-  'value' : bigint,
-  'userPId' : Principal,
+export interface WithdrawErrorLog {
+  'token' : Token,
+  'time' : bigint,
+  'user' : Principal,
+  'amount' : bigint,
 }
 export interface _SERVICE {
-  'addAuth' : ActorMethod<[Principal], boolean>,
-  'addLiquidity' : ActorMethod<
-    [Principal, Principal, bigint, bigint, bigint, bigint, bigint],
-    TxReceipt
+  'allTokenBalance' : ActorMethod<[bigint, bigint], Result_23>,
+  'approvePosition' : ActorMethod<[Principal, bigint], Result_2>,
+  'batchRefreshIncome' : ActorMethod<[Array<bigint>], Result_22>,
+  'checkOwnerOfUserPosition' : ActorMethod<[Principal, bigint], Result_2>,
+  'claim' : ActorMethod<[ClaimArgs], Result_21>,
+  'decreaseLiquidity' : ActorMethod<[DecreaseLiquidityArgs], Result_21>,
+  'deposit' : ActorMethod<[DepositArgs], Result>,
+  'depositAllAndMint' : ActorMethod<[DepositAndMintArgs], Result>,
+  'depositFrom' : ActorMethod<[DepositArgs], Result>,
+  'getAdmins' : ActorMethod<[], Array<Principal>>,
+  'getAvailabilityState' : ActorMethod<
+    [],
+    { 'whiteList' : Array<Principal>, 'available' : boolean }
   >,
-  'addLiquidityForUser' : ActorMethod<
-    [Principal, Principal, Principal, bigint, bigint],
-    TxReceipt
+  'getClaimLog' : ActorMethod<[], Array<string>>,
+  'getCycleInfo' : ActorMethod<[], Result_20>,
+  'getMistransferBalance' : ActorMethod<[Token], Result>,
+  'getPosition' : ActorMethod<[GetPositionArgs], Result_19>,
+  'getPositions' : ActorMethod<[bigint, bigint], Result_18>,
+  'getTickInfos' : ActorMethod<[bigint, bigint], Result_17>,
+  'getTicks' : ActorMethod<[bigint, bigint], Result_16>,
+  'getTokenAmountState' : ActorMethod<[], Result_15>,
+  'getTokenBalance' : ActorMethod<[], { 'token0' : bigint, 'token1' : bigint }>,
+  'getTokenMeta' : ActorMethod<
+    [],
+    { 'token0' : Array<[string, Value]>, 'token1' : Array<[string, Value]> }
   >,
-  'addLiquidityForUserTest' : ActorMethod<
-    [Principal, Principal, Principal, bigint, bigint],
-    string
+  'getTransferLogs' : ActorMethod<[], Result_14>,
+  'getUserByPositionId' : ActorMethod<[bigint], Result_1>,
+  'getUserPosition' : ActorMethod<[bigint], Result_13>,
+  'getUserPositionIds' : ActorMethod<[], Result_12>,
+  'getUserPositionIdsByPrincipal' : ActorMethod<[Principal], Result_11>,
+  'getUserPositionWithTokenAmount' : ActorMethod<[bigint, bigint], Result_10>,
+  'getUserPositions' : ActorMethod<[bigint, bigint], Result_9>,
+  'getUserPositionsByPrincipal' : ActorMethod<[Principal], Result_8>,
+  'getUserUnusedBalance' : ActorMethod<[Principal], Result_7>,
+  'getVersion' : ActorMethod<[], string>,
+  'getWithdrawErrorLog' : ActorMethod<[], Result_6>,
+  'increaseLiquidity' : ActorMethod<[IncreaseLiquidityArgs], Result>,
+  'init' : ActorMethod<[bigint, bigint, bigint], undefined>,
+  'logMessageGet' : ActorMethod<[], Array<string>>,
+  'metadata' : ActorMethod<[], Result_5>,
+  'mint' : ActorMethod<[MintArgs], Result>,
+  'quote' : ActorMethod<[SwapArgs], Result>,
+  'quoteForAll' : ActorMethod<[SwapArgs], Result>,
+  'refreshIncome' : ActorMethod<[bigint], Result_4>,
+  'removeErrorTransferLog' : ActorMethod<[bigint, boolean], undefined>,
+  'removeWithdrawErrorLog' : ActorMethod<[bigint, boolean], undefined>,
+  'resetTokenAmountState' : ActorMethod<
+    [bigint, bigint, bigint, bigint],
+    undefined
   >,
-  'addToken' : ActorMethod<[Principal, string], TxReceipt>,
-  'addTokenValidate' : ActorMethod<
-    [Principal, string],
-    ValidateFunctionReturnType
-  >,
-  'addUserToBlocklist' : ActorMethod<[Principal], boolean>,
-  'allowance' : ActorMethod<[string, Principal, Principal], bigint>,
-  'approve' : ActorMethod<[string, Principal, bigint], boolean>,
-  'balanceOf' : ActorMethod<[string, Principal], bigint>,
-  'burn' : ActorMethod<[string, bigint], boolean>,
-  'createPair' : ActorMethod<[Principal, Principal], TxReceipt>,
-  'decimals' : ActorMethod<[string], number>,
-  'deposit' : ActorMethod<[Principal, bigint], TxReceipt>,
-  'depositTo' : ActorMethod<[Principal, Principal, bigint], TxReceipt>,
-  'executeFundRecoveryForUser' : ActorMethod<[Principal], TxReceipt>,
-  'exportBalances' : ActorMethod<[string], [] | [Array<[Principal, bigint]>]>,
-  'exportFaileWithdraws' : ActorMethod<[], Array<[string, WithdrawState]>>,
-  'exportLPTokens' : ActorMethod<[], Array<TokenInfoExt>>,
-  'exportPairs' : ActorMethod<[], Array<PairInfoExt>>,
-  'exportRewardInfo' : ActorMethod<[], Array<[Principal, Array<RewardInfo>]>>,
-  'exportRewardPairs' : ActorMethod<[], Array<PairInfoExt>>,
-  'exportSubAccounts' : ActorMethod<[], Array<[Principal, DepositSubAccounts]>>,
-  'exportSwapInfo' : ActorMethod<[], SwapInfoExt>,
-  'exportTokenTypes' : ActorMethod<[], Array<[string, string]>>,
-  'exportTokens' : ActorMethod<[], Array<TokenInfoExt>>,
-  'failedWithdrawRefund' : ActorMethod<[string], WithdrawRefundReceipt>,
-  'getAllPairs' : ActorMethod<[], Array<PairInfoExt>>,
-  'getAllRewardPairs' : ActorMethod<[], Array<PairInfoExt>>,
-  'getAuthList' : ActorMethod<[], Array<[Principal, boolean]>>,
-  'getBlocklistedUsers' : ActorMethod<[], Array<[Principal, boolean]>>,
-  'getCapDetails' : ActorMethod<[], CapDetails>,
-  'getHolders' : ActorMethod<[string], bigint>,
-  'getICRC1SubAccountBalance' : ActorMethod<
-    [Principal, string],
-    ICRC1SubAccountBalance
-  >,
-  'getLPTokenId' : ActorMethod<[Principal, Principal], string>,
-  'getLastTransactionOutAmount' : ActorMethod<[], SwapLastTransaction>,
-  'getNumPairs' : ActorMethod<[], bigint>,
-  'getPair' : ActorMethod<[Principal, Principal], [] | [PairInfoExt]>,
-  'getPairs' : ActorMethod<[bigint, bigint], [Array<PairInfoExt>, bigint]>,
-  'getSupportedTokenList' : ActorMethod<[], Array<TokenInfoWithType>>,
-  'getSupportedTokenListByName' : ActorMethod<
-    [string, bigint, bigint],
-    [Array<TokenInfoExt>, bigint]
-  >,
-  'getSupportedTokenListSome' : ActorMethod<
-    [bigint, bigint],
-    [Array<TokenInfoExt>, bigint]
-  >,
-  'getSwapInfo' : ActorMethod<[], SwapInfo>,
-  'getTokenMetadata' : ActorMethod<[string], TokenAnalyticsInfo>,
-  'getUserBalances' : ActorMethod<[Principal], Array<[string, bigint]>>,
-  'getUserICRC1SubAccount' : ActorMethod<[Principal], string>,
-  'getUserInfo' : ActorMethod<[Principal], UserInfo>,
-  'getUserInfoAbove' : ActorMethod<[Principal, bigint, bigint], UserInfo>,
-  'getUserInfoByNamePageAbove' : ActorMethod<
-    [Principal, bigint, string, bigint, bigint, bigint, string, bigint, bigint],
-    UserInfoPage
-  >,
-  'getUserLPBalances' : ActorMethod<[Principal], Array<[string, bigint]>>,
-  'getUserLPBalancesAbove' : ActorMethod<
-    [Principal, bigint],
-    Array<[string, bigint]>
-  >,
-  'getUserReward' : ActorMethod<[Principal, string, string], Result_1>,
-  'historySize' : ActorMethod<[], bigint>,
-  'initiateICRC1Transfer' : ActorMethod<[], Uint8Array | number[]>,
-  'initiateICRC1TransferForUser' : ActorMethod<[Principal], ICRCTxReceipt>,
-  'monitorMetrics' : ActorMethod<[], MonitorMetrics>,
-  'name' : ActorMethod<[string], string>,
-  'registerFundRecoveryForUser' : ActorMethod<
-    [Principal, Principal, bigint],
-    TxReceipt
-  >,
-  'removeAuth' : ActorMethod<[Principal], boolean>,
-  'removeLiquidity' : ActorMethod<
-    [Principal, Principal, bigint, bigint, bigint, Principal, bigint],
-    TxReceipt
-  >,
-  'removeUserFromBlocklist' : ActorMethod<[Principal], boolean>,
-  'retryDeposit' : ActorMethod<[Principal], TxReceipt>,
-  'retryDepositTo' : ActorMethod<[Principal, Principal, bigint], TxReceipt>,
-  'setCapV1EnableStatus' : ActorMethod<[boolean], boolean>,
-  'setCapV2CanisterId' : ActorMethod<[string], boolean>,
-  'setCapV2EnableStatus' : ActorMethod<[boolean], Result>,
-  'setFeeForToken' : ActorMethod<[string, bigint], boolean>,
-  'setFeeOn' : ActorMethod<[boolean], boolean>,
-  'setFeeTo' : ActorMethod<[Principal], boolean>,
-  'setGlobalTokenFee' : ActorMethod<[bigint], boolean>,
-  'setMaxTokenValidate' : ActorMethod<[bigint], ValidateFunctionReturnType>,
-  'setMaxTokens' : ActorMethod<[bigint], boolean>,
-  'setOwner' : ActorMethod<[Principal], boolean>,
-  'swapExactTokensForTokens' : ActorMethod<
-    [bigint, bigint, Array<string>, Principal, bigint],
-    TxReceipt
-  >,
-  'symbol' : ActorMethod<[string], string>,
-  'totalSupply' : ActorMethod<[string], bigint>,
-  'transferFrom' : ActorMethod<[string, Principal, Principal, bigint], boolean>,
-  'updateAllTokenMetadata' : ActorMethod<[], boolean>,
-  'updateTokenFees' : ActorMethod<[], boolean>,
-  'updateTokenMetadata' : ActorMethod<[string], boolean>,
-  'validateExecuteFundRecoveryForUser' : ActorMethod<
-    [Principal],
-    ValidateFunctionReturnType
-  >,
-  'validateRegisterFundRecoveryForUser' : ActorMethod<
-    [Principal, Principal, bigint],
-    ValidateFunctionReturnType
-  >,
-  'withdraw' : ActorMethod<[Principal, bigint], TxReceipt>,
+  'setAdmins' : ActorMethod<[Array<Principal>], undefined>,
+  'setAvailable' : ActorMethod<[boolean], undefined>,
+  'setWhiteList' : ActorMethod<[Array<Principal>], undefined>,
+  'sumTick' : ActorMethod<[], Result_3>,
+  'swap' : ActorMethod<[SwapArgs], Result>,
+  'transferPosition' : ActorMethod<[Principal, Principal, bigint], Result_2>,
+  'upgradeTokenStandard' : ActorMethod<[Principal], Result_1>,
+  'withdraw' : ActorMethod<[WithdrawArgs], Result>,
+  'withdrawMistransferBalance' : ActorMethod<[Token], Result>,
 }

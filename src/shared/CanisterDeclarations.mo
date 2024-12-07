@@ -345,6 +345,30 @@ module{
         return canister;
     };
 
+    //**********************--SONIC POOL CANISTERS--******************
+
+    public type SwapArgs = {
+        amountIn : Text;
+        zeroForOne : Bool;
+        amountOutMinimum : Text;
+    };
+
+    public type Error = {
+        #CommonError;
+        #InternalError : Text;
+        #UnsupportedToken : Text;
+        #InsufficientFunds;
+    };
+
+    public type SonicPoolCanisterInterface = actor{
+        quote : query (input: SwapArgs) -> async Result.Result<Nat, Error>;
+    };
+
+    public func getSonicPoolCanister(canisterId: Text) : SonicPoolCanisterInterface {
+        let canister : SonicPoolCanisterInterface = actor(canisterId);
+        return canister;
+    };
+
     //**********************POSTBUCKET CANISTER****************
     public type PostBucketType = {
         postId : Text;

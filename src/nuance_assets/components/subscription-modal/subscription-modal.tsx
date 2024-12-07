@@ -61,12 +61,12 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const [subscriptionError, setSubscriptionError] = useState<string | null>(
     null
   );
-  const { userWallet, tokenBalances, fetchTokenBalances, sonicTokenPairs, restrictedTokenBalance } =
+  const { userWallet, tokenBalances, fetchTokenBalances, tokenPrices, restrictedTokenBalance } =
     useAuthStore((state) => ({
       userWallet: state.userWallet,
       tokenBalances: state.tokenBalances,
       fetchTokenBalances: state.fetchTokenBalances,
-      sonicTokenPairs: state.sonicTokenPairs,
+      tokenPrices: state.tokenPrices,
       restrictedTokenBalance: state.restrictedTokenBalance,
     }));
 
@@ -191,7 +191,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     const fee = parseFee(option)[0];
     const pricePerUnit =
       getPriceBetweenTokens(
-        sonicTokenPairs,
+        tokenPrices,
         'NUA',
         tokenSymbol,
         fee * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
@@ -521,7 +521,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                                     ={' '}
                                     {truncateToDecimalPlace(
                                       getPriceBetweenTokens(
-                                        sonicTokenPairs,
+                                        tokenPrices,
                                         'NUA',
                                         'ckUSDC',
                                         parseFloat(option.fee[0] || '0') *
