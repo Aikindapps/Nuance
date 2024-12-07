@@ -16,6 +16,7 @@ import ENV "../shared/env";
 import Cycles "mo:base/ExperimentalCycles";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
+import Time "mo:base/Time";
 import Notifications "../NotificationsV3/types";
 import Versions "../shared/versions";
 import Prim "mo:prim";
@@ -1162,7 +1163,7 @@ actor Subscription {
         } catch (_) {
         };
 
-        let now = U.epochTime();
+        let now = Time.now();
         lastTimerCalled := now;
 
         cyclesBalanceWhenTimerIsCalledLastTime := Cycles.balance();
