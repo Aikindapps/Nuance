@@ -557,12 +557,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {
     return new Promise(async (resolve, reject) => {
-    
-
-      /* if (currentLoginMethod == "ii") {
-        toast('You are already logged in with Internet Identity.', ToastType.Notification);
-        return;
-      } */
       
       try {
         const currentLoginMethod = await get().loginMethod;

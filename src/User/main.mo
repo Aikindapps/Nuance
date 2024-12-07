@@ -719,23 +719,13 @@ actor User {
 
   public shared ({ caller }) func verifyPoh(credentialJWT: Text) : async VerifyResult {
 
-      //let callerPrincipal = Principal.fromText("cvehj-bmdlv-q4zaa-6wp6v-rzg3r-ga7bd-apjro-mdi6x-wgx5y-5l4wg-fqe");
-
-      /* let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
-
-      let result = await VerifyPohCanister.verify_proof_of_unique_personhood( // actual code
-          callerPrincipal,
-          credentialJWT,
-          Nat64.fromIntWrap(Time.now() / 1_000_000)
-      ); */
-
       var result : VerifyResult = #Ok({
           provider = #DecideAI;
           timestamp = 1_732_561_876_730;
         });
 
       if (ENV.IS_LOCAL) {
-        // Assign the hardcoded success result to 'result'
+        // assign the hardcoded success result to 'result'
         result := #Ok({
           provider = #DecideAI;
           timestamp = 1_732_561_876_735;
@@ -747,9 +737,9 @@ actor User {
         if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
           effectiveDerivationOrigin := "https://nuance.xyz";
         } else {
-          effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".icp0.io"
+          effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
         };
-        // Perform the actual canister call and assign the result
+        // perform the actual canister call and assign the result
         result := await VerifyPohCanister.verify_proof_of_unique_personhood(
           caller,
           credentialJWT,
@@ -2540,6 +2530,8 @@ actor User {
     claimBlockedUsers := [];
     claimSubaccountIndexes := [];
     isVerifiedUsers := [];
+    pendingLinkingRequests := [];
+    confirmedLinkingRequests := [];
   };
 
   //#endregion

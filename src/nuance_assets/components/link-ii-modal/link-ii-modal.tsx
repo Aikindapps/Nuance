@@ -23,7 +23,7 @@ export const LinkIIModal = () => {
   }));
 
   const handleProceed = async () => {
-    // Start the linking process
+    // start the linking process
     const iiPrincipal = await requestLinkInternetIdentity();
 
     if (!iiPrincipal) {
@@ -31,7 +31,7 @@ export const LinkIIModal = () => {
       return;
     }
 
-    // Proceed with verification
+    // proceed with verification
     await proceedWithVerification(iiPrincipal);
   };
 
@@ -39,7 +39,7 @@ export const LinkIIModal = () => {
 
   return (
     <div
-      className='claim-restricted-tokens-modal'
+      className='link-ii-modal'
       style={
         darkTheme ? { background: colors.darkModePrimaryBackgroundColor } : {}
       }
@@ -87,9 +87,9 @@ export const LinkIIModal = () => {
         need to create and link an Internet Identity to your Nuance account
         before proceeding.
       </p>
-      <div className='token-amounts-and-terms-wrapper'>
+      <div className='link-ii-wrapper'>
         <div
-          className='terms-wrapper'
+          className='link-wrapper'
           onClick={() => {
             if (loading) {
               return;
@@ -99,8 +99,8 @@ export const LinkIIModal = () => {
         <div className='buttons-wrapper'>
           <Button
             className={{
-              dark: 'claim-restricted-tokens-modal-deposit-button',
-              light: 'claim-restricted-tokens-modal-deposit-button',
+              dark: 'link-ii-cancel-button',
+              light: 'link-ii-cancel-button',
             }}
             styleType={{ dark: 'white', light: 'white' }}
             type='button'
@@ -116,8 +116,8 @@ export const LinkIIModal = () => {
           </Button>
           <Button
             className={{
-              dark: 'claim-restricted-tokens-modal-withdraw-button-dark',
-              light: 'claim-restricted-tokens-modal-withdraw-button',
+              dark: 'link-ii-link-button-dark',
+              light: 'link-ii-link-button',
             }}
             styleType={{ dark: 'navy-dark', light: 'navy' }}
             type='button'

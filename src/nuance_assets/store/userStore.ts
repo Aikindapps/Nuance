@@ -349,74 +349,6 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return undefined;
   },
 
-  /* proceedWithVerification: async (userPrincipal: Principal): Promise<void> => {
-    try {
-      const jwt: string = await new Promise((resolve, reject) => {
-        requestVerifiablePresentation({
-          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
-            if ('Ok' in verifiablePresentation) {
-              resolve(verifiablePresentation.Ok);
-            } else {
-              reject(new Error(verifiablePresentation.Err));
-            }
-          },
-          onError(err) {
-            reject(new Error(err));
-          },
-          issuerData: {
-            origin: 'https://a4tbr-q4aaa-aaaaa-qaafq-cai.localhost:5173/', // Replace with your issuer's origin
-            canisterId: Principal.fromText('a4tbr-q4aaa-aaaaa-qaafq-cai'), // Replace with your issuer's canister ID
-          },
-          credentialData: {
-            credentialSpec: {
-              credentialType: 'VerifiedEmployee', // Or 'ProofOfHumanity' based on your issuer
-              arguments: {
-                employerName: "DFINITY Foundation"
-              },
-            },
-            credentialSubject: userPrincipal,
-          },
-          identityProvider: new URL('http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/'), // Replace with your Identity Provider URL
-          //derivationOrigin: window.location.origin, // Use if necessary
-        });
-      });
-
-      console.log("JWT: ", jwt);
-
-      // verify the JWT credentials
-      const userActor = await getUserActor();
-      const result = await userActor.verifyPoh(jwt);
-
-      if ('Ok' in result) {
-        // verification successful
-        const uniquePersonProof = result.Ok;
-        console.log(uniquePersonProof);
-
-        // fetch the updated user from the backend
-        const userResult = await userActor.getUser();
-
-        if ('ok' in userResult) {
-          // update the user state in the frontend
-          const user = toUserModel(userResult.ok);
-          set({ user });
-
-          toast('Verification successful!', ToastType.Success);
-        } else {
-          console.error('Failed to fetch updated user:', userResult.err);
-          toastError('Verification succeeded, but failed to update user information.');
-        }
-      } else {
-        // verification failed
-        console.error('Verification failed:', result.Err);
-        toastError('Verification failed: ' + result.Err);
-      }
-
-    } catch (error) {
-      console.error('Error during PoH verification:', error);
-      handleError(error, Unexpected);
-    }
-  }, */
-
   verifyPoh: async (jwt: string): Promise<void> => {
     try {
       const result = await (await getUserActor()).verifyPoh(jwt);
@@ -481,7 +413,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     } catch (error) {
       console.error('Error during PoH verification:', error);
       handleError(error, Unexpected);
-      // handle error appropriately
+      // handle error
     }
   },
 

@@ -167,6 +167,7 @@ const MyProfile = () => {
           alignSelf: 'flex-end',
           position: 'absolute',
           top: context.width > 768 ? '0' : '10px',
+          right: context.width < 768 ? '10px' : '50px'
         }}
       >
         <Button

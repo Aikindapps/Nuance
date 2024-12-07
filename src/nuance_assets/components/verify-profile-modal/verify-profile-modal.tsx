@@ -109,7 +109,7 @@ export const VerifyProfileModal = () => {
         }
         className='information-text'
       >
-        Please ensure that you have verified your unique personhood via the
+        Please ensure that you have verified your unique personhood via
         <a
           href='https://decideai.xyz/'
           target='_blank'
@@ -120,7 +120,7 @@ export const VerifyProfileModal = () => {
         before proceeding. If you have not done so, please follow these steps:
         <ol>
           <li>
-            Go to the
+            Go to
             <a
               href='https://decideai.com'
               target='_blank'
