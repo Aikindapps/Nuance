@@ -24,10 +24,27 @@ import {
 } from '../services/actorService';
 import { removeDuplicatesFromArray } from '../shared/utils';
 import { NavigateFunction } from 'react-router-dom';
+import { requestVerifiablePresentation, VerifiablePresentationResponse } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
+import { Principal } from '@dfinity/principal';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const UserNotFound = 'User not found';
+
+//check derivation origin is PROD or UAT
+const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
+const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
+const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+
+const derivationOrigin: string = window.location.origin.includes(
+  NuanceUATCanisterId
+)
+  ? NuanceUAT
+  : NuancePROD;
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 const handleError = (err: any, preText?: string) => {
   const errorType = getErrorType(err);
@@ -201,6 +218,7 @@ export interface UserStore {
   readonly totalNotificationCount: number;
   readonly unreadNotificationCount: number;
   readonly notificationsToasted: string[];
+  readonly linkedPrincipal: string;
 
   registerUser: (
     handle: string,
@@ -269,6 +287,9 @@ export interface UserStore {
     bucketCanisterId: string,
     amount: number
   ) => Promise<boolean | void>;
+  proceedWithVerification: (userPrincipal: Principal) => Promise<void>;
+  getLinkedPrincipal: (principal: string) => Promise<string | undefined>;
+  verifyPoh: (jwt: string) => Promise<void>;
   clearAll: () => void;
 }
 
@@ -285,6 +306,7 @@ const toUserModel = (user: User): UserType => {
           ? []
           : [Number(user.claimInfo.lastClaimDate[0])],
     },
+    isVerified: user.isVerified || false,
   } as UserType;
 };
 
@@ -313,6 +335,83 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   unreadNotificationCount: 0,
   totalNotificationCount: 0,
   notificationsToasted: [],
+  linkedPrincipal: '',
+
+  getLinkedPrincipal: async (principal: string): Promise<string | undefined> => {
+    const userWallet = await useAuthStore.getState().getUserWallet();
+
+    const result = await (
+      await getUserActor()
+    ).getLinkedPrincipal(userWallet.principal);
+    if (!(Err in result)) {
+      return result.ok;
+    }
+    return undefined;
+  },
+
+  verifyPoh: async (jwt: string): Promise<void> => {
+    try {
+      const result = await (await getUserActor()).verifyPoh(jwt);
+
+      if ('Ok' in result) {
+        const userResult = await (await getUserActor()).getUser();
+
+        if ('ok' in userResult) {
+          const user = toUserModel(userResult.ok);
+          set({ user });
+
+          toast('Verification successful!', ToastType.Success);
+        } else {
+          toastError('Verification succeeded, but failed to update user information.');
+        }
+      } else {
+        toastError('Verification failed: ' + result.Err);
+      }
+    } catch (error) {
+      handleError(error, Unexpected);
+    }
+  },
+
+  proceedWithVerification: async (verifyPrincipal: Principal): Promise<void> => {
+    try {
+      const jwt: string = await new Promise((resolve, reject) => {
+        requestVerifiablePresentation({
+          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
+            if ('Ok' in verifiablePresentation) {
+              resolve(verifiablePresentation.Ok);
+            } else {
+              reject(new Error(verifiablePresentation.Err));
+            }
+          },
+          onError(err) {
+            reject(new Error(err));
+          },
+          issuerData: {
+            origin: 'https://id.decideai.xyz',
+            canisterId: Principal.fromText('qgxyr-pyaaa-aaaah-qdcwq-cai'),
+          },
+          credentialData: {
+            credentialSpec: {
+              credentialType: 'ProofOfUniqueness',
+              arguments: {
+                "minimumVerificationDate": "2020-12-01T00:00:00Z",
+              },
+            },
+            credentialSubject: verifyPrincipal,
+          },
+          identityProvider: new URL('https://identity.ic0.app/'),
+          derivationOrigin: isLocal ? undefined : derivationOrigin,
+        });
+      });
+
+      // verify the JWT credentials
+      await get().verifyPoh(jwt);
+
+    } catch (error) {
+      handleError(error, Unexpected);
+      // handle error
+    }
+  },
 
   registerUser: async (
     handle: string,
@@ -869,7 +968,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       let userActor = await getUserActor();
       let response = await userActor.claimRestrictedTokens();
       if ('err' in response) {
-        handleError(response.err);
+        toastError("You need to verify your profile to request free NUA.");
       } else {
         //claim successful
         //refresh the balances

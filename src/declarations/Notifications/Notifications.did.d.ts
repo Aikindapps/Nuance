@@ -61,6 +61,7 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'postId' : string,
     }
   } |
+  { 'VerifyProfile' : null } |
   {
     'YouUnsubscribedFromAuthor' : {
       'subscriptionTimeInterval' : SubscriptionTimeInterval,
@@ -169,6 +170,7 @@ export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
       'postId' : string,
     }
   } |
+  { 'VerifyProfile' : null } |
   {
     'YouUnsubscribedFromAuthor' : {
       'subscriptionTimeInterval' : SubscriptionTimeInterval,
@@ -233,12 +235,15 @@ export type Result = { 'ok' : UserNotificationSettings } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
+export type Result_2 = { 'ok' : Array<string> } |
+  { 'err' : string };
 export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
   { 'Monthly' : null } |
   { 'Annually' : null };
 export interface UserNotificationSettings {
   'premiumArticleSold' : boolean,
+  'verifyProfile' : boolean,
   'tipReceived' : boolean,
   'authorGainsNewSubscriber' : boolean,
   'authorLosesSubscriber' : boolean,
@@ -255,6 +260,7 @@ export interface UserNotificationSettings {
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'broadcastNotification' : ActorMethod<[NotificationContent__1], Result_2>,
   'createNotification' : ActorMethod<
     [string, NotificationContent__1],
     undefined

@@ -299,6 +299,7 @@ type Comment__1 =
    editedAt: opt text;
    handle: text;
    isCensored: bool;
+   isVerified: bool;
    postId: text;
    repliedCommentId: opt text;
    replies: vec Comment;
@@ -316,6 +317,7 @@ type Comment =
    editedAt: opt text;
    handle: text;
    isCensored: bool;
+   isVerified: bool;
    postId: text;
    repliedCommentId: opt text;
    replies: vec Comment;

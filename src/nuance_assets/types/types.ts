@@ -61,6 +61,7 @@ export type UserType = {
   nuaTokens: number;
   followersCount: number;
   claimInfo: UserClaimInfoType;
+  isVerified: boolean;
 };
 
 type UserClaimInfoType = {
@@ -94,6 +95,7 @@ export type UserListItem = {
   followersCount: string;
   principal: string;
   postCounts?: UserPostCounts;
+  isVerified: boolean;
 };
 
 //TODO: phase out in postStore and use Post type from canister
@@ -131,6 +133,7 @@ export type PostType = {
   isPublication?: boolean;
   displayName?: string;
   fontType?: string;
+  isVerified?: boolean;
 };
 
 export type PostSaveModel = {

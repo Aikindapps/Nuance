@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
 import { useTheme } from '../../contextes/ThemeContext';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const Following = () => {
   // This component is a child of profileSidebar
@@ -62,10 +63,15 @@ const Following = () => {
               @{follower}
             </Link>
           </div>
+          {console.log("AUTHOR1: ", author)}
           <img
             src={images.DEFAULT_AVATAR}
             alt='background'
             className='followers-list-image'
+            style={author?.isVerified ? {
+              background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+              padding: "0.15em",
+            } : {borderRadius: "50%"}}
           />
         </li>
       </div>
@@ -87,7 +93,7 @@ const Following = () => {
               >
                 {' '}
               </FollowAuthor>
-              <div className='follower-handle'>
+              <div className='follower-handle' style={{margin: '10px'}}>
                 <Link
                   to={`/user/${follower.handle}`}
                   className='handle'
@@ -95,11 +101,16 @@ const Following = () => {
                 >
                   @{follower.handle}
                 </Link>
+                {follower.isVerified && <GradientMdVerified width='16' height='16' gradientKey={follower.handle} />}
               </div>
               <img
                 src={follower.avatar || images.DEFAULT_AVATAR}
                 alt='background'
                 className='followers-list-image'
+                style={follower.isVerified ? {
+                  background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                  padding: "0.15em",
+                } : {borderRadius: "50%"}}
               />
             </li>
           </div>

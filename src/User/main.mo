@@ -52,6 +52,7 @@ actor User {
   type NftCanisterEntry = Types.NftCanisterEntry;
   type UserClaimInfo = Types.UserClaimInfo;
   type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
+  type VerifyResult = CanisterDeclarations.VerifyResult;
 
   type List<T> = List.List<T>;
 
@@ -89,6 +90,9 @@ actor User {
   stable var lastClaimNotificationDate : [(Text, Int)] = [];
   stable var claimSubaccountIndexes : [(Text, Nat)] = [];
   stable var claimBlockedUsers : [(Text, Text)] = [];
+  stable var isVerifiedUsers : [(Text, Bool)] = [];
+  stable var pendingLinkingRequests: [(Text, Text)] =[];
+  stable var confirmedLinkingRequests: [(Text, Text)] = [];
 
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
 
@@ -117,6 +121,9 @@ actor User {
   var lastClaimDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var lastClaimNotificationDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var claimBlockedUsersHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var isVerifiedUsersHashMap = HashMap.HashMap<Text, Bool>(initCapacity, isEq, Text.hash);
+  var pendingLinkingRequestsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  var confirmedLinkingRequestsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //0th account-id of user's principal mapped to user's handle
   //key: account-id, value: handle
   stable var accountIdsToHandleEntries : [(Text, Text)] = [];
@@ -288,6 +295,16 @@ actor User {
     #ok();
   };
 
+  public shared query ({ caller }) func getAllUserPrincipals() : async Result.Result<[Text], Text> {
+    if (caller != Principal.fromText(ENV.NOTIFICATIONS_CANISTER_ID)) {
+      return #err(Unauthorized);
+    };
+
+    let usersPrincipals = Iter.toArray(principalIdHashMap.keys());
+
+    return #ok(usersPrincipals);
+  };
+
   //#endregion
 
   //#region User Management
@@ -337,6 +354,7 @@ actor User {
         subaccount = null;
         isUserBlocked = false;
       };
+      isVerified = false;
     };
   };
 
@@ -362,6 +380,7 @@ actor User {
         nuaTokens = U.safeGet(nuaTokensHashMap, principalId, 0.0);
         followersCount = Nat32.fromNat(U.safeGet(myFollowersHashMap, userPrincipalId, []).size());
         claimInfo = buildClaimInfo(principalId);
+        isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
       };
     };
     user;
@@ -559,6 +578,7 @@ actor User {
         subaccount = null;
         isUserBlocked = false;
       };
+      isVerified = false;
     };
   };
 
@@ -588,6 +608,12 @@ actor User {
 
     var principalId = Principal.toText(caller);
 
+    for (principal in confirmedLinkingRequestsHashMap.vals()) {
+      if (principal == principalId) {
+        return #err("This internet identity is linked with an existing account.");
+      };
+    };
+
     if (principalIdHashMap.get(principalId) != null) {
       #err(UserExists);
     } else if (not isValidHandle(handle)) {
@@ -602,7 +628,152 @@ actor User {
       var user = createNewUser(principalId, Text.trimStart(handle, #char('@')), displayName, avatar);
       putUser(principalId, user);
       userCount += 1;
+      let NotificationsCanister = CanisterDeclarations.getNotificationCanister();
+      ignore NotificationsCanister.createNotification(principalId, #VerifyProfile);
       #ok(buildUser(principalId));
+    };
+  };
+
+  public query func getLinkedPrincipal(walletPrincipal: Text) : async Result.Result<Text, Text> {
+    switch(confirmedLinkingRequestsHashMap.get(walletPrincipal)) {
+      case(?value) {
+        return #ok(value);
+      };
+      case(null) {
+        return #err("The user doesn't have any linked principal.");
+      };
+    };
+
+  };
+
+  public shared ({ caller }) func linkInternetIdentityRequest(walletPrincipal: Text, iiPrincipal: Text) : async Result.Result<(), Text> {
+    let callerPrincipal = Principal.toText(caller);
+
+    if (principalIdHashMap.get(walletPrincipal) == null) {
+      return #err(UserNotFound);
+    };
+
+    if (principalIdHashMap.get(iiPrincipal) != null) {
+      return #err("The internet identity requested to be linked already has an account.");
+    };
+
+    if(confirmedLinkingRequestsHashMap.get(walletPrincipal) != null) {
+      return #err("User is already linked");
+    };
+
+    if (callerPrincipal != walletPrincipal) {
+      return #err("Unauthorized request.");
+    };
+
+    pendingLinkingRequestsHashMap.put(walletPrincipal, iiPrincipal);
+
+    return #ok();
+  };
+
+  public shared ({ caller }) func linkInternetIdentityConfirm(walletPrincipal: Text) : async Result.Result<(), Text> {
+    let callerPrincipal = Principal.toText(caller);
+
+    switch(pendingLinkingRequestsHashMap.get(walletPrincipal)) {
+      case(?pendingRequest) {
+        if (callerPrincipal != pendingRequest) {
+          return #err("Unauthorized confirmation.");
+        } else {
+          for (principal in confirmedLinkingRequestsHashMap.vals()) {
+            if (principal == callerPrincipal) {
+              return #err("This internet identity is linked with another account.");
+            };
+          };
+          confirmedLinkingRequestsHashMap.put(walletPrincipal, pendingRequest);
+          pendingLinkingRequestsHashMap.delete(walletPrincipal);
+          return #ok();
+        };
+      };
+      case(null) {
+        return #err("There is no request for linking this principal.");
+      };
+    };
+  };
+
+  public query func getVerificationStatus(principalId: Text) : async Result.Result<Bool, Text> {
+
+    if (principalIdHashMap.get(principalId) == null) {
+      return #err(UserNotFound);
+    };
+
+    let isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
+
+    return #ok(isVerified);
+  };
+
+  private func updateVerificationStatus(principalId: Principal, isVerified: Bool) : Result.Result<User, Text> {
+    let callerPrincipal = Principal.toText(principalId);
+
+    if (principalIdHashMap.get(callerPrincipal) == null) {
+      return #err(UserNotFound);
+    };
+
+    isVerifiedUsersHashMap.put(callerPrincipal, isVerified);
+
+    return #ok(buildUser(callerPrincipal));
+  };
+
+  public shared ({ caller }) func verifyPoh(credentialJWT: Text) : async VerifyResult {
+
+      if (isAnonymous(caller)) {
+        return #Err("Anonymous cannot call this method");
+      };
+
+      var result : VerifyResult = #Ok({
+          provider = #DecideAI;
+          timestamp = 1_732_561_876_730;
+        });
+
+      if (ENV.IS_LOCAL) {
+        // assign the hardcoded success result to 'result'
+        result := #Ok({
+          provider = #DecideAI;
+          timestamp = 1_732_561_876_735;
+        });
+      } else {
+        let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
+        var effectiveDerivationOrigin : Text = "";
+        var credentialSubject : Principal = caller;
+
+        switch(confirmedLinkingRequestsHashMap.get(Principal.toText(caller))) {
+          case(?linkedPrincipal) {
+            credentialSubject := Principal.fromText(linkedPrincipal);
+          };
+          case(null) {
+            if (principalIdHashMap.get(Principal.toText(caller)) == null){
+              return #Err(Unauthorized);
+            };
+          };
+        };
+
+        if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+          effectiveDerivationOrigin := "https://nuance.xyz";
+        } else {
+          effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
+        };
+        // perform the actual canister call and assign the result
+        result := await VerifyPohCanister.verify_proof_of_unique_personhood(
+          credentialSubject,
+          credentialJWT,
+          effectiveDerivationOrigin,
+          Nat64.fromIntWrap(Time.now() / 1_000_000)
+        );
+      };
+
+      switch (result) {
+        case (#Ok(uniquePersonProof)) {
+          // handle the success case
+          let user = updateVerificationStatus(caller, true);
+          return #Ok(uniquePersonProof);
+        };
+        case (#Err(errMessage)) {
+          // handle the error case
+          return #Err(errMessage);
+        };
     };
   };
 
@@ -1072,6 +1243,7 @@ actor User {
         website = U.safeGet(websiteHashMap, followerPrincipalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, followerPrincipalId, false);
       };
       users.add(user);
     };
@@ -1097,6 +1269,7 @@ actor User {
         website = U.safeGet(websiteHashMap, followerPrincipalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, followerPrincipalId, false);
       };
       users.add(user);
     };
@@ -1134,6 +1307,7 @@ actor User {
         website = U.safeGet(websiteHashMap, followerPrincipalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, followerPrincipalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, followerPrincipalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, followerPrincipalId, false);
       };
       users.add(user);
     };
@@ -1521,6 +1695,19 @@ actor User {
             return #err("The caller is not allowed to claim any restricted tokens.")
           };
           case(null) {};
+        };
+        switch (isVerifiedUsersHashMap.get(principal)) {
+          case (?isVerified) {
+            if (isVerified) {} 
+            else {
+                // user is not verified
+                return #err("User is not verified. Cannot claim restricted tokens.");
+            };
+          };
+          case null {
+              // user's verification status is not set (not verified)
+              return #err("User is not verified. Cannot claim restricted tokens.");
+          };
         };
         //check if it's the first time user claims the tokens
         var callerSubaccountIndex = 1;
@@ -2009,6 +2196,7 @@ actor User {
       website = U.safeGet(websiteHashMap, principalId, "");
       socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
       followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+      isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
     };
 
     #ok(user);
@@ -2035,6 +2223,7 @@ actor User {
           website = U.safeGet(websiteHashMap, principalId, "");
           socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
           followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+          isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
         };
         users := List.push<UserListItem>(user, users);
       };
@@ -2060,6 +2249,7 @@ actor User {
         website = U.safeGet(websiteHashMap, principalId, "");
         socialChannelsUrls = U.safeGet(socialChannelsHashMap, principalId, []);
         followersCount = Nat.toText(U.safeGet(myFollowersHashMap, principalId, []).size());
+        isVerified = U.safeGet(isVerifiedUsersHashMap, principalId, false);
       };
       users := List.push<UserListItem>(user, users);
     };
@@ -2300,7 +2490,9 @@ actor User {
     lastClaimNotificationDate := Iter.toArray(lastClaimNotificationDateHashMap.entries());
     claimBlockedUsers := Iter.toArray(claimBlockedUsersHashMap.entries());
     claimSubaccountIndexes := Iter.toArray(claimSubaccountIndexesHashMap.entries());
-
+    isVerifiedUsers := Iter.toArray(isVerifiedUsersHashMap.entries());
+    pendingLinkingRequests := Iter.toArray(pendingLinkingRequestsHashMap.entries());
+    confirmedLinkingRequests := Iter.toArray(confirmedLinkingRequestsHashMap.entries());
   };
 
   system func postupgrade() {
@@ -2332,6 +2524,9 @@ actor User {
     lastClaimNotificationDateHashMap := HashMap.fromIter(lastClaimNotificationDate.vals(), initCapacity, isEq, Text.hash);
     claimBlockedUsersHashMap := HashMap.fromIter(claimBlockedUsers.vals(), initCapacity, isEq, Text.hash);
     claimSubaccountIndexesHashMap := HashMap.fromIter(claimSubaccountIndexes.vals(), initCapacity, isEq, Text.hash);
+    isVerifiedUsersHashMap := HashMap.fromIter(isVerifiedUsers.vals(), initCapacity, isEq, Text.hash);
+    pendingLinkingRequestsHashMap := HashMap.fromIter(pendingLinkingRequests.vals(), initCapacity, isEq, Text.hash);
+    confirmedLinkingRequestsHashMap := HashMap.fromIter(confirmedLinkingRequests.vals(), initCapacity, isEq, Text.hash);
 
     principalId := [];
     handle := [];
@@ -2350,6 +2545,9 @@ actor User {
     lastClaimNotificationDate := [];
     claimBlockedUsers := [];
     claimSubaccountIndexes := [];
+    isVerifiedUsers := [];
+    pendingLinkingRequests := [];
+    confirmedLinkingRequests := [];
   };
 
   //#endregion

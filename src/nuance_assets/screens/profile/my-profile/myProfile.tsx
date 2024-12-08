@@ -16,6 +16,8 @@ import { useTheme } from '../../../contextes/ThemeContext';
 import { Tooltip } from 'react-tooltip';
 import { getIconForSocialChannel } from '../../../shared/utils';
 import { Context as ModalContext } from '../../../contextes/ModalContext';
+import GradientMdVerified from '../../../UI/verified-icon/verified-icon';
+import { Principal } from '@dfinity/principal';
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -31,6 +33,9 @@ const MyProfile = () => {
     usersByHandles,
     getUserFollowersCount,
     userFollowersCount,
+    getLinkedPrincipal,
+    verifyPoh,
+    proceedWithVerification,
   } = useUserStore((state) => ({
     user: state.user,
     getUser: state.getUser,
@@ -39,6 +44,9 @@ const MyProfile = () => {
     usersByHandles: state.usersByHandles,
     getUserFollowersCount: state.getUserFollowersCount,
     userFollowersCount: state.userFollowersCount,
+    getLinkedPrincipal: state.getLinkedPrincipal,
+    verifyPoh: state.verifyPoh,
+    proceedWithVerification: state.proceedWithVerification,
   }));
 
   useEffect(() => {
@@ -114,6 +122,7 @@ const MyProfile = () => {
           alignSelf: 'flex-end',
           position: 'absolute',
           top: context.width > 768 ? '0' : '10px',
+          right: context.width < 768 ? '10px' : '50px'
         }}
       >
         <Button
@@ -126,14 +135,29 @@ const MyProfile = () => {
         >
           Edit Profile
         </Button>
+        {!user?.isVerified && <Button
+          styleType={{dark: 'white', light: 'white'}}
+          type='button'
+          style={{
+            width: '96px',
+            marginTop: '5px'
+          }}
+          onClick={() => modalContext?.openModal('verify profile')}
+        >
+          Verify Profile
+        </Button>}
       </div>
       <div className='content'>
         <img
           src={user?.avatar || images.DEFAULT_AVATAR}
           alt='background'
           className='profile-picture'
+          style={user?.isVerified ? {
+            background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+            padding: "0.2em",
+           } : {borderRadius: "50%"}}
         />
-        <p className='name'>{user?.displayName}</p>
+        <p className='name'>{user?.displayName} {user?.isVerified && <GradientMdVerified width='24' height='24'/>}</p>
         <p
           style={
             darkTheme

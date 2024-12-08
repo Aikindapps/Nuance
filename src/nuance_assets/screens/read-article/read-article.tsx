@@ -46,6 +46,7 @@ import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -489,7 +490,10 @@ const ReadArticle = () => {
         <meta property='og:type' content='article' />
         <meta
           property='og:image'
-          content={post?.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
+          content={
+            post?.headerImage ||
+            (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)
+          }
         />
 
         {/* Twitter Meta Tags */}
@@ -552,7 +556,19 @@ const ReadArticle = () => {
             <div className='horizontal-divider'></div>
             {post && author && (
               <div className='author'>
-                <img src={getAvatar() || images.DEFAULT_AVATAR} alt=''></img>
+                <img
+                  src={getAvatar() || images.DEFAULT_AVATAR}
+                  alt=''
+                  style={
+                    author?.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.1em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
+                />
                 <Link
                   to={`/user/${
                     post.isPublication ? post.creatorHandle : author.handle
@@ -562,6 +578,11 @@ const ReadArticle = () => {
                 >
                   @{post.isPublication ? post.creatorHandle : author.handle}
                 </Link>
+                {author?.isVerified && (
+                  <div className='verified-badge'>
+                    <GradientMdVerified width={'16'} height={'16'} />
+                  </div>
+                )}
               </div>
             )}
             <div className='horizontal-divider'></div>
@@ -761,7 +782,10 @@ const ReadArticle = () => {
               >
                 <img
                   className='header-image'
-                  src={post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)}
+                  src={
+                    post.headerImage ||
+                    (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)
+                  }
                   style={{
                     background: darkTheme
                       ? darkOptionsAndColors.background
@@ -866,6 +890,15 @@ const ReadArticle = () => {
                     src={getAvatar() || images.DEFAULT_AVATAR}
                     alt='background'
                     className='profile-picture'
+                    style={
+                      author?.isVerified
+                        ? {
+                            background:
+                              'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                            padding: '0.2em',
+                          }
+                        : { borderRadius: '50%' }
+                    }
                   />
                   <Link
                     to={`/user/${
@@ -875,6 +908,15 @@ const ReadArticle = () => {
                     className='username'
                   >
                     @{post.isPublication ? post.creatorHandle : author.handle}
+                    {author?.isVerified && (
+                      <div className='verified-badge'>
+                        <GradientMdVerified
+                          width={'20'}
+                          height={'20'}
+                          gradientKey='bottom'
+                        />
+                      </div>
+                    )}
                   </Link>
                   <div className='social-channels'>
                     {getSocialChannelUrls().map((url, index) => {
@@ -951,7 +993,6 @@ const ReadArticle = () => {
                     }}
                     comments={comments}
                   />
-
                   {comments.length > 0 &&
                     comments[0].postId === post.postId &&
                     comments.map((comment) => (
@@ -965,6 +1006,7 @@ const ReadArticle = () => {
                         avatar={user?.avatar || ''}
                         totalNumberOfComments={totalNumberOfComments}
                         comments={comments}
+                        isVerified={comment.isVerified}
                         setComments={(newComments, totalNumber) => {
                           setComments(newComments);
                           setTotalNumberOfComments(totalNumber);

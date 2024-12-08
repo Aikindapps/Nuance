@@ -346,7 +346,11 @@ const Wallet = () => {
                   type='button'
                   style={{ maxWidth: '180px', fontSize: '14px' }}
                   onClick={() => {
-                    modalContext?.openModal('claim restricted tokens');
+                    if (!user.isVerified) {
+                      modalContext?.openModal('verify profile');
+                    } else {
+                      modalContext?.openModal('claim restricted tokens');
+                    }
                   }}
                 >
                   Request Free NUA

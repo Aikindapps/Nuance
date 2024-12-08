@@ -11,6 +11,7 @@ import { useTheme } from '../../contextes/ThemeContext';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { Link } from 'react-router-dom';
 import { ToastType, toastError, toast } from '../..//services/toastService';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 interface CommentProps {
   loggedInUser: string;
@@ -21,6 +22,7 @@ interface CommentProps {
   bucketCanisterId: string;
   totalNumberOfComments: number;
   comments: Comment[];
+  isVerified: boolean;
   setComments: (newComments: Comment[], totalNumberOfComments: number) => void;
 }
 
@@ -33,6 +35,7 @@ const Comments: React.FC<CommentProps> = ({
   avatar,
   totalNumberOfComments,
   comments,
+  isVerified,
   setComments,
 }) => {
   let identity =
@@ -248,12 +251,16 @@ const Comments: React.FC<CommentProps> = ({
                 className='user-icon'
                 alt='user icon'
                 src={comment.avatar || images.DEFAULT_AVATAR}
+                style={comment.isVerified ? {
+                  background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                  padding: "0.1em",
+                 } : {borderRadius: "50%"}}
               />
             </Link>
           </div>
           <Link to={`/user/${comment.handle}`} rel='noopener noreferrer'>
             <strong className={darkTheme ? 'username-dark' : 'username'}>
-              {comment.handle}
+              {comment.handle} {comment.isVerified && <div className='verified-badge'><GradientMdVerified width={'12'} height={'12'} /></div>}
             </strong>
           </Link>
         </div>
@@ -444,6 +451,7 @@ const Comments: React.FC<CommentProps> = ({
             totalNumberOfComments={totalNumberOfComments}
             setComments={setComments}
             comments={comments}
+            isVerified={isVerified}
           />
         ))}
     </div>

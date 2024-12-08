@@ -6,6 +6,7 @@ import { useSubscriptionStore, useUserStore } from '../../store/';
 import './_subscribers-tab.scss';
 import { Link } from 'react-router-dom';
 import Loader from '../../UI/loader/Loader';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 interface Subscriber {
   id: number;
@@ -138,6 +139,10 @@ const SubscribersTab: React.FC = () => {
                               sub.userListItem.avatar || images.DEFAULT_AVATAR
                             }
                             alt='Avatar'
+                            style={sub.userListItem.isVerified ? {
+                              background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                              padding: "0.1em",
+                            } : {borderRadius: "50%"}}
                           />
                         </Link>{' '}
                         <Link
@@ -145,7 +150,8 @@ const SubscribersTab: React.FC = () => {
                           to={`/user/${sub.userListItem.handle}`}
                         >
                           @{sub.userListItem.handle}
-                        </Link>
+                        </Link>{' '}
+                        {sub.userListItem.isVerified && <GradientMdVerified width='12' height='12' gradientKey={sub.userListItem.handle} />}
                       </td>
                       <td className='subscribers-tab-chart-info'>
                         {formatDate(sub.subscriptionStartDate)}

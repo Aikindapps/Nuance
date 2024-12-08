@@ -1,4 +1,4 @@
-import { ActorSubclass, AnonymousIdentity } from '@dfinity/agent';
+import { ActorSubclass, AnonymousIdentity, Identity } from '@dfinity/agent';
 
 import { _SERVICE as UserService } from '../../declarations/User/User.did';
 import {
@@ -167,6 +167,15 @@ export async function getUserActor(): Promise<ActorSubclass<UserService>> {
     agentOptions: {
       identity,
       host: isLocal ? undefined : 'https://icp-api.io ',
+    },
+  });
+}
+
+export async function getCustomUserActor(identity: Identity): Promise<ActorSubclass<UserService>> {
+  return createUserActor(USER_CANISTER_ID as string, {
+    agentOptions: {
+      identity,
+      host: isLocal ? undefined : 'https://icp-api.io',
     },
   });
 }

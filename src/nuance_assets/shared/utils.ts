@@ -914,5 +914,6 @@ export const buildTempComment = (
     editedAt: comment ? comment.editedAt : [],
     bucketCanisterId,
     isCensored: false,
+    isVerified: false,
   };
 };

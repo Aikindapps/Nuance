@@ -21,6 +21,7 @@ import {
   getIcrc1TokenActorAnonymous,
   getSonicActor,
   getUserActor,
+  getCustomUserActor,
 } from '../services/actorService';
 import {
   ckUSDC_CANISTER_ID,
@@ -130,6 +131,7 @@ export interface AuthStore {
   fetchTokenBalances: () => Promise<void>;
   clearAll: () => void;
   clearLoginMethod: () => void;
+  requestLinkInternetIdentity: () => Promise<Principal | null>;
 }
 
 // Encapsulates and abstracts AuthClient
@@ -282,6 +284,16 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   login: async (_loginMethod: string): Promise<void> => {
     set({ registrationError: undefined, isLoggedIn: false });
+
+    if (!authClient) {
+      authClient = await AuthClient.create({
+        idleOptions: {
+          disableIdle: true,
+          disableDefaultIdleCallback: true,
+        },
+      });
+    }
+
     if (_loginMethod === 'stoic') {
       let identity = await StoicIdentity.connect();
       set({ isLoggedIn: true, loginMethod: 'stoic' });
@@ -318,7 +330,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         await authClient.login(<AuthClientLoginOptions>{
           onSuccess: async () => {
             console.log('Logged in: ' + new Date());
-            set({ isLoggedIn: true });
+            set({ isLoggedIn: true, loginMethod: 'ii' });
             authChannel.postMessage({ type: 'login', date: new Date() });
             Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
             Usergeek.trackSession();
@@ -344,7 +356,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           derivationOrigin: isLocal ? undefined : derivationOrigin,
         });
       } else {
-        set({ isLoggedIn: true });
+        set({ isLoggedIn: true, loginMethod: 'ii' });
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
@@ -372,13 +384,13 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               disableDefaultIdleCallback: true,
             },
           });
-          set({ isLoggedIn: true });
+          set({ isLoggedIn: true, loginMethod: 'NFID' });
           await useUserStore.getState().getUser();
         } else {
           await authClient.login(<AuthClientLoginOptions>{
             onSuccess: async () => {
               console.log('Logged in: ' + new Date());
-              set({ isLoggedIn: true });
+              set({ isLoggedIn: true, loginMethod: 'NFID' });
               authChannel.postMessage({ type: 'login', date: new Date() });
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
@@ -411,6 +423,14 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
             maxTimeToLive: sessionTimeout,
             derivationOrigin: isLocal ? undefined : derivationOrigin,
           });
+        }
+      } else {
+        set({ isLoggedIn: true, loginMethod: 'NFID' });
+        await useUserStore.getState().getUser();
+        if (useUserStore.getState().user === undefined) {
+          window.location.href = '/register';
+        } else {
+          await get().fetchTokenBalances();
         }
       }
     } else if (_loginMethod === 'bitfinity') {
@@ -495,8 +515,10 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
           let isLoggedIn = await authClient.isAuthenticated();
           set({ isInitialized: true, isLoggedIn });
-          if (isLoggedIn) {
-            set({ loginMethod: 'ii' });
+          const storedLoginMethod = get().loginMethod;
+          if (isLoggedIn && storedLoginMethod) {
+            //set({ loginMethod: {currentLoginMethod} });
+            set({ loginMethod: storedLoginMethod })
           }
           //no need to await and block the thread while app loads
           useUserStore.getState().getUser();
@@ -551,6 +573,59 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
       window_any.ic.bitfinityWallet.disconnect();
     } catch (err) {}
+  },
+
+  requestLinkInternetIdentity: async (): Promise<Principal | null> => {
+    return new Promise(async (resolve, reject) => {
+      
+      try {
+        const currentLoginMethod = await get().loginMethod;
+        // get the current user's principal
+        const currentUserPrincipal = (await get().getUserWallet()).principal;
+
+        // create a separate AuthClient instance
+        const linkAuthClient = await AuthClient.create();
+
+        await linkAuthClient.login({
+          identityProvider,
+          maxTimeToLive: sessionTimeout as bigint,
+          onSuccess: async () => {
+            const iiIdentity = linkAuthClient.getIdentity();
+            const iiPrincipal = iiIdentity.getPrincipal().toText();
+
+            const userActor = await getUserActor();
+            const request = await userActor.linkInternetIdentityRequest(currentUserPrincipal, iiPrincipal);
+
+            if ('ok' in request) {
+              // create an actor with the II identity
+              const customUserActor = await getCustomUserActor(iiIdentity);
+              const confirmation = await customUserActor.linkInternetIdentityConfirm(currentUserPrincipal);
+
+              if ('ok' in confirmation) {
+                toast('Internet Identity linked successfully!', ToastType.Success);
+                resolve(Principal.fromText(iiPrincipal));
+              } else {
+                toastError(' Failed to confirm linking process.', confirmation.err);
+                resolve(null);
+              }
+            } else {
+              toastError(' Failed to initiate linking process.', request.err);
+              resolve(null);
+            }
+
+            // logout from the temporary AuthClient to prevent session conflicts
+            await linkAuthClient.logout();
+          },
+          onError: (error) => {
+            toastError(`Failed to link Internet Identity: ${error}`);
+            resolve(null);
+          },
+        });
+      } catch (error) {
+        toastError(`An error occurred: ${error}`);
+        resolve(null);
+      }
+    })
   },
 });
 

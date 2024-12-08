@@ -31,6 +31,7 @@ module {
         nuaTokens: Float;
         followersCount: Nat32;
         claimInfo: UserClaimInfo;
+        isVerified: Bool;
     };
 
     public type UserClaimInfo = {
@@ -53,6 +54,7 @@ module {
         website: Text;
         socialChannelsUrls: [Text];
         followersCount: Text;
+        isVerified: Bool;
     };
 
     public type PublicationObject = {

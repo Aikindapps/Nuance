@@ -10,7 +10,9 @@ type ModalType =
   | 'Notifications'
   | 'Subscription'
   | 'cancelSubscription'
-  | 'claim restricted tokens';
+  | 'claim restricted tokens'
+  | 'verify profile'
+  | 'link ii';
 
 type ModalData = {
   transferNftData?: PremiumPostActivityListItem;

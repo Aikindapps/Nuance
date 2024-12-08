@@ -9,6 +9,11 @@ type WriterSubscriptionDetails =
    writerPrincipalId: text;
    writerSubscriptions: vec SubscriptionEvent;
  };
+type VerifyResult = 
+ variant {
+   Err: text;
+   Ok: UniquePersonProof;
+ };
 type Validate = 
  variant {
    Err: text;
@@ -26,6 +31,7 @@ type User__1 =
    followersCount: nat32;
    followersPrincipals: FollowersPrincipals;
    handle: text;
+   isVerified: bool;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
    socialChannels: vec text;
@@ -39,6 +45,7 @@ type UserListItem =
    followersCount: text;
    fontType: text;
    handle: text;
+   isVerified: bool;
    "principal": text;
    socialChannelsUrls: vec text;
    website: text;
@@ -63,12 +70,19 @@ type User =
    followersCount: nat32;
    followersPrincipals: FollowersPrincipals;
    handle: text;
+   isVerified: bool;
    nuaTokens: float64;
    publicationsArray: vec PublicationObject;
    socialChannels: vec text;
    website: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
+type UniquePersonProofProvider = variant {DecideAI;};
+type UniquePersonProof = 
+ record {
+   provider: UniquePersonProofProvider;
+   timestamp: nat64;
+ };
 type SubscriptionTimeInterval = 
  variant {
    Annually;
@@ -133,15 +147,15 @@ type Result_2 =
 type Result_11 = 
  variant {
    err: text;
-   ok: text;
- };
-type Result_10 = 
- variant {
-   err: text;
    ok: vec record {
              text;
              nat;
            };
+ };
+type Result_10 = 
+ variant {
+   err: text;
+   ok: text;
  };
 type Result_1 = 
  variant {
@@ -269,7 +283,7 @@ service : {
   acceptCycles: () -> ();
   addNuaBalance: (text) -> () oneway;
   addPublication: (PublicationObject__1, text) -> (AddPublicationReturn);
-  adminAirDrop: (float64) -> (Result_11);
+  adminAirDrop: (float64) -> (Result_10);
   availableCycles: () -> (nat) query;
   blockUserFromClaiming: (text) -> (Result_1);
   checkMyClaimNotification: () -> ();
@@ -283,8 +297,9 @@ service : {
   generateLowercaseHandles: () -> (text, vec text);
   getActiveUsersByRange: (Date) -> (nat) query;
   getAdmins: () -> (Result_6) query;
-  getAllClaimSubaccountIndexes: () -> (Result_10) query;
+  getAllClaimSubaccountIndexes: () -> (Result_11) query;
   getAllHandles: () -> (vec text) query;
+  getAllUserPrincipals: () -> (Result_6) query;
   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_6) query;
@@ -295,6 +310,7 @@ service : {
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
   getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
   getHandlesByPrincipals: (vec text) -> (vec text) query;
+  getLinkedPrincipal: (text) -> (Result_10) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getMultipleUsersByPrincipalId: (vec text) -> (Result_9) query;
@@ -316,9 +332,12 @@ service : {
   getUsersBlockedFromClaiming: () -> (Result_6) query;
   getUsersByHandles: (vec text) -> (vec UserListItem) query;
   getUsersByPrincipals: (vec text) -> (vec UserListItem) query;
+  getVerificationStatus: (text) -> (Result_4) query;
   handleClap: (text, text) -> () oneway;
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
+  linkInternetIdentityConfirm: (text) -> (Result_1);
+  linkInternetIdentityRequest: (text, text) -> (Result_1);
   migrateFollowersHashmapsFromHandlesToPrincipalIds: () -> (Result_5);
   registerAdmin: (text) -> (Result_1);
   registerCanister: (text) -> (Result_1);
@@ -350,4 +369,5 @@ service : {
   updateSocialLinks: (text, vec text) -> (Result);
   updateUserDetails: (text, text, text, text, vec text) -> (Result);
   validate: (reserved) -> (Validate);
+  verifyPoh: (text) -> (VerifyResult);
 }

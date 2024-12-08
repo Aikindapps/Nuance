@@ -20,6 +20,7 @@ module {
     #YouUnsubscribedFromAuthor;
     #ReaderExpiredSubscription;
     #FaucetClaimAvailable;
+    #VerifyProfile;
   };
 
   public type GetUserNotificationsResponse = {
@@ -125,6 +126,7 @@ module {
       isPublication: Bool;
     };
     #FaucetClaimAvailable;
+    #VerifyProfile;
   };
 
 
@@ -142,6 +144,7 @@ module {
     youUnsubscribedFromAuthor: Bool;
     readerExpiredSubscription: Bool;
     faucetClaimAvailable: Bool;
+    verifyProfile: Bool;
   };
 
   public type SubscriptionTimeInterval = {

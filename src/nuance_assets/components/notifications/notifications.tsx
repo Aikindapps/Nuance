@@ -89,10 +89,14 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     }
   };
 
+  console.log("TOTAL COUNT: ", totalNotificationCount);
+
   // event listener to close the sidebar when clicked outside
   useEffect(() => {
-    if (modalContext?.isModalOpen &&
-      modalContext.modalType === 'Notifications') {
+    if (
+      modalContext?.isModalOpen &&
+      modalContext.modalType === 'Notifications'
+    ) {
       document.body.classList.add('arrow-cursor');
       document.addEventListener('click', handleClickOutside, true);
     } else {
@@ -104,7 +108,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       document.body.classList.remove('arrow-cursor');
       document.removeEventListener('click', handleClickOutside, true);
     };
-  }, [modalContext]); 
+  }, [modalContext]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -164,14 +168,37 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
           You are allowed to request new Free NUA refill up to a total of 50
           Free NUA in your wallet!
           <Button
-            className={{dark: 'notifications-white-button', light: 'notifications-navy-button'}}
-            styleType={{dark: 'white', light: 'navy'}}
+            className={{
+              dark: 'notifications-white-button',
+              light: 'notifications-navy-button',
+            }}
+            styleType={{ dark: 'white', light: 'navy' }}
             onClick={() => {
               navigate('/my-profile/wallet');
             }}
             loading={false}
           >
             Request Free NUA
+          </Button>
+        </span>
+      );
+    } else if ('VerifyProfile' in notificationContent) {
+      return (
+        <span>
+          Your profile is not verified. You can verify yourself on your profile
+          page.
+          <Button
+            className={{
+              dark: 'notifications-white-button',
+              light: 'notifications-navy-button',
+            }}
+            styleType={{ dark: 'white', light: 'navy' }}
+            onClick={() => {
+              navigate('/my-profile');
+            }}
+            loading={false}
+          >
+            Verify Profile
           </Button>
         </span>
       );
@@ -652,6 +679,24 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
                     />
                   </div>
                 );
+              } else if (key === 'verifyProfile') {
+                return (
+                  <div className='toggle-row'>
+                    <label className={`${darkTheme ? 'dark' : ''}`}>
+                      Losing subscribers
+                    </label>
+                    <Toggle
+                      toggled={notificationSettings.authorLosesSubscriber}
+                      callBack={() => {
+                        setNotificationSettings({
+                          ...notificationSettings,
+                          authorLosesSubscriber:
+                            !notificationSettings.authorLosesSubscriber,
+                        });
+                      }}
+                    />
+                  </div>
+                );
               } else if (key === 'newArticleByFollowedTag') {
                 return (
                   <div className='toggle-row'>
@@ -834,8 +879,11 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
             })}
           </div>
           <Button
-            className={{dark: 'notifications-white-button', light: 'notifications-navy-button'}}
-            styleType={{dark: 'white', light: 'navy'}}
+            className={{
+              dark: 'notifications-white-button',
+              light: 'notifications-navy-button',
+            }}
+            styleType={{ dark: 'white', light: 'navy' }}
             onClick={async () => {
               setSavingNotificationSettings(true);
               await updateUserNotificationSettings(notificationSettings);
@@ -844,7 +892,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
             loading={savingNotificationSettings}
             style={{
               width: '272px',
-              marginTop: '40px'
+              marginTop: '40px',
             }}
           >
             Save Notification settings
@@ -899,8 +947,11 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
               ))}
             {notifications.length < totalNotificationCount && (
               <Button
-                className={{dark: 'notifications-load-more-button', light: 'notifications-load-more-button'}}
-                styleType={{dark: 'white', light: 'white'}}
+                className={{
+                  dark: 'notifications-load-more-button',
+                  light: 'notifications-load-more-button',
+                }}
+                styleType={{ dark: 'white', light: 'white' }}
                 onClick={async () => {
                   setIsLoadingMore(true);
                   getUserNotifications(page * 20, (page + 1) * 20, navigate);

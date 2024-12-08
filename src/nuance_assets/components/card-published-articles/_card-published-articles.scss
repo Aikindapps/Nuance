@@ -73,6 +73,10 @@
           width: 20px;
           height: 20px;
         }
+
+        .verified-badge {
+          margin-left: -5px;
+        }
       }
 
       .card-published-articles-actions-right {
@@ -332,6 +336,10 @@
             border-radius: 50%;
             width: 16px;
             height: 16px;
+          }
+
+          .verified-badge {
+            margin-left: 0;
           }
         }
 

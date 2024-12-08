@@ -11,6 +11,7 @@ import Badge from '../../UI/badge/badge';
 import { Context } from '../../contextes/Context';
 import { PiHandsClappingLight } from 'react-icons/pi';
 import { PiPencilSimpleThin } from 'react-icons/pi';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 interface CardVerticalProps {
   post: PostType;
@@ -47,6 +48,10 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
             <img
               className='card-published-articles-writer-avatar'
               src={post.avatar || images.DEFAULT_AVATAR}
+              style={post.isVerified ? {
+                background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                padding: "0.05em",
+              } : {borderRadius: "50%"}}
             />
             <Link
               className='card-published-articles-handle'
@@ -59,6 +64,7 @@ const CardPublishedArticles: React.FC<CardVerticalProps> = ({ post }) => {
             >
               @{post.isPublication ? post.creatorHandle : post.handle}
             </Link>
+            {post.isVerified && <div className='verified-badge'><GradientMdVerified width={'12'} height={'12'} /></div>}
           </div>
           <div className='card-published-articles-actions-right'>
             {post.isPublication ? (

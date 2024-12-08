@@ -34,6 +34,7 @@ module {
     replies : [Comment]; //an array of Comments to enable replying -> As the MVP of the feature is restricted with 400 chars and 100 comments per post, this field directly contains the Comment. It can be converted to [commentId] for pagination
     repliedCommentId : ?Text; //if this comment is a reply, holds the commentId. if not it's null
     isCensored : Bool; //if the comment is moderated, it's true
+    isVerified: Bool; //verified status of the user who sent the comment
   };
 
   public type CommentsReturnType = {

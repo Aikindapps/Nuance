@@ -6,6 +6,7 @@ import { images, icons, colors } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
 import './_card-vertical.scss';
 import { useIntersectionObserver } from '../../shared/useIntersectionObserver';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
   const navigate = useNavigate();
@@ -18,11 +19,18 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
     rootMargin: '0px 0px 1000px 0px',
   });
 
-  //updates imgSrc when the image is intersecting for the first time
+  // updates imgSrc when the image is intersecting for the first time
   // or when changing dark mode option if its using default header image
   useEffect(() => {
-    if ((isIntersecting && imgSrc === '') || imgSrc == images.NUANCE_LOGO || imgSrc == images.NUANCE_LOGO_BLACK) {
-      setImgSrc(post.headerImage || (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK));
+    if (
+      (isIntersecting && imgSrc === '') ||
+      imgSrc == images.NUANCE_LOGO ||
+      imgSrc == images.NUANCE_LOGO_BLACK
+    ) {
+      setImgSrc(
+        post.headerImage ||
+          (darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK)
+      );
     }
   }, [isIntersecting, imgSrc, post.headerImage, darkTheme]);
 
@@ -58,6 +66,10 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
                 className='profile-pic'
                 src={post.avatar || images.DEFAULT_AVATAR}
                 alt='Author image'
+                style={post.isVerified ? {
+                  background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
+                  padding: "0.1em",
+                 } : {borderRadius: "50%"}}
               />
               <div>
                 {post.isPublication ? (
@@ -76,6 +88,7 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
                   </Link>
                 )}
               </div>
+              {post.isVerified && <div className='verified-badge'><GradientMdVerified width={'12'} height={'12'} /></div>}
             </>
           )}
         </div>
@@ -106,18 +119,14 @@ const CardVertical: React.FC<CardVerticalProps> = ({ post }) => {
               </p>
             </div>
           ) : post.isMembersOnly ? (
-
             <img
               className='subscription-icon'
-              src={
-                icons.MEMBERS_ONLY
-              }
+              src={icons.MEMBERS_ONLY}
               style={{
                 filter: darkTheme ? 'contrast(.6)' : '',
               }}
             />
-          ) : null
-          }
+          ) : null}
           <div className='divider' />
           <p>
             {formatDate(post.publishedDate, DateFormat.NoYear) ||
