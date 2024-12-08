@@ -32,13 +32,13 @@ export const ClapModal = (props: { post: PostType }) => {
     userWallet,
     tokenBalances,
     fetchTokenBalances,
-    sonicTokenPairs,
+    tokenPrices,
     restrictedTokenBalance,
   } = useAuthStore((state) => ({
     userWallet: state.userWallet,
     tokenBalances: state.tokenBalances,
     fetchTokenBalances: state.fetchTokenBalances,
-    sonicTokenPairs: state.sonicTokenPairs,
+    tokenPrices: state.tokenPrices,
     restrictedTokenBalance: state.restrictedTokenBalance,
   }));
   const { spendRestrictedTokensForTipping } = useUserStore((state) => ({
@@ -77,7 +77,7 @@ export const ClapModal = (props: { post: PostType }) => {
   const getConversionPrice = (tokenSymbol: SupportedTokenSymbol) => {
     const pricePerUnit =
       getPriceBetweenTokens(
-        sonicTokenPairs,
+        tokenPrices,
         'NUA',
         tokenSymbol,
         inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
@@ -93,7 +93,7 @@ export const ClapModal = (props: { post: PostType }) => {
     let activeBalance = getSelectedCurrencyBalance();
     let availableBalance = activeBalance.balance - activeBalance.token.fee;
     let nuaEquivalance = getNuaEquivalance(
-      sonicTokenPairs,
+      tokenPrices,
       activeBalance.token.symbol,
       availableBalance
     );
@@ -128,7 +128,7 @@ export const ClapModal = (props: { post: PostType }) => {
     let activeCurrencyAndBalance = getSelectedCurrencyBalance();
     let tokensToSend = Math.floor(
       getPriceBetweenTokens(
-        sonicTokenPairs,
+        tokenPrices,
         'NUA',
         activeCurrencyAndBalance.token.symbol,
         inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
@@ -235,7 +235,7 @@ export const ClapModal = (props: { post: PostType }) => {
     let activeCurrencyAndBalance = getSelectedCurrencyBalance();
     let tokensToSend = Math.floor(
       getPriceBetweenTokens(
-        sonicTokenPairs,
+        tokenPrices,
         'NUA',
         activeCurrencyAndBalance.token.symbol,
         inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
@@ -264,7 +264,7 @@ export const ClapModal = (props: { post: PostType }) => {
     let activeCurrencyAndBalance = getSelectedCurrencyBalance();
     let tokensToSend = Math.floor(
       getPriceBetweenTokens(
-        sonicTokenPairs,
+        tokenPrices,
         'NUA',
         activeCurrencyAndBalance.token.symbol,
         inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))
@@ -277,7 +277,7 @@ export const ClapModal = (props: { post: PostType }) => {
     let activeCurrencyAndBalance = getSelectedCurrencyBalance();
     let tokensToSend = Math.floor(
       getPriceBetweenTokens(
-        sonicTokenPairs,
+        tokenPrices,
         'NUA',
         activeCurrencyAndBalance.token.symbol,
         inputAmount * Math.pow(10, getDecimalsByTokenSymbol('NUA'))

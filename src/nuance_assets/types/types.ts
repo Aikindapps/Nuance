@@ -205,12 +205,9 @@ export type PremiumArticleSaleInformation = {
   price_e8s: number;
 };
 
-export type PairInfo = {
-  id: string;
-  reserve0: number;
-  reserve1: number;
-  token0: string;
-  token1: string;
+export type TokenPrice = {
+  tokenSymbol: string;
+  icpEquivalence: number;
 };
 
 export type ApplaudListItem = {

@@ -31,12 +31,12 @@ export const WithdrawModal = () => {
   const modalContext = useContext(ModalContext);
   const darkTheme = useTheme();
 
-  const { userWallet, tokenBalances, fetchTokenBalances, sonicTokenPairs } =
+  const { userWallet, tokenBalances, fetchTokenBalances, tokenPrices } =
     useAuthStore((state) => ({
       userWallet: state.userWallet,
       tokenBalances: state.tokenBalances,
       fetchTokenBalances: state.fetchTokenBalances,
-      sonicTokenPairs: state.sonicTokenPairs,
+      tokenPrices: state.tokenPrices,
     }));
 
   const [selectedCurrency, setSelectedCurrency] = useState(
@@ -409,7 +409,7 @@ export const WithdrawModal = () => {
               <div>
                 {truncateToDecimalPlace(
                   getNuaEquivalance(
-                    sonicTokenPairs,
+                    tokenPrices,
                     selectedCurrency,
                     parseFloat(getInputAmount()) *
                       Math.pow(10, getDecimalsByTokenSymbol(selectedCurrency))
@@ -421,7 +421,7 @@ export const WithdrawModal = () => {
               <div>
                 {truncateToDecimalPlace(
                   getPriceBetweenTokens(
-                    sonicTokenPairs,
+                    tokenPrices,
                     selectedCurrency,
                     'ICP',
                     parseFloat(getInputAmount()) *
@@ -434,7 +434,7 @@ export const WithdrawModal = () => {
               <div>
                 {truncateToDecimalPlace(
                   getPriceBetweenTokens(
-                    sonicTokenPairs,
+                    tokenPrices,
                     selectedCurrency,
                     'ckBTC',
                     parseFloat(getInputAmount()) *

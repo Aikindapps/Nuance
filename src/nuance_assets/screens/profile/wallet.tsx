@@ -72,14 +72,14 @@ const Wallet = () => {
     tokenBalances,
     restrictedTokenBalance,
     fetchTokenBalances,
-    sonicTokenPairs,
+    tokenPrices,
   } = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
     tokenBalances: state.tokenBalances,
     restrictedTokenBalance: state.restrictedTokenBalance,
     fetchTokenBalances: state.fetchTokenBalances,
-    sonicTokenPairs: state.sonicTokenPairs,
+    tokenPrices: state.tokenPrices,
   }));
   const { getMySubscriptionTransactions } = useSubscriptionStore((state) => ({
     getMySubscriptionTransactions: state.getMySubscriptionTransactions,
@@ -252,7 +252,7 @@ const Wallet = () => {
                     <div className='value'>
                       {(
                         getNuaEquivalance(
-                          sonicTokenPairs,
+                          tokenPrices,
                           tokenBalance.token.symbol,
                           tokenBalance.balance
                         ) / Math.pow(10, getDecimalsByTokenSymbol('NUA'))
