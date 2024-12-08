@@ -284,6 +284,16 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   login: async (_loginMethod: string): Promise<void> => {
     set({ registrationError: undefined, isLoggedIn: false });
+
+    if (!authClient) {
+      authClient = await AuthClient.create({
+        idleOptions: {
+          disableIdle: true,
+          disableDefaultIdleCallback: true,
+        },
+      });
+    }
+
     if (_loginMethod === 'stoic') {
       let identity = await StoicIdentity.connect();
       set({ isLoggedIn: true, loginMethod: 'stoic' });
@@ -320,7 +330,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         await authClient.login(<AuthClientLoginOptions>{
           onSuccess: async () => {
             console.log('Logged in: ' + new Date());
-            set({ isLoggedIn: true });
+            set({ isLoggedIn: true, loginMethod: 'ii' });
             authChannel.postMessage({ type: 'login', date: new Date() });
             Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
             Usergeek.trackSession();
@@ -346,7 +356,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           derivationOrigin: isLocal ? undefined : derivationOrigin,
         });
       } else {
-        set({ isLoggedIn: true });
+        set({ isLoggedIn: true, loginMethod: 'ii' });
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
@@ -374,13 +384,13 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               disableDefaultIdleCallback: true,
             },
           });
-          set({ isLoggedIn: true });
+          set({ isLoggedIn: true, loginMethod: 'NFID' });
           await useUserStore.getState().getUser();
         } else {
           await authClient.login(<AuthClientLoginOptions>{
             onSuccess: async () => {
               console.log('Logged in: ' + new Date());
-              set({ isLoggedIn: true });
+              set({ isLoggedIn: true, loginMethod: 'NFID' });
               authChannel.postMessage({ type: 'login', date: new Date() });
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
@@ -413,6 +423,14 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
             maxTimeToLive: sessionTimeout,
             derivationOrigin: isLocal ? undefined : derivationOrigin,
           });
+        }
+      } else {
+        set({ isLoggedIn: true, loginMethod: 'NFID' });
+        await useUserStore.getState().getUser();
+        if (useUserStore.getState().user === undefined) {
+          window.location.href = '/register';
+        } else {
+          await get().fetchTokenBalances();
         }
       }
     } else if (_loginMethod === 'bitfinity') {
@@ -497,8 +515,10 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
           let isLoggedIn = await authClient.isAuthenticated();
           set({ isInitialized: true, isLoggedIn });
-          if (isLoggedIn) {
-            //set({ loginMethod: 'ii' });
+          const storedLoginMethod = get().loginMethod;
+          if (isLoggedIn && storedLoginMethod) {
+            //set({ loginMethod: {currentLoginMethod} });
+            set({ loginMethod: storedLoginMethod })
           }
           //no need to await and block the thread while app loads
           useUserStore.getState().getUser();
