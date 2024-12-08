@@ -1,5 +1,5 @@
 module{
-    public let PUBLICATIONMANAGEMENT_VERSION = "French 75";
-    public let PUBLICATION_VERSION = "French 75";
-    public let NFTFACTORY_VERSION = "French 75";
+    public let PUBLICATIONMANAGEMENT_VERSION = "Horsefeather";
+    public let PUBLICATION_VERSION = "Horsefeather";
+    public let NFTFACTORY_VERSION = "Horsefeather";
 }
