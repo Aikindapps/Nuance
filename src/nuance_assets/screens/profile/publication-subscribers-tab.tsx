@@ -170,6 +170,7 @@ const PublicationSubscribersTab: React.FC<PublicationSubscribersTabProps> = ({
                   >
                     @{sub.userListItem.handle}
                   </Link>
+                  {sub.userListItem.isVerified && <GradientMdVerified width='12' height='12' gradientKey={sub.userListItem.handle} />}
                 </td>
                 <td className='subscribers-tab-chart-info'>
                   {formatDate(sub.subscriptionStartDate)}

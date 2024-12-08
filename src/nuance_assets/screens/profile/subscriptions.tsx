@@ -9,6 +9,7 @@ import SubscriptionModal from '../../components/subscription-modal/subscription-
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import { useSubscriptionStore, ReaderSubscriptionDetailsConverted, SubscribedWriterItem, ExpiredSubscriptionItem } from '../../store/subscriptionStore';
 import { Link } from 'react-router-dom';
+import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 
 
 
@@ -209,7 +210,7 @@ const Subscriptions = () => {
                                         background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
                                         padding: "0.1em",
                                     } : {borderRadius: "50%"}} /> </Link></td>
-                                    <td className='subscribers-tab-chart-handle'><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`} style={{ color: "currentcolor" }}>@{sub.userListItem.handle}</Link></td>
+                                    <td className='subscribers-tab-chart-handle'><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`} style={{ color: "currentcolor" }}>@{sub.userListItem.handle}</Link>{' '}{sub.userListItem.isVerified && <GradientMdVerified width='16' height='16' gradientKey={sub.userListItem.handle} />}</td>
                                     <td className='subscribers-tab-chart-info'>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td className='subscribers-tab-chart-info'>{sub.period}</td>
                                     <td className='subscribers-tab-chart-info'>{sub.feePerPeriod / 1e8} NUA</td>

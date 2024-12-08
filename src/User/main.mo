@@ -719,6 +719,10 @@ actor User {
 
   public shared ({ caller }) func verifyPoh(credentialJWT: Text) : async VerifyResult {
 
+      if (isAnonymous(caller)) {
+        return #Err("Anonymous cannot call this method");
+      };
+
       var result : VerifyResult = #Ok({
           provider = #DecideAI;
           timestamp = 1_732_561_876_730;
@@ -739,7 +743,11 @@ actor User {
           case(?linkedPrincipal) {
             credentialSubject := Principal.fromText(linkedPrincipal);
           };
-          case(null) {};
+          case(null) {
+            if (principalIdHashMap.get(Principal.toText(caller)) == null){
+              return #Err(Unauthorized);
+            };
+          };
         };
 
         if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {

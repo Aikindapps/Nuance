@@ -111,7 +111,7 @@ const Followers = () => {
                         navigate('/user/' + user.handle);
                       }}
                     >
-                      {user.displayName} {user.isVerified && <div className='verified-badge'><GradientMdVerified width={'16'} height={'16'} /></div>}
+                      {user.displayName} {user.isVerified && <div className='verified-badge'><GradientMdVerified width={'16'} height={'16'} gradientKey={user.handle} /></div>}
                     </p>
 
                     <p

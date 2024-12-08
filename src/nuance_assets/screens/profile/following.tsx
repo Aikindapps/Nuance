@@ -101,6 +101,7 @@ const Following = () => {
                 >
                   @{follower.handle}
                 </Link>
+                {follower.isVerified && <GradientMdVerified width='16' height='16' gradientKey={follower.handle} />}
               </div>
               <img
                 src={follower.avatar || images.DEFAULT_AVATAR}

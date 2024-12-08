@@ -18,7 +18,6 @@ import { getIconForSocialChannel } from '../../../shared/utils';
 import { Context as ModalContext } from '../../../contextes/ModalContext';
 import GradientMdVerified from '../../../UI/verified-icon/verified-icon';
 import { Principal } from '@dfinity/principal';
-import { requestVerifiablePresentation, VerifiablePresentationResponse } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 
 const MyProfile = () => {
   const navigate = useNavigate();
@@ -49,48 +48,6 @@ const MyProfile = () => {
     verifyPoh: state.verifyPoh,
     proceedWithVerification: state.proceedWithVerification,
   }));
-
-  const {
-    loginMethod,
-    getUserWallet,
-  } = useAuthStore((state) => ({
-    loginMethod: state.loginMethod,
-    getUserWallet: state.getUserWallet,
-  }))
-
-  const verifyUserHumanity = async () => {
-    try {
-      const userWallet = getUserWallet();
-      //const userActor = await getUserActor();
-
-      const currentLoginMethod = loginMethod;
-      let principalToUse: Principal;
-
-      if (currentLoginMethod === 'ii') {
-        // User is logged in via II
-        principalToUse = Principal.fromText((await userWallet).principal);
-        await proceedWithVerification(principalToUse);
-      } else {
-        // User is not logged in via II
-        // Check if they have linked II principal
-        const linkedPrincipalResult = await getLinkedPrincipal((await userWallet).principal);
-
-        if (linkedPrincipalResult === undefined) {
-          // No linked II principal
-          // Open custom link-ii-modal
-          modalContext?.openModal('link ii');
-          return;
-        } else {
-          // User has linked II principal
-          principalToUse = Principal.fromText(linkedPrincipalResult);
-          await proceedWithVerification(principalToUse);
-        }
-      }
-    } catch (error) {
-      console.error('Error during PoH verification:', error);
-      // Handle error appropriately
-    }
-  };
 
   useEffect(() => {
     getUser();
@@ -134,8 +91,6 @@ const MyProfile = () => {
       return [];
     }
   };
-
-  console.log("WINDOW: ", window.location.origin);
 
   const darkOptionsAndColors = {
     background: darkTheme

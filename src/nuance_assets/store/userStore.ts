@@ -362,15 +362,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
           toast('Verification successful!', ToastType.Success);
         } else {
-          console.error('Failed to fetch updated user:', userResult.err);
           toastError('Verification succeeded, but failed to update user information.');
         }
       } else {
-        console.error('Verification failed:', result.Err);
         toastError('Verification failed: ' + result.Err);
       }
     } catch (error) {
-      console.error('Error during PoH verification:', error);
       handleError(error, Unexpected);
     }
   },
@@ -397,7 +394,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
             credentialSpec: {
               credentialType: 'ProofOfUniqueness',
               arguments: {
-                "minimumVerificationDate": "2024-12-01T00:00:00Z",
+                "minimumVerificationDate": "2020-12-01T00:00:00Z",
               },
             },
             credentialSubject: verifyPrincipal,
@@ -407,13 +404,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         });
       });
 
-      console.log("JWT: ", jwt);
-
       // verify the JWT credentials
       await get().verifyPoh(jwt);
 
     } catch (error) {
-      console.error('Error during PoH verification:', error);
       handleError(error, Unexpected);
       // handle error
     }
