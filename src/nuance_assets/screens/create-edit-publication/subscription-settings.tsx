@@ -40,7 +40,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
   const darkTheme = useTheme();
   const context = React.useContext(Context);
   const [inputAddressErrorMessage, setInputAddressErrorMessage] = useState('');
-  const sonicTokenPairs = useAuthStore((state) => state.sonicTokenPairs);
+  const tokenPrices = useAuthStore((state) => state.tokenPrices);
 
   const handleFeeChange = (
     type: keyof WriterSubscriptionDetails,
@@ -159,7 +159,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               ={' '}
               {truncateToDecimalPlace(
                 getPriceBetweenTokens(
-                  sonicTokenPairs,
+                  tokenPrices,
                   'NUA',
                   'ICP',
                   parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
@@ -170,7 +170,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               ICP |{' '}
               {truncateToDecimalPlace(
                 getPriceBetweenTokens(
-                  sonicTokenPairs,
+                  tokenPrices,
                   'NUA',
                   'ckBTC',
                   parseFloat(subscriptionDetails[type]?.[0] ?? '0') *
@@ -181,7 +181,7 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
               ckBTC |{' '}
               {truncateToDecimalPlace(
                 getPriceBetweenTokens(
-                  sonicTokenPairs,
+                  tokenPrices,
                   'NUA',
                   'ckUSDC',
                   parseFloat(subscriptionDetails[type]?.[0] ?? '0') *

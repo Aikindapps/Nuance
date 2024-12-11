@@ -11,7 +11,7 @@ import {
   getDecimalsByTokenSymbol,
   icons,
 } from './constants';
-import { PairInfo, PostType } from '../types/types';
+import { PostType, TokenPrice } from '../types/types';
 import { TagModel } from '../services/actorService';
 import { SubscriptionTimeInterval } from '../../declarations/Subscription/Subscription.did';
 import {
@@ -442,7 +442,7 @@ export function areUint8ArraysEqual(
 }
 
 export const getNuaEquivalance = (
-  tokenPairs: PairInfo[],
+  tokenPrices: TokenPrice[],
   symbol: SupportedTokenSymbol,
   amount: number
 ) => {
@@ -450,119 +450,69 @@ export const getNuaEquivalance = (
     case 'NUA':
       return amount;
     case 'ICP':
-      return getPriceBetweenTokens(tokenPairs, 'ICP', 'NUA', amount);
+      return getPriceBetweenTokens(tokenPrices, 'ICP', 'NUA', amount);
     case 'ckBTC':
-      let ckbtcToIcp = getPriceBetweenTokens(
-        tokenPairs,
-        'ckBTC',
-        'ICP',
-        amount
-      );
-      return getPriceBetweenTokens(tokenPairs, 'ICP', 'NUA', ckbtcToIcp);
+      return getPriceBetweenTokens(tokenPrices, 'ckBTC', 'NUA', amount);
   }
 };
 
 export const getPriceBetweenTokens = (
-  tokenPairs: PairInfo[],
+  tokenPrices: TokenPrice[],
   token0Symbol: 'ICP' | 'ckBTC' | 'NUA' | 'ckUSDC',
   token1Symbol: 'ICP' | 'ckBTC' | 'NUA' | 'ckUSDC',
   amount: number
 ): number => {
+  console.log(
+    'here is the arguments: ',
+    tokenPrices,
+    token0Symbol,
+    token1Symbol,
+    amount
+  );
   if (token0Symbol === token1Symbol) {
+    console.log('here is the result 0 : ', amount);
     return amount;
   }
-  if (token0Symbol !== 'ICP' && token1Symbol !== 'ICP') {
-    return getPriceBetweenTokens(
-      tokenPairs,
-      'ICP',
+  if (token0Symbol === 'ICP') {
+    let oneIcpEquivelance = tokenPrices.find((value) => {
+      return value.tokenSymbol === token1Symbol;
+    })?.icpEquivalence as number;
+    console.log(
+      'here is the arguments: ',
+      tokenPrices,
+      token0Symbol,
       token1Symbol,
-      getPriceBetweenTokens(tokenPairs, token0Symbol, 'ICP', amount)
+      amount
     );
-  }
-
-  let token0 = '';
-  let token1 = '';
-  switch (token0Symbol) {
-    case 'NUA':
-      token0 = NUA_CANISTER_ID;
-      break;
-    case 'ICP':
-      token0 = ICP_CANISTER_ID;
-      break;
-    case 'ckBTC':
-      token0 = ckBTC_CANISTER_ID;
-      break;
-    case 'ckUSDC':
-      token0 = ckUSDC_CANISTER_ID;
-      break;
-  }
-  switch (token1Symbol) {
-    case 'NUA':
-      token1 = NUA_CANISTER_ID;
-      break;
-    case 'ICP':
-      token1 = ICP_CANISTER_ID;
-      break;
-    case 'ckBTC':
-      token1 = ckBTC_CANISTER_ID;
-      break;
-    case 'ckUSDC':
-      token1 = ckUSDC_CANISTER_ID;
-      break;
-  }
-  let poolIncludingUndefined = tokenPairs.map((poolValue) => {
-    if (
-      (poolValue.token0 === token0 && poolValue.token1 === token1) ||
-      (poolValue.token1 === token0 && poolValue.token0 === token1)
-    ) {
-      return poolValue;
-    }
-  });
-
-  let poolFiltered = poolIncludingUndefined.filter((val) => {
-    return val !== undefined;
-  });
-
-  if (poolFiltered.length > 0) {
-    let pool = poolFiltered[0];
-    if (pool) {
-      let reserveIn = 0;
-      let reserveOut = 0;
-      if (pool.token0 === ICP_CANISTER_ID) {
-        reserveIn = Number(pool.reserve0);
-      } else {
-        reserveIn = Number(pool.reserve1);
-      }
-      if (pool.token1 !== ICP_CANISTER_ID) {
-        reserveOut = Number(pool.reserve1);
-      } else {
-        reserveOut = Number(pool.reserve0);
-      }
-
-      var amountInWithFee = Math.pow(10, getDecimalsByTokenSymbol('ICP')) * 997;
-      var numerator = amountInWithFee * reserveOut;
-      var denominator = reserveIn * 1000 + amountInWithFee;
-      var amountOut = numerator / denominator;
-
-      //amountOut means the ICP equivalance of the other token
-      if (token0Symbol === 'ICP') {
-        return (
-          (amount / Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))) *
-          amountOut
-        );
-      } else {
-        return (
-          (amount / amountOut) *
-          Math.pow(10, getDecimalsByTokenSymbol(token0Symbol))
-        );
-      }
-    } else {
-      //the pool not found -> not fetched yet return 0
-      return 0;
-    }
+    console.log(
+      'here is the result 1 : ',
+      (amount * oneIcpEquivelance) /
+        Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))
+    );
+    return (
+      (amount * oneIcpEquivelance) /
+      Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))
+    );
   } else {
-    //the pool not found -> not fetched yet return 0
-    return 0;
+    let token0IcpEquivelance =
+      (tokenPrices.find((value) => {
+        return value.tokenSymbol === token0Symbol;
+      })?.icpEquivalence as number) /
+      Math.pow(10, getDecimalsByTokenSymbol(token0Symbol));
+    console.log('token0IcpEquivelance: ', token0IcpEquivelance);
+    let token1IcpEquivelance =
+      token1Symbol === 'ICP'
+        ? 1
+        : (tokenPrices.find((value) => {
+            return value.tokenSymbol === token1Symbol;
+          })?.icpEquivalence as number) /
+          Math.pow(10, getDecimalsByTokenSymbol(token1Symbol));
+    console.log('token1IcpEquivelance: ', token1IcpEquivelance);
+    console.log(
+      'here is the result 2 : ',
+      (amount * token1IcpEquivelance) / token0IcpEquivelance
+    );
+    return amount * (token1IcpEquivelance / token0IcpEquivelance);
   }
 };
 

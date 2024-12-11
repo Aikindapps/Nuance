@@ -1388,7 +1388,7 @@ actor class PostBucket() = this {
     var creatorPrincipal = U.safeGet(handleReverseHashMap, creatorHandle, "");
     if (creatorPrincipal == "" and isPublication) {
       let UserCanister = CanisterDeclarations.getUserCanister();
-      var user = await UserCanister.getUserListItemByHandle(creatorHandle);
+      var user = await UserCanister.getUserListItemByHandle(U.lowerCase(creatorHandle));
       switch (user) {
         case (#err(err)) {
           return #err("Cross canister user not found");
