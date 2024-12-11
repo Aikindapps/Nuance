@@ -207,6 +207,7 @@ export const idlFactory = ({ IDL }) => {
     'claimRestrictedTokens' : IDL.Func([], [Result], []),
     'clearAllMyFollowers' : IDL.Func([], [IDL.Text], []),
     'collectCanisterMetrics' : IDL.Func([], [], []),
+    'deleteConfirmedLinkings' : IDL.Func([], [Result_1], []),
     'deleteUser' : IDL.Func([IDL.Text], [Result_3], []),
     'dumpUsers' : IDL.Func([], [IDL.Text], ['query']),
     'followAuthor' : IDL.Func([IDL.Text], [Result], []),

@@ -477,6 +477,9 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     } else if (loginMethod === 'NFID') {
       Usergeek.setPrincipal(Principal.anonymous());
       await authClient.logout();
+    } else {
+      Usergeek.setPrincipal(Principal.anonymous());
+      await authClient.logout();
     }
     set({ isLoggedIn: false });
     authChannel.postMessage({ type: 'logout', date: new Date() });
@@ -567,6 +570,11 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {
     return new Promise(async (resolve, reject) => {
+
+      if (useAuthStore?.getState().loginMethod === undefined) {
+        toast('Your login method is undefined. Please restore your session.', ToastType.Error);
+        return;
+      }
       
       try {
         const currentLoginMethod = await get().loginMethod;

@@ -235,7 +235,7 @@ export type Result = { 'ok' : UserNotificationSettings } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_2 = { 'ok' : Array<string> } |
+export type Result_2 = { 'ok' : null } |
   { 'err' : string };
 export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |

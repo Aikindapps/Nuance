@@ -94,7 +94,7 @@ export const idlFactory = ({ IDL }) => {
       'subscriberPrincipalId' : IDL.Text,
     }),
   });
-  const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const UserNotificationSettings = IDL.Record({
     'premiumArticleSold' : IDL.Bool,
     'verifyProfile' : IDL.Bool,

@@ -908,6 +908,7 @@ const ReadArticle = () => {
                     className='username'
                   >
                     @{post.isPublication ? post.creatorHandle : author.handle}
+                    {' '}
                     {author?.isVerified && (
                       <div className='verified-badge'>
                         <GradientMdVerified

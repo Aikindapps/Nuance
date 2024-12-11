@@ -290,6 +290,7 @@ service : {
   claimRestrictedTokens: () -> (Result);
   clearAllMyFollowers: () -> (text);
   collectCanisterMetrics: () -> ();
+  deleteConfirmedLinkings: () -> (Result_1);
   deleteUser: (text) -> (Result_3);
   dumpUsers: () -> (text) query;
   followAuthor: (text) -> (Result);

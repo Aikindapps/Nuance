@@ -634,6 +634,22 @@ actor User {
     };
   };
 
+  public shared ({ caller }) func deleteConfirmedLinkings() : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous cannot call this method.");
+    };
+
+    if (not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    for (principal in confirmedLinkingRequestsHashMap.keys()) {
+      confirmedLinkingRequestsHashMap.delete(principal);
+    };
+
+    return #ok();
+  };
+
   public query func getLinkedPrincipal(walletPrincipal: Text) : async Result.Result<Text, Text> {
     switch(confirmedLinkingRequestsHashMap.get(walletPrincipal)) {
       case(?value) {
@@ -723,10 +739,7 @@ actor User {
         return #Err("Anonymous cannot call this method");
       };
 
-      var result : VerifyResult = #Ok({
-          provider = #DecideAI;
-          timestamp = 1_732_561_876_730;
-        });
+      var result : VerifyResult = #Err("An error occured.");
 
       if (ENV.IS_LOCAL) {
         // assign the hardcoded success result to 'result'

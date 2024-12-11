@@ -136,7 +136,8 @@ actor Notifications {
 
   //public update functions
 
-  public shared ({caller}) func broadcastNotification(notificationContent: NotificationContent) : async Result.Result<[Text], Text> {
+  //broadcasts a notification type to all users
+  public shared ({caller}) func broadcastNotification(notificationContent: NotificationContent) : async Result.Result<(), Text> {
     if (not isAdmin(caller) and not isPlatformOperator(caller)) {
         return #err("Unauthorized");
     };
@@ -152,7 +153,7 @@ actor Notifications {
             for (userPrincipalId in allUserPrincipals.vals()) {
                 createNotificationInternal(userPrincipalId, notificationContent);
             };
-            return #ok(allUserPrincipals);
+            return #ok();
         };
         case (#err(err)) {
             return #err("error");
