@@ -25,7 +25,7 @@ type SubscriptionTimeInterval =
 type Result_2 = 
  variant {
    err: text;
-   ok: vec text;
+   ok;
  };
 type Result_1 = 
  variant {

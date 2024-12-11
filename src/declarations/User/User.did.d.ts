@@ -195,6 +195,7 @@ export interface _SERVICE {
   'claimRestrictedTokens' : ActorMethod<[], Result>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
+  'deleteConfirmedLinkings' : ActorMethod<[], Result_1>,
   'deleteUser' : ActorMethod<[string], Result_3>,
   'dumpUsers' : ActorMethod<[], string>,
   'followAuthor' : ActorMethod<[string], Result>,

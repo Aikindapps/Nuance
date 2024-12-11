@@ -274,16 +274,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   login: async (_loginMethod: string): Promise<void> => {
     set({ registrationError: undefined, isLoggedIn: false });
-
-    if (!authClient) {
-      authClient = await AuthClient.create({
-        idleOptions: {
-          disableIdle: true,
-          disableDefaultIdleCallback: true,
-        },
-      });
-    }
-
     if (_loginMethod === 'stoic') {
       let identity = await StoicIdentity.connect();
       set({ isLoggedIn: true, loginMethod: 'stoic' });
@@ -297,8 +287,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         const navigator = window.navigator as any;
         (navigator.brave && (await navigator.brave.isBrave())) || false
           ? alert(
-              'Must enable all cookies for Stoic wallet to work with Brave browser'
-            )
+            'Must enable all cookies for Stoic wallet to work with Brave browser'
+          )
           : console.log('Not a brave browser');
 
         (await isChrome())
@@ -314,13 +304,13 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       try {
         let window_any = window as any;
         window_any.ic.bitfinityWallet.disconnect();
-      } catch (err) {}
+      } catch (err) { }
       set({ loginMethod: 'ii' });
       if (!(await authClient?.isAuthenticated())) {
         await authClient.login(<AuthClientLoginOptions>{
           onSuccess: async () => {
             console.log('Logged in: ' + new Date());
-            set({ isLoggedIn: true, loginMethod: 'ii' });
+            set({ isLoggedIn: true });
             authChannel.postMessage({ type: 'login', date: new Date() });
             Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
             Usergeek.trackSession();
@@ -346,7 +336,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
           derivationOrigin: isLocal ? undefined : derivationOrigin,
         });
       } else {
-        set({ isLoggedIn: true, loginMethod: 'ii' });
+        set({ isLoggedIn: true });
         await useUserStore.getState().getUser();
         if (useUserStore.getState().user === undefined) {
           window.location.href = '/register';
@@ -360,7 +350,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       try {
         let window_any = window as any;
         window_any.ic.bitfinityWallet.disconnect();
-      } catch (err) {}
+      } catch (err) { }
       set({ loginMethod: 'NFID' });
       if (!(await authClient?.isAuthenticated())) {
         if (fakeProvider) {
@@ -374,13 +364,13 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
               disableDefaultIdleCallback: true,
             },
           });
-          set({ isLoggedIn: true, loginMethod: 'NFID' });
+          set({ isLoggedIn: true });
           await useUserStore.getState().getUser();
         } else {
           await authClient.login(<AuthClientLoginOptions>{
             onSuccess: async () => {
               console.log('Logged in: ' + new Date());
-              set({ isLoggedIn: true, loginMethod: 'NFID' });
+              set({ isLoggedIn: true });
               authChannel.postMessage({ type: 'login', date: new Date() });
 
               Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
@@ -477,14 +467,17 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     } else if (loginMethod === 'NFID') {
       Usergeek.setPrincipal(Principal.anonymous());
       await authClient.logout();
+    } else {
+      Usergeek.setPrincipal(Principal.anonymous());
+      await authClient.logout();
     }
     set({ isLoggedIn: false });
     authChannel.postMessage({ type: 'logout', date: new Date() });
-    // clear all stores, and sessionStorage
+    // clear all stores, and localStorage
     usePostStore.getState().clearAll();
     useUserStore.getState().clearAll();
     get().clearAll();
-    sessionStorage?.clear();
+    localStorage?.clear();
     console.log('Logged out: ' + new Date());
   },
 
@@ -567,6 +560,12 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {
     return new Promise(async (resolve, reject) => {
+
+      if (useAuthStore?.getState().loginMethod === undefined) {
+        toast('Your login method is undefined. Please restore your session.', ToastType.Error);
+        return;
+      }
+      
       try {
         const currentLoginMethod = await get().loginMethod;
         // get the current user's principal
@@ -641,7 +640,7 @@ export const useAuthStore = create<AuthStore>(
     }),
     {
       name: 'authStore',
-      getStorage: () => sessionStorage,
+      getStorage: () => localStorage,
     }
   )
 );
