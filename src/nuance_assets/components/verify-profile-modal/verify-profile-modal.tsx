@@ -81,8 +81,8 @@ export const VerifyProfileModal = () => {
         style={
           loading
             ? {
-                cursor: 'not-allowed',
-              }
+              cursor: 'not-allowed',
+            }
             : {}
         }
         className='close-modal-icon'
@@ -91,8 +91,8 @@ export const VerifyProfileModal = () => {
         style={
           darkTheme
             ? {
-                color: colors.darkModePrimaryTextColor,
-              }
+              color: colors.darkModePrimaryTextColor,
+            }
             : {}
         }
         className='modal-title'
@@ -103,8 +103,8 @@ export const VerifyProfileModal = () => {
         style={
           darkTheme
             ? {
-                color: colors.darkSecondaryTextColor,
-              }
+              color: colors.darkSecondaryTextColor,
+            }
             : {}
         }
         className='information-text'
@@ -122,7 +122,7 @@ export const VerifyProfileModal = () => {
           <li>
             Go to
             <a
-              href='https://decideai.com'
+              href='https://id.decideai.xyz/'
               target='_blank'
               rel='noopener noreferrer'
             >
@@ -136,8 +136,8 @@ export const VerifyProfileModal = () => {
               style={
                 darkTheme
                   ? {
-                      color: colors.darkSecondaryTextColor,
-                    }
+                    color: colors.darkSecondaryTextColor,
+                  }
                   : {}
               }
               className='note-text'
@@ -158,8 +158,8 @@ export const VerifyProfileModal = () => {
         style={
           darkTheme
             ? {
-                color: colors.darkSecondaryTextColor,
-              }
+              color: colors.darkSecondaryTextColor,
+            }
             : {}
         }
         className='information-text'
