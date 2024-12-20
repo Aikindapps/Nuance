@@ -1,22 +1,10 @@
-import '../../shared/styles/customQuill.css';
 import 'highlight.js/styles/github-dark-dimmed.css';
-import React from 'react';
-import ReactQuill, { Quill } from 'react-quill';
-import ImageCompress from './modules/quill-image-compress/quill.imageCompressor.js';
-import ImageResize from './modules/quill-image-resize/quill-image-resize.js';
+import React, { useState, useRef, useEffect } from 'react';
+import ReactQuill from 'react-quill';
 import hljs from 'highlight.js';
-
-//Includes ImageDrop module
-Quill.register('modules/imageCompress', ImageCompress);
-Quill.register('modules/imageResize', ImageResize);
-
-type TextEditorProps = {
-  onChange?: (html: string, text: string, isEmpty: boolean) => void;
-  value: string;
-  hasError: boolean;
-  dark?: boolean;
-};
-
+import { CreateMLCEngine } from '@mlc-ai/web-llm';
+import 'react-quill/dist/quill.snow.css';
+import { modelConfig } from './model_config';
 
 hljs.configure({
   languages: ['javascript', 'ruby', 'python', 'rust'],
@@ -31,69 +19,177 @@ const modules = {
     ['blockquote'],
     ['code-block'],
   ],
-
   syntax: {
     highlight: (text: string) => hljs.highlightAuto(text).value,
   },
-  clipboard: {
-    matchVisual: false,
-  },
-
-  imageResize: {
-    modules: ['Resize', 'DisplaySize'],
-  },
-
-  imageCompress: {
-    quality: 0.9,
-    maxWidth: 1000, // default
-    maxHeight: 1000, // default
-    imageType: 'image/jpeg', // default
-    debug: true, // default
-    suppressErrorLogging: false, // default
-  },
+  clipboard: { matchVisual: false },
 };
 
-const QuillTextEditor: React.FC<TextEditorProps> = (props) => {
-  const formats = [
-    'code-block',
-    'header',
-    'bold',
-    'italic',
-    'blockquote',
-    'list',
-    'bullet',
-    'link',
-    'image',
-    'width',
-    'height',
-    'style',
-    'class',
-    'alt',
-  ];
+const formats = [
+  'code-block', 'header', 'bold', 'italic', 'blockquote', 'list', 'bullet',
+  'link', 'image', 'width', 'height', 'style', 'class', 'alt',
+];
 
-  const onChangeHandler = (html: any, delta: any, source: any, editor: any) => {
-    const text = editor.getText(html).trim();
-    const isEmpty = text.length === 0;
-    props.onChange && props.onChange(html, text, isEmpty);
+type Mode = 'autocomplete' | 'tone' | 'grammar' | 'quality';
+
+const defaultPrompts = {
+  autocomplete: 'You are a helpful blogging assistant. Suggest the next sentence for a blog. Only respond suggesting the next word or few words.',
+  quality: 'Provide a quality assessment of this blog content and suggest improvements.',
+  tone: 'Analyze the tone of this blog and suggest adjustments to match a professional style.',
+  grammar: 'Check the grammar of this blog content and suggest corrections.',
+};
+
+const QuillTextEditor: React.FC = () => {
+  const [mode, setMode] = useState<Mode>('autocomplete');
+  const [engine, setEngine] = useState<any>(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [output, setOutput] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState<string>(defaultPrompts[mode]);
+  const [temperature, setTemperature] = useState<number>(0.7);
+  const [maxTokens, setMaxTokens] = useState<number>(10);
+  const [modelName, setModelName] = useState<string>(modelConfig.model_list[0]?.model_id || '');
+  const quillRef = useRef<ReactQuill | null>(null);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    initializeModel();
+  }, [modelName]);
+
+  useEffect(() => {
+    setPrompt(defaultPrompts[mode]);
+    setOutput(null);
+  }, [mode]);
+
+  const initializeModel = async () => {
+    setModelLoaded(false);
+    try {
+      const progressCallback = (progress: { progress: number }) => {
+        console.log(`Model loading: ${progress.progress * 100}%`);
+      };
+      const engineInstance = await CreateMLCEngine(modelName, { initProgressCallback: progressCallback });
+      setEngine(engineInstance);
+      setModelLoaded(true);
+    } catch (error) {
+      console.error('Error loading model:', error);
+    }
   };
 
-  const className = props.hasError
-    ? props.dark
-      ? 'has-error text-editor-dark'
-      : 'has-editor'
-    : props.dark
-      ? 'text-editor-dark'
-      : 'text-editor';
+  const handleTextChange = (html: string, _delta: any, source: string, editor: any) => {
+    const text = editor.getText().trim();
+    if (!text || !modelLoaded) {
+      setOutput(null);
+      return;
+    }
+
+    if (mode === 'autocomplete') {
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+      typingTimeout.current = setTimeout(() => processInput(text), 300); // Debounced input processing for autocomplete
+    } else if (isSentenceComplete(text)) {
+      processInput(text); // Process input only if the sentence is complete for other modes
+    }
+  };
+
+  const isSentenceComplete = (text: string): boolean => {
+    return /[.!?]$/.test(text); // Detect if the text ends with a sentence-ending punctuation
+  };
+
+  const processInput = async (text: string) => {
+    if (!engine) return;
+
+    try {
+      const messages = [
+        { role: 'system', content: prompt },
+        { role: 'user', content: text },
+      ];
+
+      const result = await engine.chat.completions.create({
+        messages,
+        max_tokens: mode === 'autocomplete' ? 10 : 100,
+        temperature,
+      });
+
+      setOutput(result.choices?.[0]?.message?.content?.trim() || null);
+    } catch (error) {
+      console.error(`Error in ${mode} mode:`, error);
+    }
+  };
 
   return (
-    <div className={className}>
+    <div>
+      <div style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}>
+        {(['autocomplete', 'tone', 'grammar', 'quality'] as Mode[]).map((currentMode) => (
+          <button
+            key={currentMode}
+            onClick={() => setMode(currentMode)}
+            style={{
+              padding: '5px 10px',
+              border: mode === currentMode ? '2px solid #007BFF' : '1px solid #ddd',
+              background: mode === currentMode ? '#E7F3FF' : '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            {currentMode.toUpperCase()}
+          </button>
+        ))}
+        <label style={{ marginLeft: 'auto' }}>Model:</label>
+        <select
+          style={{ marginLeft: '5px' }}
+          value={modelName}
+          onChange={(e) => setModelName(e.target.value)}
+        >
+          {modelConfig.model_list.map((model) => (
+            <option key={model.model_id} value={model.model_id}>
+              {model.model_id}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div style={{ marginTop: '10px' }}>
+        <label>Prompt:</label>
+        <input
+          type="text"
+          style={{ width: '100%', marginTop: '5px' }}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+        />
+        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <div>
+            <label>Temperature:</label>
+            <input
+              type="number"
+              step="0.1"
+              min={0}
+              max={2}
+              value={temperature}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+            />
+          </div>
+          <div>
+            <label>Max Tokens:</label>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              value={maxTokens}
+              onChange={(e) => setMaxTokens(parseInt(e.target.value, 10))}
+            />
+          </div>
+        </div>
+      </div>
       <ReactQuill
+        ref={quillRef}
         modules={modules}
         formats={formats}
-        placeholder='Body...'
-        onChange={onChangeHandler}
-        value={props.value}
-      ></ReactQuill>
+        placeholder="Start writing your blog content..."
+        onChange={handleTextChange}
+      />
+      {output && (
+        <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #ddd' }}>
+          <strong>{mode.toUpperCase()} Output:</strong>
+          <p>{output}</p>
+        </div>
+      )}
+      {!modelLoaded && <div>Loading model, please wait...</div>}
     </div>
   );
 };
