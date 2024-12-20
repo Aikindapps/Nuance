@@ -39,7 +39,14 @@ const defaultPrompts = {
   grammar: 'Check the grammar of this blog content and suggest corrections.',
 };
 
-const QuillTextEditor: React.FC = () => {
+interface QuillTextEditorProps {
+  onChange: (html: string, text: string, isEmpty: boolean) => void;
+  value: string;
+  hasError: boolean;
+  dark: boolean;
+}
+
+const QuillTextEditor: React.FC<QuillTextEditorProps> = ({ onChange, value, hasError, dark }) => {
   const [mode, setMode] = useState<Mode>('autocomplete');
   const [engine, setEngine] = useState<any>(null);
   const [modelLoaded, setModelLoaded] = useState(false);
@@ -76,6 +83,9 @@ const QuillTextEditor: React.FC = () => {
 
   const handleTextChange = (html: string, _delta: any, source: string, editor: any) => {
     const text = editor.getText().trim();
+    const isEmpty = text.length === 0;
+    onChange(html, text, isEmpty); // Propagate changes to the parent component
+
     if (!text || !modelLoaded) {
       setOutput(null);
       return;
@@ -115,7 +125,7 @@ const QuillTextEditor: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className={dark ? 'editor-dark' : 'editor-light'}>
       <div style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}>
         {(['autocomplete', 'tone', 'grammar', 'quality'] as Mode[]).map((currentMode) => (
           <button
@@ -180,8 +190,9 @@ const QuillTextEditor: React.FC = () => {
         ref={quillRef}
         modules={modules}
         formats={formats}
+        value={value}
         placeholder="Start writing your blog content..."
-        onChange={handleTextChange}
+        onChange={(html, delta, source, editor) => handleTextChange(html, delta, source, editor)}
       />
       {output && (
         <div style={{ marginTop: '10px', padding: '10px', border: '1px solid #ddd' }}>
@@ -190,6 +201,7 @@ const QuillTextEditor: React.FC = () => {
         </div>
       )}
       {!modelLoaded && <div>Loading model, please wait...</div>}
+      {hasError && <div className="error-message">Error: Please check the content!</div>}
     </div>
   );
 };
