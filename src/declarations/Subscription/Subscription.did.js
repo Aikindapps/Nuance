@@ -49,6 +49,9 @@ export const idlFactory = ({ IDL }) => {
     'ok' : WriterSubscriptionDetails,
     'err' : IDL.Text,
   });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const UpdateSubscriptionDetailsModel = IDL.Record({
     'weeklyFee' : IDL.Opt(IDL.Nat),
@@ -93,6 +96,7 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         ['query'],
       ),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'isReaderSubscriber' : IDL.Func(
         [IDL.Text, IDL.Text],
         [IDL.Bool],

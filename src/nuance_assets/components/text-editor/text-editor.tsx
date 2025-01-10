@@ -192,12 +192,11 @@ const TextEditor: React.FC<TextEditorProps> = (props) => {
             },
           },
         }}
-      >
-        <textarea
-          disabled
-          value={draftToHtml(convertToRaw(editorState?.getCurrentContent()))}
-        />
-      </Editor>
+      ></Editor>
+      <textarea
+        disabled
+        value={draftToHtml(convertToRaw(editorState?.getCurrentContent()))}
+      />
       {/* <div id='test'></div> */}
     </div>
   );

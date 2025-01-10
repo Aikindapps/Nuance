@@ -5,7 +5,7 @@ import {
   useUserStore,
   usePostStore,
   usePublisherStore,
-  useSubscriptionStore
+  useSubscriptionStore,
 } from '../../store';
 import Header from '../../components/header/header';
 import Button from '../../UI/Button/Button';
@@ -15,11 +15,13 @@ import Activity from './activity';
 import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images, icons } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
+import { useAuth, useIsInitializing } from '@nfid/identitykit/react';
 
 const ProfileSidebar = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [screenWidth, setScreenWidth] = useState(0);
   const navigate = useNavigate();
+  const isInitializing = useIsInitializing();
   const [mobile, setMobile] = useState<Boolean>(false);
   const [userPublications, setUserPublications] = useState<PublicationObject[]>(
     []
@@ -45,9 +47,15 @@ const ProfileSidebar = () => {
   const location = useLocation();
   const darkTheme = useTheme();
 
-  const { user, getCounts, counts, author, getAuthor, clearAuthor } =
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+    agent: state.agent,
+  }));
+
+  const { user, loadingUser, getUser, getCounts, counts, author, getAuthor, clearAuthor } =
     useUserStore((state) => ({
       user: state.user,
+      loadingUser: state.loadingUser,
+      getUser: state.getUser,
       getCounts: state.getUserPostCounts,
       counts: state.userPostCounts,
       author: state.author,
@@ -56,10 +64,11 @@ const ProfileSidebar = () => {
     }));
 
   const [subscriptionCount, setSubscriptionCount] = useState<number>(0);
-  const { getMySubscriptionHistoryAsReader, getMySubscriptionDetailsAsWriter } = useSubscriptionStore((state) => ({
-    getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
-    getMySubscriptionDetailsAsWriter: state.getMySubscriptionDetailsAsWriter,
-  }));
+  const { getMySubscriptionHistoryAsReader, getMySubscriptionDetailsAsWriter } =
+    useSubscriptionStore((state) => ({
+      getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
+      getMySubscriptionDetailsAsWriter: state.getMySubscriptionDetailsAsWriter,
+    }));
 
   useEffect(() => {
     const fetchSubscriptionHistory = async () => {
@@ -101,17 +110,20 @@ const ProfileSidebar = () => {
   }));
 
   useEffect(() => {
-    if (user) {
-      getCounts(user.handle);
-      getMySubscriptionHistoryAsReader();
-      getMyTags();
-      setUserPublications(
-        user.publicationsArray.filter((publication) => publication.isEditor)
-      );
-    } else {
-      navigate('/');
+    console.log('PROFILE SIDEBAR USER :', user);
+    if (!isInitializing && !loadingUser) {
+      if (user) {
+        getCounts(user.handle);
+        getMySubscriptionHistoryAsReader();
+        getMyTags();
+        setUserPublications(
+          user.publicationsArray.filter((publication) => publication.isEditor)
+        );
+      } else {
+        navigate('/');
+      }
     }
-  }, [user]);
+  }, [user, isInitializing]);
 
   useEffect(() => {
     if (window.innerWidth < 1089) {
@@ -168,16 +180,16 @@ const ProfileSidebar = () => {
         <div
           style={
             location.pathname.includes('publications') &&
-              screenWidth > 451 &&
-              screenWidth < 1089 &&
-              shown
+            screenWidth > 451 &&
+            screenWidth < 1089 &&
+            shown
               ? {}
               : (location.pathname.includes('published') ||
-                location.pathname.includes('draft')) &&
+                  location.pathname.includes('draft')) &&
                 screenWidth < 1089 &&
                 shown
-                ? {}
-                : {}
+              ? {}
+              : {}
           }
           className={`sidebar ${!shown ? 'not-toggled' : ''}`}
         >
@@ -202,8 +214,8 @@ const ProfileSidebar = () => {
                   shown && !location.pathname.includes('publications')
                     ? { width: 200 }
                     : shown
-                      ? { width: 200 }
-                      : { width: 0 }
+                    ? { width: 200 }
+                    : { width: 0 }
                 }
               >
                 <div
@@ -217,8 +229,9 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${location.pathname === '/my-profile' && 'active'
-                        }`}
+                      className={`route ${
+                        location.pathname === '/my-profile' && 'active'
+                      }`}
                       to='/my-profile'
                     >
                       My Profile
@@ -230,8 +243,9 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${location.pathname === '/my-profile/articles' && 'active'
-                        }`}
+                      className={`route ${
+                        location.pathname === '/my-profile/articles' && 'active'
+                      }`}
                       to='/my-profile/articles'
                     >
                       My Articles ({counts?.totalPostCount || 0})
@@ -260,15 +274,16 @@ const ProfileSidebar = () => {
                             ? colors.accentColor
                             : darkOptionsAndColors.color,
                       }}
-                      className={`route ${location.pathname === '/my-profile/wallet' && 'active'
-                        }`}
+                      className={`route ${
+                        location.pathname === '/my-profile/wallet' && 'active'
+                      }`}
                       to='/my-profile/wallet'
                     >
                       My Wallet
                     </Link>
                     <div className='hr' />
                     <Button
-                      styleType={{dark: 'white', light: 'white'}}
+                      styleType={{ dark: 'white', light: 'white' }}
                       type='button'
                       style={{ width: '130px' }}
                       onClick={() => {

@@ -11,6 +11,8 @@ import './_personal-articles.scss';
 import { get } from 'lodash';
 
 const PersonalArticles = () => {
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+
   const { user, getUser, getCounts, counts } = useUserStore((state) => ({
     user: state.user,
     getUser: state.getUser,
@@ -74,7 +76,7 @@ const PersonalArticles = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getUser();
+    getUser(agentToBeUsed);
     loadInitial();
   }, []);
 

@@ -19,6 +19,24 @@ import Loader from '../../UI/loader/Loader';
 import SearchResults from '../../components/search-results/search-results';
 import Dropdown from '../../UI/dropdown/dropdown';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
+import {
+  useAccounts,
+  useAgent,
+  useAuth,
+  useBalance,
+  useDelegationType,
+  useIdentity,
+  useSigner,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
+import {
+  NFIDW,
+  Plug,
+  InternetIdentity,
+  Stoic,
+  MockedSigner,
+} from '@nfid/identitykit';
+import { stat } from 'fs';
 
 const HomePage = () => {
   //darkTheme
@@ -30,6 +48,8 @@ const HomePage = () => {
   //location
   const location = useLocation();
 
+  //const [isLoading, setIsLoading] = useState(false);
+
   const [screenWidth, setScreenWidth] = useState(0);
   useEffect(
     (window.onresize = window.onload =
@@ -39,15 +59,52 @@ const HomePage = () => {
     [screenWidth]
   );
 
-  //authStore
-  const { isLoggedIn, login } = useAuthStore((state) => ({
-    isLoggedIn: state.isLoggedIn,
-    login: state.login,
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
+  const { connect, disconnect, isConnecting, user: authUser } = useAuth();
+  const { balance, fetchBalance } = useBalance();
+  const signer = useSigner();
+  const identity = useIdentity();
+  const accounts = useAccounts();
+  const delegationType = useDelegationType();
+  const isInitializing = useIsInitializing();
+
+  const customHost = 'https://icp-api.io';
+  const agent = useAgent({ host: customHost });
+
+  console.log({
+    isInitializing,
+    authUser,
+    isConnecting,
+    balance,
+    signer,
+    identity,
+    delegationType,
+    accounts,
+    connect,
+    disconnect,
+    fetchBalance,
+  });
+
+  const {
+    agent: agent1,
+    getUserWallet,
+    fetchTokenBalances,
+    clearAll,
+  } = useAuthStore((state) => ({
+    agent: state.agent,
+    getUserWallet: state.getUserWallet,
+    fetchTokenBalances: state.fetchTokenBalances,
+    clearAll: state.clearAll,
   }));
+
   //userStore
-  const { user, searchUsers, searchPublications, getCounts, counts } =
+  const { user, getUser, searchUsers, searchPublications, getCounts, counts } =
     useUserStore((state) => ({
       user: state.user,
+      getUser: state.getUser,
       searchUsers: state.searchUsers,
       searchPublications: state.searchPublications,
       getCounts: state.getUserPostCounts,
@@ -74,6 +131,68 @@ const HomePage = () => {
     getLatestPosts: state.getLatestPosts,
     getAllTags: state.getAllTags,
     search: state.search,
+  }));
+
+  console.log('agent homepage: ', agent);
+  console.log('agent authStore :', agent1);
+
+  console.log('USERWALLET TYPE :', typeof getUserWallet);
+
+  const connectFunction = (id: string) => {
+    if (isInitializing || isConnecting) {
+      return;
+    }
+    connect(id);
+  };
+
+  console.log('PRINCIPAL :', identity?.getPrincipal().toText());
+
+  useEffect(() => {
+    const executeFetchTokenBalances = async () => {
+      if (!isInitializing && !isConnecting && identity) {
+        // we know the user is connected
+        // 1. retrieve or create user on your canister
+        if (!isInitialized) {
+          await useUserStore.getState().getUser(agent ?? agent1);
+          useAuthStore.setState({ isInitialized: true });
+        }
+        if (
+          useUserStore.getState().user === undefined &&
+          !useAuthStore.getState().identity
+        ) {
+          window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          const userWallet = await getUserWallet();
+          await fetchTokenBalances();
+          // 2. fetch balances (through AuthStore)
+
+          console.log('USER WALLET :', userWallet.principal);
+          //const tokenBalances = await fetchTokenBalances();
+          //console.log('TOKEN BALANCES :', tokenBalances);
+        }
+
+        // 3. track session with usergeek, etc.
+        //Usergeek.setPrincipal(identity.getPrincipal());
+        //Usergeek.trackSession();
+        //Usergeek.flush();
+      } else if (!isInitializing && !identity) {
+        // user is definitely logged out
+        // clear your store data
+        //useUserStore.getState().clearAll();
+      }
+    };
+
+    executeFetchTokenBalances();
+  }, [agent]);
+
+  console.log('USER :', user);
+
+  //authStore
+  const { isLoggedIn, login, isInitialized } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    login: state.login,
+    isInitialized: state.isInitialized,
   }));
 
   const [selectedTab, setSelectedTab] = useState(
@@ -650,7 +769,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('NFID');
+                      //login('NFID');
+                      connectFunction(NFIDW.id);
                     }}
                   >
                     Google
@@ -669,7 +789,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
+                      //login('ii');
+                      connectFunction(InternetIdentity.id);
                     }}
                   >
                     Internet Identity
@@ -698,7 +819,10 @@ const HomePage = () => {
       </div>
       <div className='join-revolution-mobile'>
         <div className='nuance-logo-blue-text'>
-          <img className='image-container' src={images.NUANCE_LOGO_BLACK_TEXT} />
+          <img
+            className='image-container'
+            src={images.NUANCE_LOGO_BLACK_TEXT}
+          />
         </div>
         {!isLoggedIn && (
           <div className='login-options-mobile-wrapper'>
@@ -713,7 +837,8 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    login('NFID');
+                    //login('NFID');
+                    connectFunction(NFIDW.id);
                   }}
                 >
                   Google
@@ -732,7 +857,8 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    login('ii');
+                    //login('ii');
+                    connectFunction(InternetIdentity.id);
                   }}
                 >
                   Internet Identity
@@ -835,7 +961,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('NFID');
+                  //login('NFID');
+                  connectFunction(NFIDW.id);
                 }}
               >
                 Login with Google
@@ -846,7 +973,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('ii');
+                  //login('ii');
+                  connectFunction(InternetIdentity.id);
                 }}
               >
                 Login with Internet Identity
@@ -916,7 +1044,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('NFID');
+                  //login('NFID');
+                  connectFunction(NFIDW.id);
                 }}
               >
                 Login with Google
@@ -927,7 +1056,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('ii');
+                  //login('ii');
+                  connectFunction(InternetIdentity.id);
                 }}
               >
                 Login with Internet Identity
@@ -999,7 +1129,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('NFID');
+                  //login('NFID');
+                  connectFunction(NFIDW.id);
                 }}
               >
                 Login with Google
@@ -1010,7 +1141,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('ii');
+                  //login('ii');
+                  connectFunction(InternetIdentity.id);
                 }}
               >
                 Login with Internet Identity
@@ -1136,7 +1268,8 @@ const HomePage = () => {
                   style={{ width: '224px' }}
                   styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
-                    login('NFID');
+                    //login('NFID');
+                    connectFunction(NFIDW.id);
                   }}
                 >
                   Login with Google
@@ -1147,7 +1280,8 @@ const HomePage = () => {
                   style={{ width: '224px' }}
                   styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
-                    login('ii');
+                    //login('ii');
+                    connectFunction(InternetIdentity.id);
                   }}
                 >
                   Login with Internet Identity
@@ -1175,19 +1309,37 @@ const HomePage = () => {
 
       {selectedTab === 'Articles' && (
         <div className='articles-section-wrapper'>
-          {isLoggedIn && user ? (
+          {!user && isLoggedIn ? (
+            <div className='left'>
+              <Loader />
+            </div>
+          ) : isLoggedIn && user ? (
             <div className='left'>
               <div className='user-info'>
                 <img
                   className='avatar'
                   src={user.avatar || images.DEFAULT_AVATAR}
                   loading='lazy'
-                  style={user?.isVerified ? {
-                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-                    padding: "0.15em",
-                   } : {borderRadius: "50%"}}
+                  style={
+                    user?.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.15em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
                 />
-                <div className='display-name'>{user.displayName} {user.isVerified && <GradientMdVerified width='16' height='16' gradientKey='left' />}</div>
+                <div className='display-name'>
+                  {user.displayName}{' '}
+                  {user.isVerified && (
+                    <GradientMdVerified
+                      width='16'
+                      height='16'
+                      gradientKey='left'
+                    />
+                  )}
+                </div>
                 <Link
                   to='/my-profile'
                   className='handle'
@@ -1281,7 +1433,11 @@ const HomePage = () => {
               <img
                 className='blue-logo'
                 style={{ filter: darkOptionsAndColors.filter }}
-                src={darkTheme ? images.NUANCE_LOGO_BLUE_TEXT : images.NUANCE_LOGO_BLACK_TEXT}
+                src={
+                  darkTheme
+                    ? images.NUANCE_LOGO_BLUE_TEXT
+                    : images.NUANCE_LOGO_BLACK_TEXT
+                }
                 loading='lazy'
               />
               <div className='blogging-to-the-people'>
@@ -1305,7 +1461,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
+                      //login('ii');
+                      connectFunction(InternetIdentity.id);
                     }}
                   >
                     Internet Identity
@@ -1324,7 +1481,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('NFID');
+                      //login('NFID');
+                      connectFunction(NFIDW.id);
                     }}
                   >
                     Google
@@ -1379,12 +1537,26 @@ const HomePage = () => {
                   className='avatar'
                   src={user.avatar || images.DEFAULT_AVATAR}
                   loading='lazy'
-                  style={user.isVerified ? {
-                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-                    padding: "0.15em",
-                   } : {borderRadius: "50%"}}
+                  style={
+                    user.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.15em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
                 />
-                <div className='display-name'>{user.displayName} {<GradientMdVerified width='12' height='12' gradientKey='left-mobile' />}</div>
+                <div className='display-name'>
+                  {user.displayName}{' '}
+                  {
+                    <GradientMdVerified
+                      width='12'
+                      height='12'
+                      gradientKey='left-mobile'
+                    />
+                  }
+                </div>
                 <Link
                   to='/my-profile'
                   className='handle'
@@ -1532,7 +1704,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
+                      //login('ii');
+                      connectFunction(InternetIdentity.id);
                     }}
                   >
                     Internet Identity
@@ -1552,7 +1725,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('NFID');
+                      //login('NFID');
+                      connectFunction(NFIDW.id);
                     }}
                   >
                     Google

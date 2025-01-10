@@ -16,6 +16,9 @@ export interface GetPostsByFollowers {
   'totalCount' : string,
   'posts' : Array<PostKeyProperties__1>,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export type PopularityType = { 'month' : null } |
   { 'today' : null } |
@@ -316,6 +319,7 @@ export interface _SERVICE {
   'getViewsByRange' : ActorMethod<[RecallOptions], bigint>,
   'getWasmChunks' : ActorMethod<[], Result_7>,
   'handleModclubMigration' : ActorMethod<[string], Result_2>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'idQuick' : ActorMethod<[], Principal>,
   'incrementApplauds' : ActorMethod<[string, bigint], undefined>,
   'indexPopular' : ActorMethod<[], undefined>,

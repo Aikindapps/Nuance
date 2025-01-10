@@ -89,6 +89,9 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(Comment__1),
     'err' : IDL.Text,
   });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result_8 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const Result_7 = IDL.Variant({
     'ok' : IDL.Tuple(IDL.Nat, IDL.Vec(IDL.Text)),
@@ -276,6 +279,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostBucketType__1)],
         ['query'],
       ),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'initializeBucketCanister' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Vec(IDL.Text), IDL.Text],
         [Result_2],

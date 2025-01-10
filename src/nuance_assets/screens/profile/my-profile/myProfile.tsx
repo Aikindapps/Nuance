@@ -18,10 +18,16 @@ import { getIconForSocialChannel } from '../../../shared/utils';
 import { Context as ModalContext } from '../../../contextes/ModalContext';
 import GradientMdVerified from '../../../UI/verified-icon/verified-icon';
 import { Principal } from '@dfinity/principal';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 
 const MyProfile = () => {
   const navigate = useNavigate();
+  const agent = useAgent();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+    agent: state.agent,
+  }));
+  const isInitializing = useIsInitializing();
   const darkTheme = useTheme();
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
@@ -33,6 +39,7 @@ const MyProfile = () => {
     usersByHandles,
     getUserFollowersCount,
     userFollowersCount,
+    loadingUser,
     getLinkedPrincipal,
     verifyPoh,
     proceedWithVerification,
@@ -44,22 +51,27 @@ const MyProfile = () => {
     usersByHandles: state.usersByHandles,
     getUserFollowersCount: state.getUserFollowersCount,
     userFollowersCount: state.userFollowersCount,
+    loadingUser: state.loadingUser,
     getLinkedPrincipal: state.getLinkedPrincipal,
     verifyPoh: state.verifyPoh,
     proceedWithVerification: state.proceedWithVerification,
   }));
 
   useEffect(() => {
-    getUser();
-  }, []);
+    if (agent && !isInitializing) {
+      getUser(agent);
+    }
+  }, [agent, isInitializing]);
 
   useEffect(() => {
-    if (isLoggedIn && !user) {
-      navigate('/register', { replace: true });
-    } else {
-      getUserFollowersCount(user?.handle || '');
+    if (!isInitializing && !loadingUser) {
+      if (isLoggedIn && !user) {
+        navigate('/register', { replace: true });
+      } else {
+        getUserFollowersCount(user?.handle || '');
+      }
     }
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user, isInitializing]);
 
   useEffect(() => {
     getUsersByHandles(
@@ -122,11 +134,11 @@ const MyProfile = () => {
           alignSelf: 'flex-end',
           position: 'absolute',
           top: context.width > 768 ? '0' : '10px',
-          right: context.width < 768 ? '10px' : '50px'
+          right: context.width < 768 ? '10px' : '50px',
         }}
       >
         <Button
-          styleType={{dark: 'white', light: 'white'}}
+          styleType={{ dark: 'white', light: 'white' }}
           type='button'
           style={{
             width: '96px',
@@ -135,29 +147,38 @@ const MyProfile = () => {
         >
           Edit Profile
         </Button>
-        {!user?.isVerified && <Button
-          styleType={{dark: 'white', light: 'white'}}
-          type='button'
-          style={{
-            width: '96px',
-            marginTop: '5px'
-          }}
-          onClick={() => modalContext?.openModal('verify profile')}
-        >
-          Verify Profile
-        </Button>}
+        {!user?.isVerified && (
+          <Button
+            styleType={{ dark: 'white', light: 'white' }}
+            type='button'
+            style={{
+              width: '96px',
+              marginTop: '5px',
+            }}
+            onClick={() => modalContext?.openModal('verify profile')}
+          >
+            Verify Profile
+          </Button>
+        )}
       </div>
       <div className='content'>
         <img
           src={user?.avatar || images.DEFAULT_AVATAR}
           alt='background'
           className='profile-picture'
-          style={user?.isVerified ? {
-            background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-            padding: "0.2em",
-           } : {borderRadius: "50%"}}
+          style={
+            user?.isVerified
+              ? {
+                  background: 'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                  padding: '0.2em',
+                }
+              : { borderRadius: '50%' }
+          }
         />
-        <p className='name'>{user?.displayName} {user?.isVerified && <GradientMdVerified width='24' height='24'/>}</p>
+        <p className='name'>
+          {user?.displayName}{' '}
+          {user?.isVerified && <GradientMdVerified width='24' height='24' />}
+        </p>
         <p
           style={
             darkTheme

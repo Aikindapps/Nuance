@@ -129,6 +129,9 @@ export const idlFactory = ({ IDL }) => {
     'thisMonth' : IDL.Null,
   });
   const Result_7 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result_6 = IDL.Variant({
     'ok' : IDL.Tuple(
       IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text))),
@@ -412,6 +415,7 @@ export const idlFactory = ({ IDL }) => {
     'getViewsByRange' : IDL.Func([RecallOptions], [IDL.Int], []),
     'getWasmChunks' : IDL.Func([], [Result_7], []),
     'handleModclubMigration' : IDL.Func([IDL.Text], [Result_2], []),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
     'incrementApplauds' : IDL.Func([IDL.Text, IDL.Nat], [], []),
     'indexPopular' : IDL.Func([], [], []),

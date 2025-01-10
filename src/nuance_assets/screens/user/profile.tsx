@@ -79,6 +79,8 @@ const Profile = () => {
       redirectScreen: state.redirectScreen,
     })
   );
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+
   const user = useUserStore((state) => state.user);
 
   const { getAuthor, getUserPostCounts, getPrincipalByHandle } = useUserStore(
@@ -115,7 +117,7 @@ const Profile = () => {
         setAuthor(authorResponse);
 
         try {
-          let principalId = await getPrincipalByHandle(handle);
+          let principalId = await getPrincipalByHandle(handle, agentToBeUsed);
           setAuthorPrincipalId(principalId);
         } catch (error) {
           console.log('Error getting principal id', error);

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext, Suspense, lazy } from 'react';
-import { usePostStore } from './store';
+import { usePostStore, useUserStore } from './store';
 import {
   BrowserRouter as Router,
+  useLocation,
   useNavigate,
   useRoutes,
 } from 'react-router-dom';
@@ -64,6 +65,13 @@ import NotificationsSidebar from './components/notifications/notifications';
 import Subscriptions from './screens/profile/subscriptions';
 import PublicationSubscribersTab from './screens/profile/publication-subscribers-tab';
 import SubscribersTab from './screens/profile/subscribers-tab';
+import { useSyncIdentity } from './shared/syncIdentity';
+import {
+  useAgent,
+  useAuth,
+  useIdentity,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
 
 const Routes = () => {
   return useRoutes([
@@ -120,6 +128,45 @@ function App() {
     context.setWidth(width);
     context.setHeight(height);
   };
+
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
+  const { isInitializedAgent, setAgent, setIdentity } = useAuthStore(
+    (state) => ({
+      isInitializedAgent: state.isInitializedAgent,
+      setAgent: state.setAgent,
+      setIdentity: state.setIdentity,
+    })
+  );
+
+  const customHost = 'https://icp-api.io';
+  const agent = useAgent({ host: customHost });
+
+  const identity = useIdentity();
+  const { user } = useAuth();
+  const isInitializing = useIsInitializing();
+
+  useEffect(() => {
+    setIdentity(identity);
+  }, [identity]);
+
+  useEffect(() => {
+    if (!isInitializing) {
+      setAgent(agent);
+      useAuthStore.setState({ isInitializedAgent: true });
+    }
+    console.log('APP AGENT :', agent);
+    console.log('APP IS LOGGEDIN :', user);
+    console.log('APP IS INITIALIZING :', isInitializing);
+  }, [agent, isInitializing]);
+
+  const isLoading = agent === undefined && isInitializing === true;
+  //agent === undefined;
+
+  console.log('AuthStore state:', useAuthStore.getState());
+
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     fetchTokenBalances();
@@ -139,7 +186,6 @@ function App() {
     //   : // default = 1 hour
     //30 days in milliseconds
     43200 * 60 * 1_000;
-
 
   const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
@@ -174,6 +220,10 @@ function App() {
       authChannel.close();
     };
   }, []);
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   return (
     <ModalContextProvider>

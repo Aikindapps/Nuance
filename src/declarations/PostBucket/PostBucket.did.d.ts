@@ -52,6 +52,9 @@ export interface CommentsReturnType {
   'totalNumberOfComments' : string,
   'comments' : Array<Comment>,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export interface Post {
   'url' : string,
@@ -144,6 +147,7 @@ export interface PostBucket {
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
   'getUserPostIds' : ActorMethod<[string], Array<string>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeBucketCanister' : ActorMethod<
     [Array<string>, Array<string>, string],
     Result_2

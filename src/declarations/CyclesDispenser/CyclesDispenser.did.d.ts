@@ -8,6 +8,9 @@ export interface AddCanisterModel {
   'isStorageBucket' : boolean,
   'canisterId' : string,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export interface RegisteredCanister {
   'balance' : bigint,
@@ -64,6 +67,7 @@ export interface _SERVICE {
   'getTopUp' : ActorMethod<[string], Result_3>,
   'getTopUpsByRange' : ActorMethod<[TimeRange], Array<TopUp>>,
   'getTrustedCanisters' : ActorMethod<[], Result_2>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'idQuick' : ActorMethod<[], Principal>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'registerAdmin' : ActorMethod<[string], Result>,

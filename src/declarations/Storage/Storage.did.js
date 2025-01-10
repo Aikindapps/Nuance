@@ -48,6 +48,9 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Nat8), 'err' : IDL.Text });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Content = IDL.Record({
     'contentId' : IDL.Text,
     'contentSize' : IDL.Nat,
@@ -75,6 +78,7 @@ export const idlFactory = ({ IDL }) => {
     'getNewContentId' : IDL.Func([], [Result], []),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getWasmChunks' : IDL.Func([], [Result_2], []),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
     'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
     'registerCgUser' : IDL.Func([IDL.Text], [Result_1], []),

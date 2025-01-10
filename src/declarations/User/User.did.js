@@ -138,6 +138,9 @@ export const idlFactory = ({ IDL }) => {
   });
   const Result_7 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
   const Result_4 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result_5 = IDL.Variant({
     'ok' : IDL.Tuple(IDL.Nat, IDL.Nat),
     'err' : IDL.Text,
@@ -304,6 +307,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getVerificationStatus' : IDL.Func([IDL.Text], [Result_4], ['query']),
     'handleClap' : IDL.Func([IDL.Text, IDL.Text], [], ['oneway']),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'isRegistrationOpen' : IDL.Func([], [IDL.Bool], ['query']),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'linkInternetIdentityConfirm' : IDL.Func([IDL.Text], [Result_1], []),

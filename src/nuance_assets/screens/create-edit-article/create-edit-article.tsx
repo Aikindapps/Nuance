@@ -107,6 +107,7 @@ const CreateEditArticle = () => {
 
   //authStore
   const isLoggedIn = useAuthStore((state: AuthStore) => state.isLoggedIn);
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
   const [currentStatus, setCurrentStatus] = useState('');
 
 
@@ -336,7 +337,7 @@ const CreateEditArticle = () => {
     setLoading(true);
     await Promise.all([
       fetchPost(),
-      getUser(),
+      getUser(agentToBeUsed),
       fillUserRelatedFields(),
       getAllTags(),
     ]);
@@ -740,7 +741,7 @@ const CreateEditArticle = () => {
       if (user) {
         try {
           let handle = user.handle === selectedHandle ? user.handle : selectedHandle;
-          let principal = await getPrincipalByHandle(handle);
+          let principal = await getPrincipalByHandle(handle, agentToBeUsed);
           let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(principal || '');
           console.log("debugging " + selectedHandle + " principal " + principal);
 

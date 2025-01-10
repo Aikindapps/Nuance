@@ -211,6 +211,9 @@ export const idlFactory = ({ IDL }) => {
     'notifications' : IDL.Vec(Notification),
     'totalCount' : IDL.Text,
   });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Result = IDL.Variant({
     'ok' : UserNotificationSettings,
@@ -243,6 +246,7 @@ export const idlFactory = ({ IDL }) => {
         [GetUserNotificationsResponse],
         ['query'],
       ),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'markNotificationsAsRead' : IDL.Func([IDL.Vec(IDL.Text)], [], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_1], []),

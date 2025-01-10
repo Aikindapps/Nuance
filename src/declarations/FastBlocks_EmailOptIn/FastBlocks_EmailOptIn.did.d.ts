@@ -2,6 +2,9 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export type Result = { 'ok' : null } |
   { 'err' : string };
@@ -21,6 +24,7 @@ export interface _SERVICE {
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'registerAdmin' : ActorMethod<[string], Result>,
   'registerPlatformOperator' : ActorMethod<[string], Result>,

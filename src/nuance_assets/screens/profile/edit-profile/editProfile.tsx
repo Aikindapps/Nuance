@@ -29,6 +29,7 @@ var psl = require('psl');
 
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
   const navigate = useNavigate();
   const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore(
     (state) => ({

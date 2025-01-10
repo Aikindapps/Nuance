@@ -27,6 +27,9 @@ export interface HourlyMetricsData {
   'canisterMemorySize' : CanisterMemoryAggregatedData,
   'timeMillis' : bigint,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type KinicReturn = { 'ok' : Array<string> } |
   { 'err' : string };
 export type List = [] | [[string, List]];
@@ -66,6 +69,7 @@ export interface _SERVICE {
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getTrustedPrincipals' : ActorMethod<[], Result_3>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeCanister' : ActorMethod<[string], Result_2>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'registerAdmin' : ActorMethod<[string], Result>,

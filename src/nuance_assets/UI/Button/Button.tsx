@@ -16,6 +16,7 @@ type ButtonProps = {
   onClick?: (event: any) => void;
   disabled?: boolean;
   loading?: boolean;
+  children?: React.ReactNode;
   className?: { dark?: string; light?: string };
 };
 

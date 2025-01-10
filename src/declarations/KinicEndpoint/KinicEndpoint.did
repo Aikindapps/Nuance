@@ -47,6 +47,7 @@ type KinicReturn =
    err: text;
    ok: vec text;
  };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type HourlyMetricsData = 
  record {
    canisterCycles: CanisterCyclesAggregatedData;
@@ -91,6 +92,7 @@ service : {
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
   getTrustedPrincipals: () -> (Result_3) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   initializeCanister: (text) -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
   registerAdmin: (text) -> (Result);

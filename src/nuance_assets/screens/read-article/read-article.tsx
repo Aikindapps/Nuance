@@ -907,8 +907,7 @@ const ReadArticle = () => {
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
-                    @{post.isPublication ? post.creatorHandle : author.handle}
-                    {' '}
+                    @{post.isPublication ? post.creatorHandle : author.handle}{' '}
                     {author?.isVerified && (
                       <div className='verified-badge'>
                         <GradientMdVerified

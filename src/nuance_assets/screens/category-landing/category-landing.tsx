@@ -46,6 +46,8 @@ function CategoryLanding() {
     redirectScreen: state.redirectScreen,
   }));
 
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+
   const {
     user,
     getUser,
@@ -132,11 +134,11 @@ function CategoryLanding() {
     const categoryName = current_location.substring(
       current_location.lastIndexOf('/') + 1
     );
-    getUser();
+    getUser(agentToBeUsed);
     setPublicationHandle(handleName);
     setCategoryName(categoryName);
     getPublication(handleName);
-    getUserPostCounts(handleName);
+    getUserPostCounts(handleName, agentToBeUsed);
     getUserFollowersCount(handleName);
     loadInitial(handleName, categoryName);
     clearPostsByCategory();

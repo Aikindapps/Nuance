@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import Footer from '../../components/footer/footer';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 import Header from '../../components/header/header';
-import { useUserStore } from '../../store';
+import { useAuthStore, useUserStore } from '../../store';
 import { useTheme } from '../../contextes/ThemeContext';
 import { colors } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
@@ -20,13 +20,15 @@ const TimedOut = () => {
     navigate('/', { replace: true });
   };
 
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+
   const { user, getUser } = useUserStore((state) => ({
     user: state.user,
     getUser: state.getUser,
   }));
 
   useEffect(() => {
-    getUser();
+    getUser(agentToBeUsed);
   }, []);
 
   useEffect(() => {

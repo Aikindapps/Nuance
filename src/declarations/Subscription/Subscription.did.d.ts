@@ -2,6 +2,9 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export interface PaymentRequest {
   'subscriptionEventId' : string,
   'subaccount' : Uint8Array | number[],
@@ -76,6 +79,7 @@ export interface _SERVICE {
   'getReaderSubscriptionDetails' : ActorMethod<[], Result_1>,
   'getWriterSubscriptionDetails' : ActorMethod<[[] | [string]], Result>,
   'getWriterSubscriptionDetailsByPrincipalId' : ActorMethod<[string], Result>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isReaderSubscriber' : ActorMethod<[string, string], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'isWriterActivatedSubscription' : ActorMethod<[string], boolean>,

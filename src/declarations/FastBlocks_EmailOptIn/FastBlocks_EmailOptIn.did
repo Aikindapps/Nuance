@@ -23,6 +23,7 @@ type List =
        text;
        List;
      };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
@@ -33,6 +34,7 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isThereEnoughMemory: () -> (bool) query;
   registerAdmin: (text) -> (Result);
   registerPlatformOperator: (text) -> (Result);

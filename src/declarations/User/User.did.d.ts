@@ -41,6 +41,9 @@ export interface HourlyMetricsData {
   'canisterMemorySize' : CanisterMemoryAggregatedData,
   'timeMillis' : bigint,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
@@ -249,6 +252,7 @@ export interface _SERVICE {
   'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'getVerificationStatus' : ActorMethod<[string], Result_4>,
   'handleClap' : ActorMethod<[string, string], undefined>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'linkInternetIdentityConfirm' : ActorMethod<[string], Result_1>,

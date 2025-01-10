@@ -17,6 +17,7 @@ type ButtonProps = {
   onMouseDown: (event: any) => void;
   onMouseUp: (event: any) => void;
   dark?: boolean;
+  children?: React.ReactNode;
   applaudingPost: PostType | undefined;
 };
 

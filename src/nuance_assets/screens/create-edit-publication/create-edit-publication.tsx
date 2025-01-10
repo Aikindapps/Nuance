@@ -60,6 +60,7 @@ const CreateEditPublication = () => {
   const context = useContext(Context);
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
   const { getUser, user, getUsersByHandles, usersByHandles } = useUserStore(
     (state) => ({
       getUser: state.getUser,
@@ -318,7 +319,7 @@ const CreateEditPublication = () => {
 
   useEffect(() => {
     clearAll();
-    getUser();
+    getUser(agentToBeUsed);
 
     return () => {
       clearAll();

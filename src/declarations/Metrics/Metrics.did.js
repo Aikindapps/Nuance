@@ -11,6 +11,9 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(OperationLog),
     'err' : IDL.Text,
   });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
@@ -24,6 +27,7 @@ export const idlFactory = ({ IDL }) => {
     'getNuanceCanisters' : IDL.Func([], [Result_2], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPlatformOperatorsLog' : IDL.Func([], [Result_3], ['query']),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'initNuanceCanisters' : IDL.Func([], [Result_2], []),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'logCommand' : IDL.Func([IDL.Text, IDL.Text], [Result], []),

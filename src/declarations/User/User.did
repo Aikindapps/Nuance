@@ -216,6 +216,7 @@ type List =
        text;
        List;
      };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type HourlyMetricsData = 
  record {
    canisterCycles: CanisterCyclesAggregatedData;
@@ -335,6 +336,7 @@ service : {
   getUsersByPrincipals: (vec text) -> (vec UserListItem) query;
   getVerificationStatus: (text) -> (Result_4) query;
   handleClap: (text, text) -> () oneway;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
   linkInternetIdentityConfirm: (text) -> (Result_1);

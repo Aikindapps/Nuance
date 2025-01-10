@@ -577,6 +577,21 @@ actor PostRelations {
         ENV.isPlatformOperator(caller)
     };
 
+    //#region trusted origin
+
+    public type Icrc28TrustedOriginsResponse = {
+        trusted_origins: [Text]
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+        trusted_origins= [
+            "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app"
+        ]
+        }
+    };
+
+    // #endregion
 
     //memory management
     //2GB default

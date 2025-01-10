@@ -4,8 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-var DuplicatePackageCheckerPlugin = require("duplicate-package-checker-webpack-plugin");
-
+var DuplicatePackageCheckerPlugin = require('duplicate-package-checker-webpack-plugin');
 
 function initCanisterEnv() {
   let localCanisters, prodCanisters;
@@ -144,14 +143,14 @@ module.exports = {
       template: path.join(__dirname, 'src', frontendDirectory, 'index.html'),
       cache: false,
     }),
-  (new CopyPlugin({
+    new CopyPlugin({
       patterns: [
         {
           from: path.join(__dirname, 'src', frontendDirectory, 'assets'),
           to: path.join(__dirname, 'dist'),
         },
       ],
-    })),
+    }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
       ...canisterEnvVariables,
@@ -161,17 +160,19 @@ module.exports = {
       process: require.resolve('process/browser'),
     }),
   ],
-// proxy /api to port 4943 during development
+  // proxy /api to port 4943 during development
   devServer: {
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:8080",
-        changeOrigin: true,
-        pathRewrite: {
-          "^/api": "/api",
+    proxy: [
+      {
+        '/api': {
+          target: 'http://127.0.0.1:8080',
+          changeOrigin: true,
+          pathRewrite: {
+            '^/api': '/api',
+          },
         },
       },
-    },
+    ],
     hot: true,
     watchFiles: [path.resolve(__dirname, 'src', frontendDirectory)],
     liveReload: true,

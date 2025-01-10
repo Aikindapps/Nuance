@@ -4,7 +4,7 @@ import { AuthClient, AuthClientLoginOptions } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { Usergeek } from 'usergeek-ic-js';
-import { AnonymousIdentity, Identity } from '@dfinity/agent';
+import { Agent, AnonymousIdentity, Identity } from '@dfinity/agent';
 import {
   ToastType,
   toast,
@@ -31,6 +31,7 @@ import {
   SUPPORTED_TOKENS,
   TokenBalance,
 } from '../shared/constants';
+import { identity } from 'lodash';
 
 const USER_CANISTER_ID = process.env.USER_CANISTER_ID || '';
 
@@ -112,6 +113,7 @@ export const authChannel = new BroadcastChannel('auth_channel');
 
 export interface AuthStore {
   readonly isInitialized: boolean;
+  readonly isInitializedAgent: boolean;
   readonly isLoggedIn: boolean;
   readonly registrationError: string | undefined;
   readonly loginMethod: string | undefined;
@@ -120,9 +122,15 @@ export interface AuthStore {
   readonly tokenBalances: TokenBalance[];
   readonly restrictedTokenBalance: number;
   readonly tokenPrices: TokenPrice[];
+  readonly agent?: Agent;
+  readonly identity?: Identity;
+  setAgent: (agent?: Agent) => void;
+  setIdentity: (identity?: Identity) => void;
+  getIdentity: () => Promise<Identity | undefined>;
   login: (loginMethod: string) => Promise<void>;
   logout: () => Promise<void>;
-  getIdentity: () => Promise<Identity | undefined>;
+  getIdentityDep: () => Promise<Identity | undefined>;
+  getUserWalletDep: () => Promise<UserWallet>;
   getUserWallet: () => Promise<UserWallet>;
   redirect: (url: string) => void;
   updateLastLogin: () => Promise<void>;
@@ -141,6 +149,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   get
 ) => ({
   isInitialized: false,
+  isInitializedAgent: false,
   isLoggedIn: false,
   registrationError: undefined,
   loginMethod: undefined,
@@ -149,16 +158,35 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   tokenBalances: [],
   restrictedTokenBalance: 0,
   tokenPrices: [],
+  agent: undefined,
+  identity: undefined,
 
   redirect: (_screen: string) => {
     set((state) => ({ redirectScreen: _screen }));
+  },
+
+  setAgent: (agent?: Agent) => {
+    // If there is a valid Identity, mark isLoggedIn = true, etc.
+    set({
+      agent,
+      // You could also set loginMethod if you want, based on which
+      // signer was used, but that info can come from your UI.
+    });
+  },
+
+  setIdentity: (identity?: Identity) => {
+    if (identity !== undefined) {
+      set({ isLoggedIn: true });
+    }
+    set({ identity });
   },
 
   fetchTokenBalances: async (): Promise<void> => {
     let wallet = await get().getUserWallet();
     let user = useUserStore.getState().user;
     //fire and forget
-    useUserStore.getState().checkMyClaimNotification();
+    useUserStore.getState().checkMyClaimNotification(get().agent);
+    console.log("claim not console");
     if (!user) {
       return;
     }
@@ -202,8 +230,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       user.claimInfo.subaccount.length === 0
         ? 0
         : new Uint8Array(user.claimInfo.subaccount[0]).length === 0
-        ? 0
-        : (
+          ? 0
+          : (
             await getIcrc1Actor(NUA_CANISTER_ID)
           ).icrc1_balance_of({
             owner: Principal.fromText(USER_CANISTER_ID),
@@ -241,8 +269,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   updateLastLogin: async (): Promise<void> => {
     try {
-      (await getUserActor()).updateLastLogin();
-    } catch (error) {}
+      (await getUserActor(get().agent)).updateLastLogin();
+    } catch (error) { }
   },
 
   verifyBitfinityWallet: async (): Promise<void> => {
@@ -481,7 +509,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     console.log('Logged out: ' + new Date());
   },
 
-  getIdentity: async (): Promise<Identity | undefined> => {
+  getIdentityDep: async (): Promise<Identity | undefined> => {
     let stcIdentity = await StoicIdentity.load();
     if (stcIdentity) {
       set({ isLoggedIn: true, loginMethod: 'stoic' });
@@ -513,11 +541,17 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     }
   },
 
+  getIdentity: async (): Promise<Identity | undefined> => {
+    useUserStore.getState().getUser();
+    set({ isLoggedIn: true });
+    return get().identity;
+  },
+
   clearAll: (): void => {
     set({}, true);
   },
 
-  getUserWallet: async (): Promise<UserWallet> => {
+  getUserWalletDep: async (): Promise<UserWallet> => {
     if (get().loginMethod === 'bitfinity' && get().isLoggedIn) {
       let window_any = window as any;
       let principal =
@@ -548,6 +582,24 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     return { principal: userPrincipalId, accountId: userAccountId };
   },
 
+  getUserWallet: async (): Promise<UserWallet> => {
+    const id = get().identity;
+    if (id === undefined) {
+      return { principal: '', accountId: '' };
+    } else {
+      const principal = id.getPrincipal();
+      const userAccountId = AccountIdentifier.fromPrincipal({ principal }).toHex();
+
+      const userWallet = {
+        principal: principal.toText(),
+        accountId: userAccountId,
+      };
+
+      set({ userWallet });
+      return { principal: principal.toText(), accountId: userAccountId };
+    }
+  },
+
   clearLoginMethod: (): void => {
     //stoic continues to connect and reconnect so it needs to be disconnected to login to II
     StoicIdentity.disconnect();
@@ -555,7 +607,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       let window_any = window as any;
 
       window_any.ic.bitfinityWallet.disconnect();
-    } catch (err) {}
+    } catch (err) { }
   },
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {
@@ -565,7 +617,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
         toast('Your login method is undefined. Please restore your session.', ToastType.Error);
         return;
       }
-      
+
       try {
         const currentLoginMethod = await get().loginMethod;
         // get the current user's principal

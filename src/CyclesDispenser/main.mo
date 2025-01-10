@@ -723,6 +723,22 @@ actor CyclesDispenser {
     };
   };
 
+  //#region trusted origin
+
+  public type Icrc28TrustedOriginsResponse = {
+    trusted_origins: [Text]
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= [
+          "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app"
+      ]
+    }
+  };
+
+  // #endregion
+
   //#region memory management
   stable var MAX_MEMORY_SIZE = 380000000;
 

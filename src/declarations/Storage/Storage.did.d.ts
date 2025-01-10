@@ -35,6 +35,9 @@ export interface HourlyMetricsData {
   'canisterMemorySize' : CanisterMemoryAggregatedData,
   'timeMillis' : bigint,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
@@ -72,6 +75,7 @@ export interface Storage {
   'getNewContentId' : ActorMethod<[], Result>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getWasmChunks' : ActorMethod<[], Result_2>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'idQuick' : ActorMethod<[], Principal>,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,

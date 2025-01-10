@@ -240,6 +240,7 @@ type List =
        text;
        List;
      };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type GetPostsByFollowers = 
  record {
    posts: vec PostKeyProperties__1;
@@ -376,6 +377,7 @@ service : {
   getViewsByRange: (RecallOptions) -> (int);
   getWasmChunks: () -> (Result_7);
   handleModclubMigration: (text) -> (Result_2);
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   idQuick: () -> (principal) query;
   incrementApplauds: (text, nat) -> ();
   indexPopular: () -> ();

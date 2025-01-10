@@ -3,6 +3,9 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
+  });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
@@ -15,6 +18,7 @@ export const idlFactory = ({ IDL }) => {
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),
     'registerPlatformOperator' : IDL.Func([IDL.Text], [Result], []),

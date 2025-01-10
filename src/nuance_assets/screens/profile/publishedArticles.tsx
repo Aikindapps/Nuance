@@ -18,6 +18,7 @@ const PublishedArticles = () => {
 
   const darkTheme = useTheme();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreCounter, setLoadMoreCounter] = useState(1);
@@ -29,7 +30,7 @@ const PublishedArticles = () => {
   }));
 
   useEffect(() => {
-    getUser();
+    getUser(agentToBeUsed);
     loadInitial();
   }, []);
 

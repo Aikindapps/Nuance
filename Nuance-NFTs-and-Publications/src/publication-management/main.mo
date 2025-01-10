@@ -509,6 +509,22 @@ actor class Management() = this {
         Versions.PUBLICATIONMANAGEMENT_VERSION;
     };
 
+    //#region trusted origin
+
+    public type Icrc28TrustedOriginsResponse = {
+        trusted_origins: [Text]
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+            trusted_origins= [
+                "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app"
+            ]
+        }
+    };
+
+    // #endregion
+
     system func preupgrade() {
         publicationCanisterIdsEntries := Iter.toArray(publicationCanisterIdsHashmap.entries());
     };

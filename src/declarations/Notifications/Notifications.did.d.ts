@@ -6,6 +6,9 @@ export interface GetUserNotificationsResponse {
   'notifications' : Array<Notification>,
   'totalCount' : string,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export interface Notification {
   'id' : string,
   'content' : NotificationContent,
@@ -277,6 +280,7 @@ export interface _SERVICE {
     [string, string],
     GetUserNotificationsResponse
   >,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'markNotificationsAsRead' : ActorMethod<[Array<string>], undefined>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,

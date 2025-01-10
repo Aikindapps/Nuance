@@ -33,12 +33,14 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [shownProfile, setShownProfile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const darkTheme = window.location.pathname !== '/' && useTheme();
+  const theme = useTheme();
   const toggleTheme = useThemeUpdate();
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const darkTheme = window.location.pathname !== '/' && theme;
 
   let logoSrc: string;
 
@@ -164,7 +166,8 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-  const { verifyBitfinityWallet, updateLastLogin } = useAuthStore((state) => ({
+  const { agent, verifyBitfinityWallet, updateLastLogin } = useAuthStore((state) => ({
+    agent: state.agent,
     verifyBitfinityWallet: state.verifyBitfinityWallet,
     updateLastLogin: state.updateLastLogin,
   }));
@@ -196,7 +199,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     verifyBitfinityWallet();
     updateLastLogin();
     setInterval(() => {
-      getUserNotifications(0, 20, navigate);
+      getUserNotifications(0, 20, navigate, agent);
     }, 10000);
     setInterval(() => {
       checkMyClaimNotification();

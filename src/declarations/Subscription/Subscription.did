@@ -79,6 +79,7 @@ type PaymentRequest =
    subscriptionTimeInterval: SubscriptionTimeInterval;
    writerPrincipalId: text;
  };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
@@ -96,6 +97,7 @@ service : {
   getReaderSubscriptionDetails: () -> (Result_1) query;
   getWriterSubscriptionDetails: (opt text) -> (Result) composite_query;
   getWriterSubscriptionDetailsByPrincipalId: (text) -> (Result) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isReaderSubscriber: (text, text) -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
   isWriterActivatedSubscription: (text) -> (bool) query;

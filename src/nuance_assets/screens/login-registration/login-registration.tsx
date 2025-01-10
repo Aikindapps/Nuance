@@ -42,6 +42,8 @@ const LoginRegistration = () => {
   const [canvasScaled, setCanvasScaled] = useState('');
   const [hideEditor, setHideEditor] = useState(true);
 
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+
   const { getUser, user, unregistered, createUser, isRegistrationAllowed} = useUserStore((state) => ({
     user: state.user,
     unregistered: state.unregistered,
@@ -71,7 +73,7 @@ const LoginRegistration = () => {
 
   useEffect(() => {
     handleRegistrationLimit()
-    getUser();
+    getUser(agentToBeUsed);
   }, []);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ const LoginRegistration = () => {
 
 
   const handleRegistrationLimit = async () => {
-    let isAllowed =  await isRegistrationAllowed();
+    let isAllowed =  await isRegistrationAllowed(agentToBeUsed);
     if(!isAllowed){
       toastError("Daily user registration limit exceeded. You are being redirected to the home page.")
       setTimeout(()=>{
@@ -188,9 +190,9 @@ const LoginRegistration = () => {
       );
 
       // create user with avatar url pointing to image in storage canister
-      createUser(handle, displayName, storageInfo.dataUrl);
+      createUser(handle, displayName, storageInfo.dataUrl, agentToBeUsed);
     } else {
-      createUser(handle, displayName, '');
+      createUser(handle, displayName, '', agentToBeUsed);
     }
   };
 

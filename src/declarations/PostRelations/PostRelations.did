@@ -16,6 +16,7 @@ type IndexPostModel =
    tags: vec text;
    title: text;
  };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
@@ -24,6 +25,7 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getRelatedPosts: (text) -> (vec text) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   indexPost: (IndexPostModel) -> ();
   indexPosts: (vec IndexPostModel) -> ();
   isThereEnoughMemory: () -> (bool) query;
