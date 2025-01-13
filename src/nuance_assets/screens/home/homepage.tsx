@@ -139,7 +139,7 @@ const HomePage = () => {
   console.log('USERWALLET TYPE :', typeof getUserWallet);
 
   const connectFunction = (id: string) => {
-    if (isInitializing || isConnecting) {
+    if (isInitializing) {
       return;
     }
     connect(id);
@@ -149,17 +149,15 @@ const HomePage = () => {
 
   useEffect(() => {
     const executeFetchTokenBalances = async () => {
-      if (!isInitializing && !isConnecting && identity) {
-        // we know the user is connected
-        // 1. retrieve or create user on your canister
-        if (!isInitialized) {
-          await useUserStore.getState().getUser(agent ?? agent1);
+      // we know the user is connected
+      // 1. retrieve or create user on your canister
+      if (agent1 && !isInitializing) {
+        const loggedUser = await useUserStore
+          .getState()
+          .getUser(agent ?? agent1);
+
+        if (loggedUser === undefined && !isInitialized && !isInitializing) {
           useAuthStore.setState({ isInitialized: true });
-        }
-        if (
-          useUserStore.getState().user === undefined &&
-          !useAuthStore.getState().identity
-        ) {
           window.location.href = '/register';
         } else {
           //user fetched successfully, get the token balances
@@ -171,20 +169,16 @@ const HomePage = () => {
           //const tokenBalances = await fetchTokenBalances();
           //console.log('TOKEN BALANCES :', tokenBalances);
         }
-
-        // 3. track session with usergeek, etc.
-        //Usergeek.setPrincipal(identity.getPrincipal());
-        //Usergeek.trackSession();
-        //Usergeek.flush();
-      } else if (!isInitializing && !identity) {
-        // user is definitely logged out
-        // clear your store data
-        //useUserStore.getState().clearAll();
       }
+
+      // 3. track session with usergeek, etc.
+      //Usergeek.setPrincipal(identity.getPrincipal());
+      //Usergeek.trackSession();
+      //Usergeek.flush();
     };
 
     executeFetchTokenBalances();
-  }, [agent]);
+  }, [agent, agent1, isInitializing]);
 
   console.log('USER :', user);
 

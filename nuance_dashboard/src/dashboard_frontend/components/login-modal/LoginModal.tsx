@@ -17,21 +17,21 @@ export const LoginModal = () => {
   );
 
   const [postCoreCanisterId, setPostCoreCanisterId] = useState(
-    '322sd-3iaaa-aaaaf-qakgq-cai'
+    '4vm7k-tyaaa-aaaah-aq4wq-cai'
   );
   const [metricsCanisterId, setMetricsCanisterId] = useState(
-    'xjlvo-hyaaa-aaaam-qbcga-cai'
+    'a5asx-niaaa-aaaac-aacxq-cai'
   );
 
   const [userCanisterId, setUserCanisterId] = useState(
-    'rtqeo-eyaaa-aaaaf-qaana-cai'
+    'wlam3-raaaa-aaaap-qpmaa-cai'
   );
 
   const [publicationManagementCanisterId, setPublicationManagementCanisterId] =
     useState('kq23y-aiaaa-aaaaf-qajmq-cai');
 
     const [cyclesDispenserCanisterId, setCyclesDispenserCanisterId] =
-    useState('353ux-wqaaa-aaaaf-qakga-cai');
+    useState('y6ydp-7aaaa-aaaaj-azwyq-cai');
 
   const verifyPrincipalId = (t: string) => {
     try {

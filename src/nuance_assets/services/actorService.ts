@@ -435,17 +435,13 @@ export async function getAllTargetCanisterIds(): Promise<string[]> {
     USER_CANISTER_ID,
     POST_RELATIONS_CANISTER_ID,
     FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID,
+    KINIC_ENDPOINT_CANISTER_ID,
     STORAGE_CANISTER_ID,
     SUBSCRIPTION_CANISTER_ID,
     NOTIFICATIONS_CANISTER_ID,
-    KINIC_ENDPOINT_CANISTER_ID,
-    CYCLES_DISPENSER_CANISTER_ID,
-    NUANCE_ASSETS_CANISTER_ID,
-    NFT_FACTORY_CANISTER_ID,
-    PUBLICATION_MANAGEMENT_CANISTER_ID,
-    'ryjl3-tyaaa-aaaaa-aaaba-cai',
+    'yx3it-jiaaa-aaaaj-azwza-cai'
   ];
-  let postActor = await getPostCoreActor();
+  let postActor = await getPostCoreActor(getAnonAgent());
   let [trustedCanistersPost, bucketCanisters] = await Promise.all([
     postActor.getTrustedCanisters(),
     postActor.getBucketCanisters(),

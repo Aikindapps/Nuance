@@ -8,7 +8,7 @@ quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-
         summary = \"This proposal re-registers Nuance assets canister to the SNS, along with permissions to allow for upgrades via proposal. See proposal #3 for full details of the un-upgradeable assets canister. \";
         action = opt variant {
             RegisterDappCanisters = record {
-                canister_ids = vec {principal \"exwqn-uaaaa-aaaaf-qaeaa-cai\"};
+                canister_ids = vec {principal \"t6unq-pqaaa-aaaai-q3nqa-cai\"};
             }
         }
     }

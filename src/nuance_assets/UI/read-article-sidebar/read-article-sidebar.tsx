@@ -33,7 +33,7 @@ const ReadArticleSidebar: React.FC<ReadArticleSidebarProps> = (
 
   const copyLinkToArticle = () => {
     if (
-      window.location.origin == 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app'
+      window.location.origin == 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app'
     ) {
       navigator.clipboard.writeText('http://www.nuance.xyz' + props.url);
     } else {

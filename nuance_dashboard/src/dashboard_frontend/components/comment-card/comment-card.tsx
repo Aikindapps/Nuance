@@ -25,7 +25,7 @@ export const CommentCard: React.FC<CommentCardProps> = (props) => {
   const getUrl = () => {
     let post = props.comment.post;
     let comment = props.comment
-    if(frontendCanisterId === 'exwqn-uaaaa-aaaaf-qaeaa-cai' && !isLocal){
+    if(frontendCanisterId === 't6unq-pqaaa-aaaai-q3nqa-cai' && !isLocal){
         return `https://nuance.xyz/${post.handle.toLowerCase()}/${
           comment.postId
         }-${comment.bucketCanisterId}/some-thing?comment=${comment.commentId}`;

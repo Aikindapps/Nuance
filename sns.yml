@@ -120,23 +120,23 @@ NnsProposal:
 
         Nuance consists of a set of canister smart contracts. Top-level canisters controlled by the Nuance SNS root canister include:
 
-        - rtqeo-eyaaa-aaaaf-qaana-cai  User
+        - wlam3-raaaa-aaaap-qpmaa-cai  User
 
-        - y2pkg-ciaaa-aaaaf-qagbq-cai  Storage
+        - 44puw-fqaaa-aaaah-aq4xa-cai  Storage
 
-        - 322sd-3iaaa-aaaaf-qakgq-cai  PostCore
+        - 4vm7k-tyaaa-aaaah-aq4wq-cai  PostCore
 
         - r5sjg-7iaaa-aaaaf-qaama-cai  PostIndex
 
         - kzzqe-waaaa-aaaaf-qajna-cai  NFT factory
 
-        - 4m3sz-lqaaa-aaaaf-qagza-cai  KinicEndpoint
+        - sphnc-7yaaa-aaaao-a3wga-cai  KinicEndpoint
 
-        - exwqn-uaaaa-aaaaf-qaeaa-cai  nuance_assets
+        - t6unq-pqaaa-aaaai-q3nqa-cai  nuance_assets
 
-        - 353ux-wqaaa-aaaaf-qakga-cai  CyclesDispenser
+        - y6ydp-7aaaa-aaaaj-azwyq-cai  CyclesDispenser
 
-        - dgwwd-jaaaa-aaaaf-qai7a-cai  FastBlocks_EmailOptIn
+        - 24qg5-ciaaa-aaaak-qtr7a-cai  FastBlocks_EmailOptIn
 
         - kx35m-nqaaa-aaaaf-qajma-cai  Publication management   
 
@@ -169,15 +169,15 @@ dapp_canisters:
     # IDs of the canisters comprising your to-be-decentralized dapp.
     #
     # For testing, propose_sns.sh will fill this in automatically.
-    - rtqeo-eyaaa-aaaaf-qaana-cai # User
-    - y2pkg-ciaaa-aaaaf-qagbq-cai # Storage
-    - 322sd-3iaaa-aaaaf-qakgq-cai # PostCore
+    - wlam3-raaaa-aaaap-qpmaa-cai # User
+    - 44puw-fqaaa-aaaah-aq4xa-cai # Storage
+    - 4vm7k-tyaaa-aaaah-aq4wq-cai # PostCore
     - r5sjg-7iaaa-aaaaf-qaama-cai # PostIndex
     - kzzqe-waaaa-aaaaf-qajna-cai # NFT factory
-    - 4m3sz-lqaaa-aaaaf-qagza-cai # KinicEndpoint
-    - exwqn-uaaaa-aaaaf-qaeaa-cai # nuance_assets
-    - 353ux-wqaaa-aaaaf-qakga-cai # CyclesDispenser
-    - dgwwd-jaaaa-aaaaf-qai7a-cai # FastBlocks_EmailOptIn
+    - sphnc-7yaaa-aaaao-a3wga-cai # KinicEndpoint
+    - t6unq-pqaaa-aaaai-q3nqa-cai # nuance_assets
+    - y6ydp-7aaaa-aaaaj-azwyq-cai # CyclesDispenser
+    - 24qg5-ciaaa-aaaak-qtr7a-cai # FastBlocks_EmailOptIn
     - kx35m-nqaaa-aaaaf-qajma-cai # Publication management
 
 

@@ -21,21 +21,35 @@ import App from './App';
 import { getAllTargetCanisterIds } from './services/actorService';
 import Loader from './UI/loader/Loader';
 import { useAuthStore } from './store';
+import {
+  CYCLES_DISPENSER_CANISTER_ID,
+  FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID,
+  KINIC_ENDPOINT_CANISTER_ID,
+  NFT_FACTORY_CANISTER_ID,
+  NOTIFICATIONS_CANISTER_ID,
+  NUANCE_ASSETS_CANISTER_ID,
+  POST_CORE_CANISTER_ID,
+  POST_RELATIONS_CANISTER_ID,
+  PUBLICATION_MANAGEMENT_CANISTER_ID,
+  STORAGE_CANISTER_ID,
+  SUBSCRIPTION_CANISTER_ID,
+  USER_CANISTER_ID,
+} from './services/canisterIds';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
 const MainApp = () => {
-  const [targets, setTargets] = useState<string[] | null>(null);
+  const [targetCanisters, setTargetCanisters] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchTargets = async () => {
       try {
         const targetCanisterIds = await getAllTargetCanisterIds();
-        setTargets(targetCanisterIds);
+        setTargetCanisters(targetCanisterIds);
       } catch (error) {
         console.error('Error fetching target canister IDs:', error);
-        setTargets([]); // Optionally provide a fallback
+        setTargetCanisters(['']); // Optionally provide a fallback
       }
     };
 
@@ -50,23 +64,24 @@ const MainApp = () => {
     //30 days in nanoseconds
     BigInt(480) * BigInt(60) * BigInt(1000000000) * BigInt(91);
 
-  //const mockedSigner: IdentityKitSignerConfig = { ...MockedSigner, providerUrl: 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' }
-
-  if (targets === null && useAuthStore?.getState().agent === undefined) {
+  if (targetCanisters.length === 0) {
     // Show a loading state while fetching the targets
     return <Loader />;
   }
-
+  console.log('TARGET CANISTER :', targetCanisters);
   return (
     <IdentityKitProvider
+      authType={IdentityKitAuthType.DELEGATION}
       signers={[NFIDW, Plug, InternetIdentity, Stoic, MockedSigner]}
       signerClientOptions={{
-        targets,
-        maxTimetoLive: sessionTimeout,
-        disableIdle: true,
+        targets: targetCanisters,
+        maxTimeToLive: sessionTimeout,
+        idleOptions: {
+          disableIdle: true,
+        },
       }}
-      authType={IdentityKitAuthType.DELEGATION}
     >
+      {console.log('TARGET CANISTERS IK PROVIDER :', targetCanisters)}
       <ContextProvider>
         <ThemeProvider>
           <App />

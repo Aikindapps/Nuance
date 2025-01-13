@@ -7,8 +7,8 @@ import { PostKeyProperties } from '../declarations/PostCore/PostCore.did.js';
 
 
 // Replace these with actual canister IDs
-const postCoreCanisterId = "322sd-3iaaa-aaaaf-qakgq-cai";
-const userCanisterId = "rtqeo-eyaaa-aaaaf-qaana-cai";
+const postCoreCanisterId = "4vm7k-tyaaa-aaaah-aq4wq-cai";
+const userCanisterId = "wlam3-raaaa-aaaap-qpmaa-cai";
 
 function createActor(canisterId : string, idlFactory : any) {
     const agent = new HttpAgent({ host: 'https://icp-api.io' });

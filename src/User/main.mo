@@ -763,7 +763,7 @@ actor User {
           };
         };
 
-        if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+        if (ENV.NUANCE_ASSETS_CANISTER_ID == "t6unq-pqaaa-aaaai-q3nqa-cai") {
           effectiveDerivationOrigin := "https://nuance.xyz";
         } else {
           effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
@@ -2482,7 +2482,7 @@ actor User {
   public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
     return {
       trusted_origins= [
-          "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app"
+          "https://t6unq-pqaaa-aaaai-q3nqa-cai.icp0.io"
       ]
     }
   };

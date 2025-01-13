@@ -23,16 +23,16 @@ const canisterIds = {
 
 // //PROD and Local
 // const canisterIds = {
-//   CyclesDispenser: "353ux-wqaaa-aaaaf-qakga-cai",
-//   FastBlocks_EmailOptIn: "dgwwd-jaaaa-aaaaf-qai7a-cai",
-//   KinicEndpoint: "4m3sz-lqaaa-aaaaf-qagza-cai",
-//   Metrics: "xjlvo-hyaaa-aaaam-qbcga-cai",
-//   PostBucket: "3uy7l-ayaaa-aaaaf-qakhq-cai",
-//   PostCore: "322sd-3iaaa-aaaaf-qakgq-cai",
+//   CyclesDispenser: "y6ydp-7aaaa-aaaaj-azwyq-cai",
+//   FastBlocks_EmailOptIn: "24qg5-ciaaa-aaaak-qtr7a-cai",
+//   KinicEndpoint: "sphnc-7yaaa-aaaao-a3wga-cai",
+//   Metrics: "a5asx-niaaa-aaaac-aacxq-cai",
+//   PostBucket: "yx3it-jiaaa-aaaaj-azwza-cai",
+//   PostCore: "4vm7k-tyaaa-aaaah-aq4wq-cai",
 //   PostIndex: "r5sjg-7iaaa-aaaaf-qaama-cai",
-//   Storage: "y2pkg-ciaaa-aaaaf-qagbq-cai",
-//   User: "rtqeo-eyaaa-aaaaf-qaana-cai",
-//   nuance_assets: "exwqn-uaaaa-aaaaf-qaeaa-cai",
+//   Storage: "44puw-fqaaa-aaaah-aq4xa-cai",
+//   User: "wlam3-raaaa-aaaap-qpmaa-cai",
+//   nuance_assets: "t6unq-pqaaa-aaaai-q3nqa-cai",
 //   NftFactory: "kc4mb-myaaa-aaaaf-qajpq-cai",
 //   PublicationManagement: "kq23y-aiaaa-aaaaf-qajmq-cai"
 // };

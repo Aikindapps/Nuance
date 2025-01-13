@@ -158,7 +158,7 @@ actor FastBlocks_EmailOptIn {
   public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
     return {
       trusted_origins= [
-          "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app"
+          "https://t6unq-pqaaa-aaaai-q3nqa-cai.icp0.io"
       ]
     }
   };

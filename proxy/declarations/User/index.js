@@ -9,7 +9,7 @@ export { idlFactory } from "./User.did.js";
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
-export const canisterId = "rtqeo-eyaaa-aaaaf-qaana-cai"
+export const canisterId = "wlam3-raaaa-aaaap-qpmaa-cai"
 
 export const createActor = (canisterId, options = {}) => {
   console.log("Creating actor: " + canisterId +  " with options: ", options);

@@ -145,7 +145,7 @@ function App() {
   const agent = useAgent({ host: customHost });
 
   const identity = useIdentity();
-  const { user } = useAuth();
+  const { user, disconnect } = useAuth();
   const isInitializing = useIsInitializing();
 
   useEffect(() => {
@@ -197,6 +197,7 @@ function App() {
     console.log('Idle: ' + new Date());
     if (isLoggedIn) {
       logout();
+      disconnect();
       console.log('Logged out: ' + new Date());
       window.location.href = '/timed-out';
     }

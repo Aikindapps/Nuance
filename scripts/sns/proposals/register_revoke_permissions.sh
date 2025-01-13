@@ -14,8 +14,8 @@ quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-
                 description = opt "revoke_permission can revoke Prepare, ManagePermissions, and Commit";
                 function_type = opt variant { 
                     GenericNervousSystemFunction = record { 
-                        validator_canister_id = opt principal "exwqn-uaaaa-aaaaf-qaeaa-cai"; 
-                        target_canister_id = opt principal "exwqn-uaaaa-aaaaf-qaeaa-cai"; 
+                        validator_canister_id = opt principal "t6unq-pqaaa-aaaai-q3nqa-cai"; 
+                        target_canister_id = opt principal "t6unq-pqaaa-aaaai-q3nqa-cai"; 
                         validator_method_name = opt "validate_revoke_permission"; 
                         target_method_name = opt "revoke_permission";
                     } 

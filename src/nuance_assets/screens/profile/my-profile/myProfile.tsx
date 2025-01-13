@@ -22,7 +22,8 @@ import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 
 const MyProfile = () => {
   const navigate = useNavigate();
-  const agent = useAgent();
+  const customHost = 'https://icp-api.io';
+  const agent = useAgent({ host: customHost });
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { agent: agentToBeUsed } = useAuthStore((state) => ({
     agent: state.agent,

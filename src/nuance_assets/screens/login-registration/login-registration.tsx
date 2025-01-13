@@ -16,6 +16,7 @@ import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sid
 import { getUserActor } from 'src/nuance_assets/services/actorService';
 import toast from 'react-hot-toast';
 import { toastError } from '../../services/toastService';
+import { useAuth } from '@nfid/identitykit/react';
 
 const LoginRegistration = () => {
   const [handle, setHandle] = useState('');
@@ -42,6 +43,7 @@ const LoginRegistration = () => {
   const [canvasScaled, setCanvasScaled] = useState('');
   const [hideEditor, setHideEditor] = useState(true);
 
+  const { disconnect } = useAuth();
   const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
 
   const { getUser, user, unregistered, createUser, isRegistrationAllowed} = useUserStore((state) => ({
@@ -151,6 +153,7 @@ const LoginRegistration = () => {
   const handleCancel = async () => {
     clearLoginMethod();
     await logout();
+    disconnect();
     window.location.pathname=redirectScreen;
   };
 

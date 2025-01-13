@@ -14,8 +14,8 @@ quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-
                 description = opt "Commit frontend canister assets via proposal";
                 function_type = opt variant { 
                     GenericNervousSystemFunction = record { 
-                        validator_canister_id = opt principal "exwqn-uaaaa-aaaaf-qaeaa-cai"; 
-                        target_canister_id = opt principal "exwqn-uaaaa-aaaaf-qaeaa-cai"; 
+                        validator_canister_id = opt principal "t6unq-pqaaa-aaaai-q3nqa-cai"; 
+                        target_canister_id = opt principal "t6unq-pqaaa-aaaai-q3nqa-cai"; 
                         validator_method_name = opt "validate_commit_proposed_batch"; 
                         target_method_name = opt "commit_proposed_batch";
                     } 

@@ -1,14 +1,14 @@
-export const USER_CANISTER_ID = 'rtqeo-eyaaa-aaaaf-qaana-cai';
-export const POST_CORE_CANISTER_ID = '322sd-3iaaa-aaaaf-qakgq-cai';
-export const KINIC_ENDPOINT_CANISTER_ID = '4m3sz-lqaaa-aaaaf-qagza-cai';
+export const USER_CANISTER_ID = 'wlam3-raaaa-aaaap-qpmaa-cai';
+export const POST_CORE_CANISTER_ID = '4vm7k-tyaaa-aaaah-aq4wq-cai';
+export const KINIC_ENDPOINT_CANISTER_ID = 'sphnc-7yaaa-aaaao-a3wga-cai';
 export const FASTBLOCKS_EMAIL_OPT_IN_CANISTER_ID =
-  'dgwwd-jaaaa-aaaaf-qai7a-cai';
-export const POST_RELATIONS_CANISTER_ID = 'qyi2m-xaaaa-aaaaf-qal3a-cai';
-export const STORAGE_CANISTER_ID = 'y2pkg-ciaaa-aaaaf-qagbq-cai';
-export const CYCLES_DISPENSER_CANISTER_ID = '353ux-wqaaa-aaaaf-qakga-cai';
-export const NUANCE_ASSETS_CANISTER_ID = 'exwqn-uaaaa-aaaaf-qaeaa-cai';
-export const METRICS_CANISTER_ID = 'xjlvo-hyaaa-aaaam-qbcga-cai';
+  '24qg5-ciaaa-aaaak-qtr7a-cai';
+export const POST_RELATIONS_CANISTER_ID = 'zjix6-iiaaa-aaaah-qpxca-cai';
+export const STORAGE_CANISTER_ID = '44puw-fqaaa-aaaah-aq4xa-cai';
+export const CYCLES_DISPENSER_CANISTER_ID = 'y6ydp-7aaaa-aaaaj-azwyq-cai';
+export const NUANCE_ASSETS_CANISTER_ID = 't6unq-pqaaa-aaaai-q3nqa-cai';
+export const METRICS_CANISTER_ID = 'a5asx-niaaa-aaaac-aacxq-cai';
 export const NFT_FACTORY_CANISTER_ID = 'kc4mb-myaaa-aaaaf-qajpq-cai';
 export const PUBLICATION_MANAGEMENT_CANISTER_ID = 'kq23y-aiaaa-aaaaf-qajmq-cai';
-export const NOTIFICATIONS_CANISTER_ID = 'qrlrq-biaaa-aaaaf-qal2q-cai';
-export const SUBSCRIPTION_CANISTER_ID = 's6qib-6qaaa-aaaaf-qalwa-cai';
+export const NOTIFICATIONS_CANISTER_ID = 'z4pgt-jaaaa-aaaah-qpxbq-cai';
+export const SUBSCRIPTION_CANISTER_ID = 'yq2oh-eqaaa-aaaaj-azwzq-cai';

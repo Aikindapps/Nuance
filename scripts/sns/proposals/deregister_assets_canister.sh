@@ -11,7 +11,7 @@ quill sns --canister-ids-file ./sns_canister_ids.json --pem-file $PEM_FILE make-
 To understand more about upgrade permissions for asset canisters, you can refer to this documentation: https://internetcomputer.org/docs/current/developer-docs/integrations/sns/managing/sns-asset-canister/ and this developer forum post: https://forum.dfinity.org/t/issue-asset-canister-cant-be-upgraded-via-sns-proposal/23421  \";
         action = opt variant {
             DeregisterDappCanisters = record {
-                canister_ids = vec {principal \"exwqn-uaaaa-aaaaf-qaeaa-cai\";};
+                canister_ids = vec {principal \"t6unq-pqaaa-aaaai-q3nqa-cai\";};
                 new_controllers = vec {principal \"keqno-ecosc-a47cf-rk2ui-5ehla-noflk-jj4it-h6nku-smno2-fucgs-cae\"; principal \"f5o3w-2iaaa-aaaam-qa3fq-cai\"; principal \"3v3rk-jx25f-dl43p-osgkw-6dm7b-wguwy-kjcun-lyo3w-lsuev-kcdnp-7qe\";};
             }
         }

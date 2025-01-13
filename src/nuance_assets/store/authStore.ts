@@ -72,7 +72,7 @@ var authClient: AuthClient;
 //check derivation origin is PROD or UAT
 const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+const NuancePROD = 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app';
 
 declare global {
   interface Navigator {
@@ -302,203 +302,24 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   login: async (_loginMethod: string): Promise<void> => {
     set({ registrationError: undefined, isLoggedIn: false });
-    if (_loginMethod === 'stoic') {
-      let identity = await StoicIdentity.connect();
-      set({ isLoggedIn: true, loginMethod: 'stoic' });
-      authChannel.postMessage({ type: 'login', date: new Date() });
-      Usergeek.setPrincipal(identity.getPrincipal());
-      Usergeek.trackSession();
-      Usergeek.flush();
-      await useUserStore.getState().getUser();
-      if (useUserStore.getState().user === undefined) {
-        //check for brave browser
-        const navigator = window.navigator as any;
-        (navigator.brave && (await navigator.brave.isBrave())) || false
-          ? alert(
-            'Must enable all cookies for Stoic wallet to work with Brave browser'
-          )
-          : console.log('Not a brave browser');
+    console.log('Logged in: ' + new Date());
+    set({ isLoggedIn: true });
+    authChannel.postMessage({ type: 'login', date: new Date() });
+    Usergeek.setPrincipal(get().identity?.getPrincipal());
+    Usergeek.trackSession();
+    Usergeek.flush();
 
-        (await isChrome())
-          ? await new Promise((resolve) => showBlockingToast('', resolve))
-          : console.log('Not a chrome browser');
-        window.location.href = '/register';
-      } else {
-        //user fetched successfully, get the token balances
-        await get().fetchTokenBalances();
-      }
-    } else if (_loginMethod === 'ii') {
-      StoicIdentity.disconnect();
-      try {
-        let window_any = window as any;
-        window_any.ic.bitfinityWallet.disconnect();
-      } catch (err) { }
-      set({ loginMethod: 'ii' });
-      if (!(await authClient?.isAuthenticated())) {
-        await authClient.login(<AuthClientLoginOptions>{
-          onSuccess: async () => {
-            console.log('Logged in: ' + new Date());
-            set({ isLoggedIn: true });
-            authChannel.postMessage({ type: 'login', date: new Date() });
-            Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
-            Usergeek.trackSession();
-            Usergeek.flush();
-
-            await useUserStore.getState().getUser();
-            if (useUserStore.getState().user === undefined) {
-              window.location.href = '/register';
-            } else {
-              //user fetched successfully, get the token balances
-              await get().fetchTokenBalances();
-            }
-          },
-          onError: (error) => {
-            set({ isLoggedIn: false, registrationError: error });
-            toastError(error);
-            if (useUserStore.getState().user === undefined) {
-              window.location.href = '/register';
-            }
-          },
-          identityProvider,
-          maxTimeToLive: sessionTimeout,
-          derivationOrigin: isLocal ? undefined : derivationOrigin,
-        });
-      } else {
-        set({ isLoggedIn: true });
-        await useUserStore.getState().getUser();
-        if (useUserStore.getState().user === undefined) {
-          window.location.href = '/register';
-        } else {
-          //user fetched successfully, get the token balances
-          await get().fetchTokenBalances();
-        }
-      }
-    } else if (_loginMethod === 'NFID') {
-      StoicIdentity.disconnect();
-      try {
-        let window_any = window as any;
-        window_any.ic.bitfinityWallet.disconnect();
-      } catch (err) { }
-      set({ loginMethod: 'NFID' });
-      if (!(await authClient?.isAuthenticated())) {
-        if (fakeProvider) {
-          // for local development, the identity can be generated
-          // bypassing the Internet Identity login workflow
-          console.log('creating fake provider');
-          authClient = await AuthClient.create({
-            identity: Ed25519KeyIdentity.generate(),
-            idleOptions: {
-              disableIdle: true,
-              disableDefaultIdleCallback: true,
-            },
-          });
-          set({ isLoggedIn: true });
-          await useUserStore.getState().getUser();
-        } else {
-          await authClient.login(<AuthClientLoginOptions>{
-            onSuccess: async () => {
-              console.log('Logged in: ' + new Date());
-              set({ isLoggedIn: true });
-              authChannel.postMessage({ type: 'login', date: new Date() });
-
-              Usergeek.setPrincipal(authClient.getIdentity().getPrincipal());
-              Usergeek.trackSession();
-              Usergeek.flush();
-
-              await useUserStore.getState().getUser();
-              if (useUserStore.getState().user === undefined) {
-                window.location.href = '/register';
-              } else {
-                //user fetched successfully, get the token balances
-                await get().fetchTokenBalances();
-              }
-              /*
-              else {
-                window.location.href = useAuthStore.getState().redirectScreen;
-              }
-              */
-            },
-            onError: (error) => {
-              set({ isLoggedIn: false, registrationError: error });
-              toastError(error);
-              if (useUserStore.getState().user === undefined) {
-                window.location.href = '/register';
-              }
-            },
-            identityProvider: isLocal
-              ? Local_NFID_PROVIDER_URL
-              : NFID_PROVIDER_URL,
-            maxTimeToLive: sessionTimeout,
-            derivationOrigin: isLocal ? undefined : derivationOrigin,
-          });
-        }
-      } else {
-        set({ isLoggedIn: true, loginMethod: 'NFID' });
-        await useUserStore.getState().getUser();
-        if (useUserStore.getState().user === undefined) {
-          window.location.href = '/register';
-        } else {
-          await get().fetchTokenBalances();
-        }
-      }
-    } else if (_loginMethod === 'bitfinity') {
-      StoicIdentity.disconnect();
-      let window_any = window as any;
-      try {
-        let bitfinity = window_any.ic.bitfinityWallet.getPrincipal as Function;
-      } catch (error) {
-        toastError('Bitfinity wallet not detected in browser.');
-        set({ isLoggedIn: false, loginMethod: undefined });
-        setTimeout(() => {
-          window.open(
-            'https://chrome.google.com/webstore/detail/bitfinity-wallet/jnldfbidonfeldmalbflbmlebbipcnle',
-            '_blank'
-          );
-        }, 500);
-        return;
-      }
-      try {
-        await window_any?.ic?.bitfinityWallet?.requestConnect({
-          whitelist: await getAllCanisterIds(),
-        });
-        set({ isLoggedIn: true, loginMethod: 'bitfinity' });
-        authChannel.postMessage({ type: 'login', date: new Date() });
-        Usergeek.setPrincipal(
-          await window_any.ic.bitfinityWallet.getPrincipal()
-        );
-        Usergeek.trackSession();
-        Usergeek.flush();
-        await useUserStore.getState().getUser();
-        if (useUserStore.getState().user === undefined) {
-          window.location.href = '/register';
-        } else {
-          //user fetched successfully, get the token balances
-          await get().fetchTokenBalances();
-        }
-      } catch (error) {
-        set({ isLoggedIn: false, loginMethod: undefined });
-        toastError('User interrupt.');
-      }
+    await useUserStore.getState().getUser(get().agent);
+    if (useUserStore.getState().user === undefined) {
+      window.location.href = '/register';
+    } else {
+      //user fetched successfully, get the token balances
+      await get().fetchTokenBalances();
     }
   },
 
   logout: async () => {
-    let loginMethod = useAuthStore?.getState().loginMethod;
-    if (!fakeProvider && loginMethod === 'ii') {
-      Usergeek.setPrincipal(Principal.anonymous());
-      await authClient.logout();
-    } else if (loginMethod === 'stoic') {
-      StoicIdentity.disconnect();
-      Usergeek.setPrincipal(Principal.anonymous());
-    } else if (loginMethod === 'bitfinity') {
-      get().clearLoginMethod();
-    } else if (loginMethod === 'NFID') {
-      Usergeek.setPrincipal(Principal.anonymous());
-      await authClient.logout();
-    } else {
-      Usergeek.setPrincipal(Principal.anonymous());
-      await authClient.logout();
-    }
+    Usergeek.setPrincipal(Principal.anonymous());
     set({ isLoggedIn: false });
     authChannel.postMessage({ type: 'logout', date: new Date() });
     // clear all stores, and localStorage
