@@ -3355,9 +3355,7 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
 
   public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
     return {
-      trusted_origins= [
-          "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app"
-      ]
+      trusted_origins= ENV.getTrustedOrigins();
     }
   };
 

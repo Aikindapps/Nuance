@@ -841,10 +841,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     from: number,
     to: number,
     navigate: NavigateFunction,
-    agent?: Agent
   ): Promise<void> => {
     try {
-      let notificationsActor = await getNotificationsActor(agent);
+      let notificationsActor = await getNotificationsActor();
       let result = await notificationsActor.getUserNotifications(
         JSON.stringify(from),
         JSON.stringify(to)
@@ -864,7 +863,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       //remove the duplicates
       allPrincipalIds = [...new Set(allPrincipalIds)];
       //get the user list items from the User canister
-      let userActor = await getUserActor(agent);
+      let userActor = await getUserActor();
       let userListItems = await userActor.getUsersByPrincipals(allPrincipalIds);
       let existingUserListItems = Array.from(get().notificationUserListItems);
       existingUserListItems.forEach((userListItem) => {

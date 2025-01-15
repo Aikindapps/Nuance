@@ -65,7 +65,6 @@ import NotificationsSidebar from './components/notifications/notifications';
 import Subscriptions from './screens/profile/subscriptions';
 import PublicationSubscribersTab from './screens/profile/publication-subscribers-tab';
 import SubscribersTab from './screens/profile/subscribers-tab';
-import { useSyncIdentity } from './shared/syncIdentity';
 import {
   useAgent,
   useAuth,
@@ -133,27 +132,41 @@ function App() {
     window.location.origin.includes('localhost') ||
     window.location.origin.includes('127.0.0.1');
 
-  const { isInitializedAgent, setAgent, setIdentity } = useAuthStore(
-    (state) => ({
-      isInitializedAgent: state.isInitializedAgent,
-      setAgent: state.setAgent,
-      setIdentity: state.setIdentity,
-    })
-  );
+  const {
+    isLoggedIn,
+    agent: agentAuth,
+    setAgent,
+    setIdentity,
+  } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    agent: state.agent,
+    setAgent: state.setAgent,
+    setIdentity: state.setIdentity,
+  }));
 
-  const customHost = 'https://icp-api.io';
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
   const agent = useAgent({ host: customHost });
 
   const identity = useIdentity();
-  const { user } = useAuth();
+  const { user, disconnect } = useAuth();
   const isInitializing = useIsInitializing();
 
   useEffect(() => {
-    setIdentity(identity);
-  }, [identity]);
+    if (
+      identity?.getPrincipal().toText() === '2vxsx-fae' &&
+      isLoggedIn === true
+    ) {
+      setIdentity(undefined);
+      useAuthStore.setState({ isLoggedIn: false });
+    }
+  });
 
   useEffect(() => {
-    if (!isInitializing) {
+    !isInitializing && identity && setIdentity(identity);
+  }, [identity, isInitializing]);
+
+  useEffect(() => {
+    if (!isInitializing && identity) {
       setAgent(agent);
       useAuthStore.setState({ isInitializedAgent: true });
     }
@@ -163,16 +176,20 @@ function App() {
   }, [agent, isInitializing]);
 
   const isLoading = agent === undefined && isInitializing === true;
-  //agent === undefined;
 
   console.log('AuthStore state:', useAuthStore.getState());
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
-    fetchTokenBalances();
     handleResize();
     setTimeout(handleResize, 200);
   }, []);
+
+  useEffect(() => {
+    if (agentAuth && identity && !isInitializing) {
+      fetchTokenBalances();
+    }
+  }, [agentAuth, identity]);
 
   useEffect(() => {
     document.body.style.backgroundColor = darkTheme
@@ -187,15 +204,15 @@ function App() {
     //30 days in milliseconds
     43200 * 60 * 1_000;
 
-  const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
-    isLoggedIn: state.isLoggedIn,
+  const { logout, fetchTokenBalances } = useAuthStore((state) => ({
     logout: state.logout,
     fetchTokenBalances: state.fetchTokenBalances,
   }));
 
-  const onIdle = () => {
+  const onIdle = async () => {
     console.log('Idle: ' + new Date());
     if (isLoggedIn) {
+      await disconnect();
       logout();
       console.log('Logged out: ' + new Date());
       window.location.href = '/timed-out';
@@ -216,9 +233,9 @@ function App() {
 
     authChannel.onmessage = handleMessage;
 
-    return () => {
+    /* return () => {
       authChannel.close();
-    };
+    }; */
   }, []);
 
   if (isLoading) {

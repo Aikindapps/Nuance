@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore, useUserStore } from '../../store';
 import { icons, colors } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
+import { useAuth } from '@nfid/identitykit/react';
 
 type ProfileMenuProps = {
   shown: boolean;
@@ -19,6 +20,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
 
   const darkTheme = useTheme();
   const darkThemeHomepage = useTheme() && window.location.pathname !== '/';
+  const { disconnect } = useAuth();
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -74,7 +76,8 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
     }
   };
 
-  const onLogOut = () => {
+  const onLogOut = async () => {
+    await disconnect();
     logout();
     window.location.href = '/';
   };

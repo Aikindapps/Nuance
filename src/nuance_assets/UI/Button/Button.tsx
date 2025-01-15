@@ -49,8 +49,8 @@ const Button: React.FC<ButtonProps> = ({
       onClick={onClick}
       disabled={disabled || loading}
     >
-      {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
       {children}
+      {icon ? <img className='plus-sign' src={String(icon)} /> : ''}
       {loading && <LuLoader2 className='button-loader-icon' />}
     </button>
   );

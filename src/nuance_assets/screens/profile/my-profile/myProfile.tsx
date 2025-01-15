@@ -18,11 +18,17 @@ import { getIconForSocialChannel } from '../../../shared/utils';
 import { Context as ModalContext } from '../../../contextes/ModalContext';
 import GradientMdVerified from '../../../UI/verified-icon/verified-icon';
 import { Principal } from '@dfinity/principal';
-import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
+import { useAgent, useAuth, useIsInitializing } from '@nfid/identitykit/react';
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 const MyProfile = () => {
   const navigate = useNavigate();
-  const agent = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agent = useAgent({ host: customHost });
+  const { isConnecting } = useAuth();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { agent: agentToBeUsed } = useAuthStore((state) => ({
     agent: state.agent,
@@ -58,17 +64,17 @@ const MyProfile = () => {
   }));
 
   useEffect(() => {
-    if (agent && !isInitializing) {
-      getUser(agent);
+    if (agentToBeUsed && !isInitializing) {
+      getUser(agentToBeUsed);
     }
-  }, [agent, isInitializing]);
+  }, [agentToBeUsed, isInitializing]);
 
   useEffect(() => {
     if (!isInitializing && !loadingUser) {
       if (isLoggedIn && !user) {
         navigate('/register', { replace: true });
       } else {
-        getUserFollowersCount(user?.handle || '');
+        user && getUserFollowersCount(user?.handle || '');
       }
     }
   }, [isLoggedIn, user, isInitializing]);

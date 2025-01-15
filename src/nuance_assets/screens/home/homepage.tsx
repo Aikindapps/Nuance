@@ -36,7 +36,8 @@ import {
   Stoic,
   MockedSigner,
 } from '@nfid/identitykit';
-import { stat } from 'fs';
+import { authChannel } from '../../store/authStore';
+import { Usergeek } from 'usergeek-ic-js';
 
 const HomePage = () => {
   //darkTheme
@@ -66,13 +67,9 @@ const HomePage = () => {
   const { connect, disconnect, isConnecting, user: authUser } = useAuth();
   const { balance, fetchBalance } = useBalance();
   const signer = useSigner();
-  const identity = useIdentity();
   const accounts = useAccounts();
   const delegationType = useDelegationType();
   const isInitializing = useIsInitializing();
-
-  const customHost = 'https://icp-api.io';
-  const agent = useAgent({ host: customHost });
 
   console.log({
     isInitializing,
@@ -80,7 +77,7 @@ const HomePage = () => {
     isConnecting,
     balance,
     signer,
-    identity,
+    //identity,
     delegationType,
     accounts,
     connect,
@@ -93,13 +90,24 @@ const HomePage = () => {
     getUserWallet,
     fetchTokenBalances,
     clearAll,
+    identity: identity1,
   } = useAuthStore((state) => ({
     agent: state.agent,
     getUserWallet: state.getUserWallet,
     fetchTokenBalances: state.fetchTokenBalances,
     clearAll: state.clearAll,
+    identity: state.identity,
   }));
 
+  //authStore
+  const { isLoggedIn, logout, isInitialized, loginMethod } = useAuthStore(
+    (state) => ({
+      isLoggedIn: state.isLoggedIn,
+      logout: state.logout,
+      isInitialized: state.isInitialized,
+      loginMethod: state.loginMethod,
+    })
+  );
   //userStore
   const { user, getUser, searchUsers, searchPublications, getCounts, counts } =
     useUserStore((state) => ({
@@ -133,67 +141,51 @@ const HomePage = () => {
     search: state.search,
   }));
 
-  console.log('agent homepage: ', agent);
   console.log('agent authStore :', agent1);
+  console.log('identity authStore :', identity1);
 
   console.log('USERWALLET TYPE :', typeof getUserWallet);
 
   const connectFunction = (id: string) => {
-    if (isInitializing || isConnecting) {
+    if (isInitializing) {
       return;
     }
     connect(id);
+    authChannel.postMessage({ type: 'login', date: new Date() });
   };
-
-  console.log('PRINCIPAL :', identity?.getPrincipal().toText());
 
   useEffect(() => {
     const executeFetchTokenBalances = async () => {
-      if (!isInitializing && !isConnecting && identity) {
-        // we know the user is connected
-        // 1. retrieve or create user on your canister
-        if (!isInitialized) {
-          await useUserStore.getState().getUser(agent ?? agent1);
+      if (!agent1 && !isLoggedIn && !isInitializing) {
+        console.log('you are here');
+        return;
+      }
+      // we know the user is connected
+      if (agent1 && !isInitializing) {
+        const loggedUser = await getUser(agent1);
+
+        if (loggedUser === undefined && !isInitialized && !isInitializing) {
           useAuthStore.setState({ isInitialized: true });
-        }
-        if (
-          useUserStore.getState().user === undefined &&
-          !useAuthStore.getState().identity
-        ) {
           window.location.href = '/register';
         } else {
           //user fetched successfully, get the token balances
           const userWallet = await getUserWallet();
           await fetchTokenBalances();
-          // 2. fetch balances (through AuthStore)
-
-          console.log('USER WALLET :', userWallet.principal);
-          //const tokenBalances = await fetchTokenBalances();
-          //console.log('TOKEN BALANCES :', tokenBalances);
         }
-
-        // 3. track session with usergeek, etc.
-        //Usergeek.setPrincipal(identity.getPrincipal());
-        //Usergeek.trackSession();
-        //Usergeek.flush();
-      } else if (!isInitializing && !identity) {
-        // user is definitely logged out
-        // clear your store data
-        //useUserStore.getState().clearAll();
       }
+
+      // track session with usergeek
+      Usergeek.setPrincipal(identity1?.getPrincipal());
+      Usergeek.trackSession();
+      Usergeek.flush();
     };
 
     executeFetchTokenBalances();
-  }, [agent]);
+  }, [agent1, isInitializing]);
 
   console.log('USER :', user);
-
-  //authStore
-  const { isLoggedIn, login, isInitialized } = useAuthStore((state) => ({
-    isLoggedIn: state.isLoggedIn,
-    login: state.login,
-    isInitialized: state.isInitialized,
-  }));
+  console.log('ISLOGGEDIN :', isLoggedIn);
+  console.log('SIGNER :', signer);
 
   const [selectedTab, setSelectedTab] = useState(
     isLoggedIn || window.location.search !== '' ? 'Articles' : 'About'
@@ -769,8 +761,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      //login('NFID');
                       connectFunction(NFIDW.id);
+                      useAuthStore.setState({ loginMethod: 'NFID' });
                     }}
                   >
                     Google
@@ -789,8 +781,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      //login('ii');
                       connectFunction(InternetIdentity.id);
+                      useAuthStore.setState({ loginMethod: 'ii' });
                     }}
                   >
                     Internet Identity
@@ -837,8 +829,8 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    //login('NFID');
                     connectFunction(NFIDW.id);
+                    useAuthStore.setState({ loginMethod: 'NFID' });
                   }}
                 >
                   Google
@@ -857,8 +849,8 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    //login('ii');
                     connectFunction(InternetIdentity.id);
+                    useAuthStore.setState({ loginMethod: 'ii' });
                   }}
                 >
                   Internet Identity
@@ -961,8 +953,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  //login('NFID');
                   connectFunction(NFIDW.id);
+                  useAuthStore.setState({ loginMethod: 'NFID' });
                 }}
               >
                 Login with Google
@@ -973,8 +965,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  //login('ii');
                   connectFunction(InternetIdentity.id);
+                  useAuthStore.setState({ loginMethod: 'ii' });
                 }}
               >
                 Login with Internet Identity
@@ -1044,8 +1036,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  //login('NFID');
                   connectFunction(NFIDW.id);
+                  useAuthStore.setState({ loginMethod: 'NFID' });
                 }}
               >
                 Login with Google
@@ -1056,8 +1048,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  //login('ii');
                   connectFunction(InternetIdentity.id);
+                  useAuthStore.setState({ loginMethod: 'ii' });
                 }}
               >
                 Login with Internet Identity
@@ -1129,8 +1121,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  //login('NFID');
                   connectFunction(NFIDW.id);
+                  useAuthStore.setState({ loginMethod: 'NFID' });
                 }}
               >
                 Login with Google
@@ -1141,8 +1133,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  //login('ii');
                   connectFunction(InternetIdentity.id);
+                  useAuthStore.setState({ loginMethod: 'ii' });
                 }}
               >
                 Login with Internet Identity
@@ -1268,8 +1260,8 @@ const HomePage = () => {
                   style={{ width: '224px' }}
                   styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
-                    //login('NFID');
                     connectFunction(NFIDW.id);
+                    useAuthStore.setState({ loginMethod: 'NFID' });
                   }}
                 >
                   Login with Google
@@ -1280,8 +1272,8 @@ const HomePage = () => {
                   style={{ width: '224px' }}
                   styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
-                    //login('ii');
                     connectFunction(InternetIdentity.id);
+                    useAuthStore.setState({ loginMethod: 'ii' });
                   }}
                 >
                   Login with Internet Identity
@@ -1461,8 +1453,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      //login('ii');
                       connectFunction(InternetIdentity.id);
+                      useAuthStore.setState({ loginMethod: 'ii' });
                     }}
                   >
                     Internet Identity
@@ -1481,8 +1473,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      //login('NFID');
                       connectFunction(NFIDW.id);
+                      useAuthStore.setState({ loginMethod: 'NFID' });
                     }}
                   >
                     Google
@@ -1704,8 +1696,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      //login('ii');
                       connectFunction(InternetIdentity.id);
+                      useAuthStore.setState({ loginMethod: 'ii' });
                     }}
                   >
                     Internet Identity
@@ -1725,8 +1717,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      //login('NFID');
                       connectFunction(NFIDW.id);
+                      useAuthStore.setState({ loginMethod: 'NFID' });
                     }}
                   >
                     Google

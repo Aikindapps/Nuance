@@ -65,7 +65,7 @@
 .button-attributes-navy-dark {
   color: $primary-text-color;
   background-color: $second-accent-color;
-  border: 1px solid $dark-button-hover-color
+  border: 1px solid $dark-button-hover-color;
 }
 
 .button-attributes-white {
@@ -109,7 +109,9 @@
 }
 
 .plus-sign {
-  margin: 0 15px 0 -15px;
+  width: 18px;
+  height: 18px;
+  margin: 0 0 0 15px;
 }
 
 .button-loader-icon {

@@ -29,7 +29,6 @@ var psl = require('psl');
 
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
   const navigate = useNavigate();
   const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore(
     (state) => ({
@@ -671,7 +670,7 @@ const EditProfile = () => {
           <Button
             style={{ width: '96px', margin: '0 0 0 0' }}
             type='button'
-            styleType={{dark: 'white', light: 'white'}}
+            styleType={{ dark: 'white', light: 'white' }}
             onClick={() => navigate('/my-profile')}
           >
             Cancel
@@ -683,7 +682,7 @@ const EditProfile = () => {
               }
             }}
             type='button'
-            styleType={{dark: 'navy-dark', light: 'navy'}}
+            styleType={{ dark: 'navy-dark', light: 'navy' }}
             disabled={!validate()}
             style={{ width: '120px' }}
           >

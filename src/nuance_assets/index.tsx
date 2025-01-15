@@ -20,27 +20,43 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import App from './App';
 import { getAllTargetCanisterIds } from './services/actorService';
 import Loader from './UI/loader/Loader';
-import { useAuthStore } from './store';
+import { useAuthStore, usePostStore, useUserStore } from './store';
+import { Principal } from '@dfinity/principal';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
 const MainApp = () => {
-  const [targets, setTargets] = useState<string[] | null>(null);
+  const [targetCanisters, setTargetCanisters] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchTargets = async () => {
       try {
         const targetCanisterIds = await getAllTargetCanisterIds();
-        setTargets(targetCanisterIds);
+        setTargetCanisters(targetCanisterIds);
       } catch (error) {
         console.error('Error fetching target canister IDs:', error);
-        setTargets([]); // Optionally provide a fallback
+        setTargetCanisters(['']); // provide a fallback
       }
     };
 
     fetchTargets();
   }, []);
+
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
+  //check derivation origin is PROD or UAT
+  const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
+  const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
+  const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+
+  const derivationOrigin: string = window.location.origin.includes(
+    NuanceUATCanisterId
+  )
+    ? NuanceUAT
+    : NuancePROD;
 
   const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
     //   ? // configuration is in minutes, but API expects nanoseconds
@@ -50,22 +66,70 @@ const MainApp = () => {
     //30 days in nanoseconds
     BigInt(480) * BigInt(60) * BigInt(1000000000) * BigInt(91);
 
-  //const mockedSigner: IdentityKitSignerConfig = { ...MockedSigner, providerUrl: 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize' }
+  const mockedSignerProvider = 'http://localhost:3003';
 
-  if (targets === null && useAuthStore?.getState().agent === undefined) {
+  let signers;
+
+  if (isLocal) {
+    signers = [
+      NFIDW,
+      Plug,
+      {
+        ...InternetIdentity,
+        providerUrl:
+          'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize',
+      },
+      Stoic,
+      { ...MockedSigner, providerUrl: mockedSignerProvider },
+    ];
+  } else {
+    signers = [NFIDW, Plug, InternetIdentity, Stoic];
+  }
+
+  if (targetCanisters.length === 0) {
     // Show a loading state while fetching the targets
     return <Loader />;
   }
 
   return (
     <IdentityKitProvider
-      signers={[NFIDW, Plug, InternetIdentity, Stoic, MockedSigner]}
-      signerClientOptions={{
-        targets,
-        maxTimetoLive: sessionTimeout,
-        disableIdle: true,
-      }}
       authType={IdentityKitAuthType.DELEGATION}
+      signers={signers}
+      signerClientOptions={{
+        targets: targetCanisters,
+        maxTimeToLive: sessionTimeout,
+        idleOptions: {
+          disableIdle: true,
+        },
+        derivationOrigin: isLocal
+          ? window.location.origin.includes('exwqn-uaaaa-aaaaf-qaeaa-cai')
+            ? 'http://exwqn-uaaaa-aaaaf-qaeaa-cai.localhost:8080'
+            : 'http://localhost:8081'
+          : derivationOrigin,
+      }}
+      onConnectSuccess={() => {
+        useAuthStore.setState({ isLoggedIn: true });
+        console.log('CONNECTED...');
+      }}
+      onDisconnect={() => {
+        Usergeek.setPrincipal(Principal.anonymous());
+        useAuthStore.setState({
+          isLoggedIn: false,
+          agent: undefined,
+          identity: undefined,
+          isInitialized: false,
+        });
+        console.log('Logged out: ' + new Date());
+      }}
+      onConnectFailure={(e: Error) => {
+        useAuthStore.setState({
+          isLoggedIn: false,
+          agent: undefined,
+          identity: undefined,
+          isInitialized: false,
+        });
+        console.warn(Error);
+      }}
     >
       <ContextProvider>
         <ThemeProvider>

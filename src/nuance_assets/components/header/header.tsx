@@ -166,9 +166,8 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-  const { agent, verifyBitfinityWallet, updateLastLogin } = useAuthStore((state) => ({
+  const { agent, updateLastLogin } = useAuthStore((state) => ({
     agent: state.agent,
-    verifyBitfinityWallet: state.verifyBitfinityWallet,
     updateLastLogin: state.updateLastLogin,
   }));
 
@@ -196,10 +195,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   }));
 
   useEffect(() => {
-    verifyBitfinityWallet();
     updateLastLogin();
     setInterval(() => {
-      getUserNotifications(0, 20, navigate, agent);
+      getUserNotifications(0, 20, navigate);
     }, 10000);
     setInterval(() => {
       checkMyClaimNotification();

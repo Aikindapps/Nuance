@@ -31,7 +31,6 @@ const Err = 'err';
 const Unexpected = 'Unexpected error: ';
 const ArticleNotFound = 'Article not found';
 const user = useUserStore.getState().user;
-//const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
 
 const mergeAuthorAvatars = async (posts: PostType[]): Promise<PostType[]> => {
   const authorHandles = posts.map((p) => p.handle);

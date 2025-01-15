@@ -1734,6 +1734,18 @@ actor class Publisher() = this {
 
     //#endregion
 
+    //#region trusted origin
+
+    public type Icrc28TrustedOriginsResponse = {
+        trusted_origins: [Text]
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+            trusted_origins= ENV.getTrustedOrigins();
+        }
+    };
+
     //#Pre and post upgrades,
     system func preupgrade() {
         Debug.print("Publisher0->preupgrade: hashmap size: " # Nat.toText(index.size()));
