@@ -1,7 +1,7 @@
 import Principal "mo:base/Principal";
 import CanisterIds "../../../src/shared/canisterIds";
 module {
-  public let IS_LOCAL = true;
+  public let IS_LOCAL = false;
   public let USER_CANISTER_ID = CanisterIds.USER_CANISTER_ID;
   public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
   public let KINIC_ENDPOINT_CANISTER_ID = CanisterIds.KINIC_ENDPOINT_CANISTER_ID;
@@ -72,12 +72,12 @@ module {
   public func getTrustedOrigins(): [Text] {
     if (IS_LOCAL) {
       [
-        "http://exwqn-uaaaa-aaaaf-qaeaa-cai.localhost:8080",
+        "http://t6unq-pqaaa-aaaai-q3nqa-cai.localhost:8080",
         "http://localhost:8081"
       ]
     } else {
       [
-        "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app",
+        "https://t6unq-pqaaa-aaaai-q3nqa-cai.icp0.io",
         "https://www.nuance.xyz",
         "https://nuance.xyz",
         "https://distrikt.app",

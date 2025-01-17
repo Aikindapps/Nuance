@@ -189,7 +189,7 @@ actor class Management() = this {
         };
 
         //create publisher canisters and add 20T cycles
-        Cycles.add(5_000_000_000_000);
+        Cycles.add(1_000_000_000_000);
         let newPublisher = await Publisher.Publisher();
         let newPublisherCanisterId = ?Principal.fromActor(newPublisher);
 
@@ -230,7 +230,7 @@ actor class Management() = this {
                 let registerUserCanisterReturn = await UserCanister.registerCanister(publicationCanisterId);
                 let registerPostCanisterReturn = await PostCoreCanister.registerCanister(publicationCanisterId);
 
-                ignore PostCoreCanister.addCanisterToCyclesDispenser(publicationCanisterId, 10_000_000_000_000, 5_000_000_000_000);
+                ignore PostCoreCanister.addCanisterToCyclesDispenser(publicationCanisterId, 500_000_000_000, 700_000_000_000);
 
                 //register publication
 

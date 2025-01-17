@@ -178,12 +178,12 @@ export interface PostStore {
 const createPostStore: StateCreator<PostStore> = (set, get) => ({
   comments: [],
   postBucketCanisterIds: [],
-  postCoreCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
-  userCanisterId: 'rtqeo-eyaaa-aaaaf-qaana-cai',
-  publicationManagementCanisterId: 'kq23y-aiaaa-aaaaf-qajmq-cai',
-  cyclesDispenserCanisterId: '353ux-wqaaa-aaaaf-qakga-cai',
-  metricsCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
-  frontendCanisterId: 'exwqn-uaaaa-aaaaf-qaeaa-cai',
+  postCoreCanisterId: '4vm7k-tyaaa-aaaah-aq4wq-cai',
+  userCanisterId: 'wlam3-raaaa-aaaap-qpmaa-cai',
+  publicationManagementCanisterId: 'zvibj-naaaa-aaaae-qaira-cai',
+  cyclesDispenserCanisterId: 'y6ydp-7aaaa-aaaaj-azwyq-cai',
+  metricsCanisterId: '4vm7k-tyaaa-aaaah-aq4wq-cai',
+  frontendCanisterId: 't6unq-pqaaa-aaaai-q3nqa-cai',
   isLocal: false,
 
   deleteComment: async (
@@ -737,11 +737,11 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
     set({
       comments: [],
       postBucketCanisterIds: [],
-      postCoreCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
-      metricsCanisterId: '322sd-3iaaa-aaaaf-qakgq-cai',
-      userCanisterId: 'rtqeo-eyaaa-aaaaf-qaana-cai',
-      publicationManagementCanisterId: 'kq23y-aiaaa-aaaaf-qajmq-cai',
-      cyclesDispenserCanisterId: '353ux-wqaaa-aaaaf-qakga-cai',
+      postCoreCanisterId: '4vm7k-tyaaa-aaaah-aq4wq-cai',
+      metricsCanisterId: '4vm7k-tyaaa-aaaah-aq4wq-cai',
+      userCanisterId: 'wlam3-raaaa-aaaap-qpmaa-cai',
+      publicationManagementCanisterId: 'zvibj-naaaa-aaaae-qaira-cai',
+      cyclesDispenserCanisterId: 'y6ydp-7aaaa-aaaaj-azwyq-cai',
       isLocal: false,
     });
   },

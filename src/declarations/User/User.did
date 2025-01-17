@@ -293,6 +293,7 @@ service : {
   collectCanisterMetrics: () -> ();
   deleteConfirmedLinkings: () -> (Result_1);
   deleteUser: (text) -> (Result_3);
+  deleteVerifiedUsers: () -> (Result_1);
   dumpUsers: () -> (text) query;
   followAuthor: (text) -> (Result);
   generateAccountIds: () -> ();

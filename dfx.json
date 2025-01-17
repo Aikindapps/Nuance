@@ -3,12 +3,12 @@
     "CyclesDispenser": {
       "main": "src/CyclesDispenser/main.mo",
       "type": "motoko",
-      "specified_id": "353ux-wqaaa-aaaaf-qakga-cai"
+      "specified_id": "y6ydp-7aaaa-aaaaj-azwyq-cai"
     },
     "FastBlocks_EmailOptIn": {
       "main": "src/FastBlocks_EmailOptIn/main.mo",
       "type": "motoko",
-      "specified_id": "dgwwd-jaaaa-aaaaf-qai7a-cai"
+      "specified_id": "24qg5-ciaaa-aaaak-qtr7a-cai"
     },
     "KinicEndpoint": {
       "dependencies": [
@@ -16,47 +16,47 @@
       ],
       "main": "src/KinicEndpoint/main.mo",
       "type": "motoko",
-      "specified_id": "4m3sz-lqaaa-aaaaf-qagza-cai"
+      "specified_id": "sphnc-7yaaa-aaaao-a3wga-cai"
     },
     "PostBucket": {
       "main": "src/PostBucket/main.mo",
       "type": "motoko",
-      "specified_id": "3uy7l-ayaaa-aaaaf-qakhq-cai"
+      "specified_id": "yx3it-jiaaa-aaaaj-azwza-cai"
     },
     "PostCore": {
       "main": "src/PostCore/main.mo",
       "type": "motoko",
-      "specified_id": "322sd-3iaaa-aaaaf-qakgq-cai"
+      "specified_id": "4vm7k-tyaaa-aaaah-aq4wq-cai"
     },
     "Storage": {
       "main": "src/Storage/main.mo",
       "type": "motoko",
-      "specified_id": "y2pkg-ciaaa-aaaaf-qagbq-cai"
+      "specified_id": "44puw-fqaaa-aaaah-aq4xa-cai"
     },
     "User": {
       "main": "src/User/main.mo",
       "type": "motoko",
-      "specified_id": "rtqeo-eyaaa-aaaaf-qaana-cai"
+      "specified_id": "wlam3-raaaa-aaaap-qpmaa-cai"
     },
     "Metrics": {
       "main": "src/Metrics/main.mo",
       "type": "motoko",
-      "specified_id": "xjlvo-hyaaa-aaaam-qbcga-cai"
+      "specified_id": "a5asx-niaaa-aaaac-aacxq-cai"
     },
     "Notifications": {
       "main": "src/NotificationsV3/main.mo",
       "type": "motoko",
-      "specified_id": "qrlrq-biaaa-aaaaf-qal2q-cai"
+      "specified_id": "z4pgt-jaaaa-aaaah-qpxbq-cai"
     },
     "Subscription": {
       "main": "src/Subscription/main.mo",
       "type": "motoko",
-      "specified_id": "s6qib-6qaaa-aaaaf-qalwa-cai"
+      "specified_id": "yq2oh-eqaaa-aaaaj-azwzq-cai"
     },
     "PostRelations": {
       "main": "src/PostRelations/main.mo",
       "type": "motoko",
-      "specified_id": "qyi2m-xaaaa-aaaaf-qal3a-cai"
+      "specified_id": "zjix6-iiaaa-aaaah-qpxca-cai"
     },
     "nuance_assets": {
       "frontend": {
@@ -68,7 +68,7 @@
         "src/SEO/"
       ],
       "type": "assets",
-      "specified_id": "exwqn-uaaaa-aaaaf-qaeaa-cai"
+      "specified_id": "t6unq-pqaaa-aaaai-q3nqa-cai"
     }
   },
   "defaults": {

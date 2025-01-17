@@ -139,7 +139,7 @@ const server = http.createServer(async (req, res) => {
             } catch (error) {
                 console.error('Error processing post details:', error);
                 proxy.web(req, res, {
-                    target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                    target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
                     changeOrigin: true
                 });
             }
@@ -148,7 +148,7 @@ const server = http.createServer(async (req, res) => {
             if (!handle || handle === 'undefined'){
                 console.log('handle is undefined');
                 proxy.web(req, res, {
-                    target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                    target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
                     changeOrigin: true
                 });
             }
@@ -199,7 +199,7 @@ const server = http.createServer(async (req, res) => {
             } catch (error) {
                 console.error(error);
                 proxy.web(req, res, {
-                    target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                    target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
                     changeOrigin: true
                 });
             }
@@ -239,7 +239,7 @@ const server = http.createServer(async (req, res) => {
             }
             catch (error) {
                 proxy.web(req, res, {
-                    target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                    target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
                     changeOrigin: true
                 });
             }
@@ -297,7 +297,7 @@ const server = http.createServer(async (req, res) => {
             } catch (error) {
                 console.error(error);
                 proxy.web(req, res, {
-                    target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                    target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
                     changeOrigin: true
                 });
             }
@@ -305,13 +305,13 @@ const server = http.createServer(async (req, res) => {
             
         } else {
             proxy.web(req, res, {
-                target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+                target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
                 changeOrigin: true
             });
         }
     } else {
         proxy.web(req, res, {
-            target: 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app/',
+            target: 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app/',
             changeOrigin: true
         });
     }

@@ -372,7 +372,8 @@ const HomePage = () => {
     const { posts, totalCount } = await getPostsByFollowers(
       user?.followersArray || [],
       start,
-      end
+      end,
+      agent1
     );
     if (initial) {
       setWritersPosts(posts);
@@ -414,7 +415,7 @@ const HomePage = () => {
   const loadPopularPostsToday = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsToday(start, end);
+    const { posts, totalCount } = await getPopularPostsToday(start, end, agent1);
     if (initial) {
       setTodayPosts(posts);
     } else {
@@ -429,7 +430,7 @@ const HomePage = () => {
   const loadPopularPostsThisWeek = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisWeek(start, end);
+    const { posts, totalCount } = await getPopularPostsThisWeek(start, end, agent1);
     if (initial) {
       setThisWeekPosts(posts);
     } else {
@@ -444,7 +445,7 @@ const HomePage = () => {
   const loadPopularPostsThisMonth = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisMonth(start, end);
+    const { posts, totalCount } = await getPopularPostsThisMonth(start, end, agent1);
     if (initial) {
       setThisMonthPosts(posts);
     } else {
@@ -459,7 +460,7 @@ const HomePage = () => {
   const loadPopularPostsEver = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPosts(start, end);
+    const { posts, totalCount } = await getPopularPosts(start, end, agent1);
     if (initial) {
       setEverPopularPosts(posts);
     } else {
@@ -475,7 +476,7 @@ const HomePage = () => {
   const loadLatestPosts = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getLatestPosts(start, end);
+    const { posts, totalCount } = await getLatestPosts(start, end, agent1);
     if (initial) {
       setLatestPosts(posts);
     } else {

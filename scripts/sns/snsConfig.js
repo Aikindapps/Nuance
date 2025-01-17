@@ -10,6 +10,6 @@ exports.canisterCommands = [
     'dfx canister id nuance_assets',
     'dfx canister id PostCore',
     'dfx canister id CyclesDispenser',
-    'dfx canister id kc4mb-myaaa-aaaaf-qajpq-cai', // NFT Factory
-    'dfx canister id kq23y-aiaaa-aaaaf-qajmq-cai', // Publication Management
+    'dfx canister id uebr2-liaaa-aaaai-q3sha-cai', // NFT Factory
+    'dfx canister id zvibj-naaaa-aaaae-qaira-cai', // Publication Management
 ];

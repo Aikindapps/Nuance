@@ -14,6 +14,7 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { GoTriangleDown } from 'react-icons/go';
 
 import './_header.scss';
+import { useIsInitializing } from '@nfid/identitykit/react';
 
 type HeaderProps = {
   loggedIn: boolean;
@@ -39,6 +40,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const modalContext = useContext(ModalContext);
   const location = useLocation();
   const navigate = useNavigate();
+  const isInitializing = useIsInitializing();
 
   const darkTheme = window.location.pathname !== '/' && theme;
 
@@ -50,9 +52,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     logoSrc = images.NUANCE_LOGO_BLACK;
   } else if (props.isPublicationPage) {
     logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
-  } else if (!props.isArticlePage && !props.isPublicationPage && !props.isUserAdminScreen) {
+  } else if (
+    !props.isArticlePage &&
+    !props.isPublicationPage &&
+    !props.isUserAdminScreen
+  ) {
     logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
-  } else if(props.isUserAdminScreen) {
+  } else if (props.isUserAdminScreen) {
     logoSrc = darkTheme ? images.NUANCE_LOGO_BLACK : images.NUANCE_LOGO;
   } else {
     logoSrc = darkTheme ? images.NUANCE_LOGO_BLACK : images.NUANCE_LOGO;
@@ -181,6 +187,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const {
     user,
     unreadNotificationCount,
+    loadingUserNotifications,
     markAllNotificationsAsRead,
     resetUnreadNotificationCount,
     getUserNotifications,
@@ -188,6 +195,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
+    loadingUserNotifications: state.loadingUserNotifications,
     resetUnreadNotificationCount: state.resetUnreadNotificationCount,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
     getUserNotifications: state.getUserNotifications,
@@ -196,13 +204,22 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
 
   useEffect(() => {
     updateLastLogin();
-    setInterval(() => {
-      getUserNotifications(0, 20, navigate);
-    }, 10000);
-    setInterval(() => {
-      checkMyClaimNotification();
-    }, 10000);
-  }, []);
+    const intervalId = setInterval(async () => {
+      // If we’re busy or uninitialized, skip
+      if (loadingUserNotifications || isInitializing) return;
+
+      try {
+        // 1. getUserNotifications
+        await getUserNotifications(0, 20, navigate, agent);
+        // 2. checkMyClaimNotification
+        await checkMyClaimNotification();
+      } catch (e) {
+        console.error(e);
+      }
+    }, 25000);
+
+    return () => clearInterval(intervalId);
+  }, [loadingUserNotifications, isInitializing]);
 
   const getLogoOrBreadCrumb = () => {
     if (props.isPublicationPage) {
@@ -214,7 +231,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
                 className='icon'
                 onClick={clearSearch}
                 src={logoSrc}
-                style={{filter: darkTheme ? 'opacity(0.3)' : 'none'}}
+                style={{ filter: darkTheme ? 'opacity(0.3)' : 'none' }}
                 alt=''
               />
             </Link>
@@ -262,7 +279,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
                 className='icon'
                 onClick={clearSearch}
                 src={logoSrc}
-                style={{filter: darkTheme ? 'opacity(0.3)' : 'none'}}
+                style={{ filter: darkTheme ? 'opacity(0.3)' : 'none' }}
                 alt=''
               />
             </Link>
@@ -318,23 +335,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       if (props.loggedIn == false && props.ScreenWidth < 768) {
         return (
           <Link to='/'>
-            <img
-              className='icon'
-              onClick={clearSearch}
-              src={logoSrc}
-              alt=''
-            />
+            <img className='icon' onClick={clearSearch} src={logoSrc} alt='' />
           </Link>
         );
       } else {
         return (
           <Link to='/'>
-            <img
-              className='icon'
-              onClick={clearSearch}
-              src={logoSrc}
-              alt=''
-            />
+            <img className='icon' onClick={clearSearch} src={logoSrc} alt='' />
           </Link>
         );
       }
@@ -472,7 +479,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
         )}
 
         {props.loggedIn && user ? (
-          <div className='profile-icon-wrapper' onClick={() => setShownProfile(!shownProfile)}>
+          <div
+            className='profile-icon-wrapper'
+            onClick={() => setShownProfile(!shownProfile)}
+          >
             <ProfileMenu
               shown={shownProfile}
               isArticle={props.isArticlePage}
@@ -486,7 +496,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
           ''
         )}
 
-        <div className='meatball-icon-wrapper' onClick={() => setShownMeatball(!shownMeatball)}>
+        <div
+          className='meatball-icon-wrapper'
+          onClick={() => setShownMeatball(!shownMeatball)}
+        >
           <MeatBallMenu
             shown={shownMeatball}
             isArticle={props.isArticlePage}

@@ -1,41 +1,41 @@
 {
   "CyclesDispenser": {
-    "ic": "353ux-wqaaa-aaaaf-qakga-cai"
+    "ic": "y6ydp-7aaaa-aaaaj-azwyq-cai"
   },
   "FastBlocks_EmailOptIn": {
-    "ic": "dgwwd-jaaaa-aaaaf-qai7a-cai"
+    "ic": "24qg5-ciaaa-aaaak-qtr7a-cai"
   },
   "KinicEndpoint": {
-    "ic": "4m3sz-lqaaa-aaaaf-qagza-cai"
+    "ic": "sphnc-7yaaa-aaaao-a3wga-cai"
   },
   "Metrics": {
-    "ic": "xjlvo-hyaaa-aaaam-qbcga-cai"
+    "ic": "a5asx-niaaa-aaaac-aacxq-cai"
   },
   "Notifications": {
-    "ic": "qrlrq-biaaa-aaaaf-qal2q-cai"
+    "ic": "z4pgt-jaaaa-aaaah-qpxbq-cai"
   },
   "PostBucket": {
-    "ic": "3uy7l-ayaaa-aaaaf-qakhq-cai"
+    "ic": "yx3it-jiaaa-aaaaj-azwza-cai"
   },
   "PostCore": {
-    "ic": "322sd-3iaaa-aaaaf-qakgq-cai"
+    "ic": "4vm7k-tyaaa-aaaah-aq4wq-cai"
   },
   "PostIndex": {
     "ic": "r5sjg-7iaaa-aaaaf-qaama-cai"
   },
   "PostRelations": {
-    "ic": "qyi2m-xaaaa-aaaaf-qal3a-cai"
+    "ic": "zjix6-iiaaa-aaaah-qpxca-cai"
   },
   "Storage": {
-    "ic": "y2pkg-ciaaa-aaaaf-qagbq-cai"
+    "ic": "44puw-fqaaa-aaaah-aq4xa-cai"
   },
   "Subscription": {
-    "ic": "s6qib-6qaaa-aaaaf-qalwa-cai"
+    "ic": "yq2oh-eqaaa-aaaaj-azwzq-cai"
   },
   "User": {
-    "ic": "rtqeo-eyaaa-aaaaf-qaana-cai"
+    "ic": "wlam3-raaaa-aaaap-qpmaa-cai"
   },
   "nuance_assets": {
-    "ic": "exwqn-uaaaa-aaaaf-qaeaa-cai"
+    "ic": "t6unq-pqaaa-aaaai-q3nqa-cai"
   }
 }

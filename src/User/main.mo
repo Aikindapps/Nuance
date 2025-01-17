@@ -634,6 +634,22 @@ actor User {
     };
   };
 
+  public shared ({ caller }) func deleteVerifiedUsers() : async Result.Result<(), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous cannot call this method.");
+    };
+
+    if (not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    for (principal in isVerifiedUsersHashMap.keys()) {
+      isVerifiedUsersHashMap.delete(principal);
+    };
+
+    return #ok();
+  };
+
   public shared ({ caller }) func deleteConfirmedLinkings() : async Result.Result<(), Text> {
     if (isAnonymous(caller)) {
       return #err("Anonymous cannot call this method.");
@@ -763,8 +779,8 @@ actor User {
           };
         };
 
-        if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
-          effectiveDerivationOrigin := "https://nuance.xyz";
+        if (ENV.NUANCE_ASSETS_CANISTER_ID == "t6unq-pqaaa-aaaai-q3nqa-cai") {
+          effectiveDerivationOrigin := "https://t6unq-pqaaa-aaaai-q3nqa-cai.icp0.io";
         } else {
           effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
         };

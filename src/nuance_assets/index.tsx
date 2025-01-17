@@ -50,7 +50,7 @@ const MainApp = () => {
   //check derivation origin is PROD or UAT
   const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
   const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-  const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+  const NuancePROD = 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app';
 
   const derivationOrigin: string = window.location.origin.includes(
     NuanceUATCanisterId
@@ -68,10 +68,10 @@ const MainApp = () => {
 
   const mockedSignerProvider = 'http://localhost:3003';
 
-  let signers;
+  let allSigners;
 
   if (isLocal) {
-    signers = [
+    allSigners = [
       NFIDW,
       Plug,
       {
@@ -83,7 +83,7 @@ const MainApp = () => {
       { ...MockedSigner, providerUrl: mockedSignerProvider },
     ];
   } else {
-    signers = [NFIDW, Plug, InternetIdentity, Stoic];
+    allSigners = [NFIDW, Plug, InternetIdentity, Stoic];
   }
 
   if (targetCanisters.length === 0) {
@@ -94,7 +94,7 @@ const MainApp = () => {
   return (
     <IdentityKitProvider
       authType={IdentityKitAuthType.DELEGATION}
-      signers={signers}
+      signers={allSigners}
       signerClientOptions={{
         targets: targetCanisters,
         maxTimeToLive: sessionTimeout,
@@ -102,8 +102,8 @@ const MainApp = () => {
           disableIdle: true,
         },
         derivationOrigin: isLocal
-          ? window.location.origin.includes('exwqn-uaaaa-aaaaf-qaeaa-cai')
-            ? 'http://exwqn-uaaaa-aaaaf-qaeaa-cai.localhost:8080'
+          ? window.location.origin.includes('t6unq-pqaaa-aaaai-q3nqa-cai')
+            ? 'http://t6unq-pqaaa-aaaai-q3nqa-cai.localhost:8080'
             : 'http://localhost:8081'
           : derivationOrigin,
       }}
@@ -127,6 +127,7 @@ const MainApp = () => {
           agent: undefined,
           identity: undefined,
           isInitialized: false,
+          loginMethod: undefined,
         });
         console.warn(Error);
       }}

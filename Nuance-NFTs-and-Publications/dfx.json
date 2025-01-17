@@ -3,12 +3,12 @@
     "PublicationManagement": {
       "main": "src/publication-management/main.mo",
       "type": "motoko",
-      "specified_id": "kq23y-aiaaa-aaaaf-qajmq-cai"
+      "specified_id": "zvibj-naaaa-aaaae-qaira-cai"
     },
     "NftFactory": {
       "main": "src/nft-factory/main.mo",
       "type": "motoko",
-      "specified_id": "kc4mb-myaaa-aaaaf-qajpq-cai"
+      "specified_id": "uebr2-liaaa-aaaai-q3sha-cai"
     },
     "Publisher": {
       "main": "src/Publisher/main.mo",

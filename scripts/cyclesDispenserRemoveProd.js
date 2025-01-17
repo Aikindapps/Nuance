@@ -42,7 +42,7 @@ async function main() {
     'zjfrd-tqaaa-aaaaf-qakia-cai',
     'opni3-7yaaa-aaaaf-qajvq-cai',
     '3d7l4-iaaaa-aaaaf-qagia-cai',
-    '322sd-3iaaa-aaaaf-qakgq-cai',
+    '4vm7k-tyaaa-aaaah-aq4wq-cai',
     'pfckb-5iaaa-aaaaf-qajsq-cai',
     'kx35m-nqaaa-aaaaf-qajma-cai',
     'kzzqe-waaaa-aaaaf-qajna-cai',
@@ -53,7 +53,7 @@ async function main() {
   for (const canisterId of canisterIds) {
     console.log('🔃 Removing the canister ' + canisterId + '...');
     const { stdout: result } = await exec(
-      `dfx canister --network ic call 353ux-wqaaa-aaaaf-qakga-cai removeCanister '("${canisterId}")'`
+      `dfx canister --network ic call y6ydp-7aaaa-aaaaj-azwyq-cai removeCanister '("${canisterId}")'`
     );
     console.log(result);
   }

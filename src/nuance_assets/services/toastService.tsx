@@ -580,6 +580,8 @@ const CustomNotificationContent = ({
 export const toastError = (err: any, preText: string = ''): void => {
   if (err.message) {
     toast(preText + err.message, ToastType.Error);
+    console.error('Full error object:', err);
+    console.error('Error stack:', err.stack);
   } else {
     toast(preText + err, ToastType.Error);
   }

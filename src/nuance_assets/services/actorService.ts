@@ -266,15 +266,11 @@ export async function getExtActor(
   });
 }
 
-export async function getLedgerActor(): Promise<ActorSubclass<LedgerService>> {
-  var identity =
-    (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
+export async function getLedgerActor(agentToUse?: Agent): Promise<ActorSubclass<LedgerService>> {
+  const agent = agentToUse || useAuthStore.getState().agent || await getAnonAgent();
 
   return createLedgerActor('ryjl3-tyaaa-aaaaa-aaaba-cai' as string, {
-    agentOptions: {
-      identity,
-      host: isLocal ? 'http://localhost:8080' : 'https://icp-api.io',
-    },
+    agent
   });
 }
 
@@ -319,15 +315,13 @@ export async function getNotificationsActor(agentToUse?: Agent): Promise<
 }
 
 export async function getIcrc1Actor(
-  canisterId: string
+  canisterId: string,
+  agentToUse?: Agent
 ): Promise<ActorSubclass<ICRC1Service>> {
-  var identity =
-    (await useAuthStore?.getState().getIdentity()) || new AnonymousIdentity();
+  const agent = agentToUse || useAuthStore.getState().agent || await getAnonAgent();
+
   return createIcrc1Actor(canisterId as string, {
-    agentOptions: {
-      identity,
-      host: isLocal ? 'http://localhost:8080' : 'https://icp-api.io',
-    },
+    agent
   });
 }
 
@@ -445,7 +439,8 @@ export async function getAllTargetCanisterIds(): Promise<string[]> {
     STORAGE_CANISTER_ID,
     SUBSCRIPTION_CANISTER_ID,
     NOTIFICATIONS_CANISTER_ID,
-    '3uy7l-ayaaa-aaaaf-qakhq-cai'
+    'yx3it-jiaaa-aaaaj-azwza-cai',
+    'w4td5-oyaaa-aaaak-qtxpq-cai'
   ];
   let postActor = await getPostCoreActor(await getAnonAgent());
   let [trustedCanistersPost, bucketCanisters, publicationCanisters] = await Promise.all([

@@ -35,7 +35,7 @@ const UserNotFound = 'User not found';
 //check derivation origin is PROD or UAT
 const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+const NuancePROD = 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app';
 
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
@@ -225,6 +225,7 @@ export interface UserStore {
   readonly notificationsToasted: string[];
   readonly linkedPrincipal: string;
   readonly loadingUser: boolean;
+  readonly loadingUserNotifications: boolean;
 
   registerUser: (
     handle: string,
@@ -352,6 +353,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   notificationsToasted: [],
   linkedPrincipal: '',
   loadingUser: false,
+  loadingUserNotifications: false,
 
   getLinkedPrincipal: async (principal: string): Promise<string | undefined> => {
     const userWallet = await useAuthStore.getState().getUserWallet();
@@ -841,9 +843,11 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     from: number,
     to: number,
     navigate: NavigateFunction,
+    agent?: Agent
   ): Promise<void> => {
+    set({ loadingUserNotifications: true });
     try {
-      let notificationsActor = await getNotificationsActor();
+      let notificationsActor = await getNotificationsActor(agent);
       let result = await notificationsActor.getUserNotifications(
         JSON.stringify(from),
         JSON.stringify(to)
@@ -927,9 +931,11 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           ...alreadyToastedNotificationIds,
           ...toToast.map((n) => n.id),
         ],
+        loadingUserNotifications: false
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('getUserNotifications:', err);
+      set({ loadingUserNotifications: false });
     }
   },
 

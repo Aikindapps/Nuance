@@ -70,6 +70,7 @@ import {
 } from '../shared/constants';
 import { canisterId as userCanisterId } from '../../declarations/User';
 import { canisterId as subscriptionCanisterId } from '../../declarations/Subscription';
+import { Agent } from '@dfinity/agent';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -351,7 +352,8 @@ export interface PostStore {
   ) => Promise<PostType[] | undefined>;
   getLatestPosts: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<{
     posts: PostType[];
     totalCount: number;
@@ -360,7 +362,8 @@ export interface PostStore {
   getPostsByFollowers: (
     followers: Array<string>,
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<{ posts: PostType[]; totalCount: number }>;
   getPostsByCategory: (
     handle: string,
@@ -374,19 +377,23 @@ export interface PostStore {
   clearSearchBar: (isTagScreen: boolean) => void;
   getPopularPosts: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   getPopularPostsToday: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   getPopularPostsThisWeek: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   getPopularPostsThisMonth: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   clerGetPublicationPostError: () => Promise<void>;
   setSearchText: (searchText: string) => void;
@@ -1162,10 +1169,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getPostsByFollowers: async (
     followers: Array<string>,
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<{ posts: PostType[]; totalCount: number }> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPostsByFollowers(
         followers.map((handle) => {
           return handle.toLowerCase();
@@ -1233,10 +1241,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
 
   getPopularPosts: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopular(indexFrom, indexTo);
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
@@ -1250,10 +1259,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
   getPopularPostsToday: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopularToday(indexFrom, indexTo);
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
@@ -1267,10 +1277,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
   getPopularPostsThisWeek: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopularThisWeek(
         indexFrom,
         indexTo
@@ -1287,10 +1298,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
   getPopularPostsThisMonth: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopularThisMonth(
         indexFrom,
         indexTo
@@ -1417,13 +1429,14 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
 
   getLatestPosts: async (
     indexFrom,
-    indexTo
+    indexTo,
+    agent?: Agent
   ): Promise<{
     posts: PostType[];
     totalCount: number;
   }> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getLatestPosts(indexFrom, indexTo);
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
       const totalCount = keyProperties.totalCount;

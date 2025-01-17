@@ -11,7 +11,7 @@ Background on memory allocation for future reference:
 quill sns make-proposal 'a0e3889b406b7686640619648d848d5a0d800f2b5a7a2a44ff7cda7b2d264131' \
 --proposal '( record { title="Update Memory Allocation"; url="https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/180903126530388291372782995208461639178"; summary="After a recent update to the SNS canisters, an arbitrary 1gb limit was promoted to all canisters. This limit could interfere with the operation of some canisters. This proposal is to increase the memory allocation to 2gb on canisters at risk of exceeding the 1gb limit."; action=opt variant { ManageDappCanisterSettings=record {
 freezing_threshold=null;
-canister_ids=vec {principal "322sd-3iaaa-aaaaf-qakgq-cai"; principal "rtqeo-eyaaa-aaaaf-qaana-cai"};
+canister_ids=vec {principal "4vm7k-tyaaa-aaaah-aq4wq-cai"; principal "wlam3-raaaa-aaaap-qpmaa-cai"};
 reserved_cycles_limit=null;
 log_visibility=null;
 wasm_memory_limit= null;

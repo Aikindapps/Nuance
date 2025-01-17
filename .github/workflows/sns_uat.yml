@@ -71,7 +71,7 @@ jobs:
           cat << EOF > ./src/well-known/.well-known/ii-alternative-origins 
                     {
               "alternativeOrigins": [
-                "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app",
+                "https://t6unq-pqaaa-aaaai-q3nqa-cai.icp0.io",
                 "https://www.nuancedevs.xyz",
                 "https://nuancedevs.xyz"
               ]

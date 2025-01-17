@@ -74,12 +74,12 @@ main();
 
 
 // const PROD_CANISTER_IDS = [
-//   "dgwwd-jaaaa-aaaaf-qai7a-cai",
-//   "4m3sz-lqaaa-aaaaf-qagza-cai",
+//   "24qg5-ciaaa-aaaak-qtr7a-cai",
+//   "sphnc-7yaaa-aaaao-a3wga-cai",
 //   "qq4ni-qaaaa-aaaaf-qaalq-cai",
 //   "r5sjg-7iaaa-aaaaf-qaama-cai",
-//   "y2pkg-ciaaa-aaaaf-qagbq-cai",
-//   "rtqeo-eyaaa-aaaaf-qaana-cai",
+//   "44puw-fqaaa-aaaah-aq4xa-cai",
+//   "wlam3-raaaa-aaaap-qpmaa-cai",
 //   "2lqm4-daaaa-aaaaf-qakda-cai",
 //   "l5u7w-paaaa-aaaaf-qajla-cai",
 //   "oimop-saaaa-aaaaf-qajva-cai",
@@ -106,7 +106,7 @@ main();
 //   "3tzz7-naaaa-aaaaf-qakha-cai",
 // ];
 // const PROD_PRIVILEGED_CANISTER_IDS = [
-// "322sd-3iaaa-aaaaf-qakgq-cai",//PostCore
-// "kq23y-aiaaa-aaaaf-qajmq-cai", //PublicationManagement
-// "kc4mb-myaaa-aaaaf-qajpq-cai"//NftFactory
+// "4vm7k-tyaaa-aaaah-aq4wq-cai",//PostCore
+// "zvibj-naaaa-aaaae-qaira-cai", //PublicationManagement
+// "uebr2-liaaa-aaaai-q3sha-cai"//NftFactory
 // ];

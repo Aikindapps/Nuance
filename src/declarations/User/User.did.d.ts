@@ -200,6 +200,7 @@ export interface _SERVICE {
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
   'deleteConfirmedLinkings' : ActorMethod<[], Result_1>,
   'deleteUser' : ActorMethod<[string], Result_3>,
+  'deleteVerifiedUsers' : ActorMethod<[], Result_1>,
   'dumpUsers' : ActorMethod<[], string>,
   'followAuthor' : ActorMethod<[string], Result>,
   'generateAccountIds' : ActorMethod<[], undefined>,
