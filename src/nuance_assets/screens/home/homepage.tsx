@@ -49,8 +49,6 @@ const HomePage = () => {
   //location
   const location = useLocation();
 
-  //const [isLoading, setIsLoading] = useState(false);
-
   const [screenWidth, setScreenWidth] = useState(0);
   useEffect(
     (window.onresize = window.onload =
@@ -69,6 +67,7 @@ const HomePage = () => {
   const signer = useSigner();
   const accounts = useAccounts();
   const delegationType = useDelegationType();
+  const agentIk = useAgent();
   const isInitializing = useIsInitializing();
 
   console.log({
@@ -86,11 +85,11 @@ const HomePage = () => {
   });
 
   const {
-    agent: agent1,
+    agent: agent,
     getUserWallet,
     fetchTokenBalances,
     clearAll,
-    identity: identity1,
+    identity: identity,
   } = useAuthStore((state) => ({
     agent: state.agent,
     getUserWallet: state.getUserWallet,
@@ -108,6 +107,14 @@ const HomePage = () => {
       loginMethod: state.loginMethod,
     })
   );
+
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   //userStore
   const { user, getUser, searchUsers, searchPublications, getCounts, counts } =
     useUserStore((state) => ({
@@ -141,8 +148,8 @@ const HomePage = () => {
     search: state.search,
   }));
 
-  console.log('agent authStore :', agent1);
-  console.log('identity authStore :', identity1);
+  console.log('agent authStore :', agent);
+  console.log('identity authStore :', identity);
 
   console.log('USERWALLET TYPE :', typeof getUserWallet);
 
@@ -156,13 +163,13 @@ const HomePage = () => {
 
   useEffect(() => {
     const executeFetchTokenBalances = async () => {
-      if (!agent1 && !isLoggedIn && !isInitializing) {
+      if (!agentIk && !isLoggedIn && !isInitializing) {
         console.log('you are here');
         return;
       }
       // we know the user is connected
-      if (agent1 && !isInitializing) {
-        const loggedUser = await getUser(agent1);
+      if (agentIk && !isInitializing) {
+        const loggedUser = await getUser(agentIk);
 
         if (loggedUser === undefined && !isInitialized && !isInitializing) {
           useAuthStore.setState({ isInitialized: true });
@@ -175,13 +182,13 @@ const HomePage = () => {
       }
 
       // track session with usergeek
-      Usergeek.setPrincipal(identity1?.getPrincipal());
+      Usergeek.setPrincipal(identity?.getPrincipal());
       Usergeek.trackSession();
       Usergeek.flush();
     };
 
     executeFetchTokenBalances();
-  }, [agent1, isInitializing]);
+  }, [agentIk, isInitializing]);
 
   console.log('USER :', user);
   console.log('ISLOGGEDIN :', isLoggedIn);
@@ -373,7 +380,7 @@ const HomePage = () => {
       user?.followersArray || [],
       start,
       end,
-      agent1
+      agent
     );
     if (initial) {
       setWritersPosts(posts);
@@ -415,7 +422,7 @@ const HomePage = () => {
   const loadPopularPostsToday = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsToday(start, end, agent1);
+    const { posts, totalCount } = await getPopularPostsToday(start, end, agent);
     if (initial) {
       setTodayPosts(posts);
     } else {
@@ -430,7 +437,11 @@ const HomePage = () => {
   const loadPopularPostsThisWeek = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisWeek(start, end, agent1);
+    const { posts, totalCount } = await getPopularPostsThisWeek(
+      start,
+      end,
+      agent
+    );
     if (initial) {
       setThisWeekPosts(posts);
     } else {
@@ -445,7 +456,11 @@ const HomePage = () => {
   const loadPopularPostsThisMonth = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisMonth(start, end, agent1);
+    const { posts, totalCount } = await getPopularPostsThisMonth(
+      start,
+      end,
+      agent
+    );
     if (initial) {
       setThisMonthPosts(posts);
     } else {
@@ -460,7 +475,7 @@ const HomePage = () => {
   const loadPopularPostsEver = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPosts(start, end, agent1);
+    const { posts, totalCount } = await getPopularPosts(start, end, agent);
     if (initial) {
       setEverPopularPosts(posts);
     } else {
@@ -476,7 +491,7 @@ const HomePage = () => {
   const loadLatestPosts = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getLatestPosts(start, end, agent1);
+    const { posts, totalCount } = await getLatestPosts(start, end, agent);
     if (initial) {
       setLatestPosts(posts);
     } else {
@@ -695,6 +710,10 @@ const HomePage = () => {
       : colors.primaryTextColor,
   };
 
+  if (isLoading && isInitializing) {
+    return <Loader />;
+  }
+
   return (
     <div className='homepage'>
       <Header
@@ -762,11 +781,16 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      connectFunction(NFIDW.id);
-                      useAuthStore.setState({ loginMethod: 'NFID' });
+                      if (!isLocal) {
+                        connectFunction(NFIDW.id);
+                        useAuthStore.setState({ loginMethod: 'NFID' });
+                      } else {
+                        connectFunction(MockedSigner.id);
+                        useAuthStore.setState({ loginMethod: 'mocked' });
+                      }
                     }}
                   >
-                    Google
+                    {isLocal ? 'Mocked Signer' : 'Google'}
                   </Button>
                   <a
                     className='login-info-text'

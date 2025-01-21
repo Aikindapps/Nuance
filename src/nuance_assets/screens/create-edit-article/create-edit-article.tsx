@@ -52,10 +52,18 @@ import {
   WriterSubscriptionDetailsConverted,
   useSubscriptionStore,
 } from '../../store/subscriptionStore';
+import {
+  useAgent,
+  useIdentity,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
 
 const CreateEditArticle = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const agentIk = useAgent();
+  const identity = useIdentity();
+  const isInitializing = useIsInitializing();
 
   //dark theme
   const darkTheme = useTheme();
@@ -117,9 +125,26 @@ const CreateEditArticle = () => {
 
   //authStore
   const isLoggedIn = useAuthStore((state: AuthStore) => state.isLoggedIn);
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+  const {
+    agent: agentToBeUsed,
+    isInitialized,
+    getUserWallet,
+    fetchTokenBalances,
+  } = useAuthStore((state) => ({
     agent: state.agent,
+    isInitialized: state.isInitialized,
+    getUserWallet: state.getUserWallet,
+    fetchTokenBalances: state.fetchTokenBalances,
   }));
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   const [currentStatus, setCurrentStatus] = useState('');
 
   //returns the current status of the post
@@ -345,7 +370,7 @@ const CreateEditArticle = () => {
     setLoading(true);
     await Promise.all([
       fetchPost(),
-      !loadingUser && getUser(agentToBeUsed),
+      !loadingUser && getUser(agentIk),
       fillUserRelatedFields(),
       getAllTags(),
     ]);
@@ -653,24 +678,27 @@ const CreateEditArticle = () => {
           //not possible to reach here
         } else {
           //just a regular post edit -> call savePost
-          let saveResult = await savePost({
-            title: savingPost.title,
-            creatorHandle: savingPost.creatorHandle || '',
-            content: contentWithUrls || postHtml,
-            premium: premium ? [premium] : [],
-            isDraft: isDraft,
-            tagIds: savingPost.tags.map((tag) => {
-              return tag.tagId;
-            }),
-            category: selectedCategory,
-            headerImage: headerUrl || '',
-            subtitle: savingPost.subtitle,
-            isPublication: false,
-            postId: savingPost.postId,
-            handle: lastSavedPost.handle,
-            isMembersOnly: access.value === 'members-only',
-            scheduledPublishedDate: handleScheduledPublishDate() || [],
-          });
+          let saveResult = await savePost(
+            {
+              title: savingPost.title,
+              creatorHandle: savingPost.creatorHandle || '',
+              content: contentWithUrls || postHtml,
+              premium: premium ? [premium] : [],
+              isDraft: isDraft,
+              tagIds: savingPost.tags.map((tag) => {
+                return tag.tagId;
+              }),
+              category: selectedCategory,
+              headerImage: headerUrl || '',
+              subtitle: savingPost.subtitle,
+              isPublication: false,
+              postId: savingPost.postId,
+              handle: lastSavedPost.handle,
+              isMembersOnly: access.value === 'members-only',
+              scheduledPublishedDate: handleScheduledPublishDate() || [],
+            },
+            agentIk
+          );
           if (saveResult) {
             setSavingPost(saveResult);
             setLastSavedPost(saveResult);
@@ -759,7 +787,7 @@ const CreateEditArticle = () => {
         try {
           let handle =
             user.handle === selectedHandle ? user.handle : selectedHandle;
-          let principal = await getPrincipalByHandle(handle, agentToBeUsed);
+          let principal = await getPrincipalByHandle(handle, agentIk);
           let subscriptionDetails =
             await getWriterSubscriptionDetailsByPrincipalId(principal || '');
           console.log(
@@ -1536,6 +1564,10 @@ const CreateEditArticle = () => {
       ];
     }
   };
+
+  if (isLoading || isInitializing) {
+    return <Loader />;
+  }
 
   return (
     <div className='edit-article-wrapper' style={darkOptionsAndColors}>

@@ -18,6 +18,7 @@ import {
 } from './contextes/ModalContext';
 import { images, colors } from './shared/constants';
 import { authChannel } from './store/authStore';
+import fetch from 'isomorphic-fetch';
 
 const HomePageGrid = lazy(() => import('./screens/home/homepage'));
 const Metrics = lazy(() => import('./screens/metrics/metrics'));
@@ -71,6 +72,8 @@ import {
   useIdentity,
   useIsInitializing,
 } from '@nfid/identitykit/react';
+import { HttpAgent } from '@dfinity/agent';
+import { Usergeek } from 'usergeek-ic-js';
 
 const Routes = () => {
   return useRoutes([
@@ -120,6 +123,7 @@ function App() {
   //handle resize on app wide
   const context = useContext(Context);
   const darkTheme = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleResize = () => {
     let width = window.outerWidth;
@@ -134,22 +138,42 @@ function App() {
 
   const {
     isLoggedIn,
+    isInitialized,
+    isInitializedAgent,
     agent: agentAuth,
     setAgent,
     setIdentity,
+    logout,
+    getUserWallet,
+    fetchTokenBalances,
   } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
+    isInitialized: state.isInitialized,
+    isInitializedAgent: state.isInitializedAgent,
     agent: state.agent,
     setAgent: state.setAgent,
     setIdentity: state.setIdentity,
+    logout: state.logout,
+    getUserWallet: state.getUserWallet,
+    fetchTokenBalances: state.fetchTokenBalances,
   }));
 
-  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp0.io';
-  const agent = useAgent({ host: customHost, retryTimes: 10 });
-
   const identity = useIdentity();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agent = useAgent({
+    host: customHost,
+    retryTimes: 10,
+    fetch,
+  });
+
   const { user, disconnect } = useAuth();
   const isInitializing = useIsInitializing();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agent ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agent, isLoggedIn]);
 
   useEffect(() => {
     if (
@@ -166,7 +190,7 @@ function App() {
   }, [identity, isInitializing]);
 
   useEffect(() => {
-    if (!isInitializing && identity) {
+    if (!isInitializing && agent) {
       setAgent(agent);
       useAuthStore.setState({ isInitializedAgent: true });
     }
@@ -175,9 +199,39 @@ function App() {
     console.log('APP IS INITIALIZING :', isInitializing);
   }, [agent, isInitializing]);
 
-  const isLoading = agent === undefined && isInitializing === true;
+  //const isLoading = agent === undefined || !agentAuth?.rootKey;
 
   console.log('AuthStore state:', useAuthStore.getState());
+  console.log('AGENT ROOTKEY :', agentAuth?.rootKey);
+
+  useEffect(() => {
+    const executeFetchTokenBalances = async () => {
+      if (!agent && !isLoggedIn && !isInitializing) {
+        console.log('you are here');
+        return;
+      }
+      // we know the user is connected
+      if (agent && !isInitializing) {
+        const loggedUser = await useUserStore.getState().getUser(agent);
+
+        if (loggedUser === undefined && !isInitialized && !isInitializing) {
+          useAuthStore.setState({ isInitialized: true });
+          window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          await getUserWallet();
+          await fetchTokenBalances();
+        }
+      }
+
+      // track session with usergeek
+      Usergeek.setPrincipal(identity?.getPrincipal());
+      Usergeek.trackSession();
+      Usergeek.flush();
+    };
+
+    executeFetchTokenBalances();
+  }, [agent, isInitializing]);
 
   useEffect(() => {
     window.addEventListener('resize', handleResize);
@@ -186,10 +240,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (agentAuth && identity && !isInitializing) {
+    if (agent && identity && !isInitializing) {
       fetchTokenBalances();
     }
-  }, [agentAuth, identity]);
+  }, [agent, identity, isInitializing]);
 
   useEffect(() => {
     document.body.style.backgroundColor = darkTheme
@@ -203,11 +257,6 @@ function App() {
     //   : // default = 1 hour
     //30 days in milliseconds
     43200 * 60 * 1_000;
-
-  const { logout, fetchTokenBalances } = useAuthStore((state) => ({
-    logout: state.logout,
-    fetchTokenBalances: state.fetchTokenBalances,
-  }));
 
   const onIdle = async () => {
     console.log('Idle: ' + new Date());
@@ -238,8 +287,20 @@ function App() {
     }; */
   }, []);
 
-  if (isLoading) {
-    return <Loader />;
+  if (isLoading || isInitializing) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   }
 
   return (

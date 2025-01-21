@@ -723,18 +723,6 @@ actor CyclesDispenser {
     };
   };
 
-  //#region trusted origin
-
-  public type Icrc28TrustedOriginsResponse = {
-    trusted_origins: [Text]
-  };
-
-  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
-    return {
-      trusted_origins= ENV.getTrustedOrigins();
-    }
-  };
-
   // #endregion
 
   //#region memory management

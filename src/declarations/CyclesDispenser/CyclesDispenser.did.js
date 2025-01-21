@@ -27,9 +27,6 @@ export const idlFactory = ({ IDL }) => {
   const Result_3 = IDL.Variant({ 'ok' : TopUp, 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const TimeRange = IDL.Variant({ 'day' : IDL.Nat, 'hour' : IDL.Nat });
-  const Icrc28TrustedOriginsResponse = IDL.Record({
-    'trusted_origins' : IDL.Vec(IDL.Text),
-  });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
   return IDL.Service({
@@ -66,7 +63,6 @@ export const idlFactory = ({ IDL }) => {
     'getTopUp' : IDL.Func([IDL.Text], [Result_3], ['query']),
     'getTopUpsByRange' : IDL.Func([TimeRange], [IDL.Vec(TopUp)], ['query']),
     'getTrustedCanisters' : IDL.Func([], [Result_2], ['query']),
-    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'idQuick' : IDL.Func([], [IDL.Principal], ['query']),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
     'registerAdmin' : IDL.Func([IDL.Text], [Result], []),

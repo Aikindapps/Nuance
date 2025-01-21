@@ -14,7 +14,7 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { GoTriangleDown } from 'react-icons/go';
 
 import './_header.scss';
-import { useIsInitializing } from '@nfid/identitykit/react';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 
 type HeaderProps = {
   loggedIn: boolean;
@@ -172,8 +172,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-  const { agent, updateLastLogin } = useAuthStore((state) => ({
+  const { agent, isLoggedIn, updateLastLogin } = useAuthStore((state) => ({
     agent: state.agent,
+    isLoggedIn: state.isLoggedIn,
     updateLastLogin: state.updateLastLogin,
   }));
 
@@ -216,7 +217,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       } catch (e) {
         console.error(e);
       }
-    }, 25000);
+    }, 10000);
 
     return () => clearInterval(intervalId);
   }, [loadingUserNotifications, isInitializing]);

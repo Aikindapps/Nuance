@@ -310,7 +310,7 @@ export interface PostStore {
   comments: Comment[] | [];
   totalNumberOfComments: number;
 
-  savePost: (post: PostSaveModel) => Promise<PostType | undefined>;
+  savePost: (post: PostSaveModel, agent?: Agent) => Promise<PostType | undefined>;
   getSavedPost: (postId: string) => Promise<void>;
   getSavedPostReturnOnly: (
     postId: string,
@@ -808,9 +808,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     });
   },
 
-  savePost: async (post: PostSaveModel): Promise<PostType | undefined> => {
+  savePost: async (post: PostSaveModel, agent?: Agent): Promise<PostType | undefined> => {
     try {
-      const result = await (await getPostCoreActor()).save(post);
+      const result = await (await getPostCoreActor(agent)).save(post);
       if (Err in result) {
         toastError(result.err);
       } else {

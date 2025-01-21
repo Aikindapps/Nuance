@@ -11,9 +11,7 @@
       "specified_id": "24qg5-ciaaa-aaaak-qtr7a-cai"
     },
     "KinicEndpoint": {
-      "dependencies": [
-        "PostCore"
-      ],
+      "dependencies": ["PostCore"],
       "main": "src/KinicEndpoint/main.mo",
       "type": "motoko",
       "specified_id": "sphnc-7yaaa-aaaao-a3wga-cai"
@@ -62,11 +60,7 @@
       "frontend": {
         "entrypoint": "dist/index.html"
       },
-      "source": [
-        "dist/",
-        "src/well-known/",
-        "src/SEO/"
-      ],
+      "source": ["dist/", "src/well-known/", "src/SEO/"],
       "type": "assets",
       "specified_id": "t6unq-pqaaa-aaaai-q3nqa-cai"
     }

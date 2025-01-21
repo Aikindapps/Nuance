@@ -47,6 +47,7 @@ import SubscriptionModal from '../../components/subscription-modal/subscription-
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -75,6 +76,8 @@ const ReadArticle = () => {
 
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
+  const agentIk = useAgent();
+  const isInitializing = useIsInitializing();
 
   const {
     getPost,
@@ -197,6 +200,12 @@ const ReadArticle = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const commentId = queryParams.get('comment');
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setLoading(false) : setLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
 
   useEffect(() => {
     const scrollToComment = () => {

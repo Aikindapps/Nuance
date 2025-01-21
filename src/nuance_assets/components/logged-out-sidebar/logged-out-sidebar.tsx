@@ -7,8 +7,16 @@ import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { useAuth, useIsInitializing } from '@nfid/identitykit/react';
 import { authChannel } from '../../store/authStore';
-import { InternetIdentity, NFIDW, Plug, Stoic } from '@nfid/identitykit';
+import {
+  InternetIdentity,
+  NFIDW,
+  Plug,
+  Stoic,
+  MockedSigner,
+} from '@nfid/identitykit';
 import { Usergeek } from 'usergeek-ic-js';
+import { isMobile } from 'react-device-detect';
+import { toastError } from '../../services/toastService';
 type LoggedOutSidebarProps = {
   style?: any;
 };
@@ -39,6 +47,10 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
     modalContext?.closeModal();
     login(loginMethod);
   };
+
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
 
   const isInitializing = useIsInitializing();
   const { connect } = useAuth();
@@ -80,10 +92,8 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
           window.location.href = '/register';
         } else {
           //user fetched successfully, get the token balances
-          const userWallet = await getUserWallet();
+          await getUserWallet();
           await fetchTokenBalances();
-
-          console.log('USER WALLET :', userWallet.principal);
         }
       }
 
@@ -162,11 +172,16 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
             style={{ width: '100%' }}
             icon={NFIDW.icon}
             onClick={() => {
-              connectFunction(NFIDW.id);
-              useAuthStore.setState({ loginMethod: 'NFID' });
+              if (!isLocal) {
+                connectFunction(NFIDW.id);
+                useAuthStore.setState({ loginMethod: 'NFID' });
+              } else {
+                connectFunction(MockedSigner.id);
+                useAuthStore.setState({ loginMethod: 'mocked' });
+              }
             }}
           >
-            Log in with NFID
+            Log in with {isLocal ? 'Mocked Signer' : 'NFID'}
           </Button>
         </div>
         <div className='logged-out-sidebar-button'>
@@ -193,8 +208,14 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
             style={{ width: '100%' }}
             icon={Plug.icon}
             onClick={() => {
-              connectFunction(Plug.id);
-              useAuthStore.setState({ loginMethod: 'plug' });
+              if (!isMobile) {
+                connectFunction(Plug.id);
+                useAuthStore.setState({ loginMethod: 'plug' });
+              } else {
+                toastError(
+                  'Plug login is not available on mobile devices. Please use a desktop browser or another login method.'
+                );
+              }
             }}
           >
             Log in with Plug

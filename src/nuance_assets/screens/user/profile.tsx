@@ -33,8 +33,13 @@ import {
   WriterSubscriptionDetailsConverted,
   useSubscriptionStore,
 } from '../../store/subscriptionStore';
-import { set } from 'lodash';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
+import {
+  useAgent,
+  useIdentity,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
+import Loader from '../../UI/loader/Loader';
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -55,6 +60,10 @@ const Profile = () => {
   const modalContext = useContext(ModalContext);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const agentIk = useAgent();
+  const isInitializing = useIsInitializing();
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -71,15 +80,24 @@ const Profile = () => {
       : colors.accentColor,
   };
 
-  const { redirect, redirectScreen, isLoggedIn, login } = useAuthStore(
-    (state) => ({
-      isLoggedIn: state.isLoggedIn,
-      login: state.login,
-      redirect: state.redirect,
-      redirectScreen: state.redirectScreen,
-    })
-  );
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+  const {
+    redirect,
+    redirectScreen,
+    isLoggedIn,
+  } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    redirect: state.redirect,
+    redirectScreen: state.redirectScreen,
+  }));
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+    agent: state.agent,
+  }));
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
 
   const user = useUserStore((state) => state.user);
 
@@ -252,6 +270,10 @@ const Profile = () => {
     setIsSubscribed(!isSubscribed);
   };
 
+  if (isLoading || isInitializing) {
+    return <Loader />;
+  }
+
   return (
     <div>
       <Helmet>
@@ -356,12 +378,24 @@ const Profile = () => {
                   src={author?.avatar || images.DEFAULT_AVATAR}
                   alt='background'
                   className='profile-picture'
-                  style={author?.isVerified ? {
-                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-                    padding: "0.2em",
-                  } : {borderRadius: "50%"}}
+                  style={
+                    author?.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.2em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
                 />
-                <p className='name'>{author?.displayName} {author?.isVerified && <div className='verified-badge'><GradientMdVerified width={'24'} height={'24'} /></div>}</p>
+                <p className='name'>
+                  {author?.displayName}{' '}
+                  {author?.isVerified && (
+                    <div className='verified-badge'>
+                      <GradientMdVerified width={'24'} height={'24'} />
+                    </div>
+                  )}
+                </p>
                 <p
                   style={
                     darkTheme
@@ -508,7 +542,7 @@ const Profile = () => {
                     displayingPosts.length && (
                     <div className='load-more-container'>
                       <Button
-                        styleType={{dark: 'white', light: 'white'}}
+                        styleType={{ dark: 'white', light: 'white' }}
                         style={{ width: '152px' }}
                         onClick={() => loadMoreHandler()}
                         loading={loadingMore}

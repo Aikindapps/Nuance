@@ -270,7 +270,7 @@ actor PostCore {
     };
 
     try {
-      Cycles.add(5_000_000_000_000);
+      Cycles.add(2_000_000_000_000);
       let bucketCanister = await PostBucket.PostBucket();
       let canisterId = Principal.toText(Principal.fromActor(bucketCanister));
 

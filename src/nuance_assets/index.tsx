@@ -129,6 +129,7 @@ const MainApp = () => {
           isInitialized: false,
           loginMethod: undefined,
         });
+        window.location.reload();
         console.warn(Error);
       }}
     >

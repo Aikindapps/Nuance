@@ -26,7 +26,7 @@
 env="l"
 mode="u"
 modeAction="Upgrading"
-network="local"
+network="ic"
 canisterFilePath="./.dfx/local/canister_ids.json"
 productionCanisterFilePath="./canister_ids.json"
 cgUsers=""
