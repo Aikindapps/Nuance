@@ -455,7 +455,7 @@ export interface PostStore {
     postId: string,
     bucketCanisterId: string
   ) => Promise<string[]>;
-  getUserApplauds: () => Promise<ApplaudListItem[]>;
+  getUserApplauds: (agent?: Agent) => Promise<ApplaudListItem[]>;
   getUserIcpTransactions: () => Promise<TransactionListItem[]>;
   getUserNuaTransactions: () => Promise<TransactionListItem[]>;
   getUserCkbtcTransactions: () => Promise<TransactionListItem[]>;
@@ -473,10 +473,12 @@ export interface PostStore {
   ) => Promise<PostType | undefined>;
 
   getOwnedNfts: (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ) => Promise<PremiumPostActivityListItem[]>;
   getSellingNfts: (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ) => Promise<PremiumPostActivityListItem[]>;
   transferNft: (
     tokenIdentifier: string,
@@ -1688,10 +1690,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
   getSellingNfts: async (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ): Promise<PremiumPostActivityListItem[]> => {
     try {
-      let postCoreActor = await getPostCoreActor();
+      let postCoreActor = await getPostCoreActor(agent);
       let [allOwnedPosts, allNftCanisters] = await Promise.all([
         postCoreActor.getMyAllPosts(0, 100000), //arbitrary big number
         postCoreActor.getAllNftCanisters(),
@@ -1718,7 +1721,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const nftCanisterId of allOwnedPremiumArticlesNftCanisterIds) {
-        let extActor = await getExtActor(nftCanisterId);
+        let extActor = await getExtActor(nftCanisterId, agent);
         transactionsPromises.push(
           extActor.marketplaceTransactionsAndTotalSupply()
         );
@@ -1785,17 +1788,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
   getOwnedNfts: async (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ): Promise<PremiumPostActivityListItem[]> => {
     try {
-      let postCoreActor = await getPostCoreActor();
+      let postCoreActor = await getPostCoreActor(agent);
       let [allOwnedPosts, allNftCanisters] = await Promise.all([
         postCoreActor.getMyAllPosts(0, 100000), //arbitrary big number
         postCoreActor.getAllNftCanisters(),
       ]);
       let promises = [];
       for (const [postId, canisterId] of allNftCanisters) {
-        let extActor = await getExtActor(canisterId);
+        let extActor = await getExtActor(canisterId, agent);
         promises.push(extActor.tokens_ext(userAccountId));
       }
       let result: PremiumPostActivityListItem[] = [];
@@ -1826,7 +1830,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const item of result) {
-        let extActor = await getExtActor(item.canisterId);
+        let extActor = await getExtActor(item.canisterId, agent);
         transactionsPromises.push(
           extActor.marketplaceTransactionsAndTotalSupply()
         );
@@ -1967,15 +1971,15 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       console.log(error);
     }
   },
-  getUserApplauds: async (): Promise<ApplaudListItem[]> => {
+  getUserApplauds: async (agent?: Agent): Promise<ApplaudListItem[]> => {
     try {
       let allBucketCanisterIds = (
-        await (await getPostCoreActor()).getBucketCanisters()
+        await (await getPostCoreActor(agent)).getBucketCanisters()
       ).map((bucketCanisterEntry) => {
         return bucketCanisterEntry[0];
       });
       let promises = allBucketCanisterIds.map(async (bucketCanisterId) => {
-        return (await getPostBucketActor(bucketCanisterId)).getMyApplauds();
+        return (await getPostBucketActor(bucketCanisterId, agent)).getMyApplauds();
       });
       //contains the applauds data
       let applauds = (await Promise.all(promises)).flat(1);

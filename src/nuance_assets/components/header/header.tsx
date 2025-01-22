@@ -40,6 +40,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const modalContext = useContext(ModalContext);
   const location = useLocation();
   const navigate = useNavigate();
+  const agentIk = useAgent();
   const isInitializing = useIsInitializing();
 
   const darkTheme = window.location.pathname !== '/' && theme;
@@ -204,10 +205,12 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   }));
 
   useEffect(() => {
-    updateLastLogin();
+    if (agentIk) {
+      updateLastLogin();
+    }
     const intervalId = setInterval(async () => {
       // If we’re busy or uninitialized, skip
-      if (loadingUserNotifications || isInitializing) return;
+      if (loadingUserNotifications || !agentIk) return;
 
       try {
         // 1. getUserNotifications
@@ -220,7 +223,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     }, 10000);
 
     return () => clearInterval(intervalId);
-  }, [loadingUserNotifications, isInitializing]);
+  }, [loadingUserNotifications]);
 
   const getLogoOrBreadCrumb = () => {
     if (props.isPublicationPage) {

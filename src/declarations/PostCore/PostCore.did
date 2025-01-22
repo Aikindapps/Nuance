@@ -27,6 +27,11 @@ type TagModel =
    id: text;
    value: text;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type Result_9 = 
  variant {
    err: text;
@@ -377,6 +382,7 @@ service : {
   getViewsByRange: (RecallOptions) -> (int);
   getWasmChunks: () -> (Result_7);
   handleModclubMigration: (text) -> (Result_2);
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   idQuick: () -> (principal) query;
   incrementApplauds: (text, nat) -> ();

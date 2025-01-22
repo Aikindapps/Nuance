@@ -36,10 +36,12 @@ import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { AccountIdentifier, SubAccount } from '@dfinity/ledger-icp';
 import { Principal } from '@dfinity/principal';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 
 const Wallet = () => {
   const [ownedKeys, setOwnedKeys] = useState(0);
   const [soldKeys, setSoldKeys] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [displayingActivities, setDisplayingActivities] = useState<
     (
       | PremiumPostActivityListItem
@@ -56,6 +58,8 @@ const Wallet = () => {
 
   const navigate = useNavigate();
   const darkTheme = useTheme();
+  const agentIk = useAgent();
+  const isInitializing = useIsInitializing();
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -73,6 +77,7 @@ const Wallet = () => {
     restrictedTokenBalance,
     fetchTokenBalances,
     tokenPrices,
+    isLoggedIn,
   } = useAuthStore((state) => ({
     getUserWallet: state.getUserWallet,
     userWallet: state.userWallet,
@@ -80,6 +85,7 @@ const Wallet = () => {
     restrictedTokenBalance: state.restrictedTokenBalance,
     fetchTokenBalances: state.fetchTokenBalances,
     tokenPrices: state.tokenPrices,
+    isLoggedIn: state.isLoggedIn,
   }));
   const { getMySubscriptionTransactions } = useSubscriptionStore((state) => ({
     getMySubscriptionTransactions: state.getMySubscriptionTransactions,
@@ -101,6 +107,12 @@ const Wallet = () => {
     getUserCkbtcTransactions: state.getUserCkbtcTransactions,
     getUserRestrictedNuaTransactions: state.getUserRestrictedNuaTransactions,
   }));
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
 
   const { user } = useUserStore((state) => ({
     user: state.user,
@@ -152,14 +164,14 @@ const Wallet = () => {
       restrictedNuaTransactions,
       subscriptionTransactions,
     ] = await Promise.all([
-      getSellingNfts(userWallet.accountId),
-      getOwnedNfts(userWallet.accountId),
-      getUserApplauds(),
+      getSellingNfts(userWallet.accountId, agentIk),
+      getOwnedNfts(userWallet.accountId, agentIk),
+      getUserApplauds(agentIk),
       getUserIcpTransactions(),
       getUserNuaTransactions(),
       getUserCkbtcTransactions(),
       getUserRestrictedNuaTransactions(),
-      getMySubscriptionTransactions(),
+      getMySubscriptionTransactions(agentIk),
     ]);
     setDisplayingActivities(
       [
@@ -285,8 +297,11 @@ const Wallet = () => {
 
       <div className='deposit-withdraw-buttons-wrapper'>
         <Button
-          className={{dark: 'wallet-deposit-button', light: 'wallet-deposit-button'}}
-          styleType={{dark: 'white', light: 'white'}}
+          className={{
+            dark: 'wallet-deposit-button',
+            light: 'wallet-deposit-button',
+          }}
+          styleType={{ dark: 'white', light: 'white' }}
           type='button'
           onClick={() => {
             modalContext?.openModal('Deposit');
@@ -295,8 +310,11 @@ const Wallet = () => {
           Deposit to your wallet
         </Button>
         <Button
-          className={{dark: 'wallet-withdraw-button-dark', light: 'wallet-withdraw-button'}}
-          styleType={{dark: 'navy-dark', light: 'navy'}}
+          className={{
+            dark: 'wallet-withdraw-button-dark',
+            light: 'wallet-withdraw-button',
+          }}
+          styleType={{ dark: 'navy-dark', light: 'navy' }}
           type='button'
           onClick={() => {
             modalContext?.openModal('WithdrawToken');
@@ -341,8 +359,11 @@ const Wallet = () => {
                 </div>
               ) : userAllowedToClaimByDate(user) ? (
                 <Button
-                  className={{dark: 'wallet-deposit-button', light: 'wallet-deposit-button'}}
-                  styleType={{dark: 'white', light: 'white'}}
+                  className={{
+                    dark: 'wallet-deposit-button',
+                    light: 'wallet-deposit-button',
+                  }}
+                  styleType={{ dark: 'white', light: 'white' }}
                   type='button'
                   style={{ maxWidth: '180px', fontSize: '14px' }}
                   onClick={() => {

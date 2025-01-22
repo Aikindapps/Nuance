@@ -3,6 +3,11 @@ type Validate =
    Err: text;
    Ok: text;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type Result_2 = 
  variant {
    err: text;
@@ -34,6 +39,7 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isThereEnoughMemory: () -> (bool) query;
   registerAdmin: (text) -> (Result);

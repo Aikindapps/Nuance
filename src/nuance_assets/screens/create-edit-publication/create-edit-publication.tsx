@@ -60,7 +60,9 @@ const CreateEditPublication = () => {
   const context = useContext(Context);
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+    agent: state.agent,
+  }));
   const { getUser, user, getUsersByHandles, usersByHandles } = useUserStore(
     (state) => ({
       getUser: state.getUser,
@@ -254,6 +256,7 @@ const CreateEditPublication = () => {
         publicationHandle
       );
       updateSubscriptionDetails(
+        agentToBeUsed,
         weeklyFeeE8s,
         monthlyFeeE8s,
         annuallyFeeE8s,
@@ -412,10 +415,10 @@ const CreateEditPublication = () => {
   }, [publication]);
 
   const subscriptionFeesEnabled =
-      subscriptionDetails.weeklyFeeEnabled ||
-      subscriptionDetails.monthlyFeeEnabled ||
-      subscriptionDetails.annuallyFeeEnabled ||
-      subscriptionDetails.lifeTimeFeeEnabled;
+    subscriptionDetails.weeklyFeeEnabled ||
+    subscriptionDetails.monthlyFeeEnabled ||
+    subscriptionDetails.annuallyFeeEnabled ||
+    subscriptionDetails.lifeTimeFeeEnabled;
 
   const handleScrolls = () => {
     if (publicationBannerImage === '') {

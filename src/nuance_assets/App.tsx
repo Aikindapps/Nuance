@@ -18,7 +18,6 @@ import {
 } from './contextes/ModalContext';
 import { images, colors } from './shared/constants';
 import { authChannel } from './store/authStore';
-import fetch from 'isomorphic-fetch';
 
 const HomePageGrid = lazy(() => import('./screens/home/homepage'));
 const Metrics = lazy(() => import('./screens/metrics/metrics'));
@@ -162,8 +161,6 @@ function App() {
   const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
   const agent = useAgent({
     host: customHost,
-    retryTimes: 10,
-    fetch,
   });
 
   const { user, disconnect } = useAuth();

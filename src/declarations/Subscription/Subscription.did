@@ -20,6 +20,11 @@ type UpdateSubscriptionDetailsModel =
                                };
    weeklyFee: opt nat;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type SubscriptionTimeInterval = 
  variant {
    Annually;
@@ -97,6 +102,7 @@ service : {
   getReaderSubscriptionDetails: () -> (Result_1) query;
   getWriterSubscriptionDetails: (opt text) -> (Result) composite_query;
   getWriterSubscriptionDetailsByPrincipalId: (text) -> (Result) query;
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isReaderSubscriber: (text, text) -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;

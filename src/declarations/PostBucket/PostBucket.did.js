@@ -89,6 +89,7 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Vec(Comment__1),
     'err' : IDL.Text,
   });
+  const SupportedStandard = IDL.Record({ 'url' : IDL.Text, 'name' : IDL.Text });
   const Icrc28TrustedOriginsResponse = IDL.Record({
     'trusted_origins' : IDL.Vec(IDL.Text),
   });
@@ -277,6 +278,11 @@ export const idlFactory = ({ IDL }) => {
     'getUserPosts' : IDL.Func(
         [IDL.Text, IDL.Bool],
         [IDL.Vec(PostBucketType__1)],
+        ['query'],
+      ),
+    'icrc10_supported_standards' : IDL.Func(
+        [],
+        [IDL.Vec(SupportedStandard)],
         ['query'],
       ),
     'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),

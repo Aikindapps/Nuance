@@ -15,17 +15,20 @@ import Activity from './activity';
 import { useTheme } from '../../contextes/ThemeContext';
 import { colors, images, icons } from '../../shared/constants';
 import { Context } from '../../contextes/Context';
-import { useAuth, useIsInitializing } from '@nfid/identitykit/react';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
+import Loader from '../../UI/loader/Loader';
 
 const ProfileSidebar = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [screenWidth, setScreenWidth] = useState(0);
   const navigate = useNavigate();
+  const agentIk = useAgent();
   const isInitializing = useIsInitializing();
   const [mobile, setMobile] = useState<Boolean>(false);
   const [userPublications, setUserPublications] = useState<PublicationObject[]>(
     []
   );
+  const [isLoading, setIsLoading] = useState(false);
   const [shown, setShown] = useState(screenWidth > 1089);
   const ToggleMenu = () => {
     if (screenWidth < 1089) {
@@ -51,17 +54,25 @@ const ProfileSidebar = () => {
     agent: state.agent,
   }));
 
-  const { user, loadingUser, getUser, getCounts, counts, author, getAuthor, clearAuthor } =
-    useUserStore((state) => ({
-      user: state.user,
-      loadingUser: state.loadingUser,
-      getUser: state.getUser,
-      getCounts: state.getUserPostCounts,
-      counts: state.userPostCounts,
-      author: state.author,
-      getAuthor: state.getAuthor,
-      clearAuthor: state.clearAuthor,
-    }));
+  const {
+    user,
+    loadingUser,
+    getUser,
+    getCounts,
+    counts,
+    author,
+    getAuthor,
+    clearAuthor,
+  } = useUserStore((state) => ({
+    user: state.user,
+    loadingUser: state.loadingUser,
+    getUser: state.getUser,
+    getCounts: state.getUserPostCounts,
+    counts: state.userPostCounts,
+    author: state.author,
+    getAuthor: state.getAuthor,
+    clearAuthor: state.clearAuthor,
+  }));
 
   const [subscriptionCount, setSubscriptionCount] = useState<number>(0);
   const { getMySubscriptionHistoryAsReader, getMySubscriptionDetailsAsWriter } =
@@ -110,8 +121,14 @@ const ProfileSidebar = () => {
   }));
 
   useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
+  useEffect(() => {
     console.log('PROFILE SIDEBAR USER :', user);
-    if (!isInitializing && !loadingUser) {
+    if (!agentIk && !loadingUser) {
       if (user) {
         getCounts(user.handle);
         getMySubscriptionHistoryAsReader();
@@ -123,7 +140,7 @@ const ProfileSidebar = () => {
         navigate('/');
       }
     }
-  }, [user, isInitializing]);
+  }, [user, agentIk]);
 
   useEffect(() => {
     if (window.innerWidth < 1089) {
@@ -159,6 +176,22 @@ const ProfileSidebar = () => {
       ? icons.THREE_DOTS_WHITE
       : icons.THREE_DOTS,
   };
+
+  if (isLoading || isInitializing) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div

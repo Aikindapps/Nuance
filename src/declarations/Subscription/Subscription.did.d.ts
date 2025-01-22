@@ -43,6 +43,7 @@ export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
   { 'Monthly' : null } |
   { 'Annually' : null };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export interface UpdateSubscriptionDetailsModel {
   'weeklyFee' : [] | [bigint],
   'lifeTimeFee' : [] | [bigint],
@@ -79,6 +80,7 @@ export interface _SERVICE {
   'getReaderSubscriptionDetails' : ActorMethod<[], Result_1>,
   'getWriterSubscriptionDetails' : ActorMethod<[[] | [string]], Result>,
   'getWriterSubscriptionDetailsByPrincipalId' : ActorMethod<[string], Result>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
   'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isReaderSubscriber' : ActorMethod<[string, string], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,

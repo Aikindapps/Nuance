@@ -25,11 +25,14 @@ import { useSubscriptionStore } from '../../../store/subscriptionStore';
 import { SubscriptionStore } from '../../../store/subscriptionStore';
 import { Principal } from '@dfinity/principal';
 import './_edit-profile.scss';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 var psl = require('psl');
 
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
+  const agentIk = useAgent();
+  const isInitializing = useIsInitializing();
   const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore(
     (state) => ({
       getUser: state.getUser,
@@ -47,9 +50,16 @@ const EditProfile = () => {
     updateSubscriptionDetails: state.updateSubscriptionDetails,
   }));
 
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setLoading(false) : setLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   const firstLoad = async () => {
     setIsLoading(true);
-    let user = await getUser();
+    let user = await getUser(agentIk);
     if (user) {
       setUser(user);
       setAvatar(user.avatar);
@@ -106,6 +116,7 @@ const EditProfile = () => {
     try {
       const userPrincipalId = await getPrincipalByHandle(user?.handle || '');
       updateSubscriptionDetails(
+        agentIk,
         convertToE8s(subscriptionDetails.weeklyFee[0]),
         convertToE8s(subscriptionDetails.monthlyFee[0]),
         convertToE8s(subscriptionDetails.annuallyFee[0]),
@@ -315,6 +326,7 @@ const EditProfile = () => {
       }
 
       updateSubscriptionDetails(
+        agentIk,
         subscriptionDetails.weeklyFee[0]
           ? Number(subscriptionDetails.weeklyFee[0]) * 1e8
           : undefined,
@@ -447,7 +459,7 @@ const EditProfile = () => {
       : colors.primaryTextColor,
   };
 
-  if (isLoading) {
+  if (loading || isInitializing || isLoading) {
     return (
       <div className='edit-profile-wrapper'>
         <div style={{ width: '150px' }}>
