@@ -41,7 +41,7 @@ import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 const Wallet = () => {
   const [ownedKeys, setOwnedKeys] = useState(0);
   const [soldKeys, setSoldKeys] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [displayingActivities, setDisplayingActivities] = useState<
     (
       | PremiumPostActivityListItem
@@ -52,13 +52,18 @@ const Wallet = () => {
     )[]
   >([]);
 
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   //NFT feature toggle
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
 
   const navigate = useNavigate();
   const darkTheme = useTheme();
-  const agentIk = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
   const isInitializing = useIsInitializing();
 
   const darkOptionsAndColors = {

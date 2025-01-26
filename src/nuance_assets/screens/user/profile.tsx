@@ -41,6 +41,10 @@ import {
 } from '@nfid/identitykit/react';
 import Loader from '../../UI/loader/Loader';
 
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
+
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
   const [copyProfile, setCopyProfile] = useState(false);
@@ -62,7 +66,8 @@ const Profile = () => {
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const agentIk = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost });
   const isInitializing = useIsInitializing();
 
   const darkOptionsAndColors = {
@@ -80,11 +85,7 @@ const Profile = () => {
       : colors.accentColor,
   };
 
-  const {
-    redirect,
-    redirectScreen,
-    isLoggedIn,
-  } = useAuthStore((state) => ({
+  const { redirect, redirectScreen, isLoggedIn } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
     redirect: state.redirect,
     redirectScreen: state.redirectScreen,
@@ -271,7 +272,23 @@ const Profile = () => {
   };
 
   if (isLoading || isInitializing) {
-    return <Loader />;
+    return (
+      <div
+        className='user-profile-wrapper'
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+          background: darkTheme
+            ? colors.darkModePrimaryBackgroundColor
+            : colors.primaryBackgroundColor,
+        }}
+      >
+        <Loader />
+      </div>
+    );
   }
 
   return (

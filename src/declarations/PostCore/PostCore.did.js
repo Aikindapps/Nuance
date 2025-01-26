@@ -308,6 +308,7 @@ export const idlFactory = ({ IDL }) => {
         [GetPostsByFollowers],
         ['composite_query'],
       ),
+    'getMyLatestPost' : IDL.Func([], [IDL.Opt(Post)], []),
     'getMyPlannedPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [IDL.Vec(PostKeyProperties)],

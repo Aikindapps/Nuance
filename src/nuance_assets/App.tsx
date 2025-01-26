@@ -71,7 +71,6 @@ import {
   useIdentity,
   useIsInitializing,
 } from '@nfid/identitykit/react';
-import { HttpAgent } from '@dfinity/agent';
 import { Usergeek } from 'usergeek-ic-js';
 
 const Routes = () => {
@@ -161,6 +160,7 @@ function App() {
   const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
   const agent = useAgent({
     host: customHost,
+    retryTimes: 10,
   });
 
   const { user, disconnect } = useAuth();
@@ -293,6 +293,9 @@ function App() {
           alignItems: 'center',
           height: '100vh',
           width: '100vw',
+          background: darkTheme
+            ? colors.darkModePrimaryBackgroundColor
+            : colors.primaryBackgroundColor,
         }}
       >
         <Loader />
@@ -361,8 +364,8 @@ function App() {
             <ModalsWrapper />
             <Routes />
           </Suspense>
+          <RenderToaster />
         </Router>
-        <RenderToaster />
       </div>
     </ModalContextProvider>
   );

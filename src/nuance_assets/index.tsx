@@ -20,8 +20,9 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import App from './App';
 import { getAllTargetCanisterIds } from './services/actorService';
 import Loader from './UI/loader/Loader';
-import { useAuthStore, usePostStore, useUserStore } from './store';
+import { useAuthStore } from './store';
 import { Principal } from '@dfinity/principal';
+import { authChannel } from './store/authStore';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
@@ -88,7 +89,19 @@ const MainApp = () => {
 
   if (targetCanisters.length === 0) {
     // Show a loading state while fetching the targets
-    return <Loader />;
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   }
 
   return (
@@ -109,6 +122,7 @@ const MainApp = () => {
       }}
       onConnectSuccess={() => {
         useAuthStore.setState({ isLoggedIn: true });
+        authChannel.postMessage({ type: 'login', date: new Date() });
         console.log('CONNECTED...');
       }}
       onDisconnect={() => {

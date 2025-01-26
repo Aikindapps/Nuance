@@ -27,8 +27,7 @@ const isLocal: boolean =
 const MyProfile = () => {
   const navigate = useNavigate();
   const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
-  const agent = useAgent({ host: customHost });
-  const { isConnecting } = useAuth();
+  const agent = useAgent({ host: customHost, retryTimes: 10 });
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { agent: agentToBeUsed } = useAuthStore((state) => ({
     agent: state.agent,
@@ -70,7 +69,7 @@ const MyProfile = () => {
   }, [agentToBeUsed, isInitializing]);
 
   useEffect(() => {
-    if (!isInitializing && !loadingUser) {
+    if (!isInitializing) {
       if (isLoggedIn && !user) {
         navigate('/register', { replace: true });
       } else {

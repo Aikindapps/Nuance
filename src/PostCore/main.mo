@@ -2315,6 +2315,74 @@ actor PostCore {
     Buffer.toArray(postsBuffer);
   };
 
+  public shared ({ caller }) func getMyLatestPost() : async ?Post {
+  Debug.print("PostCore->getMyLatestPost");
+
+  let callerPrincipalId = Principal.toText(caller);
+
+  // Fetch the user's post list (descending order)
+  let userPosts = U.safeGet(userPostsHashMap, callerPrincipalId, List.nil<Text>());
+
+  // The first post in the list is the newest one (because they're stored desc by creation time)
+  let postIdsArray = List.toArray(userPosts);
+  if (postIdsArray.size() == 0) {
+    return null;
+  };
+
+  let latestPostId = postIdsArray[0];
+
+  // Get the mapped bucket canister ID for this post
+  let bucketCanisterId = U.safeGet(postIdsToBucketCanisterIdsHashMap, latestPostId, "");
+  if (bucketCanisterId == "") {
+    // If there's no bucket canister ID, we can't retrieve the full post
+    return null;
+  };
+
+  // Call into the bucket canister to retrieve the full post data
+  let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+  let postResult = await bucketActor.getPost(latestPostId);
+
+  switch (postResult) {
+    case (#err(errMsg)) {
+      Debug.print("Error retrieving post from bucket: " # errMsg);
+      return null;  // or handle the error as desired
+    };
+
+    case (#ok(bucketPost)) {
+      // Build the extra key properties you store outside the bucket (e.g., claps, views, tags).
+      let keyProps = buildPostKeyProperties(latestPostId);
+
+      // Merge them into a full Post object consistent with what you return in `save`
+      return ?{
+        bucketCanisterId = bucketCanisterId;
+        category = bucketPost.category;
+        claps = keyProps.claps;
+        content = bucketPost.content;
+        created = bucketPost.created;
+        creatorHandle = bucketPost.creatorHandle;
+        creatorPrincipal = bucketPost.creatorPrincipal;
+        handle = bucketPost.handle;
+        headerImage = bucketPost.headerImage;
+        isDraft = bucketPost.isDraft;
+        isPremium = bucketPost.isPremium;
+        isMembersOnly = bucketPost.isMembersOnly;
+        nftCanisterId = bucketPost.nftCanisterId;
+        isPublication = bucketPost.isPublication;
+        modified = bucketPost.modified;
+        postId = bucketPost.postId;
+        publishedDate = bucketPost.publishedDate;
+        subtitle = bucketPost.subtitle;
+        tags = keyProps.tags;
+        title = bucketPost.title;
+        url = bucketPost.url;
+        wordCount = bucketPost.wordCount;
+        views = keyProps.views;
+      };
+    };
+  };
+  };
+
+
   public shared query func getUsersPostCountsByHandles(userHandles: [Text]) : async [UserPostCounts] {
     let result = Buffer.Buffer<UserPostCounts>(0);
     let now = U.epochTime();

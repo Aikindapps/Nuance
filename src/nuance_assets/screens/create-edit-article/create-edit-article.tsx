@@ -59,9 +59,14 @@ import {
 } from '@nfid/identitykit/react';
 
 const CreateEditArticle = () => {
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   const navigate = useNavigate();
   const location = useLocation();
-  const agentIk = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
   const identity = useIdentity();
   const isInitializing = useIsInitializing();
 
@@ -370,7 +375,7 @@ const CreateEditArticle = () => {
     setLoading(true);
     await Promise.all([
       fetchPost(),
-      !loadingUser && getUser(agentIk),
+      getUser(agentIk),
       fillUserRelatedFields(),
       getAllTags(),
     ]);
@@ -618,7 +623,11 @@ const CreateEditArticle = () => {
       return;
     }
     //firstly conver the images to urls
-    const result = await convertImagesToUrls(postHtml, savingPost.headerImage);
+    const result = await convertImagesToUrls(
+      postHtml,
+      savingPost.headerImage,
+      agentIk
+    );
     const contentWithUrls = result?.contentWithUrls;
     const headerUrl = result?.headerUrl;
 
@@ -744,24 +753,27 @@ const CreateEditArticle = () => {
       } else {
         //create a regular post
         //just a regular post edit -> call savePost
-        let saveResult = await savePost({
-          title: savingPost.title,
-          creatorHandle: '',
-          content: contentWithUrls || postHtml,
-          premium: premium ? [premium] : [],
-          isDraft: isDraft,
-          tagIds: savingPost.tags.map((tag) => {
-            return tag.tagId;
-          }),
-          category: selectedCategory,
-          headerImage: headerUrl || '',
-          subtitle: savingPost.subtitle,
-          isPublication: false,
-          postId: savingPost.postId,
-          handle: selectedHandle,
-          isMembersOnly: access.value === 'members-only',
-          scheduledPublishedDate: handleScheduledPublishDate() || [],
-        });
+        let saveResult = await savePost(
+          {
+            title: savingPost.title,
+            creatorHandle: '',
+            content: contentWithUrls || postHtml,
+            premium: premium ? [premium] : [],
+            isDraft: isDraft,
+            tagIds: savingPost.tags.map((tag) => {
+              return tag.tagId;
+            }),
+            category: selectedCategory,
+            headerImage: headerUrl || '',
+            subtitle: savingPost.subtitle,
+            isPublication: false,
+            postId: savingPost.postId,
+            handle: selectedHandle,
+            isMembersOnly: access.value === 'members-only',
+            scheduledPublishedDate: handleScheduledPublishDate() || [],
+          },
+          agentIk
+        );
         if (saveResult) {
           setSavingPost(saveResult);
           setLastSavedPost(saveResult);
@@ -789,7 +801,10 @@ const CreateEditArticle = () => {
             user.handle === selectedHandle ? user.handle : selectedHandle;
           let principal = await getPrincipalByHandle(handle, agentIk);
           let subscriptionDetails =
-            await getWriterSubscriptionDetailsByPrincipalId(principal || '');
+            await getWriterSubscriptionDetailsByPrincipalId(
+              principal || '',
+              agentIk
+            );
           console.log(
             'debugging ' + selectedHandle + ' principal ' + principal
           );
@@ -1566,7 +1581,11 @@ const CreateEditArticle = () => {
   };
 
   if (isLoading || isInitializing) {
-    return <Loader />;
+    return (
+      <div className='edit-article-wrapper'>
+        <Loader />
+      </div>
+    );
   }
 
   return (

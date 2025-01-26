@@ -57,14 +57,14 @@ const LoginRegistration = () => {
       isRegistrationAllowed: state.isRegistrationOpen,
     }));
 
-  const { clearLoginMethod, isLoggedIn, login, redirectScreen, logout } =
-    useAuthStore((state) => ({
+  const { clearLoginMethod, isLoggedIn, redirectScreen, logout } = useAuthStore(
+    (state) => ({
       clearLoginMethod: state.clearLoginMethod,
       isLoggedIn: state.isLoggedIn,
-      login: state.login,
       redirectScreen: state.redirectScreen,
       logout: state.logout,
-    }));
+    })
+  );
 
   useEffect(() => {
     if (user) {

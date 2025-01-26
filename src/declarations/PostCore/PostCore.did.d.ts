@@ -257,6 +257,7 @@ export interface _SERVICE {
     [number, number],
     GetPostsByFollowers
   >,
+  'getMyLatestPost' : ActorMethod<[], [] | [Post]>,
   'getMyPlannedPosts' : ActorMethod<[number, number], Array<PostKeyProperties>>,
   'getMyPublishedPosts' : ActorMethod<
     [number, number],

@@ -1895,19 +1895,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getMyBalance: async (): Promise<bigint | undefined> => {
     let ledgerActor = await getLedgerActor();
     let authStore = useAuthStore?.getState();
-    if (authStore.loginMethod === 'bitfinity') {
-      let window_any = window as any;
-
-      let principal =
-        (await window_any.ic.bitfinityWallet.getPrincipal()) as Principal;
-      let userAccountId = AccountIdentifier.fromPrincipal({
-        principal,
-      });
-      let balance = await ledgerActor.account_balance({
-        account: userAccountId.toNumbers(),
-      });
-      return balance.e8s;
-    }
     let identity = await authStore.getIdentity();
     if (identity) {
       let userAccountId = AccountIdentifier.fromPrincipal({

@@ -348,7 +348,8 @@ export interface SubscriptionStore {
     publicationCanisterId: string
   ) => Promise<WriterSubscriptionDetailsConverted | void>;
   getWriterSubscriptionDetailsByPrincipalId: (
-    principal: string
+    principal: string,
+    agent?: Agent
   ) => Promise<WriterSubscriptionDetails | void>;
   getMySubscriptionTransactions: (agent?: Agent) => Promise<SubscriptionHistoryItem[]>;
   updateSubscriptionDetails: (
@@ -393,10 +394,11 @@ const createSubscriptionStore:
       },
     //returns the subscription details of the writer by the principal id
     getWriterSubscriptionDetailsByPrincipalId: async (
-      principal: string
+      principal: string,
+      agent?: Agent
     ): Promise<WriterSubscriptionDetails | void> => {
       try {
-        let subscriptionActor = await getSubscriptionActor();
+        let subscriptionActor = await getSubscriptionActor(agent);
         let writerDetails =
           await subscriptionActor.getWriterSubscriptionDetailsByPrincipalId(
             principal

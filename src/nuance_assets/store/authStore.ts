@@ -12,7 +12,6 @@ import {
   showBlockingToast,
 } from '../services/toastService';
 import { useUserStore, usePostStore } from './';
-import { StoicIdentity } from 'ic-stoic-identity';
 import { TokenPrice, UserWallet } from '../types/types';
 import { AccountIdentifier } from '@dfinity/ledger-icp';
 import {
@@ -42,20 +41,6 @@ const identityProvider: string = isLocal
   ? 'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize'
   : 'https://identity.ic0.app/#authorize';
 
-//NFID
-const APPLICATION_NAME = 'Nuance';
-const APPLICATION_LOGO_URL =
-  'https://nuance.xyz/assets/images/nuance-logo-black.svg';
-const AUTH_PATH =
-  '/authenticate/?applicationName=' +
-  APPLICATION_NAME +
-  '&applicationLogo=' +
-  APPLICATION_LOGO_URL +
-  '#authorize';
-const NFID_PROVIDER_URL: string = 'https://nfid.one' + AUTH_PATH;
-const Local_NFID_PROVIDER_URL: string =
-  'https://283d-2603-6010-8f00-9f00-c50b-3764-27be-5cc8.ngrok.io' + AUTH_PATH; //This will come from your ngrok server for local testing
-
 const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
   //   ? // configuration is in minutes, but API expects nanoseconds
   //     BigInt(process.env.II_SESSION_TIMEOUT) * BigInt(60) * BigInt(1_000_000_000)
@@ -63,49 +48,6 @@ const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
 
   //30 days in nanoseconds
   BigInt(480) * BigInt(60) * BigInt(1000000000) * BigInt(91);
-
-const fakeProvider: boolean = process.env.II_PROVIDER_USE_FAKE == 'true';
-
-var authClient: AuthClient;
-
-//check derivation origin is PROD or UAT
-const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
-const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app';
-
-declare global {
-  interface Navigator {
-    brave: {
-      isBrave: () => Promise<boolean>;
-    };
-  }
-}
-async function detectBrave() {
-  if (navigator.brave) {
-    const isBrave = await navigator.brave.isBrave();
-    return isBrave;
-  } else {
-    return false;
-  }
-}
-
-async function isChrome() {
-  var userAgent = navigator.userAgent;
-  let isBrave = await detectBrave();
-
-  // Basic check for Chrome in userAgent
-  var isChromeUA =
-    userAgent.includes('Chrome') && !userAgent.includes('Edg') && !isBrave;
-  var hasChromeFeatures = 'chrome' in window;
-
-  return isChromeUA && hasChromeFeatures;
-}
-
-const derivationOrigin: string = window.location.origin.includes(
-  NuanceUATCanisterId
-)
-  ? NuanceUAT
-  : NuancePROD;
 
 // For login/logout across tabs
 export const authChannel = new BroadcastChannel('auth_channel');
@@ -126,7 +68,6 @@ export interface AuthStore {
   setAgent: (agent?: Agent) => void;
   setIdentity: (identity?: Identity) => void;
   getIdentity: () => Promise<Identity | undefined>;
-  login: (loginMethod: string) => Promise<void>;
   logout: () => Promise<void>;
   getUserWallet: () => Promise<UserWallet>;
   redirect: (url: string) => void;
@@ -266,24 +207,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     } catch (error) { }
   },
 
-  login: async (_loginMethod: string): Promise<void> => {
-    set({ registrationError: undefined, isLoggedIn: false });
-    console.log('Logged in: ' + new Date());
-    set({ isLoggedIn: true });
-    //authChannel.postMessage({ type: 'login', date: new Date() });
-    Usergeek.setPrincipal(get().identity?.getPrincipal());
-    Usergeek.trackSession();
-    Usergeek.flush();
-
-    await useUserStore.getState().getUser(get().agent);
-    if (useUserStore.getState().user === undefined) {
-      window.location.href = '/register';
-    } else {
-      //user fetched successfully, get the token balances
-      await get().fetchTokenBalances();
-    }
-  },
-
   logout: async () => {
     Usergeek.setPrincipal(Principal.anonymous());
     set({ isLoggedIn: false, agent: undefined, identity: undefined, isInitialized: false });
@@ -325,13 +248,7 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
   },
 
   clearLoginMethod: (): void => {
-    //stoic continues to connect and reconnect so it needs to be disconnected to login to II
-    StoicIdentity.disconnect();
-    try {
-      let window_any = window as any;
-
-      window_any.ic.bitfinityWallet.disconnect();
-    } catch (err) { }
+    set({ loginMethod: undefined });
   },
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {

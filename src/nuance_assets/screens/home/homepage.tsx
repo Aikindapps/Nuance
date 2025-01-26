@@ -67,7 +67,8 @@ const HomePage = () => {
   const signer = useSigner();
   const accounts = useAccounts();
   const delegationType = useDelegationType();
-  const agentIk = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
   const isInitializing = useIsInitializing();
 
   console.log({
@@ -711,7 +712,11 @@ const HomePage = () => {
   };
 
   if (isLoading && isInitializing) {
-    return <Loader />;
+    return (
+      <div className='homepage'>
+        <Loader />
+      </div>
+    );
   }
 
   return (
@@ -1263,10 +1268,10 @@ const HomePage = () => {
                   establish their own identity on the platform.
                 </span>
                 <span>
-                  Log in with Google or Internet Identity (or Stoic or
-                  Bitfinity) and join Nuance today to experience the future of
-                  decentralized publishing. Where creators are empowered,
-                  content is secure, and communities thrive.
+                  Log in with Google or Internet Identity (or Plug) and join
+                  Nuance today to experience the future of decentralized
+                  publishing. Where creators are empowered, content is secure,
+                  and communities thrive.
                 </span>
               </div>
             </div>

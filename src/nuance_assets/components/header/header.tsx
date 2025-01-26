@@ -31,6 +31,10 @@ type HeaderProps = {
 };
 
 const Header: React.FC<HeaderProps> = (props): JSX.Element => {
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   const [shownMeatball, setShownMeatball] = useState(false);
   const [shownProfile, setShownProfile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -40,7 +44,8 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const modalContext = useContext(ModalContext);
   const location = useLocation();
   const navigate = useNavigate();
-  const agentIk = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
   const isInitializing = useIsInitializing();
 
   const darkTheme = window.location.pathname !== '/' && theme;
@@ -205,25 +210,16 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   }));
 
   useEffect(() => {
-    if (agentIk) {
-      updateLastLogin();
-    }
-    const intervalId = setInterval(async () => {
-      // If we’re busy or uninitialized, skip
-      if (loadingUserNotifications || !agentIk) return;
-
+    updateLastLogin();
+    setInterval(async () => {
       try {
-        // 1. getUserNotifications
         await getUserNotifications(0, 20, navigate, agent);
-        // 2. checkMyClaimNotification
         await checkMyClaimNotification();
       } catch (e) {
         console.error(e);
       }
     }, 10000);
-
-    return () => clearInterval(intervalId);
-  }, [loadingUserNotifications]);
+  }, []);
 
   const getLogoOrBreadCrumb = () => {
     if (props.isPublicationPage) {

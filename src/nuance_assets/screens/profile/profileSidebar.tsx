@@ -19,10 +19,15 @@ import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 import Loader from '../../UI/loader/Loader';
 
 const ProfileSidebar = () => {
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const [screenWidth, setScreenWidth] = useState(0);
   const navigate = useNavigate();
-  const agentIk = useAgent();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
   const isInitializing = useIsInitializing();
   const [mobile, setMobile] = useState<Boolean>(false);
   const [userPublications, setUserPublications] = useState<PublicationObject[]>(
@@ -128,7 +133,7 @@ const ProfileSidebar = () => {
 
   useEffect(() => {
     console.log('PROFILE SIDEBAR USER :', user);
-    if (!agentIk && !loadingUser) {
+    if (agentIk) {
       if (user) {
         getCounts(user.handle);
         getMySubscriptionHistoryAsReader();
@@ -177,21 +182,25 @@ const ProfileSidebar = () => {
       : icons.THREE_DOTS,
   };
 
-  if (isLoading || isInitializing) {
+  /* if (isLoading || isInitializing) {
     return (
       <div
+        className='profile-wrapper'
         style={{
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           height: '100vh',
           width: '100vw',
+          background: darkTheme
+            ? colors.darkModePrimaryBackgroundColor
+            : colors.primaryBackgroundColor,
         }}
       >
         <Loader />
       </div>
     );
-  }
+  } */
 
   return (
     <div
