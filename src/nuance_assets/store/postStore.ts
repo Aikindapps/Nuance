@@ -70,6 +70,7 @@ import {
 } from '../shared/constants';
 import { canisterId as userCanisterId } from '../../declarations/User';
 import { canisterId as subscriptionCanisterId } from '../../declarations/Subscription';
+import { Agent } from '@dfinity/agent';
 global.fetch = fetch;
 
 const Err = 'err';
@@ -309,7 +310,7 @@ export interface PostStore {
   comments: Comment[] | [];
   totalNumberOfComments: number;
 
-  savePost: (post: PostSaveModel) => Promise<PostType | undefined>;
+  savePost: (post: PostSaveModel, agent?: Agent) => Promise<PostType | undefined>;
   getSavedPost: (postId: string) => Promise<void>;
   getSavedPostReturnOnly: (
     postId: string,
@@ -351,7 +352,8 @@ export interface PostStore {
   ) => Promise<PostType[] | undefined>;
   getLatestPosts: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<{
     posts: PostType[];
     totalCount: number;
@@ -360,7 +362,8 @@ export interface PostStore {
   getPostsByFollowers: (
     followers: Array<string>,
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<{ posts: PostType[]; totalCount: number }>;
   getPostsByCategory: (
     handle: string,
@@ -374,19 +377,23 @@ export interface PostStore {
   clearSearchBar: (isTagScreen: boolean) => void;
   getPopularPosts: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   getPopularPostsToday: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   getPopularPostsThisWeek: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   getPopularPostsThisMonth: (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ) => Promise<GetPopularReturnType>;
   clerGetPublicationPostError: () => Promise<void>;
   setSearchText: (searchText: string) => void;
@@ -448,7 +455,7 @@ export interface PostStore {
     postId: string,
     bucketCanisterId: string
   ) => Promise<string[]>;
-  getUserApplauds: () => Promise<ApplaudListItem[]>;
+  getUserApplauds: (agent?: Agent) => Promise<ApplaudListItem[]>;
   getUserIcpTransactions: () => Promise<TransactionListItem[]>;
   getUserNuaTransactions: () => Promise<TransactionListItem[]>;
   getUserCkbtcTransactions: () => Promise<TransactionListItem[]>;
@@ -466,10 +473,12 @@ export interface PostStore {
   ) => Promise<PostType | undefined>;
 
   getOwnedNfts: (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ) => Promise<PremiumPostActivityListItem[]>;
   getSellingNfts: (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ) => Promise<PremiumPostActivityListItem[]>;
   transferNft: (
     tokenIdentifier: string,
@@ -801,9 +810,9 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     });
   },
 
-  savePost: async (post: PostSaveModel): Promise<PostType | undefined> => {
+  savePost: async (post: PostSaveModel, agent?: Agent): Promise<PostType | undefined> => {
     try {
-      const result = await (await getPostCoreActor()).save(post);
+      const result = await (await getPostCoreActor(agent)).save(post);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -1162,10 +1171,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getPostsByFollowers: async (
     followers: Array<string>,
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<{ posts: PostType[]; totalCount: number }> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPostsByFollowers(
         followers.map((handle) => {
           return handle.toLowerCase();
@@ -1233,10 +1243,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
 
   getPopularPosts: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopular(indexFrom, indexTo);
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
@@ -1250,10 +1261,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
   getPopularPostsToday: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopularToday(indexFrom, indexTo);
 
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
@@ -1267,10 +1279,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
   getPopularPostsThisWeek: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopularThisWeek(
         indexFrom,
         indexTo
@@ -1287,10 +1300,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   },
   getPopularPostsThisMonth: async (
     indexFrom: number,
-    indexTo: number
+    indexTo: number,
+    agent?: Agent
   ): Promise<GetPopularReturnType> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getPopularThisMonth(
         indexFrom,
         indexTo
@@ -1417,13 +1431,14 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
 
   getLatestPosts: async (
     indexFrom,
-    indexTo
+    indexTo,
+    agent?: Agent
   ): Promise<{
     posts: PostType[];
     totalCount: number;
   }> => {
     try {
-      const coreActor = await getPostCoreActor();
+      const coreActor = await getPostCoreActor(agent);
       const keyProperties = await coreActor.getLatestPosts(indexFrom, indexTo);
       let posts = await fetchPostsByBuckets(keyProperties.posts, false);
       const totalCount = keyProperties.totalCount;
@@ -1675,10 +1690,11 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
   getSellingNfts: async (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ): Promise<PremiumPostActivityListItem[]> => {
     try {
-      let postCoreActor = await getPostCoreActor();
+      let postCoreActor = await getPostCoreActor(agent);
       let [allOwnedPosts, allNftCanisters] = await Promise.all([
         postCoreActor.getMyAllPosts(0, 100000), //arbitrary big number
         postCoreActor.getAllNftCanisters(),
@@ -1705,7 +1721,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const nftCanisterId of allOwnedPremiumArticlesNftCanisterIds) {
-        let extActor = await getExtActor(nftCanisterId);
+        let extActor = await getExtActor(nftCanisterId, agent);
         transactionsPromises.push(
           extActor.marketplaceTransactionsAndTotalSupply()
         );
@@ -1772,17 +1788,18 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
     }
   },
   getOwnedNfts: async (
-    userAccountId: string
+    userAccountId: string,
+    agent?: Agent
   ): Promise<PremiumPostActivityListItem[]> => {
     try {
-      let postCoreActor = await getPostCoreActor();
+      let postCoreActor = await getPostCoreActor(agent);
       let [allOwnedPosts, allNftCanisters] = await Promise.all([
         postCoreActor.getMyAllPosts(0, 100000), //arbitrary big number
         postCoreActor.getAllNftCanisters(),
       ]);
       let promises = [];
       for (const [postId, canisterId] of allNftCanisters) {
-        let extActor = await getExtActor(canisterId);
+        let extActor = await getExtActor(canisterId, agent);
         promises.push(extActor.tokens_ext(userAccountId));
       }
       let result: PremiumPostActivityListItem[] = [];
@@ -1813,7 +1830,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const item of result) {
-        let extActor = await getExtActor(item.canisterId);
+        let extActor = await getExtActor(item.canisterId, agent);
         transactionsPromises.push(
           extActor.marketplaceTransactionsAndTotalSupply()
         );
@@ -1878,19 +1895,6 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
   getMyBalance: async (): Promise<bigint | undefined> => {
     let ledgerActor = await getLedgerActor();
     let authStore = useAuthStore?.getState();
-    if (authStore.loginMethod === 'bitfinity') {
-      let window_any = window as any;
-
-      let principal =
-        (await window_any.ic.bitfinityWallet.getPrincipal()) as Principal;
-      let userAccountId = AccountIdentifier.fromPrincipal({
-        principal,
-      });
-      let balance = await ledgerActor.account_balance({
-        account: userAccountId.toNumbers(),
-      });
-      return balance.e8s;
-    }
     let identity = await authStore.getIdentity();
     if (identity) {
       let userAccountId = AccountIdentifier.fromPrincipal({
@@ -1954,15 +1958,15 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       console.log(error);
     }
   },
-  getUserApplauds: async (): Promise<ApplaudListItem[]> => {
+  getUserApplauds: async (agent?: Agent): Promise<ApplaudListItem[]> => {
     try {
       let allBucketCanisterIds = (
-        await (await getPostCoreActor()).getBucketCanisters()
+        await (await getPostCoreActor(agent)).getBucketCanisters()
       ).map((bucketCanisterEntry) => {
         return bucketCanisterEntry[0];
       });
       let promises = allBucketCanisterIds.map(async (bucketCanisterId) => {
-        return (await getPostBucketActor(bucketCanisterId)).getMyApplauds();
+        return (await getPostBucketActor(bucketCanisterId, agent)).getMyApplauds();
       });
       //contains the applauds data
       let applauds = (await Promise.all(promises)).flat(1);

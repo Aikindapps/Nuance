@@ -1,3 +1,4 @@
+import { Agent } from '@dfinity/agent';
 import { getStorageActor, Content } from '../services/actorService';
 
 const ERR = 'err';
@@ -15,10 +16,11 @@ export async function uploadBlob(
   imageSize: number,
   imageMimeType: string,
   mappingId?: string,
-  contentId?: string
+  contentId?: string,
+  agent?: Agent
 ): Promise<DataStorageInfoType> {
   if (contentId == null) {
-    contentId = await getNewContentId();
+    contentId = await getNewContentId(agent);
   }
   console.log(contentId);
   const putChunkPromises: Promise<string>[] = [];
@@ -36,7 +38,8 @@ export async function uploadBlob(
         byteStart,
         offset,
         imageSize,
-        imageMimeType
+        imageMimeType,
+        agent
       )
     );
   }
@@ -54,8 +57,8 @@ export async function uploadBlob(
   };
 }
 
-export async function getNewContentId(): Promise<string> {
-  const result = await (await getStorageActor()).getNewContentId();
+export async function getNewContentId(agent?: Agent): Promise<string> {
+  const result = await (await getStorageActor(agent)).getNewContentId();
   if (ERR in result) {
     throw new Error(result.err);
   } else {
@@ -63,8 +66,8 @@ export async function getNewContentId(): Promise<string> {
   }
 }
 
-async function uploadBlobChunk(content: Content): Promise<string> {
-  const result = await (await getStorageActor()).uploadBlob(content);
+async function uploadBlobChunk(content: Content, agent?: Agent): Promise<string> {
+  const result = await (await getStorageActor(agent)).uploadBlob(content);
   if (ERR in result) {
     throw new Error(result.err);
   } else {
@@ -79,7 +82,8 @@ async function processAndUploadChunk(
   byteStart: number,
   offset: number,
   fileSize: number,
-  fileMimeType: string
+  fileMimeType: string,
+  agent?: Agent
 ): Promise<string> {
   const blobSlice = blob.slice(
     byteStart,
@@ -95,7 +99,7 @@ async function processAndUploadChunk(
     offset: BigInt(offset),
     totalChunks: BigInt(Number(Math.ceil(fileSize / MAX_CHUNK_SIZE))),
     chunkData: encodeArrayBuffer(bsf) as any,
-  });
+  }, agent);
   return dataCanisterId;
 }
 

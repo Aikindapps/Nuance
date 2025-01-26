@@ -75,6 +75,7 @@ export interface Storage {
   'getNewContentId' : ActorMethod<[], Result>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getWasmChunks' : ActorMethod<[], Result_2>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
   'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'idQuick' : ActorMethod<[], Principal>,
   'registerAdmin' : ActorMethod<[string], Result_1>,
@@ -90,6 +91,7 @@ export interface Storage {
   'uploadBlob' : ActorMethod<[Content], Result>,
   'validate' : ActorMethod<[any], Validate>,
 }
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };

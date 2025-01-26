@@ -111,6 +111,7 @@ export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
   { 'Monthly' : null } |
   { 'Annually' : null };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export interface UniquePersonProof {
   'provider' : UniquePersonProofProvider,
   'timestamp' : bigint,
@@ -252,6 +253,7 @@ export interface _SERVICE {
   'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'getVerificationStatus' : ActorMethod<[string], Result_4>,
   'handleClap' : ActorMethod<[string, string], undefined>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
   'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,

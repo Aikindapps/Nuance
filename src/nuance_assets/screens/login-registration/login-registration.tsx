@@ -44,8 +44,18 @@ const LoginRegistration = () => {
   const [hideEditor, setHideEditor] = useState(true);
 
   const { disconnect } = useAuth();
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+  const {
+    agent: agentToBeUsed,
+    clearLoginMethod,
+    isLoggedIn,
+    redirectScreen,
+    logout,
+  } = useAuthStore((state) => ({
     agent: state.agent,
+    clearLoginMethod: state.clearLoginMethod,
+    isLoggedIn: state.isLoggedIn,
+    redirectScreen: state.redirectScreen,
+    logout: state.logout,
   }));
 
   const { getUser, user, unregistered, createUser, isRegistrationAllowed } =
@@ -55,15 +65,6 @@ const LoginRegistration = () => {
       createUser: state.registerUser,
       getUser: state.getUser,
       isRegistrationAllowed: state.isRegistrationOpen,
-    }));
-
-  const { clearLoginMethod, isLoggedIn, login, redirectScreen, logout } =
-    useAuthStore((state) => ({
-      clearLoginMethod: state.clearLoginMethod,
-      isLoggedIn: state.isLoggedIn,
-      login: state.login,
-      redirectScreen: state.redirectScreen,
-      logout: state.logout,
     }));
 
   useEffect(() => {

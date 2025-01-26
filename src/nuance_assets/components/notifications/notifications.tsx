@@ -89,8 +89,6 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
     }
   };
 
-  console.log("TOTAL COUNT: ", totalNotificationCount);
-
   // event listener to close the sidebar when clicked outside
   useEffect(() => {
     if (

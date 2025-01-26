@@ -47,11 +47,28 @@ import { UserStore } from '../../store/userStore';
 import { AuthStore } from '../../store/authStore';
 import { TagModel } from 'src/declarations/PostCore/PostCore.did';
 import SchedulePublish from '../../components/schedule-publish/schedule-publish';
-import { ReaderSubscriptionDetailsConverted, WriterSubscriptionDetailsConverted, useSubscriptionStore } from '../../store/subscriptionStore';
+import {
+  ReaderSubscriptionDetailsConverted,
+  WriterSubscriptionDetailsConverted,
+  useSubscriptionStore,
+} from '../../store/subscriptionStore';
+import {
+  useAgent,
+  useIdentity,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
 
 const CreateEditArticle = () => {
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   const navigate = useNavigate();
   const location = useLocation();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
+  const identity = useIdentity();
+  const isInitializing = useIsInitializing();
 
   //dark theme
   const darkTheme = useTheme();
@@ -92,25 +109,47 @@ const CreateEditArticle = () => {
     })
   );
 
-  const { getMySubscriptionHistoryAsReader, getWriterSubscriptionDetailsByPrincipalId } = useSubscriptionStore((state) => ({
+  const {
+    getMySubscriptionHistoryAsReader,
+    getWriterSubscriptionDetailsByPrincipalId,
+  } = useSubscriptionStore((state) => ({
     getMySubscriptionHistoryAsReader: state.getMySubscriptionHistoryAsReader,
-    getWriterSubscriptionDetailsByPrincipalId: state.getWriterSubscriptionDetailsByPrincipalId,
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
   }));
-
 
   //userStore
-  const { getUser, user, getPrincipalByHandle } = useUserStore((state: UserStore) => ({
-    getPrincipalByHandle: state.getPrincipalByHandle,
-    getUser: state.getUser,
-    user: state.user,
-  }));
+  const { getUser, user, getPrincipalByHandle, loadingUser } = useUserStore(
+    (state: UserStore) => ({
+      getPrincipalByHandle: state.getPrincipalByHandle,
+      getUser: state.getUser,
+      user: state.user,
+      loadingUser: state.loadingUser,
+    })
+  );
 
   //authStore
   const isLoggedIn = useAuthStore((state: AuthStore) => state.isLoggedIn);
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+  const {
+    agent: agentToBeUsed,
+    isInitialized,
+    getUserWallet,
+    fetchTokenBalances,
+  } = useAuthStore((state) => ({
+    agent: state.agent,
+    isInitialized: state.isInitialized,
+    getUserWallet: state.getUserWallet,
+    fetchTokenBalances: state.fetchTokenBalances,
+  }));
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   const [currentStatus, setCurrentStatus] = useState('');
-
-
 
   //returns the current status of the post
   const getCurrentStatus = () => {
@@ -131,16 +170,15 @@ const CreateEditArticle = () => {
       if (lastSavedPost?.publishedDate) {
         const plannedDate = new Date(Number(lastSavedPost?.publishedDate));
         if (plannedDate > currentDate) {
-          return "Planned + Mint";
+          return 'Planned + Mint';
         }
       }
-      return "Minted";
+      return 'Minted';
     }
 
     if (lastSavedPost?.publishedDate) {
       // Assuming lastSavedPost.publishedDate is in milliseconds
       const scheduledDate = new Date(Number(lastSavedPost.publishedDate));
-
 
       if (scheduledDate > currentDate) {
         return 'Planned';
@@ -150,7 +188,6 @@ const CreateEditArticle = () => {
     }
     return 'Published';
   };
-
 
   const isPublishButtonVisible = () => {
     if (lastSavedPost) {
@@ -337,14 +374,12 @@ const CreateEditArticle = () => {
     setLoading(true);
     await Promise.all([
       fetchPost(),
-      getUser(agentToBeUsed),
+      getUser(agentIk),
       fillUserRelatedFields(),
       getAllTags(),
     ]);
     setLoading(false);
   };
-
-
 
   //refresh the user related fields if the user object changes
   useEffect(() => {
@@ -393,18 +428,24 @@ const CreateEditArticle = () => {
 
   //schedule publish
   const [date, setDate] = useState<Date | null>(new Date());
-  const [time, setTime] = useState({ hours: new Date().getHours().toString().padStart(2, '0'), minutes: new Date().getMinutes().toString().padStart(2, '0') });
-  const [access, setAccess] = useState<{ value: string, label: string }>({ value: 'public', label: 'Public' });
+  const [time, setTime] = useState({
+    hours: new Date().getHours().toString().padStart(2, '0'),
+    minutes: new Date().getMinutes().toString().padStart(2, '0'),
+  });
+  const [access, setAccess] = useState<{ value: string; label: string }>({
+    value: 'public',
+    label: 'Public',
+  });
 
   const handleDateChange = (newDate: Date | null) => {
     setDate(newDate);
   };
 
-  const handleTimeChange = (newTime: { hours: string, minutes: string }) => {
+  const handleTimeChange = (newTime: { hours: string; minutes: string }) => {
     setTime(newTime);
   };
 
-  const handleAccessChange = (newAccess: { value: string, label: string }) => {
+  const handleAccessChange = (newAccess: { value: string; label: string }) => {
     setAccess(newAccess);
   };
 
@@ -427,11 +468,16 @@ const CreateEditArticle = () => {
 
   useEffect(() => {
     if (lastSavedPost) {
-      setAccess({ value: lastSavedPost.isMembersOnly ? 'members-only' : 'public', label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public' });
-      handleAccessChange({ value: lastSavedPost.isMembersOnly ? 'members-only' : 'public', label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public' });
+      setAccess({
+        value: lastSavedPost.isMembersOnly ? 'members-only' : 'public',
+        label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public',
+      });
+      handleAccessChange({
+        value: lastSavedPost.isMembersOnly ? 'members-only' : 'public',
+        label: lastSavedPost.isMembersOnly ? 'Members Only' : 'Public',
+      });
     }
   }, [lastSavedPost]);
-
 
   //set post fields
   const setIsDraft = (isDraft: boolean) => {
@@ -576,7 +622,11 @@ const CreateEditArticle = () => {
       return;
     }
     //firstly conver the images to urls
-    const result = await convertImagesToUrls(postHtml, savingPost.headerImage);
+    const result = await convertImagesToUrls(
+      postHtml,
+      savingPost.headerImage,
+      agentIk
+    );
     const contentWithUrls = result?.contentWithUrls;
     const headerUrl = result?.headerUrl;
 
@@ -604,7 +654,7 @@ const CreateEditArticle = () => {
             postId: savingPost.postId,
             handle: lastSavedPost.handle,
             isMembersOnly: access.value === 'members-only',
-            scheduledPublishedDate: handleScheduledPublishDate() || []
+            scheduledPublishedDate: handleScheduledPublishDate() || [],
           });
           if (savePublicationResult) {
             setSavingPost(savePublicationResult);
@@ -636,24 +686,27 @@ const CreateEditArticle = () => {
           //not possible to reach here
         } else {
           //just a regular post edit -> call savePost
-          let saveResult = await savePost({
-            title: savingPost.title,
-            creatorHandle: savingPost.creatorHandle || '',
-            content: contentWithUrls || postHtml,
-            premium: premium ? [premium] : [],
-            isDraft: isDraft,
-            tagIds: savingPost.tags.map((tag) => {
-              return tag.tagId;
-            }),
-            category: selectedCategory,
-            headerImage: headerUrl || '',
-            subtitle: savingPost.subtitle,
-            isPublication: false,
-            postId: savingPost.postId,
-            handle: lastSavedPost.handle,
-            isMembersOnly: access.value === 'members-only',
-            scheduledPublishedDate: handleScheduledPublishDate() || []
-          });
+          let saveResult = await savePost(
+            {
+              title: savingPost.title,
+              creatorHandle: savingPost.creatorHandle || '',
+              content: contentWithUrls || postHtml,
+              premium: premium ? [premium] : [],
+              isDraft: isDraft,
+              tagIds: savingPost.tags.map((tag) => {
+                return tag.tagId;
+              }),
+              category: selectedCategory,
+              headerImage: headerUrl || '',
+              subtitle: savingPost.subtitle,
+              isPublication: false,
+              postId: savingPost.postId,
+              handle: lastSavedPost.handle,
+              isMembersOnly: access.value === 'members-only',
+              scheduledPublishedDate: handleScheduledPublishDate() || [],
+            },
+            agentIk
+          );
           if (saveResult) {
             setSavingPost(saveResult);
             setLastSavedPost(saveResult);
@@ -667,7 +720,6 @@ const CreateEditArticle = () => {
       //new article
       let isPublication = user?.handle !== selectedHandle;
       if (isPublication) {
-
         //create a publication post
         let savePublicationResult = await savePublicationPost({
           title: savingPost.title,
@@ -685,7 +737,7 @@ const CreateEditArticle = () => {
           postId: savingPost.postId,
           handle: selectedHandle,
           isMembersOnly: access.value === 'members-only',
-          scheduledPublishedDate: handleScheduledPublishDate() || []
+          scheduledPublishedDate: handleScheduledPublishDate() || [],
         });
         if (savePublicationResult) {
           setSavingPost(savePublicationResult);
@@ -700,24 +752,27 @@ const CreateEditArticle = () => {
       } else {
         //create a regular post
         //just a regular post edit -> call savePost
-        let saveResult = await savePost({
-          title: savingPost.title,
-          creatorHandle: '',
-          content: contentWithUrls || postHtml,
-          premium: premium ? [premium] : [],
-          isDraft: isDraft,
-          tagIds: savingPost.tags.map((tag) => {
-            return tag.tagId;
-          }),
-          category: selectedCategory,
-          headerImage: headerUrl || '',
-          subtitle: savingPost.subtitle,
-          isPublication: false,
-          postId: savingPost.postId,
-          handle: selectedHandle,
-          isMembersOnly: access.value === 'members-only',
-          scheduledPublishedDate: handleScheduledPublishDate() || []
-        });
+        let saveResult = await savePost(
+          {
+            title: savingPost.title,
+            creatorHandle: '',
+            content: contentWithUrls || postHtml,
+            premium: premium ? [premium] : [],
+            isDraft: isDraft,
+            tagIds: savingPost.tags.map((tag) => {
+              return tag.tagId;
+            }),
+            category: selectedCategory,
+            headerImage: headerUrl || '',
+            subtitle: savingPost.subtitle,
+            isPublication: false,
+            postId: savingPost.postId,
+            handle: selectedHandle,
+            isMembersOnly: access.value === 'members-only',
+            scheduledPublishedDate: handleScheduledPublishDate() || [],
+          },
+          agentIk
+        );
         if (saveResult) {
           setSavingPost(saveResult);
           setLastSavedPost(saveResult);
@@ -734,23 +789,32 @@ const CreateEditArticle = () => {
     }
   };
 
-  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] = useState<boolean>(false);
+  const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] =
+    useState<boolean>(false);
   //get subscription details
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
       if (user) {
         try {
-          let handle = user.handle === selectedHandle ? user.handle : selectedHandle;
-          let principal = await getPrincipalByHandle(handle, agentToBeUsed);
-          let subscriptionDetails = await getWriterSubscriptionDetailsByPrincipalId(principal || '');
-          console.log("debugging " + selectedHandle + " principal " + principal);
+          let handle =
+            user.handle === selectedHandle ? user.handle : selectedHandle;
+          let principal = await getPrincipalByHandle(handle, agentIk);
+          let subscriptionDetails =
+            await getWriterSubscriptionDetailsByPrincipalId(
+              principal || '',
+              agentIk
+            );
+          console.log(
+            'debugging ' + selectedHandle + ' principal ' + principal
+          );
 
-          if (subscriptionDetails && (
-            subscriptionDetails.weeklyFee.length > 0 ||
-            subscriptionDetails.monthlyFee.length > 0 ||
-            subscriptionDetails.annuallyFee.length > 0 ||
-            subscriptionDetails.lifeTimeFee.length > 0
-          )) {
+          if (
+            subscriptionDetails &&
+            (subscriptionDetails.weeklyFee.length > 0 ||
+              subscriptionDetails.monthlyFee.length > 0 ||
+              subscriptionDetails.annuallyFee.length > 0 ||
+              subscriptionDetails.lifeTimeFee.length > 0)
+          ) {
             setHasValidSubscriptionOptions(true);
             console.log('Valid subscription options', subscriptionDetails);
           } else {
@@ -765,7 +829,6 @@ const CreateEditArticle = () => {
 
     fetchSubscriptionDetails();
   }, [user, selectedHandle]);
-
 
   const [radioButtonIndex, setRadioButtonIndex] = useState(
     lastSavedPost ? (lastSavedPost.isDraft ? 0 : 1) : 0
@@ -873,8 +936,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -889,8 +955,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -905,8 +974,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={() => {
                       let validationResult = validate();
@@ -955,8 +1027,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -971,8 +1046,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -996,8 +1074,11 @@ const CreateEditArticle = () => {
                 </div>
                 <Button
                   type='button'
-                  className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                  styleType={{dark: 'navy-dark', light: 'white'}}
+                  className={{
+                    dark: 'create-edit-article-edit-article-button-dark',
+                    light: 'create-edit-article-edit-article-button',
+                  }}
+                  styleType={{ dark: 'navy-dark', light: 'white' }}
                   style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                   onClick={async () => {
                     setLoading(true);
@@ -1026,8 +1107,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -1042,8 +1126,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -1058,8 +1145,11 @@ const CreateEditArticle = () => {
                 return (
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={() => {
                       let validationResult = validate();
@@ -1181,8 +1271,11 @@ const CreateEditArticle = () => {
                   </div>
                   <Button
                     type='button'
-                    className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                    styleType={{dark: 'navy-dark', light: 'white'}}
+                    className={{
+                      dark: 'create-edit-article-edit-article-button-dark',
+                      light: 'create-edit-article-edit-article-button',
+                    }}
+                    styleType={{ dark: 'navy-dark', light: 'white' }}
                     style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                     onClick={async () => {
                       setLoading(true);
@@ -1210,8 +1303,11 @@ const CreateEditArticle = () => {
               </div>
               <Button
                 type='button'
-                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                className={{
+                  dark: 'create-edit-article-edit-article-button-dark',
+                  light: 'create-edit-article-edit-article-button',
+                }}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -1237,8 +1333,11 @@ const CreateEditArticle = () => {
             </div>
             <Button
               type='button'
-              className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-              styleType={{dark: 'navy-dark', light: 'white'}}
+              className={{
+                dark: 'create-edit-article-edit-article-button-dark',
+                light: 'create-edit-article-edit-article-button',
+              }}
+              styleType={{ dark: 'navy-dark', light: 'white' }}
               style={{ width: '100%', margin: '20px 0px 0px 0px' }}
               onClick={async () => {
                 setLoading(true);
@@ -1267,8 +1366,11 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                className={{
+                  dark: 'create-edit-article-edit-article-button-dark',
+                  light: 'create-edit-article-edit-article-button',
+                }}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -1283,8 +1385,11 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                className={{
+                  dark: 'create-edit-article-edit-article-button-dark',
+                  light: 'create-edit-article-edit-article-button',
+                }}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -1299,8 +1404,11 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                className={{
+                  dark: 'create-edit-article-edit-article-button-dark',
+                  light: 'create-edit-article-edit-article-button',
+                }}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={() => {
                   let validationResult = validate();
@@ -1345,8 +1453,11 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                className={{
+                  dark: 'create-edit-article-edit-article-button-dark',
+                  light: 'create-edit-article-edit-article-button',
+                }}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -1361,8 +1472,11 @@ const CreateEditArticle = () => {
             return (
               <Button
                 type='button'
-                className={{dark: 'create-edit-article-edit-article-button-dark', light: 'create-edit-article-edit-article-button'}}
-                styleType={{dark: 'navy-dark', light: 'white'}}
+                className={{
+                  dark: 'create-edit-article-edit-article-button-dark',
+                  light: 'create-edit-article-edit-article-button',
+                }}
+                styleType={{ dark: 'navy-dark', light: 'white' }}
                 style={{ width: '100%', margin: '20px 0px 0px 0px' }}
                 onClick={async () => {
                   setLoading(true);
@@ -1413,8 +1527,8 @@ const CreateEditArticle = () => {
           lastSavedPost.isPublication
             ? icons.PUBLICATION_ICON
             : darkTheme
-              ? icons.PROFILE_ICON_DARK
-              : icons.PROFILE_ICON,
+            ? icons.PROFILE_ICON_DARK
+            : icons.PROFILE_ICON,
         ];
       }
     } else {
@@ -1464,6 +1578,14 @@ const CreateEditArticle = () => {
       ];
     }
   };
+
+  if (isLoading || isInitializing) {
+    return (
+      <div className='edit-article-wrapper'>
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className='edit-article-wrapper' style={darkOptionsAndColors}>
@@ -1515,9 +1637,9 @@ const CreateEditArticle = () => {
                 style={
                   darkTheme
                     ? {
-                      background: colors.darkModePrimaryBackgroundColor,
-                      border: '1px solid rgb(153, 153, 153)',
-                    }
+                        background: colors.darkModePrimaryBackgroundColor,
+                        border: '1px solid rgb(153, 153, 153)',
+                      }
                     : {}
                 }
               >
@@ -1591,27 +1713,30 @@ const CreateEditArticle = () => {
                   <div className='edit-article-left-manage-title'>MANAGE</div>
                   {(getCurrentStatus() === 'Draft' ||
                     getCurrentStatus() === 'Not saved') && (
-                      <RadioButtons
-                        items={getRadioButtonItems()}
-                        onSelect={(index) => {
-                          setRadioButtonIndex(index);
-                        }}
-                        selectedIndex={radioButtonIndex}
-                      />
+                    <RadioButtons
+                      items={getRadioButtonItems()}
+                      onSelect={(index) => {
+                        setRadioButtonIndex(index);
+                      }}
+                      selectedIndex={radioButtonIndex}
+                    />
+                  )}
+                  {(currentStatus === 'Draft' ||
+                    currentStatus === 'Not saved') &&
+                    (radioButtonIndex === 1 || radioButtonIndex === 2) && (
+                      <div className='schedule-publish-container'>
+                        <SchedulePublish
+                          onDateChange={handleDateChange}
+                          onTimeChange={handleTimeChange}
+                          onAccessChange={handleAccessChange}
+                          initialAccess={access}
+                          isPremium={
+                            radioButtonIndex === 2 || lastSavedPost?.isPremium
+                          }
+                          validSubscriptionOptions={hasValidSubscriptionOptions}
+                        />
+                      </div>
                     )}
-                  {(currentStatus === 'Draft' || currentStatus === 'Not saved') && (radioButtonIndex === 1 || radioButtonIndex === 2) && (
-                    <div className='schedule-publish-container'>
-                      <SchedulePublish
-                        onDateChange={handleDateChange}
-                        onTimeChange={handleTimeChange}
-                        onAccessChange={handleAccessChange}
-                        initialAccess={access}
-                        isPremium={radioButtonIndex === 2 || lastSavedPost?.isPremium}
-                        validSubscriptionOptions={hasValidSubscriptionOptions}
-                      />
-                    </div>
-                  )
-                  }
                   {getManageItems()}
                 </div>
               </div>
@@ -1626,11 +1751,12 @@ const CreateEditArticle = () => {
             <div className='edit-article-right-content'>
               {/* if the post is premium, act like the read-article screen. if not, simply show the input fields */}
               {isEditAllowed() ? (
-
                 <EditArticleInputFields
                   isMobile={isMobile()}
                   lastSavedPost={lastSavedPost}
-                  membersOnly={access.value === 'members-only' && radioButtonIndex != 2}
+                  membersOnly={
+                    access.value === 'members-only' && radioButtonIndex != 2
+                  }
                   savingPost={savingPost}
                   postHtml={postHtml}
                   darkTheme={darkTheme}

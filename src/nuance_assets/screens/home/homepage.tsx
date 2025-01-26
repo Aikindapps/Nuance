@@ -29,13 +29,7 @@ import {
   useSigner,
   useIsInitializing,
 } from '@nfid/identitykit/react';
-import {
-  NFIDW,
-  Plug,
-  InternetIdentity,
-  Stoic,
-  MockedSigner,
-} from '@nfid/identitykit';
+import { NFIDW, Plug, InternetIdentity, MockedSigner } from '@nfid/identitykit';
 import { authChannel } from '../../store/authStore';
 import { Usergeek } from 'usergeek-ic-js';
 
@@ -64,50 +58,35 @@ const HomePage = () => {
     window.location.origin.includes('localhost') ||
     window.location.origin.includes('127.0.0.1');
 
-  const { connect, disconnect, isConnecting, user: authUser } = useAuth();
-  const { balance, fetchBalance } = useBalance();
-  const signer = useSigner();
-  const accounts = useAccounts();
-  const delegationType = useDelegationType();
+  const { connect } = useAuth();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
   const isInitializing = useIsInitializing();
 
-  console.log({
-    isInitializing,
-    authUser,
-    isConnecting,
-    balance,
-    signer,
-    //identity,
-    delegationType,
-    accounts,
-    connect,
-    disconnect,
-    fetchBalance,
-  });
-
+  //authStore
   const {
-    agent: agent1,
+    agent,
     getUserWallet,
     fetchTokenBalances,
-    clearAll,
-    identity: identity1,
+    identity: identity,
+    isLoggedIn,
+    isInitialized,
   } = useAuthStore((state) => ({
     agent: state.agent,
     getUserWallet: state.getUserWallet,
     fetchTokenBalances: state.fetchTokenBalances,
-    clearAll: state.clearAll,
     identity: state.identity,
+    isLoggedIn: state.isLoggedIn,
+    isInitialized: state.isInitialized,
   }));
 
-  //authStore
-  const { isLoggedIn, logout, isInitialized, loginMethod } = useAuthStore(
-    (state) => ({
-      isLoggedIn: state.isLoggedIn,
-      logout: state.logout,
-      isInitialized: state.isInitialized,
-      loginMethod: state.loginMethod,
-    })
-  );
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   //userStore
   const { user, getUser, searchUsers, searchPublications, getCounts, counts } =
     useUserStore((state) => ({
@@ -141,11 +120,6 @@ const HomePage = () => {
     search: state.search,
   }));
 
-  console.log('agent authStore :', agent1);
-  console.log('identity authStore :', identity1);
-
-  console.log('USERWALLET TYPE :', typeof getUserWallet);
-
   const connectFunction = (id: string) => {
     if (isInitializing) {
       return;
@@ -156,13 +130,12 @@ const HomePage = () => {
 
   useEffect(() => {
     const executeFetchTokenBalances = async () => {
-      if (!agent1 && !isLoggedIn && !isInitializing) {
-        console.log('you are here');
+      if (!agentIk && !isLoggedIn && !isInitializing) {
         return;
       }
       // we know the user is connected
-      if (agent1 && !isInitializing) {
-        const loggedUser = await getUser(agent1);
+      if (agentIk && !isInitializing) {
+        const loggedUser = await getUser(agentIk);
 
         if (loggedUser === undefined && !isInitialized && !isInitializing) {
           useAuthStore.setState({ isInitialized: true });
@@ -175,17 +148,13 @@ const HomePage = () => {
       }
 
       // track session with usergeek
-      Usergeek.setPrincipal(identity1?.getPrincipal());
+      Usergeek.setPrincipal(identity?.getPrincipal());
       Usergeek.trackSession();
       Usergeek.flush();
     };
 
     executeFetchTokenBalances();
-  }, [agent1, isInitializing]);
-
-  console.log('USER :', user);
-  console.log('ISLOGGEDIN :', isLoggedIn);
-  console.log('SIGNER :', signer);
+  }, [agentIk, isInitializing]);
 
   const [selectedTab, setSelectedTab] = useState(
     isLoggedIn || window.location.search !== '' ? 'Articles' : 'About'
@@ -372,7 +341,8 @@ const HomePage = () => {
     const { posts, totalCount } = await getPostsByFollowers(
       user?.followersArray || [],
       start,
-      end
+      end,
+      agent
     );
     if (initial) {
       setWritersPosts(posts);
@@ -414,7 +384,7 @@ const HomePage = () => {
   const loadPopularPostsToday = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsToday(start, end);
+    const { posts, totalCount } = await getPopularPostsToday(start, end, agent);
     if (initial) {
       setTodayPosts(posts);
     } else {
@@ -429,7 +399,11 @@ const HomePage = () => {
   const loadPopularPostsThisWeek = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisWeek(start, end);
+    const { posts, totalCount } = await getPopularPostsThisWeek(
+      start,
+      end,
+      agent
+    );
     if (initial) {
       setThisWeekPosts(posts);
     } else {
@@ -444,7 +418,11 @@ const HomePage = () => {
   const loadPopularPostsThisMonth = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisMonth(start, end);
+    const { posts, totalCount } = await getPopularPostsThisMonth(
+      start,
+      end,
+      agent
+    );
     if (initial) {
       setThisMonthPosts(posts);
     } else {
@@ -459,7 +437,7 @@ const HomePage = () => {
   const loadPopularPostsEver = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPosts(start, end);
+    const { posts, totalCount } = await getPopularPosts(start, end, agent);
     if (initial) {
       setEverPopularPosts(posts);
     } else {
@@ -475,7 +453,7 @@ const HomePage = () => {
   const loadLatestPosts = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getLatestPosts(start, end);
+    const { posts, totalCount } = await getLatestPosts(start, end, agent);
     if (initial) {
       setLatestPosts(posts);
     } else {
@@ -694,6 +672,14 @@ const HomePage = () => {
       : colors.primaryTextColor,
   };
 
+  if (isLoading && isInitializing) {
+    return (
+      <div className='homepage'>
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div className='homepage'>
       <Header
@@ -761,11 +747,16 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      connectFunction(NFIDW.id);
-                      useAuthStore.setState({ loginMethod: 'NFID' });
+                      if (!isLocal) {
+                        connectFunction(NFIDW.id);
+                        useAuthStore.setState({ loginMethod: 'NFID' });
+                      } else {
+                        connectFunction(MockedSigner.id);
+                        useAuthStore.setState({ loginMethod: 'mocked' });
+                      }
                     }}
                   >
-                    Google
+                    {isLocal ? 'Mocked Signer' : 'Google'}
                   </Button>
                   <a
                     className='login-info-text'
@@ -1238,10 +1229,10 @@ const HomePage = () => {
                   establish their own identity on the platform.
                 </span>
                 <span>
-                  Log in with Google or Internet Identity (or Stoic or
-                  Bitfinity) and join Nuance today to experience the future of
-                  decentralized publishing. Where creators are empowered,
-                  content is secure, and communities thrive.
+                  Log in with Google or Internet Identity (or Plug) and join
+                  Nuance today to experience the future of decentralized
+                  publishing. Where creators are empowered, content is secure,
+                  and communities thrive.
                 </span>
               </div>
             </div>

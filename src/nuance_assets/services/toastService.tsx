@@ -14,7 +14,7 @@ import {
 import { icons, colors } from '../shared/constants';
 import { Notification } from '../../declarations/Notifications/Notifications.did';
 import Button from '../UI/Button/Button';
-import { NavigateFunction } from 'react-router-dom';
+import { Link, NavigateFunction } from 'react-router-dom';
 
 export enum ToastType {
   Plain,
@@ -185,26 +185,16 @@ const CustomNotificationContent = ({
       return (
         <span>
           Excellent!{' '}
-          <span
-            onClick={() => {
-              navigate('/user/' + tipSenderHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/${tipSenderHandle}`} className='link'>
             {tipSenderHandle}
-          </span>{' '}
+          </Link>{' '}
           <span className='bold'>applauded</span> +
           {(Number(content.numberOfApplauds) / Math.pow(10, 8)).toFixed(0)}{' '}
           using {content.tippedTokenSymbol} on "
-          <span
-            onClick={() => {
-              navigate(postUrl);
-            }}
-            className='link'
-          >
+          <Link to={postUrl} className='link'>
             {content.postTitle.slice(0, 20)}
             {content.postTitle.length > 20 && '...'}
-          </span>
+          </Link>
           "
         </span>
       );
@@ -218,23 +208,13 @@ const CustomNotificationContent = ({
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <span
-            onClick={() => {
-              navigate('/user/' + postWriterHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/${postWriterHandle}`} className='link'>
             {postWriterHandle}
-          </span>{' '}
+          </Link>{' '}
           posted a <span className='bold'>new article: </span>"
-          <span
-            onClick={() => {
-              navigate(postUrl);
-            }}
-            className='link'
-          >
+          <Link to={postUrl} className='link'>
             {content.postTitle}
-          </span>
+          </Link>
           "
         </span>
       );
@@ -248,14 +228,9 @@ const CustomNotificationContent = ({
       );
       return (
         <span>
-          <span
-            onClick={() => {
-              navigate('/user/' + subscriberHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/${subscriberHandle}`} className='link'>
             {subscriberHandle}
-          </span>{' '}
+          </Link>{' '}
           has cancelled the {subscriptionTimeInterval} subscription to your
           account.
         </span>
@@ -274,18 +249,16 @@ const CustomNotificationContent = ({
           You <span className='bold'>subscribed</span> to the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
           {
-            <span
-              onClick={() => {
-                if (content.isPublication) {
-                  navigate('/publication/' + subscribedAccountHandle);
-                } else {
-                  navigate('/user/' + subscribedAccountHandle);
-                }
-              }}
+            <Link
+              to={
+                content.isPublication
+                  ? `/publication/${subscribedAccountHandle}`
+                  : `/user/${subscribedAccountHandle}`
+              }
               className='link'
             >
               {subscribedAccountHandle}
-            </span>
+            </Link>
           }{' '}
           ({subscriptionTimeInterval})
         </span>
@@ -305,28 +278,18 @@ const CustomNotificationContent = ({
       let commentContent = content.commentContent;
       return (
         <span>
-          <span
-            onClick={() => {
-              navigate('/user/' + commenterHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/'${commenterHandle}`} className='link'>
             {commenterHandle}
-          </span>{' '}
+          </Link>{' '}
           has{' '}
           <span className='bold'>
             {isReply ? 'added a reply ' : 'commented'}
           </span>{' '}
           on your article: "
-          <span
-            onClick={() => {
-              navigate(postUrl);
-            }}
-            className='link'
-          >
+          <Link to={postUrl} className='link'>
             {content.postTitle.slice(0, 20)}
             {content.postTitle.length > 20 && '...'}
-          </span>
+          </Link>
           "
         </span>
       );
@@ -344,18 +307,16 @@ const CustomNotificationContent = ({
           You <span className='bold'>unsubscribed</span> from the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
           {
-            <span
-              onClick={() => {
-                if (content.isPublication) {
-                  navigate('/publication/' + subscribedAccountHandle);
-                } else {
-                  navigate('/user/' + subscribedAccountHandle);
-                }
-              }}
+            <Link
+              to={
+                content.isPublication
+                  ? `/publication/${subscribedAccountHandle}`
+                  : `/user/${subscribedAccountHandle}`
+              }
               className='link'
             >
               {subscribedAccountHandle}
-            </span>
+            </Link>
           }{' '}
           ({subscriptionTimeInterval})
         </span>
@@ -367,14 +328,9 @@ const CustomNotificationContent = ({
         getUserListItemFromPrincipal(followerPrincipal)?.handle;
       return (
         <span>
-          <span
-            onClick={() => {
-              navigate('/user/' + followerHandle);
-            }}
-            className=''
-          >
+          <Link to={`/user/${followerHandle}`} className=''>
             {followerHandle}
-          </span>{' '}
+          </Link>{' '}
           is now <span className='bold'>following</span> you. Well done!
         </span>
       );
@@ -389,18 +345,16 @@ const CustomNotificationContent = ({
           Your{' '}
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)}{' '}
           subscription to the account{' '}
-          <span
-            onClick={() => {
-              if (content.isPublication) {
-                navigate('/publication/' + subscribedHandle);
-              } else {
-                navigate('/user/' + subscribedHandle);
-              }
-            }}
+          <Link
+            to={
+              content.isPublication
+                ? `/publication/${subscribedHandle}`
+                : `/user/${subscribedHandle}`
+            }
             className='link'
           >
             {subscribedHandle}
-          </span>{' '}
+          </Link>{' '}
           has <span className='bold'>expired</span>!
         </span>
       );
@@ -421,14 +375,9 @@ const CustomNotificationContent = ({
         <span>
           <span className='link'>{replierHandle}</span> has{' '}
           <span className='bold'>replied</span> to your comment:
-          <span
-            onClick={() => {
-              navigate(commentUrl);
-            }}
-            className='link'
-          >
+          <Link to={commentUrl} className='link'>
             {content.myCommentContent.slice(0, 20)}
-          </span>
+          </Link>
           !
         </span>
       );
@@ -449,25 +398,15 @@ const CustomNotificationContent = ({
       return (
         <span>
           K-ching!{' '}
-          <span
-            onClick={() => {
-              navigate('/user/' + purchaserHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/${purchaserHandle}`} className='link'>
             {purchaserHandle}
-          </span>{' '}
+          </Link>{' '}
           bought an <span className='bold'>NFT access</span> key for your
           article: "
-          <span
-            onClick={() => {
-              navigate(postUrl);
-            }}
-            className='link'
-          >
+          <Link to={postUrl} className='link'>
             "{content.postTitle.slice(0, 20)}
             {content.postTitle.length > 20 && '...'}"
-          </span>
+          </Link>
           "
         </span>
       );
@@ -481,23 +420,13 @@ const CustomNotificationContent = ({
       }/${textToUrlSegment(content.postTitle)}`;
       return (
         <span>
-          <span
-            onClick={() => {
-              navigate('/user/' + postWriterHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/${postWriterHandle}`} className='link'>
             {postWriterHandle}
-          </span>{' '}
+          </Link>{' '}
           posted a <span className='bold'>new article: </span>"
-          <span
-            onClick={() => {
-              navigate(postUrl);
-            }}
-            className='link'
-          >
+          <Link to={postUrl} className='link'>
             {content.postTitle}
-          </span>
+          </Link>
           "
         </span>
       );
@@ -509,14 +438,9 @@ const CustomNotificationContent = ({
 
       return (
         <span>
-          <span
-            onClick={() => {
-              navigate('/user/' + subscriberHandle);
-            }}
-            className='link'
-          >
+          <Link to={`/user/${subscriberHandle}`} className='link'>
             {subscriberHandle}
-          </span>{' '}
+          </Link>{' '}
           has <span className='bold'>subscribed</span> to you! (
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)})
         </span>

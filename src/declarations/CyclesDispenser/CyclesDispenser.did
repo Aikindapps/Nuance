@@ -55,7 +55,6 @@ type List =
        text;
        List;
      };
-type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type AddCanisterModel = 
  record {
    canisterId: text;
@@ -89,7 +88,6 @@ service : {
   getTopUp: (text) -> (Result_3) query;
   getTopUpsByRange: (TimeRange) -> (vec TopUp) query;
   getTrustedCanisters: () -> (Result_2) query;
-  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   idQuick: () -> (principal) query;
   isThereEnoughMemory: () -> (bool) query;
   registerAdmin: (text) -> (Result);

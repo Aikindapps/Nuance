@@ -8,10 +8,8 @@ import { useTheme } from '../../contextes/ThemeContext';
 import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sidebar';
 
 const AuthorProfileSidebar = () => {
-  const { isLoggedIn, login, logout } = useAuthStore((state) => ({
+  const { isLoggedIn } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
-    login: state.login,
-    logout: state.logout,
   }));
   const [shown, setShown] = useState(false);
   const [shownMeatball, setShownMeatball] = useState(false);

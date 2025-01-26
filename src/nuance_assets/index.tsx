@@ -5,14 +5,10 @@ import { createRoot } from 'react-dom/client';
 import { Usergeek } from 'usergeek-ic-js';
 import { ContextProvider } from './contextes/Context';
 import { ThemeProvider } from './contextes/ThemeContext';
-import {
-  IdentityKitAuthType,
-  IdentityKitSignerConfig,
-  MockedSigner,
-} from '@nfid/identitykit';
+import { IdentityKitAuthType, MockedSigner } from '@nfid/identitykit';
 import { IdentityKitProvider } from '@nfid/identitykit/react';
 import '@nfid/identitykit/react/styles.css';
-import { NFIDW, Plug, InternetIdentity, Stoic } from '@nfid/identitykit';
+import { NFIDW, Plug, InternetIdentity } from '@nfid/identitykit';
 
 import './index.scss';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
@@ -20,8 +16,9 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import App from './App';
 import { getAllTargetCanisterIds } from './services/actorService';
 import Loader from './UI/loader/Loader';
-import { useAuthStore, usePostStore, useUserStore } from './store';
+import { useAuthStore } from './store';
 import { Principal } from '@dfinity/principal';
+import { authChannel } from './store/authStore';
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
@@ -68,10 +65,10 @@ const MainApp = () => {
 
   const mockedSignerProvider = 'http://localhost:3003';
 
-  let signers;
+  let allSigners;
 
   if (isLocal) {
-    signers = [
+    allSigners = [
       NFIDW,
       Plug,
       {
@@ -79,22 +76,33 @@ const MainApp = () => {
         providerUrl:
           'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize',
       },
-      Stoic,
       { ...MockedSigner, providerUrl: mockedSignerProvider },
     ];
   } else {
-    signers = [NFIDW, Plug, InternetIdentity, Stoic];
+    allSigners = [NFIDW, Plug, InternetIdentity];
   }
 
   if (targetCanisters.length === 0) {
-    // Show a loading state while fetching the targets
-    return <Loader />;
+    // show a loading state while fetching the targets
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   }
 
   return (
     <IdentityKitProvider
       authType={IdentityKitAuthType.DELEGATION}
-      signers={signers}
+      signers={allSigners}
       signerClientOptions={{
         targets: targetCanisters,
         maxTimeToLive: sessionTimeout,
@@ -109,6 +117,7 @@ const MainApp = () => {
       }}
       onConnectSuccess={() => {
         useAuthStore.setState({ isLoggedIn: true });
+        authChannel.postMessage({ type: 'login', date: new Date() });
         console.log('CONNECTED...');
       }}
       onDisconnect={() => {
@@ -127,7 +136,9 @@ const MainApp = () => {
           agent: undefined,
           identity: undefined,
           isInitialized: false,
+          loginMethod: undefined,
         });
+        window.location.reload();
         console.warn(Error);
       }}
     >

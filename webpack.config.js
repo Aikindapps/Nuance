@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const TerserPlugin = require('terser-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 var DuplicatePackageCheckerPlugin = require('duplicate-package-checker-webpack-plugin');
 
 function initCanisterEnv() {
@@ -90,7 +91,13 @@ module.exports = {
   // },
   module: {
     rules: [
-      { test: /\.(js|ts)x?$/i, loader: 'ts-loader' },
+      {
+        test: /\.(js|ts)x?$/i,
+        loader: 'ts-loader',
+        options: {
+          transpileOnly: true,
+        },
+      },
       {
         test: /\.(css|s[ac]ss)$/i,
         use: [
@@ -135,6 +142,7 @@ module.exports = {
         safari10: true,
       },
     }),
+    new ForkTsCheckerWebpackPlugin(),
     new webpack.optimize.AggressiveMergingPlugin(),
     new Dotenv({
       path: `./.env${isDevelopment ? '.local' : ''}`,

@@ -7,8 +7,10 @@ import { Context } from '../../contextes/Context';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { useAuth, useIsInitializing } from '@nfid/identitykit/react';
 import { authChannel } from '../../store/authStore';
-import { InternetIdentity, NFIDW, Plug, Stoic } from '@nfid/identitykit';
+import { InternetIdentity, NFIDW, Plug, MockedSigner } from '@nfid/identitykit';
 import { Usergeek } from 'usergeek-ic-js';
+import { isMobile } from 'react-device-detect';
+import { toastError } from '../../services/toastService';
 type LoggedOutSidebarProps = {
   style?: any;
 };
@@ -17,7 +19,6 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
 ): JSX.Element => {
   //redirecting to register pages is handled in the HomeGrid component.
   const {
-    login,
     agent,
     identity,
     isLoggedIn,
@@ -25,7 +26,6 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
     getUserWallet,
     fetchTokenBalances,
   } = useAuthStore((state) => ({
-    login: state.login,
     agent: state.agent,
     identity: state.identity,
     isLoggedIn: state.isLoggedIn,
@@ -35,10 +35,10 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
   }));
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
-  const loginInternal = (loginMethod: string) => {
-    modalContext?.closeModal();
-    login(loginMethod);
-  };
+
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
 
   const isInitializing = useIsInitializing();
   const { connect } = useAuth();
@@ -68,7 +68,6 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
   useEffect(() => {
     const executeFetchTokenBalances = async () => {
       if (!agent && !isLoggedIn && !isInitializing) {
-        console.log('you are here');
         return;
       }
       // we know the user is connected
@@ -80,10 +79,8 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
           window.location.href = '/register';
         } else {
           //user fetched successfully, get the token balances
-          const userWallet = await getUserWallet();
+          await getUserWallet();
           await fetchTokenBalances();
-
-          console.log('USER WALLET :', userWallet.principal);
         }
       }
 
@@ -145,7 +142,7 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
             styleType={{ dark: 'navy-dark', light: 'navy' }}
             type='button'
             style={{ width: '100%' }}
-            icon={InternetIdentity.icon}
+            //icon={InternetIdentity.icon}
             onClick={() => {
               connectFunction(InternetIdentity.id);
               useAuthStore.setState({ loginMethod: 'ii' });
@@ -160,28 +157,18 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
             styleType={{ dark: 'navy-dark', light: 'navy' }}
             type='button'
             style={{ width: '100%' }}
-            icon={NFIDW.icon}
+            //icon={NFIDW.icon}
             onClick={() => {
-              connectFunction(NFIDW.id);
-              useAuthStore.setState({ loginMethod: 'NFID' });
+              if (!isLocal) {
+                connectFunction(NFIDW.id);
+                useAuthStore.setState({ loginMethod: 'NFID' });
+              } else {
+                connectFunction(MockedSigner.id);
+                useAuthStore.setState({ loginMethod: 'mocked' });
+              }
             }}
           >
-            Log in with NFID
-          </Button>
-        </div>
-        <div className='logged-out-sidebar-button'>
-          <Button
-            className={{ dark: 'logged-out-navy-button-dark', light: '' }}
-            styleType={{ dark: 'navy-dark', light: 'navy' }}
-            type='button'
-            style={{ width: '100%' }}
-            icon={Stoic.icon}
-            onClick={() => {
-              connectFunction(Stoic.id);
-              useAuthStore.setState({ loginMethod: 'stoic' });
-            }}
-          >
-            Log in with Stoic
+            Log in with {isLocal ? 'Mocked Signer' : 'NFID'}
           </Button>
         </div>
 
@@ -191,10 +178,16 @@ const LoggedOutSidebar: React.FC<LoggedOutSidebarProps> = (
             styleType={{ dark: 'navy-dark', light: 'navy' }}
             type='button'
             style={{ width: '100%' }}
-            icon={Plug.icon}
+            //icon={Plug.icon}
             onClick={() => {
-              connectFunction(Plug.id);
-              useAuthStore.setState({ loginMethod: 'plug' });
+              if (!isMobile) {
+                connectFunction(Plug.id);
+                useAuthStore.setState({ loginMethod: 'plug' });
+              } else {
+                toastError(
+                  'Plug login is not available on mobile devices. Please use a desktop browser or another login method.'
+                );
+              }
             }}
           >
             Log in with Plug

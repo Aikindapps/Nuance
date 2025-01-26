@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Toggle from '../../UI/toggle/toggle';
 import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 import { useTheme } from '../../contextes/ThemeContext';
@@ -12,6 +12,8 @@ import {
   truncateToDecimalPlace,
 } from '../../shared/utils';
 import { useAuthStore } from '../../store';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
+import Loader from '../../UI/loader/Loader';
 
 interface SubscriptionDetailsState extends WriterSubscriptionDetails {
   weeklyFeeEnabled: boolean;
@@ -37,10 +39,27 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
   isPublication,
   error,
 }) => {
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   const darkTheme = useTheme();
   const context = React.useContext(Context);
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
+  const isInitializing = useIsInitializing();
   const [inputAddressErrorMessage, setInputAddressErrorMessage] = useState('');
-  const tokenPrices = useAuthStore((state) => state.tokenPrices);
+  const { tokenPrices, isLoggedIn } = useAuthStore((state) => ({
+    tokenPrices: state.tokenPrices,
+    isLoggedIn: state.isLoggedIn,
+  }));
+
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setLoading(false) : setLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
 
   const handleFeeChange = (
     type: keyof WriterSubscriptionDetails,
@@ -72,6 +91,16 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
     'annuallyFee',
     'lifeTimeFee',
   ] as const;
+
+  if (loading || isInitializing) {
+    return (
+      <div className='membership-subscription'>
+        <div style={{ width: '150px' }}>
+          <Loader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='membership-subscription'>

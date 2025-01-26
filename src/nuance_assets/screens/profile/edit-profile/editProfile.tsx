@@ -25,11 +25,19 @@ import { useSubscriptionStore } from '../../../store/subscriptionStore';
 import { SubscriptionStore } from '../../../store/subscriptionStore';
 import { Principal } from '@dfinity/principal';
 import './_edit-profile.scss';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 var psl = require('psl');
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 const EditProfile = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const navigate = useNavigate();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
+  const isInitializing = useIsInitializing();
   const { updateUserDetails, getUser, getPrincipalByHandle } = useUserStore(
     (state) => ({
       getUser: state.getUser,
@@ -47,9 +55,16 @@ const EditProfile = () => {
     updateSubscriptionDetails: state.updateSubscriptionDetails,
   }));
 
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setLoading(false) : setLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   const firstLoad = async () => {
     setIsLoading(true);
-    let user = await getUser();
+    let user = await getUser(agentIk);
     if (user) {
       setUser(user);
       setAvatar(user.avatar);
@@ -105,7 +120,8 @@ const EditProfile = () => {
 
     try {
       const userPrincipalId = await getPrincipalByHandle(user?.handle || '');
-      updateSubscriptionDetails(
+      await updateSubscriptionDetails(
+        agentIk,
         convertToE8s(subscriptionDetails.weeklyFee[0]),
         convertToE8s(subscriptionDetails.monthlyFee[0]),
         convertToE8s(subscriptionDetails.annuallyFee[0]),
@@ -314,7 +330,8 @@ const EditProfile = () => {
         }
       }
 
-      updateSubscriptionDetails(
+      await updateSubscriptionDetails(
+        agentIk,
         subscriptionDetails.weeklyFee[0]
           ? Number(subscriptionDetails.weeklyFee[0]) * 1e8
           : undefined,
@@ -447,9 +464,21 @@ const EditProfile = () => {
       : colors.primaryTextColor,
   };
 
-  if (isLoading) {
+  if (loading || isInitializing || isLoading) {
     return (
-      <div className='edit-profile-wrapper'>
+      <div
+        className='edit-profile-wrapper'
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+          background: darkTheme
+            ? colors.darkModePrimaryBackgroundColor
+            : colors.primaryBackgroundColor,
+        }}
+      >
         <div style={{ width: '150px' }}>
           <Loader />
         </div>

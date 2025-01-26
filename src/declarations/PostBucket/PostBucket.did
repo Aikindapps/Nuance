@@ -3,6 +3,11 @@ type Validate =
    Err: text;
    Ok: text;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type SaveResult = 
  variant {
    err: text;
@@ -213,6 +218,7 @@ type PostBucket =
    getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
    getUserPostIds: (text) -> (vec text) query;
    getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
+   icrc10_supported_standards: () -> (vec SupportedStandard) query;
    icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
    initializeBucketCanister: (vec text, vec text, text) -> (Result_2);
    initializeCanister: (text, text) -> (Result_2);

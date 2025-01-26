@@ -46,7 +46,9 @@ function CategoryLanding() {
     redirectScreen: state.redirectScreen,
   }));
 
-  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+    agent: state.agent,
+  }));
 
   const {
     user,
@@ -108,9 +110,9 @@ function CategoryLanding() {
     if (
       publication !== undefined &&
       publication?.publicationHandle.toLowerCase() !==
-      current_location
-        .substring(13, current_location.lastIndexOf('/'))
-        .toLowerCase()
+        current_location
+          .substring(13, current_location.lastIndexOf('/'))
+          .toLowerCase()
     ) {
       setPublicationDoesNotExist(true);
     }
@@ -381,7 +383,6 @@ function CategoryLanding() {
                   alt='publication-icon'
                   className='publication-header-icon'
                 />
-
               </span>
               <span className='at-handle'>@</span>
               {publication?.publicationHandle}

@@ -147,6 +147,7 @@ export interface PostBucket {
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
   'getUserPostIds' : ActorMethod<[string], Array<string>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
   'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeBucketCanister' : ActorMethod<
     [Array<string>, Array<string>, string],
@@ -296,6 +297,7 @@ export interface SaveCommentModel {
 }
 export type SaveResult = { 'ok' : PostBucketType } |
   { 'err' : string };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE extends PostBucket {}
