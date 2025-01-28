@@ -144,6 +144,7 @@ function App() {
     logout,
     getUserWallet,
     fetchTokenBalances,
+    logoutDepreciated,
   } = useAuthStore((state) => ({
     isLoggedIn: state.isLoggedIn,
     isInitialized: state.isInitialized,
@@ -154,6 +155,7 @@ function App() {
     logout: state.logout,
     getUserWallet: state.getUserWallet,
     fetchTokenBalances: state.fetchTokenBalances,
+    logoutDepreciated: state.logoutDepreciated,
   }));
 
   const identity = useIdentity();
@@ -286,14 +288,14 @@ function App() {
 
   // migrating to identity kit condition
   if (!agent && !identity && isLoggedIn && isInitialized) {
-    authChannel.postMessage({ type: 'logout', date: new Date() });
+    /* authChannel.postMessage({ type: 'logout', date: new Date() });
     // clear all stores, and localStorage
     usePostStore.getState().clearAll();
     useUserStore.getState().clearAll();
     useAuthStore.getState().clearAll();
     localStorage?.clear();
-    console.log('Logged out: ' + new Date());
-    window.location.href = '/register';
+    console.log('Logged out: ' + new Date()); */
+    logoutDepreciated();
   }
 
   if (isLoading || isInitializing) {

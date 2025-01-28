@@ -49,6 +49,8 @@ const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
   //30 days in nanoseconds
   BigInt(480) * BigInt(60) * BigInt(1000000000) * BigInt(91);
 
+var authClient: AuthClient;
+
 // For login/logout across tabs
 export const authChannel = new BroadcastChannel('auth_channel');
 
@@ -69,6 +71,7 @@ export interface AuthStore {
   setIdentity: (identity?: Identity) => void;
   getIdentity: () => Promise<Identity | undefined>;
   logout: () => Promise<void>;
+  logoutDepreciated: () => Promise<void>;
   getUserWallet: () => Promise<UserWallet>;
   redirect: (url: string) => void;
   updateLastLogin: () => Promise<void>;
@@ -249,6 +252,19 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
 
   clearLoginMethod: (): void => {
     set({ loginMethod: undefined });
+  },
+
+  logoutDepreciated: async () => {
+    Usergeek.setPrincipal(Principal.anonymous());
+    await authClient.logout();
+    set({ isLoggedIn: false });
+    authChannel.postMessage({ type: 'logout', date: new Date() });
+    // clear all stores, and localStorage
+    usePostStore.getState().clearAll();
+    useUserStore.getState().clearAll();
+    get().clearAll();
+    localStorage?.clear();
+    console.log('Logged out: ' + new Date());
   },
 
   requestLinkInternetIdentity: async (): Promise<Principal | null> => {
