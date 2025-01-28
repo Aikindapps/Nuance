@@ -287,7 +287,7 @@ function App() {
   }, []);
 
   // migrating to identity kit condition
-  if (!agent && !identity && isLoggedIn && isInitialized) {
+  if (!useAuthStore.getState().agent && !useAuthStore.getState().identity && isLoggedIn && isInitialized) {
     disconnect();
     logout();
     window.location.reload();
