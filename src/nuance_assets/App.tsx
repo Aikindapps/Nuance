@@ -190,7 +190,6 @@ function App() {
     }
   }, [agent, isInitializing]);
 
-
   useEffect(() => {
     const executeFetchTokenBalances = async () => {
       if (!agent && !isLoggedIn && !isInitializing) {
@@ -272,6 +271,21 @@ function App() {
       authChannel.close();
     }; */
   }, []);
+
+  // migrating to identitykit condition
+  // this condition will be true for the users whose sessions are still alive after deployment
+  // will be true once and then won't be used anymore
+  // can be deleted 30 days after deployment of identitykit because max session time is 30 days.
+  if (
+    !useAuthStore.getState().agent &&
+    !useAuthStore.getState().identity &&
+    isLoggedIn &&
+    isInitialized
+  ) {
+    disconnect();
+    logout();
+    window.location.reload();
+  }
 
   if (isLoading || isInitializing) {
     return (
