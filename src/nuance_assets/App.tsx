@@ -284,6 +284,18 @@ function App() {
     }; */
   }, []);
 
+  // migrating to identity kit condition
+  if (!agent && !identity && isLoggedIn && isInitialized) {
+    authChannel.postMessage({ type: 'logout', date: new Date() });
+    // clear all stores, and localStorage
+    usePostStore.getState().clearAll();
+    useUserStore.getState().clearAll();
+    useAuthStore.getState().clearAll();
+    localStorage?.clear();
+    console.log('Logged out: ' + new Date());
+    window.location.href = '/register';
+  }
+
   if (isLoading || isInitializing) {
     return (
       <div
