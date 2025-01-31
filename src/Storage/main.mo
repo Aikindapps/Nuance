@@ -20,6 +20,7 @@ import Array "mo:base/Array";
 import Versions "../shared/versions";
 import ENV "../shared/env";
 import U "../shared/utils";
+import TypesStandards "../shared/TypesStandards";
 
 
 // actor Storage {
@@ -33,7 +34,9 @@ shared ({caller = initializer}) actor class Storage () = this {
     //var globalIdMap = HashMap.HashMap<Text, Nat>(5000, Text.equal, Text.hash);
     var globalIdMap = HashMap.fromIter<Text, Nat>(globalIdMapEntries.vals(), initCapacity, isEq, Text.hash);
 
-    
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
     let canistergeekMonitor = Canistergeek.Monitor();
     stable var _canistergeekMonitorUD: ? Canistergeek.UpgradeData = null;
@@ -354,31 +357,14 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
     };
 
     //#region trusted origin
-    type SupportedStandard = {
-      url: Text;
-      name: Text;
-    };
 
     public query func icrc10_supported_standards() : async [SupportedStandard] {
-        return [
-            {
-                url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
-                name = "ICRC-10";
-            },
-            {
-                url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
-                name = "ICRC-28";
-            }
-        ];
-    };
-
-    public type Icrc28TrustedOriginsResponse = {
-        trusted_origins: [Text]
+        return ENV.supportedStandards;
     };
 
     public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
         return {
-        trusted_origins= ENV.getTrustedOrigins();
+            trusted_origins= ENV.getTrustedOrigins();
         }
     };
 

@@ -68,6 +68,19 @@ module {
     PUBLICATION_MANAGEMENT_CANISTER_ID,
   ];
 
+  //icrc10 standards
+  public let supportedStandards = 
+    [
+      {
+          url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
+          name = "ICRC-10";
+      },
+      {
+          url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
+          name = "ICRC-28";
+      }
+    ];
+
   //get trusted origins
   public func getTrustedOrigins(): [Text] {
     if (IS_LOCAL) {

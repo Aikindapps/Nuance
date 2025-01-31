@@ -19,6 +19,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import TypesStandards "../shared/TypesStandards";
 
 actor FastBlocks_EmailOptIn {
   // local variables
@@ -32,6 +33,10 @@ actor FastBlocks_EmailOptIn {
   let Unauthorized = "Unauthorized";
   let EmailAddressUnavailable = "No email address provided";
   let NotTrustedPrincipal = "Not a trusted principal, unauthorized";
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   //SNS
   public type Validate = {
@@ -150,26 +155,9 @@ actor FastBlocks_EmailOptIn {
   };
 
   //#region trusted origin
-  type SupportedStandard = {
-      url: Text;
-      name: Text;
-  };
 
   public query func icrc10_supported_standards() : async [SupportedStandard] {
-      return [
-          {
-              url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
-              name = "ICRC-10";
-          },
-          {
-              url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
-              name = "ICRC-28";
-          }
-      ];
-  };
-
-  public type Icrc28TrustedOriginsResponse = {
-    trusted_origins: [Text]
+    return ENV.supportedStandards;
   };
 
   public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
