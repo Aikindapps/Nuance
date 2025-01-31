@@ -20,6 +20,7 @@ import Time "mo:base/Time";
 import Notifications "../NotificationsV3/types";
 import Versions "../shared/versions";
 import Prim "mo:prim";
+import TypesStandards "../shared/TypesStandards";
 
 actor Subscription {
     let {thash; } = Map;
@@ -77,6 +78,10 @@ actor Subscription {
         expirationDate: Int;
         subaccount: Blob;
     };
+
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
     //unique id for every subscription event
     stable var subscriptionEventCounter = 0;
     //the unix time of the last time the timer has been called
@@ -1193,26 +1198,9 @@ actor Subscription {
     };
 
     //#region trusted origin
-    type SupportedStandard = {
-        url: Text;
-        name: Text;
-    };
 
     public query func icrc10_supported_standards() : async [SupportedStandard] {
-        return [
-            {
-                url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
-                name = "ICRC-10";
-            },
-            {
-                url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
-                name = "ICRC-28";
-            }
-        ];
-    };
-
-    public type Icrc28TrustedOriginsResponse = {
-        trusted_origins: [Text]
+        return ENV.supportedStandards;
     };
 
     public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{

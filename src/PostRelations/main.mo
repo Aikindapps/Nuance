@@ -18,6 +18,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Prim "mo:prim";
 import Versions "../shared/versions";
+import TypesStandards "../shared/TypesStandards";
 
 actor PostRelations {
     let {nhash; thash; } = Map;
@@ -34,6 +35,10 @@ actor PostRelations {
         totalCount: Text;
         postIds: [Text];
     };
+
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
     //key: postId, value: [key: word, value: total number of the word in the post]
     stable var postIdToWordsMap = Map.new<Text, Map.Map<Text, Nat>>();
@@ -578,31 +583,14 @@ actor PostRelations {
     };
 
     //#region trusted origin
-    type SupportedStandard = {
-        url: Text;
-        name: Text;
-    };
 
     public query func icrc10_supported_standards() : async [SupportedStandard] {
-        return [
-            {
-                url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
-                name = "ICRC-10";
-            },
-            {
-                url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
-                name = "ICRC-28";
-            }
-        ];
-    };
-
-    public type Icrc28TrustedOriginsResponse = {
-        trusted_origins: [Text]
+        return ENV.supportedStandards;
     };
 
     public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
         return {
-        trusted_origins= ENV.getTrustedOrigins();
+            trusted_origins= ENV.getTrustedOrigins();
         }
     };
 

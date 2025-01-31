@@ -26,6 +26,7 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../shared/env";
 import Sonic "../shared/sonic";
+import TypesStandards "../shared/TypesStandards";
 
 actor class PostBucket() = this {
   let canistergeekMonitor = Canistergeek.Monitor();
@@ -89,6 +90,10 @@ actor class PostBucket() = this {
 
   //applaud types
   type Applaud = Types.Applaud;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
@@ -3348,26 +3353,9 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
   };
 
   //#region trusted origin
-  type SupportedStandard = {
-      url: Text;
-      name: Text;
-  };
 
   public query func icrc10_supported_standards() : async [SupportedStandard] {
-      return [
-          {
-              url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
-              name = "ICRC-10";
-          },
-          {
-              url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
-              name = "ICRC-28";
-          }
-      ];
-  };
-
-  public type Icrc28TrustedOriginsResponse = {
-    trusted_origins: [Text]
+      return ENV.supportedStandards;
   };
 
   public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
