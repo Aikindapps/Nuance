@@ -28,7 +28,7 @@ const PublicationCallToAction: React.FC<Props> = ({
   onClick,
   publicationBackgroundColor,
   mobile,
-  style
+  style,
 }) => {
   const [tagline, setTagline] = useState(publicationTagLine);
   const [buttonText, setButtonText] = useState(publicationButtonText);
@@ -49,7 +49,7 @@ const PublicationCallToAction: React.FC<Props> = ({
         backgroundColor: publicationBackgroundColor,
         height: '90px',
         borderRadius: '4px',
-        ...style
+        ...style,
       }}
     >
       <div
@@ -59,11 +59,13 @@ const PublicationCallToAction: React.FC<Props> = ({
           height: '100%',
         }}
       >
-        <FontAwesomeIcon
-          icon={handleFindIcon(publicationIcon) as IconDefinition}
-          size={'2x'}
-          style={{ padding: '30px', color: 'white' }}
-        />
+        {handleFindIcon(publicationIcon) && (
+          <FontAwesomeIcon
+            icon={handleFindIcon(publicationIcon) as IconDefinition}
+            size={'2x'}
+            style={{ padding: '30px', color: 'white' }}
+          />
+        )}
         <h2
           style={{
             fontWeight: '700',

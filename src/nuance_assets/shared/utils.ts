@@ -217,7 +217,6 @@ export const trim_category_name = (name: string) => {
 
 export const hexShade = (hex: string) => {
   var rgb = hexToRgb(hex);
-  console.log(rgb);
   if (rgb) {
     rgb.r = rgb.r * 0.8;
     rgb.g = rgb.g * 0.8;
@@ -466,33 +465,13 @@ export const getPriceBetweenTokens = (
   token1Symbol: 'ICP' | 'ckBTC' | 'NUA' | 'ckUSDC',
   amount: number
 ): number => {
-  console.log(
-    'here is the arguments: ',
-    tokenPrices,
-    token0Symbol,
-    token1Symbol,
-    amount
-  );
   if (token0Symbol === token1Symbol) {
-    console.log('here is the result 0 : ', amount);
     return amount;
   }
   if (token0Symbol === 'ICP') {
     let oneIcpEquivelance = tokenPrices.find((value) => {
       return value.tokenSymbol === token1Symbol;
     })?.icpEquivalence as number;
-    console.log(
-      'here is the arguments: ',
-      tokenPrices,
-      token0Symbol,
-      token1Symbol,
-      amount
-    );
-    console.log(
-      'here is the result 1 : ',
-      (amount * oneIcpEquivelance) /
-      Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))
-    );
     return (
       (amount * oneIcpEquivelance) /
       Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))
@@ -503,7 +482,6 @@ export const getPriceBetweenTokens = (
         return value.tokenSymbol === token0Symbol;
       })?.icpEquivalence as number) /
       Math.pow(10, getDecimalsByTokenSymbol(token0Symbol));
-    console.log('token0IcpEquivelance: ', token0IcpEquivelance);
     let token1IcpEquivelance =
       token1Symbol === 'ICP'
         ? 1
@@ -511,11 +489,6 @@ export const getPriceBetweenTokens = (
           return value.tokenSymbol === token1Symbol;
         })?.icpEquivalence as number) /
         Math.pow(10, getDecimalsByTokenSymbol(token1Symbol));
-    console.log('token1IcpEquivelance: ', token1IcpEquivelance);
-    console.log(
-      'here is the result 2 : ',
-      (amount * token1IcpEquivelance) / token0IcpEquivelance
-    );
     return amount * (token1IcpEquivelance / token0IcpEquivelance);
   }
 };

@@ -120,7 +120,6 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     let user = useUserStore.getState().user;
     //fire and forget
     useUserStore.getState().checkMyClaimNotification();
-    console.log("claim not console");
     if (!user) {
       return;
     }

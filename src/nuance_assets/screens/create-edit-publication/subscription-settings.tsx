@@ -250,7 +250,11 @@ const MembershipSubscription: React.FC<MembershipSubscriptionProps> = ({
                     paymentReceiverPrincipalId: e,
                   }))
                 }
-                value={subscriptionDetails.paymentReceiverPrincipalId}
+                value={
+                  subscriptionDetails.isSubscriptionActive
+                    ? subscriptionDetails.paymentReceiverPrincipalId
+                    : undefined
+                }
                 maxLength={161}
                 theme={darkTheme ? 'dark' : 'light'}
                 icon={undefined}

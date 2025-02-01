@@ -391,13 +391,22 @@ const CreateEditPublication = () => {
     }
   }, [subscriptionDetails.paymentReceiverPrincipalId]);
 
-  const validatePrincipal = () => {
+  const validatePrincipal = async () => {
     try {
       let validation =
         subscriptionDetails.paymentReceiverPrincipalId ===
         Principal.fromText(
           subscriptionDetails.paymentReceiverPrincipalId
         ).toText();
+      const publicationCanisterId = await getCanisterIdByHandle(
+        publicationHandle
+      );
+      if (
+        subscriptionDetails.paymentReceiverPrincipalId === publicationCanisterId
+      ) {
+        setValidPrincipal(false);
+        return false;
+      }
       setValidPrincipal(validation);
       return validation;
     } catch (e) {
@@ -420,7 +429,7 @@ const CreateEditPublication = () => {
     subscriptionDetails.annuallyFeeEnabled ||
     subscriptionDetails.lifeTimeFeeEnabled;
 
-  const handleScrolls = () => {
+  const handleScrolls = async () => {
     if (publicationBannerImage === '') {
       let el = document.getElementById('banner-image');
       if (el) {
@@ -453,7 +462,7 @@ const CreateEditPublication = () => {
       }
       return;
     }
-    if (!validatePrincipal()) {
+    if (!(await validatePrincipal())) {
       if (!subscriptionFeesEnabled) {
         window.scrollTo(0, 0);
         return;
@@ -476,7 +485,7 @@ const CreateEditPublication = () => {
     window.scrollTo(0, 0);
   };
 
-  function validate() {
+  async function validate() {
     const isValid =
       !loading &&
       publicationTitle.trim() !== '' &&
@@ -485,7 +494,7 @@ const CreateEditPublication = () => {
       !publicationDescriptionWarning &&
       !publicationCtaWebsiteWarning &&
       publicationBannerImage !== '' &&
-      (!subscriptionFeesEnabled || validatePrincipal());
+      (!subscriptionFeesEnabled || (await validatePrincipal()));
 
     return isValid;
   }
@@ -1184,12 +1193,24 @@ const CreateEditPublication = () => {
   const onSave = async () => {
     setFirstSave(true);
     setSaveBtnIsDisabled(true);
-    let isValid = validate();
+    let isValid = await validate();
     let isValidHandle = await validateHandles();
 
     if (!isValid || !isValidHandle) {
       setSaveBtnIsDisabled(false);
       return;
+    }
+
+    if (
+      !subscriptionFeesEnabled &&
+      subscriptionDetails.paymentReceiverPrincipalId === ''
+    ) {
+      const publicationCanisterId = await getCanisterIdByHandle(
+        publicationHandle
+      );
+      subscriptionDetails.paymentReceiverPrincipalId = publicationCanisterId
+        ? publicationCanisterId
+        : '';
     }
 
     setLoading(true);
@@ -1382,11 +1403,11 @@ const CreateEditPublication = () => {
 
               <div style={{ display: 'inline-block' }}>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!validateWebsiteAndSocialLinks()) {
                       return;
                     }
-                    handleScrolls();
+                    await handleScrolls();
                     setTimeout(onSave, 800);
                   }}
                   disabled={
@@ -2143,7 +2164,7 @@ const CreateEditPublication = () => {
                 {'  Add new link to social channel'}
               </div>
 
-              <div className='subscription-settings-wrapper'>
+              <div className='subscription-settings-wrapper' id='principal'>
                 <SubscriptionSettings
                   subscriptionDetails={subscriptionDetails}
                   updateSubscriptionDetails={handleUpdateSubscriptionDetails}
@@ -2165,11 +2186,11 @@ const CreateEditPublication = () => {
               </div>
               <div style={{ display: 'inline-block' }}>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!validateWebsiteAndSocialLinks()) {
                       return;
                     }
-                    handleScrolls();
+                    await handleScrolls();
                     setTimeout(onSave, 800);
                   }}
                   disabled={

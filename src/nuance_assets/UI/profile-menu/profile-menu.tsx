@@ -130,7 +130,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
             ? {
                 height:
                   (user
-                    ? 5 +
+                    ? 6 +
                       user?.publicationsArray.filter((val) => val.isEditor)
                         .length
                     : 180) * 36,
@@ -154,6 +154,13 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
           <Link to='/my-profile/articles'>
             <li style={{ color: darkOptionsAndColors.color }}>My articles</li>
           </Link>
+          <div className='horizontal-divider'></div>
+          <Link to='/article/new'>
+            <li style={{ color: darkOptionsAndColors.color }}>
+              Create an article
+            </li>
+          </Link>
+          <div className='horizontal-divider'></div>
           {user?.publicationsArray
             .filter((val) => val.isEditor)
             .map((publication, index) => {
@@ -168,11 +175,6 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
                 </Link>
               );
             })}
-          <Link to='/article/new'>
-            <li style={{ color: darkOptionsAndColors.color }}>
-              Create an article
-            </li>
-          </Link>
           <div className='horizontal-divider'></div>
           <a>
             <span onClick={onLogOut}>
