@@ -665,20 +665,43 @@ const CreateEditArticle = () => {
           }
         } else {
           //the post was a regular post. now it needs to be migrated to a publication
-          let migratePostResult = await migratePostToPublication(
-            lastSavedPost.postId,
-            selectedHandle,
-            isDraft
+
+          let updatedPost = await savePost(
+            {
+              title: savingPost.title,
+              creatorHandle: savingPost.creatorHandle || '',
+              content: contentWithUrls || postHtml,
+              premium: premium ? [premium] : [],
+              isDraft: isDraft,
+              tagIds: savingPost.tags.map((tag) => tag.tagId),
+              category: selectedCategory,
+              headerImage: headerUrl || '',
+              subtitle: savingPost.subtitle,
+              isPublication: false, // still a regular post at this point
+              postId: savingPost.postId,
+              handle: lastSavedPost.handle,
+              isMembersOnly: access.value === 'members-only',
+              scheduledPublishedDate: handleScheduledPublishDate() || [],
+            },
+            agentIk
           );
-          if (migratePostResult) {
-            setSavingPost(migratePostResult);
-            setLastSavedPost(migratePostResult);
-            setPostHtml(migratePostResult.content);
-            setRadioButtonIndex(migratePostResult.isDraft ? 0 : 1);
-            navigate('/article/edit/' + migratePostResult.postId, {
-              replace: true,
-            });
-            return migratePostResult;
+
+          if (updatedPost) {
+            let migratePostResult = await migratePostToPublication(
+              updatedPost.postId,
+              selectedHandle,
+              isDraft
+            );
+            if (migratePostResult) {
+              setSavingPost(migratePostResult);
+              setLastSavedPost(migratePostResult);
+              setPostHtml(migratePostResult.content);
+              setRadioButtonIndex(migratePostResult.isDraft ? 0 : 1);
+              navigate('/article/edit/' + migratePostResult.postId, {
+                replace: true,
+              });
+              return migratePostResult;
+            }
           }
         }
       } else {

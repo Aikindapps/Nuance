@@ -126,21 +126,20 @@ const CustomNotificationContent = ({
         <span>
           You are allowed to request new Free NUA refill up to a total of 50
           Free NUA in your wallet!
-          <Button
-            styleType={{ dark: 'navy-dark', light: 'navy' }}
-            onClick={() => {
-              navigate('/my-profile/wallet');
-            }}
-            loading={false}
-            style={{
-              display: 'flex',
-              flexDirection: 'row-reverse',
-              marginTop: '10px',
-              float: 'right',
-            }}
-          >
-            Request Free NUA
-          </Button>
+          <Link to={`/my-profile/wallet`}>
+            <Button
+              styleType={{ dark: 'navy-dark', light: 'navy' }}
+              loading={false}
+              style={{
+                display: 'flex',
+                flexDirection: 'row-reverse',
+                marginTop: '10px',
+                float: 'right',
+              }}
+            >
+              Request Free NUA
+            </Button>
+          </Link>
         </span>
       );
     } else if ('VerifyProfile' in notificationContent) {
@@ -148,21 +147,20 @@ const CustomNotificationContent = ({
         <span>
           Your profile is not verified. You can verify yourself on your profile
           page.
-          <Button
-            styleType={{ dark: 'navy-dark', light: 'navy' }}
-            onClick={() => {
-              navigate('/my-profile');
-            }}
-            loading={false}
-            style={{
-              display: 'flex',
-              flexDirection: 'row-reverse',
-              marginTop: '10px',
-              float: 'right',
-            }}
-          >
-            Verify Profile
-          </Button>
+          <Link to={`/my-profile`}>
+            <Button
+              styleType={{ dark: 'navy-dark', light: 'navy' }}
+              loading={false}
+              style={{
+                display: 'flex',
+                flexDirection: 'row-reverse',
+                marginTop: '10px',
+                float: 'right',
+              }}
+            >
+              Verify Profile
+            </Button>
+          </Link>
         </span>
       );
     } else if ('TipReceived' in notificationContent) {
