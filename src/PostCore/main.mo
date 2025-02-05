@@ -205,7 +205,7 @@ actor PostCore {
         memory_allocation = null;
         compute_allocation = null;
     }}));
-};
+  };
 
   public shared ({ caller }) func updateSettingsForAllBucketCanisters() : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
@@ -1634,6 +1634,32 @@ actor PostCore {
     await PostRelationsCanister.indexPosts(Buffer.toArray(indexPostsArguments));
 
     Buffer.toArray(results);
+  };
+
+  public shared ({ caller }) func debugMembersOnlyStatusOfExistingDraftArticles() : async Result.Result<[Text], Text> {
+    if (not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    let results = Buffer.Buffer<Text>(bucketCanisterIdsHashMap.size());
+
+    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+      let bucketResult = await bucketActor.debugMembersOnlyStatusOfExistingDraftArticles();
+
+      switch(bucketResult) {
+        case(#ok(debuggedPostIds)) {
+          let msg = "Bucket " # bucketCanisterId # " members only status removed post IDs: " # debug_show(debuggedPostIds);
+          results.add(msg);
+        };
+        case (#err(error)) {
+          let msg = "Bucket " # bucketCanisterId # " error: " # error;
+          results.add(msg);
+        };
+      };
+    };
+
+    return #ok(Buffer.toArray(results));
   };
 
   //migration function for new nft canister architecture

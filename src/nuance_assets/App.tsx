@@ -367,8 +367,8 @@ function App() {
             <ModalsWrapper />
             <Routes />
           </Suspense>
+          <RenderToaster />
         </Router>
-        <RenderToaster />
       </div>
     </ModalContextProvider>
   );

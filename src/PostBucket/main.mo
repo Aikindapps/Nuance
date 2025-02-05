@@ -855,7 +855,7 @@ actor class PostBucket() = this {
     let wordCount = U.calculate_total_word_count(content);
     wordCountsHashmap.put(postId, wordCount);
 
-    if(isMembersOnly){
+    if(not isDraft and isMembersOnly){
       isMembersOnlyHashMap.put(postId, true);
     }
     else{
@@ -1648,6 +1648,30 @@ actor class PostBucket() = this {
 
     #ok(counter)
   };
+
+  // debug function to remove 'isMembersOnly = true' status of existing draft articles
+  public shared ({ caller }) func debugMembersOnlyStatusOfExistingDraftArticles() : async Result.Result<[Text], Text> {
+    if(not isAdmin(caller)){
+      return #err("Unauthorized");
+    };
+
+    let debuggedPostIds = Buffer.Buffer<Text>(isMembersOnlyHashMap.size());
+
+    // if the article is a draft remove it from isMembersOnlyHashMap
+    for (postId in isMembersOnlyHashMap.keys()) {
+        // check if the corresponding post is marked as a draft
+        switch (isDraftHashMap.get(postId)) {
+          case (?true) {
+            // if it's a draft remove it from the isMembersOnlyHashMap
+            isMembersOnlyHashMap.delete(postId);
+            debuggedPostIds.add(postId);
+          };
+          case (_) {};
+        };
+    };
+    return #ok(Buffer.toArray(debuggedPostIds));
+  };
+
   //returns the not migrated postIds
   //once the debug is done, it should return an empty array
   public shared query ({caller}) func getAllNotMigratedCreatorFields() : async [Text] {

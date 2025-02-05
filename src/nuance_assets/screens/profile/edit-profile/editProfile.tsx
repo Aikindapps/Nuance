@@ -466,19 +466,7 @@ const EditProfile = () => {
 
   if (loading || isInitializing || isLoading) {
     return (
-      <div
-        className='edit-profile-wrapper'
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          width: '100vw',
-          background: darkTheme
-            ? colors.darkModePrimaryBackgroundColor
-            : colors.primaryBackgroundColor,
-        }}
-      >
+      <div className='edit-profile-wrapper'>
         <div style={{ width: '150px' }}>
           <Loader />
         </div>

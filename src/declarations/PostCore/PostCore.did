@@ -288,6 +288,7 @@ service : {
                                         text;
                                         nat;
                                       }) query;
+  debugMembersOnlyStatusOfExistingDraftArticles: () -> (Result_8);
   debugSaveMultiplePosts: (vec PostSaveModel) -> (vec Result_4);
   delete: (text) -> (Result_3);
   deletePostFromUserDebug: (text, text) -> (Result_8);
