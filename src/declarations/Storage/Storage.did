@@ -4,6 +4,11 @@ type Validate =
    Ok: text;
  };
 type UpdateCallsAggregatedData = vec nat64;
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type Storage = 
  service {
    acceptCycles: () -> ();
@@ -19,6 +24,8 @@ type Storage =
    getNewContentId: () -> (Result);
    getPlatformOperators: () -> (List) query;
    getWasmChunks: () -> (Result_2);
+   icrc10_supported_standards: () -> (vec SupportedStandard) query;
+   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
    idQuick: () -> (principal) query;
    registerAdmin: (text) -> (Result_1);
    registerCgUser: (text) -> (Result_1);
@@ -79,6 +86,7 @@ type List =
        text;
        List;
      };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type HourlyMetricsData = 
  record {
    canisterCycles: CanisterCyclesAggregatedData;

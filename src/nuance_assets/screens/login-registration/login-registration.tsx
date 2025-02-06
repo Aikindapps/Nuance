@@ -16,6 +16,7 @@ import LoggedOutSidebar from '../../components/logged-out-sidebar/logged-out-sid
 import { getUserActor } from 'src/nuance_assets/services/actorService';
 import toast from 'react-hot-toast';
 import { toastError } from '../../services/toastService';
+import { useAuth } from '@nfid/identitykit/react';
 
 const LoginRegistration = () => {
   const [handle, setHandle] = useState('');
@@ -42,23 +43,29 @@ const LoginRegistration = () => {
   const [canvasScaled, setCanvasScaled] = useState('');
   const [hideEditor, setHideEditor] = useState(true);
 
-  const { getUser, user, unregistered, createUser, isRegistrationAllowed} = useUserStore((state) => ({
-    user: state.user,
-    unregistered: state.unregistered,
-    createUser: state.registerUser,
-    getUser: state.getUser,
-    isRegistrationAllowed: state.isRegistrationOpen
+  const { disconnect } = useAuth();
+  const {
+    agent: agentToBeUsed,
+    clearLoginMethod,
+    isLoggedIn,
+    redirectScreen,
+    logout,
+  } = useAuthStore((state) => ({
+    agent: state.agent,
+    clearLoginMethod: state.clearLoginMethod,
+    isLoggedIn: state.isLoggedIn,
+    redirectScreen: state.redirectScreen,
+    logout: state.logout,
   }));
 
-  const { clearLoginMethod, isLoggedIn, login, redirectScreen,logout  } = useAuthStore(
-    (state) => ({
-      clearLoginMethod: state.clearLoginMethod,
-      isLoggedIn: state.isLoggedIn,
-      login: state.login,
-      redirectScreen: state.redirectScreen,
-      logout: state.logout
-    })
-  );
+  const { getUser, user, unregistered, createUser, isRegistrationAllowed } =
+    useUserStore((state) => ({
+      user: state.user,
+      unregistered: state.unregistered,
+      createUser: state.registerUser,
+      getUser: state.getUser,
+      isRegistrationAllowed: state.isRegistrationOpen,
+    }));
 
   useEffect(() => {
     if (user) {
@@ -70,8 +77,8 @@ const LoginRegistration = () => {
   }, [user, unregistered, registrationError]);
 
   useEffect(() => {
-    handleRegistrationLimit()
-    getUser();
+    handleRegistrationLimit();
+    getUser(agentToBeUsed);
   }, []);
 
   useEffect(() => {
@@ -86,18 +93,19 @@ const LoginRegistration = () => {
     setTermCeckWarning(firstSave && termCheck === false);
   }, [termCheck, firstSave]);
 
-
   const handleRegistrationLimit = async () => {
-    let isAllowed =  await isRegistrationAllowed();
-    if(!isAllowed){
-      toastError("Daily user registration limit exceeded. You are being redirected to the home page.")
-      setTimeout(()=>{
-        handleCancel()
-      }, 2000)
+    let isAllowed = await isRegistrationAllowed(agentToBeUsed);
+    if (!isAllowed) {
+      toastError(
+        'Daily user registration limit exceeded. You are being redirected to the home page.'
+      );
+      setTimeout(() => {
+        handleCancel();
+      }, 2000);
     }
-    setRegistrationAllowed(isAllowed)
+    setRegistrationAllowed(isAllowed);
   };
-  console.log(registrationAllowed)
+  console.log(registrationAllowed);
   const onHandleChange = (value: string) => {
     setHandle(value);
     // console.log('value: ', value);
@@ -148,8 +156,9 @@ const LoginRegistration = () => {
 
   const handleCancel = async () => {
     clearLoginMethod();
-    await logout();
-    window.location.pathname=redirectScreen;
+    await disconnect();
+    logout();
+    window.location.pathname = redirectScreen;
   };
 
   function validate() {
@@ -188,9 +197,9 @@ const LoginRegistration = () => {
       );
 
       // create user with avatar url pointing to image in storage canister
-      createUser(handle, displayName, storageInfo.dataUrl);
+      createUser(handle, displayName, storageInfo.dataUrl, agentToBeUsed);
     } else {
-      createUser(handle, displayName, '');
+      createUser(handle, displayName, '', agentToBeUsed);
     }
   };
 
@@ -314,7 +323,7 @@ const LoginRegistration = () => {
             <div className='buttons'>
               <Button
                 type='button'
-                styleType={{dark: 'white', light: 'white'}}
+                styleType={{ dark: 'white', light: 'white' }}
                 style={{ width: '96px' }}
                 onClick={async () => {
                   await handleCancel();
@@ -324,7 +333,7 @@ const LoginRegistration = () => {
               </Button>
               <Button
                 type='button'
-                styleType={{dark: 'navy', light: 'navy'}}
+                styleType={{ dark: 'navy', light: 'navy' }}
                 style={{ width: '96px', alignSelf: 'center' }}
                 onClick={onRegister}
               >
@@ -335,7 +344,7 @@ const LoginRegistration = () => {
         </div>
       ) : (
         <div>
-          <LoggedOutSidebar/>
+          <LoggedOutSidebar />
         </div>
       )}
       <div className='dividerr'></div>

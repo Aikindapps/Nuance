@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext, Suspense, lazy } from 'react';
-import { usePostStore } from './store';
+import { usePostStore, useUserStore } from './store';
 import {
   BrowserRouter as Router,
+  useLocation,
   useNavigate,
   useRoutes,
 } from 'react-router-dom';
@@ -64,6 +65,13 @@ import NotificationsSidebar from './components/notifications/notifications';
 import Subscriptions from './screens/profile/subscriptions';
 import PublicationSubscribersTab from './screens/profile/publication-subscribers-tab';
 import SubscribersTab from './screens/profile/subscribers-tab';
+import {
+  useAgent,
+  useAuth,
+  useIdentity,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
+import { Usergeek } from 'usergeek-ic-js';
 
 const Routes = () => {
   return useRoutes([
@@ -113,6 +121,7 @@ function App() {
   //handle resize on app wide
   const context = useContext(Context);
   const darkTheme = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleResize = () => {
     let width = window.outerWidth;
@@ -120,12 +129,106 @@ function App() {
     context.setWidth(width);
     context.setHeight(height);
   };
+
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
+  const {
+    isLoggedIn,
+    isInitialized,
+    isInitializedAgent,
+    agent: agentAuth,
+    setAgent,
+    setIdentity,
+    logout,
+    getUserWallet,
+    fetchTokenBalances,
+  } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    isInitialized: state.isInitialized,
+    isInitializedAgent: state.isInitializedAgent,
+    agent: state.agent,
+    setAgent: state.setAgent,
+    setIdentity: state.setIdentity,
+    logout: state.logout,
+    getUserWallet: state.getUserWallet,
+    fetchTokenBalances: state.fetchTokenBalances,
+  }));
+
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agent = useAgent({ host: customHost });
+
+  const identity = useIdentity();
+  const { user, disconnect } = useAuth();
+  const isInitializing = useIsInitializing();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agent ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agent, isLoggedIn]);
+
+  useEffect(() => {
+    if (
+      identity?.getPrincipal().toText() === '2vxsx-fae' &&
+      isLoggedIn === true
+    ) {
+      setIdentity(undefined);
+      useAuthStore.setState({ isLoggedIn: false });
+    }
+  });
+
+  useEffect(() => {
+    !isInitializing && identity && setIdentity(identity);
+  }, [identity, isInitializing]);
+
+  useEffect(() => {
+    if (!isInitializing && agent) {
+      setAgent(agent);
+      useAuthStore.setState({ isInitializedAgent: true });
+    }
+  }, [agent, isInitializing]);
+
+  useEffect(() => {
+    const executeFetchTokenBalances = async () => {
+      if (!agent && !isLoggedIn && !isInitializing) {
+        return;
+      }
+      // we know the user is connected
+      if (agent && !isInitializing) {
+        const loggedUser = await useUserStore.getState().getUser(agent);
+
+        if (loggedUser === undefined && !isInitialized && !isInitializing) {
+          useAuthStore.setState({ isInitialized: true });
+          window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          await getUserWallet();
+          await fetchTokenBalances();
+        }
+      }
+
+      // track session with usergeek
+      Usergeek.setPrincipal(identity?.getPrincipal());
+      Usergeek.trackSession();
+      Usergeek.flush();
+    };
+
+    executeFetchTokenBalances();
+  }, [agent, isInitializing]);
+
   useEffect(() => {
     window.addEventListener('resize', handleResize);
-    fetchTokenBalances();
     handleResize();
     setTimeout(handleResize, 200);
   }, []);
+
+  useEffect(() => {
+    if (agent && identity && !isInitializing) {
+      fetchTokenBalances();
+    }
+  }, [agent, identity, isInitializing]);
 
   useEffect(() => {
     document.body.style.backgroundColor = darkTheme
@@ -140,16 +243,10 @@ function App() {
     //30 days in milliseconds
     43200 * 60 * 1_000;
 
-
-  const { isLoggedIn, logout, fetchTokenBalances } = useAuthStore((state) => ({
-    isLoggedIn: state.isLoggedIn,
-    logout: state.logout,
-    fetchTokenBalances: state.fetchTokenBalances,
-  }));
-
-  const onIdle = () => {
+  const onIdle = async () => {
     console.log('Idle: ' + new Date());
     if (isLoggedIn) {
+      await disconnect();
       logout();
       console.log('Logged out: ' + new Date());
       window.location.href = '/timed-out';
@@ -170,10 +267,44 @@ function App() {
 
     authChannel.onmessage = handleMessage;
 
-    return () => {
+    /* return () => {
       authChannel.close();
-    };
+    }; */
   }, []);
+
+  // migrating to identitykit condition
+  // this condition will be true for the users whose sessions are still alive after deployment
+  // will be true once and then won't be used anymore
+  // can be deleted 30 days after deployment of identitykit because max session time is 30 days.
+  if (
+    !useAuthStore.getState().agent &&
+    !useAuthStore.getState().identity &&
+    isLoggedIn &&
+    isInitialized
+  ) {
+    disconnect();
+    logout();
+    window.location.reload();
+  }
+
+  if (isLoading || isInitializing) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+          background: darkTheme
+            ? colors.darkModePrimaryBackgroundColor
+            : colors.primaryBackgroundColor,
+        }}
+      >
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <ModalContextProvider>
@@ -236,8 +367,8 @@ function App() {
             <ModalsWrapper />
             <Routes />
           </Suspense>
+          <RenderToaster />
         </Router>
-        <RenderToaster />
       </div>
     </ModalContextProvider>
   );

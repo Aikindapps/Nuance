@@ -1,24 +1,160 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import reportWebVitals from './reportWebVitals';
+import { createRoot } from 'react-dom/client';
 import { Usergeek } from 'usergeek-ic-js';
 import { ContextProvider } from './contextes/Context';
 import { ThemeProvider } from './contextes/ThemeContext';
+import { IdentityKitAuthType, MockedSigner } from '@nfid/identitykit';
+import { IdentityKitProvider } from '@nfid/identitykit/react';
+import '@nfid/identitykit/react/styles.css';
+import { NFIDW, Plug, InternetIdentity } from '@nfid/identitykit';
 
 import './index.scss';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 import App from './App';
+import { getAllTargetCanisterIds } from './services/actorService';
+import Loader from './UI/loader/Loader';
+import { useAuthStore } from './store';
+import { Principal } from '@dfinity/principal';
+import { authChannel } from './store/authStore';
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container!);
+
+const MainApp = () => {
+  const [targetCanisters, setTargetCanisters] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchTargets = async () => {
+      try {
+        const targetCanisterIds = await getAllTargetCanisterIds();
+        setTargetCanisters(targetCanisterIds);
+      } catch (error) {
+        console.error('Error fetching target canister IDs:', error);
+        setTargetCanisters(['']); // provide a fallback
+      }
+    };
+
+    fetchTargets();
+  }, []);
+
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
+  //check derivation origin is PROD or UAT
+  const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
+  const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
+  const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+
+  const derivationOrigin: string = window.location.origin.includes(
+    NuanceUATCanisterId
+  )
+    ? NuanceUAT
+    : NuancePROD;
+
+  const sessionTimeout: BigInt = //process.env.II_SESSION_TIMEOUT
+    //   ? // configuration is in minutes, but API expects nanoseconds
+    //     BigInt(process.env.II_SESSION_TIMEOUT) * BigInt(60) * BigInt(1_000_000_000)
+    //   : // default = 8 hours
+
+    //30 days in nanoseconds
+    BigInt(480) * BigInt(60) * BigInt(1000000000) * BigInt(91);
+
+  const mockedSignerProvider = 'http://localhost:3003';
+
+  let allSigners;
+
+  if (isLocal) {
+    allSigners = [
+      NFIDW,
+      Plug,
+      {
+        ...InternetIdentity,
+        providerUrl:
+          'http://qhbym-qaaaa-aaaaa-aaafq-cai.localhost:8080/#authorize',
+      },
+      { ...MockedSigner, providerUrl: mockedSignerProvider },
+    ];
+  } else {
+    allSigners = [NFIDW, Plug, InternetIdentity];
+  }
+
+  if (targetCanisters.length === 0) {
+    // show a loading state while fetching the targets
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
+        <Loader />
+      </div>
+    );
+  }
+
+  return (
+    <IdentityKitProvider
+      authType={IdentityKitAuthType.DELEGATION}
+      signers={allSigners}
+      signerClientOptions={{
+        targets: targetCanisters,
+        maxTimeToLive: sessionTimeout,
+        idleOptions: {
+          disableIdle: true,
+        },
+        derivationOrigin: isLocal
+          ? window.location.origin.includes('exwqn-uaaaa-aaaaf-qaeaa-cai')
+            ? 'http://exwqn-uaaaa-aaaaf-qaeaa-cai.localhost:8080'
+            : 'http://localhost:8081'
+          : derivationOrigin,
+      }}
+      onConnectSuccess={() => {
+        useAuthStore.setState({ isLoggedIn: true });
+        authChannel.postMessage({ type: 'login', date: new Date() });
+        console.log('CONNECTED...');
+      }}
+      onDisconnect={() => {
+        Usergeek.setPrincipal(Principal.anonymous());
+        useAuthStore.setState({
+          isLoggedIn: false,
+          agent: undefined,
+          identity: undefined,
+          isInitialized: false,
+        });
+        console.log('Logged out: ' + new Date());
+      }}
+      onConnectFailure={(e: Error) => {
+        useAuthStore.setState({
+          isLoggedIn: false,
+          agent: undefined,
+          identity: undefined,
+          isInitialized: false,
+          loginMethod: undefined,
+        });
+        window.location.reload();
+        console.warn(Error);
+      }}
+    >
+      <ContextProvider>
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </ContextProvider>
+    </IdentityKitProvider>
+  );
+};
+
+root.render(
   <React.StrictMode>
-    <ContextProvider>
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>
-    </ContextProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+    <MainApp />
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
@@ -41,5 +177,5 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   Usergeek.init({ apiKey: userGeekSecondaryApiKey });
   console.log('usergeek init in prod mode');
-  console.log(`fully decentralized :)`)
+  console.log(`fully decentralized :)`);
 }

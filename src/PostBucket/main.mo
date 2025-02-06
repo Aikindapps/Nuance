@@ -26,6 +26,7 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../shared/env";
 import Sonic "../shared/sonic";
+import TypesStandards "../shared/TypesStandards";
 
 actor class PostBucket() = this {
   let canistergeekMonitor = Canistergeek.Monitor();
@@ -89,6 +90,10 @@ actor class PostBucket() = this {
 
   //applaud types
   type Applaud = Types.Applaud;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
@@ -850,7 +855,7 @@ actor class PostBucket() = this {
     let wordCount = U.calculate_total_word_count(content);
     wordCountsHashmap.put(postId, wordCount);
 
-    if(isMembersOnly){
+    if(not isDraft and isMembersOnly){
       isMembersOnlyHashMap.put(postId, true);
     }
     else{
@@ -1643,6 +1648,30 @@ actor class PostBucket() = this {
 
     #ok(counter)
   };
+
+  // debug function to remove 'isMembersOnly = true' status of existing draft articles
+  public shared ({ caller }) func debugMembersOnlyStatusOfExistingDraftArticles() : async Result.Result<[Text], Text> {
+    if(not isAdmin(caller)){
+      return #err("Unauthorized");
+    };
+
+    let debuggedPostIds = Buffer.Buffer<Text>(isMembersOnlyHashMap.size());
+
+    // if the article is a draft remove it from isMembersOnlyHashMap
+    for (postId in isMembersOnlyHashMap.keys()) {
+        // check if the corresponding post is marked as a draft
+        switch (isDraftHashMap.get(postId)) {
+          case (?true) {
+            // if it's a draft remove it from the isMembersOnlyHashMap
+            isMembersOnlyHashMap.delete(postId);
+            debuggedPostIds.add(postId);
+          };
+          case (_) {};
+        };
+    };
+    return #ok(Buffer.toArray(debuggedPostIds));
+  };
+
   //returns the not migrated postIds
   //once the debug is done, it should return an empty array
   public shared query ({caller}) func getAllNotMigratedCreatorFields() : async [Text] {
@@ -3347,6 +3376,19 @@ private func updateCommentQueue(commentId : Text, action : CommentQueueAction) :
     return #ok(buildApplaud(applaudId));
   };
 
+  //#region trusted origin
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //#region System Hooks
 

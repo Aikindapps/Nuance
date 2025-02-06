@@ -18,6 +18,7 @@ import {
   Comment,
   SaveCommentModel,
 } from '../../declarations/PostBucket/PostBucket.did';
+import { Agent } from '@dfinity/agent';
 
 export enum DateFormat {
   // Sep 16
@@ -183,10 +184,10 @@ const hexToRgb = (hex: string) => {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    }
     : null;
 };
 
@@ -216,7 +217,6 @@ export const trim_category_name = (name: string) => {
 
 export const hexShade = (hex: string) => {
   var rgb = hexToRgb(hex);
-  console.log(rgb);
   if (rgb) {
     rgb.r = rgb.r * 0.8;
     rgb.g = rgb.g * 0.8;
@@ -321,7 +321,8 @@ export const getFieldsFromMetadata = (metadata: Metadata) => {
 
 export const convertImagesToUrls = async (
   content: string,
-  postImage: string
+  postImage: string,
+  agent?: Agent
 ): Promise<{ headerUrl: string; contentWithUrls: string } | null> => {
   let headerUrl = postImage;
   // returns null if the header image is already a URL
@@ -349,7 +350,7 @@ export const convertImagesToUrls = async (
   if (errorImageName) {
     toast(
       `${errorImageName} exceeded the maximum image size of ` +
-        `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
+      `${(maxMessageSize / 1024 / 1024).toFixed(3)} MBs after compression.`,
       ToastType.Error
     );
 
@@ -360,10 +361,10 @@ export const convertImagesToUrls = async (
   // Each call to the canister is 2 seconds, so the header image + 2 content images
   // will take 6 seconds just to get content ids, before uploading begins.
   if (headerImage) {
-    headerImage.contentId = await getNewContentId();
+    headerImage.contentId = await getNewContentId(agent);
   }
   for (let image of images) {
-    image.contentId = await getNewContentId();
+    image.contentId = await getNewContentId(agent);
   }
 
   const promises = images.map((image) =>
@@ -372,7 +373,8 @@ export const convertImagesToUrls = async (
       image.blob.size,
       image.mimeType,
       image.index.toString(),
-      image.contentId
+      image.contentId,
+      agent
     )
   );
 
@@ -383,7 +385,8 @@ export const convertImagesToUrls = async (
         headerImage.blob.size,
         headerImage.mimeType,
         '-1', // indicates header
-        headerImage.contentId
+        headerImage.contentId,
+        agent
       )
     );
   }
@@ -462,33 +465,13 @@ export const getPriceBetweenTokens = (
   token1Symbol: 'ICP' | 'ckBTC' | 'NUA' | 'ckUSDC',
   amount: number
 ): number => {
-  console.log(
-    'here is the arguments: ',
-    tokenPrices,
-    token0Symbol,
-    token1Symbol,
-    amount
-  );
   if (token0Symbol === token1Symbol) {
-    console.log('here is the result 0 : ', amount);
     return amount;
   }
   if (token0Symbol === 'ICP') {
     let oneIcpEquivelance = tokenPrices.find((value) => {
       return value.tokenSymbol === token1Symbol;
     })?.icpEquivalence as number;
-    console.log(
-      'here is the arguments: ',
-      tokenPrices,
-      token0Symbol,
-      token1Symbol,
-      amount
-    );
-    console.log(
-      'here is the result 1 : ',
-      (amount * oneIcpEquivelance) /
-        Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))
-    );
     return (
       (amount * oneIcpEquivelance) /
       Math.pow(10, getDecimalsByTokenSymbol(token1Symbol))
@@ -499,19 +482,13 @@ export const getPriceBetweenTokens = (
         return value.tokenSymbol === token0Symbol;
       })?.icpEquivalence as number) /
       Math.pow(10, getDecimalsByTokenSymbol(token0Symbol));
-    console.log('token0IcpEquivelance: ', token0IcpEquivelance);
     let token1IcpEquivelance =
       token1Symbol === 'ICP'
         ? 1
         : (tokenPrices.find((value) => {
-            return value.tokenSymbol === token1Symbol;
-          })?.icpEquivalence as number) /
-          Math.pow(10, getDecimalsByTokenSymbol(token1Symbol));
-    console.log('token1IcpEquivelance: ', token1IcpEquivelance);
-    console.log(
-      'here is the result 2 : ',
-      (amount * token1IcpEquivelance) / token0IcpEquivelance
-    );
+          return value.tokenSymbol === token1Symbol;
+        })?.icpEquivalence as number) /
+        Math.pow(10, getDecimalsByTokenSymbol(token1Symbol));
     return amount * (token1IcpEquivelance / token0IcpEquivelance);
   }
 };

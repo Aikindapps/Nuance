@@ -61,6 +61,8 @@ function PublicationLanding() {
     redirectScreen: state.redirectScreen,
   }));
 
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
+
   const {
     user,
     getUser,
@@ -291,7 +293,7 @@ function PublicationLanding() {
     window.scrollTo(0, 0);
     const handleName = getPublicationHandleFromUrl();
     clearAll();
-    getUser();
+    getUser(agentToBeUsed);
     setPublicationHandle(handleName);
     getPublication(handleName);
     getAuthor(handleName);

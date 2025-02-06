@@ -19,6 +19,19 @@ import Loader from '../../UI/loader/Loader';
 import SearchResults from '../../components/search-results/search-results';
 import Dropdown from '../../UI/dropdown/dropdown';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
+import {
+  useAccounts,
+  useAgent,
+  useAuth,
+  useBalance,
+  useDelegationType,
+  useIdentity,
+  useSigner,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
+import { NFIDW, Plug, InternetIdentity, MockedSigner } from '@nfid/identitykit';
+import { authChannel } from '../../store/authStore';
+import { Usergeek } from 'usergeek-ic-js';
 
 const HomePage = () => {
   //darkTheme
@@ -30,6 +43,8 @@ const HomePage = () => {
   //location
   const location = useLocation();
 
+  //const [isLoading, setIsLoading] = useState(false);
+
   const [screenWidth, setScreenWidth] = useState(0);
   useEffect(
     (window.onresize = window.onload =
@@ -39,15 +54,44 @@ const HomePage = () => {
     [screenWidth]
   );
 
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
+  const { connect } = useAuth();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
+  const isInitializing = useIsInitializing();
+
   //authStore
-  const { isLoggedIn, login } = useAuthStore((state) => ({
+  const {
+    agent,
+    getUserWallet,
+    fetchTokenBalances,
+    identity: identity,
+    isLoggedIn,
+    isInitialized,
+  } = useAuthStore((state) => ({
+    agent: state.agent,
+    getUserWallet: state.getUserWallet,
+    fetchTokenBalances: state.fetchTokenBalances,
+    identity: state.identity,
     isLoggedIn: state.isLoggedIn,
-    login: state.login,
+    isInitialized: state.isInitialized,
   }));
+
+  const [isLoading, setIsLoading] = useState(false);
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   //userStore
-  const { user, searchUsers, searchPublications, getCounts, counts } =
+  const { user, getUser, searchUsers, searchPublications, getCounts, counts } =
     useUserStore((state) => ({
       user: state.user,
+      getUser: state.getUser,
       searchUsers: state.searchUsers,
       searchPublications: state.searchPublications,
       getCounts: state.getUserPostCounts,
@@ -75,6 +119,42 @@ const HomePage = () => {
     getAllTags: state.getAllTags,
     search: state.search,
   }));
+
+  const connectFunction = (id: string) => {
+    if (isInitializing) {
+      return;
+    }
+    connect(id);
+    authChannel.postMessage({ type: 'login', date: new Date() });
+  };
+
+  useEffect(() => {
+    const executeFetchTokenBalances = async () => {
+      if (!agentIk && !isLoggedIn && !isInitializing) {
+        return;
+      }
+      // we know the user is connected
+      if (agentIk && !isInitializing) {
+        const loggedUser = await getUser(agentIk);
+
+        if (loggedUser === undefined && !isInitialized && !isInitializing) {
+          useAuthStore.setState({ isInitialized: true });
+          window.location.href = '/register';
+        } else {
+          //user fetched successfully, get the token balances
+          const userWallet = await getUserWallet();
+          await fetchTokenBalances();
+        }
+      }
+
+      // track session with usergeek
+      Usergeek.setPrincipal(identity?.getPrincipal());
+      Usergeek.trackSession();
+      Usergeek.flush();
+    };
+
+    executeFetchTokenBalances();
+  }, [agentIk, isInitializing]);
 
   const [selectedTab, setSelectedTab] = useState(
     isLoggedIn || window.location.search !== '' ? 'Articles' : 'About'
@@ -261,7 +341,8 @@ const HomePage = () => {
     const { posts, totalCount } = await getPostsByFollowers(
       user?.followersArray || [],
       start,
-      end
+      end,
+      agent
     );
     if (initial) {
       setWritersPosts(posts);
@@ -303,7 +384,7 @@ const HomePage = () => {
   const loadPopularPostsToday = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsToday(start, end);
+    const { posts, totalCount } = await getPopularPostsToday(start, end, agent);
     if (initial) {
       setTodayPosts(posts);
     } else {
@@ -318,7 +399,11 @@ const HomePage = () => {
   const loadPopularPostsThisWeek = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisWeek(start, end);
+    const { posts, totalCount } = await getPopularPostsThisWeek(
+      start,
+      end,
+      agent
+    );
     if (initial) {
       setThisWeekPosts(posts);
     } else {
@@ -333,7 +418,11 @@ const HomePage = () => {
   const loadPopularPostsThisMonth = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPostsThisMonth(start, end);
+    const { posts, totalCount } = await getPopularPostsThisMonth(
+      start,
+      end,
+      agent
+    );
     if (initial) {
       setThisMonthPosts(posts);
     } else {
@@ -348,7 +437,7 @@ const HomePage = () => {
   const loadPopularPostsEver = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getPopularPosts(start, end);
+    const { posts, totalCount } = await getPopularPosts(start, end, agent);
     if (initial) {
       setEverPopularPosts(posts);
     } else {
@@ -364,7 +453,7 @@ const HomePage = () => {
   const loadLatestPosts = async (page: number, initial: boolean) => {
     const start = initial ? 0 : page * 15;
     const end = (page + 1) * 15;
-    const { posts, totalCount } = await getLatestPosts(start, end);
+    const { posts, totalCount } = await getLatestPosts(start, end, agent);
     if (initial) {
       setLatestPosts(posts);
     } else {
@@ -583,6 +672,14 @@ const HomePage = () => {
       : colors.primaryTextColor,
   };
 
+  if (isLoading && isInitializing) {
+    return (
+      <div className='homepage'>
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div className='homepage'>
       <Header
@@ -650,10 +747,16 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('NFID');
+                      if (!isLocal) {
+                        connectFunction(NFIDW.id);
+                        useAuthStore.setState({ loginMethod: 'NFID' });
+                      } else {
+                        connectFunction(MockedSigner.id);
+                        useAuthStore.setState({ loginMethod: 'mocked' });
+                      }
                     }}
                   >
-                    Google
+                    {isLocal ? 'Mocked Signer' : 'Google'}
                   </Button>
                   <a
                     className='login-info-text'
@@ -669,7 +772,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
+                      connectFunction(InternetIdentity.id);
+                      useAuthStore.setState({ loginMethod: 'ii' });
                     }}
                   >
                     Internet Identity
@@ -698,7 +802,10 @@ const HomePage = () => {
       </div>
       <div className='join-revolution-mobile'>
         <div className='nuance-logo-blue-text'>
-          <img className='image-container' src={images.NUANCE_LOGO_BLACK_TEXT} />
+          <img
+            className='image-container'
+            src={images.NUANCE_LOGO_BLACK_TEXT}
+          />
         </div>
         {!isLoggedIn && (
           <div className='login-options-mobile-wrapper'>
@@ -713,7 +820,8 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    login('NFID');
+                    connectFunction(NFIDW.id);
+                    useAuthStore.setState({ loginMethod: 'NFID' });
                   }}
                 >
                   Google
@@ -732,7 +840,8 @@ const HomePage = () => {
                   type='button'
                   style={{ width: '176px', margin: '0' }}
                   onClick={() => {
-                    login('ii');
+                    connectFunction(InternetIdentity.id);
+                    useAuthStore.setState({ loginMethod: 'ii' });
                   }}
                 >
                   Internet Identity
@@ -835,7 +944,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('NFID');
+                  connectFunction(NFIDW.id);
+                  useAuthStore.setState({ loginMethod: 'NFID' });
                 }}
               >
                 Login with Google
@@ -846,7 +956,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('ii');
+                  connectFunction(InternetIdentity.id);
+                  useAuthStore.setState({ loginMethod: 'ii' });
                 }}
               >
                 Login with Internet Identity
@@ -916,7 +1027,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('NFID');
+                  connectFunction(NFIDW.id);
+                  useAuthStore.setState({ loginMethod: 'NFID' });
                 }}
               >
                 Login with Google
@@ -927,7 +1039,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('ii');
+                  connectFunction(InternetIdentity.id);
+                  useAuthStore.setState({ loginMethod: 'ii' });
                 }}
               >
                 Login with Internet Identity
@@ -999,7 +1112,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('NFID');
+                  connectFunction(NFIDW.id);
+                  useAuthStore.setState({ loginMethod: 'NFID' });
                 }}
               >
                 Login with Google
@@ -1010,7 +1124,8 @@ const HomePage = () => {
                 style={{ width: '224px' }}
                 styleType={{ dark: 'navy-dark', light: 'navy' }}
                 onClick={() => {
-                  login('ii');
+                  connectFunction(InternetIdentity.id);
+                  useAuthStore.setState({ loginMethod: 'ii' });
                 }}
               >
                 Login with Internet Identity
@@ -1114,10 +1229,10 @@ const HomePage = () => {
                   establish their own identity on the platform.
                 </span>
                 <span>
-                  Log in with Google or Internet Identity (or Stoic or
-                  Bitfinity) and join Nuance today to experience the future of
-                  decentralized publishing. Where creators are empowered,
-                  content is secure, and communities thrive.
+                  Log in with Google or Internet Identity (or Plug) and join
+                  Nuance today to experience the future of decentralized
+                  publishing. Where creators are empowered, content is secure,
+                  and communities thrive.
                 </span>
               </div>
             </div>
@@ -1136,7 +1251,8 @@ const HomePage = () => {
                   style={{ width: '224px' }}
                   styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
-                    login('NFID');
+                    connectFunction(NFIDW.id);
+                    useAuthStore.setState({ loginMethod: 'NFID' });
                   }}
                 >
                   Login with Google
@@ -1147,7 +1263,8 @@ const HomePage = () => {
                   style={{ width: '224px' }}
                   styleType={{ dark: 'navy-dark', light: 'navy' }}
                   onClick={() => {
-                    login('ii');
+                    connectFunction(InternetIdentity.id);
+                    useAuthStore.setState({ loginMethod: 'ii' });
                   }}
                 >
                   Login with Internet Identity
@@ -1175,19 +1292,37 @@ const HomePage = () => {
 
       {selectedTab === 'Articles' && (
         <div className='articles-section-wrapper'>
-          {isLoggedIn && user ? (
+          {!user && isLoggedIn ? (
+            <div className='left'>
+              <Loader />
+            </div>
+          ) : isLoggedIn && user ? (
             <div className='left'>
               <div className='user-info'>
                 <img
                   className='avatar'
                   src={user.avatar || images.DEFAULT_AVATAR}
                   loading='lazy'
-                  style={user?.isVerified ? {
-                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-                    padding: "0.15em",
-                   } : {borderRadius: "50%"}}
+                  style={
+                    user?.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.15em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
                 />
-                <div className='display-name'>{user.displayName} {user.isVerified && <GradientMdVerified width='16' height='16' gradientKey='left' />}</div>
+                <div className='display-name'>
+                  {user.displayName}{' '}
+                  {user.isVerified && (
+                    <GradientMdVerified
+                      width='16'
+                      height='16'
+                      gradientKey='left'
+                    />
+                  )}
+                </div>
                 <Link
                   to='/my-profile'
                   className='handle'
@@ -1281,7 +1416,11 @@ const HomePage = () => {
               <img
                 className='blue-logo'
                 style={{ filter: darkOptionsAndColors.filter }}
-                src={darkTheme ? images.NUANCE_LOGO_BLUE_TEXT : images.NUANCE_LOGO_BLACK_TEXT}
+                src={
+                  darkTheme
+                    ? images.NUANCE_LOGO_BLUE_TEXT
+                    : images.NUANCE_LOGO_BLACK_TEXT
+                }
                 loading='lazy'
               />
               <div className='blogging-to-the-people'>
@@ -1305,7 +1444,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
+                      connectFunction(InternetIdentity.id);
+                      useAuthStore.setState({ loginMethod: 'ii' });
                     }}
                   >
                     Internet Identity
@@ -1324,7 +1464,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('NFID');
+                      connectFunction(NFIDW.id);
+                      useAuthStore.setState({ loginMethod: 'NFID' });
                     }}
                   >
                     Google
@@ -1379,12 +1520,26 @@ const HomePage = () => {
                   className='avatar'
                   src={user.avatar || images.DEFAULT_AVATAR}
                   loading='lazy'
-                  style={user.isVerified ? {
-                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-                    padding: "0.15em",
-                   } : {borderRadius: "50%"}}
+                  style={
+                    user.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.15em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
                 />
-                <div className='display-name'>{user.displayName} {<GradientMdVerified width='12' height='12' gradientKey='left-mobile' />}</div>
+                <div className='display-name'>
+                  {user.displayName}{' '}
+                  {
+                    <GradientMdVerified
+                      width='12'
+                      height='12'
+                      gradientKey='left-mobile'
+                    />
+                  }
+                </div>
                 <Link
                   to='/my-profile'
                   className='handle'
@@ -1532,7 +1687,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('ii');
+                      connectFunction(InternetIdentity.id);
+                      useAuthStore.setState({ loginMethod: 'ii' });
                     }}
                   >
                     Internet Identity
@@ -1552,7 +1708,8 @@ const HomePage = () => {
                     type='button'
                     style={{ width: '176px', margin: '0' }}
                     onClick={() => {
-                      login('NFID');
+                      connectFunction(NFIDW.id);
+                      useAuthStore.setState({ loginMethod: 'NFID' });
                     }}
                   >
                     Google

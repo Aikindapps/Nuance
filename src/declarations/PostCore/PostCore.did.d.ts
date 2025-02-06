@@ -16,6 +16,9 @@ export interface GetPostsByFollowers {
   'totalCount' : string,
   'posts' : Array<PostKeyProperties__1>,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export type PopularityType = { 'month' : null } |
   { 'today' : null } |
@@ -157,6 +160,7 @@ export type Result_8 = { 'ok' : Array<string> } |
   { 'err' : string };
 export type Result_9 = { 'ok' : TagModel } |
   { 'err' : string };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export interface TagModel {
   'id' : string,
   'value' : string,
@@ -197,6 +201,7 @@ export interface _SERVICE {
   'currentId' : ActorMethod<[], bigint>,
   'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
+  'debugMembersOnlyStatusOfExistingDraftArticles' : ActorMethod<[], Result_8>,
   'debugSaveMultiplePosts' : ActorMethod<
     [Array<PostSaveModel>],
     Array<Result_4>
@@ -316,6 +321,8 @@ export interface _SERVICE {
   'getViewsByRange' : ActorMethod<[RecallOptions], bigint>,
   'getWasmChunks' : ActorMethod<[], Result_7>,
   'handleModclubMigration' : ActorMethod<[string], Result_2>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'idQuick' : ActorMethod<[], Principal>,
   'incrementApplauds' : ActorMethod<[string, bigint], undefined>,
   'indexPopular' : ActorMethod<[], undefined>,

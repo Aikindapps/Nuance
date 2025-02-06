@@ -1,6 +1,7 @@
 import Principal "mo:base/Principal";
 import CanisterIds "../../../src/shared/canisterIds";
 module {
+  public let IS_LOCAL = false;
   public let USER_CANISTER_ID = CanisterIds.USER_CANISTER_ID;
   public let POST_CORE_CANISTER_ID = CanisterIds.POST_CORE_CANISTER_ID;
   public let KINIC_ENDPOINT_CANISTER_ID = CanisterIds.KINIC_ENDPOINT_CANISTER_ID;
@@ -65,6 +66,40 @@ module {
     SNS_GOVERNANCE_CANISTER,
     CYCLES_DISPENSER_CANISTER_ID,
     PUBLICATION_MANAGEMENT_CANISTER_ID,
-  ]
+  ];
+
+  //icrc10 standards
+  public let supportedStandards = 
+    [
+      {
+          url = "https://github.com/dfinity/ICRC/blob/main/ICRCs/ICRC-10/ICRC-10.md";
+          name = "ICRC-10";
+      },
+      {
+          url = "https://github.com/dfinity/wg-identity-authentication/blob/main/topics/icrc_28_trusted_origins.md";
+          name = "ICRC-28";
+      }
+    ];
+
+  //get trusted origins
+  public func getTrustedOrigins(): [Text] {
+    if (IS_LOCAL) {
+      [
+        "http://exwqn-uaaaa-aaaaf-qaeaa-cai.localhost:8080",
+        "http://localhost:8081"
+      ]
+    } else {
+      [
+        "https://exwqn-uaaaa-aaaaf-qaeaa-cai.raw.ic0.app",
+        "https://www.nuance.xyz",
+        "https://nuance.xyz",
+        "https://distrikt.app",
+        "https://az5sd-cqaaa-aaaae-aaarq-cai.ic0.app",
+        "https://am2do-dyaaa-aaaae-aaasa-cai.ic0.app",
+        "https://distrikt.work",
+        "https://" # NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
+      ]
+    }
+  };
 
 };

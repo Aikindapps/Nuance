@@ -55,7 +55,7 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
       <div className='search-summary' style={{ marginLeft: '0' }}>
         <div className='search-count'>
           <span className='pipe'>|</span>
-          Found {props.totalCount}
+          Found {Number(props.totalCount)}
           {props.totalCount == 1 ? ' article ' : ' articles '}
           {props.searchedTag ? ' with the tag ' : ' for '}
           <span
@@ -75,7 +75,7 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
         {props.user && props.searchedTag && (
           <div className='follow'>
             <Button
-              styleType={{dark: 'white', light: 'white'}}
+              styleType={{ dark: 'white', light: 'white' }}
               type='button'
               style={{ width: '152px' }}
               onClick={() => {
@@ -101,7 +101,7 @@ const SearchList: React.FC<SearchListProps> = (props): JSX.Element => {
       {Number(props.totalCount) > props.posts.length ? (
         <div className='load-more-container'>
           <Button
-            styleType={{dark: 'white', light: 'white'}}
+            styleType={{ dark: 'white', light: 'white' }}
             style={{ width: '152px' }}
             onClick={() => props.loadMoreHandler()}
             loading={props.loadingMore}

@@ -82,6 +82,7 @@ const Subscriptions = () => {
     const modalContext = React.useContext(Context);
     const user = useUserStore((state) => state.user);
     const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+    const { agent: agentToBeUsed } = useAuthStore((state) => ({ agent: state.agent }));
     const navigate = useNavigate();
     const darkTheme = useTheme();
 
@@ -134,7 +135,7 @@ const Subscriptions = () => {
     const filteredSubscriptions = activeTab === 'active' ? subscriptions.activeSubscriptions : subscriptions.expiredSubscriptions;
 
     const openSubscriptionModal = async (subscription: any) => {
-        const principalId = await getPrincipalByHandle(subscription.userListItem.handle);
+        const principalId = await getPrincipalByHandle(subscription.userListItem.handle, agentToBeUsed);
         setSelectedSubscription(subscription);
         setPrincipalId(principalId || '');
         setModalType('Subscription');
@@ -142,7 +143,7 @@ const Subscriptions = () => {
     };
 
     const openCancelSubscriptionModal = async (subscription: any) => {
-        const principalId = await getPrincipalByHandle(subscription.userListItem.handle);
+        const principalId = await getPrincipalByHandle(subscription.userListItem.handle, agentToBeUsed);
         setSelectedSubscription(subscription);
         setPrincipalId(principalId || '');
         setModalType('cancelSubscription');

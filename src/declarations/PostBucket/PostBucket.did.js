@@ -39,6 +39,7 @@ export const idlFactory = ({ IDL }) => {
     'postId' : IDL.Text,
   });
   const Result_11 = IDL.Variant({ 'ok' : Applaud, 'err' : IDL.Text });
+  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const Result_4 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   Comment.fill(
     IDL.Record({
@@ -82,12 +83,15 @@ export const idlFactory = ({ IDL }) => {
     'comments' : IDL.Vec(Comment),
   });
   const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
-  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_10 = IDL.Variant({
     'ok' : IDL.Vec(Comment__1),
     'err' : IDL.Text,
+  });
+  const SupportedStandard = IDL.Record({ 'url' : IDL.Text, 'name' : IDL.Text });
+  const Icrc28TrustedOriginsResponse = IDL.Record({
+    'trusted_origins' : IDL.Vec(IDL.Text),
   });
   const Result_8 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const Result_7 = IDL.Variant({
@@ -189,6 +193,11 @@ export const idlFactory = ({ IDL }) => {
         [Result_11],
         [],
       ),
+    'debugMembersOnlyStatusOfExistingDraftArticles' : IDL.Func(
+        [],
+        [Result_9],
+        [],
+      ),
     'debugSetCreatorFieldAndAddPostIdToUser' : IDL.Func(
         [IDL.Text, IDL.Text],
         [Result_6],
@@ -276,6 +285,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostBucketType__1)],
         ['query'],
       ),
+    'icrc10_supported_standards' : IDL.Func(
+        [],
+        [IDL.Vec(SupportedStandard)],
+        ['query'],
+      ),
+    'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
     'initializeBucketCanister' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Vec(IDL.Text), IDL.Text],
         [Result_2],

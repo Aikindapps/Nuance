@@ -35,6 +35,16 @@ import {
 } from '../../store/subscriptionStore';
 import { set } from 'lodash';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
+import {
+  useAgent,
+  useIdentity,
+  useIsInitializing,
+} from '@nfid/identitykit/react';
+import Loader from '../../UI/loader/Loader';
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 const Profile = () => {
   const [shownMeatball, setShownMeatball] = useState(false);
@@ -55,6 +65,11 @@ const Profile = () => {
   const modalContext = useContext(ModalContext);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost });
+  const isInitializing = useIsInitializing();
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -71,14 +86,17 @@ const Profile = () => {
       : colors.accentColor,
   };
 
-  const { redirect, redirectScreen, isLoggedIn, login } = useAuthStore(
-    (state) => ({
-      isLoggedIn: state.isLoggedIn,
-      login: state.login,
-      redirect: state.redirect,
-      redirectScreen: state.redirectScreen,
-    })
-  );
+  const { agent: agentToBeUsed, isLoggedIn } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    agent: state.agent,
+  }));
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setIsLoading(false) : setIsLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
+
   const user = useUserStore((state) => state.user);
 
   const { getAuthor, getUserPostCounts, getPrincipalByHandle } = useUserStore(
@@ -115,7 +133,7 @@ const Profile = () => {
         setAuthor(authorResponse);
 
         try {
-          let principalId = await getPrincipalByHandle(handle);
+          let principalId = await getPrincipalByHandle(handle, agentToBeUsed);
           setAuthorPrincipalId(principalId);
         } catch (error) {
           console.log('Error getting principal id', error);
@@ -250,6 +268,26 @@ const Profile = () => {
     setIsSubscribed(!isSubscribed);
   };
 
+  if (isLoading || isInitializing) {
+    return (
+      <div
+        className='user-profile-wrapper'
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+          background: darkTheme
+            ? colors.darkModePrimaryBackgroundColor
+            : colors.primaryBackgroundColor,
+        }}
+      >
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <div>
       <Helmet>
@@ -354,12 +392,24 @@ const Profile = () => {
                   src={author?.avatar || images.DEFAULT_AVATAR}
                   alt='background'
                   className='profile-picture'
-                  style={author?.isVerified ? {
-                    background: "linear-gradient(to bottom, #1FDCBD, #23F295)",
-                    padding: "0.2em",
-                  } : {borderRadius: "50%"}}
+                  style={
+                    author?.isVerified
+                      ? {
+                          background:
+                            'linear-gradient(to bottom, #1FDCBD, #23F295)',
+                          padding: '0.2em',
+                        }
+                      : { borderRadius: '50%' }
+                  }
                 />
-                <p className='name'>{author?.displayName} {author?.isVerified && <div className='verified-badge'><GradientMdVerified width={'24'} height={'24'} /></div>}</p>
+                <p className='name'>
+                  {author?.displayName}{' '}
+                  {author?.isVerified && (
+                    <div className='verified-badge'>
+                      <GradientMdVerified width={'24'} height={'24'} />
+                    </div>
+                  )}
+                </p>
                 <p
                   style={
                     darkTheme
@@ -506,7 +556,7 @@ const Profile = () => {
                     displayingPosts.length && (
                     <div className='load-more-container'>
                       <Button
-                        styleType={{dark: 'white', light: 'white'}}
+                        styleType={{ dark: 'white', light: 'white' }}
                         style={{ width: '152px' }}
                         onClick={() => loadMoreHandler()}
                         loading={loadingMore}

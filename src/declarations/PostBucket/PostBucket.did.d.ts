@@ -52,6 +52,9 @@ export interface CommentsReturnType {
   'totalNumberOfComments' : string,
   'comments' : Array<Comment>,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export interface Post {
   'url' : string,
@@ -89,6 +92,7 @@ export interface PostBucket {
     [string, string, string],
     Result_11
   >,
+  'debugMembersOnlyStatusOfExistingDraftArticles' : ActorMethod<[], Result_9>,
   'debugSetCreatorFieldAndAddPostIdToUser' : ActorMethod<
     [string, string],
     Result_6
@@ -144,6 +148,8 @@ export interface PostBucket {
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
   'getUserPostIds' : ActorMethod<[string], Array<string>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeBucketCanister' : ActorMethod<
     [Array<string>, Array<string>, string],
     Result_2
@@ -292,6 +298,7 @@ export interface SaveCommentModel {
 }
 export type SaveResult = { 'ok' : PostBucketType } |
   { 'err' : string };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE extends PostBucket {}

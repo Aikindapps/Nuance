@@ -27,6 +27,9 @@ export interface HourlyMetricsData {
   'canisterMemorySize' : CanisterMemoryAggregatedData,
   'timeMillis' : bigint,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type KinicReturn = { 'ok' : Array<string> } |
   { 'err' : string };
 export type List = [] | [[string, List]];
@@ -47,6 +50,7 @@ export type Result_2 = { 'ok' : string } |
   { 'err' : string };
 export type Result_3 = { 'ok' : Array<string> } |
   { 'err' : string };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
@@ -66,6 +70,8 @@ export interface _SERVICE {
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getTrustedPrincipals' : ActorMethod<[], Result_3>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeCanister' : ActorMethod<[string], Result_2>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'registerAdmin' : ActorMethod<[string], Result>,

@@ -26,6 +26,7 @@ import Versions "../shared/versions";
 import ENV "../shared/env";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import NotificationTypes "../NotificationsV3/types";
+import TypesStandards "../shared/TypesStandards";
 
 actor User {
   let Unauthorized = "Unauthorized";
@@ -53,6 +54,10 @@ actor User {
   type UserClaimInfo = Types.UserClaimInfo;
   type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
   type VerifyResult = CanisterDeclarations.VerifyResult;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   type List<T> = List.List<T>;
 
@@ -2472,6 +2477,21 @@ actor User {
   public shared query func getCanisterVersion() : async Text {
     Versions.USER_VERSION;
   };
+
+  //#region trusted origin
+  
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //#region System Hooks
 

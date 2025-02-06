@@ -46,14 +46,11 @@ const Profile = () => {
       : colors.accentColor,
   };
 
-  const { redirect, redirectScreen, isLoggedIn, login } = useAuthStore(
-    (state) => ({
-      isLoggedIn: state.isLoggedIn,
-      login: state.login,
-      redirect: state.redirect,
-      redirectScreen: state.redirectScreen,
-    })
-  );
+  const { redirect, redirectScreen, isLoggedIn } = useAuthStore((state) => ({
+    isLoggedIn: state.isLoggedIn,
+    redirect: state.redirect,
+    redirectScreen: state.redirectScreen,
+  }));
   const user = useUserStore((state) => state.user);
 
   const {
@@ -122,7 +119,6 @@ const Profile = () => {
   useEffect(() => {
     redirect(window.location.pathname);
   }, [author]);
-
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -297,7 +293,6 @@ const Profile = () => {
               />
             </div>
 
-
             <div className='statistic'>
               <div className='stat'>
                 <p className='count'>{counts?.publishedCount || 0}</p>
@@ -332,10 +327,10 @@ const Profile = () => {
                   {counts &&
                     !loading &&
                     parseInt(counts?.publishedCount) >
-                    displayingPosts.length && (
+                      displayingPosts.length && (
                       <div className='load-more-container'>
                         <Button
-                          styleType={{dark: 'white', light: 'white'}}
+                          styleType={{ dark: 'white', light: 'white' }}
                           style={{ width: '152px' }}
                           onClick={() => loadMoreHandler()}
                           loading={loadingMore}
@@ -354,10 +349,10 @@ const Profile = () => {
                   {counts &&
                     !loading &&
                     parseInt(counts?.publishedCount) >
-                    displayingPosts.length && (
+                      displayingPosts.length && (
                       <div className='load-more-container'>
                         <Button
-                          styleType={{dark: 'white', light: 'white'}}
+                          styleType={{ dark: 'white', light: 'white' }}
                           style={{ width: '152px' }}
                           onClick={() => loadMoreHandler()}
                           loading={loadingMore}

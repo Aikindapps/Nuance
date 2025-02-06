@@ -11,6 +11,7 @@ type FollowAuthorProps = {
   Followers: Array<String> | undefined;
   user: string;
   isPublication: boolean;
+  children?: React.ReactNode;
   primaryColor?: string;
 };
 
@@ -66,7 +67,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
     <div className='followAuthor'>
       {following ? (
         <Button
-          styleType={{dark: 'white', light: 'white'}}
+          styleType={{ dark: 'white', light: 'white' }}
           type='button'
           style={
             props.isPublication
@@ -81,7 +82,7 @@ const FollowAuthor: React.FC<FollowAuthorProps> = (props): JSX.Element => {
         </Button>
       ) : (
         <Button
-          styleType={{dark: 'navy-dark', light: 'navy'}}
+          styleType={{ dark: 'navy-dark', light: 'navy' }}
           type='button'
           style={
             props.isPublication

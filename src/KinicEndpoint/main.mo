@@ -21,6 +21,7 @@ import Prim "mo:prim";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import TypesStandards "../shared/TypesStandards";
 
 actor KinicEndpoint {
   // local variables
@@ -36,6 +37,10 @@ actor KinicEndpoint {
   type List<T> = List.List<T>;
   type KinicUrls = Types.KinicUrls;
   type KinicReturn = Types.KinicReturn;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   //SNS
   public type Validate = {
@@ -299,6 +304,20 @@ actor KinicEndpoint {
   public shared query func getCanisterVersion() : async Text {
     Versions.KINICENDPOINT_VERSION;
   };
+
+  //#region trusted origin
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //Pre and post upgrades, currently here for future use if we need to store data.
   system func preupgrade() {

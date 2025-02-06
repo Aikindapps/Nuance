@@ -37,6 +37,7 @@ import OperationLog "../shared/Types";
 import ENV "../shared/env";
 import Sonic "../shared/sonic";
 import Map "mo:hashmap/Map";
+import TypesStandards "../shared/TypesStandards";
 
 
 actor PostCore {
@@ -76,6 +77,10 @@ actor PostCore {
   type DayOfWeek = Types.DayOfWeek;
   type MonthOfYear = Types.MonthOfYear;
   type DateTimeParts = Types.DateTimeParts;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   // permanent in-memory state (data types are not lost during upgrades)
   stable var admins : List.List<Text> = List.nil<Text>();
@@ -200,7 +205,7 @@ actor PostCore {
         memory_allocation = null;
         compute_allocation = null;
     }}));
-};
+  };
 
   public shared ({ caller }) func updateSettingsForAllBucketCanisters() : async Result.Result<Text, Text> {
     if (isAnonymous(caller)) {
@@ -1629,6 +1634,32 @@ actor PostCore {
     await PostRelationsCanister.indexPosts(Buffer.toArray(indexPostsArguments));
 
     Buffer.toArray(results);
+  };
+
+  public shared ({ caller }) func debugMembersOnlyStatusOfExistingDraftArticles() : async Result.Result<[Text], Text> {
+    if (not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    let results = Buffer.Buffer<Text>(bucketCanisterIdsHashMap.size());
+
+    for (bucketCanisterId in bucketCanisterIdsHashMap.keys()) {
+      let bucketActor = CanisterDeclarations.getPostBucketCanister(bucketCanisterId);
+      let bucketResult = await bucketActor.debugMembersOnlyStatusOfExistingDraftArticles();
+
+      switch(bucketResult) {
+        case(#ok(debuggedPostIds)) {
+          let msg = "Bucket " # bucketCanisterId # " members only status removed post IDs: " # debug_show(debuggedPostIds);
+          results.add(msg);
+        };
+        case (#err(error)) {
+          let msg = "Bucket " # bucketCanisterId # " error: " # error;
+          results.add(msg);
+        };
+      };
+    };
+
+    return #ok(Buffer.toArray(results));
   };
 
   //migration function for new nft canister architecture
@@ -4559,6 +4590,20 @@ private func getTagsFollowers(tagNames : [Text]) : [[Text]] {
 
     (totalDailyViews, Buffer.toArray(result));
   };
+
+  //#region trusted origin
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //#region memory management
   stable var MAX_MEMORY_SIZE = 380000000;

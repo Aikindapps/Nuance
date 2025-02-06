@@ -21,12 +21,18 @@ import Versions "../shared/versions";
 import Time "mo:base/Time";
 import Hash "mo:base/Hash";
 import ENV "../shared/env";
+import TypesStandards "../shared/TypesStandards";
 
 actor Metrics {
 
   //types
   type OperationLog = Types.OperationLog;
   type RegisteredCanister = Types.RegisteredCanister;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
+
   // local variables
   func isEq(x : Text, y : Text) : Bool { x == y };
   private func isAnonymous(caller : Principal) : Bool {
@@ -245,6 +251,20 @@ actor Metrics {
     platformOperatorsLog := Buffer.toArray(logBuffer);
     #ok();
   };
+
+  //#region trusted origin
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //Pre and post upgrades, currently here for future use if we need to store data.
   system func preupgrade() {

@@ -20,6 +20,7 @@ import Array "mo:base/Array";
 import Versions "../shared/versions";
 import ENV "../shared/env";
 import U "../shared/utils";
+import TypesStandards "../shared/TypesStandards";
 
 
 // actor Storage {
@@ -33,7 +34,9 @@ shared ({caller = initializer}) actor class Storage () = this {
     //var globalIdMap = HashMap.HashMap<Text, Nat>(5000, Text.equal, Text.hash);
     var globalIdMap = HashMap.fromIter<Text, Nat>(globalIdMapEntries.vals(), initCapacity, isEq, Text.hash);
 
-    
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
     let canistergeekMonitor = Canistergeek.Monitor();
     stable var _canistergeekMonitorUD: ? Canistergeek.UpgradeData = null;
@@ -352,6 +355,20 @@ public shared ({ caller }) func validate(input : Any) : async Validate {
     public shared query func getCanisterVersion() : async Text{
         Versions.STORAGE_VERSION;
     };
+
+    //#region trusted origin
+
+    public query func icrc10_supported_standards() : async [SupportedStandard] {
+        return ENV.supportedStandards;
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+            trusted_origins= ENV.getTrustedOrigins();
+        }
+    };
+
+    // #endregion
 
     system func preupgrade() {
         _canistergeekMonitorUD := ? canistergeekMonitor.preupgrade();

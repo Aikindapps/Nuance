@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore, useUserStore } from '../../store';
 import { icons, colors } from '../../shared/constants';
 import { useTheme } from '../../contextes/ThemeContext';
+import { useAuth } from '@nfid/identitykit/react';
 
 type ProfileMenuProps = {
   shown: boolean;
@@ -19,6 +20,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
 
   const darkTheme = useTheme();
   const darkThemeHomepage = useTheme() && window.location.pathname !== '/';
+  const { disconnect } = useAuth();
 
   const darkOptionsAndColors = {
     background: darkTheme
@@ -74,7 +76,8 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
     }
   };
 
-  const onLogOut = () => {
+  const onLogOut = async () => {
+    await disconnect();
     logout();
     window.location.href = '/';
   };
@@ -127,7 +130,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
             ? {
                 height:
                   (user
-                    ? 5 +
+                    ? 6 +
                       user?.publicationsArray.filter((val) => val.isEditor)
                         .length
                     : 180) * 36,
@@ -151,6 +154,13 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
           <Link to='/my-profile/articles'>
             <li style={{ color: darkOptionsAndColors.color }}>My articles</li>
           </Link>
+          <div className='horizontal-divider'></div>
+          <Link to='/article/new'>
+            <li style={{ color: darkOptionsAndColors.color }}>
+              Create an article
+            </li>
+          </Link>
+          <div className='horizontal-divider'></div>
           {user?.publicationsArray
             .filter((val) => val.isEditor)
             .map((publication, index) => {
@@ -165,11 +175,6 @@ const ProfileMenu: React.FC<ProfileMenuProps> = (props): JSX.Element => {
                 </Link>
               );
             })}
-          <Link to='/article/new'>
-            <li style={{ color: darkOptionsAndColors.color }}>
-              Create an article
-            </li>
-          </Link>
           <div className='horizontal-divider'></div>
           <a>
             <span onClick={onLogOut}>

@@ -15,6 +15,11 @@ type UserNotificationSettings =
    youSubscribedToAuthor: bool;
    youUnsubscribedFromAuthor: bool;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type SubscriptionTimeInterval = 
  variant {
    Annually;
@@ -247,6 +252,7 @@ type Notification =
    read: bool;
    timestamp: text;
  };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type GetUserNotificationsResponse = 
  record {
    notifications: vec Notification;
@@ -266,6 +272,8 @@ service : {
   getMemorySize: () -> (nat) query;
   getUserNotificationSettings: () -> (UserNotificationSettings) query;
   getUserNotifications: (text, text) -> (GetUserNotificationsResponse) query;
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isThereEnoughMemory: () -> (bool) query;
   markNotificationsAsRead: (vec text) -> ();
   setMaxMemorySize: (nat) -> (Result_1);

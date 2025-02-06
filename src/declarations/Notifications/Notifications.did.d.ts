@@ -6,6 +6,9 @@ export interface GetUserNotificationsResponse {
   'notifications' : Array<Notification>,
   'totalCount' : string,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export interface Notification {
   'id' : string,
   'content' : NotificationContent,
@@ -241,6 +244,7 @@ export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
   { 'Monthly' : null } |
   { 'Annually' : null };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export interface UserNotificationSettings {
   'premiumArticleSold' : boolean,
   'verifyProfile' : boolean,
@@ -277,6 +281,8 @@ export interface _SERVICE {
     [string, string],
     GetUserNotificationsResponse
   >,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'markNotificationsAsRead' : ActorMethod<[Array<string>], undefined>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,

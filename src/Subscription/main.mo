@@ -20,6 +20,7 @@ import Time "mo:base/Time";
 import Notifications "../NotificationsV3/types";
 import Versions "../shared/versions";
 import Prim "mo:prim";
+import TypesStandards "../shared/TypesStandards";
 
 actor Subscription {
     let {thash; } = Map;
@@ -77,6 +78,11 @@ actor Subscription {
         expirationDate: Int;
         subaccount: Blob;
     };
+
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
+
     //unique id for every subscription event
     stable var subscriptionEventCounter = 0;
     //the unix time of the last time the timer has been called
@@ -1192,6 +1198,19 @@ actor Subscription {
         U.arrayContains(ENV.SUBSCRIPTION_CANISTER_ADMINS, c);
     };
 
+    //#region trusted origin
+
+    public query func icrc10_supported_standards() : async [SupportedStandard] {
+        return ENV.supportedStandards;
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+            trusted_origins= ENV.getTrustedOrigins();
+        }
+    };
+
+    // #endregion
 
     //memory management
     //2GB default

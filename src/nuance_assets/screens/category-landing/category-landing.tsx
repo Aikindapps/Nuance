@@ -46,6 +46,10 @@ function CategoryLanding() {
     redirectScreen: state.redirectScreen,
   }));
 
+  const { agent: agentToBeUsed } = useAuthStore((state) => ({
+    agent: state.agent,
+  }));
+
   const {
     user,
     getUser,
@@ -106,9 +110,9 @@ function CategoryLanding() {
     if (
       publication !== undefined &&
       publication?.publicationHandle.toLowerCase() !==
-      current_location
-        .substring(13, current_location.lastIndexOf('/'))
-        .toLowerCase()
+        current_location
+          .substring(13, current_location.lastIndexOf('/'))
+          .toLowerCase()
     ) {
       setPublicationDoesNotExist(true);
     }
@@ -132,11 +136,11 @@ function CategoryLanding() {
     const categoryName = current_location.substring(
       current_location.lastIndexOf('/') + 1
     );
-    getUser();
+    getUser(agentToBeUsed);
     setPublicationHandle(handleName);
     setCategoryName(categoryName);
     getPublication(handleName);
-    getUserPostCounts(handleName);
+    getUserPostCounts(handleName, agentToBeUsed);
     getUserFollowersCount(handleName);
     loadInitial(handleName, categoryName);
     clearPostsByCategory();
@@ -379,7 +383,6 @@ function CategoryLanding() {
                   alt='publication-icon'
                   className='publication-header-icon'
                 />
-
               </span>
               <span className='at-handle'>@</span>
               {publication?.publicationHandle}

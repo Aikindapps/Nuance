@@ -27,6 +27,11 @@ type TagModel =
    id: text;
    value: text;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type Result_9 = 
  variant {
    err: text;
@@ -240,6 +245,7 @@ type List =
        text;
        List;
      };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type GetPostsByFollowers = 
  record {
    posts: vec PostKeyProperties__1;
@@ -282,6 +288,7 @@ service : {
                                         text;
                                         nat;
                                       }) query;
+  debugMembersOnlyStatusOfExistingDraftArticles: () -> (Result_8);
   debugSaveMultiplePosts: (vec PostSaveModel) -> (vec Result_4);
   delete: (text) -> (Result_3);
   deletePostFromUserDebug: (text, text) -> (Result_8);
@@ -376,6 +383,8 @@ service : {
   getViewsByRange: (RecallOptions) -> (int);
   getWasmChunks: () -> (Result_7);
   handleModclubMigration: (text) -> (Result_2);
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   idQuick: () -> (principal) query;
   incrementApplauds: (text, nat) -> ();
   indexPopular: () -> ();

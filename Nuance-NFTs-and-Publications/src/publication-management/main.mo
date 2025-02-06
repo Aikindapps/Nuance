@@ -21,6 +21,7 @@ import Array "mo:base/Array";
 import Debug "mo:base/Debug";
 import Versions "../shared/versions";
 import ENV "../../../src/shared/env";
+import TypesStandards "../shared/TypesStandards";
 
 actor class Management() = this {
 
@@ -40,6 +41,10 @@ actor class Management() = this {
     };
 
     type RegisterUserReturn = Types.RegisterUserReturn;
+
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
     //should be called once to initialize the canister
     public shared ({ caller }) func initManagementCanister() : async RegisterUserReturn {
@@ -508,6 +513,20 @@ actor class Management() = this {
     public shared query func getCanisterVersion() : async Text {
         Versions.PUBLICATIONMANAGEMENT_VERSION;
     };
+
+    //#region trusted origin
+
+    public query func icrc10_supported_standards() : async [SupportedStandard] {
+        return ENV.supportedStandards;
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+            trusted_origins= ENV.getTrustedOrigins();
+        }
+    };
+
+    // #endregion
 
     system func preupgrade() {
         publicationCanisterIdsEntries := Iter.toArray(publicationCanisterIdsHashmap.entries());

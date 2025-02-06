@@ -18,6 +18,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import Prim "mo:prim";
 import Versions "../shared/versions";
+import TypesStandards "../shared/TypesStandards";
 
 actor PostRelations {
     let {nhash; thash; } = Map;
@@ -34,6 +35,10 @@ actor PostRelations {
         totalCount: Text;
         postIds: [Text];
     };
+
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
     //key: postId, value: [key: word, value: total number of the word in the post]
     stable var postIdToWordsMap = Map.new<Text, Map.Map<Text, Nat>>();
@@ -577,6 +582,19 @@ actor PostRelations {
         ENV.isPlatformOperator(caller)
     };
 
+    //#region trusted origin
+
+    public query func icrc10_supported_standards() : async [SupportedStandard] {
+        return ENV.supportedStandards;
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+        trusted_origins= ENV.getTrustedOrigins();
+        }
+    };
+
+    // #endregion
 
     //memory management
     //2GB default

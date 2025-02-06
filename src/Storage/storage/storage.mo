@@ -107,7 +107,7 @@ public class StorageSolution(storageStableState : StorageState.DataCanisterState
 
     // dynamically install a new Bucket
     private func newEmptyBucket(): async Bucket.Bucket {
-      Cycles.add(500000000000);
+      Cycles.add(2000000000000);
       let b = await Bucket.Bucket();
       let _ = await updateCanister(b); // update canister permissions and settings
       Debug.print("new canister principal is " # debug_show(Principal.toText(Principal.fromActor(b))) );

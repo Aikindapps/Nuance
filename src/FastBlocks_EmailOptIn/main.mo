@@ -19,6 +19,7 @@ import Cycles "mo:base/ExperimentalCycles";
 import Prim "mo:prim";
 import Versions "../shared/versions";
 import ENV "../shared/env";
+import TypesStandards "../shared/TypesStandards";
 
 actor FastBlocks_EmailOptIn {
   // local variables
@@ -32,6 +33,10 @@ actor FastBlocks_EmailOptIn {
   let Unauthorized = "Unauthorized";
   let EmailAddressUnavailable = "No email address provided";
   let NotTrustedPrincipal = "Not a trusted principal, unauthorized";
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
   //SNS
   public type Validate = {
@@ -148,6 +153,20 @@ actor FastBlocks_EmailOptIn {
   public shared query func availableCycles() : async Nat {
     Cycles.balance();
   };
+
+  //#region trusted origin
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //#region memory management
   stable var MAX_MEMORY_SIZE = 380000000;

@@ -2,6 +2,9 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export interface IndexPostModel {
   'title' : string,
   'content' : string,
@@ -15,6 +18,7 @@ export interface SearchByTagsResponse {
   'postIds' : Array<string>,
   'totalCount' : string,
 }
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
@@ -23,6 +27,8 @@ export interface _SERVICE {
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getRelatedPosts' : ActorMethod<[string], Array<string>>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'indexPost' : ActorMethod<[IndexPostModel], undefined>,
   'indexPosts' : ActorMethod<[Array<IndexPostModel>], undefined>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,

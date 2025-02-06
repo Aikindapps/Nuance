@@ -37,6 +37,7 @@ import Prim "mo:prim";
 import CanisterDeclarations "../../../src/shared/CanisterDeclarations";
 import Versions "../shared/versions";
 import ENV "../../../src/shared/env";
+import TypesStandards "../shared/TypesStandards";
 
 actor class Publisher() = this {
 
@@ -95,6 +96,10 @@ actor class Publisher() = this {
         to : AccountIdentifier;
         created_at_time : ?TimeStamp;
     };
+
+    //icrc standards types
+    type SupportedStandard = TypesStandards.SupportedStandard;
+    type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
 
     // local variables
     let canistergeekMonitor = Canistergeek.Monitor();
@@ -1733,6 +1738,18 @@ actor class Publisher() = this {
     };
 
     //#endregion
+
+    //#region trusted origin
+
+    public query func icrc10_supported_standards() : async [SupportedStandard] {
+        return ENV.supportedStandards;
+    };
+
+    public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+        return {
+            trusted_origins= ENV.getTrustedOrigins();
+        }
+    };
 
     //#Pre and post upgrades,
     system func preupgrade() {

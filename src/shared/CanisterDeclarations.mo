@@ -494,6 +494,7 @@ module{
         migratePremiumArticleFromOldArch : query (postId: Text, price: ?Nat) -> async Result.Result<Text, Text>;
         getPost : query (postId : Text) -> async Result.Result<PostBucketType, Text>;
         getUserPostIds : query (principalId: Text) -> async [Text];
+        debugMembersOnlyStatusOfExistingDraftArticles : () -> async Result.Result<[Text], Text>;
     };
 
     public func getPostBucketCanister(canisterId: Text) : PostBucketCanisterInterface {

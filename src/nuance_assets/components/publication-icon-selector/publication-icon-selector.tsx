@@ -19,7 +19,7 @@ interface PublicationIconSelectorProps {
 
   mobile: boolean;
   style?: any;
-  isActive: boolean
+  isActive: boolean;
 }
 
 const PublicationIconSelector: React.FC<PublicationIconSelectorProps> = ({
@@ -31,7 +31,7 @@ const PublicationIconSelector: React.FC<PublicationIconSelectorProps> = ({
   backgroundColor,
   mobile,
   style,
-  isActive
+  isActive,
 }) => {
   const handleFindIcon = (iconName: string) => {
     const icon = ctaIcons.find((i) => i.name === iconName);
@@ -53,10 +53,9 @@ const PublicationIconSelector: React.FC<PublicationIconSelectorProps> = ({
   const [showList, setShowList] = useState(false);
 
   const toggleList = () => {
-    if(isActive){
+    if (isActive) {
       setShowList(!showList);
     }
-    
   };
 
   const darkOptionsAndColors = {
@@ -71,7 +70,7 @@ const PublicationIconSelector: React.FC<PublicationIconSelectorProps> = ({
       style={{
         color: darkOptionsAndColors.color,
         background: darkOptionsAndColors.background,
-        ...style
+        ...style,
       }}
     >
       <div
@@ -83,14 +82,16 @@ const PublicationIconSelector: React.FC<PublicationIconSelectorProps> = ({
       >
         {/* if icon is of type string find it first to convert */}
         <div className='icon-input' style={{ cursor: 'pointer' }}>
-          <FontAwesomeIcon
-            icon={
-              publicationIcon
-                ? (handleFindIcon(publicationIcon) as IconDefinition)
-                : (icon as IconDefinition)
-            }
-            size={'2x'}
-          />
+          {handleFindIcon(publicationIcon) && (
+            <FontAwesomeIcon
+              icon={
+                publicationIcon
+                  ? (handleFindIcon(publicationIcon) as IconDefinition)
+                  : (icon as IconDefinition)
+              }
+              size={'2x'}
+            />
+          )}
           <FontAwesomeIcon
             icon={faAngleDown}
             size={'sm'}

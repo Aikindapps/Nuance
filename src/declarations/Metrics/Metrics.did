@@ -3,6 +3,11 @@ type Validate =
    Err: text;
    Ok: text;
  };
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
 type Result_3 = 
  variant {
    err: text;
@@ -34,6 +39,7 @@ type List =
        text;
        List;
      };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
@@ -44,6 +50,8 @@ service : {
   getNuanceCanisters: () -> (Result_2) query;
   getPlatformOperators: () -> (List) query;
   getPlatformOperatorsLog: () -> (Result_3) query;
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   initNuanceCanisters: () -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
   logCommand: (text, text) -> (Result);

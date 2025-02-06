@@ -26,6 +26,7 @@ import { removeDuplicatesFromArray } from '../shared/utils';
 import { NavigateFunction } from 'react-router-dom';
 import { requestVerifiablePresentation, VerifiablePresentationResponse } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
 import { Principal } from '@dfinity/principal';
+import { Agent } from '@dfinity/agent';
 
 const Err = 'err';
 const Unexpected = 'Unexpected error: ';
@@ -34,7 +35,7 @@ const UserNotFound = 'User not found';
 //check derivation origin is PROD or UAT
 const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
+const NuancePROD = 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app';
 
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
@@ -57,6 +58,8 @@ const handleError = (err: any, preText?: string) => {
     toastError(err, preText);
   }
 };
+
+const agentToBeUsed = useAuthStore?.getState().agent;
 
 export function levenshteinDistance(a: string, b: string) {
   const an = a.length;
@@ -114,12 +117,13 @@ const findSimilarHandles = (input: string, handles: string[]) => {
 };
 
 const mergeUsersWithNumberOfPublishedArticles = async (
-  input: UserListItem[]
+  input: UserListItem[],
+  agent?: Agent
 ): Promise<UserListItem[]> => {
   let handles = input.map((el) => {
     return el.handle.toLowerCase();
   });
-  let postCoreActor = await getPostCoreActor();
+  let postCoreActor = await getPostCoreActor(agent);
   let response = await postCoreActor.getUsersPostCountsByHandles(handles);
   return input.map((el, index) => {
     return { ...el, postCounts: response[index] };
@@ -127,13 +131,14 @@ const mergeUsersWithNumberOfPublishedArticles = async (
 };
 
 const mergePublicationsWithNumberOfPublishedArticlesAndUserListItem = async (
-  input: PublicationType[]
+  input: PublicationType[],
+  agent?: Agent
 ): Promise<PublicationType[]> => {
   let handles = input.map((el) => {
     return el.publicationHandle.toLowerCase();
   });
-  let postCoreActor = await getPostCoreActor();
-  let userActor = await getUserActor();
+  let postCoreActor = await getPostCoreActor(agent);
+  let userActor = await getUserActor(agent);
   let [responsePostCounts, responseUserListItems] = await Promise.all([
     postCoreActor.getUsersPostCountsByHandles(handles),
     userActor.getUsersByHandles(handles),
@@ -219,73 +224,84 @@ export interface UserStore {
   readonly unreadNotificationCount: number;
   readonly notificationsToasted: string[];
   readonly linkedPrincipal: string;
+  readonly loadingUser: boolean;
+  readonly loadingUserNotifications: boolean;
 
   registerUser: (
     handle: string,
     displayName: string,
-    avatar: string
+    avatar: string,
+    agent?: Agent
   ) => Promise<void>;
-  isRegistrationOpen: () => Promise<boolean>;
-  getUser: () => Promise<UserType | undefined>;
-  getAuthor: (handle: string) => Promise<UserType | undefined>;
-  getAllUsersHandles: () => Promise<string[]>;
-  getAllPublicationsHandles: () => Promise<[string, string][]>;
-  getHandlesByPrincipals: (principals: string[]) => Promise<string[]>;
-  searchUsers: (input: string) => Promise<UserListItem[]>;
-  searchPublications: (input: string) => Promise<PublicationType[]>;
-  getUserPostCounts: (handle: string) => Promise<UserPostCounts | undefined>;
-  getWriterPostCounts: (handle: string) => Promise<void>;
-  getUserFollowersCount: (handle: string) => Promise<void>;
+  isRegistrationOpen: (agent?: Agent) => Promise<boolean>;
+  getUser: (agent?: Agent) => Promise<UserType | undefined>;
+  getAuthor: (handle: string, agent?: Agent) => Promise<UserType | undefined>;
+  getAllUsersHandles: (agent?: Agent) => Promise<string[]>;
+  getAllPublicationsHandles: (agent?: Agent) => Promise<[string, string][]>;
+  getHandlesByPrincipals: (principals: string[], agent?: Agent) => Promise<string[]>;
+  searchUsers: (input: string, agent?: Agent) => Promise<UserListItem[]>;
+  searchPublications: (input: string, agent?: Agent) => Promise<PublicationType[]>;
+  getUserPostCounts: (handle: string, agent?: Agent) => Promise<UserPostCounts | undefined>;
+  getWriterPostCounts: (handle: string, agent?: Agent) => Promise<void>;
+  getUserFollowersCount: (handle: string, agent?: Agent) => Promise<void>;
   clearUser: () => Promise<void>;
   clearAuthor: () => Promise<void>;
-  updateDisplayName: (displayName: string) => Promise<void>;
-  updateAvatar: (avatarUrl: string) => Promise<void>;
+  updateDisplayName: (displayName: string, agent?: Agent) => Promise<void>;
+  updateAvatar: (avatarUrl: string, agent?: Agent) => Promise<void>;
   updateSocialLinks: (
     websiteUrl: string,
-    socialChannelUrls: string[]
+    socialChannelUrls: string[],
+    agent?: Agent
   ) => Promise<void>;
   updateUserDetails: (
     bio: string,
     avatarUrl: string,
     displayName: string,
     websiteUrl: string,
-    socialChannelUrls: string[]
+    socialChannelUrls: string[],
+    agent?: Agent
   ) => Promise<UserType | undefined>;
-  updateBio: (bio: string) => Promise<void>;
-  followAuthor: (author: string) => Promise<void>;
-  unfollowAuthor: (author: string) => Promise<void>;
+  updateBio: (bio: string, agent?: Agent) => Promise<void>;
+  followAuthor: (author: string, agent?: Agent) => Promise<void>;
+  unfollowAuthor: (author: string, agent?: Agent) => Promise<void>;
   getUsersByHandles: (
-    handles: Array<string>
+    handles: Array<string>,
+    agent?: Agent
   ) => Promise<UserListItem[] | undefined>;
   getUsersByHandlesReturnOnly: (
-    handles: Array<string>
+    handles: Array<string>,
+    agent?: Agent
   ) => Promise<UserListItem[] | undefined>;
   getMyFollowers: (
     indexStart: number,
-    indexEnd: number
+    indexEnd: number,
+    agent?: Agent
   ) => Promise<UserListItem[]>;
-  getPrincipalByHandle: (handle: string) => Promise<string | undefined>;
-  createEmailOptInAddress: (emailAddress: string) => Promise<void>;
+  getPrincipalByHandle: (handle: string, agent?: Agent) => Promise<string | undefined>;
+  createEmailOptInAddress: (emailAddress: string, agent?: Agent) => Promise<void>;
   getUserNotifications: (
     from: number,
     to: number,
-    navigate: NavigateFunction
+    navigate: NavigateFunction,
+    agent?: Agent
   ) => Promise<void>;
-  checkMyClaimNotification: () => Promise<void>;
-  markNotificationsAsRead: (notificationId: string[]) => Promise<void>;
-  markAllNotificationsAsRead: () => void;
+  checkMyClaimNotification: (agent?: Agent) => Promise<void>;
+  markNotificationsAsRead: (notificationId: string[], agent?: Agent) => Promise<void>;
+  markAllNotificationsAsRead: (agent?: Agent) => void;
   resetUnreadNotificationCount: () => void;
   updateUserNotificationSettings: (
-    notificationSettings: UserNotificationSettings
+    notificationSettings: UserNotificationSettings,
+    agent?: Agent
   ) => Promise<void>;
-  getUserNotificationSettings: () => Promise<
+  getUserNotificationSettings: (agent?: Agent) => Promise<
     UserNotificationSettings | undefined
   >;
-  claimTokens: () => Promise<boolean | void>;
+  claimTokens: (agent?: Agent) => Promise<boolean | void>;
   spendRestrictedTokensForTipping: (
     postId: string,
     bucketCanisterId: string,
-    amount: number
+    amount: number,
+    agent?: Agent
   ) => Promise<boolean | void>;
   proceedWithVerification: (userPrincipal: Principal) => Promise<void>;
   getLinkedPrincipal: (principal: string) => Promise<string | undefined>;
@@ -336,6 +352,8 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   totalNotificationCount: 0,
   notificationsToasted: [],
   linkedPrincipal: '',
+  loadingUser: false,
+  loadingUserNotifications: false,
 
   getLinkedPrincipal: async (principal: string): Promise<string | undefined> => {
     const userWallet = await useAuthStore.getState().getUserWallet();
@@ -416,11 +434,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   registerUser: async (
     handle: string,
     displayName: string,
-    avatar: string
+    avatar: string,
+    agent?: Agent
   ): Promise<void> => {
     try {
       const result = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).registerUser(handle, displayName, avatar);
       if (Err in result) {
         toastError(result.err);
@@ -432,13 +451,14 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  isRegistrationOpen: async (): Promise<boolean> => {
-    return (await getUserActor()).isRegistrationOpen();
+  isRegistrationOpen: async (agent?: Agent): Promise<boolean> => {
+    return (await getUserActor(agent)).isRegistrationOpen();
   },
 
-  getUser: async (): Promise<UserType | undefined> => {
+  getUser: async (agent?: Agent): Promise<UserType | undefined> => {
+    set({ loadingUser: true });
     try {
-      const result = await (await getUserActor()).getUser();
+      const result = await (await getUserActor(agent)).getUser();
       if (Err in result) {
         set({
           user: undefined,
@@ -454,6 +474,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         set({
           user,
           unregistered: false,
+          loadingUser: false
         });
         //fetch the token balances in background
         useAuthStore.getState().fetchTokenBalances();
@@ -473,13 +494,14 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         //clear all
         useUserStore.getState().clearAll();
       }
+      set({ loadingUser: false });
       handleError(err, Unexpected);
     }
   },
 
-  getPrincipalByHandle: async (handle: string): Promise<string | undefined> => {
+  getPrincipalByHandle: async (handle: string, agent?: Agent): Promise<string | undefined> => {
     const result = await (
-      await getUserActor()
+      await getUserActor(agent)
     ).getPrincipalByHandle(handle.toLowerCase());
     if (!(Err in result)) {
       return result.ok[0];
@@ -487,9 +509,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return undefined;
   },
 
-  getHandlesByPrincipals: async (principals: string[]): Promise<string[]> => {
+  getHandlesByPrincipals: async (principals: string[], agent?: Agent): Promise<string[]> => {
     const result = await (
-      await getUserActor()
+      await getUserActor(agent)
     ).getHandlesByPrincipals(principals);
     if (!(Err in result)) {
       return result;
@@ -498,11 +520,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   getUserPostCounts: async (
-    handle: string
+    handle: string,
+    agent?: Agent
   ): Promise<UserPostCounts | undefined> => {
     try {
       const userPostCounts = await (
-        await getPostCoreActor()
+        await getPostCoreActor(agent)
       ).getUserPostCounts(handle.toLowerCase());
 
       set({ userPostCounts });
@@ -512,10 +535,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  getWriterPostCounts: async (handle: string): Promise<void> => {
+  getWriterPostCounts: async (handle: string, agent?: Agent): Promise<void> => {
     try {
       const writerPostCounts = await (
-        await getPostCoreActor()
+        await getPostCoreActor(agent)
       ).getUserPostCounts(handle.toLowerCase());
 
       set({ writerPostCounts });
@@ -524,10 +547,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  getUserFollowersCount: async (handle: string): Promise<void> => {
+  getUserFollowersCount: async (handle: string, agent?: Agent): Promise<void> => {
     try {
       const userFollowersCount = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).getFollowersCount(handle.toLowerCase());
 
       set({ userFollowersCount });
@@ -536,10 +559,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  getAuthor: async (handle: string): Promise<UserType | undefined> => {
+  getAuthor: async (handle: string, agent?: Agent): Promise<UserType | undefined> => {
     try {
       const result = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).getUserByHandle(handle.trim().toLowerCase());
       if (Err in result) {
         set({ author: undefined });
@@ -561,7 +584,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     set({ author: undefined });
   },
 
-  updateDisplayName: async (displayName: string): Promise<void> => {
+  updateDisplayName: async (displayName: string, agent?: Agent): Promise<void> => {
     try {
       const result = await (
         await getUserActor()
@@ -577,11 +600,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   getUsersByHandles: async (
-    handles: Array<string>
+    handles: Array<string>,
+    agent?: Agent
   ): Promise<UserListItem[] | undefined> => {
     try {
       const usersByHandles = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).getUsersByHandles(
         handles.map((handle) => {
           return handle.toLowerCase();
@@ -595,11 +619,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   getUsersByHandlesReturnOnly: async (
-    handles: Array<string>
+    handles: Array<string>,
+    agent?: Agent
   ): Promise<UserListItem[] | undefined> => {
     try {
       const usersByHandles = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).getUsersByHandles(
         handles.map((handle) => {
           return handle.toLowerCase();
@@ -613,10 +638,11 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   getMyFollowers: async (
     indexStart: number,
-    indexEnd: number
+    indexEnd: number,
+    agent?: Agent
   ): Promise<UserListItem[]> => {
     try {
-      let result = await (await getUserActor()).getMyFollowers();
+      let result = await (await getUserActor(agent)).getMyFollowers();
 
       if (Err in result) {
         toastError(result.err);
@@ -630,23 +656,23 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  getAllUsersHandles: async (): Promise<string[]> => {
+  getAllUsersHandles: async (agent?: Agent): Promise<string[]> => {
     if (get().allUsersHandles.length > 0) {
       //refresh the users list but don't wait for the response
-      (await getUserActor()).getAllHandles().then((allUsersHandles) => {
+      (await getUserActor(agent)).getAllHandles().then((allUsersHandles) => {
         set({ allUsersHandles });
       });
       return get().allUsersHandles;
     }
-    let allUsersHandles = await (await getUserActor()).getAllHandles();
+    let allUsersHandles = await (await getUserActor(agent)).getAllHandles();
     set({ allUsersHandles });
     return allUsersHandles;
   },
 
-  getAllPublicationsHandles: async (): Promise<[string, string][]> => {
+  getAllPublicationsHandles: async (agent?: Agent): Promise<[string, string][]> => {
     if (get().allPublicationsHandlesAndCanisterIds.length > 0) {
       //refresh the publications list but don't wait for the response
-      (await getPostCoreActor())
+      (await getPostCoreActor(agent))
         .getPublicationCanisters()
         .then((allPublicationsHandlesAndCanisterIds) => {
           set({ allPublicationsHandlesAndCanisterIds });
@@ -654,21 +680,21 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       return get().allPublicationsHandlesAndCanisterIds;
     }
     let allPublicationsHandlesAndCanisterIds = await (
-      await getPostCoreActor()
+      await getPostCoreActor(agent)
     ).getPublicationCanisters();
     set({ allPublicationsHandlesAndCanisterIds });
     return allPublicationsHandlesAndCanisterIds;
   },
 
-  searchUsers: async (input: string): Promise<UserListItem[]> => {
+  searchUsers: async (input: string, agent?: Agent): Promise<UserListItem[]> => {
     let allHandles = await get().getAllUsersHandles();
     let resultHandles = findSimilarHandles(input, allHandles);
-    let users = await (await getUserActor()).getUsersByHandles(resultHandles);
-    let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users);
+    let users = await (await getUserActor(agent)).getUsersByHandles(resultHandles);
+    let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users, agentToBeUsed);
     set({ searchUserResults: usersMerged });
     return usersMerged;
   },
-  searchPublications: async (input: string): Promise<PublicationType[]> => {
+  searchPublications: async (input: string, agent?: Agent): Promise<PublicationType[]> => {
     let allPublications = await get().getAllPublicationsHandles();
     let handleToCanisterIdMap = new Map<string, string>();
     let handles: string[] = [];
@@ -681,7 +707,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     for (const handle of resultHandles) {
       let canisterId = handleToCanisterIdMap.get(handle);
       if (canisterId) {
-        let promise = (await getPublisherActor(canisterId)).getPublicationQuery(
+        let promise = (await getPublisherActor(canisterId, agent)).getPublicationQuery(
           handle
         );
         promises.push(promise);
@@ -696,15 +722,16 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     });
     let mergedPublications =
       await mergePublicationsWithNumberOfPublishedArticlesAndUserListItem(
-        publications
+        publications,
+        agentToBeUsed
       );
     set({ searchPublicationResults: mergedPublications });
     return mergedPublications;
   },
 
-  updateBio: async (bio: string): Promise<void> => {
+  updateBio: async (bio: string, agent?: Agent): Promise<void> => {
     try {
-      const result = await (await getUserActor()).updateBio(bio);
+      const result = await (await getUserActor(agent)).updateBio(bio);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -715,9 +742,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  updateAvatar: async (avatar: string): Promise<void> => {
+  updateAvatar: async (avatar: string, agent?: Agent): Promise<void> => {
     try {
-      const result = await (await getUserActor()).updateAvatar(avatar);
+      const result = await (await getUserActor(agent)).updateAvatar(avatar);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -730,11 +757,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   updateSocialLinks: async (
     websiteUrl: string,
-    socialChannelUrls: string[]
+    socialChannelUrls: string[],
+    agent?: Agent
   ): Promise<void> => {
     try {
       const result = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).updateSocialLinks(websiteUrl, socialChannelUrls);
       if (Err in result) {
         toastError(result.err);
@@ -751,11 +779,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     avatarUrl: string,
     displayName: string,
     websiteUrl: string,
-    socialChannelUrls: string[]
+    socialChannelUrls: string[],
+    agent?: Agent
   ): Promise<UserType | undefined> => {
     try {
       const result = await (
-        await getUserActor()
+        await getUserActor(agent)
       ).updateUserDetails(
         bio,
         avatarUrl,
@@ -774,9 +803,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  followAuthor: async (author: string): Promise<void> => {
+  followAuthor: async (author: string, agent?: Agent): Promise<void> => {
     try {
-      const result = await (await getUserActor()).followAuthor(author);
+      const result = await (await getUserActor(agent)).followAuthor(author);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -786,9 +815,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
       handleError(err, Unexpected);
     }
   },
-  unfollowAuthor: async (author: string): Promise<void> => {
+  unfollowAuthor: async (author: string, agent?: Agent): Promise<void> => {
     try {
-      const result = await (await getUserActor()).unfollowAuthor(author);
+      const result = await (await getUserActor(agent)).unfollowAuthor(author);
       if (Err in result) {
         toastError(result.err);
       } else {
@@ -799,10 +828,10 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  createEmailOptInAddress: async (emailAddress: string): Promise<void> => {
+  createEmailOptInAddress: async (emailAddress: string, agent?: Agent): Promise<void> => {
     try {
       const result = await (
-        await getEmailOptInActor()
+        await getEmailOptInActor(agent)
       ).createEmailOptInAddress(emailAddress);
     } catch (err) {
       handleError(err, Unexpected);
@@ -813,10 +842,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   getUserNotifications: async (
     from: number,
     to: number,
-    navigate: NavigateFunction
+    navigate: NavigateFunction,
+    agent?: Agent
   ): Promise<void> => {
+    set({ loadingUserNotifications: true });
     try {
-      let notificationsActor = await getNotificationsActor();
+      let notificationsActor = await getNotificationsActor(agent);
       let result = await notificationsActor.getUserNotifications(
         JSON.stringify(from),
         JSON.stringify(to)
@@ -900,15 +931,17 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
           ...alreadyToastedNotificationIds,
           ...toToast.map((n) => n.id),
         ],
+        loadingUserNotifications: false
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('getUserNotifications:', err);
+      set({ loadingUserNotifications: false });
     }
   },
 
-  checkMyClaimNotification: async (): Promise<void> => {
+  checkMyClaimNotification: async (agent?: Agent): Promise<void> => {
     try {
-      let userActor = await getUserActor();
+      let userActor = await getUserActor(agent);
       //fire and forget
       userActor.checkMyClaimNotification();
     } catch (error) {
@@ -916,17 +949,17 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     }
   },
 
-  markNotificationsAsRead: async (notificationIds: string[]): Promise<void> => {
+  markNotificationsAsRead: async (notificationIds: string[], agent?: Agent): Promise<void> => {
     try {
       const result = await (
-        await getNotificationsActor()
+        await getNotificationsActor(agent)
       ).markNotificationsAsRead(notificationIds);
     } catch (err) {
       handleError(err, Unexpected);
     }
   },
 
-  markAllNotificationsAsRead: async () => {
+  markAllNotificationsAsRead: async (agent?: Agent) => {
     let notifications = get().notifications || [];
     let notificationIds = notifications
       .filter((notification) => !notification.read)
@@ -943,17 +976,17 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
         unreadNotificationCount: 0,
       });
       //mark all as read
-      let notificationActor = await getNotificationsActor();
+      let notificationActor = await getNotificationsActor(agent);
       notificationActor.markNotificationsAsRead(notificationIds);
     }
   },
 
-  getUserNotificationSettings: async (): Promise<
+  getUserNotificationSettings: async (agent?: Agent): Promise<
     UserNotificationSettings | undefined
   > => {
     try {
       const result = await (
-        await getNotificationsActor()
+        await getNotificationsActor(agent)
       ).getUserNotificationSettings();
       return result;
     } catch (err) {
@@ -963,9 +996,9 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   //users can call this method to claim their restricted tokens
-  claimTokens: async (): Promise<boolean | void> => {
+  claimTokens: async (agent?: Agent): Promise<boolean | void> => {
     try {
-      let userActor = await getUserActor();
+      let userActor = await getUserActor(agent);
       let response = await userActor.claimRestrictedTokens();
       if ('err' in response) {
         toastError("You need to verify your profile to request free NUA.");
@@ -986,10 +1019,11 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   spendRestrictedTokensForTipping: async (
     postId: string,
     bucketCanisterId: string,
-    amount: number
+    amount: number,
+    agent?: Agent
   ): Promise<boolean | void> => {
     try {
-      let userActor = await getUserActor();
+      let userActor = await getUserActor(agent);
       let response = await userActor.spendRestrictedTokensForTipping(
         bucketCanisterId,
         postId,
@@ -1013,11 +1047,12 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
   },
 
   updateUserNotificationSettings: async (
-    notificationSettings: UserNotificationSettings
+    notificationSettings: UserNotificationSettings,
+    agent?: Agent
   ): Promise<void> => {
     try {
       const result = await (
-        await getNotificationsActor()
+        await getNotificationsActor(agent)
       ).updateNotificationSettings(notificationSettings);
       if (Err in result) {
         toastError(result.err);

@@ -288,4 +288,6 @@ actor NftFactory {
         Versions.NFTFACTORY_VERSION;
     };
 
+    // #endregion
+
 };

@@ -14,6 +14,7 @@ import { IoMdNotificationsOutline } from 'react-icons/io';
 import { GoTriangleDown } from 'react-icons/go';
 
 import './_header.scss';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
 
 type HeaderProps = {
   loggedIn: boolean;
@@ -30,15 +31,24 @@ type HeaderProps = {
 };
 
 const Header: React.FC<HeaderProps> = (props): JSX.Element => {
+  const isLocal: boolean =
+    window.location.origin.includes('localhost') ||
+    window.location.origin.includes('127.0.0.1');
+
   const [shownMeatball, setShownMeatball] = useState(false);
   const [shownProfile, setShownProfile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const darkTheme = window.location.pathname !== '/' && useTheme();
+  const theme = useTheme();
   const toggleTheme = useThemeUpdate();
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
   const location = useLocation();
   const navigate = useNavigate();
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost, retryTimes: 10 });
+  const isInitializing = useIsInitializing();
+
+  const darkTheme = window.location.pathname !== '/' && theme;
 
   let logoSrc: string;
 
@@ -48,9 +58,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
     logoSrc = images.NUANCE_LOGO_BLACK;
   } else if (props.isPublicationPage) {
     logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
-  } else if (!props.isArticlePage && !props.isPublicationPage && !props.isUserAdminScreen) {
+  } else if (
+    !props.isArticlePage &&
+    !props.isPublicationPage &&
+    !props.isUserAdminScreen
+  ) {
     logoSrc = darkTheme ? images.NUANCE_LOGO : images.NUANCE_LOGO_BLACK;
-  } else if(props.isUserAdminScreen) {
+  } else if (props.isUserAdminScreen) {
     logoSrc = darkTheme ? images.NUANCE_LOGO_BLACK : images.NUANCE_LOGO;
   } else {
     logoSrc = darkTheme ? images.NUANCE_LOGO_BLACK : images.NUANCE_LOGO;
@@ -164,8 +178,9 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       nftCanisters: state.nftCanistersEntries,
     }));
 
-  const { verifyBitfinityWallet, updateLastLogin } = useAuthStore((state) => ({
-    verifyBitfinityWallet: state.verifyBitfinityWallet,
+  const { agent, isLoggedIn, updateLastLogin } = useAuthStore((state) => ({
+    agent: state.agent,
+    isLoggedIn: state.isLoggedIn,
     updateLastLogin: state.updateLastLogin,
   }));
 
@@ -179,6 +194,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   const {
     user,
     unreadNotificationCount,
+    loadingUserNotifications,
     markAllNotificationsAsRead,
     resetUnreadNotificationCount,
     getUserNotifications,
@@ -186,6 +202,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   } = useUserStore((state) => ({
     user: state.user,
     unreadNotificationCount: state.unreadNotificationCount,
+    loadingUserNotifications: state.loadingUserNotifications,
     resetUnreadNotificationCount: state.resetUnreadNotificationCount,
     markAllNotificationsAsRead: state.markAllNotificationsAsRead,
     getUserNotifications: state.getUserNotifications,
@@ -193,13 +210,14 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
   }));
 
   useEffect(() => {
-    verifyBitfinityWallet();
     updateLastLogin();
-    setInterval(() => {
-      getUserNotifications(0, 20, navigate);
-    }, 10000);
-    setInterval(() => {
-      checkMyClaimNotification();
+    setInterval(async () => {
+      try {
+        await getUserNotifications(0, 20, navigate, agent);
+        await checkMyClaimNotification();
+      } catch (e) {
+        console.error(e);
+      }
     }, 10000);
   }, []);
 
@@ -213,7 +231,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
                 className='icon'
                 onClick={clearSearch}
                 src={logoSrc}
-                style={{filter: darkTheme ? 'opacity(0.3)' : 'none'}}
+                style={{ filter: darkTheme ? 'opacity(0.3)' : 'none' }}
                 alt=''
               />
             </Link>
@@ -261,7 +279,7 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
                 className='icon'
                 onClick={clearSearch}
                 src={logoSrc}
-                style={{filter: darkTheme ? 'opacity(0.3)' : 'none'}}
+                style={{ filter: darkTheme ? 'opacity(0.3)' : 'none' }}
                 alt=''
               />
             </Link>
@@ -317,23 +335,13 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
       if (props.loggedIn == false && props.ScreenWidth < 768) {
         return (
           <Link to='/'>
-            <img
-              className='icon'
-              onClick={clearSearch}
-              src={logoSrc}
-              alt=''
-            />
+            <img className='icon' onClick={clearSearch} src={logoSrc} alt='' />
           </Link>
         );
       } else {
         return (
           <Link to='/'>
-            <img
-              className='icon'
-              onClick={clearSearch}
-              src={logoSrc}
-              alt=''
-            />
+            <img className='icon' onClick={clearSearch} src={logoSrc} alt='' />
           </Link>
         );
       }
@@ -471,7 +479,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
         )}
 
         {props.loggedIn && user ? (
-          <div className='profile-icon-wrapper' onClick={() => setShownProfile(!shownProfile)}>
+          <div
+            className='profile-icon-wrapper'
+            onClick={() => setShownProfile(!shownProfile)}
+          >
             <ProfileMenu
               shown={shownProfile}
               isArticle={props.isArticlePage}
@@ -485,7 +496,10 @@ const Header: React.FC<HeaderProps> = (props): JSX.Element => {
           ''
         )}
 
-        <div className='meatball-icon-wrapper' onClick={() => setShownMeatball(!shownMeatball)}>
+        <div
+          className='meatball-icon-wrapper'
+          onClick={() => setShownMeatball(!shownMeatball)}
+        >
           <MeatBallMenu
             shown={shownMeatball}
             isArticle={props.isArticlePage}

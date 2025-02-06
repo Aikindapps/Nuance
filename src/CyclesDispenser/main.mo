@@ -723,6 +723,8 @@ actor CyclesDispenser {
     };
   };
 
+  // #endregion
+
   //#region memory management
   stable var MAX_MEMORY_SIZE = 380000000;
 

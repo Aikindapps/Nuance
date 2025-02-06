@@ -63,7 +63,6 @@ const Following = () => {
               @{follower}
             </Link>
           </div>
-          {console.log("AUTHOR1: ", author)}
           <img
             src={images.DEFAULT_AVATAR}
             alt='background'

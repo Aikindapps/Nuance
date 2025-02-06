@@ -23,6 +23,7 @@ import Time "mo:base/Time";
 import Int "mo:base/Int";
 import Order "mo:base/Order";
 import Option "mo:base/Option";
+import TypesStandards "../shared/TypesStandards";
 
 actor Notifications {
   
@@ -34,6 +35,11 @@ actor Notifications {
   type GetUserNotificationsResponse = Types.GetUserNotificationsResponse;
   type UserListItem = UserTypes.UserListItem;
   type SubscriptionTimeInterval = Types.SubscriptionTimeInterval;
+
+  //icrc standards types
+  type SupportedStandard = TypesStandards.SupportedStandard;
+  type Icrc28TrustedOriginsResponse = TypesStandards.Icrc28TrustedOriginsResponse;
+
   let {thash; phash } = Map;
 
   // #region Notifications
@@ -880,6 +886,20 @@ actor Notifications {
     };
     false
   };
+
+  //#region trusted origin
+
+  public query func icrc10_supported_standards() : async [SupportedStandard] {
+    return ENV.supportedStandards;
+  };
+
+  public shared func icrc28_trusted_origins() : async Icrc28TrustedOriginsResponse{
+    return {
+      trusted_origins= ENV.getTrustedOrigins();
+    }
+  };
+
+  // #endregion
 
   //memory management
   //2GB default

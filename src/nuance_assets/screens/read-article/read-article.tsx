@@ -47,6 +47,11 @@ import SubscriptionModal from '../../components/subscription-modal/subscription-
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
+import { useAgent, useIsInitializing } from '@nfid/identitykit/react';
+
+const isLocal: boolean =
+  window.location.origin.includes('localhost') ||
+  window.location.origin.includes('127.0.0.1');
 
 const ReadArticle = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -75,6 +80,9 @@ const ReadArticle = () => {
 
   const context = useContext(Context);
   const modalContext = useContext(ModalContext);
+  const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
+  const agentIk = useAgent({ host: customHost });
+  const isInitializing = useIsInitializing();
 
   const {
     getPost,
@@ -197,6 +205,12 @@ const ReadArticle = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const commentId = queryParams.get('comment');
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      agentIk ? setLoading(false) : setLoading(true);
+    }
+  }, [agentIk, isLoggedIn]);
 
   useEffect(() => {
     const scrollToComment = () => {
@@ -907,8 +921,7 @@ const ReadArticle = () => {
                     style={{ color: darkOptionsAndColors.color }}
                     className='username'
                   >
-                    @{post.isPublication ? post.creatorHandle : author.handle}
-                    {' '}
+                    @{post.isPublication ? post.creatorHandle : author.handle}{' '}
                     {author?.isVerified && (
                       <div className='verified-badge'>
                         <GradientMdVerified
