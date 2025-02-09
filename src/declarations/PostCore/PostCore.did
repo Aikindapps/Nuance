@@ -288,6 +288,7 @@ service : {
                                         text;
                                         nat;
                                       }) query;
+  debugMembersOnlyStatusOfExistingDraftArticles: () -> (Result_8);
   debugSaveMultiplePosts: (vec PostSaveModel) -> (vec Result_4);
   delete: (text) -> (Result_3);
   deletePostFromUserDebug: (text, text) -> (Result_8);
@@ -334,7 +335,6 @@ service : {
   getMyDraftPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMyFollowingTagsPostKeyProperties: (nat32, nat32) ->
    (GetPostsByFollowers) composite_query;
-  getMyLatestPost: () -> (opt Post);
   getMyPlannedPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMyPublishedPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
   getMySubmittedToReviewPosts: (nat32, nat32) ->

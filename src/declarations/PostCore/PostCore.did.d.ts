@@ -201,6 +201,7 @@ export interface _SERVICE {
   'currentId' : ActorMethod<[], bigint>,
   'debugApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
   'debugGetApplaudsHashMap' : ActorMethod<[], Array<[string, bigint]>>,
+  'debugMembersOnlyStatusOfExistingDraftArticles' : ActorMethod<[], Result_8>,
   'debugSaveMultiplePosts' : ActorMethod<
     [Array<PostSaveModel>],
     Array<Result_4>
@@ -257,7 +258,6 @@ export interface _SERVICE {
     [number, number],
     GetPostsByFollowers
   >,
-  'getMyLatestPost' : ActorMethod<[], [] | [Post]>,
   'getMyPlannedPosts' : ActorMethod<[number, number], Array<PostKeyProperties>>,
   'getMyPublishedPosts' : ActorMethod<
     [number, number],

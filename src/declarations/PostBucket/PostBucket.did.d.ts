@@ -92,6 +92,7 @@ export interface PostBucket {
     [string, string, string],
     Result_11
   >,
+  'debugMembersOnlyStatusOfExistingDraftArticles' : ActorMethod<[], Result_9>,
   'debugSetCreatorFieldAndAddPostIdToUser' : ActorMethod<
     [string, string],
     Result_6
