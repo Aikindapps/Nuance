@@ -213,6 +213,7 @@ export const idlFactory = ({ IDL }) => {
     'collectCanisterMetrics' : IDL.Func([], [], []),
     'deleteConfirmedLinkings' : IDL.Func([], [Result_1], []),
     'deleteUser' : IDL.Func([IDL.Text], [Result_3], []),
+    'deleteVerifiedUsers' : IDL.Func([], [Result_1], []),
     'dumpUsers' : IDL.Func([], [IDL.Text], ['query']),
     'followAuthor' : IDL.Func([IDL.Text], [Result], []),
     'generateAccountIds' : IDL.Func([], [], []),

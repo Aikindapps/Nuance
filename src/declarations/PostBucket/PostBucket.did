@@ -171,7 +171,6 @@ type PostBucket =
    buildCommentUrl: (text) -> (text) query;
    checkTipping: (text) -> ();
    checkTippingByTokenSymbol: (text, text, text) -> (Result_11);
-   debugMembersOnlyStatusOfExistingDraftArticles: () -> (Result_9);
    debugSetCreatorFieldAndAddPostIdToUser: (text, text) -> (Result_6);
    delete: (text) -> (Result_4);
    deleteComment: (text) -> (Result_5);

@@ -39,7 +39,6 @@ export const idlFactory = ({ IDL }) => {
     'postId' : IDL.Text,
   });
   const Result_11 = IDL.Variant({ 'ok' : Applaud, 'err' : IDL.Text });
-  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   const Result_4 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   Comment.fill(
     IDL.Record({
@@ -83,6 +82,7 @@ export const idlFactory = ({ IDL }) => {
     'comments' : IDL.Vec(Comment),
   });
   const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
+  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const Result_10 = IDL.Variant({
@@ -191,11 +191,6 @@ export const idlFactory = ({ IDL }) => {
     'checkTippingByTokenSymbol' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [Result_11],
-        [],
-      ),
-    'debugMembersOnlyStatusOfExistingDraftArticles' : IDL.Func(
-        [],
-        [Result_9],
         [],
       ),
     'debugSetCreatorFieldAndAddPostIdToUser' : IDL.Func(

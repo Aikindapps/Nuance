@@ -221,11 +221,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         ['query'],
       ),
-    'debugMembersOnlyStatusOfExistingDraftArticles' : IDL.Func(
-        [],
-        [Result_8],
-        [],
-      ),
     'debugSaveMultiplePosts' : IDL.Func(
         [IDL.Vec(PostSaveModel)],
         [IDL.Vec(Result_4)],
@@ -313,6 +308,7 @@ export const idlFactory = ({ IDL }) => {
         [GetPostsByFollowers],
         ['composite_query'],
       ),
+    'getMyLatestPost' : IDL.Func([], [IDL.Opt(Post)], []),
     'getMyPlannedPosts' : IDL.Func(
         [IDL.Nat32, IDL.Nat32],
         [IDL.Vec(PostKeyProperties)],
