@@ -157,7 +157,7 @@ function App() {
   }));
 
   const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
-  const agent = useAgent({ host: customHost });
+  const agent = useAgent({ host: customHost, retryTimes: 10 });
 
   const identity = useIdentity();
   const { user, disconnect } = useAuth();
