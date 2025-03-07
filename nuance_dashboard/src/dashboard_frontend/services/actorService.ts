@@ -60,7 +60,7 @@ export async function getPostCoreActor(
       identity,
       host: isLocal ? undefined : 'https://icp-api.io ',
     },
-  });
+  }) as unknown as ActorSubclass<PostCoreService>;
 }
 
 export async function getPostBucketActor(
@@ -74,7 +74,7 @@ export async function getPostBucketActor(
       identity: identity || new AnonymousIdentity(),
       host: isLocal ? undefined : 'https://icp-api.io ',
     },
-  });
+  }) as unknown as ActorSubclass<PostBucketService>;
 }
 
 export async function getUserActor(
@@ -88,7 +88,7 @@ export async function getUserActor(
       identity: identity || new AnonymousIdentity(),
       host: isLocal ? undefined : 'https://icp-api.io',
     },
-  });
+  }) as unknown as ActorSubclass<UserService>;
 }
 
 export async function getPublicationManagementActor(
@@ -102,7 +102,7 @@ export async function getPublicationManagementActor(
       identity: identity || new AnonymousIdentity(),
       host: isLocal ? undefined : 'https://icp-api.io',
     },
-  });
+  }) as unknown as ActorSubclass<PublicationManagementService>;
 }
 
 export async function getPublicationActor(
@@ -116,7 +116,7 @@ export async function getPublicationActor(
       identity: identity || new AnonymousIdentity(),
       host: isLocal ? undefined : 'https://icp-api.io',
     },
-  });
+  }) as unknown as ActorSubclass<PublicationService>;
 }
 
 export async function getCyclesDispenserActor(
@@ -130,7 +130,7 @@ export async function getCyclesDispenserActor(
       identity: identity || new AnonymousIdentity(),
       host: isLocal ? undefined : 'https://icp-api.io',
     },
-  });
+  }) as unknown as ActorSubclass<CyclesDispenserService>;
 }
 
 export async function getSnsRootActor(): Promise<

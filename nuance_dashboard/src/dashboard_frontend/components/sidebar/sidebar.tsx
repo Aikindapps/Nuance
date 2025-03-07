@@ -71,9 +71,8 @@ const Sidebar = () => {
         <div className='icon-container'>
           <Link
             to='/review-comments'
-            className={`icon ${
-              activeIcon === 'review-comments' ? 'active' : ''
-            }`}
+            className={`icon ${activeIcon === 'review-comments' ? 'active' : ''
+              }`}
             onClick={() => setActiveIcon('review-comments')}
           >
             <CiFlag1 />
@@ -125,15 +124,20 @@ const Sidebar = () => {
         </button>
       )}
       {isLoggedIn && (
-        <button
-          type='submit'
-          onClick={() => {
-            navigator.clipboard.writeText(principalString);
-            toastSuccess('Copied to clipboard!');
-          }}
-        >
-          Copy your principal
-        </button>
+        // <button
+        //   type='submit'
+        //   onClick={() => {
+        //     navigator.clipboard.writeText(principalString);
+        //     toastSuccess('Copied to clipboard!');
+        //   }}
+        // >
+        //   Copy your principal
+        // </button>
+        <div className='principal-container'>
+          <span>Your principal:</span>
+          <div className='principal'>{principalString}</div>
+        </div>
+
       )}
       {isLoggedIn && (
         <button
