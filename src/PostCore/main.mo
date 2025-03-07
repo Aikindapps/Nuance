@@ -642,7 +642,7 @@ actor PostCore {
     };
 
     canistergeekMonitor.collectMetrics();
-    if (not isAdmin(caller)) {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     var postUrls : Text = "";
