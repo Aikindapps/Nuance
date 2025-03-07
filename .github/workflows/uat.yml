@@ -149,21 +149,14 @@ jobs:
           POST_RELATIONS: ${{ secrets.UAT_POSTRELATIONS }}
           NFT_BUCKET: ${{ secrets.UAT_NFT_BUCKET }}
 
-      - name: Install OpenSSL 1.1 (libssl1.1)
+      - name: Generate canister_ids.json in for NFTs and Publications
         run: |
-          cd /tmp
-          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb
-          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.16_amd64.deb
-
-      - name: Install Vessel
-        run: |
-          mkdir -p "$HOME/bin"
-          cd "$HOME/bin"
-          wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
-          mv vessel-linux64 vessel
-          chmod +x vessel
-          echo "$HOME/bin" >> $GITHUB_PATH
-          vessel --version
+          cd ./Nuance-NFTs-and-Publications
+            wget https://github.com/dfinity/vessel/releases/download/v0.7.0/vessel-linux64
+            mv vessel-linux64 vessel
+            chmod +x vessel
+            mv vessel /usr/local/bin/.
+            vessel --version
 
       - name: Deploy UAT --network ic
         run: bash ./scripts/deployment/UAT_Deploy.sh
