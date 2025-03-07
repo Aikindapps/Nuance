@@ -79,7 +79,7 @@ jobs:
       - name: Install vessel for NFTs and Publications
         run: |
           cd ./Nuance-NFTs-and-Publications
-            wget https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64
+            wget https://github.com/dfinity/vessel/releases/download/v0.7.0/vessel-linux64
             mv vessel-linux64 vessel
             chmod +x vessel
             mv vessel /usr/local/bin/.
