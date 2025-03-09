@@ -286,8 +286,17 @@ function App() {
     }; */
   }, []);
 
+  console.log('AUTH STORE AGENT: ', useAuthStore.getState().agent);
+  console.log('AUTH STORE IDENTITY: ', useAuthStore.getState().identity);
+  console.log('ISLOGGEDIN: ', isLoggedIn);
+  console.log('ISINITIALIZED: ', isInitialized);
   // migrating to identity kit condition
-  if (!useAuthStore.getState().agent && !useAuthStore.getState().identity && isLoggedIn && isInitialized) {
+  if (
+    !useAuthStore.getState().agent &&
+    !useAuthStore.getState().identity &&
+    isLoggedIn &&
+    isInitialized
+  ) {
     disconnect();
     logout();
     window.location.reload();
