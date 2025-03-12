@@ -35,6 +35,7 @@ import {
   getIcrc1TokenActorAnonymous,
   getIcrc1IndexCanister,
   getIcrc1ArchiveCanister,
+  getAnonAgent,
 } from '../services/actorService';
 import { AccountIdentifier, LedgerCanister } from '@dfinity/ledger-icp';
 import {
@@ -884,7 +885,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               savedPost.nftCanisterId.length !== 0
             ) {
               let nftCanisterId = savedPost.nftCanisterId[0];
-              let extActor = await getExtActor(nftCanisterId);
+              let extActor = await getExtActor(nftCanisterId, await getAnonAgent());
               let response = await extActor.getAvailableToken();
               savedPost = {
                 ...savedPost,
@@ -988,7 +989,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
                 //premium post and user is not authorized to see
                 //fetch the sale info and merge with post
                 let nftCanisterId = post.nftCanisterId?.[0] as string;
-                let extActor = await getExtActor(nftCanisterId);
+                let extActor = await getExtActor(nftCanisterId, await getAnonAgent());
                 let response = await extActor.getAvailableToken();
                 set({
                   post: {
@@ -1051,7 +1052,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
               //premium post and user is not authorized to see
               //fetch the sale info and merge with post
               let nftCanisterId = post.nftCanisterId?.[0] as string;
-              let extActor = await getExtActor(nftCanisterId);
+              let extActor = await getExtActor(nftCanisterId, await getAnonAgent());
               let response = await extActor.getAvailableToken();
               set({
                 post: {
@@ -1673,7 +1674,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       let post = await get().getSavedPostReturnOnly(postId);
       if (post?.nftCanisterId) {
         let nftCanisterId = post.nftCanisterId[0] as string;
-        let extActor = await getExtActor(nftCanisterId);
+        let extActor = await getExtActor(nftCanisterId, await getAnonAgent());
         let saleInfo = await extActor.getAvailableToken();
 
         return {
@@ -1721,7 +1722,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const nftCanisterId of allOwnedPremiumArticlesNftCanisterIds) {
-        let extActor = await getExtActor(nftCanisterId, agent);
+        let extActor = await getExtActor(nftCanisterId, await getAnonAgent());
         transactionsPromises.push(
           extActor.marketplaceTransactionsAndTotalSupply()
         );
@@ -1799,7 +1800,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       ]);
       let promises = [];
       for (const [postId, canisterId] of allNftCanisters) {
-        let extActor = await getExtActor(canisterId, agent);
+        let extActor = await getExtActor(canisterId, await getAnonAgent());
         promises.push(extActor.tokens_ext(userAccountId));
       }
       let result: PremiumPostActivityListItem[] = [];
@@ -1830,7 +1831,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
       //for every item in result array, fetch the marketplace transactions and maxSupply from nft canisters
       let transactionsPromises = [];
       for (const item of result) {
-        let extActor = await getExtActor(item.canisterId, agent);
+        let extActor = await getExtActor(item.canisterId, await getAnonAgent());
         transactionsPromises.push(
           extActor.marketplaceTransactionsAndTotalSupply()
         );
@@ -2353,6 +2354,7 @@ const createPostStore: StateCreator<PostStore> | StoreApi<PostStore> = (
         subaccount: [],
         amount: BigInt(1),
       });
+      console.log("POSTSTORE TRANSFER NFT RESULT: ", result);
       if ('ok' in result) {
         return 'Success';
       } else {

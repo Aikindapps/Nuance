@@ -55,7 +55,7 @@ actor NftFactory {
         };
         ignore U.logMetrics("createNftCanister", Principal.toText(caller));
 
-        Cycles.add<system>(10_000_000_000_000);
+        Cycles.add<system>(2_000_000_000_000);
         let nftCanister = await EXTNFT.EXTNFT();
 
         await nftCanister.acceptCycles();
@@ -75,7 +75,7 @@ actor NftFactory {
                     canisterId;
                     isStorageBucket = false;
                     minimumThreshold = 10_000_000_000_000; 
-                    topUpAmount = 5_000_000_000_000;
+                    topUpAmount = 5_000_000_000;
                 })) {
                     case(#ok(value)) {
                         //everything worked fine
