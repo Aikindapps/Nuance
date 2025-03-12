@@ -22,6 +22,7 @@ import {
   getExtActor,
   getPostCoreActor,
   getPostBucketActor,
+  getAnonAgent,
 } from '../services/actorService';
 import { Listing, Metadata } from '../services/ext-service/ext_v2.did';
 import { PostKeyProperties } from '../../../src/declarations/PostCore/PostCore.did';
@@ -59,7 +60,7 @@ const mergePremiumArticleSaleInformation = async (
 
   let promises = [];
   for (const [postId, nftCanisterId] of postIdsAndNftCanisterIds) {
-    let extActor = await getExtActor(nftCanisterId);
+    let extActor = await getExtActor(nftCanisterId, await getAnonAgent());
     promises.push(extActor.getAvailableToken());
   }
   let results = await Promise.all(promises);
