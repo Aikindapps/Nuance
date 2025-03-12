@@ -295,7 +295,8 @@ function App() {
     !useAuthStore.getState().agent &&
     !useAuthStore.getState().identity &&
     isLoggedIn &&
-    isInitialized
+    isInitialized &&
+    isInitializing
   ) {
     disconnect();
     logout();
