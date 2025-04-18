@@ -1,20 +1,44 @@
 /* Reset font sizes within the Quill editor */
 .ql-container.ql-snow {
-
+  position: relative;
+  overflow: visible !important;
 }
 
 /* Custom toolbar styles */
-.ql-toolbar {
+.ql-toolbar { }
 
-}
-
-/* Placeholder styling */
 .ql-editor.ql-blank::before {
   font-family: 'Georgia';
   font-style: italic;
-  color: #b2b2b2 !important; /* Replacing $medium-border-color */
+  color: #b2b2b2 !important;
   font-size: 18px;
   line-height: 32px;
   margin-left: -15px;
 }
 
+.ql-webllm-autocomplete {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  max-width: 300px;
+  z-index: 1000;
+}
+
+.ql-webllm-autocomplete li.selected {
+  background-color: #f1f3f4;
+}
+
+.ghost-suggestion {
+  position: absolute;
+  opacity: 0.4;
+  pointer-events: none;
+  color: #999;
+  white-space: pre;
+  z-index: 1000;
+  font: inherit;
+  line-height: inherit;
+  font-size: 18px;
+}
+
+.ql-autocompleteToggle {
+  display: contents !important;
+}
