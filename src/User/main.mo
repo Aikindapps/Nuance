@@ -1722,6 +1722,13 @@ actor User {
     getLastDayClaimedAmount()
   };
 
+  // returns the total number of claim events occured in the last 24 hours
+  public shared query func getLastDayNumberOfClaimEvents() : async Nat {
+    let now = Time.now();
+    let DAY : Int = 86400000000000;
+    Array.filter<(Int, Nat)>(dailyClaims, func((timestamp, _) : (Int, Nat)) : Bool { now <= timestamp + DAY }).size()
+  };
+
 
   private func getLastDayClaimedAmount() : Nat {
     let now = Time.now();
