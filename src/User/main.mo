@@ -70,6 +70,7 @@ actor User {
   stable var isClaimActive = false;
   stable var claimSubaccountIndex = 0;
   stable var maxClaimTokens = 5_001_000_000; //50.001 NUA tokens - including the fee
+  stable var maxDailyClaimLimit = maxClaimTokens * 100;
   stable var claimedTokensCounter = 0;
 
   stable var principalId : [(Text, Text)] = [];
@@ -96,9 +97,12 @@ actor User {
   stable var claimSubaccountIndexes : [(Text, Nat)] = [];
   stable var claimBlockedUsers : [(Text, Text)] = [];
   stable var isVerifiedUsers : [(Text, Bool)] = [];
+  stable var isUserLockedForClaim : [(Text, Int)] = [];
   stable var pendingLinkingRequests: [(Text, Text)] =[];
   stable var confirmedLinkingRequests: [(Text, Text)] = [];
-
+  
+  // stores the daily claims by the timestamps and the amounts
+  stable var dailyClaims: [(Int, Nat)] = [];
   stable var _canistergeekMonitorUD : ?Canistergeek.UpgradeData = null;
 
   func isEq(x : Text, y : Text) : Bool { x == y };
@@ -127,6 +131,7 @@ actor User {
   var lastClaimNotificationDateHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var claimBlockedUsersHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   var isVerifiedUsersHashMap = HashMap.HashMap<Text, Bool>(initCapacity, isEq, Text.hash);
+  var isUserLockedForClaimHashMap = HashMap.HashMap<Text, Int>(initCapacity, isEq, Text.hash);
   var pendingLinkingRequestsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   var confirmedLinkingRequestsHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //0th account-id of user's principal mapped to user's handle
@@ -1607,6 +1612,7 @@ actor User {
     };
   };
 
+  // platform operators can activate/deactivate the claim using this function
   public shared ({caller}) func setIsClaimActive(isActive: Bool) : async Result.Result<Bool, Text> {
     if(not isPlatformOperator(caller)){
       return #err(Unauthorized);
@@ -1617,6 +1623,7 @@ actor User {
     #ok(isClaimActive)
   };
 
+  // public function to return the max number of claimable tokens per claim
   public shared ({caller}) func setMaxNumberOfClaimableTokens(amount: Nat) : async Result.Result<Nat, Text> {
     if(not isPlatformOperator(caller)){
       return #err(Unauthorized);
@@ -1625,6 +1632,17 @@ actor User {
     maxClaimTokens := amount;
     //return the new value
     #ok(maxClaimTokens)
+  };
+
+  // public function to return the max number of daily claimable tokens
+  public shared ({caller}) func setMaxNumberOfDailyClaimableTokens(amount: Nat) : async Result.Result<Nat, Text> {
+    if(not isPlatformOperator(caller)){
+      return #err(Unauthorized);
+    };
+    //set the value
+    maxDailyClaimLimit := amount;
+    //return the new value
+    #ok(maxDailyClaimLimit)
   };
 
   //returns the handles of the blocked users
@@ -1670,7 +1688,7 @@ actor User {
     switch(handleReverseHashMap.get(handle)) {
       case(?principalId) {
         switch(claimBlockedUsersHashMap.get(principalId)) {
-          case(?value) {
+          case(?_) {
             claimBlockedUsersHashMap.delete(principalId);
             return #ok();
           };
@@ -1694,8 +1712,36 @@ actor User {
     return #ok(Iter.toArray(claimSubaccountIndexesHashMap.entries()))
   };
 
-  public shared query ({caller}) func getTotalNumberOfClaimedTokens() : async Nat {
+  // returns the total number of claimed tokens
+  public shared query func getTotalNumberOfClaimedTokens() : async Nat {
     claimedTokensCounter
+  };
+
+  // returns the total number of claimed tokens in last day
+  public shared query func getLastDayClaimedTokensAmount() : async Nat {
+    getLastDayClaimedAmount()
+  };
+
+
+  private func getLastDayClaimedAmount() : Nat {
+    let now = Time.now();
+    let DAY : Int = 86400000000000;
+    var counter = 0;
+    for((timestamp, amount) in dailyClaims.vals()) {
+      if(now <= timestamp + DAY){
+        counter += amount
+      }
+    };
+    counter
+  };
+
+  private func putClaimToLastDayLogs(amount: Nat) : () {
+    let now = Time.now();
+    let DAY : Int = 86400000000000;
+    // delete the logs older than one day first
+    dailyClaims := Array.filter<(Int, Nat)>(dailyClaims, func((timestamp, _) : (Int, Nat)) : Bool { now <= timestamp + DAY });
+    // put the new claim log to the array
+    dailyClaims := Array.append(dailyClaims, [(now, amount)]);
   };
 
 
@@ -1709,7 +1755,7 @@ actor User {
         //caller has an account
         //firstly, check if the caller has been blocked
         switch(claimBlockedUsersHashMap.get(principal)) {
-          case(?value) {
+          case(?_) {
             return #err("The caller is not allowed to claim any restricted tokens.")
           };
           case(null) {};
@@ -1760,6 +1806,28 @@ actor User {
           };
         };
 
+        // check if the daily limit has been exceeded
+        if(getLastDayClaimedAmount() >= maxDailyClaimLimit){
+          return #err("The number of tokens which can be claimed per day has been exceeded. Please try again later.")
+        };
+
+        //check if the user is locked in isUserLockedForClaimHashMap
+        switch(isUserLockedForClaimHashMap.get(principal)) {
+          case(?lockedTimeStamp) {
+            let MINUTE = 60000000000;
+            if(now <= lockedTimeStamp + MINUTE){
+              // there can only be 1 request per minute for a single user
+              // return an error
+              return #err("Try again later.")
+            }
+          };
+          case(null) {
+            //not locked
+            //lock it now
+            isUserLockedForClaimHashMap.put(principal, now)
+          };
+        };
+
         let NuaLedgerCanister = CanisterDeclarations.getIcrc1Canister(ENV.NUA_TOKEN_CANISTER_ID);
         let availableRestrictedTokenBalance = await NuaLedgerCanister.icrc1_balance_of({
           owner = Principal.fromActor(User);
@@ -1785,20 +1853,22 @@ actor User {
           }
         });
         switch(response) {
-          case(#Ok(value)) {
+          case(#Ok(_)) {
             //update the last claim date
             lastClaimDateHashMap.put(principal, now);
             //update the counter value
             claimedTokensCounter += claimableAmount;
+            //put the claim to the daily logs
+            putClaimToLastDayLogs(claimableAmount);
             return #ok(buildUser(principal))
           };
           case(#Err(error)) {
-            return #err("An error occured while sending the tokens.")
+            return #err("An error occured while sending the tokens: " # debug_show(error))
           };
         };
       };
       case (null) {
-        //caller doesn't have an nuance account
+        //caller doesn't have a nuance account
         return #err("There is no Nuance account to claim the restricted tokens.")
       };
     };
@@ -1816,7 +1886,7 @@ actor User {
         //caller has an account
         //firstly, check if the caller has been blocked
         switch(claimBlockedUsersHashMap.get(principal)) {
-          case(?value) {
+          case(?_) {
             return;
           };
           case(null) {};
@@ -2524,6 +2594,7 @@ actor User {
     claimBlockedUsers := Iter.toArray(claimBlockedUsersHashMap.entries());
     claimSubaccountIndexes := Iter.toArray(claimSubaccountIndexesHashMap.entries());
     isVerifiedUsers := Iter.toArray(isVerifiedUsersHashMap.entries());
+    isUserLockedForClaim := Iter.toArray(isUserLockedForClaimHashMap.entries());
     pendingLinkingRequests := Iter.toArray(pendingLinkingRequestsHashMap.entries());
     confirmedLinkingRequests := Iter.toArray(confirmedLinkingRequestsHashMap.entries());
   };
@@ -2558,6 +2629,7 @@ actor User {
     claimBlockedUsersHashMap := HashMap.fromIter(claimBlockedUsers.vals(), initCapacity, isEq, Text.hash);
     claimSubaccountIndexesHashMap := HashMap.fromIter(claimSubaccountIndexes.vals(), initCapacity, isEq, Text.hash);
     isVerifiedUsersHashMap := HashMap.fromIter(isVerifiedUsers.vals(), initCapacity, isEq, Text.hash);
+    isUserLockedForClaimHashMap := HashMap.fromIter(isUserLockedForClaim.vals(), initCapacity, isEq, Text.hash);
     pendingLinkingRequestsHashMap := HashMap.fromIter(pendingLinkingRequests.vals(), initCapacity, isEq, Text.hash);
     confirmedLinkingRequestsHashMap := HashMap.fromIter(confirmedLinkingRequests.vals(), initCapacity, isEq, Text.hash);
 
@@ -2579,6 +2651,7 @@ actor User {
     claimBlockedUsers := [];
     claimSubaccountIndexes := [];
     isVerifiedUsers := [];
+    isUserLockedForClaim := [];
     pendingLinkingRequests := [];
     confirmedLinkingRequests := [];
   };
