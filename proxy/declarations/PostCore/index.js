@@ -9,7 +9,8 @@ export { idlFactory } from "./PostCore.did.js";
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
-export const canisterId = "nnyve-piaaa-aaaaf-qaj6q-cai";
+export const canisterId =
+  process.env.CANISTER_ID_POSTCORE;
 
 export const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });
@@ -38,4 +39,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const PostCore = createActor(canisterId);
+export const PostCore = canisterId ? createActor(canisterId) : undefined;

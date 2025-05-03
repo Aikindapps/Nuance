@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export interface Applaud {
   'bucketCanisterId' : string,
@@ -21,6 +22,7 @@ export interface Comment {
   'createdAt' : string,
   'downVotes' : Array<string>,
   'isCensored' : boolean,
+  'isVerified' : boolean,
   'upVotes' : Array<string>,
   'replies' : Array<Comment>,
   'handle' : string,
@@ -37,6 +39,7 @@ export interface Comment__1 {
   'createdAt' : string,
   'downVotes' : Array<string>,
   'isCensored' : boolean,
+  'isVerified' : boolean,
   'upVotes' : Array<string>,
   'replies' : Array<Comment>,
   'handle' : string,
@@ -49,40 +52,15 @@ export interface CommentsReturnType {
   'totalNumberOfComments' : string,
   'comments' : Array<Comment>,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
-export type Metadata = {
-    'fungible' : {
-      'decimals' : number,
-      'metadata' : [] | [MetadataContainer],
-      'name' : string,
-      'symbol' : string,
-    }
-  } |
-  {
-    'nonfungible' : {
-      'thumbnail' : string,
-      'asset' : string,
-      'metadata' : [] | [MetadataContainer],
-      'name' : string,
-    }
-  };
-export type MetadataContainer = { 'blob' : Uint8Array | number[] } |
-  { 'data' : Array<MetadataValue> } |
-  { 'json' : string };
-export type MetadataValue = [
-  string,
-  { 'nat' : bigint } |
-    { 'blob' : Uint8Array | number[] } |
-    { 'nat8' : number } |
-    { 'text' : string },
-];
-export interface NftCanisterEntry { 'handle' : string, 'canisterId' : string }
 export interface Post {
   'url' : string,
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'views' : string,
@@ -91,10 +69,14 @@ export interface Post {
   'publishedDate' : string,
   'claps' : string,
   'tags' : Array<PostTagModel>,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -102,12 +84,18 @@ export interface Post {
 export interface PostBucket {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addPostCategory' : ActorMethod<[string, string], Result_6>,
+  'addPostIdToUserDebug' : ActorMethod<[string, string], Result_3>,
   'availableCycles' : ActorMethod<[], bigint>,
   'buildCommentUrl' : ActorMethod<[string], string>,
   'checkTipping' : ActorMethod<[string], undefined>,
   'checkTippingByTokenSymbol' : ActorMethod<
     [string, string, string],
     Result_11
+  >,
+  'debugMembersOnlyStatusOfExistingDraftArticles' : ActorMethod<[], Result_9>,
+  'debugSetCreatorFieldAndAddPostIdToUser' : ActorMethod<
+    [string, string],
+    Result_6
   >,
   'delete' : ActorMethod<[string], Result_4>,
   'deleteComment' : ActorMethod<[string], Result_5>,
@@ -116,24 +104,24 @@ export interface PostBucket {
   'dumpIds' : ActorMethod<[], Result_3>,
   'dumpPosts' : ActorMethod<[], Result_3>,
   'dumpUserIds' : ActorMethod<[], Result_3>,
-  'generateContent' : ActorMethod<[string], string>,
+  'fixEmptyCreatorFields' : ActorMethod<[string, string], Result_4>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
-  'getAdmins' : ActorMethod<[], Result_8>,
+  'getAdmins' : ActorMethod<[], Result_9>,
+  'getAllApplauds' : ActorMethod<[], Array<Applaud>>,
+  'getAllNotMigratedCreatorFields' : ActorMethod<[], Array<string>>,
   'getAllRejected' : ActorMethod<[], Array<[string, string]>>,
-  'getAllSubmittedForReviews' : ActorMethod<[], Result_12>,
   'getApplaudById' : ActorMethod<[string], Result_11>,
   'getBucketCanisterVersion' : ActorMethod<[], string>,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_8>,
+  'getCgUsers' : ActorMethod<[], Result_9>,
   'getComment' : ActorMethod<[string], Result_5>,
   'getFrontendCanisterId' : ActorMethod<[], string>,
-  'getKinicList' : ActorMethod<[], Result_8>,
+  'getKinicList' : ActorMethod<[], Result_9>,
   'getList' : ActorMethod<[Array<string>], Array<PostBucketType__1>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getMetadata' : ActorMethod<[string, bigint], Result_10>,
   'getMyApplauds' : ActorMethod<[], Array<Applaud>>,
-  'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
+  'getNotMigratedPremiumArticlePostIds' : ActorMethod<[], Array<string>>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPost' : ActorMethod<[string], Result_6>,
   'getPostApplauds' : ActorMethod<[string], Array<Applaud>>,
@@ -141,60 +129,56 @@ export interface PostBucket {
   'getPostCompositeQuery' : ActorMethod<[string], Result_6>,
   'getPostCoreCanisterId' : ActorMethod<[], string>,
   'getPostUrls' : ActorMethod<[], Result_2>,
-  'getPostWithPublicationControl' : ActorMethod<[string], Result_6>,
   'getPostsByPostIds' : ActorMethod<
     [Array<string>, boolean],
     Array<PostBucketType__1>
   >,
-  'getPremiumArticle' : ActorMethod<[string], Result_6>,
+  'getPostsByPostIdsMigration' : ActorMethod<
+    [Array<string>],
+    Array<PostBucketType__1>
+  >,
   'getPublicationPosts' : ActorMethod<
     [Array<string>, string],
     Array<PostBucketType__1>
   >,
   'getReportedCommentIds' : ActorMethod<[], Array<string>>,
-  'getReportedComments' : ActorMethod<[], Result_9>,
+  'getReportedComments' : ActorMethod<[], Result_10>,
   'getTotalPostCount' : ActorMethod<[], bigint>,
-  'getTrustedCanisters' : ActorMethod<[], Result_8>,
+  'getTrustedCanisters' : ActorMethod<[], Result_9>,
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
+  'getUserPostIds' : ActorMethod<[string], Array<string>>,
   'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeBucketCanister' : ActorMethod<
-    [
-      Array<string>,
-      Array<string>,
-      Array<string>,
-      Array<[string, string]>,
-      string,
-      string,
-      string,
-      string,
-    ],
+    [Array<string>, Array<string>, string],
     Result_2
   >,
   'initializeCanister' : ActorMethod<[string, string], Result_2>,
   'isBucketCanisterActivePublic' : ActorMethod<[], boolean>,
-  'makeBucketCanisterNonActive' : ActorMethod<[], Result_7>,
-  'makePostPremium' : ActorMethod<[string], boolean>,
+  'makeBucketCanisterNonActive' : ActorMethod<[], Result_8>,
+  'migrateCreatorsFromHandlesToPrincipals' : ActorMethod<[], Result_7>,
   'migratePostToPublication' : ActorMethod<[string, string, boolean], Result_1>,
+  'migratePremiumArticleFromOldArch' : ActorMethod<
+    [string, [] | [bigint]],
+    Result_2
+  >,
   'registerAdmin' : ActorMethod<[string], Result_3>,
   'registerCanister' : ActorMethod<[string], Result_3>,
   'registerCgUser' : ActorMethod<[string], Result_3>,
-  'registerNftCanisterId' : ActorMethod<[string, string], Result_2>,
-  'registerNftCanisterIdAdminFunction' : ActorMethod<
-    [string, string],
-    Result_2
-  >,
   'registerPlatformOperator' : ActorMethod<[string], Result_3>,
   'reindex' : ActorMethod<[], Result_2>,
   'rejectPostByModclub' : ActorMethod<[string], undefined>,
   'removeCommentVote' : ActorMethod<[string], Result>,
   'removePostCategory' : ActorMethod<[string], Result_6>,
+  'removePostIdToUserDebug' : ActorMethod<[string, string], Result_3>,
   'reportComment' : ActorMethod<[string], Result_2>,
   'reviewComment' : ActorMethod<[string, boolean], Result_5>,
   'save' : ActorMethod<[PostSaveModel], SaveResult>,
   'saveComment' : ActorMethod<[SaveCommentModel], Result>,
+  'saveMultiple' : ActorMethod<[Array<PostSaveModel>], Array<SaveResult>>,
+  'sendNewCommentNotification' : ActorMethod<[string], undefined>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_4>,
-  'simulatePremiumArticle' : ActorMethod<[string, boolean], undefined>,
-  'storeAllSEO' : ActorMethod<[], Result_3>,
   'storeHandlesAndPrincipals' : ActorMethod<
     [Array<[string, string]>],
     Result_2
@@ -215,16 +199,20 @@ export interface PostBucketType {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'wordCount' : string,
   'isPremium' : boolean,
   'publishedDate' : string,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'postOwnerPrincipal' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -234,16 +222,20 @@ export interface PostBucketType__1 {
   'bucketCanisterId' : string,
   'title' : string,
   'created' : string,
-  'creator' : string,
   'modified' : string,
   'content' : string,
   'wordCount' : string,
   'isPremium' : boolean,
   'publishedDate' : string,
+  'nftCanisterId' : [] | [string],
   'isDraft' : boolean,
+  'creatorPrincipal' : string,
   'category' : string,
   'handle' : string,
+  'postOwnerPrincipal' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -251,15 +243,24 @@ export interface PostBucketType__1 {
 export interface PostSaveModel {
   'tagNames' : Array<string>,
   'title' : string,
-  'creator' : string,
   'content' : string,
-  'isPremium' : boolean,
+  'premium' : [] | [
+    {
+      'thumbnail' : string,
+      'icpPrice' : bigint,
+      'editorPrincipals' : Array<string>,
+      'maxSupply' : bigint,
+    }
+  ],
   'isDraft' : boolean,
   'postOwnerPrincipalId' : string,
   'category' : string,
   'caller' : Principal,
   'handle' : string,
+  'creatorHandle' : string,
   'headerImage' : string,
+  'isMembersOnly' : boolean,
+  'scheduledPublishedDate' : [] | [bigint],
   'subtitle' : string,
   'isPublication' : boolean,
   'postId' : string,
@@ -269,11 +270,9 @@ export type Result = { 'ok' : CommentsReturnType } |
   { 'err' : string };
 export type Result_1 = { 'ok' : Post } |
   { 'err' : string };
-export type Result_10 = { 'ok' : Metadata } |
+export type Result_10 = { 'ok' : Array<Comment__1> } |
   { 'err' : string };
 export type Result_11 = { 'ok' : Applaud } |
-  { 'err' : string };
-export type Result_12 = { 'ok' : Array<[string, Array<string>]> } |
   { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };
@@ -285,11 +284,11 @@ export type Result_5 = { 'ok' : Comment__1 } |
   { 'err' : string };
 export type Result_6 = { 'ok' : PostBucketType__1 } |
   { 'err' : string };
-export type Result_7 = { 'ok' : boolean } |
+export type Result_7 = { 'ok' : [bigint, Array<string>] } |
   { 'err' : string };
-export type Result_8 = { 'ok' : Array<string> } |
+export type Result_8 = { 'ok' : boolean } |
   { 'err' : string };
-export type Result_9 = { 'ok' : Array<Comment__1> } |
+export type Result_9 = { 'ok' : Array<string> } |
   { 'err' : string };
 export interface SaveCommentModel {
   'content' : string,
@@ -299,6 +298,9 @@ export interface SaveCommentModel {
 }
 export type SaveResult = { 'ok' : PostBucketType } |
   { 'err' : string };
+export interface SupportedStandard { 'url' : string, 'name' : string }
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE extends PostBucket {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

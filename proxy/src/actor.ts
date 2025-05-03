@@ -32,6 +32,7 @@ function getPostBucketActor(bucketCanisterId : string) {
 
 
 export async function getUserPosts(handle: string): Promise<PostKeyProperties[]> {
+    console.log('Fetching user posts...' + handle);
     try {
         let posts = await getPostCoreActor().getUserPosts(handle.toLowerCase()) as PostKeyProperties[];
         return posts; 

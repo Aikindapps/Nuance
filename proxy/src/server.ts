@@ -159,6 +159,7 @@ const server = http.createServer(async (req, res) => {
                 const userResponse = await getUserByHandle(handle) as UserResponse;
             
                 if (userResponse && userResponse.ok) {
+                    console.log("User found: " + userResponse.ok.handle);
                     const user = userResponse.ok;
                     let postsIdentifiers =  getPostsByFollowers([handle], 0, 30) as Promise<GetPostsByFollowers>; 
                     let uniqueTags = new Set<string>(); 
