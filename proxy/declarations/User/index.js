@@ -9,10 +9,10 @@ export { idlFactory } from "./User.did.js";
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
-export const canisterId = "rtqeo-eyaaa-aaaaf-qaana-cai"
+export const canisterId =
+  process.env.CANISTER_ID_USER;
 
 export const createActor = (canisterId, options = {}) => {
-  console.log("Creating actor: " + canisterId +  " with options: ", options);
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });
 
   if (options.agent && options.agentOptions) {
@@ -39,4 +39,4 @@ export const createActor = (canisterId, options = {}) => {
   });
 };
 
-export const User = createActor(canisterId);
+export const User = canisterId ? createActor(canisterId) : undefined;

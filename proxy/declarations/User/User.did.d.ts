@@ -1,5 +1,6 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
 
 export type AddPublicationReturn = { 'ok' : User__1 } |
   { 'err' : string };
@@ -23,6 +24,7 @@ export interface Date {
   'year' : bigint,
 }
 export type Followers = [] | [[string, List]];
+export type FollowersPrincipals = [] | [[string, List]];
 export type GetHandleByPrincipalReturn = { 'ok' : [] | [string] } |
   { 'err' : string };
 export interface GetMetricsParameters {
@@ -39,10 +41,12 @@ export interface HourlyMetricsData {
   'canisterMemorySize' : CanisterMemoryAggregatedData,
   'timeMillis' : bigint,
 }
+export interface Icrc28TrustedOriginsResponse {
+  'trusted_origins' : Array<string>,
+}
 export type List = [] | [[string, List]];
 export type MetricsGranularity = { 'hourly' : null } |
   { 'daily' : null };
-export interface NftCanisterEntry { 'handle' : string, 'canisterId' : string }
 export type NuaBalanceResult = { 'ok' : string } |
   { 'err' : string };
 export interface NumericEntity {
@@ -60,6 +64,11 @@ export interface PublicationObject__1 {
   'isEditor' : boolean,
   'publicationName' : string,
 }
+export interface ReaderSubscriptionDetails {
+  'readerSubscriptions' : Array<SubscriptionEvent>,
+  'readerNotStoppedSubscriptionsWriters' : Array<WriterSubscriptionDetails>,
+  'readerPrincipalId' : string,
+}
 export type RegisterUserReturn = { 'ok' : User__1 } |
   { 'err' : string };
 export type RemovePublicationReturn = { 'ok' : User__1 } |
@@ -68,51 +77,114 @@ export type Result = { 'ok' : User } |
   { 'err' : string };
 export type Result_1 = { 'ok' : null } |
   { 'err' : string };
-export type Result_2 = { 'ok' : bigint } |
+export type Result_10 = { 'ok' : string } |
   { 'err' : string };
-export type Result_3 = { 'ok' : string } |
+export type Result_11 = { 'ok' : Array<[string, bigint]> } |
   { 'err' : string };
-export type Result_4 = { 'ok' : Array<string> } |
+export type Result_2 = { 'ok' : ReaderSubscriptionDetails } |
   { 'err' : string };
-export type Result_5 = { 'ok' : Array<UserListItem> } |
+export type Result_3 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_6 = { 'ok' : Array<User> } |
+export type Result_4 = { 'ok' : boolean } |
   { 'err' : string };
+export type Result_5 = { 'ok' : [bigint, bigint] } |
+  { 'err' : string };
+export type Result_6 = { 'ok' : Array<string> } |
+  { 'err' : string };
+export type Result_7 = { 'ok' : UserListItem } |
+  { 'err' : string };
+export type Result_8 = { 'ok' : Array<UserListItem> } |
+  { 'err' : string };
+export type Result_9 = { 'ok' : Array<User> } |
+  { 'err' : string };
+export interface SubscriptionEvent {
+  'startTime' : bigint,
+  'subscriptionEventId' : string,
+  'endTime' : bigint,
+  'subscriptionTimeInterval' : SubscriptionTimeInterval,
+  'writerPrincipalId' : string,
+  'paymentFee' : string,
+  'isWriterSubscriptionActive' : boolean,
+  'readerPrincipalId' : string,
+}
+export type SubscriptionTimeInterval = { 'LifeTime' : null } |
+  { 'Weekly' : null } |
+  { 'Monthly' : null } |
+  { 'Annually' : null };
+export interface SupportedStandard { 'url' : string, 'name' : string }
+export interface UniquePersonProof {
+  'provider' : UniquePersonProofProvider,
+  'timestamp' : bigint,
+}
+export type UniquePersonProofProvider = { 'DecideAI' : null };
 export type UpdateCallsAggregatedData = BigUint64Array | bigint[];
 export interface User {
   'bio' : string,
+  'socialChannels' : Array<string>,
   'followersArray' : Array<string>,
   'displayName' : string,
   'followersCount' : number,
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'claimInfo' : UserClaimInfo,
+  'website' : string,
+  'isVerified' : boolean,
   'handle' : string,
+  'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
 }
+export interface UserClaimInfo {
+  'isUserBlocked' : boolean,
+  'maxClaimableTokens' : string,
+  'subaccount' : [] | [Uint8Array | number[]],
+  'lastClaimDate' : [] | [string],
+  'isClaimActive' : boolean,
+}
 export interface UserListItem {
   'bio' : string,
+  'socialChannelsUrls' : Array<string>,
   'principal' : string,
   'displayName' : string,
+  'followersCount' : string,
+  'website' : string,
+  'isVerified' : boolean,
   'handle' : string,
   'fontType' : string,
   'avatar' : string,
 }
 export interface User__1 {
   'bio' : string,
+  'socialChannels' : Array<string>,
   'followersArray' : Array<string>,
   'displayName' : string,
   'followersCount' : number,
   'nuaTokens' : number,
   'accountCreated' : string,
   'publicationsArray' : Array<PublicationObject>,
+  'claimInfo' : UserClaimInfo,
+  'website' : string,
+  'isVerified' : boolean,
   'handle' : string,
+  'followersPrincipals' : FollowersPrincipals,
   'followers' : Followers,
   'avatar' : string,
 }
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
+export type VerifyResult = { 'Ok' : UniquePersonProof } |
+  { 'Err' : string };
+export interface WriterSubscriptionDetails {
+  'writerSubscriptions' : Array<SubscriptionEvent>,
+  'weeklyFee' : [] | [string],
+  'paymentReceiverPrincipalId' : string,
+  'writerPrincipalId' : string,
+  'lifeTimeFee' : [] | [string],
+  'isSubscriptionActive' : boolean,
+  'annuallyFee' : [] | [string],
+  'monthlyFee' : [] | [string],
+}
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addNuaBalance' : ActorMethod<[string], undefined>,
@@ -120,69 +192,101 @@ export interface _SERVICE {
     [PublicationObject__1, string],
     AddPublicationReturn
   >,
-  'adminAirDrop' : ActorMethod<[number], Result_3>,
+  'adminAirDrop' : ActorMethod<[number], Result_10>,
   'availableCycles' : ActorMethod<[], bigint>,
+  'blockUserFromClaiming' : ActorMethod<[string], Result_1>,
+  'checkMyClaimNotification' : ActorMethod<[], undefined>,
+  'claimRestrictedTokens' : ActorMethod<[], Result>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
-  'deleteUser' : ActorMethod<[string], Result_2>,
+  'deleteConfirmedLinkings' : ActorMethod<[], Result_1>,
+  'deleteUser' : ActorMethod<[string], Result_3>,
   'dumpUsers' : ActorMethod<[], string>,
   'followAuthor' : ActorMethod<[string], Result>,
   'generateAccountIds' : ActorMethod<[], undefined>,
   'generateLowercaseHandles' : ActorMethod<[], [string, Array<string>]>,
   'getActiveUsersByRange' : ActorMethod<[Date], bigint>,
-  'getAdmins' : ActorMethod<[], Result_4>,
+  'getAdmins' : ActorMethod<[], Result_6>,
+  'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_11>,
   'getAllHandles' : ActorMethod<[], Array<string>>,
+  'getAllUserPrincipals' : ActorMethod<[], Result_6>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_4>,
+  'getCgUsers' : ActorMethod<[], Result_6>,
   'getDailyMaxRegistration' : ActorMethod<[], bigint>,
+  'getFollowersByPrincipalId' : ActorMethod<[Principal], Array<UserListItem>>,
   'getFollowersCount' : ActorMethod<[string], string>,
+  'getFollowersPrincipalIdsByPrincipalId' : ActorMethod<
+    [string],
+    Array<string>
+  >,
   'getHandleByPrincipal' : ActorMethod<[string], GetHandleByPrincipalReturn>,
   'getHandlesByAccountIdentifiers' : ActorMethod<
     [Array<string>],
     Array<string>
   >,
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
+  'getLinkedPrincipal' : ActorMethod<[string], Result_10>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_6>,
-  'getMyFollowers' : ActorMethod<[number, number], Result_5>,
-  'getNftCanisters' : ActorMethod<[], Array<NftCanisterEntry>>,
+  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_9>,
+  'getMyFollowers' : ActorMethod<[], Result_8>,
   'getNuaBalance' : ActorMethod<[string], NuaBalanceResult>,
   'getNumberOfAllRegisteredUsers' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPrincipalByHandle' : ActorMethod<[string], GetPrincipalByHandleReturn>,
   'getPrincipalsByHandles' : ActorMethod<[Array<string>], Array<string>>,
   'getRegistrationNumberLastDay' : ActorMethod<[], bigint>,
-  'getTrustedCanisters' : ActorMethod<[], Result_4>,
+  'getTotalNumberOfClaimedTokens' : ActorMethod<[], bigint>,
+  'getTrustedCanisters' : ActorMethod<[], Result_6>,
   'getUser' : ActorMethod<[], Result>,
   'getUserByHandle' : ActorMethod<[string], Result>,
   'getUserByPrincipalId' : ActorMethod<[string], Result>,
-  'getUserFollowers' : ActorMethod<[string], Array<string>>,
+  'getUserFollowers' : ActorMethod<[string], Array<UserListItem>>,
   'getUserInternal' : ActorMethod<[string], [] | [User]>,
+  'getUserListItemByHandle' : ActorMethod<[string], Result_7>,
+  'getUsersBlockedFromClaiming' : ActorMethod<[], Result_6>,
   'getUsersByHandles' : ActorMethod<[Array<string>], Array<UserListItem>>,
+  'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
+  'getVerificationStatus' : ActorMethod<[string], Result_4>,
   'handleClap' : ActorMethod<[string, string], undefined>,
-  'initFollowers' : ActorMethod<[bigint, bigint], string>,
+  'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
+  'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
+  'linkInternetIdentityConfirm' : ActorMethod<[string], Result_1>,
+  'linkInternetIdentityRequest' : ActorMethod<[string, string], Result_1>,
+  'migrateFollowersHashmapsFromHandlesToPrincipalIds' : ActorMethod<
+    [],
+    Result_5
+  >,
   'registerAdmin' : ActorMethod<[string], Result_1>,
   'registerCanister' : ActorMethod<[string], Result_1>,
   'registerCgUser' : ActorMethod<[string], Result_1>,
-  'registerNftCanisterId' : ActorMethod<[string], Result_3>,
   'registerPlatformOperator' : ActorMethod<[string], Result_1>,
   'registerUser' : ActorMethod<[string, string, string], RegisterUserReturn>,
   'removePublication' : ActorMethod<
     [PublicationObject__1, string],
     RemovePublicationReturn
   >,
-  'setDailyMaxRegistration' : ActorMethod<[bigint], Result_2>,
-  'setFollowersCount' : ActorMethod<[], GetHandleByPrincipalReturn>,
-  'setMaxMemorySize' : ActorMethod<[bigint], Result_2>,
+  'setDailyMaxRegistration' : ActorMethod<[bigint], Result_3>,
+  'setIsClaimActive' : ActorMethod<[boolean], Result_4>,
+  'setMaxMemorySize' : ActorMethod<[bigint], Result_3>,
+  'setMaxNumberOfClaimableTokens' : ActorMethod<[bigint], Result_3>,
   'spendNuaBalance' : ActorMethod<[string], undefined>,
+  'spendRestrictedTokensForSubscription' : ActorMethod<
+    [string, bigint],
+    Result_2
+  >,
+  'spendRestrictedTokensForTipping' : ActorMethod<
+    [string, string, bigint],
+    Result_1
+  >,
   'testInstructionSize' : ActorMethod<[], string>,
+  'unblockUserFromClaiming' : ActorMethod<[string], Result_1>,
   'unfollowAuthor' : ActorMethod<[string], Result>,
   'unregisterAdmin' : ActorMethod<[string], Result_1>,
   'unregisterCanister' : ActorMethod<[string], Result_1>,
@@ -197,5 +301,13 @@ export interface _SERVICE {
     Result
   >,
   'updateLastLogin' : ActorMethod<[], undefined>,
+  'updateSocialLinks' : ActorMethod<[string, Array<string>], Result>,
+  'updateUserDetails' : ActorMethod<
+    [string, string, string, string, Array<string>],
+    Result
+  >,
   'validate' : ActorMethod<[any], Validate>,
+  'verifyPoh' : ActorMethod<[string], VerifyResult>,
 }
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];
