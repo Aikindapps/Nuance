@@ -967,9 +967,36 @@ actor class PostBucket() = this {
         let extCanister = CanisterDeclarations.getExtCanister(nftCanisterId);
         switch(await extCanister.tokens_ext(U.fromPrincipal(caller, null))) {
           case(#ok(value)) {
-            //owns a token
-            //return the full post
-            return #ok(post);
+            if (value.size() > 0) {
+              //owns a token, return the full post
+              return #ok(post);
+            } else {
+              //doesn't own any token, return the post with empty content
+              post := {
+              postId = post.postId;
+              handle = post.handle;
+              postOwnerPrincipal = post.postOwnerPrincipal;
+              url = post.url;
+              title = post.title;
+              subtitle = post.subtitle;
+              headerImage = post.headerImage;
+              content = "";
+              isDraft = post.isDraft;
+              created = post.created;
+              modified = post.modified;
+              publishedDate = post.publishedDate;
+              creatorHandle = post.creatorHandle;
+              creatorPrincipal = post.creatorPrincipal;
+              isPublication = post.isPublication;
+              category = post.category;
+              isPremium = post.isPremium;
+              isMembersOnly = post.isMembersOnly;
+              nftCanisterId = post.nftCanisterId;
+              wordCount = post.wordCount;
+              bucketCanisterId = Principal.toText(Principal.fromActor(this));
+              };
+              return #ok(post);
+            }
           };
           case(#err(error)) {
             //doesn't own any token in the canister
