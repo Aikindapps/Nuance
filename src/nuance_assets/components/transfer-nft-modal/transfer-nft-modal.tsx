@@ -20,6 +20,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
   const [modalPage, setModalPage] = useState('user-input');
   const [loading, setLoading] = useState(false);
   const [requiredError, setRequiredError] = useState(false);
+  const [inputAddressErrorMessage, setInputAddressErrorMessage] = useState('');
   const darkTheme = useTheme();
   const modalContext = useContext(ModalContext);
 
@@ -33,6 +34,29 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
     secondaryColor: darkTheme
       ? colors.darkSecondaryTextColor
       : colors.primaryTextColor,
+  };
+
+  const isHex = (h: string) => {
+    var regexp = /^[0-9a-fA-F]+$/;
+    return regexp.test(h);
+  };
+  const validateAddress = (handleErrorMessage: boolean) => {
+    if (props.post.userAccountId === receiver && handleErrorMessage) {
+      setInputAddressErrorMessage('You can not use your own address here.');
+      return false;
+    }
+    let validation = isHex(receiver) && receiver.length === 64;
+    if (validation) {
+      if (handleErrorMessage) {
+        setInputAddressErrorMessage('');
+      }
+      return true;
+    } else {
+      if (handleErrorMessage) {
+        setInputAddressErrorMessage('Invalid account ID!');
+      }
+      return false;
+    }
   };
 
   const handleTransfer = async () => {
@@ -99,6 +123,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
         <div className='input-wrapper'>
           <InputField2
             classname='input-attributes2'
+            style={{ marginBottom: '-20px' }}
             value={receiver}
             width='100%'
             height='24px'
@@ -111,9 +136,12 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
               setReceiver(e);
             }}
             theme={darkTheme ? 'dark' : 'light'}
-            hasError={false}
+            hasError={inputAddressErrorMessage !== ''}
           ></InputField2>
-          <RequiredFieldMessage hasError={requiredError} />
+          <RequiredFieldMessage
+            hasError={inputAddressErrorMessage !== ''}
+            errorMessage={inputAddressErrorMessage}
+          />
         </div>
         <div className='buttons-flex'>
           <Button
@@ -133,7 +161,7 @@ export const TransferNftModal: React.FC<TransferNftModalProps> = (
             styleType={{ dark: 'navy-dark', light: 'navy' }}
             style={{ width: '140px', marginLeft: '5px', marginRight: '5px' }}
             onClick={() => {
-              if (receiver.length) {
+              if (validateAddress(true)) {
                 setRequiredError(false);
                 setModalPage('review-transaction');
               } else {
