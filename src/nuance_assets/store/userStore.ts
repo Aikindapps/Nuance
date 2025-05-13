@@ -59,8 +59,6 @@ const handleError = (err: any, preText?: string) => {
   }
 };
 
-const agentToBeUsed = useAuthStore?.getState().agent;
-
 export function levenshteinDistance(a: string, b: string) {
   const an = a.length;
   const bn = b.length;
@@ -690,7 +688,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     let allHandles = await get().getAllUsersHandles();
     let resultHandles = findSimilarHandles(input, allHandles);
     let users = await (await getUserActor(agent)).getUsersByHandles(resultHandles);
-    let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users, agentToBeUsed);
+    let usersMerged = await mergeUsersWithNumberOfPublishedArticles(users, agent);
     set({ searchUserResults: usersMerged });
     return usersMerged;
   },
@@ -723,7 +721,7 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     let mergedPublications =
       await mergePublicationsWithNumberOfPublishedArticlesAndUserListItem(
         publications,
-        agentToBeUsed
+        agent
       );
     set({ searchPublicationResults: mergedPublications });
     return mergedPublications;
