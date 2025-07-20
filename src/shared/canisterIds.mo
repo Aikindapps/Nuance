@@ -12,4 +12,5 @@ module {
   public let PUBLICATION_MANAGEMENT_CANISTER_ID = "kq23y-aiaaa-aaaaf-qajmq-cai";
   public let NOTIFICATIONS_CANISTER_ID = "qrlrq-biaaa-aaaaf-qal2q-cai";
   public let SUBSCRIPTION_CANISTER_ID = "s6qib-6qaaa-aaaaf-qalwa-cai";
+  public let NUA_TRANSACTION_HISTORY_CANISTER_ID = "xv4td-yyaaa-aaaam-qdxlq-cai";
 };

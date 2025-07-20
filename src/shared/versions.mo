@@ -14,4 +14,5 @@ module {
   public let NOTIFICATIONS_VERSION = "angel-face";
   public let POST_RELATIONS_VERSION = "angel-face";
   public let SUBSCRIPTION_VERSION = "angel-face";
+  public let NUA_TRANSACTION_HISTORY_VERSION = "angel-face";
 };

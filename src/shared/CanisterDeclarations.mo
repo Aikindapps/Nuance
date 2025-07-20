@@ -109,6 +109,7 @@ module{
         getUsersByPrincipals : query (principals : [Text]) -> async [UserListItem];
         getFollowersPrincipalIdsByPrincipalId : query (principalId: Text) -> async [Text];
         getAllUserPrincipals : query () -> async Result.Result<[Text], Text>;
+        getNumberOfAllRegisteredUsers : query () -> async Nat;
     };
 
     public func getUserCanister() : UserCanisterInterface {
@@ -685,6 +686,64 @@ module{
         memo : ?Blob;
         created_at_time : ?Nat64;
     };
+
+    public type Transaction = {
+        kind : Text;
+        timestamp : Nat64;
+        transfer : ?{
+            from : Account;
+            to : Account;
+            amount : Nat;
+            fee : ?Nat;
+            memo : ?Blob;
+            created_at_time : ?Nat64;
+            spender : ?Principal;
+        };
+        mint : ?{
+            to : Account;
+            amount : Nat;
+            memo : ?Blob;
+            created_at_time : ?Nat64;
+        };
+        burn : ?{
+            from : Account;
+            amount : Nat;
+            memo : ?Blob;
+            created_at_time : ?Nat64;
+        };
+        approve : ?{
+            from : Account;
+            spender : Principal;
+            amount : Nat;
+            expected_allowance : ?Nat;
+            expires_at : ?Nat64;
+            fee : ?Nat;
+            memo : ?Blob;
+            created_at_time : ?Nat64;
+        };
+    };
+
+
+    public type GetTransactionsRequest = {
+        start : Nat;
+        length : Nat;
+    };
+
+    public type TransactionRange = {
+        transactions: [Transaction];
+    };
+
+    public type GetTransactionsResponse = {
+        log_length : Nat;
+        first_index : Nat;
+        transactions : [Transaction];
+        archived_transactions : [{
+            start : Nat;
+            length : Nat;
+            callback : shared query (GetTransactionsRequest) -> async TransactionRange;
+        }];
+    };
+
     public type ICRC1CanisterInterface = actor {
 
         /// Returns the name of the token
@@ -720,6 +779,12 @@ module{
         burn : shared (BurnArgs) -> async TransferResult;
 
         mint : shared (Mint) -> async TransferResult;
+
+        /// Returns transactions for integration with the rosetta standard
+        get_transactions : shared query (GetTransactionsRequest) -> async GetTransactionsResponse;
+
+        /// Returns a single transaction by index
+        get_transaction : shared (Nat) -> async ?Transaction;
 
     };
     public func getIcrc1Canister(canisterId: Text) : ICRC1CanisterInterface {
