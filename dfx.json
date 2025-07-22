@@ -43,6 +43,11 @@
       "type": "motoko",
       "specified_id": "xjlvo-hyaaa-aaaam-qbcga-cai"
     },
+    "NuaTransactionHistory": {
+      "main": "src/NuaTransactionHistory/main.mo",
+      "type": "motoko",
+      "specified_id": "xv4td-yyaaa-aaaam-qdxlq-cai"
+    },
     "Notifications": {
       "main": "src/NotificationsV3/main.mo",
       "type": "motoko",
