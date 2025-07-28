@@ -229,6 +229,8 @@ export interface _SERVICE {
     Array<string>
   >,
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
+  'getLastDayClaimedTokensAmount' : ActorMethod<[], bigint>,
+  'getLastDayNumberOfClaimEvents' : ActorMethod<[], bigint>,
   'getLinkedPrincipal' : ActorMethod<[string], Result_10>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
@@ -268,6 +270,7 @@ export interface _SERVICE {
   'registerCgUser' : ActorMethod<[string], Result_1>,
   'registerPlatformOperator' : ActorMethod<[string], Result_1>,
   'registerUser' : ActorMethod<[string, string, string], RegisterUserReturn>,
+  'removePoh' : ActorMethod<[string], Result>,
   'removePublication' : ActorMethod<
     [PublicationObject__1, string],
     RemovePublicationReturn
@@ -276,6 +279,7 @@ export interface _SERVICE {
   'setIsClaimActive' : ActorMethod<[boolean], Result_4>,
   'setMaxMemorySize' : ActorMethod<[bigint], Result_3>,
   'setMaxNumberOfClaimableTokens' : ActorMethod<[bigint], Result_3>,
+  'setMaxNumberOfDailyClaimableTokens' : ActorMethod<[bigint], Result_3>,
   'spendNuaBalance' : ActorMethod<[string], undefined>,
   'spendRestrictedTokensForSubscription' : ActorMethod<
     [string, bigint],

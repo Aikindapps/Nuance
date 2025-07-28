@@ -1,6 +1,6 @@
 import React, { useState, createContext, ReactNode, useEffect } from 'react';
 import { PostType } from '../shared/types';
-type ModalType = 'Login' | 'Update handle' | 'Update publication handle' | 'Create Publication' | 'View rejected post';
+type ModalType = 'Login' | 'Update handle' | 'Update publication handle' | 'Create Publication' | 'View rejected post' | 'Remove PoH';
 type ModalData = {
   post?: PostType
 };

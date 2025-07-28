@@ -260,6 +260,8 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(IDL.Text)],
         ['query'],
       ),
+    'getLastDayClaimedTokensAmount' : IDL.Func([], [IDL.Nat], ['query']),
+    'getLastDayNumberOfClaimEvents' : IDL.Func([], [IDL.Nat], ['query']),
     'getLinkedPrincipal' : IDL.Func([IDL.Text], [Result_10], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
@@ -336,6 +338,7 @@ export const idlFactory = ({ IDL }) => {
         [RegisterUserReturn],
         [],
       ),
+    'removePoh' : IDL.Func([IDL.Text], [Result], []),
     'removePublication' : IDL.Func(
         [PublicationObject__1, IDL.Text],
         [RemovePublicationReturn],
@@ -345,6 +348,7 @@ export const idlFactory = ({ IDL }) => {
     'setIsClaimActive' : IDL.Func([IDL.Bool], [Result_4], []),
     'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_3], []),
     'setMaxNumberOfClaimableTokens' : IDL.Func([IDL.Nat], [Result_3], []),
+    'setMaxNumberOfDailyClaimableTokens' : IDL.Func([IDL.Nat], [Result_3], []),
     'spendNuaBalance' : IDL.Func([IDL.Text], [], ['oneway']),
     'spendRestrictedTokensForSubscription' : IDL.Func(
         [IDL.Text, IDL.Nat],

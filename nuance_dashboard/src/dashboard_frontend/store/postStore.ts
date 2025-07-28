@@ -149,6 +149,7 @@ export interface PostStore {
     userPrincipalId: string
   ) => Promise<void>;
   updateUserHandle: (oldHandle: string, newHandle: string) => Promise<boolean>;
+  removePoh: (handle: string) => Promise<boolean>;
   updatePublicationHandle: (
     oldHandle: string,
     newHandle: string
@@ -299,6 +300,25 @@ const createPostStore: StateCreator<PostStore> = (set, get) => ({
         get().postCoreCanisterId,
         []
       );
+      if (Err in response) {
+        toastError(response.err);
+        return false;
+      } else {
+        toastSuccess('Success');
+        return true;
+      }
+    } catch (error) {
+      toastError(error);
+      return false;
+    }
+  },
+
+  removePoh: async (handle: string): Promise<boolean> => {
+    try {
+      let userActor = await getUserActor(get().userCanisterId, get().isLocal);
+
+      //backend method handles the error messaging
+      let response = await userActor.removePoh(handle);
       if (Err in response) {
         toastError(response.err);
         return false;

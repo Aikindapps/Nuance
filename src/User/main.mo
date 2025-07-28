@@ -800,6 +800,27 @@ actor User {
     };
   };
 
+  public shared ({ caller }) func removePoh(handle: Text) : async Result.Result<User, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous cannot call this method");
+    };
+    
+    if (not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    var principalId = lowercaseHandleReverseHashMap.get(handle);
+    switch (principalId) {
+      case (?pid) {
+        isVerifiedUsersHashMap.delete(pid);
+        return #ok(buildUser(pid));
+      };
+      case (null) {
+        return #err(UserNotFound);
+      };
+    };
+  };
+
   public shared ({ caller }) func updateHandle(existingHandle : Text, newHandle : Text, postCoreCanisterId : Text, publicationWritersEditorsPrincipals : ?[Text]) : async Result.Result<User, Text> {
 
     if (isAnonymous(caller)) {
