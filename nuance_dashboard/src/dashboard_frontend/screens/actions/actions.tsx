@@ -50,6 +50,14 @@ export const Actions: React.FC = () => {
           >
             Create publication
           </div>
+          <div
+            onClick={() => {
+              modalContext?.openModal('Remove PoH');
+            }}
+            className='action'
+          >
+            Remove PoH of a user
+          </div>
         </div>
       </div>
     </div>

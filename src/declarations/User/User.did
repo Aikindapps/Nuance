@@ -317,6 +317,8 @@ service : {
   getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
   getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
   getHandlesByPrincipals: (vec text) -> (vec text) query;
+  getLastDayClaimedTokensAmount: () -> (nat) query;
+  getLastDayNumberOfClaimEvents: () -> (nat) query;
   getLinkedPrincipal: (text) -> (Result_10) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
@@ -353,12 +355,14 @@ service : {
   registerCgUser: (text) -> (Result_1);
   registerPlatformOperator: (text) -> (Result_1);
   registerUser: (text, text, text) -> (RegisterUserReturn);
+  removePoh: (text) -> (Result);
   removePublication: (PublicationObject__1, text) ->
    (RemovePublicationReturn);
   setDailyMaxRegistration: (nat) -> (Result_3);
   setIsClaimActive: (bool) -> (Result_4);
   setMaxMemorySize: (nat) -> (Result_3);
   setMaxNumberOfClaimableTokens: (nat) -> (Result_3);
+  setMaxNumberOfDailyClaimableTokens: (nat) -> (Result_3);
   spendNuaBalance: (text) -> () oneway;
   spendRestrictedTokensForSubscription: (text, nat) -> (Result_2);
   spendRestrictedTokensForTipping: (text, text, nat) -> (Result_1);

@@ -6,6 +6,7 @@ import { UpdateHandleModal } from '../update-handle-modal/update-handle-modal';
 import { UpdatePublicationHandleModal } from '../update-publication-handle-modal/update-handle-modal';
 import { CreatePublicationModal } from '../create-publication-modal/create-publication-modal';
 import { ViewRejectedPostModal } from '../view-rejected-post-modal/view-rejected-post-modal';
+import { RemovePohModal } from '../remove-poh-modal/remove-poh-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   return (
@@ -37,6 +38,8 @@ export const ModalsWrapper = () => {
       ) : modalContext?.modalType === 'View rejected post' &&
         modalContext.modalData?.post ? (
         <ViewRejectedPostModal post={modalContext.modalData.post} />
+      ) : modalContext?.modalType === 'Remove PoH' ? (
+        <RemovePohModal />
       ) : null}
     </div>
   );
