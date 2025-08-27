@@ -35,7 +35,7 @@ const UserNotFound = 'User not found';
 //check derivation origin is PROD or UAT
 const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
 const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://t6unq-pqaaa-aaaai-q3nqa-cai.ic0.app';
+const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
 
 const derivationOrigin: string = window.location.origin.includes(
   NuanceUATCanisterId
