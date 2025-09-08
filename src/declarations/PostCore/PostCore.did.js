@@ -238,6 +238,7 @@ export const idlFactory = ({ IDL }) => {
     'dumpPosts' : IDL.Func([], [Result_1], []),
     'dumpUserIds' : IDL.Func([], [Result_1], []),
     'followTag' : IDL.Func([IDL.Text], [Result_1], []),
+    'followTags' : IDL.Func([IDL.Vec(IDL.Text)], [Result_1], []),
     'generateLatestPosts' : IDL.Func([], [], []),
     'generatePublishedDates' : IDL.Func([], [], []),
     'getActiveBucketCanisterId' : IDL.Func([], [Result_2], []),

@@ -297,6 +297,7 @@ service : {
   dumpPosts: () -> (Result_1);
   dumpUserIds: () -> (Result_1);
   followTag: (text) -> (Result_1);
+  followTags: (vec text) -> (Result_1);
   generateLatestPosts: () -> ();
   generatePublishedDates: () -> ();
   getActiveBucketCanisterId: () -> (Result_2);
