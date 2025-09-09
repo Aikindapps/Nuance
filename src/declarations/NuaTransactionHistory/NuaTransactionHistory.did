@@ -1,0 +1,113 @@
+type SupportedStandard = 
+ record {
+   name: text;
+   url: text;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: vec text;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec OperationLog;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type OperationLog = 
+ record {
+   operation: text;
+   "principal": text;
+   timestamp: int;
+ };
+type List = 
+ opt record {
+       text;
+       List;
+     };
+type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
+type HttpResponse = 
+ record {
+   body: vec nat8;
+   headers: vec record {
+                  text;
+                  text;
+                };
+   status_code: nat16;
+   upgrade: opt bool;
+ };
+type HttpRequest = 
+ record {
+   body: vec nat8;
+   headers: vec record {
+                  text;
+                  text;
+                };
+   method: text;
+   url: text;
+ };
+service : {
+  acceptCycles: () -> ();
+  availableCycles: () -> (nat) query;
+  forceStartTimer: () -> (Result);
+  getAdmins: () -> (Result_3) query;
+  getArchiveLedgerThreshold: () -> (nat) query;
+  getBalanceData: () -> (variant {
+                           err: text;
+                           ok: text;
+                         });
+  getCacheStatus: () ->
+   (record {
+      dailyCacheSize: nat;
+      hourlyCacheSize: nat;
+    }) query;
+  getCanisterVersion: () -> (text) query;
+  getDailyData: (text, nat) -> (variant {
+                                  err: text;
+                                  ok: text;
+                                });
+  getHourlyData: (text, nat) -> (variant {
+                                   err: text;
+                                   ok: text;
+                                 });
+  getMaxMemorySize: () -> (nat) query;
+  getMemorySize: () -> (nat) query;
+  getPlatformOperators: () -> (List) query;
+  getPlatformOperatorsLog: () -> (Result_2) query;
+  getRecentCacheStatus: () ->
+   (record {
+      lastCachedRange: opt record {
+                             end: nat;
+                             start: nat;
+                           };
+      lastUpdate: text;
+      timerActive: bool;
+    }) query;
+  getTransactionData: () -> (variant {
+                               err: text;
+                               ok: text;
+                             });
+  getUawData: () -> (variant {
+                       err: text;
+                       ok: text;
+                     });
+  http_request: (HttpRequest) -> (HttpResponse) query;
+  http_request_update: (HttpRequest) -> (HttpResponse);
+  icrc10_supported_standards: () -> (vec SupportedStandard) query;
+  icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
+  isThereEnoughMemory: () -> (bool) query;
+  processTransactionRange: (nat, nat) -> (Result);
+  refreshRecentTransactionCache: () -> (Result);
+  setArchiveLedgerThreshold: (nat) -> (Result_1);
+  setMaxMemorySize: (nat) -> (Result_1);
+  startRecentTransactionCache: () -> (Result);
+}

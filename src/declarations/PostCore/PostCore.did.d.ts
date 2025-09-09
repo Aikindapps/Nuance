@@ -213,6 +213,7 @@ export interface _SERVICE {
   'dumpPosts' : ActorMethod<[], Result_1>,
   'dumpUserIds' : ActorMethod<[], Result_1>,
   'followTag' : ActorMethod<[string], Result_1>,
+  'followTags' : ActorMethod<[Array<string>], Result_1>,
   'generateLatestPosts' : ActorMethod<[], undefined>,
   'generatePublishedDates' : ActorMethod<[], undefined>,
   'getActiveBucketCanisterId' : ActorMethod<[], Result_2>,

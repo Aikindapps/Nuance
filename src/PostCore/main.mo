@@ -3958,9 +3958,41 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
     };
     canistergeekMonitor.collectMetrics();
 
-    // Should be called from user's browser.
-    let userPrincipalId = Principal.toText(caller);
+    switch(followTagHelper(Principal.toText(caller), tagId)) {
+      case (#ok()) {};
+      case (#err(e)) { return #err(e); };
+    };
+    #ok();
+  };
 
+  public shared ({ caller }) func followTags(tagIds : [Text]) : async Result.Result<(), Text> {
+
+    if (isAnonymous(caller)) {
+      return #err(Unauthorized);
+    };
+
+    if (not isThereEnoughMemoryPrivate()) {
+      return #err("Canister reached the maximum memory threshold. Please try again later.");
+    };
+
+    canistergeekMonitor.collectMetrics();
+
+    //validate input
+    for (tagId in tagIds.vals()) {
+      if (not U.isTextLengthValid(tagId, 50)) {
+        return #err("One or more TagIds are not valid.");
+      } else {
+        switch(followTagHelper(Principal.toText(caller), tagId)) {
+          case (#ok()) {};
+          case (#err(e)) { return #err(e); };
+        };
+      };
+    };
+
+    #ok();
+  };
+
+  private func followTagHelper(userPrincipalId : Text, tagId : Text) : Result.Result<(), Text> {
     var postTags = userTagRelationships.get(userPrincipalId);
 
     switch (postTags) {
@@ -3984,6 +4016,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
 
             //userTagRelationships.put(userPrincipalId, Array.append(postTags, [createNewRelationship(tagId)]));
             userTagRelationships.put(userPrincipalId, Buffer.toArray(followedTagBuffer));
+            return #ok();
           };
           case (?tag) {
             if (not tag.isActive) {
@@ -4004,6 +4037,7 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
               );
 
               userTagRelationships.put(userPrincipalId, updatedPostTags);
+              return #ok();
             } else {
               return #err(TagAlreadyFollowed);
             };
@@ -4013,10 +4047,9 @@ public shared ({caller}) func getAllStatusCount () : async Result.Result<Text, T
       case (null) {
         //create new relationship
         userTagRelationships.put(userPrincipalId, [createNewRelationship(tagId)]);
+        return #ok();
       };
     };
-
-    #ok();
   };
 
   public shared ({ caller }) func unfollowTag(tagId : Text) : async Result.Result<(), Text> {
