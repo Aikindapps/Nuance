@@ -163,9 +163,10 @@ export const WithdrawModal = () => {
     setLoading(true);
     try {
       if (selectedCurrency === 'ICP') {
-        let e8s =
+        let e8s = Math.round(
           Math.pow(10, getSelectedCurrencyBalance().token.decimals) *
-          parseFloat(inputAmount);
+          parseFloat(inputAmount)
+        );
         let response = await transferIcp(BigInt(e8s), inputAddressValue);
         if ('Ok' in response) {
           toast('Tokens transferred successfully', ToastType.Success);
