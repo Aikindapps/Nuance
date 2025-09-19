@@ -71,6 +71,7 @@ jobs:
           PUBLICATION_MANAGEMENT_CANISTER_ID =  "${{ secrets.UAT_PUBLICATIONMANAGEMENT }}"
           NOTIFICATIONS_CANISTER_ID = "${{ secrets.UAT_NOTIFICATIONS }}"
           SUBSCRIPTION_CANISTER_ID =  "${{ secrets.UAT_SUBSCRIPTION }}"
+          NUA_TRANSACTION_HISTORY_CANISTER_ID = "${{ secrets.NUA_TRANSACTION_HISTORY }}"
           EOF
 
       - name: Generate canister_ids.json and canisterIds.mo
@@ -89,7 +90,8 @@ jobs:
             "Metrics": { "ic": "'"$METRICS"'" },
             "Notifications": { "ic": "'"$NOTIFICATIONS"'"},
             "Subscription": { "ic": "'"$SUBSCRIPTION"'" },
-            "PostRelations": { "ic": "'"$POST_RELATIONS"'" }
+            "PostRelations": { "ic": "'"$POST_RELATIONS"'" },
+            "NuaTransactionHistory": { "ic": "'"$NUA_TRANSACTION_HISTORY"'" }
 
           }' > canister_ids.json
           echo '{
@@ -129,6 +131,7 @@ jobs:
             public let NOTIFICATIONS_CANISTER_ID = "'"$NOTIFICATIONS"'";
             public let SUBSCRIPTION_CANISTER_ID = "'"$SUBSCRIPTION"'";
             public let POST_RELATIONS_CANISTER_ID = "'"$POST_RELATIONS"'";
+            public let NUA_TRANSACTION_HISTORY_CANISTER_ID = "'"$NUA_TRANSACTION_HISTORY"'";
           };' > src/shared/canisterIds.mo
 
         env:
@@ -148,6 +151,7 @@ jobs:
           SUBSCRIPTION: ${{ secrets.UAT_SUBSCRIPTION }}
           POST_RELATIONS: ${{ secrets.UAT_POSTRELATIONS }}
           NFT_BUCKET: ${{ secrets.UAT_NFT_BUCKET }}
+          NUA_TRANSACTION_HISTORY: ${{ secrets.NUA_TRANSACTION_HISTORY }}
 
       - name: Generate canister_ids.json in for NFTs and Publications
         run: |
