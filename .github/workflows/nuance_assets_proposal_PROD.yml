@@ -23,11 +23,23 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.inputs.tag }}
+          fetch-depth: 0
 
-      - name: Verify branch
+      - name: Verify tag
         run: |
-          if [ "${{ github.ref }}" != "refs/tags/${{ github.event.inputs.tag }}" ]; then
-            echo "Error: The current branch does not match the input branch."
+          git fetch --tags --force
+          TAG='${{ github.event.inputs.tag }}'
+
+          if ! git show-ref --verify --quiet "refs/tags/$TAG"; then
+            echo "Error: tag '$TAG' not found in repo."
+            exit 1
+          fi
+
+          TAG_SHA="$(git rev-parse "refs/tags/$TAG^{commit}")"
+          HEAD_SHA="$(git rev-parse HEAD)"
+
+          if [ "$TAG_SHA" != "$HEAD_SHA" ]; then
+            echo "Error: checked out commit ($HEAD_SHA) is not tag '$TAG' ($TAG_SHA)."
             exit 1
           fi
 
@@ -61,6 +73,7 @@ jobs:
           rm -f ~/.config/dfx/identity/prod/identity.pem
           mkdir -p ~/.config/dfx/identity/prod/
           echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+          chmod 600 ~/.config/dfx/identity/prod/identity.pem
           echo '{}' | jq --arg wallet "$PROD_WALLET" '.identities.prod.ic = $wallet' > ~/.config/dfx/identity/prod/wallets.json
           dfx identity use prod
           dfx identity get-principal
@@ -74,5 +87,9 @@ jobs:
 
       - name: Create commit Proposal
         run: |
-          echo "${{ secrets.PROD_IDENT }}" | base64 --decode > identity.pem
-          node scripts/sns/assetCanisterUpgrade.js --functionId=1010 --developerNeuronId=${{ secrets.PROD_NEURON_ID }} --pemFilePath=./identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}
+          node scripts/sns/assetCanisterUpgrade.js --functionId=1010 --developerNeuronId=${{ secrets.PROD_NEURON_ID }} --pemFilePath=~/.config/dfx/identity/prod/identity.pem --batchId=${{ github.event.inputs.batchId }} --evidence=${{ github.event.inputs.evidence }}
+
+      - name: Cleanup identity
+        if: ${{ always() }}
+        run: |
+          rm -f ~/.config/dfx/identity/prod/identity.pem || true

@@ -54,12 +54,22 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.inputs.tag }}
+          fetch-depth: 0
 
       - name: Verify tag
         run: |
-          if [ "${{ github.ref }}" != "refs/tags/${{ github.event.inputs.tag }}" ]; then
-            echo "Error: This workflow must run from a tag."
-            echo "Expected refs/tags/${{ github.event.inputs.tag }}, got ${{ github.ref }}"
+          TAG='${{ github.event.inputs.tag }}'
+          git fetch --force --tags
+
+          if ! git show-ref --verify --quiet "refs/tags/${TAG}"; then
+            echo "Error: Tag not found: ${TAG}"
+            exit 1
+          fi
+
+          ACTUAL_TAG="$(git describe --tags --exact-match 2>/dev/null || true)"
+          if [ "${ACTUAL_TAG}" != "${TAG}" ]; then
+            echo "Error: Checked out commit is not exactly tag ${TAG}."
+            echo "Checked out exact tag: ${ACTUAL_TAG:-<none>}"
             exit 1
           fi
 
@@ -87,6 +97,7 @@ jobs:
           rm -f ~/.config/dfx/identity/prod/identity.pem
           mkdir -p ~/.config/dfx/identity/prod/
           echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+          chmod 600 ~/.config/dfx/identity/prod/identity.pem
           echo '{}' | jq --arg wallet "$PROD_WALLET" '.identities.prod.ic = $wallet' > ~/.config/dfx/identity/prod/wallets.json
           dfx identity use prod
           dfx identity get-principal
@@ -97,10 +108,9 @@ jobs:
 
       - name: Create and send treasury transfer proposal
         run: |
-          echo "${{ secrets.PROD_IDENT }}" | base64 --decode > identity.pem
           node scripts/sns/treasuryTransferProposal.js \
             --developerNeuronId='${{ secrets.PROD_NEURON_ID }}' \
-            --pemFilePath=./identity.pem \
+            --pemFilePath=~/.config/dfx/identity/prod/identity.pem \
             --treasury='${{ github.event.inputs.treasury }}' \
             --amount='${{ github.event.inputs.amount }}' \
             --amountE8s='${{ github.event.inputs.amountE8s }}' \
@@ -111,3 +121,8 @@ jobs:
             --url='${{ github.event.inputs.url }}' \
             --summary='${{ github.event.inputs.summary }}' \
             --summaryPath='${{ github.event.inputs.summaryPath }}'
+
+      - name: Cleanup sensitive files
+        if: always()
+        run: |
+          rm -f ~/.config/dfx/identity/prod/identity.pem || true

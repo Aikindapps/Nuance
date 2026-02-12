@@ -4,6 +4,7 @@ const { spawn } = require('child_process');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const { developerNeuronId: defaultDevNeuronId, pemFilePath: defaultPemFilePath } = require('./snsConfig');
+const { Principal } = require('@dfinity/principal');
 
 const argv = yargs(hideBin(process.argv))
   .option('developerNeuronId', {
@@ -164,9 +165,15 @@ function interpretEscapesForWorkflowInput(value) {
     ? parseAmountE8s(amountE8sOverride)
     : parseDecimalAmountToE8s(argv.amount, 8);
 
-  const toPrincipal = argv.toPrincipal.trim();
-  if (toPrincipal.length === 0) {
+  const toPrincipalInput = argv.toPrincipal.trim();
+  if (toPrincipalInput.length === 0) {
     throw new Error('toPrincipal is required');
+  }
+  let toPrincipal;
+  try {
+    toPrincipal = Principal.fromText(toPrincipalInput).toText();
+  } catch {
+    throw new Error(`toPrincipal is not a valid principal: ${toPrincipalInput}`);
   }
 
   const subaccountBytes = hexToNat8Vec(argv.toSubaccountHex);
