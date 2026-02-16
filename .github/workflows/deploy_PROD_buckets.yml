@@ -31,6 +31,7 @@ jobs:
           rm -f ~/.config/dfx/identity/prod/identity.pem
           mkdir -p ~/.config/dfx/identity/prod/
           echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+          chmod 600 ~/.config/dfx/identity/prod/identity.pem
           echo '{}' | jq --arg wallet "$PROD_WALLET" '.identities.prod.ic = $wallet' > ~/.config/dfx/identity/prod/wallets.json
           dfx identity use prod
           dfx identity get-principal
@@ -87,3 +88,8 @@ jobs:
 
       - name: Deploy PROD front end and bucket canisters --network ic
         run: bash ./scripts/deployment/PROD_deploy_buckets.sh
+
+      - name: Cleanup identity
+        if: ${{ always() }}
+        run: |
+          rm -f ~/.config/dfx/identity/prod/identity.pem || true

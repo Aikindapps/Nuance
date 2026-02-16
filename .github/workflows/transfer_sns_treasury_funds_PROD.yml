@@ -1,0 +1,128 @@
+name: Transfer SNS Treasury Funds (PROD)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to run from (PROD only)'
+        required: true
+      treasury:
+        description: 'Which treasury to transfer from: icp or nua (sns token)'
+        required: true
+        default: 'icp'
+      amount:
+        description: 'Human amount (supports decimals up to 8). Example: 1.25'
+        required: true
+      amountE8s:
+        description: 'Optional override in e8s (integer). If provided, this wins over amount.'
+        required: false
+        default: ''
+      toPrincipal:
+        description: 'Receiver principal (account owner)'
+        required: true
+      toSubaccountHex:
+        description: 'Optional 32-byte subaccount as 64 hex chars (no 0x). Leave empty for default account.'
+        required: false
+        default: ''
+      memo:
+        description: 'Optional memo (nat64). Leave empty for null.'
+        required: false
+        default: ''
+      title:
+        description: 'Proposal title'
+        required: true
+        default: 'Treasury transfer'
+      url:
+        description: 'URL of discussion or additional info'
+        required: false
+        default: 'https://oc.app/community/3qzyb-ryaaa-aaaar-ateiq-cai/channel/1500991506'
+      summary:
+        description: 'Proposal summary (single-line input; you can use \\n sequences). Leave empty if using summaryPath.'
+        required: false
+        default: ''
+      summaryPath:
+        description: 'Optional path to a Markdown file in the repo to use as summary (recommended). Example: docs/treasury/summary.md'
+        required: false
+        default: ''
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.tag }}
+          fetch-depth: 0
+
+      - name: Verify tag
+        run: |
+          TAG='${{ github.event.inputs.tag }}'
+          git fetch --force --tags
+
+          if ! git show-ref --verify --quiet "refs/tags/${TAG}"; then
+            echo "Error: Tag not found: ${TAG}"
+            exit 1
+          fi
+
+          ACTUAL_TAG="$(git describe --tags --exact-match 2>/dev/null || true)"
+          if [ "${ACTUAL_TAG}" != "${TAG}" ]; then
+            echo "Error: Checked out commit is not exactly tag ${TAG}."
+            echo "Checked out exact tag: ${ACTUAL_TAG:-<none>}"
+            exit 1
+          fi
+
+      - name: npm install
+        run: npm install
+
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+
+      - name: Confirm dfx version
+        run: |
+          dfxvm install 0.22.0
+          dfxvm default 0.22.0
+          dfx --version
+
+      - name: Install Quill
+        run: |
+          mkdir -p scripts/sns/install/bin
+          bash scripts/sns/install/install.sh
+          bash scripts/sns/install/move.sh
+
+      - name: Set up dfx identity (prod)
+        run: |
+          sudo apt-get install -y jq
+          rm -f ~/.config/dfx/identity/prod/identity.pem
+          mkdir -p ~/.config/dfx/identity/prod/
+          echo "$PROD_IDENT" | base64 --decode > ~/.config/dfx/identity/prod/identity.pem
+          chmod 600 ~/.config/dfx/identity/prod/identity.pem
+          echo '{}' | jq --arg wallet "$PROD_WALLET" '.identities.prod.ic = $wallet' > ~/.config/dfx/identity/prod/wallets.json
+          dfx identity use prod
+          dfx identity get-principal
+          dfx identity set-wallet "$PROD_WALLET" --network ic
+        env:
+          PROD_IDENT: ${{ secrets.PROD_IDENT }}
+          PROD_WALLET: ${{ secrets.PROD_WALLET }}
+
+      - name: Create and send treasury transfer proposal
+        run: |
+          node scripts/sns/treasuryTransferProposal.js \
+            --developerNeuronId='${{ secrets.PROD_NEURON_ID }}' \
+            --pemFilePath=~/.config/dfx/identity/prod/identity.pem \
+            --treasury='${{ github.event.inputs.treasury }}' \
+            --amount='${{ github.event.inputs.amount }}' \
+            --amountE8s='${{ github.event.inputs.amountE8s }}' \
+            --toPrincipal='${{ github.event.inputs.toPrincipal }}' \
+            --toSubaccountHex='${{ github.event.inputs.toSubaccountHex }}' \
+            --memo='${{ github.event.inputs.memo }}' \
+            --title='${{ github.event.inputs.title }}' \
+            --url='${{ github.event.inputs.url }}' \
+            --summary='${{ github.event.inputs.summary }}' \
+            --summaryPath='${{ github.event.inputs.summaryPath }}'
+
+      - name: Cleanup sensitive files
+        if: always()
+        run: |
+          rm -f ~/.config/dfx/identity/prod/identity.pem || true
