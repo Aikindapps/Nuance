@@ -400,6 +400,29 @@ actor CyclesDispenser {
       isStorageBucket = U.safeGet(canisterIdToIsStorageBucketHashmap, canisterId, false);
     };
   };
+
+  private func refreshRegisteredCanisterBalance(canisterId : Text) : async Result.Result<Nat, Text> {
+    switch (canisterIdToMinimumAmountOfCyclesHashmap.get(canisterId)) {
+      case (?_) {
+        let registeredCanisterActor : GeneralActorType = actor (canisterId);
+        let isStorageBucket = U.safeGet(canisterIdToIsStorageBucketHashmap, canisterId, false);
+        try {
+          let liveBalance = if (isStorageBucket) {
+            await registeredCanisterActor.wallet_balance();
+          } else {
+            await registeredCanisterActor.availableCycles();
+          };
+          canisterIdToBalanceHashmap.put(canisterId, liveBalance);
+          #ok(liveBalance);
+        } catch (e) {
+          #err("Could not fetch canister balance.");
+        };
+      };
+      case (null) {
+        #err("Given canister id is not registered yet.");
+      };
+    };
+  };
   //allows admins to add/update canisters. The given canister should contain the availableCycles method.
   public shared ({ caller }) func addCanister(canister : AddCanisterModel) : async Result.Result<RegisteredCanister, Text> {
     if (isAnonymous(caller)) {
@@ -617,13 +640,13 @@ actor CyclesDispenser {
 
   //#region query data
   //returns the configurable values and top-ups related to the given canister
-  public shared query func getRegisteredCanister(canisterId : Text) : async Result.Result<RegisteredCanister, Text> {
-    switch (canisterIdToMinimumAmountOfCyclesHashmap.get(canisterId)) {
-      case (?val) {
-        return #ok(buildRegisteredCanister(canisterId));
+  public shared func getRegisteredCanister(canisterId : Text) : async Result.Result<RegisteredCanister, Text> {
+    switch (await refreshRegisteredCanisterBalance(canisterId)) {
+      case (#ok(_)) {
+        #ok(buildRegisteredCanister(canisterId));
       };
-      case (null) {
-        return #err("Given canister id is not registered yet.");
+      case (#err(error)) {
+        #err(error);
       };
     };
   };

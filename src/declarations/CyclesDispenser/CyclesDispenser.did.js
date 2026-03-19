@@ -58,7 +58,7 @@ export const idlFactory = ({ IDL }) => {
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
-    'getRegisteredCanister' : IDL.Func([IDL.Text], [Result_4], ['query']),
+    'getRegisteredCanister' : IDL.Func([IDL.Text], [Result_4], []),
     'getStatus' : IDL.Func([], [IDL.Text], ['query']),
     'getTopUp' : IDL.Func([IDL.Text], [Result_3], ['query']),
     'getTopUpsByRange' : IDL.Func([TimeRange], [IDL.Vec(TopUp)], ['query']),

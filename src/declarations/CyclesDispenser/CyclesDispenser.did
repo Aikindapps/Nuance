@@ -83,7 +83,7 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
-  getRegisteredCanister: (text) -> (Result_4) query;
+  getRegisteredCanister: (text) -> (Result_4);
   getStatus: () -> (text) query;
   getTopUp: (text) -> (Result_3) query;
   getTopUpsByRange: (TimeRange) -> (vec TopUp) query;
