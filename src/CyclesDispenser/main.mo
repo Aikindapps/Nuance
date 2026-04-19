@@ -455,7 +455,13 @@ actor CyclesDispenser {
     let registeredCanister = buildRegisteredCanister(canisterId);
     let registeredCanisterActor : GeneralActorType = actor (canisterId);
 
-    let balance = if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()};
+    let balance = try {
+      if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()}
+    } catch (e) {
+      // If the balance fetch fails (e.g. the bucket is too low on cycles to respond),
+      // treat it as 0 so the threshold check below triggers a top-up.
+      0
+    };
     canisterIdToBalanceHashmap.put(canisterId, balance);
     let cyclesDispenserBalance = Cycles.balance();
 
@@ -617,10 +623,17 @@ actor CyclesDispenser {
 
   //#region query data
   //returns the configurable values and top-ups related to the given canister
-  public shared query func getRegisteredCanister(canisterId : Text) : async Result.Result<RegisteredCanister, Text> {
+  public shared func getRegisteredCanister(canisterId : Text) : async Result.Result<RegisteredCanister, Text> {
     switch (canisterIdToMinimumAmountOfCyclesHashmap.get(canisterId)) {
       case (?val) {
-        return #ok(buildRegisteredCanister(canisterId));
+        let registeredCanister = buildRegisteredCanister(canisterId);
+        if (registeredCanister.isStorageBucket) {
+          let bucketActor : GeneralActorType = actor (canisterId);
+          let liveBalance = try { await bucketActor.wallet_balance() } catch (e) { registeredCanister.balance };
+          canisterIdToBalanceHashmap.put(canisterId, liveBalance);
+          return #ok({ registeredCanister with balance = liveBalance });
+        };
+        return #ok(registeredCanister);
       };
       case (null) {
         return #err("Given canister id is not registered yet.");
@@ -628,10 +641,18 @@ actor CyclesDispenser {
     };
   };
   //returns all the registered canister's info
-  public shared query func getAllRegisteredCanisters() : async [RegisteredCanister] {
+  public shared func getAllRegisteredCanisters() : async [RegisteredCanister] {
     let resultBuffer = Buffer.Buffer<RegisteredCanister>(0);
     for (canisterId in canisterIdToMinimumAmountOfCyclesHashmap.keys()) {
-      resultBuffer.add(buildRegisteredCanister(canisterId));
+      let registeredCanister = buildRegisteredCanister(canisterId);
+      if (registeredCanister.isStorageBucket) {
+        let bucketActor : GeneralActorType = actor (canisterId);
+        let liveBalance = try { await bucketActor.wallet_balance() } catch (e) { registeredCanister.balance };
+        canisterIdToBalanceHashmap.put(canisterId, liveBalance);
+        resultBuffer.add({ registeredCanister with balance = liveBalance });
+      } else {
+        resultBuffer.add(registeredCanister);
+      };
     };
 
     Buffer.toArray(resultBuffer);

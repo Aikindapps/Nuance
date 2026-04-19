@@ -4805,6 +4805,13 @@ private func getTagsFollowers(tagNames : [Text]) : [[Text]] {
 
   system func timer(setGlobalTimer : Nat64 -> ()) : async () {
     Debug.print("PostCore -> timer");
+
+    // Schedule the next timer FIRST to guarantee it always runs,
+    // even if the rest of this function traps.
+    let now = Time.now();
+    let next = Nat64.fromIntWrap(now) + 240_000_000_000;
+    setGlobalTimer(next); // absolute time in nanoseconds
+
     try {
       ignore indexPopular();
       Debug.print("PostCore -> index popular posts end.");
@@ -4837,22 +4844,17 @@ private func getTagsFollowers(tagNames : [Text]) : [[Text]] {
         Debug.print("PostCore -> Error while creating the bucket canister. (1)");
       };
     } else {
-      let bucketActor = CanisterDeclarations.getPostBucketCanister(activeBucketCanisterId);
-      if (not (await bucketActor.isBucketCanisterActivePublic())) {
-        try {
+      try {
+        let bucketActor = CanisterDeclarations.getPostBucketCanister(activeBucketCanisterId);
+        if (not (await bucketActor.isBucketCanisterActivePublic())) {
           ignore await createNewBucketCanister();
-        } catch (e) {
-          Debug.print("PostCore -> Error while creating the bucket canister. (2)");
         };
+      } catch (e) {
+        Debug.print("PostCore -> Error while creating the bucket canister. (2)");
       };
     };
 
-    let now = Time.now();
     lastTimerCalled := now;
-
     cyclesBalanceWhenTimerIsCalledLastTime := Cycles.balance();
-
-    let next = Nat64.fromIntWrap(now) + 240_000_000_000;
-    setGlobalTimer(next); // absolute time in nanoseconds
   };
 };
