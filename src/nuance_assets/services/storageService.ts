@@ -51,7 +51,7 @@ export async function uploadBlob(
     contentId: contentId,
     dataCanisterId: res[0],
     dataUrl: isDevelopment
-      ? `http://localhost:8080/storage?canisterId=${res[0]}&contentId=${contentId}`
+      ? `http://${res[0]}.raw.localhost:8080/storage?contentId=${contentId}`
       : `https://${res[0]}.raw.icp0.io/storage?contentId=${contentId}`,
     mappingId,
   };

@@ -15,6 +15,7 @@ import './publication-landing.scss';
 import CopyPublication from '../../UI/copy-publication/copy-publication';
 import ReportAuthorMenu from '../../UI/report-author/report-author';
 import FollowAuthor from '../../components/follow-author/follow-author';
+import SubscribeToEmailButton from '../../components/subscribe-to-email-button/subscribe-to-email-button';
 import PublicationCategoriesMenu from '../../components/publication-categories-menu/publication-categories-menu';
 import ArticleList from '../../components/article-list/article-list';
 import PublicationProfile from '../../components/publication-profile/publication-profile';
@@ -36,6 +37,7 @@ import {
   useSubscriptionStore,
 } from '../../store/subscriptionStore';
 import { searchTextToTag } from '../../shared/utils';
+import { isEmailSubscribedByCaller } from '../../services/emailSubscriptionService';
 
 function PublicationLanding() {
   const darkTheme = useTheme();
@@ -155,6 +157,7 @@ function PublicationLanding() {
   const [updatingFollow, setUpdatingFollow] = useState(false);
   const [isFollowingTag, setIsFollowingTag] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [isEmailSubscribed, setIsEmailSubscribed] = useState(false);
 
   const [displayingPosts, setDisplayingPosts] = useState<PostType[]>([]);
   const [initialPostsLoading, setInitialPostsLoading] = useState(false);
@@ -223,6 +226,14 @@ function PublicationLanding() {
     handleSubscriptionComplete,
     handleCancelSubscription,
   ]);
+
+  useEffect(() => {
+    if (isLoggedIn && publication?.publicationHandle && publicationCanisterId) {
+      isEmailSubscribedByCaller(publication.publicationHandle, publicationCanisterId, agentToBeUsed ?? undefined)
+        .then(setIsEmailSubscribed)
+        .catch(() => {});
+    }
+  }, [isLoggedIn, publication?.publicationHandle, publicationCanisterId]);
 
   const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] =
     useState<boolean>(false);
@@ -613,6 +624,17 @@ function PublicationLanding() {
                   primaryColor={publication?.styling.primaryColor}
                 />
               </div>
+              {publication?.publicationHandle && publicationCanisterId && (
+                <SubscribeToEmailButton
+                  authorHandle={publication.publicationHandle}
+                  authorDisplayName={
+                    publication.publicationTitle || publication.publicationHandle
+                  }
+                  publicationCanisterId={publicationCanisterId}
+                  isEmailSubscribed={isEmailSubscribed}
+                  onUnsubscribeComplete={() => setIsEmailSubscribed(false)}
+                />
+              )}
               {!subscribed && hasValidSubscriptionOptions && isLoggedIn && (
                 <div className='Subscription-container'>
                   <SubscriptionCta onOpen={() => closeMenus()} />

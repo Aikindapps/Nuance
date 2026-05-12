@@ -72,6 +72,10 @@ export interface _SERVICE {
   >,
   'disperseTokensForSuccessfulSubscription' : ActorMethod<[string], Result_4>,
   'expiredNotificationsHeartbeatExternal' : ActorMethod<[], undefined>,
+  'getAuthorActivePaidSubscriberPrincipalIds' : ActorMethod<
+    [string],
+    Array<string>
+  >,
   'getCanisterVersion' : ActorMethod<[], string>,
   'getLatestTimerCall' : ActorMethod<[], [string, string]>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,

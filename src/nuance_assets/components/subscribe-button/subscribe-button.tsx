@@ -61,13 +61,13 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                     type='button'
                     style={
                         props.isPublication ? { width: '180px', margin: '10px 0' }
-                            : { width: '110px', margin: '10px 0' }
+                            : { width: '120px', margin: '10px 0' }
                     }
                     onClick={handleUnsubscribe}
                     disabled={loading}
                     loading={loading}
                 >
-                    Unsubscribe
+                    Stop supporting
                 </Button>
             ) : (
                 <Button
@@ -81,7 +81,7 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                     disabled={loading}
                     loading={loading}
                 >
-                    {props.isPublication ? 'Subscribe to this Publication' : 'Subscribe'}
+                    {props.isPublication ? 'Support this Publication' : 'Support'}
                 </Button>
             )}
         </div>

@@ -57,6 +57,8 @@ const CategoryLanding = lazy(
   () => import('./screens/category-landing/category-landing')
 );
 const Wallet = lazy(() => import('./screens/profile/wallet'));
+const VerifyEmail = lazy(() => import('./screens/verify-email/verify-email'));
+const Unsubscribe = lazy(() => import('./screens/unsubscribe/unsubscribe'));
 import { Context } from './contextes/Context';
 import Followers from './screens/profile/followers';
 import SubmittedArticles from './screens/profile/SubmittedArticles';
@@ -79,6 +81,8 @@ const Routes = () => {
     { path: '/metrics', element: <Metrics /> },
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
+    { path: '/verify-email', element: <VerifyEmail /> },
+    { path: '/unsubscribe', element: <Unsubscribe /> },
     { path: '/:handle', element: <Profile /> },
     { path: '/user/:handle', element: <Profile /> },
     { path: '/:handle/:id/:title', element: <ReadArticle /> },

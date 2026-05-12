@@ -244,7 +244,7 @@ const CustomNotificationContent = ({
       );
       return (
         <span>
-          You <span className='bold'>subscribed</span> to the{' '}
+          You <span className='bold'>support</span> the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
           {
             <Link

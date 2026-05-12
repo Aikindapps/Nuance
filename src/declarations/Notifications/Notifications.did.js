@@ -5,7 +5,7 @@ export const idlFactory = ({ IDL }) => {
     'Monthly' : IDL.Null,
     'Annually' : IDL.Null,
   });
-  const NotificationContent__1 = IDL.Variant({
+  const NotificationContent = IDL.Variant({
     'FaucetClaimAvailable' : IDL.Null,
     'TipReceived' : IDL.Record({
       'bucketCanisterId' : IDL.Text,
@@ -111,95 +111,6 @@ export const idlFactory = ({ IDL }) => {
     'newArticleByFollowedTag' : IDL.Bool,
     'faucetClaimAvailable' : IDL.Bool,
   });
-  const NotificationContent = IDL.Variant({
-    'FaucetClaimAvailable' : IDL.Null,
-    'TipReceived' : IDL.Record({
-      'bucketCanisterId' : IDL.Text,
-      'amountOfTokens' : IDL.Text,
-      'tipSenderPrincipal' : IDL.Text,
-      'publicationPrincipalId' : IDL.Opt(IDL.Text),
-      'postTitle' : IDL.Text,
-      'numberOfApplauds' : IDL.Text,
-      'tippedTokenSymbol' : IDL.Text,
-      'postId' : IDL.Text,
-    }),
-    'NewArticleByFollowedWriter' : IDL.Record({
-      'bucketCanisterId' : IDL.Text,
-      'postWriterPrincipal' : IDL.Text,
-      'postTitle' : IDL.Text,
-      'postId' : IDL.Text,
-    }),
-    'AuthorLosesSubscriber' : IDL.Record({
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscriberPrincipalId' : IDL.Text,
-    }),
-    'YouSubscribedToAuthor' : IDL.Record({
-      'amountOfTokens' : IDL.Text,
-      'subscriptionEndTime' : IDL.Text,
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscribedWriterPrincipalId' : IDL.Text,
-      'subscriptionStartTime' : IDL.Text,
-      'isPublication' : IDL.Bool,
-    }),
-    'NewCommentOnMyArticle' : IDL.Record({
-      'bucketCanisterId' : IDL.Text,
-      'commentId' : IDL.Text,
-      'isReply' : IDL.Bool,
-      'commentContent' : IDL.Text,
-      'postTitle' : IDL.Text,
-      'commenterPrincipal' : IDL.Text,
-      'postId' : IDL.Text,
-    }),
-    'VerifyProfile' : IDL.Null,
-    'YouUnsubscribedFromAuthor' : IDL.Record({
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscribedWriterPrincipalId' : IDL.Text,
-      'isPublication' : IDL.Bool,
-    }),
-    'NewFollower' : IDL.Record({ 'followerPrincipalId' : IDL.Text }),
-    'ReaderExpiredSubscription' : IDL.Record({
-      'amountOfTokens' : IDL.Text,
-      'subscriptionEndTime' : IDL.Text,
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscribedWriterPrincipalId' : IDL.Text,
-      'subscriptionStartTime' : IDL.Text,
-      'isPublication' : IDL.Bool,
-    }),
-    'ReplyToMyComment' : IDL.Record({
-      'bucketCanisterId' : IDL.Text,
-      'postWriterPrincipal' : IDL.Text,
-      'myCommentId' : IDL.Text,
-      'myCommentContent' : IDL.Text,
-      'replyCommentContent' : IDL.Text,
-      'postTitle' : IDL.Text,
-      'replyCommenterPrincipal' : IDL.Text,
-      'replyCommentId' : IDL.Text,
-      'postId' : IDL.Text,
-    }),
-    'PremiumArticleSold' : IDL.Record({
-      'bucketCanisterId' : IDL.Text,
-      'amountOfTokens' : IDL.Text,
-      'publicationPrincipalId' : IDL.Opt(IDL.Text),
-      'purchasedTokenSymbol' : IDL.Text,
-      'purchaserPrincipal' : IDL.Text,
-      'postTitle' : IDL.Text,
-      'postId' : IDL.Text,
-    }),
-    'NewArticleByFollowedTag' : IDL.Record({
-      'bucketCanisterId' : IDL.Text,
-      'tagName' : IDL.Text,
-      'postWriterPrincipal' : IDL.Text,
-      'postTitle' : IDL.Text,
-      'postId' : IDL.Text,
-    }),
-    'AuthorGainsNewSubscriber' : IDL.Record({
-      'amountOfTokens' : IDL.Text,
-      'subscriptionEndTime' : IDL.Text,
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscriptionStartTime' : IDL.Text,
-      'subscriberPrincipalId' : IDL.Text,
-    }),
-  });
   const Notification = IDL.Record({
     'id' : IDL.Text,
     'content' : NotificationContent,
@@ -223,14 +134,10 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'acceptCycles' : IDL.Func([], [], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
-    'broadcastNotification' : IDL.Func(
-        [NotificationContent__1],
-        [Result_2],
-        [],
-      ),
-    'createNotification' : IDL.Func([IDL.Text, NotificationContent__1], [], []),
+    'broadcastNotification' : IDL.Func([NotificationContent], [Result_2], []),
+    'createNotification' : IDL.Func([IDL.Text, NotificationContent], [], []),
     'createNotifications' : IDL.Func(
-        [IDL.Vec(IDL.Tuple(IDL.Text, NotificationContent__1))],
+        [IDL.Vec(IDL.Tuple(IDL.Text, NotificationContent))],
         [],
         [],
       ),

@@ -25,6 +25,7 @@ import { getIconForSocialChannel } from '../../shared/utils';
 import CardPublishedArticles from '../../components/card-published-articles/card-published-articles';
 import { Tooltip } from 'react-tooltip';
 import SubscribeButton from '../../components/subscribe-button/subscribe-button';
+import SubscribeToEmailButton from '../../components/subscribe-to-email-button/subscribe-to-email-button';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import SubscriptionModal from '../../components/subscription-modal/subscription-modal';
 import CancelSubscriptionModal from '../../components/cancel-subscription-modal/cancel-subscription-modal';
@@ -33,6 +34,7 @@ import {
   WriterSubscriptionDetailsConverted,
   useSubscriptionStore,
 } from '../../store/subscriptionStore';
+import { isEmailSubscribedByCaller } from '../../services/emailSubscriptionService';
 import { set } from 'lodash';
 import GradientMdVerified from '../../UI/verified-icon/verified-icon';
 import {
@@ -66,6 +68,7 @@ const Profile = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailSubscribed, setIsEmailSubscribed] = useState(false);
 
   const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
   const agentIk = useAgent({ host: customHost });
@@ -201,6 +204,14 @@ const Profile = () => {
 
     fetchSubscriptionHistory();
   }, [isLoggedIn, author?.handle, user?.handle]);
+
+  useEffect(() => {
+    if (isLoggedIn && author?.handle) {
+      isEmailSubscribedByCaller(author.handle, undefined, agentToBeUsed ?? undefined)
+        .then(setIsEmailSubscribed)
+        .catch(() => {});
+    }
+  }, [isLoggedIn, author?.handle]);
 
   const [hasValidSubscriptionOptions, setHasValidSubscriptionOptions] =
     useState<boolean>(false);
@@ -484,6 +495,16 @@ const Profile = () => {
                         isSubscribed={isSubscribed || false}
                       />
                     )}
+                  {user?.handle !== author?.handle && author?.handle && (
+                    <SubscribeToEmailButton
+                      authorHandle={author.handle}
+                      authorDisplayName={
+                        author.displayName || author.handle
+                      }
+                      isEmailSubscribed={isEmailSubscribed}
+                      onUnsubscribeComplete={() => setIsEmailSubscribed(false)}
+                    />
+                  )}
                 </div>
               </div>
               {modalContext?.isModalOpen &&

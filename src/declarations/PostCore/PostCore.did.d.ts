@@ -14,7 +14,7 @@ export type ContentStatus = { 'new' : null } |
   { 'rejected' : null };
 export interface GetPostsByFollowers {
   'totalCount' : string,
-  'posts' : Array<PostKeyProperties__1>,
+  'posts' : Array<PostKeyProperties>,
 }
 export interface Icrc28TrustedOriginsResponse {
   'trusted_origins' : Array<string>,
@@ -86,20 +86,6 @@ export interface PostKeyProperties {
   'handle' : string,
   'postId' : string,
 }
-export interface PostKeyProperties__1 {
-  'bucketCanisterId' : string,
-  'created' : string,
-  'principal' : string,
-  'modified' : string,
-  'views' : string,
-  'publishedDate' : string,
-  'claps' : string,
-  'tags' : Array<PostTagModel>,
-  'isDraft' : boolean,
-  'category' : string,
-  'handle' : string,
-  'postId' : string,
-}
 export type PostModerationStatusV2 = { 'new' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
@@ -128,7 +114,6 @@ export interface PostTag {
   'modifiedDate' : bigint,
 }
 export interface PostTagModel { 'tagId' : string, 'tagName' : string }
-export interface PostTagModel__1 { 'tagId' : string, 'tagName' : string }
 export type RecallOptions = { 'sixtydays' : null } |
   { 'today' : null } |
   { 'thisWeek' : null } |
@@ -268,7 +253,7 @@ export interface _SERVICE {
     [number, number],
     Array<PostKeyProperties>
   >,
-  'getMyTags' : ActorMethod<[], Array<PostTagModel__1>>,
+  'getMyTags' : ActorMethod<[], Array<PostTagModel>>,
   'getNextPostId' : ActorMethod<[], Result_2>,
   'getNextPostIdsDebug' : ActorMethod<[bigint], Result_2>,
   'getPlatformOperators' : ActorMethod<[], List>,

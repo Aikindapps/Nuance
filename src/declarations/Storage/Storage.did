@@ -12,13 +12,14 @@ type SupportedStandard =
 type Storage = 
  service {
    acceptCycles: () -> ();
-   addStorageBucket: (text) -> (Result_1);
-   addWasmChunk: (blob) -> (Result_1);
+   addStorageBucket: (canisterId: text) -> (Result_1);
+   addWasmChunk: (chunk: blob) -> (Result_1);
    availableCycles: () -> (nat) query;
    collectCanisterMetrics: () -> ();
    getAdmins: () -> (Result_3) query;
    getAllDataCanisterIds: () -> (Result_4);
-   getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+   getCanisterMetrics: (parameters: GetMetricsParameters) ->
+    (opt CanisterMetrics) query;
    getCanisterVersion: () -> (text) query;
    getCgUsers: () -> (Result_3) query;
    getNewContentId: () -> (Result);
@@ -27,18 +28,18 @@ type Storage =
    icrc10_supported_standards: () -> (vec SupportedStandard) query;
    icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
    idQuick: () -> (principal) query;
-   registerAdmin: (text) -> (Result_1);
-   registerCgUser: (text) -> (Result_1);
-   registerPlatformOperator: (text) -> (Result_1);
+   registerAdmin: (id: text) -> (Result_1);
+   registerCgUser: (id: text) -> (Result_1);
+   registerPlatformOperator: (id: text) -> (Result_1);
    resetWasmChunks: () -> () oneway;
-   retiredDataCanisterIdForWriting: (text) -> (Result_1);
-   unregisterAdmin: (text) -> (Result_1);
-   unregisterCgUser: (text) -> (Result_1);
-   unregisterPlatformOperator: (text) -> (Result_1);
-   upgradeAllBuckets: (text, vec nat8) -> (Result_1);
-   upgradeBucket: (text, vec nat8) -> (Result_1);
-   uploadBlob: (Content) -> (Result);
-   validate: (reserved) -> (Validate);
+   retiredDataCanisterIdForWriting: (canisterId: text) -> (Result_1);
+   unregisterAdmin: (id: text) -> (Result_1);
+   unregisterCgUser: (id: text) -> (Result_1);
+   unregisterPlatformOperator: (id: text) -> (Result_1);
+   upgradeAllBuckets: (canisterId: text, arg: vec nat8) -> (Result_1);
+   upgradeBucket: (canisterId: text, arg: vec nat8) -> (Result_1);
+   uploadBlob: (content: Content) -> (Result);
+   validate: (input: reserved) -> (Validate);
  };
 type Result_4 = 
  variant {

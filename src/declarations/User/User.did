@@ -19,24 +19,6 @@ type Validate =
    Err: text;
    Ok: text;
  };
-type User__1 = 
- record {
-   accountCreated: text;
-   avatar: text;
-   bio: text;
-   claimInfo: UserClaimInfo;
-   displayName: text;
-   followers: Followers;
-   followersArray: vec text;
-   followersCount: nat32;
-   followersPrincipals: FollowersPrincipals;
-   handle: text;
-   isVerified: bool;
-   nuaTokens: float64;
-   publicationsArray: vec PublicationObject;
-   socialChannels: vec text;
-   website: text;
- };
 type UserListItem = 
  record {
    avatar: text;
@@ -109,24 +91,9 @@ type SubscriptionEvent =
 type Result_9 = 
  variant {
    err: text;
-   ok: vec User;
- };
-type Result_8 = 
- variant {
-   err: text;
-   ok: vec UserListItem;
- };
-type Result_7 = 
- variant {
-   err: text;
-   ok: UserListItem;
- };
-type Result_6 = 
- variant {
-   err: text;
    ok: vec text;
  };
-type Result_5 = 
+type Result_8 = 
  variant {
    err: text;
    ok: record {
@@ -134,22 +101,41 @@ type Result_5 =
          nat;
        };
  };
-type Result_4 = 
+type Result_7 = 
+ variant {
+   err: text;
+   ok: record {
+         batchesFailed: nat;
+         batchesSent: nat;
+         totalRecipients: nat;
+       };
+ };
+type Result_6 = 
  variant {
    err: text;
    ok: bool;
  };
-type Result_3 = 
+type Result_5 = 
  variant {
    err: text;
    ok: nat;
  };
-type Result_2 = 
+type Result_4 = 
  variant {
    err: text;
    ok: ReaderSubscriptionDetails;
  };
-type Result_11 = 
+type Result_3 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_15 = 
  variant {
    err: text;
    ok: vec record {
@@ -157,30 +143,53 @@ type Result_11 =
              nat;
            };
  };
+type Result_14 = 
+ variant {
+   err: text;
+   ok: vec EmailSubscriber;
+ };
+type Result_13 = 
+ variant {
+   err: text;
+   ok: vec User;
+ };
+type Result_12 = 
+ variant {
+   err: text;
+   ok: vec UserListItem;
+ };
+type Result_11 = 
+ variant {
+   err: text;
+   ok: vec EmailBatchSummary;
+ };
 type Result_10 = 
  variant {
    err: text;
-   ok: text;
+   ok: UserListItem;
  };
 type Result_1 = 
  variant {
    err: text;
-   ok;
+   ok: User;
  };
 type Result = 
  variant {
    err: text;
-   ok: User;
+   ok: record {
+         authorHandle: text;
+         email: text;
+       };
  };
 type RemovePublicationReturn = 
  variant {
    err: text;
-   ok: User__1;
+   ok: User;
  };
 type RegisterUserReturn = 
  variant {
    err: text;
-   ok: User__1;
+   ok: User;
  };
 type ReaderSubscriptionDetails = 
  record {
@@ -188,10 +197,23 @@ type ReaderSubscriptionDetails =
    readerPrincipalId: text;
    readerSubscriptions: vec SubscriptionEvent;
  };
-type PublicationObject__1 = 
+type PublishedArticlePayload = 
  record {
-   isEditor: bool;
-   publicationName: text;
+   authorAvatar: text;
+   authorDisplayName: text;
+   authorHandle: text;
+   authorPrincipal: text;
+   contentHtml: text;
+   headerImage: text;
+   isMembersOnly: bool;
+   postId: text;
+   publicationAvatar: opt text;
+   publicationDisplayName: opt text;
+   publicationHandle: opt text;
+   publishedAt: int;
+   subtitle: text;
+   title: text;
+   url: text;
  };
 type PublicationObject = 
  record {
@@ -256,6 +278,28 @@ type Followers =
        text;
        List;
      };
+type EmailSubscriber = 
+ record {
+   authorPrincipal: text;
+   createdAt: int;
+   email: text;
+   unsubscribedAt: opt int;
+   userId: opt text;
+   verified: bool;
+   verifiedAt: opt int;
+ };
+type EmailBatchSummary = 
+ record {
+   attempts: nat;
+   authorPrincipal: text;
+   firstAttemptedAt: int;
+   id: text;
+   lastError: text;
+   nextAttemptAt: int;
+   postId: text;
+   recipientCount: nat;
+   updatedAt: int;
+ };
 type Date = 
  record {
    day: nat;
@@ -283,104 +327,209 @@ type CanisterCyclesAggregatedData = vec nat64;
 type AddPublicationReturn = 
  variant {
    err: text;
-   ok: User__1;
+   ok: User;
  };
 service : {
   acceptCycles: () -> ();
-  addNuaBalance: (text) -> () oneway;
-  addPublication: (PublicationObject__1, text) -> (AddPublicationReturn);
-  adminAirDrop: (float64) -> (Result_10);
+  addNuaBalance: (handle: text) -> () oneway;
+  addPublication: (publication: PublicationObject, callerId: text) ->
+   (AddPublicationReturn);
+  adminAirDrop: (amount: float64) -> (Result_2);
   availableCycles: () -> (nat) query;
-  blockUserFromClaiming: (text) -> (Result_1);
+  blockUserFromClaiming: (handle: text) -> (Result_3);
   checkMyClaimNotification: () -> ();
-  claimRestrictedTokens: () -> (Result);
+  claimRestrictedTokens: () -> (Result_1);
   clearAllMyFollowers: () -> (text);
   collectCanisterMetrics: () -> ();
-  deleteConfirmedLinkings: () -> (Result_1);
-  deleteUser: (text) -> (Result_3);
+  deleteConfirmedLinkings: () -> (Result_3);
+  deleteUser: (principalId: text) -> (Result_5);
   dumpUsers: () -> (text) query;
-  followAuthor: (text) -> (Result);
+  followAuthor: (author: text) -> (Result_1);
   generateAccountIds: () -> ();
   generateLowercaseHandles: () -> (text, vec text);
-  getActiveUsersByRange: (Date) -> (nat) query;
-  getAdmins: () -> (Result_6) query;
-  getAllClaimSubaccountIndexes: () -> (Result_11) query;
+  getActiveUsersByRange: (date: Date) -> (nat) query;
+  getAdmins: () -> (Result_9) query;
+  getAllClaimSubaccountIndexes: () -> (Result_15) query;
   getAllHandles: () -> (vec text) query;
-  getAllUserPrincipals: () -> (Result_6) query;
-  getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getAllUserPrincipals: () -> (Result_9) query;
+  getCanisterMetrics: (parameters: GetMetricsParameters) ->
+   (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
-  getCgUsers: () -> (Result_6) query;
+  getCgUsers: () -> (Result_9) query;
   getDailyMaxRegistration: () -> (nat) query;
-  getFollowersByPrincipalId: (principal) -> (vec UserListItem) query;
-  getFollowersCount: (text) -> (text) query;
-  getFollowersPrincipalIdsByPrincipalId: (text) -> (vec text) query;
-  getHandleByPrincipal: (text) -> (GetHandleByPrincipalReturn) query;
-  getHandlesByAccountIdentifiers: (vec text) -> (vec text) query;
-  getHandlesByPrincipals: (vec text) -> (vec text) query;
+  getDeadEmailBatches: () -> (Result_11) query;
+  /// Admin-only: list email subscribers for an author (for export/debug).
+  getEmailSubscribersOfAuthor: (authorPrincipal: text) -> (Result_14) query;
+  /// List email subscribers of a publication. Authorized for: editors of the
+  /// publication (looked up via PostCore), the publication canister itself,
+  /// admins, and platform operators. Composite query because the editor
+  /// check requires an inter-canister query to PostCore.
+  getEmailSubscribersOfPublication: (publicationCanisterId: text) ->
+   (Result_14) composite_query;
+  getFollowersByPrincipalId: (principalId: principal) ->
+   (vec UserListItem) query;
+  getFollowersCount: (handle: text) -> (text) query;
+  getFollowersPrincipalIdsByPrincipalId: (principalId: text) ->
+   (vec text) query;
+  getHandleByPrincipal: ("principal": text) ->
+   (GetHandleByPrincipalReturn) query;
+  getHandlesByAccountIdentifiers: (accountIds: vec text) -> (vec text) query;
+  getHandlesByPrincipals: (principals: vec text) -> (vec text) query;
   getLastDayClaimedTokensAmount: () -> (nat) query;
   getLastDayNumberOfClaimEvents: () -> (nat) query;
-  getLinkedPrincipal: (text) -> (Result_10) query;
+  getLinkedPrincipal: (walletPrincipal: text) -> (Result_2) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getMultipleUsersByPrincipalId: (vec text) -> (Result_9) query;
-  getMyFollowers: () -> (Result_8) query;
-  getNuaBalance: (text) -> (NuaBalanceResult) query;
+  getMultipleUsersByPrincipalId: (userPrincipalIds: vec text) ->
+   (Result_13) query;
+  getMyFollowers: () -> (Result_12) query;
+  getNuaBalance: (principalId: text) -> (NuaBalanceResult) query;
   getNumberOfAllRegisteredUsers: () -> (nat) query;
+  getPendingEmailBatches: () -> (Result_11) query;
   getPlatformOperators: () -> (List) query;
-  getPrincipalByHandle: (text) -> (GetPrincipalByHandleReturn) query;
-  getPrincipalsByHandles: (vec text) -> (vec text) query;
+  getPrincipalByHandle: (handle: text) -> (GetPrincipalByHandleReturn) query;
+  getPrincipalsByHandles: (handles: vec text) -> (vec text) query;
   getRegistrationNumberLastDay: () -> (nat) query;
   getTotalNumberOfClaimedTokens: () -> (nat) query;
-  getTrustedCanisters: () -> (Result_6) query;
-  getUser: () -> (Result) query;
-  getUserByHandle: (text) -> (Result) query;
-  getUserByPrincipalId: (text) -> (Result) query;
-  getUserFollowers: (text) -> (vec UserListItem) query;
-  getUserInternal: (text) -> (opt User) query;
-  getUserListItemByHandle: (text) -> (Result_7) query;
-  getUsersBlockedFromClaiming: () -> (Result_6) query;
-  getUsersByHandles: (vec text) -> (vec UserListItem) query;
-  getUsersByPrincipals: (vec text) -> (vec UserListItem) query;
-  getVerificationStatus: (text) -> (Result_4) query;
-  handleClap: (text, text) -> () oneway;
+  getTrustedCanisters: () -> (Result_9) query;
+  getUser: () -> (Result_1) query;
+  getUserByHandle: (handle: text) -> (Result_1) query;
+  getUserByPrincipalId: (userPrincipalId: text) -> (Result_1) query;
+  getUserFollowers: (handle: text) -> (vec UserListItem) query;
+  getUserInternal: (userPrincipalId: text) -> (opt User) query;
+  getUserListItemByHandle: (handle: text) -> (Result_10) query;
+  getUsersBlockedFromClaiming: () -> (Result_9) query;
+  getUsersByHandles: (handles: vec text) -> (vec UserListItem) query;
+  getUsersByPrincipals: (principals: vec text) -> (vec UserListItem) query;
+  getVerificationStatus: (principalId: text) -> (Result_6) query;
+  handleClap: (postCaller: text, handle: text) -> () oneway;
+  /// Returns true if the API key is configured (no value returned).
+  hasLettermintApiKey: () -> (bool) query;
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
+  /// Query: is a given email verified-subscribed to this author?
+  /// Used by the frontend to render the "Subscribed" state.
+  isEmailSubscribed: (authorHandle: text, email: text) -> (bool) query;
+  /// Query: is the calling principal email-subscribed to this author or publication?
+  /// Pass publicationCanisterId when checking a publication; omit (null) for individual authors.
+  /// Returns false for anonymous callers or when no verified subscription exists.
+  isEmailSubscribedByCaller: (authorHandle: text, publicationCanisterId:
+   opt text) -> (bool) query;
   isRegistrationOpen: () -> (bool) query;
   isThereEnoughMemory: () -> (bool) query;
-  linkInternetIdentityConfirm: (text) -> (Result_1);
-  linkInternetIdentityRequest: (text, text) -> (Result_1);
-  migrateFollowersHashmapsFromHandlesToPrincipalIds: () -> (Result_5);
-  registerAdmin: (text) -> (Result_1);
-  registerCanister: (text) -> (Result_1);
-  registerCgUser: (text) -> (Result_1);
-  registerPlatformOperator: (text) -> (Result_1);
-  registerUser: (text, text, text) -> (RegisterUserReturn);
-  removePoh: (text) -> (Result);
-  removePublication: (PublicationObject__1, text) ->
+  linkInternetIdentityConfirm: (walletPrincipal: text) -> (Result_3);
+  linkInternetIdentityRequest: (walletPrincipal: text, iiPrincipal: text) ->
+   (Result_3);
+  migrateFollowersHashmapsFromHandlesToPrincipalIds: () -> (Result_8);
+  /// Invoked by PostBucket right after an article transitions to
+  /// "published". Filters subscribers by members-only rules and fans out
+  /// Lettermint batch calls in chunks of BATCH_SIZE.
+  /// 
+  /// Authorization: only trusted Nuance canisters (PostBucket, PostCore,
+  /// etc.) registered via registerCanister.
+  notifyAuthorArticlePublished: (payload: PublishedArticlePayload,
+   paidSubscriberPrincipalIds: vec text, subscriptionTargetIds: vec text) ->
+   (Result_7);
+  /// Admin-triggered immediate drain — handy for testing the retry path
+  /// without waiting for the next timer tick.
+  processPendingEmailBatchesNow: () -> (Result_2);
+  registerAdmin: (id: text) -> (Result_3);
+  registerCanister: (id: text) -> (Result_3);
+  registerCgUser: (id: text) -> (Result_3);
+  registerPlatformOperator: (id: text) -> (Result_3);
+  registerUser: (handle: text, displayName: text, avatar: text) ->
+   (RegisterUserReturn);
+  removePoh: (handle: text) -> (Result_1);
+  removePublication: (publication: PublicationObject, callerId: text) ->
    (RemovePublicationReturn);
-  setDailyMaxRegistration: (nat) -> (Result_3);
-  setIsClaimActive: (bool) -> (Result_4);
-  setMaxMemorySize: (nat) -> (Result_3);
-  setMaxNumberOfClaimableTokens: (nat) -> (Result_3);
-  setMaxNumberOfDailyClaimableTokens: (nat) -> (Result_3);
-  spendNuaBalance: (text) -> () oneway;
-  spendRestrictedTokensForSubscription: (text, nat) -> (Result_2);
-  spendRestrictedTokensForTipping: (text, text, nat) -> (Result_1);
+  /// Re-queue a dead-lettered batch — useful when the underlying cause
+  /// of a 4xx (e.g. a misconfigured From domain) has been resolved.
+  /// Resets the attempt counter so the batch gets the full retry schedule
+  /// again. NOTE: if the original send happened > 24h ago, the Lettermint
+  /// idempotency key will have expired and a true duplicate is possible.
+  retryDeadEmailBatch: (id: text) -> (Result_2);
+  setDailyMaxRegistration: (newVal: nat) -> (Result_5);
+  setIsClaimActive: (isActive: bool) -> (Result_6);
+  /// Admin sets the Lettermint API key. Not queryable.
+  setLettermintApiKey: (key: text) -> (Result_3);
+  setMaxMemorySize: (newValue: nat) -> (Result_5);
+  setMaxNumberOfClaimableTokens: (amount: nat) -> (Result_5);
+  setMaxNumberOfDailyClaimableTokens: (amount: nat) -> (Result_5);
+  spendNuaBalance: (user: text) -> () oneway;
+  spendRestrictedTokensForSubscription: (eventId: text, amount: nat) ->
+   (Result_4);
+  spendRestrictedTokensForTipping: (bucketCanisterId: text, postId: text,
+   amount: nat) -> (Result_3);
+  /// Subscribe an email to an author's publishing broadcasts.
+  /// 
+  /// - `authorHandle`: public handle the subscriber sees on the author page.
+  /// - `email`: raw email text (we normalize + validate).
+  /// - `verificationBaseUrl`: the frontend URL the token is appended to
+  ///   (e.g. "https://nuance.xyz/verify-email"). Must match a trusted
+  ///   Nuance origin — see isTrustedEmailOrigin.
+  /// 
+  /// Returns a harmless success message whether the email is new, already
+  /// pending, or already verified. This prevents enumeration: an attacker
+  /// can't use this endpoint to test which emails are subscribed.
+  /// A verification email is only actually sent when it makes sense.
+  subscribeToAuthorByEmail: (authorHandle: text, email: text,
+   verificationBaseUrl: text) -> (Result_2);
+  /// Subscribe an email to a publication's article-broadcast list.
+  /// Mirrors subscribeToAuthorByEmail but the target is a publication
+  /// rather than a user. The User canister doesn't track publications,
+  /// so the caller (frontend) supplies the publication canister ID
+  /// directly — it's used as the `authorPrincipal` in the subscriber/index maps.
+  /// Display name + handle are passed in for the verification email and
+  /// rate-limit key only; we don't store them.
+  subscribeToPublicationByEmail: (publicationCanisterId: text,
+   publicationHandle: text, publicationDisplayName: text, email: text,
+   verificationBaseUrl: text) -> (Result_2);
   testInstructionSize: () -> (text);
-  unblockUserFromClaiming: (text) -> (Result_1);
-  unfollowAuthor: (text) -> (Result);
-  unregisterAdmin: (text) -> (Result_1);
-  unregisterCanister: (text) -> (Result_1);
-  unregisterCgUser: (text) -> (Result_1);
-  unregisterPlatformOperator: (text) -> (Result_1);
-  updateAvatar: (text) -> (Result);
-  updateBio: (text) -> (Result);
-  updateDisplayName: (text) -> (Result);
-  updateFontType: (text) -> (Result);
-  updateHandle: (text, text, text, opt vec text) -> (Result);
+  unblockUserFromClaiming: (handle: text) -> (Result_3);
+  unfollowAuthor: (author: text) -> (Result_1);
+  unregisterAdmin: (id: text) -> (Result_3);
+  unregisterCanister: (id: text) -> (Result_3);
+  unregisterCgUser: (id: text) -> (Result_3);
+  unregisterPlatformOperator: (id: text) -> (Result_3);
+  /// Update: unsubscribe the calling principal from an author or publication email list.
+  /// Pass publicationCanisterId for publications; omit (null) for individual authors.
+  unsubscribeEmailByCaller: (authorHandle: text, publicationCanisterId:
+   opt text) -> (Result_2);
+  /// Unsubscribe using the broadcast token + the recipient's email
+  /// (both included in the email footer link). The token is shared
+  /// across the whole broadcast and only authenticates "this URL came
+  /// from a real Nuance broadcast"; the email param identifies which
+  /// subscriber to mark unsubscribed.
+  /// 
+  /// A broadcast's recipient may be subscribed to multiple targets at
+  /// once (e.g. both the author and a publication that re-published the
+  /// article). They received a single deduped email, and clicking
+  /// Unsubscribe should silence them across every target on this
+  /// broadcast — otherwise they'd keep receiving copies from the
+  /// remaining target.
+  /// 
+  /// Do NOT delete the token on success — other recipients in the same
+  /// broadcast share it and still need it to unsubscribe.
+  unsubscribeEmailByToken: (token: text, email: text) -> (Result_2);
+  /// Unsubscribe while logged in (email from UI; authorHandle from UI).
+  unsubscribeFromAuthorByEmail: (authorHandle: text, email: text) ->
+   (Result_2);
+  updateAvatar: (avatarUrl: text) -> (Result_1);
+  updateBio: (bio: text) -> (Result_1);
+  updateDisplayName: (displayName: text) -> (Result_1);
+  updateFontType: (fontType: text) -> (Result_1);
+  updateHandle: (existingHandle: text, newHandle: text, postCoreCanisterId:
+   text, publicationWritersEditorsPrincipals: opt vec text) -> (Result_1);
   updateLastLogin: () -> () oneway;
-  updateSocialLinks: (text, vec text) -> (Result);
-  updateUserDetails: (text, text, text, text, vec text) -> (Result);
-  validate: (reserved) -> (Validate);
-  verifyPoh: (text) -> (VerifyResult);
+  updateSocialLinks: (websiteUrl: text, socialChannelsUrls: vec text) ->
+   (Result_1);
+  updateUserDetails: (bio: text, avatarUrl: text, displayName: text,
+   websiteUrl: text, socialChannelsUrls: vec text) -> (Result_1);
+  validate: (input: reserved) -> (Validate);
+  /// Verify a token and mark the subscriber as verified. Idempotent —
+  /// calling twice with the same token after it was consumed returns
+  /// the expected error, but calling twice during the valid window is
+  /// safe (no-ops on second call because the token is gone).
+  verifyEmailSubscription: (token: text) -> (Result);
+  verifyPoh: (credentialJWT: text) -> (VerifyResult);
 }

@@ -125,115 +125,6 @@ export type NotificationContent = { 'FaucetClaimAvailable' : null } |
       'subscriberPrincipalId' : string,
     }
   };
-export type NotificationContent__1 = { 'FaucetClaimAvailable' : null } |
-  {
-    'TipReceived' : {
-      'bucketCanisterId' : string,
-      'amountOfTokens' : string,
-      'tipSenderPrincipal' : string,
-      'publicationPrincipalId' : [] | [string],
-      'postTitle' : string,
-      'numberOfApplauds' : string,
-      'tippedTokenSymbol' : string,
-      'postId' : string,
-    }
-  } |
-  {
-    'NewArticleByFollowedWriter' : {
-      'bucketCanisterId' : string,
-      'postWriterPrincipal' : string,
-      'postTitle' : string,
-      'postId' : string,
-    }
-  } |
-  {
-    'AuthorLosesSubscriber' : {
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscriberPrincipalId' : string,
-    }
-  } |
-  {
-    'YouSubscribedToAuthor' : {
-      'amountOfTokens' : string,
-      'subscriptionEndTime' : string,
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscribedWriterPrincipalId' : string,
-      'subscriptionStartTime' : string,
-      'isPublication' : boolean,
-    }
-  } |
-  {
-    'NewCommentOnMyArticle' : {
-      'bucketCanisterId' : string,
-      'commentId' : string,
-      'isReply' : boolean,
-      'commentContent' : string,
-      'postTitle' : string,
-      'commenterPrincipal' : string,
-      'postId' : string,
-    }
-  } |
-  { 'VerifyProfile' : null } |
-  {
-    'YouUnsubscribedFromAuthor' : {
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscribedWriterPrincipalId' : string,
-      'isPublication' : boolean,
-    }
-  } |
-  { 'NewFollower' : { 'followerPrincipalId' : string } } |
-  {
-    'ReaderExpiredSubscription' : {
-      'amountOfTokens' : string,
-      'subscriptionEndTime' : string,
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscribedWriterPrincipalId' : string,
-      'subscriptionStartTime' : string,
-      'isPublication' : boolean,
-    }
-  } |
-  {
-    'ReplyToMyComment' : {
-      'bucketCanisterId' : string,
-      'postWriterPrincipal' : string,
-      'myCommentId' : string,
-      'myCommentContent' : string,
-      'replyCommentContent' : string,
-      'postTitle' : string,
-      'replyCommenterPrincipal' : string,
-      'replyCommentId' : string,
-      'postId' : string,
-    }
-  } |
-  {
-    'PremiumArticleSold' : {
-      'bucketCanisterId' : string,
-      'amountOfTokens' : string,
-      'publicationPrincipalId' : [] | [string],
-      'purchasedTokenSymbol' : string,
-      'purchaserPrincipal' : string,
-      'postTitle' : string,
-      'postId' : string,
-    }
-  } |
-  {
-    'NewArticleByFollowedTag' : {
-      'bucketCanisterId' : string,
-      'tagName' : string,
-      'postWriterPrincipal' : string,
-      'postTitle' : string,
-      'postId' : string,
-    }
-  } |
-  {
-    'AuthorGainsNewSubscriber' : {
-      'amountOfTokens' : string,
-      'subscriptionEndTime' : string,
-      'subscriptionTimeInterval' : SubscriptionTimeInterval,
-      'subscriptionStartTime' : string,
-      'subscriberPrincipalId' : string,
-    }
-  };
 export type Result = { 'ok' : UserNotificationSettings } |
   { 'err' : string };
 export type Result_1 = { 'ok' : bigint } |
@@ -264,13 +155,10 @@ export interface UserNotificationSettings {
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'availableCycles' : ActorMethod<[], bigint>,
-  'broadcastNotification' : ActorMethod<[NotificationContent__1], Result_2>,
-  'createNotification' : ActorMethod<
-    [string, NotificationContent__1],
-    undefined
-  >,
+  'broadcastNotification' : ActorMethod<[NotificationContent], Result_2>,
+  'createNotification' : ActorMethod<[string, NotificationContent], undefined>,
   'createNotifications' : ActorMethod<
-    [Array<[string, NotificationContent__1]>],
+    [Array<[string, NotificationContent]>],
     undefined
   >,
   'getCanisterVersion' : ActorMethod<[], string>,

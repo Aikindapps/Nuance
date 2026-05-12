@@ -1,0 +1,43 @@
+.unsubscribe-screen {
+  min-height: calc(100vh - 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: 'Roboto', sans-serif;
+  transition: background-color 180ms ease;
+
+  .unsubscribe-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 40px 32px;
+    text-align: center;
+  }
+
+  .unsubscribe-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 16px 0 12px 0;
+  }
+
+  .unsubscribe-body {
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0 0 24px 0;
+  }
+
+  .unsubscribe-cta {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+  }
+}

@@ -163,6 +163,32 @@ actor Subscription {
         Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
     };
 
+    // Bulk query: returns the principal ids of all currently-active paid
+    // subscribers of the given writer. Used by the email broadcast pipeline
+    // in the User canister to decide who is eligible to receive
+    // members-only article emails. Duplicates are filtered so callers get
+    // a deduped set.
+    public shared query func getAuthorActivePaidSubscriberPrincipalIds(writerPrincipalId: Text) : async [Text] {
+        let eventIds = Option.get(Map.get(writerPrincipalIdToSubscriptionEventIds, thash, writerPrincipalId), []);
+        let now = U.epochTime();
+        let seen = Map.new<Text, Bool>();
+        let out = Buffer.Buffer<Text>(0);
+        for(eventId in eventIds.vals()){
+            let readerPrincipalId = Option.get(Map.get(subscriptionEventIdToReaderPrincipalId, thash, eventId), "");
+            let endTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
+            if(readerPrincipalId != "" and now < endTime){
+                switch(Map.get(seen, thash, readerPrincipalId)) {
+                    case(?_) {};
+                    case(null) {
+                        Map.set(seen, thash, readerPrincipalId, true);
+                        out.add(readerPrincipalId);
+                    };
+                };
+            };
+        };
+        Buffer.toArray(out);
+    };
+
     //a function to query the subscription details and the history of the writer
     //should be called by the writer or editor
     //a regular writer should not provide any argument

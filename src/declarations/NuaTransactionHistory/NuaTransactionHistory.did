@@ -71,14 +71,14 @@ service : {
       hourlyCacheSize: nat;
     }) query;
   getCanisterVersion: () -> (text) query;
-  getDailyData: (text, nat) -> (variant {
-                                  err: text;
-                                  ok: text;
-                                });
-  getHourlyData: (text, nat) -> (variant {
-                                   err: text;
-                                   ok: text;
-                                 });
+  getDailyData: (date: text, page: nat) -> (variant {
+                                              err: text;
+                                              ok: text;
+                                            });
+  getHourlyData: (date: text, page: nat) -> (variant {
+                                               err: text;
+                                               ok: text;
+                                             });
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
@@ -100,14 +100,14 @@ service : {
                        err: text;
                        ok: text;
                      });
-  http_request: (HttpRequest) -> (HttpResponse) query;
-  http_request_update: (HttpRequest) -> (HttpResponse);
+  http_request: (_request: HttpRequest) -> (HttpResponse) query;
+  http_request_update: (request: HttpRequest) -> (HttpResponse);
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isThereEnoughMemory: () -> (bool) query;
-  processTransactionRange: (nat, nat) -> (Result);
+  processTransactionRange: (start: nat, end: nat) -> (Result);
   refreshRecentTransactionCache: () -> (Result);
-  setArchiveLedgerThreshold: (nat) -> (Result_1);
-  setMaxMemorySize: (nat) -> (Result_1);
+  setArchiveLedgerThreshold: (newThreshold: nat) -> (Result_1);
+  setMaxMemorySize: (newValue: nat) -> (Result_1);
   startRecentTransactionCache: () -> (Result);
 }

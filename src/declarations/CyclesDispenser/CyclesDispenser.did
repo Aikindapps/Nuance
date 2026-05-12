@@ -64,14 +64,15 @@ type AddCanisterModel =
  };
 service : {
   acceptCycles: () -> ();
-  addCanister: (AddCanisterModel) -> (Result_4);
+  addCanister: (canister: AddCanisterModel) -> (Result_4);
   availableCycles: () -> (nat) query;
-  batchRegisterAdmin: (principal) -> (Result_2);
-  batchRegisterPlatformOperator: (principal) -> (Result_2);
-  batchUnregisterAdmin: (principal) -> (Result_2);
-  batchUnregisterPlatformOperator: (principal) -> (Result_2);
+  batchRegisterAdmin: (admin: principal) -> (Result_2);
+  batchRegisterPlatformOperator: (platformOperator: principal) -> (Result_2);
+  batchUnregisterAdmin: (admin: principal) -> (Result_2);
+  batchUnregisterPlatformOperator: (platformOperator: principal) ->
+   (Result_2);
   checkAllRegisteredCanisters: () -> (Result);
-  checkRegisteredCanister: (text) -> (Result_3);
+  checkRegisteredCanister: (canisterId: text) -> (Result_3);
   checkStorageBucketCanisters: () -> ();
   getAdmins: () -> (Result_2) query;
   getAllRegisteredCanisters: () -> (vec RegisteredCanister) query;
@@ -83,22 +84,22 @@ service : {
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
-  getRegisteredCanister: (text) -> (Result_4) query;
+  getRegisteredCanister: (canisterId: text) -> (Result_4) query;
   getStatus: () -> (text) query;
-  getTopUp: (text) -> (Result_3) query;
-  getTopUpsByRange: (TimeRange) -> (vec TopUp) query;
+  getTopUp: (id: text) -> (Result_3) query;
+  getTopUpsByRange: (range: TimeRange) -> (vec TopUp) query;
   getTrustedCanisters: () -> (Result_2) query;
   idQuick: () -> (principal) query;
   isThereEnoughMemory: () -> (bool) query;
-  registerAdmin: (text) -> (Result);
-  registerCanister: (text) -> (Result);
-  registerCgUser: (text) -> (Result);
-  registerPlatformOperator: (text) -> (Result);
-  removeCanister: (text) -> (Result);
-  setMaxMemorySize: (nat) -> (Result_1);
-  unregisterAdmin: (text) -> (Result);
-  unregisterCanister: (text) -> (Result);
-  unregisterCgUser: (text) -> (Result);
-  unregisterPlatformOperator: (text) -> (Result);
-  validate: (reserved) -> (Validate);
+  registerAdmin: (id: text) -> (Result);
+  registerCanister: (id: text) -> (Result);
+  registerCgUser: (id: text) -> (Result);
+  registerPlatformOperator: (id: text) -> (Result);
+  removeCanister: (canisterId: text) -> (Result);
+  setMaxMemorySize: (newValue: nat) -> (Result_1);
+  unregisterAdmin: (id: text) -> (Result);
+  unregisterCanister: (id: text) -> (Result);
+  unregisterCgUser: (id: text) -> (Result);
+  unregisterPlatformOperator: (id: text) -> (Result);
+  validate: (input: reserved) -> (Validate);
 }

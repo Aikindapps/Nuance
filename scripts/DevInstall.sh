@@ -60,6 +60,11 @@ echo ""
 sudo rm -rf .dfx
 
 echo ""
+echo "##### Delete dist Folder #####"
+echo ""
+sudo rm -rf dist
+
+echo ""
 echo "##### Reinstall node_modules #####"
 echo ""
 npm ci
@@ -133,6 +138,10 @@ echo ""
 
 echo ""
 echo "### Setup Local Nua Ledger Canister ###"
+if [ -d ./local-nua-token/icrc1/.dfx/local ]; then
+  sudo chown -R "$(id -un)":staff ./local-nua-token/icrc1/.dfx/local
+  sudo rm -rf ./local-nua-token/icrc1/.dfx/local
+fi
 cd ./local-nua-token/icrc1
 dfx deploy
 echo ""

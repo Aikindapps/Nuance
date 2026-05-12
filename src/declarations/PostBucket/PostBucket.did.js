@@ -1,7 +1,7 @@
 export const idlFactory = ({ IDL }) => {
   const Comment = IDL.Rec();
   const List = IDL.Rec();
-  const PostBucketType__1 = IDL.Record({
+  const PostBucketType = IDL.Record({
     'url' : IDL.Text,
     'bucketCanisterId' : IDL.Text,
     'title' : IDL.Text,
@@ -24,7 +24,7 @@ export const idlFactory = ({ IDL }) => {
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
   });
-  const Result_6 = IDL.Variant({ 'ok' : PostBucketType__1, 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({ 'ok' : PostBucketType, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Applaud = IDL.Record({
     'bucketCanisterId' : IDL.Text,
@@ -60,24 +60,7 @@ export const idlFactory = ({ IDL }) => {
       'postId' : IDL.Text,
     })
   );
-  const Comment__1 = IDL.Record({
-    'bucketCanisterId' : IDL.Text,
-    'creator' : IDL.Text,
-    'content' : IDL.Text,
-    'commentId' : IDL.Text,
-    'createdAt' : IDL.Text,
-    'downVotes' : IDL.Vec(IDL.Text),
-    'isCensored' : IDL.Bool,
-    'isVerified' : IDL.Bool,
-    'upVotes' : IDL.Vec(IDL.Text),
-    'replies' : IDL.Vec(Comment),
-    'handle' : IDL.Text,
-    'repliedCommentId' : IDL.Opt(IDL.Text),
-    'editedAt' : IDL.Opt(IDL.Text),
-    'avatar' : IDL.Text,
-    'postId' : IDL.Text,
-  });
-  const Result_5 = IDL.Variant({ 'ok' : Comment__1, 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({ 'ok' : Comment, 'err' : IDL.Text });
   const CommentsReturnType = IDL.Record({
     'totalNumberOfComments' : IDL.Text,
     'comments' : IDL.Vec(Comment),
@@ -85,10 +68,7 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : CommentsReturnType, 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
-  const Result_10 = IDL.Variant({
-    'ok' : IDL.Vec(Comment__1),
-    'err' : IDL.Text,
-  });
+  const Result_10 = IDL.Variant({ 'ok' : IDL.Vec(Comment), 'err' : IDL.Text });
   const SupportedStandard = IDL.Record({ 'url' : IDL.Text, 'name' : IDL.Text });
   const Icrc28TrustedOriginsResponse = IDL.Record({
     'trusted_origins' : IDL.Vec(IDL.Text),
@@ -146,29 +126,6 @@ export const idlFactory = ({ IDL }) => {
     'headerImage' : IDL.Text,
     'isMembersOnly' : IDL.Bool,
     'scheduledPublishedDate' : IDL.Opt(IDL.Int),
-    'subtitle' : IDL.Text,
-    'isPublication' : IDL.Bool,
-    'postId' : IDL.Text,
-  });
-  const PostBucketType = IDL.Record({
-    'url' : IDL.Text,
-    'bucketCanisterId' : IDL.Text,
-    'title' : IDL.Text,
-    'created' : IDL.Text,
-    'modified' : IDL.Text,
-    'content' : IDL.Text,
-    'wordCount' : IDL.Text,
-    'isPremium' : IDL.Bool,
-    'publishedDate' : IDL.Text,
-    'nftCanisterId' : IDL.Opt(IDL.Text),
-    'isDraft' : IDL.Bool,
-    'creatorPrincipal' : IDL.Text,
-    'category' : IDL.Text,
-    'handle' : IDL.Text,
-    'postOwnerPrincipal' : IDL.Text,
-    'creatorHandle' : IDL.Text,
-    'headerImage' : IDL.Text,
-    'isMembersOnly' : IDL.Bool,
     'subtitle' : IDL.Text,
     'isPublication' : IDL.Bool,
     'postId' : IDL.Text,
@@ -233,7 +190,7 @@ export const idlFactory = ({ IDL }) => {
     'getKinicList' : IDL.Func([], [Result_9], ['query']),
     'getList' : IDL.Func(
         [IDL.Vec(IDL.Text)],
-        [IDL.Vec(PostBucketType__1)],
+        [IDL.Vec(PostBucketType)],
         ['query'],
       ),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
@@ -257,17 +214,17 @@ export const idlFactory = ({ IDL }) => {
     'getPostUrls' : IDL.Func([], [Result_2], ['query']),
     'getPostsByPostIds' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Bool],
-        [IDL.Vec(PostBucketType__1)],
+        [IDL.Vec(PostBucketType)],
         ['query'],
       ),
     'getPostsByPostIdsMigration' : IDL.Func(
         [IDL.Vec(IDL.Text)],
-        [IDL.Vec(PostBucketType__1)],
+        [IDL.Vec(PostBucketType)],
         ['query'],
       ),
     'getPublicationPosts' : IDL.Func(
         [IDL.Vec(IDL.Text), IDL.Text],
-        [IDL.Vec(PostBucketType__1)],
+        [IDL.Vec(PostBucketType)],
         ['composite_query'],
       ),
     'getReportedCommentIds' : IDL.Func([], [IDL.Vec(IDL.Text)], []),
@@ -282,7 +239,7 @@ export const idlFactory = ({ IDL }) => {
     'getUserPostIds' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
     'getUserPosts' : IDL.Func(
         [IDL.Text, IDL.Bool],
-        [IDL.Vec(PostBucketType__1)],
+        [IDL.Vec(PostBucketType)],
         ['query'],
       ),
     'icrc10_supported_standards' : IDL.Func(

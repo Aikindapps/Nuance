@@ -186,8 +186,8 @@ const Subscriptions = () => {
 
                 <div className={darkTheme ? 'subscription-header dark' : 'subscription-header'}>
                     {activeTab === 'active' ?
-                        "You are currently subscribed to these publications and writers. You have unlimited access to all their member content for a certain amount NUA per period that you chose to be a member." :
-                        "You are no longer subscribed to these publications and writers. You can expand your membership to still have unlimited access to all their member content for a certain amount NUA per period that you choose to be a member."
+                        "You are currently supporting these publications and writers. You have unlimited access to all their member content for a certain amount NUA per period that you chose to be a member." :
+                        "You are no longer supporting these publications and writers. You can expand your membership to still have unlimited access to all their member content for a certain amount NUA per period that you choose to be a member."
                     }
                 </div>
 
@@ -197,7 +197,7 @@ const Subscriptions = () => {
                             <tr>
                                 <th style={{ width: "10px" }}>PUBLISHER</th>
                                 <th></th>
-                                <th>SUBSCRIBED SINCE</th>
+                                <th>SUPPORTS SINCE</th>
                                 <th>PERIOD</th>
                                 <th>FEE PER PERIOD</th>
                                 <th>TOTAL FEES</th>
