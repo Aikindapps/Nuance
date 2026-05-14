@@ -60,16 +60,17 @@ jobs:
         run: |
           TAG='${{ github.event.inputs.tag }}'
           git fetch --force --tags
-
+          
           if ! git show-ref --verify --quiet "refs/tags/${TAG}"; then
             echo "Error: Tag not found: ${TAG}"
             exit 1
           fi
-
-          ACTUAL_TAG="$(git describe --tags --exact-match 2>/dev/null || true)"
-          if [ "${ACTUAL_TAG}" != "${TAG}" ]; then
-            echo "Error: Checked out commit is not exactly tag ${TAG}."
-            echo "Checked out exact tag: ${ACTUAL_TAG:-<none>}"
+          
+          # HEAD üzerindeki tag'leri listele ve aranan tag'in listede olup olmadığını kontrol et
+          if ! git tag --points-at HEAD | grep -q "^${TAG}$"; then
+            echo "Error: Checked out commit does not contain tag ${TAG}."
+            echo "Tags on current commit:"
+            git tag --points-at HEAD
             exit 1
           fi
 
