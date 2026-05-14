@@ -66,7 +66,7 @@ jobs:
             exit 1
           fi
           
-          # HEAD üzerindeki tag'leri listele ve aranan tag'in listede olup olmadığını kontrol et
+          
           if ! git tag --points-at HEAD | grep -q "^${TAG}$"; then
             echo "Error: Checked out commit does not contain tag ${TAG}."
             echo "Tags on current commit:"
