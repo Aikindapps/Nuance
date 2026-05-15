@@ -197,11 +197,6 @@ actor User {
   stable var deadEmailBatchesEntries : [(Text, Email.PendingBatch)] = [];
   var deadEmailBatchesHashMap = HashMap.HashMap<Text, Email.PendingBatch>(initCapacity, isEq, Text.hash);
 
-  // Monotonic counter used as a tiebreaker when several batches from
-  // the same article are enqueued; combined with postId to form a
-  // collision-free idempotency key per batch.
-  stable var nextEmailBatchSeq : Nat = 0;
-
   // Whether the retry timer is currently registered. Reset on upgrade
   // (timers don't survive upgrades) and re-armed in postupgrade.
   var emailRetryTimerArmed : Bool = false;
