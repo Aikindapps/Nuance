@@ -5,6 +5,7 @@ import { useTheme } from '../../contextes/ThemeContext';
 import { colors } from '../../shared/constants';
 import { unsubscribeEmailByCaller } from '../../services/emailSubscriptionService';
 import { useAuthStore } from '../../store';
+import '../email-subscribe-modal/_email-subscribe-modal.scss';
 
 type Stage = 'confirm' | 'done' | 'error';
 
