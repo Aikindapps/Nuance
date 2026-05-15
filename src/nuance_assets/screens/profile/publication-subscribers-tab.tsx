@@ -133,7 +133,7 @@ const PublicationSubscribersTab: React.FC<PublicationSubscribersTabProps> = ({
       </div>
       <SubscribersChart data={chartData} />
       <p className='subscribers-table-info'>
-        These readers are currently supoorting this publication. They have
+        These readers are currently supporting this publication. They have
         unlimited access to all the publication’s content for a chosen period.
         Your subscribers are prompted to renew their memeberships once the
         period has expired.
