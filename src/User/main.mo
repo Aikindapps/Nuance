@@ -3389,19 +3389,19 @@ actor User {
     let fromHeader = Email.buildFromHeader(payload.authorDisplayName);
     let subject = (Option.get(payload.publicationDisplayName, payload.authorDisplayName)) # " published a new article";
 
-    // One shared unsubscribe token per broadcast — short-lived, used as
-    // the "?token=" parameter in the unsubscribe footer link. Per-recipient
-    // tokens would require N extra state writes; we accept one token
-    // per broadcast as a reasonable tradeoff.
+    // One shared unsubscribe token per broadcast, used as the "?token="
+    // parameter in the unsubscribe footer link. Per-recipient tokens
+    // would require N extra state writes; we accept one token per
+    // broadcast as a reasonable tradeoff.
     let unsubToken = await Email.generateToken();
-    // Unsubscribe token lives for 30 days so email archives remain useful.
-    // Store the full target list (author + publication canister(s)) so a
-    // publication subscriber's unsubscribe click finds their row, which
-    // is keyed under the publication's principal — not the author's.
+    // No expiry: an unsubscribe link in an old email should still work
+    // (regulatory + UX expectation). Store the full target list (author
+    // + publication canister(s)) so a publication subscriber's
+    // unsubscribe click finds their row, which is keyed under the
+    // publication's principal — not the author's.
     broadcastUnsubTokensHashMap.put(unsubToken, {
       token = unsubToken;
       targetIds = Buffer.toArray(targets);
-      expiresAt = Time.now() + (30 * Email.VERIFY_TTL_NANOS);
       createdAt = Time.now();
     });
     let unsubscribeBase =
@@ -3604,10 +3604,27 @@ actor User {
     Debug.print("User->emailBatch: dead-lettered key=" # id # " attempts=" # Nat.toText(attemptsSoFar) # " err=" # err);
   };
 
+  /// Drop expired entries from emailVerificationTokensHashMap. The
+  /// verify path already deletes tokens on successful use and on
+  /// expiry-at-read; this sweeps the leftovers (subscribed but never
+  /// verified) so the map doesn't grow without bound.
+  private func sweepExpiredVerificationTokens() {
+    let now = Time.now();
+    let expired = Buffer.Buffer<Text>(8);
+    for ((key, t) in emailVerificationTokensHashMap.entries()) {
+      if (now > t.expiresAt) { expired.add(key) };
+    };
+    for (key in expired.vals()) {
+      emailVerificationTokensHashMap.delete(key);
+    };
+  };
+
   /// Timer callback. Drains up to MAX_RETRIES_PER_TICK due batches and
-  /// retries each via attemptBatchSend. The timer keeps ticking even
-  /// when the queue is empty — cost is one HashMap iteration every 60s.
+  /// retries each via attemptBatchSend. Also sweeps expired email
+  /// verification tokens. The timer keeps ticking even when the queue
+  /// is empty — cost is one HashMap iteration every 60s.
   private func processPendingEmailBatches() : async () {
+    sweepExpiredVerificationTokens();
     let now = Time.now();
     let apiKey = switch (lettermintApiKey) {
       case (?k) k;

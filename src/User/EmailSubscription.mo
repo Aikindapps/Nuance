@@ -48,10 +48,13 @@ module {
   /// (article author + any publication canisters the article was
   /// published into) so the unsubscribe handler can mark the recipient
   /// unsubscribed across every target they were subscribed to.
+  ///
+  /// No expiry: unsubscribe links must keep working indefinitely so a
+  /// user can opt out of an old email at any time. Storage grows by one
+  /// entry per broadcast.
   public type BroadcastUnsubToken = {
     token : Text;
     targetIds : [Text];
-    expiresAt : Int;
     createdAt : Int;
   };
 
