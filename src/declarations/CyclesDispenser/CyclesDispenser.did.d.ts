@@ -27,6 +27,13 @@ export type Result_3 = { 'ok' : TopUp } |
   { 'err' : string };
 export type Result_4 = { 'ok' : RegisteredCanister } |
   { 'err' : string };
+export interface StaleCanister {
+  'cachedBalance' : bigint,
+  'lastFailureTime' : bigint,
+  'isStorageBucket' : boolean,
+  'canisterId' : string,
+  'consecutiveFailures' : bigint,
+}
 export type TimeRange = { 'day' : bigint } |
   { 'hour' : bigint };
 export interface TopUp {
@@ -60,6 +67,7 @@ export interface _SERVICE {
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getRegisteredCanister' : ActorMethod<[string], Result_4>,
+  'getStaleCanisters' : ActorMethod<[], Array<StaleCanister>>,
   'getStatus' : ActorMethod<[], string>,
   'getTopUp' : ActorMethod<[string], Result_3>,
   'getTopUpsByRange' : ActorMethod<[TimeRange], Array<TopUp>>,

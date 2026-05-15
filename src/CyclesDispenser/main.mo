@@ -50,6 +50,7 @@ actor CyclesDispenser {
   public type CheckCanisterBalanceResponse = {
     #AlreadyToppedUp;
     #UnsufficientCycles;
+    #BalanceCheckFailed;
     #Success : TopUp;
   };
 
@@ -75,6 +76,14 @@ actor CyclesDispenser {
     unregisterPlatformOperator : (Text) -> async Result.Result<(), Text>;
   };
 
+  public type StaleCanister = {
+    canisterId : Text;
+    consecutiveFailures : Nat;
+    lastFailureTime : Int;
+    cachedBalance : Nat;
+    isStorageBucket : Bool;
+  };
+
   stable var admins : List.List<Text> = List.nil<Text>();
   stable var platformOperators : List.List<Text> = List.nil<Text>();
   stable var cgusers : List.List<Text> = List.nil<Text>();
@@ -87,6 +96,8 @@ actor CyclesDispenser {
   stable var canisterIdToBalanceEntries : [(Text, Nat)] = [];
   stable var canisterIdToTopUpIdsEntries : [(Text, [Text])] = [];
   stable var canisterIdToIsStorageBucketEntries : [(Text, Bool)] = [];
+  stable var canisterIdToConsecutiveFailuresEntries : [(Text, Nat)] = [];
+  stable var canisterIdToLastFailureTimeEntries : [(Text, Int)] = [];
 
   stable var topUpIdToCanisterIdEntries : [(Text, Text)] = [];
   stable var topUpIdToTimeEntries : [(Text, Int)] = [];
@@ -100,6 +111,11 @@ actor CyclesDispenser {
   var canisterIdToBalanceHashmap = HashMap.fromIter<Text, Nat>(canisterIdToBalanceEntries.vals(), initCapacity, Text.equal, Text.hash);
   var canisterIdToTopUpIdsHashmap = HashMap.fromIter<Text, [Text]>(canisterIdToTopUpIdsEntries.vals(), initCapacity, Text.equal, Text.hash);
   var canisterIdToIsStorageBucketHashmap = HashMap.fromIter<Text, Bool>(canisterIdToIsStorageBucketEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var canisterIdToConsecutiveFailuresHashmap = HashMap.fromIter<Text, Nat>(canisterIdToConsecutiveFailuresEntries.vals(), initCapacity, Text.equal, Text.hash);
+  var canisterIdToLastFailureTimeHashmap = HashMap.fromIter<Text, Int>(canisterIdToLastFailureTimeEntries.vals(), initCapacity, Text.equal, Text.hash);
+
+  // mark a canister as stale after this many consecutive failed balance reads (12 minutes at 4-min ticks)
+  let STALE_FAILURE_THRESHOLD : Nat = 3;
 
   //logged top-ups hashmaps
   var topUpIdToCanisterIdHashmap = HashMap.fromIter<Text, Text>(topUpIdToCanisterIdEntries.vals(), initCapacity, Text.equal, Text.hash);
@@ -455,7 +471,24 @@ actor CyclesDispenser {
     let registeredCanister = buildRegisteredCanister(canisterId);
     let registeredCanisterActor : GeneralActorType = actor (canisterId);
 
-    let balance = if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()};
+    var balance : Nat = 0;
+    var balanceReadFailed = false;
+    try {
+      balance := if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()};
+      // success — reset the failure counter
+      canisterIdToConsecutiveFailuresHashmap.put(canisterId, 0);
+    } catch (e) {
+      balanceReadFailed := true;
+      let prev = U.safeGet(canisterIdToConsecutiveFailuresHashmap, canisterId, 0);
+      canisterIdToConsecutiveFailuresHashmap.put(canisterId, prev + 1);
+      canisterIdToLastFailureTimeHashmap.put(canisterId, Time.now());
+      // surface the failure in the cache so getRegisteredCanister doesn't lie about a healthy balance
+      canisterIdToBalanceHashmap.put(canisterId, 0);
+      Debug.print("CyclesDispenser -> balance read failed for " # canisterId);
+    };
+    if (balanceReadFailed) {
+      return #BalanceCheckFailed;
+    };
     canisterIdToBalanceHashmap.put(canisterId, balance);
     let cyclesDispenserBalance = Cycles.balance();
 
@@ -507,7 +540,17 @@ actor CyclesDispenser {
 
   private func checkCanisters(canisterIds : [Text]) : async () {
     for (canisterId in canisterIds.vals()) {
-      ignore checkCanisterBalance(canisterId);
+      try {
+        ignore await checkCanisterBalance(canisterId);
+      } catch (e) {
+        // checkCanisterBalance now handles its own balance-read errors; this catch is a safety net
+        // for unexpected traps so one bad canister can't abort the rest of the chunk.
+        let prev = U.safeGet(canisterIdToConsecutiveFailuresHashmap, canisterId, 0);
+        canisterIdToConsecutiveFailuresHashmap.put(canisterId, prev + 1);
+        canisterIdToLastFailureTimeHashmap.put(canisterId, Time.now());
+        canisterIdToBalanceHashmap.put(canisterId, 0);
+        Debug.print("CyclesDispenser -> unexpected error in checkCanisterBalance for " # canisterId);
+      };
     };
   };
   //public method that checks the cycles balance of all the registered canisters
@@ -551,6 +594,9 @@ actor CyclesDispenser {
           };
           case (#UnsufficientCycles) {
             #err("CyclesDispenser canister has not enough cycles to top-up.");
+          };
+          case (#BalanceCheckFailed) {
+            #err("Failed to read the balance of the given canister. It may be unreachable, frozen, or out of cycles. Cached balance has been set to 0.");
           };
         };
       };
@@ -648,6 +694,23 @@ actor CyclesDispenser {
     };
   };
 
+  // returns canisters whose balance read has failed STALE_FAILURE_THRESHOLD or more times in a row
+  public shared query func getStaleCanisters() : async [StaleCanister] {
+    let resultBuffer = Buffer.Buffer<StaleCanister>(0);
+    for ((canisterId, failures) in canisterIdToConsecutiveFailuresHashmap.entries()) {
+      if (failures >= STALE_FAILURE_THRESHOLD) {
+        resultBuffer.add({
+          canisterId = canisterId;
+          consecutiveFailures = failures;
+          lastFailureTime = U.safeGet(canisterIdToLastFailureTimeHashmap, canisterId, 0);
+          cachedBalance = U.safeGet(canisterIdToBalanceHashmap, canisterId, 0);
+          isStorageBucket = U.safeGet(canisterIdToIsStorageBucketHashmap, canisterId, false);
+        });
+      };
+    };
+    Buffer.toArray(resultBuffer);
+  };
+
   public shared query func getAllTopUps() : async [TopUp] {
     let resultBuffer = Buffer.Buffer<TopUp>(0);
     for (id in topUpIdToCanisterIdHashmap.keys()) {
@@ -692,31 +755,42 @@ actor CyclesDispenser {
       };
     };
 
+    var staleCount : Nat = 0;
+    for ((_, failures) in canisterIdToConsecutiveFailuresHashmap.entries()) {
+      if (failures >= STALE_FAILURE_THRESHOLD) {
+        staleCount += 1;
+      };
+    };
+    let stalePrefix = if (staleCount > 0) {
+      "WARNING: " # Nat.toText(staleCount) # " canister(s) have failed " #
+      Nat.toText(STALE_FAILURE_THRESHOLD) # "+ consecutive balance reads — call getStaleCanisters for details. "
+    } else { "" };
+
     let MINUTE = 60000000000;
 
     if (Time.now() - lastTimerCalled > 10 * MINUTE) {
-      return "There's a problem! Timer method is not working for more than 10 minutes! CyclesDispenser has " #
+      return stalePrefix # "There's a problem! Timer method is not working for more than 10 minutes! CyclesDispenser has " #
       Float.toText(Float.fromInt(cyclesDispenserBalance) / 1000000000000) # "T cycles.";
     };
 
     if (cyclesDispenserBalance > CYCLES_DISPENSER_MINIMUM) {
       if (neededCycles == 0) {
-        return "Everything is fine. All the registered canisters has enough cycles. CyclesDispenser has " #
+        return stalePrefix # "Everything is fine. All the registered canisters has enough cycles. CyclesDispenser has " #
         Float.toText(Float.fromInt(cyclesDispenserBalance) / 1000000000000) # "T cycles.";
       } else {
         if (neededCycles + CYCLES_DISPENSER_MINIMUM > cyclesDispenserBalance) {
-          return "There is a problem. CyclesDispenser has " # Float.toText(Float.fromInt(cyclesDispenserBalance) / 1000000000000) # "T cycles. It needs at least " #
+          return stalePrefix # "There is a problem. CyclesDispenser has " # Float.toText(Float.fromInt(cyclesDispenserBalance) / 1000000000000) # "T cycles. It needs at least " #
           Float.toText((Float.fromInt(neededCycles) / 1000000000000) +20) # "T cycles to continue its function.";
         } else {
-          return "Everything is fine. Even some of the registered canisters needs cycles, there're enough cycles to top them up. It'll be sorted out in 4 minutes after the timer method works. CyclesDispenser has " #
+          return stalePrefix # "Everything is fine. Even some of the registered canisters needs cycles, there're enough cycles to top them up. It'll be sorted out in 4 minutes after the timer method works. CyclesDispenser has " #
           Float.toText(Float.fromInt(cyclesDispenserBalance) / 1000000000000) # "T cycles.";
         };
       };
     } else {
       if (neededCycles == 0) {
-        return "There's a problem! Even though all the registered canisters has enough cycles for now, CyclesDispenser canister needs at least 20T cycles to continue its function.";
+        return stalePrefix # "There's a problem! Even though all the registered canisters has enough cycles for now, CyclesDispenser canister needs at least 20T cycles to continue its function.";
       } else {
-        return "There's a problem! There're some canisters below the minimum threshold and CyclesDispenser has not enough cycles the top-up. " #
+        return stalePrefix # "There's a problem! There're some canisters below the minimum threshold and CyclesDispenser has not enough cycles the top-up. " #
         "CyclesDispenser's current balance is " # Float.toText(Float.fromInt(cyclesDispenserBalance) / 1000000000000) # "T cycles. " # "It needs " #
         Float.toText(Float.fromInt((neededCycles + Nat.sub(CYCLES_DISPENSER_MINIMUM, cyclesDispenserBalance)) / 1000000000000 + 20)) # "T cycles to continue its function.";
       };
@@ -776,6 +850,8 @@ actor CyclesDispenser {
     canisterIdToBalanceEntries := Iter.toArray(canisterIdToBalanceHashmap.entries());
     canisterIdToTopUpIdsEntries := Iter.toArray(canisterIdToTopUpIdsHashmap.entries());
     canisterIdToIsStorageBucketEntries := Iter.toArray(canisterIdToIsStorageBucketHashmap.entries());
+    canisterIdToConsecutiveFailuresEntries := Iter.toArray(canisterIdToConsecutiveFailuresHashmap.entries());
+    canisterIdToLastFailureTimeEntries := Iter.toArray(canisterIdToLastFailureTimeHashmap.entries());
     topUpIdToCanisterIdEntries := Iter.toArray(topUpIdToCanisterIdHashmap.entries());
     topUpIdToTimeEntries := Iter.toArray(topUpIdToTimeHashmap.entries());
     topUpIdToAmountEntries := Iter.toArray(topUpIdToAmountHashmap.entries());
@@ -792,6 +868,8 @@ actor CyclesDispenser {
     canisterIdToBalanceEntries := [];
     canisterIdToTopUpIdsEntries := [];
     canisterIdToIsStorageBucketEntries := [];
+    canisterIdToConsecutiveFailuresEntries := [];
+    canisterIdToLastFailureTimeEntries := [];
     topUpIdToCanisterIdEntries := [];
     topUpIdToTimeEntries := [];
     topUpIdToAmountEntries := [];

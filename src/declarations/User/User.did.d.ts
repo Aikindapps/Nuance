@@ -2,7 +2,7 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
-export type AddPublicationReturn = { 'ok' : User__1 } |
+export type AddPublicationReturn = { 'ok' : User } |
   { 'err' : string };
 export type CanisterCyclesAggregatedData = BigUint64Array | bigint[];
 export type CanisterHeapMemoryAggregatedData = BigUint64Array | bigint[];
@@ -60,18 +60,14 @@ export interface PublicationObject {
   'isEditor' : boolean,
   'publicationName' : string,
 }
-export interface PublicationObject__1 {
-  'isEditor' : boolean,
-  'publicationName' : string,
-}
 export interface ReaderSubscriptionDetails {
   'readerSubscriptions' : Array<SubscriptionEvent>,
   'readerNotStoppedSubscriptionsWriters' : Array<WriterSubscriptionDetails>,
   'readerPrincipalId' : string,
 }
-export type RegisterUserReturn = { 'ok' : User__1 } |
+export type RegisterUserReturn = { 'ok' : User } |
   { 'err' : string };
-export type RemovePublicationReturn = { 'ok' : User__1 } |
+export type RemovePublicationReturn = { 'ok' : User } |
   { 'err' : string };
 export type Result = { 'ok' : User } |
   { 'err' : string };
@@ -154,23 +150,6 @@ export interface UserListItem {
   'fontType' : string,
   'avatar' : string,
 }
-export interface User__1 {
-  'bio' : string,
-  'socialChannels' : Array<string>,
-  'followersArray' : Array<string>,
-  'displayName' : string,
-  'followersCount' : number,
-  'nuaTokens' : number,
-  'accountCreated' : string,
-  'publicationsArray' : Array<PublicationObject>,
-  'claimInfo' : UserClaimInfo,
-  'website' : string,
-  'isVerified' : boolean,
-  'handle' : string,
-  'followersPrincipals' : FollowersPrincipals,
-  'followers' : Followers,
-  'avatar' : string,
-}
 export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export type VerifyResult = { 'Ok' : UniquePersonProof } |
@@ -189,7 +168,7 @@ export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
   'addNuaBalance' : ActorMethod<[string], undefined>,
   'addPublication' : ActorMethod<
-    [PublicationObject__1, string],
+    [PublicationObject, string],
     AddPublicationReturn
   >,
   'adminAirDrop' : ActorMethod<[number], Result_10>,
@@ -272,7 +251,7 @@ export interface _SERVICE {
   'registerUser' : ActorMethod<[string, string, string], RegisterUserReturn>,
   'removePoh' : ActorMethod<[string], Result>,
   'removePublication' : ActorMethod<
-    [PublicationObject__1, string],
+    [PublicationObject, string],
     RemovePublicationReturn
   >,
   'setDailyMaxRegistration' : ActorMethod<[bigint], Result_3>,

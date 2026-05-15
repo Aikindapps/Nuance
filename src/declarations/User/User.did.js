@@ -1,9 +1,5 @@
 export const idlFactory = ({ IDL }) => {
   const List = IDL.Rec();
-  const PublicationObject__1 = IDL.Record({
-    'isEditor' : IDL.Bool,
-    'publicationName' : IDL.Text,
-  });
   const PublicationObject = IDL.Record({
     'isEditor' : IDL.Bool,
     'publicationName' : IDL.Text,
@@ -18,29 +14,6 @@ export const idlFactory = ({ IDL }) => {
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const FollowersPrincipals = IDL.Opt(IDL.Tuple(IDL.Text, List));
   const Followers = IDL.Opt(IDL.Tuple(IDL.Text, List));
-  const User__1 = IDL.Record({
-    'bio' : IDL.Text,
-    'socialChannels' : IDL.Vec(IDL.Text),
-    'followersArray' : IDL.Vec(IDL.Text),
-    'displayName' : IDL.Text,
-    'followersCount' : IDL.Nat32,
-    'nuaTokens' : IDL.Float64,
-    'accountCreated' : IDL.Text,
-    'publicationsArray' : IDL.Vec(PublicationObject),
-    'claimInfo' : UserClaimInfo,
-    'website' : IDL.Text,
-    'isVerified' : IDL.Bool,
-    'handle' : IDL.Text,
-    'followersPrincipals' : FollowersPrincipals,
-    'followers' : Followers,
-    'avatar' : IDL.Text,
-  });
-  const AddPublicationReturn = IDL.Variant({
-    'ok' : User__1,
-    'err' : IDL.Text,
-  });
-  const Result_10 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const User = IDL.Record({
     'bio' : IDL.Text,
     'socialChannels' : IDL.Vec(IDL.Text),
@@ -58,6 +31,9 @@ export const idlFactory = ({ IDL }) => {
     'followers' : Followers,
     'avatar' : IDL.Text,
   });
+  const AddPublicationReturn = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Date = IDL.Record({
@@ -146,9 +122,9 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Tuple(IDL.Nat, IDL.Nat),
     'err' : IDL.Text,
   });
-  const RegisterUserReturn = IDL.Variant({ 'ok' : User__1, 'err' : IDL.Text });
+  const RegisterUserReturn = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
   const RemovePublicationReturn = IDL.Variant({
-    'ok' : User__1,
+    'ok' : User,
     'err' : IDL.Text,
   });
   const SubscriptionTimeInterval = IDL.Variant({
@@ -200,7 +176,7 @@ export const idlFactory = ({ IDL }) => {
     'acceptCycles' : IDL.Func([], [], []),
     'addNuaBalance' : IDL.Func([IDL.Text], [], ['oneway']),
     'addPublication' : IDL.Func(
-        [PublicationObject__1, IDL.Text],
+        [PublicationObject, IDL.Text],
         [AddPublicationReturn],
         [],
       ),
@@ -340,7 +316,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'removePoh' : IDL.Func([IDL.Text], [Result], []),
     'removePublication' : IDL.Func(
-        [PublicationObject__1, IDL.Text],
+        [PublicationObject, IDL.Text],
         [RemovePublicationReturn],
         [],
       ),

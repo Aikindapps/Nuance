@@ -109,11 +109,6 @@ type RecallOptions =
    thisYear;
    today;
  };
-type PostTagModel__1 = 
- record {
-   tagId: text;
-   tagName: text;
- };
 type PostTagModel = 
  record {
    tagId: text;
@@ -152,21 +147,6 @@ type PostModerationStatusV2 =
    approved;
    new;
    rejected;
- };
-type PostKeyProperties__1 = 
- record {
-   bucketCanisterId: text;
-   category: text;
-   claps: text;
-   created: text;
-   handle: text;
-   isDraft: bool;
-   modified: text;
-   postId: text;
-   "principal": text;
-   publishedDate: text;
-   tags: vec PostTagModel;
-   views: text;
  };
 type PostKeyProperties = 
  record {
@@ -248,7 +228,7 @@ type List =
 type Icrc28TrustedOriginsResponse = record {trusted_origins: vec text;};
 type GetPostsByFollowers = 
  record {
-   posts: vec PostKeyProperties__1;
+   posts: vec PostKeyProperties;
    totalCount: text;
  };
 type ContentStatus = 
@@ -267,18 +247,19 @@ type ContentResult =
  };
 service : {
   acceptCycles: () -> ();
-  addCanisterToCyclesDispenser: (text, nat, nat) -> (Result_1);
-  addNewRules: (vec text) -> ();
-  addPostCategory: (text, text, int) -> ();
-  addPostIdToUserDebug: (text, text) -> (Result_1);
-  addWasmChunk: (blob) -> (Result_1);
+  addCanisterToCyclesDispenser: (canisterId: text, minimumThreshold: 
+   nat, topUpAmount: nat) -> (Result_1);
+  addNewRules: (rules: vec text) -> ();
+  addPostCategory: (postId: text, category: text, time: int) -> ();
+  addPostIdToUserDebug: (principalId: text, postId: text) -> (Result_1);
+  addWasmChunk: (chunk: blob) -> (Result_1);
   availableCycles: () -> (nat) query;
   checkViewsLast24Hours: () -> ();
-  clapPost: (text) -> () oneway;
-  copyPublicationCanisters: (text) -> (Result_10);
-  copyTrustedCanisters: (text) -> (Result_8);
+  clapPost: (postId: text) -> () oneway;
+  copyPublicationCanisters: (publicationManagementCai: text) -> (Result_10);
+  copyTrustedCanisters: (canisterId: text) -> (Result_8);
   createNewBucketCanister: () -> (Result_2);
-  createTag: (text) -> (Result_9);
+  createTag: (tagName: text) -> (Result_9);
   currentId: () -> (nat) query;
   debugApplaudsHashMap: () -> (vec record {
                                      text;
@@ -289,15 +270,15 @@ service : {
                                         nat;
                                       }) query;
   debugMembersOnlyStatusOfExistingDraftArticles: () -> (Result_8);
-  debugSaveMultiplePosts: (vec PostSaveModel) -> (vec Result_4);
-  delete: (text) -> (Result_3);
-  deletePostFromUserDebug: (text, text) -> (Result_8);
-  deleteUserPosts: (text) -> (Result_3);
+  debugSaveMultiplePosts: (postModels: vec PostSaveModel) -> (vec Result_4);
+  delete: (postId: text) -> (Result_3);
+  deletePostFromUserDebug: (handle: text, postId: text) -> (Result_8);
+  deleteUserPosts: (principalId: text) -> (Result_3);
   dumpIds: () -> (Result_1);
   dumpPosts: () -> (Result_1);
   dumpUserIds: () -> (Result_1);
-  followTag: (text) -> (Result_1);
-  followTags: (vec text) -> (Result_1);
+  followTag: (tagId: text) -> (Result_1);
+  followTags: (tagIds: vec text) -> (Result_1);
   generateLatestPosts: () -> ();
   generatePublishedDates: () -> ();
   getActiveBucketCanisterId: () -> (Result_2);
@@ -309,7 +290,7 @@ service : {
                                  }) query;
   getAllStatusCount: () -> (Result_2);
   getAllTags: () -> (vec TagModel) query;
-  getBucketCanisterIdsOfGivenHandles: (vec text) -> (vec text) query;
+  getBucketCanisterIdsOfGivenHandles: (handles: vec text) -> (vec text) query;
   getBucketCanisters: () -> (vec record {
                                    text;
                                    text;
@@ -323,43 +304,54 @@ service : {
                                                  }) query;
   getKinicList: () -> (Result_8);
   getLastWeekRejectedPostKeyProperties: () -> (vec PostKeyProperties) query;
-  getLatestPosts: (nat32, nat32) -> (GetPostsByFollowers) query;
+  getLatestPosts: (indexFrom: nat32, indexTo: nat32) ->
+   (GetPostsByFollowers) query;
   getLatestTimerCall: () -> (text, text) query;
-  getList: (vec text) -> (vec PostKeyProperties) query;
+  getList: (postIds: vec text) -> (vec PostKeyProperties) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getMoreArticlesFromUsers: (text, vec text) ->
+  getMoreArticlesFromUsers: (postId: text, handles: vec text) ->
    (vec vec PostKeyProperties) query;
-  getMoreLatestPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
-  getMyAllPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
-  getMyDailyPostsStatus: () -> (bool) query;
-  getMyDraftPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
-  getMyFollowingTagsPostKeyProperties: (nat32, nat32) ->
-   (GetPostsByFollowers) composite_query;
-  getMyPlannedPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
-  getMyPublishedPosts: (nat32, nat32) -> (vec PostKeyProperties) query;
-  getMySubmittedToReviewPosts: (nat32, nat32) ->
+  getMoreLatestPosts: (indexFrom: nat32, indexTo: nat32) ->
    (vec PostKeyProperties) query;
-  getMyTags: () -> (vec PostTagModel__1) query;
+  getMyAllPosts: (indexFrom: nat32, indexTo: nat32) ->
+   (vec PostKeyProperties) query;
+  getMyDailyPostsStatus: () -> (bool) query;
+  getMyDraftPosts: (indexFrom: nat32, indexTo: nat32) ->
+   (vec PostKeyProperties) query;
+  getMyFollowingTagsPostKeyProperties: (indexFrom: nat32, indexTo: nat32) ->
+   (GetPostsByFollowers) composite_query;
+  getMyPlannedPosts: (indexFrom: nat32, indexTo: nat32) ->
+   (vec PostKeyProperties) query;
+  getMyPublishedPosts: (indexFrom: nat32, indexTo: nat32) ->
+   (vec PostKeyProperties) query;
+  getMySubmittedToReviewPosts: (indexFrom: nat32, indexTo: nat32) ->
+   (vec PostKeyProperties) query;
+  getMyTags: () -> (vec PostTagModel) query;
   getNextPostId: () -> (Result_2);
-  getNextPostIdsDebug: (nat) -> (Result_2);
+  getNextPostIdsDebug: (count: nat) -> (Result_2);
   getPlatformOperators: () -> (List) query;
-  getPopular: (nat32, nat32) -> (GetPostsByFollowers) query;
-  getPopularThisMonth: (nat32, nat32) -> (GetPostsByFollowers) query;
-  getPopularThisWeek: (nat32, nat32) -> (GetPostsByFollowers) query;
-  getPopularToday: (nat32, nat32) -> (GetPostsByFollowers) query;
-  getPostKeyProperties: (text) -> (Result_5) query;
+  getPopular: (indexFrom: nat32, indexTo: nat32) ->
+   (GetPostsByFollowers) query;
+  getPopularThisMonth: (indexFrom: nat32, indexTo: nat32) ->
+   (GetPostsByFollowers) query;
+  getPopularThisWeek: (indexFrom: nat32, indexTo: nat32) ->
+   (GetPostsByFollowers) query;
+  getPopularToday: (indexFrom: nat32, indexTo: nat32) ->
+   (GetPostsByFollowers) query;
+  getPostKeyProperties: (postId: text) -> (Result_5) query;
   getPostUrls: () -> (Result_2);
   getPostViewsPerHourLast24Hours: () -> (nat, vec record {
                                                     nat;
                                                     nat;
                                                   }) query;
-  getPostsByCategory: (text, text, nat32, nat32) ->
-   (GetPostsByFollowers) query;
-  getPostsByFollowers: (vec text, nat32, nat32) ->
-   (GetPostsByFollowers) query;
-  getPostsByPostIds: (vec text) -> (vec PostKeyProperties) query;
-  getPostsByPostIdsMigration: (vec text) -> (vec PostKeyProperties) query;
+  getPostsByCategory: (handle: text, category: text, indexFrom: nat32,
+   indexTo: nat32) -> (GetPostsByFollowers) query;
+  getPostsByFollowers: (handles: vec text, indexFrom: nat32, indexTo:
+   nat32) -> (GetPostsByFollowers) query;
+  getPostsByPostIds: (postIds: vec text) -> (vec PostKeyProperties) query;
+  getPostsByPostIdsMigration: (postIds: vec text) ->
+   (vec PostKeyProperties) query;
   getPostsPerHourLast24Hours: () -> (nat, vec record {
                                                 int;
                                                 nat;
@@ -368,70 +360,77 @@ service : {
                                         text;
                                         text;
                                       }) query;
-  getPublicationPosts: (nat32, nat32, text) -> (vec PostKeyProperties) query;
-  getTagFollowers: (text) -> (Result_8);
-  getTagsByUser: (text) -> (vec PostTag) query;
+  getPublicationPosts: (indexFrom: nat32, indexTo: nat32, publicationHandle:
+   text) -> (vec PostKeyProperties) query;
+  getTagFollowers: (tagName: text) -> (Result_8);
+  getTagsByUser: (userPrincipalId: text) -> (vec PostTag) query;
   getTotalAmountOfTipsReceived: () -> (nat) composite_query;
   getTotalArticleViews: () -> (nat) query;
   getTotalClaps: () -> (nat) query;
   getTotalPostCount: () -> (nat) query;
   getTrustedCanisters: () -> (Result_8) query;
   getUserDailyAllowedPostNumber: () -> (nat) query;
-  getUserPostCounts: (text) -> (UserPostCounts) query;
-  getUserPostIds: (text) -> (Result_8) query;
-  getUserPosts: (text) -> (vec PostKeyProperties) query;
-  getUsersPostCountsByHandles: (vec text) -> (vec UserPostCounts) query;
-  getViewsByRange: (RecallOptions) -> (int);
+  getUserPostCounts: (userHandle: text) -> (UserPostCounts) query;
+  getUserPostIds: (userHandle: text) -> (Result_8) query;
+  getUserPosts: (handle: text) -> (vec PostKeyProperties) query;
+  getUsersPostCountsByHandles: (userHandles: vec text) ->
+   (vec UserPostCounts) query;
+  getViewsByRange: (recallOptions: RecallOptions) -> (int);
   getWasmChunks: () -> (Result_7);
-  handleModclubMigration: (text) -> (Result_2);
+  handleModclubMigration: (postCanisterId: text) -> (Result_2);
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   idQuick: () -> (principal) query;
-  incrementApplauds: (text, nat) -> ();
+  incrementApplauds: (postId: text, applauds: nat) -> ();
   indexPopular: () -> ();
-  initializeCanister: (text, text, text) -> (Result_2);
+  initializeCanister: (postIndexCai: text, userCai: text, cyclesDispenserCai:
+   text) -> (Result_2);
   initializePostCoreCanister: () -> (Result_2);
-  isEditorPublic: (text, principal) -> (bool) query;
+  isEditorPublic: (publicationCanisterId: text, caller: principal) ->
+   (bool) query;
   isThereEnoughMemory: () -> (bool) query;
-  isWriterPublic: (text, principal) -> (bool) query;
-  makePostPublication: (text, text, text, bool, int) -> ();
+  isWriterPublic: (publicationCanisterId: text, caller: principal) ->
+   (bool) query;
+  makePostPublication: (postId: text, publicationHandle: text, userHandle:
+   text, isDraft: bool, now: int) -> ();
   migrateAllPublicationEditorsAndWriters: () -> (Result_6);
   migrateModclubInterface: () -> (Result_2);
   migratePremiumArticleFromOldArch: () -> (Result_5);
-  modClubCallback: (ContentResult) -> () oneway;
-  refreshUserPostIds: (text) -> (Result_3);
-  registerAdmin: (text) -> (Result_1);
-  registerCanister: (text) -> (Result_1);
-  registerCgUser: (text) -> (Result_1);
-  registerPlatformOperator: (text) -> (Result_1);
+  modClubCallback: (postStatus: ContentResult) -> () oneway;
+  refreshUserPostIds: (userPrincipalId: text) -> (Result_3);
+  registerAdmin: (id: text) -> (Result_1);
+  registerCanister: (id: text) -> (Result_1);
+  registerCgUser: (id: text) -> (Result_1);
+  registerPlatformOperator: (id: text) -> (Result_1);
   registerPublisher: () -> ();
   reindex: () -> (Result_2);
-  removePostFromPopularityArrays: (text) -> () oneway;
-  removePostIdToUserDebug: (text, text) -> (Result_1);
+  removePostFromPopularityArrays: (id: text) -> () oneway;
+  removePostIdToUserDebug: (principalId: text, postId: text) -> (Result_1);
   resetWasmChunks: () -> () oneway;
-  save: (PostSaveModel) -> (Result_4);
-  sendNewArticleNotification: (PostBucketType) -> ();
-  setFrontendCanisterId: (text) -> (Result_2);
-  setMaxMemorySize: (nat) -> (Result_3);
-  setUpModClub: (text) -> () oneway;
-  setUserDailyAllowedPostNumber: (nat) -> (Result_3);
-  simulateModClub: (text, PostModerationStatusV2) -> ();
-  sortPopularPosts: (PopularityType) -> ();
+  save: (postModel: PostSaveModel) -> (Result_4);
+  sendNewArticleNotification: (postBucketResponse: PostBucketType) -> ();
+  setFrontendCanisterId: (canisterId: text) -> (Result_2);
+  setMaxMemorySize: (newValue: nat) -> (Result_3);
+  setUpModClub: (env: text) -> () oneway;
+  setUserDailyAllowedPostNumber: (newVal: nat) -> (Result_3);
+  simulateModClub: (postId: text, status: PostModerationStatusV2) -> ();
+  sortPopularPosts: (popularityType: PopularityType) -> ();
   storeAllSEO: () -> (Result_1);
   testInstructionSize: () -> (text);
-  unfollowTag: (text) -> (Result_1);
-  unregisterAdmin: (text) -> (Result_1);
-  unregisterCanister: (text) -> (Result_1);
-  unregisterCgUser: (text) -> (Result_1);
-  unregisterPlatformOperator: (text) -> (Result_1);
-  updateHandle: (text, text) -> (Result_2);
-  updatePostDraft: (text, bool, int, text) -> (PostKeyProperties);
-  updatePublicationEditorsAndWriters: (text, vec text, vec text) ->
-   (Result_1);
+  unfollowTag: (tagId: text) -> (Result_1);
+  unregisterAdmin: (id: text) -> (Result_1);
+  unregisterCanister: (id: text) -> (Result_1);
+  unregisterCgUser: (id: text) -> (Result_1);
+  unregisterPlatformOperator: (id: text) -> (Result_1);
+  updateHandle: (principalId: text, newHandle: text) -> (Result_2);
+  updatePostDraft: (postId: text, isDraft: bool, time: int,
+   writerPrincipalId: text) -> (PostKeyProperties);
+  updatePublicationEditorsAndWriters: (publicationHandle: text,
+   editorPrincipalIds: vec text, writerPrincipalIds: vec text) -> (Result_1);
   updateSettingsForAllBucketCanisters: () -> (Result_2);
-  upgradeAllBuckets: (text, vec nat8) -> (Result_1);
-  upgradeBucket: (text, vec nat8) -> (Result_1);
-  validate: (reserved) -> (Validate);
+  upgradeAllBuckets: (canisterId: text, arg: vec nat8) -> (Result_1);
+  upgradeBucket: (canisterId: text, arg: vec nat8) -> (Result_1);
+  validate: (input: reserved) -> (Validate);
   verifyMigration: () -> (Result) query;
-  viewPost: (text) -> () oneway;
+  viewPost: (postId: text) -> () oneway;
 }

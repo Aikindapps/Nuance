@@ -159,7 +159,7 @@ actor class Bucket () = this {
     { accepted = Nat64.fromNat(accepted) };
   };
 
-  public func wallet_balance() : async Nat {
+  public query func wallet_balance() : async Nat {
     return Cycles.balance();
   };
 

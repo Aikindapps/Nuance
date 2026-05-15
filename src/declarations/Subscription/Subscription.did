@@ -89,29 +89,34 @@ service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
   checkMyExpiredSubscriptionsNotifications: () -> ();
-  completeSubscriptionEvent: (text) -> (Result_1);
-  createPaymentRequestAsReader: (text, SubscriptionTimeInterval, nat) ->
-   (Result_3);
-  disperseTokensForSuccessfulSubscription: (text) -> (Result_4);
+  completeSubscriptionEvent: (eventId: text) -> (Result_1);
+  createPaymentRequestAsReader: (writerPrincipalId: text, timeInterval:
+   SubscriptionTimeInterval, amount: nat) -> (Result_3);
+  disperseTokensForSuccessfulSubscription: (eventId: text) -> (Result_4);
   expiredNotificationsHeartbeatExternal: () -> ();
   getCanisterVersion: () -> (text) query;
   getLatestTimerCall: () -> (text, text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getPaymentRequestBySubscriptionEventId: (text) -> (Result_3) query;
+  getPaymentRequestBySubscriptionEventId: (eventId: text) -> (Result_3) query;
   getReaderSubscriptionDetails: () -> (Result_1) query;
-  getWriterSubscriptionDetails: (opt text) -> (Result) composite_query;
-  getWriterSubscriptionDetailsByPrincipalId: (text) -> (Result) query;
+  getWriterSubscriptionDetails: (publicationPrincipalId: opt text) ->
+   (Result) composite_query;
+  getWriterSubscriptionDetailsByPrincipalId: ("principal": text) ->
+   (Result) query;
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
-  isReaderSubscriber: (text, text) -> (bool) query;
+  isReaderSubscriber: (writerPrincipalId: text, readerPrincipalId: text) ->
+   (bool) query;
   isThereEnoughMemory: () -> (bool) query;
-  isWriterActivatedSubscription: (text) -> (bool) query;
+  isWriterActivatedSubscription: (writerPrincipalId: text) -> (bool) query;
   pendingStuckTokensHeartbeatExternal: () -> ();
   pendingTokensHeartbeatExternal: () -> ();
-  sendNewSubscriptionNotifications: (SubscriptionEvent) -> ();
-  sendStopSubscriptionNotification: (text, text) -> ();
-  setMaxMemorySize: (nat) -> (Result_2);
-  stopSubscription: (text) -> (Result_1);
-  updateSubscriptionDetails: (UpdateSubscriptionDetailsModel) -> (Result);
+  sendNewSubscriptionNotifications: (event: SubscriptionEvent) -> ();
+  sendStopSubscriptionNotification: (readerPrincipalId: text,
+   writerPrincipalId: text) -> ();
+  setMaxMemorySize: (newValue: nat) -> (Result_2);
+  stopSubscription: (writerPrincipalId: text) -> (Result_1);
+  updateSubscriptionDetails: (subscriptionDetails:
+   UpdateSubscriptionDetailsModel) -> (Result);
 }

@@ -54,13 +54,13 @@ service : {
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   initNuanceCanisters: () -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
-  logCommand: (text, text) -> (Result);
-  registerAdmin: (text) -> (Result);
-  registerCanister: (text) -> (Result);
-  registerPlatformOperator: (text) -> (Result);
-  setMaxMemorySize: (nat) -> (Result_1);
-  unregisterAdmin: (text) -> (Result);
-  unregisterCanister: (text) -> (Result);
-  unregisterPlatformOperator: (text) -> (Result);
-  validate: (reserved) -> (Validate);
+  logCommand: (commandName: text, operator: text) -> (Result);
+  registerAdmin: (id: text) -> (Result);
+  registerCanister: (id: text) -> (Result);
+  registerPlatformOperator: (id: text) -> (Result);
+  setMaxMemorySize: (newValue: nat) -> (Result_1);
+  unregisterAdmin: (id: text) -> (Result);
+  unregisterCanister: (id: text) -> (Result);
+  unregisterPlatformOperator: (id: text) -> (Result);
+  validate: (input: reserved) -> (Validate);
 }
