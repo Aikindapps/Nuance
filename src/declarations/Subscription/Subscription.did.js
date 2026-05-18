@@ -77,6 +77,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'expiredNotificationsHeartbeatExternal' : IDL.Func([], [], []),
+    'getAuthorActivePaidSubscriberPrincipalIds' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(IDL.Text)],
+        ['query'],
+      ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
     'getLatestTimerCall' : IDL.Func([], [IDL.Text, IDL.Text], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),

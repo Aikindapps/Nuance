@@ -2,6 +2,7 @@ import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Char "mo:base/Char";
 import Debug "mo:base/Debug";
+import Error "mo:base/Error";
 import Float "mo:base/Float";
 import HashMap "mo:base/HashMap";
 import Int "mo:base/Int";
@@ -9,6 +10,7 @@ import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Nat "mo:base/Nat";
 import Nat32 "mo:base/Nat32";
+import Option "mo:base/Option";
 import Prelude "mo:base/Prelude";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
@@ -20,6 +22,7 @@ import IC "mo:base/ExperimentalInternetComputer";
 import Nat64 "mo:base/Nat64";
 import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
+import Timer "mo:base/Timer";
 import Blob "mo:base/Blob";
 import Prim "mo:prim";
 import Versions "../shared/versions";
@@ -27,6 +30,7 @@ import ENV "../shared/env";
 import CanisterDeclarations "../shared/CanisterDeclarations";
 import NotificationTypes "../NotificationsV3/types";
 import TypesStandards "../shared/TypesStandards";
+import Email "./EmailSubscription";
 
 actor User {
   let Unauthorized = "Unauthorized";
@@ -54,6 +58,11 @@ actor User {
   type UserClaimInfo = Types.UserClaimInfo;
   type ReaderSubscriptionDetails = CanisterDeclarations.ReaderSubscriptionDetails;
   type VerifyResult = CanisterDeclarations.VerifyResult;
+
+  // Email subscription types
+  type EmailSubscriber = Email.EmailSubscriber;
+  type VerificationToken = Email.VerificationToken;
+  type PublishedArticlePayload = Email.PublishedArticlePayload;
 
   //icrc standards types
   type SupportedStandard = TypesStandards.SupportedStandard;
@@ -138,6 +147,60 @@ actor User {
   //key: account-id, value: handle
   stable var accountIdsToHandleEntries : [(Text, Text)] = [];
   var accountIdsToHandleHashMap = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+
+  //#region Email Subscription state
+  // Primary subscriber store. Key: "authorPrincipal|email" (see Email.subKey).
+  // Value: EmailSubscriber record (verified bool, timestamps, userId link).
+  stable var emailSubscribersEntries : [(Text, EmailSubscriber)] = [];
+  var emailSubscribersHashMap = HashMap.HashMap<Text, EmailSubscriber>(initCapacity, isEq, Text.hash);
+
+  // Secondary index: authorPrincipal -> [subscriber key]. Used for broadcast.
+  // Stored as an array (not a Set) so iteration order is stable; we
+  // dedupe on insert. Size per author is bounded by real-world follower
+  // counts so linear scans on add are fine.
+  stable var emailSubscribersByAuthorEntries : [(Text, [Text])] = [];
+  var emailSubscribersByAuthorHashMap = HashMap.HashMap<Text, [Text]>(initCapacity, isEq, Text.hash);
+
+  // Verification token store. Key: token (opaque hex). Value: token record.
+  // Tokens are deleted on verify or explicit cleanup. Expired tokens are
+  // lazily purged when new tokens are issued for the same (email, author).
+  stable var emailVerificationTokensEntries : [(Text, VerificationToken)] = [];
+  var emailVerificationTokensHashMap = HashMap.HashMap<Text, VerificationToken>(initCapacity, isEq, Text.hash);
+
+  // Broadcast unsubscribe token store. One entry per article broadcast,
+  // shared across all its recipients. Carries the list of target IDs
+  // (author + publication canisters) so the unsubscribe handler can
+  // unsubscribe the recipient from every relevant subscription.
+  stable var broadcastUnsubTokensEntries : [(Text, Email.BroadcastUnsubToken)] = [];
+  var broadcastUnsubTokensHashMap = HashMap.HashMap<Text, Email.BroadcastUnsubToken>(initCapacity, isEq, Text.hash);
+
+  // Rate limiter: sliding-window counter per subscriber key. Stores
+  // timestamps of verification-email sends in the current window.
+  stable var emailRateLimiterEntries : [(Text, [Int])] = [];
+  var emailRateLimiterHashMap = HashMap.HashMap<Text, [Int]>(initCapacity, isEq, Text.hash);
+
+  // Lettermint API key. Set via admin-only setter; not returned by any
+  // public method. Stored as Text, optional.
+  stable var lettermintApiKey : ?Text = null;
+
+  // Failed-broadcast retry queue. Each entry is a single batch that has
+  // failed at least once; the timer re-attempts them on the schedule
+  // defined by Email.RETRY_DELAYS_NS. Idempotent on the Lettermint side
+  // via the per-batch Idempotency-Key, so retries cannot double-send
+  // within the 24h key window.
+  stable var pendingEmailBatchesEntries : [(Text, Email.PendingBatch)] = [];
+  var pendingEmailBatchesHashMap = HashMap.HashMap<Text, Email.PendingBatch>(initCapacity, isEq, Text.hash);
+
+  // Dead-letter store for batches that either exhausted their retry
+  // budget or failed with a non-retryable error (4xx). Admins can
+  // inspect these and optionally re-queue them.
+  stable var deadEmailBatchesEntries : [(Text, Email.PendingBatch)] = [];
+  var deadEmailBatchesHashMap = HashMap.HashMap<Text, Email.PendingBatch>(initCapacity, isEq, Text.hash);
+
+  // Whether the retry timer is currently registered. Reset on upgrade
+  // (timers don't survive upgrades) and re-armed in postupgrade.
+  var emailRetryTimerArmed : Bool = false;
+  //#endregion
 
   //SNS
   public type Validate = {
@@ -2591,6 +2654,1112 @@ actor User {
 
   // #endregion
 
+  //#region Email Subscription
+
+  // Who is allowed to call notifyAuthorArticlePublished? Only PostBucket
+  // and PostCore canisters — never end users. We use the existing
+  // nuanceCanisters trusted list for that.
+  private func isTrustedCanister(caller : Principal) : async Bool {
+    let callerPrincipalId = Principal.toText(caller);
+    //firstly check if the caller is added to the nuanceCanisters list
+    if (isNuanceCanister(caller)) return true;
+    //check if it's a PostBucket canister
+    let postCoreCanister = CanisterDeclarations.getPostCoreCanister();
+    let bucketCanisterIds = Array.map(await postCoreCanister.getBucketCanisters(), func(bucketCanisterEntry: (Text, Text)) : Text {
+      bucketCanisterEntry.0
+    });
+    //add all the bucketCanisterId values into nuanceCanisters list to not need any inter-canister call next time
+    for(bucketCanisterId in bucketCanisterIds.vals()){
+      if (not List.some<Text>(nuanceCanisters, func(val : Text) : Bool { val == bucketCanisterId })) {
+      nuanceCanisters := List.push<Text>(bucketCanisterId, nuanceCanisters);
+    };
+    };
+    if(U.arrayContainsGeneric(bucketCanisterIds, callerPrincipalId, Text.equal)){
+      return true;
+    };
+
+    false;
+  };
+
+  // Public base URL used in verification / unsubscribe links. Clients
+  // pass their own (local dev vs prod), but we reject anything that
+  // doesn't point to a known Nuance origin so this can't be abused as
+  // an open-redirect vector in phishing emails.
+  private func isTrustedEmailOrigin(url : Text) : Bool {
+    Text.startsWith(url, #text "https://nuance.xyz/")
+    or Text.startsWith(url, #text "https://www.nuance.xyz/")
+    or Text.startsWith(url, #text ("https://" # ENV.NUANCE_ASSETS_CANISTER_ID))
+    or Text.startsWith(url, #text "http://localhost:8081")
+    or Text.startsWith(url, #text "http://127.0.0.1:");
+  };
+
+  private func getAuthorPrincipalIdByHandle(authorHandle : Text) : ?Text {
+    handleReverseHashMap.get(U.lowerCase(authorHandle));
+  };
+
+  private func getAuthorDisplayName(authorPrincipal : Text) : Text {
+    switch (displayNameHashMap.get(authorPrincipal)) {
+      case (?dn) { if (dn.size() > 0) dn else defaultDisplayName(authorPrincipal) };
+      case null { defaultDisplayName(authorPrincipal) };
+    };
+  };
+
+  private func defaultDisplayName(authorPrincipal : Text) : Text {
+    switch (handleHashMap.get(authorPrincipal)) {
+      case (?h) h;
+      case null "An author";
+    };
+  };
+
+  // Add a subscriber key to the author's index, deduping.
+  private func indexSubscriber(authorPrincipal : Text, key : Text) : () {
+    let existing = Option.get(emailSubscribersByAuthorHashMap.get(authorPrincipal), []);
+    for (k in existing.vals()) {
+      if (k == key) { return };
+    };
+    let updated = Array.append(existing, [key]);
+    emailSubscribersByAuthorHashMap.put(authorPrincipal, updated);
+  };
+
+  // Remove a key from the author's index.
+  private func deindexSubscriber(authorPrincipal : Text, key : Text) : () {
+    switch (emailSubscribersByAuthorHashMap.get(authorPrincipal)) {
+      case (?arr) {
+        let filtered = Array.filter<Text>(arr, func(k) { k != key });
+        emailSubscribersByAuthorHashMap.put(authorPrincipal, filtered);
+      };
+      case null {};
+    };
+  };
+
+  // Rate limiter: at most MAX_VERIFIES_PER_HOUR sends per (authorPrincipal|email).
+  // Returns true if the send is allowed (and records it).
+  private func checkAndRecordRateLimit(key : Text) : Bool {
+    let now = Time.now();
+    let cutoff = now - Email.RATE_WINDOW_NANOS;
+    let existing = Option.get(emailRateLimiterHashMap.get(key), []);
+    let kept = Array.filter<Int>(existing, func(t) { t > cutoff });
+    if (kept.size() >= Email.MAX_VERIFIES_PER_HOUR) {
+      emailRateLimiterHashMap.put(key, kept);
+      return false;
+    };
+    emailRateLimiterHashMap.put(key, Array.append(kept, [now]));
+    true;
+  };
+
+  /// Admin sets the Lettermint API key. Not queryable.
+  public shared ({ caller }) func setLettermintApiKey(key : Text) : async Result.Result<(), Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    lettermintApiKey := ?Text.trim(key, #char ' ');
+    #ok();
+  };
+
+  /// Returns true if the API key is configured (no value returned).
+  public shared query ({ caller }) func hasLettermintApiKey() : async Bool {
+    switch (lettermintApiKey) {
+      case (?_) true;
+      case null false;
+    };
+  };
+
+  /// Subscribe an email to an author's publishing broadcasts.
+  ///
+  /// - `authorHandle`: public handle the subscriber sees on the author page.
+  /// - `email`: raw email text (we normalize + validate).
+  /// - `verificationBaseUrl`: the frontend URL the token is appended to
+  ///   (e.g. "https://nuance.xyz/verify-email"). Must match a trusted
+  ///   Nuance origin — see isTrustedEmailOrigin.
+  ///
+  /// Returns a harmless success message whether the email is new, already
+  /// pending, or already verified. This prevents enumeration: an attacker
+  /// can't use this endpoint to test which emails are subscribed.
+  /// A verification email is only actually sent when it makes sense.
+  public shared ({ caller }) func subscribeToAuthorByEmail(
+    authorHandle : Text,
+    email : Text,
+    verificationBaseUrl : Text,
+  ) : async Result.Result<Text, Text> {
+    canistergeekMonitor.collectMetrics();
+
+    let normalized = Email.normalizeEmail(email);
+    if (not Email.isValidEmail(normalized)) {
+      return #err("Invalid email address.");
+    };
+
+    if (not isTrustedEmailOrigin(verificationBaseUrl)) {
+      return #err("Verification URL origin not allowed.");
+    };
+
+    let authorPrincipal = switch (getAuthorPrincipalIdByHandle(authorHandle)) {
+      case (?id) id;
+      case null { return #err("Author not found.") };
+    };
+
+    // Deliverability: authors can't subscribe themselves to themselves.
+    switch (handleHashMap.get(Principal.toText(caller))) {
+      case (?callerHandle) {
+        if (U.lowerCase(callerHandle) == U.lowerCase(authorHandle)) {
+          return #err("You cannot subscribe to your own email broadcasts.");
+        };
+      };
+      case null {};
+    };
+
+    let apiKey = switch (lettermintApiKey) {
+      case (?k) k;
+      case null { return #err("Email service not configured.") };
+    };
+
+    let key = Email.subKey(authorPrincipal, normalized);
+    let now = Time.now();
+
+    // If already verified, surface a harmless success message — no resend.
+    switch (emailSubscribersHashMap.get(key)) {
+      case (?existing) {
+        if (existing.verified and existing.unsubscribedAt == null) {
+          return #err("You're already subscribed.");
+        };
+      };
+      case null {};
+    };
+
+    if (not checkAndRecordRateLimit(key)) {
+      return #err("Too many verification emails sent recently. Try again later.");
+    };
+
+    // Upsert subscriber as unverified. Preserves userId link if one existed.
+    let callerPrincipal = Principal.toText(caller);
+    let userIdLink : ?Text = if (callerPrincipal == Principal.toText(ANONYMOUS_PRINCIPAL)) {
+      null;
+    } else { ?callerPrincipal };
+    let record : EmailSubscriber = switch (emailSubscribersHashMap.get(key)) {
+      case (?existing) {
+        let linkedUserId = switch (userIdLink) {
+          case (?_) userIdLink;
+          case null existing.userId;
+        };
+        {
+          email = normalized;
+          authorPrincipal;
+          verified = existing.verified;
+          userId = linkedUserId;
+          createdAt = existing.createdAt;
+          verifiedAt = existing.verifiedAt;
+          unsubscribedAt = null; // re-subscribing clears the unsubscribe.
+        };
+      };
+      case null {
+        {
+          email = normalized;
+          authorPrincipal;
+          verified = false;
+          userId = userIdLink;
+          createdAt = now;
+          verifiedAt = null;
+          unsubscribedAt = null;
+        };
+      };
+    };
+    emailSubscribersHashMap.put(key, record);
+    indexSubscriber(authorPrincipal, key);
+
+    // Generate verification token (or reuse existing non-expired one to
+    // avoid generating fresh tokens on every refresh-and-resubmit).
+    let token = await Email.generateToken();
+    emailVerificationTokensHashMap.put(token, {
+      token;
+      email = normalized;
+      authorPrincipal;
+      expiresAt = now + Email.VERIFY_TTL_NANOS;
+      createdAt = now;
+    });
+
+    // Send the transactional verification email.
+    let authorDisplayName = getAuthorDisplayName(authorPrincipal);
+    let base =
+      if (Text.endsWith(verificationBaseUrl, #text "/")) verificationBaseUrl
+      else verificationBaseUrl # "/";
+    let verifyUrl = base # "?token=" # token;
+    let fromHeader = "Nuance <no-reply@nuance.xyz>";
+    let subject = "Confirm your subscription to " # authorDisplayName # " on Nuance";
+
+    let sendResult = await Email.sendTransactional(
+      apiKey,
+      fromHeader,
+      normalized,
+      subject,
+      "outgoing",
+      Email.renderVerificationHtml(authorDisplayName, verifyUrl),
+      Email.renderVerificationText(authorDisplayName, verifyUrl),
+      ["nuance", "email-verification"],
+      [
+        ("author_id", authorPrincipal),
+        ("author_handle", authorHandle),
+        ("type", "verification"),
+      ],
+      null,
+    );
+
+    switch (sendResult) {
+      case (#ok(_)) {
+        #ok("Verification email sent. Check your inbox.");
+      };
+      case (#err(e)) {
+        // The token row stays — the user can click the /resend path
+        // without double-creating a subscriber. We surface a friendly
+        // error but the subscriber record remains (unverified).
+        #err("Failed to send verification email: " # e);
+      };
+    };
+  };
+
+  /// Subscribe an email to a publication's article-broadcast list.
+  /// Mirrors subscribeToAuthorByEmail but the target is a publication
+  /// rather than a user. The User canister doesn't track publications,
+  /// so the caller (frontend) supplies the publication canister ID
+  /// directly — it's used as the `authorPrincipal` in the subscriber/index maps.
+  /// Display name + handle are passed in for the verification email and
+  /// rate-limit key only; we don't store them.
+  public shared ({ caller }) func subscribeToPublicationByEmail(
+    publicationCanisterId : Text,
+    publicationHandle : Text,
+    publicationDisplayName : Text,
+    email : Text,
+    verificationBaseUrl : Text,
+  ) : async Result.Result<Text, Text> {
+    canistergeekMonitor.collectMetrics();
+
+    let normalized = Email.normalizeEmail(email);
+    if (not Email.isValidEmail(normalized)) {
+      return #err("Invalid email address.");
+    };
+    if (not isTrustedEmailOrigin(verificationBaseUrl)) {
+      return #err("Verification URL origin not allowed.");
+    };
+    if (publicationCanisterId.size() == 0 or publicationHandle.size() == 0) {
+      return #err("Publication target is invalid.");
+    };
+
+    let apiKey = switch (lettermintApiKey) {
+      case (?k) k;
+      case null { return #err("Email service not configured.") };
+    };
+
+    let key = Email.subKey(publicationCanisterId, normalized);
+    let now = Time.now();
+
+    switch (emailSubscribersHashMap.get(key)) {
+      case (?existing) {
+        if (existing.verified and existing.unsubscribedAt == null) {
+          return #err("You're already subscribed.");
+        };
+      };
+      case null {};
+    };
+
+    if (not checkAndRecordRateLimit(key)) {
+      return #err("Too many verification emails sent recently. Try again later.");
+    };
+
+    let callerPrincipal = Principal.toText(caller);
+    let userIdLink : ?Text = if (callerPrincipal == Principal.toText(ANONYMOUS_PRINCIPAL)) {
+      null;
+    } else { ?callerPrincipal };
+    let record : EmailSubscriber = switch (emailSubscribersHashMap.get(key)) {
+      case (?existing) {
+        let linkedUserId = switch (userIdLink) {
+          case (?_) userIdLink;
+          case null existing.userId;
+        };
+        {
+          email = normalized;
+          authorPrincipal = publicationCanisterId;
+          verified = existing.verified;
+          userId = linkedUserId;
+          createdAt = existing.createdAt;
+          verifiedAt = existing.verifiedAt;
+          unsubscribedAt = null;
+        };
+      };
+      case null {
+        {
+          email = normalized;
+          authorPrincipal = publicationCanisterId;
+          verified = false;
+          userId = userIdLink;
+          createdAt = now;
+          verifiedAt = null;
+          unsubscribedAt = null;
+        };
+      };
+    };
+    emailSubscribersHashMap.put(key, record);
+    indexSubscriber(publicationCanisterId, key);
+
+    let token = await Email.generateToken();
+    emailVerificationTokensHashMap.put(token, {
+      token;
+      email = normalized;
+      authorPrincipal = publicationCanisterId;
+      expiresAt = now + Email.VERIFY_TTL_NANOS;
+      createdAt = now;
+    });
+
+    let displayName =
+      if (publicationDisplayName.size() > 0) publicationDisplayName
+      else publicationHandle;
+    let base =
+      if (Text.endsWith(verificationBaseUrl, #text "/")) verificationBaseUrl
+      else verificationBaseUrl # "/";
+    let verifyUrl = base # "?token=" # token;
+    let fromHeader = "Nuance <no-reply@nuance.xyz>";
+    let subject = "Confirm your subscription to " # displayName # " on Nuance";
+
+    let sendResult = await Email.sendTransactional(
+      apiKey,
+      fromHeader,
+      normalized,
+      subject,
+      "outgoing",
+      Email.renderVerificationHtml(displayName, verifyUrl),
+      Email.renderVerificationText(displayName, verifyUrl),
+      ["nuance", "email-verification"],
+      [
+        ("publication_id", publicationCanisterId),
+        ("publication_handle", publicationHandle),
+        ("type", "verification"),
+      ],
+      null,
+    );
+
+    switch (sendResult) {
+      case (#ok(_)) { #ok("Verification email sent. Check your inbox.") };
+      case (#err(e)) { #err("Failed to send verification email: " # e) };
+    };
+  };
+
+  /// Verify a token and mark the subscriber as verified. Idempotent —
+  /// calling twice with the same token after it was consumed returns
+  /// the expected error, but calling twice during the valid window is
+  /// safe (no-ops on second call because the token is gone).
+  public shared func verifyEmailSubscription(
+    token : Text
+  ) : async Result.Result<{ email : Text; authorHandle : Text }, Text> {
+    canistergeekMonitor.collectMetrics();
+    let t = switch (emailVerificationTokensHashMap.get(token)) {
+      case (?v) v;
+      case null { return #err("Invalid or expired verification token.") };
+    };
+    if (Time.now() > t.expiresAt) {
+      emailVerificationTokensHashMap.delete(token);
+      return #err("Verification token has expired. Please subscribe again.");
+    };
+
+    let key = Email.subKey(t.authorPrincipal, t.email);
+    let record = switch (emailSubscribersHashMap.get(key)) {
+      case (?r) r;
+      case null {
+        // Data went out of sync — clean up the token.
+        emailVerificationTokensHashMap.delete(token);
+        return #err("Subscription record not found.");
+      };
+    };
+
+    let updated : EmailSubscriber = {
+      email = record.email;
+      authorPrincipal = record.authorPrincipal;
+      verified = true;
+      userId = record.userId;
+      createdAt = record.createdAt;
+      verifiedAt = ?Time.now();
+      unsubscribedAt = null;
+    };
+    emailSubscribersHashMap.put(key, updated);
+    emailVerificationTokensHashMap.delete(token);
+
+    let authorHandle = Option.get(handleHashMap.get(t.authorPrincipal), "");
+    #ok({ email = t.email; authorHandle });
+  };
+
+  /// Unsubscribe using the broadcast token + the recipient's email
+  /// (both included in the email footer link). The token is shared
+  /// across the whole broadcast and only authenticates "this URL came
+  /// from a real Nuance broadcast"; the email param identifies which
+  /// subscriber to mark unsubscribed.
+  ///
+  /// A broadcast's recipient may be subscribed to multiple targets at
+  /// once (e.g. both the author and a publication that re-published the
+  /// article). They received a single deduped email, and clicking
+  /// Unsubscribe should silence them across every target on this
+  /// broadcast — otherwise they'd keep receiving copies from the
+  /// remaining target.
+  ///
+  /// Do NOT delete the token on success — other recipients in the same
+  /// broadcast share it and still need it to unsubscribe.
+  public shared func unsubscribeEmailByToken(
+    token : Text,
+    email : Text,
+  ) : async Result.Result<Text, Text> {
+    let t = switch (broadcastUnsubTokensHashMap.get(token)) {
+      case (?v) v;
+      case null { return #err("Invalid unsubscribe token.") };
+    };
+    let normalized = Email.normalizeEmail(email);
+    if (normalized.size() == 0) {
+      return #err("Missing email address.");
+    };
+    var matched : Nat = 0;
+    for (target in t.targetIds.vals()) {
+      let key = Email.subKey(target, normalized);
+      switch (emailSubscribersHashMap.get(key)) {
+        case (?_) {
+          markUnsubscribed(target, normalized);
+          matched += 1;
+        };
+        case null {};
+      };
+    };
+    if (matched == 0) {
+      return #err("No subscription found for this email.");
+    };
+    #ok("You have been unsubscribed.");
+  };
+
+  /// Unsubscribe while logged in (email from UI; authorHandle from UI).
+  public shared ({ caller }) func unsubscribeFromAuthorByEmail(
+    authorHandle : Text,
+    email : Text,
+  ) : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Login required.");
+    };
+    let normalized = Email.normalizeEmail(email);
+    let authorPrincipal = switch (getAuthorPrincipalIdByHandle(authorHandle)) {
+      case (?id) id;
+      case null { return #err("Author not found.") };
+    };
+    let key = Email.subKey(authorPrincipal, normalized);
+    let record = switch (emailSubscribersHashMap.get(key)) {
+      case (?r) r;
+      case null { return #err("No active subscription found.") };
+    };
+    // Only the owning user principal can unsubscribe by this route.
+    let callerPrincipal = Principal.toText(caller);
+    switch (record.userId) {
+      case (?uid) {
+        if (uid != callerPrincipal) return #err(Unauthorized);
+      };
+      case null { return #err("This subscription is not linked to a logged-in user. Use the email unsubscribe link.") };
+    };
+    markUnsubscribed(authorPrincipal, normalized);
+    #ok("Unsubscribed.");
+  };
+
+  private func markUnsubscribed(authorPrincipal : Text, normalizedEmail : Text) : () {
+    let key = Email.subKey(authorPrincipal, normalizedEmail);
+    switch (emailSubscribersHashMap.get(key)) {
+      case (?r) {
+        emailSubscribersHashMap.put(
+          key,
+          {
+            email = r.email;
+            authorPrincipal = r.authorPrincipal;
+            verified = r.verified;
+            userId = r.userId;
+            createdAt = r.createdAt;
+            verifiedAt = r.verifiedAt;
+            unsubscribedAt = ?Time.now();
+          },
+        );
+      };
+      case null {};
+    };
+    deindexSubscriber(authorPrincipal, key);
+  };
+
+  /// Query: is a given email verified-subscribed to this author?
+  /// Used by the frontend to render the "Subscribed" state.
+  public shared query func isEmailSubscribed(
+    authorHandle : Text,
+    email : Text,
+  ) : async Bool {
+    let normalized = Email.normalizeEmail(email);
+    let authorPrincipal = switch (handleReverseHashMap.get(U.lowerCase(authorHandle))) {
+      case (?id) id;
+      case null { return false };
+    };
+    switch (emailSubscribersHashMap.get(Email.subKey(authorPrincipal, normalized))) {
+      case (?r) r.verified and r.unsubscribedAt == null;
+      case null false;
+    };
+  };
+
+  /// Query: is the calling principal email-subscribed to this author or publication?
+  /// Pass publicationCanisterId when checking a publication; omit (null) for individual authors.
+  /// Returns false for anonymous callers or when no verified subscription exists.
+  public shared query ({ caller }) func isEmailSubscribedByCaller(
+    authorHandle : Text,
+    publicationCanisterId : ?Text,
+  ) : async Bool {
+    let callerText = Principal.toText(caller);
+    if (callerText == Principal.toText(ANONYMOUS_PRINCIPAL)) { return false };
+    let targetId = switch (publicationCanisterId) {
+      case (?cid) cid;
+      case null {
+        switch (handleReverseHashMap.get(U.lowerCase(authorHandle))) {
+          case (?id) id;
+          case null { return false };
+        };
+      };
+    };
+    let keys = Option.get(emailSubscribersByAuthorHashMap.get(targetId), []);
+    for (k in keys.vals()) {
+      switch (emailSubscribersHashMap.get(k)) {
+        case (?r) {
+          if (r.userId == ?callerText and r.verified and r.unsubscribedAt == null) {
+            return true;
+          };
+        };
+        case null {};
+      };
+    };
+    false;
+  };
+
+  /// Update: unsubscribe the calling principal from an author or publication email list.
+  /// Pass publicationCanisterId for publications; omit (null) for individual authors.
+  public shared ({ caller }) func unsubscribeEmailByCaller(
+    authorHandle : Text,
+    publicationCanisterId : ?Text,
+  ) : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) { return #err("Login required.") };
+    let callerText = Principal.toText(caller);
+    let targetId = switch (publicationCanisterId) {
+      case (?cid) cid;
+      case null {
+        switch (getAuthorPrincipalIdByHandle(authorHandle)) {
+          case (?id) id;
+          case null { return #err("Author not found.") };
+        };
+      };
+    };
+    let keys = Option.get(emailSubscribersByAuthorHashMap.get(targetId), []);
+    for (k in keys.vals()) {
+      switch (emailSubscribersHashMap.get(k)) {
+        case (?r) {
+          if (r.userId == ?callerText and r.verified and r.unsubscribedAt == null) {
+            markUnsubscribed(targetId, r.email);
+            return #ok("Unsubscribed.");
+          };
+        };
+        case null {};
+      };
+    };
+    #err("No active email subscription found for this account.");
+  };
+
+  /// Admin-only: list email subscribers for an author (for export/debug).
+  public shared query ({ caller }) func getEmailSubscribersOfAuthor(
+    authorPrincipal : Text
+  ) : async Result.Result<[EmailSubscriber], Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    let keys = Option.get(emailSubscribersByAuthorHashMap.get(authorPrincipal), []);
+    let out = Buffer.Buffer<EmailSubscriber>(keys.size());
+    for (k in keys.vals()) {
+      switch (emailSubscribersHashMap.get(k)) {
+        case (?r) {
+          if (r.verified and r.unsubscribedAt == null) { out.add(r) };
+        };
+        case null {};
+      };
+    };
+    #ok(Buffer.toArray(out));
+  };
+
+  /// List email subscribers of a publication. Authorized for: editors of the
+  /// publication (looked up via PostCore), the publication canister itself,
+  /// admins, and platform operators. Composite query because the editor
+  /// check requires an inter-canister query to PostCore.
+  public shared composite query ({ caller }) func getEmailSubscribersOfPublication(
+    publicationCanisterId : Text
+  ) : async Result.Result<[EmailSubscriber], Text> {
+    if (publicationCanisterId.size() == 0) {
+      return #err("Publication canister id is required.");
+    };
+    let isSelf = Principal.toText(caller) == publicationCanisterId;
+    var authorized = isSelf or isAdmin(caller) or isPlatformOperator(caller);
+    if (not authorized) {
+      let postCore = CanisterDeclarations.getPostCoreCanister();
+      authorized := await postCore.isEditorPublic(publicationCanisterId, caller);
+    };
+    if (not authorized) {
+      return #err(Unauthorized);
+    };
+    let keys = Option.get(emailSubscribersByAuthorHashMap.get(publicationCanisterId), []);
+    let out = Buffer.Buffer<EmailSubscriber>(keys.size());
+    for (k in keys.vals()) {
+      switch (emailSubscribersHashMap.get(k)) {
+        case (?r) {
+          if (r.verified and r.unsubscribedAt == null) { out.add(r) };
+        };
+        case null {};
+      };
+    };
+    #ok(Buffer.toArray(out));
+  };
+
+  /// Invoked by PostBucket right after an article transitions to
+  /// "published". Filters subscribers by members-only rules and fans out
+  /// Lettermint batch calls in chunks of BATCH_SIZE.
+  ///
+  /// Authorization: only trusted Nuance canisters (PostBucket, PostCore,
+  /// etc.) registered via registerCanister.
+  public shared ({ caller }) func notifyAuthorArticlePublished(
+    payload : PublishedArticlePayload,
+    paidSubscriberPrincipalIds : [Text],
+    subscriptionTargetIds : [Text],
+  ) : async Result.Result<{ totalRecipients : Nat; batchesSent : Nat; batchesFailed : Nat }, Text> {
+    if (not (await isTrustedCanister(caller))) {
+      return #err(Unauthorized);
+    };
+
+    let apiKey = switch (lettermintApiKey) {
+      case (?k) k;
+      case null { return #err("Email service not configured.") };
+    };
+
+    // Subscription targets are passed in explicitly by the caller — for a
+    // members-only article published under a publication this is just the
+    // publication, deliberately excluding the writer's audience. Dedup
+    // empty/duplicate ids defensively.
+    let seenTargets = HashMap.HashMap<Text, Bool>(subscriptionTargetIds.size(), isEq, Text.hash);
+    let targets = Buffer.Buffer<Text>(subscriptionTargetIds.size());
+    for (t in subscriptionTargetIds.vals()) {
+      if (t.size() > 0 and Option.get(seenTargets.get(t), false) == false) {
+        seenTargets.put(t, true);
+        targets.add(t);
+      };
+    };
+
+    // Paid-subscriber lookup set, used for members-only gating.
+    let paidSet = HashMap.HashMap<Text, Bool>(paidSubscriberPrincipalIds.size(), isEq, Text.hash);
+    for (p in paidSubscriberPrincipalIds.vals()) { paidSet.put(p, true) };
+
+    // Gather + dedupe by email across all targets. A user subscribed to
+    // both writer and publication should receive ONE email, not two.
+    let seenEmails = HashMap.HashMap<Text, Bool>(8, isEq, Text.hash);
+    let recipients = Buffer.Buffer<Text>(8);
+
+    for (target in targets.vals()) {
+      let keys = Option.get(emailSubscribersByAuthorHashMap.get(target), []);
+
+      for (k in keys.vals()) {
+        switch (emailSubscribersHashMap.get(k)) {
+          case (?r) {
+            if (r.verified and r.unsubscribedAt == null) {
+              let allowMembersOnly =
+                if (payload.isMembersOnly) {
+                  switch (r.userId) {
+                    case (?uid) { Option.get(paidSet.get(uid), false) };
+                    case null false;
+                  };
+                } else { true };
+              if (allowMembersOnly) {
+                if (Option.get(seenEmails.get(r.email), false) == false) {
+                  seenEmails.put(r.email, true);
+                  recipients.add(r.email);
+                };
+              };
+            };
+          };
+          case null {};
+        };
+      };
+    };
+
+    let total = recipients.size();
+    if (total == 0) {
+      return #ok({ totalRecipients = 0; batchesSent = 0; batchesFailed = 0 });
+    };
+
+    let fromHeader = Email.buildFromHeader(payload.authorDisplayName);
+    let subject = (Option.get(payload.publicationDisplayName, payload.authorDisplayName)) # " published a new article";
+
+    // One shared unsubscribe token per broadcast, used as the "?token="
+    // parameter in the unsubscribe footer link. Per-recipient tokens
+    // would require N extra state writes; we accept one token per
+    // broadcast as a reasonable tradeoff.
+    let unsubToken = await Email.generateToken();
+    // No expiry: an unsubscribe link in an old email should still work
+    // (regulatory + UX expectation). Store the full target list (author
+    // + publication canister(s)) so a publication subscriber's
+    // unsubscribe click finds their row, which is keyed under the
+    // publication's principal — not the author's.
+    broadcastUnsubTokensHashMap.put(unsubToken, {
+      token = unsubToken;
+      targetIds = Buffer.toArray(targets);
+      createdAt = Time.now();
+    });
+    let unsubscribeBase =
+      if (ENV.IS_LOCAL) {
+        "http://localhost:8081"
+      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+        "https://nuance.xyz"
+      } else {
+        "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
+      };
+    // Per-recipient email is substituted into this placeholder inside
+    // Email.buildBatchBody — see EmailSubscription.RECIPIENT_EMAIL_PLACEHOLDER.
+    let unsubscribeUrl =
+      unsubscribeBase # "/unsubscribe?token=" # unsubToken
+      # "&email=" # Email.RECIPIENT_EMAIL_PLACEHOLDER;
+
+    let html = Email.renderArticleHtml(payload, unsubscribeUrl);
+    let plain = Email.renderArticleText(payload, unsubscribeUrl);
+    let tags = ["nuance", "article-broadcast"];
+    let metadata : [(Text, Text)] = [
+      ("post_id", payload.postId),
+      ("author_id", payload.authorPrincipal),
+      ("author_handle", payload.authorHandle),
+      ("type", "article_broadcast"),
+    ];
+
+    var batchesSent : Nat = 0;
+    var batchesFailed : Nat = 0;
+    var enqueuedAny : Bool = false;
+    var batchIndex : Nat = 0;
+    var i : Nat = 0;
+    let recipientsArr = Buffer.toArray(recipients);
+    while (i < total) {
+      let endIdx = if (i + Email.BATCH_SIZE < total) { i + Email.BATCH_SIZE } else { total };
+      let chunk = Array.tabulate<Text>(
+        endIdx - i,
+        func(j) { recipientsArr[i + j] },
+      );
+      let idempotencyKey = Email.buildBatchIdempotencyKey(payload.postId, batchIndex);
+      let outcome = await attemptBatchSend(apiKey, fromHeader, chunk, subject, html, plain, tags, metadata, idempotencyKey);
+      switch (outcome) {
+        case (#sent) { batchesSent += 1 };
+        case (#retryable(err)) {
+          batchesFailed += 1;
+          enqueueBatchRetry(idempotencyKey, payload.postId, payload.authorPrincipal, chunk, subject, html, plain, fromHeader, tags, metadata, err, 1);
+          enqueuedAny := true;
+        };
+        case (#dead(err)) {
+          batchesFailed += 1;
+          deadLetterBatch(idempotencyKey, payload.postId, payload.authorPrincipal, chunk, subject, html, plain, fromHeader, tags, metadata, err, 1);
+        };
+      };
+      batchIndex += 1;
+      i := endIdx;
+    };
+
+    if (enqueuedAny) { armEmailRetryTimer<system>() };
+
+    #ok({ totalRecipients = total; batchesSent; batchesFailed });
+  };
+
+  /// Wraps Email.sendBatch with trap-catching and classifies the outcome
+  /// into one of three buckets: success, retryable failure (transient or
+  /// unknown — re-enqueue), or dead failure (permanent 4xx — no retry).
+  private type BatchOutcome = {
+    #sent;
+    #retryable : Text;
+    #dead : Text;
+  };
+
+  private func attemptBatchSend(
+    apiKey : Text,
+    fromHeader : Text,
+    recipients : [Text],
+    subject : Text,
+    html : Text,
+    plain : Text,
+    tags : [Text],
+    metadata : [(Text, Text)],
+    idempotencyKey : Text,
+  ) : async BatchOutcome {
+    try {
+      let r = await Email.sendBatch(apiKey, fromHeader, recipients, subject, "broadcast", html, plain, tags, metadata, ?idempotencyKey);
+      switch (r) {
+        case (#ok(body)) {
+          Debug.print("User->emailBatch: ok key=" # idempotencyKey # " response=" # body);
+          #sent;
+        };
+        case (#err(e)) {
+          if (Email.isRetryableError(e)) {
+            Debug.print("User->emailBatch: retryable failure key=" # idempotencyKey # " err=" # e);
+            #retryable(e);
+          } else {
+            Debug.print("User->emailBatch: PERMANENT failure key=" # idempotencyKey # " err=" # e);
+            #dead(e);
+          };
+        };
+      };
+    } catch (e) {
+      let msg = "Outcall trap: " # Error.message(e);
+      Debug.print("User->emailBatch: trap key=" # idempotencyKey # " msg=" # msg);
+      // Traps are always treated as transient — could be cycle starvation,
+      // subnet hiccup, or response decode error. Idempotency-Key makes
+      // re-attempting safe even if the original outcall actually landed.
+      #retryable(msg);
+    };
+  };
+
+  /// Add a failed batch to the retry queue. Caller must have already
+  /// checked the failure is retryable. attemptsSoFar = 1 means this is
+  /// the first failure (inline send); the timer increments attempts on
+  /// each subsequent retry.
+  private func enqueueBatchRetry(
+    id : Text,
+    postId : Text,
+    authorPrincipal : Text,
+    recipients : [Text],
+    subject : Text,
+    htmlBody : Text,
+    plainBody : Text,
+    fromHeader : Text,
+    tags : [Text],
+    metadata : [(Text, Text)],
+    err : Text,
+    attemptsSoFar : Nat,
+  ) {
+    let now = Time.now();
+    let delay = switch (Email.nextRetryDelayNs(attemptsSoFar)) {
+      case (?d) d;
+      case null {
+        // Caller asked us to enqueue but no budget remains — promote
+        // straight to the dead-letter store so we don't lose visibility.
+        deadLetterBatch(id, postId, authorPrincipal, recipients, subject, htmlBody, plainBody, fromHeader, tags, metadata, err, attemptsSoFar);
+        return;
+      };
+    };
+    let firstAt = switch (pendingEmailBatchesHashMap.get(id)) {
+      case (?existing) existing.firstAttemptedAt;
+      case null now;
+    };
+    pendingEmailBatchesHashMap.put(id, {
+      id;
+      postId;
+      authorPrincipal;
+      recipients;
+      subject;
+      htmlBody;
+      plainBody;
+      fromHeader;
+      tags;
+      metadata;
+      attempts = attemptsSoFar;
+      nextAttemptAt = now + delay;
+      lastError = err;
+      firstAttemptedAt = firstAt;
+      updatedAt = now;
+    });
+  };
+
+  /// Move a batch to the dead-letter store. Used for both terminal-state
+  /// failures (4xx) and exhausted retry budgets. Removes any matching
+  /// pending entry so we don't both retry and dead-letter.
+  private func deadLetterBatch(
+    id : Text,
+    postId : Text,
+    authorPrincipal : Text,
+    recipients : [Text],
+    subject : Text,
+    htmlBody : Text,
+    plainBody : Text,
+    fromHeader : Text,
+    tags : [Text],
+    metadata : [(Text, Text)],
+    err : Text,
+    attemptsSoFar : Nat,
+  ) {
+    let now = Time.now();
+    let firstAt = switch (pendingEmailBatchesHashMap.get(id)) {
+      case (?existing) existing.firstAttemptedAt;
+      case null now;
+    };
+    pendingEmailBatchesHashMap.delete(id);
+    deadEmailBatchesHashMap.put(id, {
+      id;
+      postId;
+      authorPrincipal;
+      recipients;
+      subject;
+      htmlBody;
+      plainBody;
+      fromHeader;
+      tags;
+      metadata;
+      attempts = attemptsSoFar;
+      nextAttemptAt = 0;
+      lastError = err;
+      firstAttemptedAt = firstAt;
+      updatedAt = now;
+    });
+    Debug.print("User->emailBatch: dead-lettered key=" # id # " attempts=" # Nat.toText(attemptsSoFar) # " err=" # err);
+  };
+
+  /// Drop expired entries from emailVerificationTokensHashMap. The
+  /// verify path already deletes tokens on successful use and on
+  /// expiry-at-read; this sweeps the leftovers (subscribed but never
+  /// verified) so the map doesn't grow without bound.
+  private func sweepExpiredVerificationTokens() {
+    let now = Time.now();
+    let expired = Buffer.Buffer<Text>(8);
+    for ((key, t) in emailVerificationTokensHashMap.entries()) {
+      if (now > t.expiresAt) { expired.add(key) };
+    };
+    for (key in expired.vals()) {
+      emailVerificationTokensHashMap.delete(key);
+    };
+  };
+
+  /// Timer callback. Drains up to MAX_RETRIES_PER_TICK due batches and
+  /// retries each via attemptBatchSend. Also sweeps expired email
+  /// verification tokens. The timer keeps ticking even when the queue
+  /// is empty — cost is one HashMap iteration every 60s.
+  private func processPendingEmailBatches() : async () {
+    sweepExpiredVerificationTokens();
+    let now = Time.now();
+    let apiKey = switch (lettermintApiKey) {
+      case (?k) k;
+      case null { return };  // can't send anything — leave queue intact for next tick
+    };
+
+    // Collect due batches without mutating the map mid-iteration.
+    let due = Buffer.Buffer<Email.PendingBatch>(8);
+    label collect for ((_, b) in pendingEmailBatchesHashMap.entries()) {
+      if (b.nextAttemptAt <= now) {
+        due.add(b);
+        if (due.size() >= Email.MAX_RETRIES_PER_TICK) { break collect };
+      };
+    };
+
+    if (due.size() == 0) { return };
+    Debug.print("User->emailRetryTimer: draining " # Nat.toText(due.size()) # " batches");
+
+    for (b in due.vals()) {
+      let outcome = await attemptBatchSend(
+        apiKey, b.fromHeader, b.recipients, b.subject, b.htmlBody, b.plainBody, b.tags, b.metadata, b.id
+      );
+      switch (outcome) {
+        case (#sent) {
+          pendingEmailBatchesHashMap.delete(b.id);
+          Debug.print("User->emailRetryTimer: batch ok after " # Nat.toText(b.attempts + 1) # " attempts key=" # b.id);
+        };
+        case (#retryable(err)) {
+          let nextAttempts = b.attempts + 1;
+          if (nextAttempts >= Email.MAX_BATCH_ATTEMPTS) {
+            deadLetterBatch(b.id, b.postId, b.authorPrincipal, b.recipients, b.subject, b.htmlBody, b.plainBody, b.fromHeader, b.tags, b.metadata, err, nextAttempts);
+          } else {
+            enqueueBatchRetry(b.id, b.postId, b.authorPrincipal, b.recipients, b.subject, b.htmlBody, b.plainBody, b.fromHeader, b.tags, b.metadata, err, nextAttempts);
+          };
+        };
+        case (#dead(err)) {
+          deadLetterBatch(b.id, b.postId, b.authorPrincipal, b.recipients, b.subject, b.htmlBody, b.plainBody, b.fromHeader, b.tags, b.metadata, err, b.attempts + 1);
+        };
+      };
+    };
+  };
+
+  /// Register the recurring retry timer. Idempotent — safe to call from
+  /// both postupgrade and the inline path. Requires the `system`
+  /// capability, supplied implicitly by callers that have it (system
+  /// hooks, shared function bodies).
+  private func armEmailRetryTimer<system>() {
+    if (emailRetryTimerArmed) { return };
+    let _ = Timer.recurringTimer<system>(
+      #nanoseconds(Email.RETRY_TIMER_INTERVAL_NS),
+      processPendingEmailBatches,
+    );
+    emailRetryTimerArmed := true;
+    Debug.print("User->emailRetryTimer: armed");
+  };
+
+  //#region Email retry queue admin
+
+  /// Snapshot row for the admin queue views. Excludes the rendered
+  /// html/plain bodies (kilobytes each) and the recipient list (PII)
+  /// to keep the response small and safe.
+  public type EmailBatchSummary = {
+    id : Text;
+    postId : Text;
+    authorPrincipal : Text;
+    recipientCount : Nat;
+    attempts : Nat;
+    nextAttemptAt : Int;
+    lastError : Text;
+    firstAttemptedAt : Int;
+    updatedAt : Int;
+  };
+
+  private func summarize(b : Email.PendingBatch) : EmailBatchSummary = {
+    id = b.id;
+    postId = b.postId;
+    authorPrincipal = b.authorPrincipal;
+    recipientCount = b.recipients.size();
+    attempts = b.attempts;
+    nextAttemptAt = b.nextAttemptAt;
+    lastError = b.lastError;
+    firstAttemptedAt = b.firstAttemptedAt;
+    updatedAt = b.updatedAt;
+  };
+
+  public shared query ({ caller }) func getPendingEmailBatches() : async Result.Result<[EmailBatchSummary], Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    let buf = Buffer.Buffer<EmailBatchSummary>(pendingEmailBatchesHashMap.size());
+    for ((_, b) in pendingEmailBatchesHashMap.entries()) { buf.add(summarize(b)) };
+    #ok(Buffer.toArray(buf));
+  };
+
+  public shared query ({ caller }) func getDeadEmailBatches() : async Result.Result<[EmailBatchSummary], Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    let buf = Buffer.Buffer<EmailBatchSummary>(deadEmailBatchesHashMap.size());
+    for ((_, b) in deadEmailBatchesHashMap.entries()) { buf.add(summarize(b)) };
+    #ok(Buffer.toArray(buf));
+  };
+
+  /// Re-queue a dead-lettered batch — useful when the underlying cause
+  /// of a 4xx (e.g. a misconfigured From domain) has been resolved.
+  /// Resets the attempt counter so the batch gets the full retry schedule
+  /// again. NOTE: if the original send happened > 24h ago, the Lettermint
+  /// idempotency key will have expired and a true duplicate is possible.
+  public shared ({ caller }) func retryDeadEmailBatch(id : Text) : async Result.Result<Text, Text> {
+    if (not isAdmin(caller)) { return #err(Unauthorized) };
+    switch (deadEmailBatchesHashMap.get(id)) {
+      case null { #err("No dead batch with that id.") };
+      case (?b) {
+        deadEmailBatchesHashMap.delete(id);
+        enqueueBatchRetry(b.id, b.postId, b.authorPrincipal, b.recipients, b.subject, b.htmlBody, b.plainBody, b.fromHeader, b.tags, b.metadata, "manually retried by admin", 1);
+        armEmailRetryTimer<system>();
+        #ok("Re-queued for retry.");
+      };
+    };
+  };
+
+  /// Admin-triggered immediate drain — handy for testing the retry path
+  /// without waiting for the next timer tick.
+  public shared ({ caller }) func processPendingEmailBatchesNow() : async Result.Result<Text, Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    await processPendingEmailBatches();
+    #ok("Drain complete.");
+  };
+
+  //#endregion
+
+  //#endregion
+
   //#region System Hooks
 
   system func preupgrade() {
@@ -2625,6 +3794,14 @@ actor User {
     isUserLockedForClaim := Iter.toArray(isUserLockedForClaimHashMap.entries());
     pendingLinkingRequests := Iter.toArray(pendingLinkingRequestsHashMap.entries());
     confirmedLinkingRequests := Iter.toArray(confirmedLinkingRequestsHashMap.entries());
+    // Email subscription state
+    emailSubscribersEntries := Iter.toArray(emailSubscribersHashMap.entries());
+    emailSubscribersByAuthorEntries := Iter.toArray(emailSubscribersByAuthorHashMap.entries());
+    emailVerificationTokensEntries := Iter.toArray(emailVerificationTokensHashMap.entries());
+    broadcastUnsubTokensEntries := Iter.toArray(broadcastUnsubTokensHashMap.entries());
+    emailRateLimiterEntries := Iter.toArray(emailRateLimiterHashMap.entries());
+    pendingEmailBatchesEntries := Iter.toArray(pendingEmailBatchesHashMap.entries());
+    deadEmailBatchesEntries := Iter.toArray(deadEmailBatchesHashMap.entries());
   };
 
   system func postupgrade() {
@@ -2661,6 +3838,21 @@ actor User {
     pendingLinkingRequestsHashMap := HashMap.fromIter(pendingLinkingRequests.vals(), initCapacity, isEq, Text.hash);
     confirmedLinkingRequestsHashMap := HashMap.fromIter(confirmedLinkingRequests.vals(), initCapacity, isEq, Text.hash);
 
+    // Email subscription state
+    emailSubscribersHashMap := HashMap.fromIter(emailSubscribersEntries.vals(), initCapacity, isEq, Text.hash);
+    emailSubscribersByAuthorHashMap := HashMap.fromIter(emailSubscribersByAuthorEntries.vals(), initCapacity, isEq, Text.hash);
+    emailVerificationTokensHashMap := HashMap.fromIter(emailVerificationTokensEntries.vals(), initCapacity, isEq, Text.hash);
+    broadcastUnsubTokensHashMap := HashMap.fromIter(broadcastUnsubTokensEntries.vals(), initCapacity, isEq, Text.hash);
+    emailRateLimiterHashMap := HashMap.fromIter(emailRateLimiterEntries.vals(), initCapacity, isEq, Text.hash);
+    pendingEmailBatchesHashMap := HashMap.fromIter(pendingEmailBatchesEntries.vals(), initCapacity, isEq, Text.hash);
+    deadEmailBatchesHashMap := HashMap.fromIter(deadEmailBatchesEntries.vals(), initCapacity, isEq, Text.hash);
+
+    // Re-register the retry timer (timers don't survive upgrades). Even
+    // when the queue is empty, arm it so newly-enqueued failures after
+    // upgrade get processed without needing a fresh notify call to wake
+    // the timer.
+    armEmailRetryTimer<system>();
+
     principalId := [];
     handle := [];
     displayName := [];
@@ -2682,6 +3874,12 @@ actor User {
     isUserLockedForClaim := [];
     pendingLinkingRequests := [];
     confirmedLinkingRequests := [];
+    emailSubscribersEntries := [];
+    emailSubscribersByAuthorEntries := [];
+    emailVerificationTokensEntries := [];
+    emailRateLimiterEntries := [];
+    pendingEmailBatchesEntries := [];
+    deadEmailBatchesEntries := [];
   };
 
   //#endregion

@@ -338,13 +338,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           </div>
           <div className='subscription-success-content'>
             <p className='subscription-success-info'>
-              You are now subscribed to <strong>@{handle}</strong>.
+              You now support <strong>@{handle}</strong>.
               <br />
               You have paid a {selectedOption} fee. You have unlimited access to
               all membership-only content for a{' '}
               {getSubscriptionPeriodText(selectedOption)}.
               <br />
-              You can stop your subscription at any time.
+              You can stop your support at any time.
             </p>
           </div>
           <div className='subscription-buttons'>
@@ -364,7 +364,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 modalContext?.openModal('cancelSubscription');
               }}
             >
-              Cancel subscription
+              Stop supporting
             </Button>
           </div>
         </>
@@ -393,7 +393,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <h2 className='subscription-header'>Error</h2>
           <div className='subscription-modal-content'>
             <p className='subscription-info'>
-              An error occurred while processing your subscription. Please try
+              An error occurred while processing your support. Please try
               again.
               <br />
               {subscriptionError}
@@ -441,7 +441,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             </div>
           </div>
           <h2 className='subscription-header'>
-            Subscribe to {isPublication ? 'Publication' : 'User'}
+            Support {isPublication ? 'Publication' : 'User'}
           </h2>
           <div className='subscribee-info'>
             <img
@@ -467,7 +467,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             ) : hasValidOptions ? (
               <>
                 <p className='subscription-info'>
-                  When you subscribe to this{' '}
+                  When you support this{' '}
                   {isPublication ? 'publication' : 'user'} you get unlimited
                   access to all of their membership content for a fee paid in
                   NUA. You pay the fee per period you choose. After this period,
@@ -633,7 +633,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 }
                 onClick={() => handleSubscription(parseFee(selectedOption))}
               >
-                Subscribe
+                Support
               </Button>
             </div>
           </div>

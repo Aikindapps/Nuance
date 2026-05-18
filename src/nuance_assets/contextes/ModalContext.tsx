@@ -12,7 +12,9 @@ type ModalType =
   | 'cancelSubscription'
   | 'claim restricted tokens'
   | 'verify profile'
-  | 'link ii';
+  | 'link ii'
+  | 'EmailSubscribe'
+  | 'EmailUnsubscribeConfirm';
 
 type ModalData = {
   transferNftData?: PremiumPostActivityListItem;
@@ -25,6 +27,18 @@ type ModalData = {
     thumbnail: string
   ) => Promise<void>;
   premiumPostRefreshPost?: () => Promise<void>;
+  // EmailSubscribe
+  emailSubscribeAuthorHandle?: string;
+  emailSubscribeAuthorDisplayName?: string;
+  // When set, the modal subscribes the email to a publication's broadcast
+  // list rather than to an individual author. The handle/displayName fields
+  // above are reused for the email body and rate-limit key.
+  emailSubscribePublicationCanisterId?: string;
+  // EmailUnsubscribeConfirm
+  emailUnsubscribeAuthorHandle?: string;
+  emailUnsubscribeAuthorDisplayName?: string;
+  emailUnsubscribePublicationCanisterId?: string;
+  emailUnsubscribeOnConfirm?: () => void;
 };
 type FakeApplaud = {
   postId: string;

@@ -32,18 +32,18 @@ export const idlFactory = ({ IDL }) => {
     'avatar' : IDL.Text,
   });
   const AddPublicationReturn = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
-  const Result_10 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
-  const Result = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
-  const Result_3 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Result_1 = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
+  const Result_5 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Date = IDL.Record({
     'day' : IDL.Nat,
     'month' : IDL.Nat,
     'hour' : IDL.Nat,
     'year' : IDL.Nat,
   });
-  const Result_6 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
-  const Result_11 = IDL.Variant({
+  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text });
+  const Result_15 = IDL.Variant({
     'ok' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
     'err' : IDL.Text,
   });
@@ -86,6 +86,34 @@ export const idlFactory = ({ IDL }) => {
     'daily' : IDL.Vec(DailyMetricsData),
   });
   const CanisterMetrics = IDL.Record({ 'data' : CanisterMetricsData });
+  const EmailBatchSummary = IDL.Record({
+    'id' : IDL.Text,
+    'nextAttemptAt' : IDL.Int,
+    'attempts' : IDL.Nat,
+    'updatedAt' : IDL.Int,
+    'lastError' : IDL.Text,
+    'recipientCount' : IDL.Nat,
+    'firstAttemptedAt' : IDL.Int,
+    'authorPrincipal' : IDL.Text,
+    'postId' : IDL.Text,
+  });
+  const Result_11 = IDL.Variant({
+    'ok' : IDL.Vec(EmailBatchSummary),
+    'err' : IDL.Text,
+  });
+  const EmailSubscriber = IDL.Record({
+    'unsubscribedAt' : IDL.Opt(IDL.Int),
+    'verified' : IDL.Bool,
+    'userId' : IDL.Opt(IDL.Text),
+    'createdAt' : IDL.Int,
+    'email' : IDL.Text,
+    'verifiedAt' : IDL.Opt(IDL.Int),
+    'authorPrincipal' : IDL.Text,
+  });
+  const Result_14 = IDL.Variant({
+    'ok' : IDL.Vec(EmailSubscriber),
+    'err' : IDL.Text,
+  });
   const UserListItem = IDL.Record({
     'bio' : IDL.Text,
     'socialChannelsUrls' : IDL.Vec(IDL.Text),
@@ -102,8 +130,8 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Opt(IDL.Text),
     'err' : IDL.Text,
   });
-  const Result_9 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
-  const Result_8 = IDL.Variant({
+  const Result_13 = IDL.Variant({ 'ok' : IDL.Vec(User), 'err' : IDL.Text });
+  const Result_12 = IDL.Variant({
     'ok' : IDL.Vec(UserListItem),
     'err' : IDL.Text,
   });
@@ -112,14 +140,39 @@ export const idlFactory = ({ IDL }) => {
     'ok' : IDL.Opt(IDL.Text),
     'err' : IDL.Text,
   });
-  const Result_7 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
-  const Result_4 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
+  const Result_10 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const SupportedStandard = IDL.Record({ 'url' : IDL.Text, 'name' : IDL.Text });
   const Icrc28TrustedOriginsResponse = IDL.Record({
     'trusted_origins' : IDL.Vec(IDL.Text),
   });
-  const Result_5 = IDL.Variant({
+  const Result_8 = IDL.Variant({
     'ok' : IDL.Tuple(IDL.Nat, IDL.Nat),
+    'err' : IDL.Text,
+  });
+  const PublishedArticlePayload = IDL.Record({
+    'url' : IDL.Text,
+    'title' : IDL.Text,
+    'contentHtml' : IDL.Text,
+    'authorAvatar' : IDL.Text,
+    'publishedAt' : IDL.Int,
+    'publicationDisplayName' : IDL.Opt(IDL.Text),
+    'publicationHandle' : IDL.Opt(IDL.Text),
+    'headerImage' : IDL.Text,
+    'authorDisplayName' : IDL.Text,
+    'publicationAvatar' : IDL.Opt(IDL.Text),
+    'authorHandle' : IDL.Text,
+    'isMembersOnly' : IDL.Bool,
+    'subtitle' : IDL.Text,
+    'authorPrincipal' : IDL.Text,
+    'postId' : IDL.Text,
+  });
+  const Result_7 = IDL.Variant({
+    'ok' : IDL.Record({
+      'totalRecipients' : IDL.Nat,
+      'batchesFailed' : IDL.Nat,
+      'batchesSent' : IDL.Nat,
+    }),
     'err' : IDL.Text,
   });
   const RegisterUserReturn = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
@@ -158,11 +211,15 @@ export const idlFactory = ({ IDL }) => {
     'readerNotStoppedSubscriptionsWriters' : IDL.Vec(WriterSubscriptionDetails),
     'readerPrincipalId' : IDL.Text,
   });
-  const Result_2 = IDL.Variant({
+  const Result_4 = IDL.Variant({
     'ok' : ReaderSubscriptionDetails,
     'err' : IDL.Text,
   });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
+  const Result = IDL.Variant({
+    'ok' : IDL.Record({ 'email' : IDL.Text, 'authorHandle' : IDL.Text }),
+    'err' : IDL.Text,
+  });
   const UniquePersonProofProvider = IDL.Variant({ 'DecideAI' : IDL.Null });
   const UniquePersonProof = IDL.Record({
     'provider' : UniquePersonProofProvider,
@@ -180,17 +237,17 @@ export const idlFactory = ({ IDL }) => {
         [AddPublicationReturn],
         [],
       ),
-    'adminAirDrop' : IDL.Func([IDL.Float64], [Result_10], []),
+    'adminAirDrop' : IDL.Func([IDL.Float64], [Result_2], []),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
-    'blockUserFromClaiming' : IDL.Func([IDL.Text], [Result_1], []),
+    'blockUserFromClaiming' : IDL.Func([IDL.Text], [Result_3], []),
     'checkMyClaimNotification' : IDL.Func([], [], []),
-    'claimRestrictedTokens' : IDL.Func([], [Result], []),
+    'claimRestrictedTokens' : IDL.Func([], [Result_1], []),
     'clearAllMyFollowers' : IDL.Func([], [IDL.Text], []),
     'collectCanisterMetrics' : IDL.Func([], [], []),
-    'deleteConfirmedLinkings' : IDL.Func([], [Result_1], []),
-    'deleteUser' : IDL.Func([IDL.Text], [Result_3], []),
+    'deleteConfirmedLinkings' : IDL.Func([], [Result_3], []),
+    'deleteUser' : IDL.Func([IDL.Text], [Result_5], []),
     'dumpUsers' : IDL.Func([], [IDL.Text], ['query']),
-    'followAuthor' : IDL.Func([IDL.Text], [Result], []),
+    'followAuthor' : IDL.Func([IDL.Text], [Result_1], []),
     'generateAccountIds' : IDL.Func([], [], []),
     'generateLowercaseHandles' : IDL.Func(
         [],
@@ -198,18 +255,29 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'getActiveUsersByRange' : IDL.Func([Date], [IDL.Nat], ['query']),
-    'getAdmins' : IDL.Func([], [Result_6], ['query']),
-    'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_11], ['query']),
+    'getAdmins' : IDL.Func([], [Result_9], ['query']),
+    'getAllClaimSubaccountIndexes' : IDL.Func([], [Result_15], ['query']),
     'getAllHandles' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'getAllUserPrincipals' : IDL.Func([], [Result_6], ['query']),
+    'getAllUserPrincipals' : IDL.Func([], [Result_9], ['query']),
     'getCanisterMetrics' : IDL.Func(
         [GetMetricsParameters],
         [IDL.Opt(CanisterMetrics)],
         ['query'],
       ),
     'getCanisterVersion' : IDL.Func([], [IDL.Text], ['query']),
-    'getCgUsers' : IDL.Func([], [Result_6], ['query']),
+    'getCgUsers' : IDL.Func([], [Result_9], ['query']),
     'getDailyMaxRegistration' : IDL.Func([], [IDL.Nat], ['query']),
+    'getDeadEmailBatches' : IDL.Func([], [Result_11], ['query']),
+    'getEmailSubscribersOfAuthor' : IDL.Func(
+        [IDL.Text],
+        [Result_14],
+        ['query'],
+      ),
+    'getEmailSubscribersOfPublication' : IDL.Func(
+        [IDL.Text],
+        [Result_14],
+        ['composite_query'],
+      ),
     'getFollowersByPrincipalId' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(UserListItem)],
@@ -238,17 +306,18 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getLastDayClaimedTokensAmount' : IDL.Func([], [IDL.Nat], ['query']),
     'getLastDayNumberOfClaimEvents' : IDL.Func([], [IDL.Nat], ['query']),
-    'getLinkedPrincipal' : IDL.Func([IDL.Text], [Result_10], ['query']),
+    'getLinkedPrincipal' : IDL.Func([IDL.Text], [Result_2], ['query']),
     'getMaxMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getMultipleUsersByPrincipalId' : IDL.Func(
         [IDL.Vec(IDL.Text)],
-        [Result_9],
+        [Result_13],
         ['query'],
       ),
-    'getMyFollowers' : IDL.Func([], [Result_8], ['query']),
+    'getMyFollowers' : IDL.Func([], [Result_12], ['query']),
     'getNuaBalance' : IDL.Func([IDL.Text], [NuaBalanceResult], ['query']),
     'getNumberOfAllRegisteredUsers' : IDL.Func([], [IDL.Nat], ['query']),
+    'getPendingEmailBatches' : IDL.Func([], [Result_11], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getPrincipalByHandle' : IDL.Func(
         [IDL.Text],
@@ -262,18 +331,18 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getRegistrationNumberLastDay' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalNumberOfClaimedTokens' : IDL.Func([], [IDL.Nat], ['query']),
-    'getTrustedCanisters' : IDL.Func([], [Result_6], ['query']),
-    'getUser' : IDL.Func([], [Result], ['query']),
-    'getUserByHandle' : IDL.Func([IDL.Text], [Result], ['query']),
-    'getUserByPrincipalId' : IDL.Func([IDL.Text], [Result], ['query']),
+    'getTrustedCanisters' : IDL.Func([], [Result_9], ['query']),
+    'getUser' : IDL.Func([], [Result_1], ['query']),
+    'getUserByHandle' : IDL.Func([IDL.Text], [Result_1], ['query']),
+    'getUserByPrincipalId' : IDL.Func([IDL.Text], [Result_1], ['query']),
     'getUserFollowers' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(UserListItem)],
         ['query'],
       ),
     'getUserInternal' : IDL.Func([IDL.Text], [IDL.Opt(User)], ['query']),
-    'getUserListItemByHandle' : IDL.Func([IDL.Text], [Result_7], ['query']),
-    'getUsersBlockedFromClaiming' : IDL.Func([], [Result_6], ['query']),
+    'getUserListItemByHandle' : IDL.Func([IDL.Text], [Result_10], ['query']),
+    'getUsersBlockedFromClaiming' : IDL.Func([], [Result_9], ['query']),
     'getUsersByHandles' : IDL.Func(
         [IDL.Vec(IDL.Text)],
         [IDL.Vec(UserListItem)],
@@ -284,82 +353,123 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(UserListItem)],
         ['query'],
       ),
-    'getVerificationStatus' : IDL.Func([IDL.Text], [Result_4], ['query']),
+    'getVerificationStatus' : IDL.Func([IDL.Text], [Result_6], ['query']),
     'handleClap' : IDL.Func([IDL.Text, IDL.Text], [], ['oneway']),
+    'hasLettermintApiKey' : IDL.Func([], [IDL.Bool], ['query']),
     'icrc10_supported_standards' : IDL.Func(
         [],
         [IDL.Vec(SupportedStandard)],
         ['query'],
       ),
     'icrc28_trusted_origins' : IDL.Func([], [Icrc28TrustedOriginsResponse], []),
+    'isEmailSubscribed' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
+    'isEmailSubscribedByCaller' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Bool],
+        ['query'],
+      ),
     'isRegistrationOpen' : IDL.Func([], [IDL.Bool], ['query']),
     'isThereEnoughMemory' : IDL.Func([], [IDL.Bool], ['query']),
-    'linkInternetIdentityConfirm' : IDL.Func([IDL.Text], [Result_1], []),
+    'linkInternetIdentityConfirm' : IDL.Func([IDL.Text], [Result_3], []),
     'linkInternetIdentityRequest' : IDL.Func(
         [IDL.Text, IDL.Text],
-        [Result_1],
+        [Result_3],
         [],
       ),
     'migrateFollowersHashmapsFromHandlesToPrincipalIds' : IDL.Func(
         [],
-        [Result_5],
+        [Result_8],
         [],
       ),
-    'registerAdmin' : IDL.Func([IDL.Text], [Result_1], []),
-    'registerCanister' : IDL.Func([IDL.Text], [Result_1], []),
-    'registerCgUser' : IDL.Func([IDL.Text], [Result_1], []),
-    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
+    'notifyAuthorArticlePublished' : IDL.Func(
+        [PublishedArticlePayload, IDL.Vec(IDL.Text), IDL.Vec(IDL.Text)],
+        [Result_7],
+        [],
+      ),
+    'processPendingEmailBatchesNow' : IDL.Func([], [Result_2], []),
+    'registerAdmin' : IDL.Func([IDL.Text], [Result_3], []),
+    'registerCanister' : IDL.Func([IDL.Text], [Result_3], []),
+    'registerCgUser' : IDL.Func([IDL.Text], [Result_3], []),
+    'registerPlatformOperator' : IDL.Func([IDL.Text], [Result_3], []),
     'registerUser' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [RegisterUserReturn],
         [],
       ),
-    'removePoh' : IDL.Func([IDL.Text], [Result], []),
+    'removePoh' : IDL.Func([IDL.Text], [Result_1], []),
     'removePublication' : IDL.Func(
         [PublicationObject, IDL.Text],
         [RemovePublicationReturn],
         [],
       ),
-    'setDailyMaxRegistration' : IDL.Func([IDL.Nat], [Result_3], []),
-    'setIsClaimActive' : IDL.Func([IDL.Bool], [Result_4], []),
-    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_3], []),
-    'setMaxNumberOfClaimableTokens' : IDL.Func([IDL.Nat], [Result_3], []),
-    'setMaxNumberOfDailyClaimableTokens' : IDL.Func([IDL.Nat], [Result_3], []),
+    'retryDeadEmailBatch' : IDL.Func([IDL.Text], [Result_2], []),
+    'setDailyMaxRegistration' : IDL.Func([IDL.Nat], [Result_5], []),
+    'setIsClaimActive' : IDL.Func([IDL.Bool], [Result_6], []),
+    'setLettermintApiKey' : IDL.Func([IDL.Text], [Result_3], []),
+    'setMaxMemorySize' : IDL.Func([IDL.Nat], [Result_5], []),
+    'setMaxNumberOfClaimableTokens' : IDL.Func([IDL.Nat], [Result_5], []),
+    'setMaxNumberOfDailyClaimableTokens' : IDL.Func([IDL.Nat], [Result_5], []),
     'spendNuaBalance' : IDL.Func([IDL.Text], [], ['oneway']),
     'spendRestrictedTokensForSubscription' : IDL.Func(
         [IDL.Text, IDL.Nat],
-        [Result_2],
+        [Result_4],
         [],
       ),
     'spendRestrictedTokensForTipping' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat],
-        [Result_1],
+        [Result_3],
+        [],
+      ),
+    'subscribeToAuthorByEmail' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [Result_2],
+        [],
+      ),
+    'subscribeToPublicationByEmail' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [Result_2],
         [],
       ),
     'testInstructionSize' : IDL.Func([], [IDL.Text], []),
-    'unblockUserFromClaiming' : IDL.Func([IDL.Text], [Result_1], []),
-    'unfollowAuthor' : IDL.Func([IDL.Text], [Result], []),
-    'unregisterAdmin' : IDL.Func([IDL.Text], [Result_1], []),
-    'unregisterCanister' : IDL.Func([IDL.Text], [Result_1], []),
-    'unregisterCgUser' : IDL.Func([IDL.Text], [Result_1], []),
-    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result_1], []),
-    'updateAvatar' : IDL.Func([IDL.Text], [Result], []),
-    'updateBio' : IDL.Func([IDL.Text], [Result], []),
-    'updateDisplayName' : IDL.Func([IDL.Text], [Result], []),
-    'updateFontType' : IDL.Func([IDL.Text], [Result], []),
+    'unblockUserFromClaiming' : IDL.Func([IDL.Text], [Result_3], []),
+    'unfollowAuthor' : IDL.Func([IDL.Text], [Result_1], []),
+    'unregisterAdmin' : IDL.Func([IDL.Text], [Result_3], []),
+    'unregisterCanister' : IDL.Func([IDL.Text], [Result_3], []),
+    'unregisterCgUser' : IDL.Func([IDL.Text], [Result_3], []),
+    'unregisterPlatformOperator' : IDL.Func([IDL.Text], [Result_3], []),
+    'unsubscribeEmailByCaller' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text)],
+        [Result_2],
+        [],
+      ),
+    'unsubscribeEmailByToken' : IDL.Func([IDL.Text, IDL.Text], [Result_2], []),
+    'unsubscribeFromAuthorByEmail' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [Result_2],
+        [],
+      ),
+    'updateAvatar' : IDL.Func([IDL.Text], [Result_1], []),
+    'updateBio' : IDL.Func([IDL.Text], [Result_1], []),
+    'updateDisplayName' : IDL.Func([IDL.Text], [Result_1], []),
+    'updateFontType' : IDL.Func([IDL.Text], [Result_1], []),
     'updateHandle' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Vec(IDL.Text))],
-        [Result],
+        [Result_1],
         [],
       ),
     'updateLastLogin' : IDL.Func([], [], ['oneway']),
-    'updateSocialLinks' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [Result], []),
+    'updateSocialLinks' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Text)],
+        [Result_1],
+        [],
+      ),
     'updateUserDetails' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
-        [Result],
+        [Result_1],
         [],
       ),
     'validate' : IDL.Func([IDL.Reserved], [Validate], []),
+    'verifyEmailSubscription' : IDL.Func([IDL.Text], [Result], []),
     'verifyPoh' : IDL.Func([IDL.Text], [VerifyResult], []),
   });
 };

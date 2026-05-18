@@ -20,6 +20,8 @@
 
 #!/bin/bash
 
+set -euo pipefail
+
 #region bash Args
 
 #default arg values
@@ -46,12 +48,18 @@ do
 done
 
 #parse and validate comma-delimited list of user principals and add each one to the array
-userPrincipals=($(echo "$principalsArg" | grep -o '[A-Za-z0-9\-]\{63\}'))
+userPrincipals=()
+if [ -n "$principalsArg" ]; then
+    userPrincipals=($(echo "$principalsArg" | grep -o '[A-Za-z0-9\-]\{63\}'))
+fi
 
 #endregion
 
 #parse and validate comma-delimited list of Canistergeek principals and add each one to the array
-cgUserPrincipals=($(echo "$cgUsers" | grep -o '[A-Za-z0-9\-]\{63\}'))
+cgUserPrincipals=()
+if [ -n "$cgUsers" ]; then
+    cgUserPrincipals=($(echo "$cgUsers" | grep -o '[A-Za-z0-9\-]\{63\}'))
+fi
 #endregion
 
 #region User Input
@@ -128,14 +136,14 @@ fi
 echo ""
 
 echo "*** REGISTER USER PRINCIPLES ****"
-for p in "${userPrincipals[@]}"
+for p in "${userPrincipals[@]-}"
 do
     echo "$p"
 done
 echo ""
 
 echo "*** REGISTER CANISTER GEEK PRINCIPLES ****"
-for c in "${cgUserPrincipals[@]}"
+for c in "${cgUserPrincipals[@]-}"
 do
     echo "$c"
 done
@@ -171,8 +179,13 @@ echo "PostCore Canister id: $postCoreCanisterId"
 echo ""
 
 echo "Getting PostIndex canister Id"
-postIndexCanisterId="$(grep -A2 '"PostIndex"' $canisterFilePath | grep $network | grep -o '[A-Za-z0-9\-]\{27\}')"
-echo "PostIndex Canister id: $postIndexCanisterId"
+postIndexCanisterId=""
+if grep -q '"PostIndex"' "$canisterFilePath"; then
+    postIndexCanisterId="$(grep -A2 '"PostIndex"' "$canisterFilePath" | grep "$network" | grep -o '[A-Za-z0-9\-]\{27\}')"
+    echo "PostIndex Canister id: $postIndexCanisterId"
+else
+    echo "PostIndex canister is not defined in $canisterFilePath; skipping PostIndex Canistergeek registration."
+fi
 echo ""
 
 
@@ -194,17 +207,21 @@ echo ""
 
 
 echo "Registering Users for Canistergeek (PostIndex Canister)"
-
-for c in "${cgUserPrincipals[@]}"
-do
-dfx canister --network $network call PostIndex registerCgUser "$c"
-done
-dfx canister --network $network call PostIndex getCgUsers
-echo ""
+if [ -n "$postIndexCanisterId" ]; then
+    for c in "${cgUserPrincipals[@]-}"
+    do
+    dfx canister --network $network call PostIndex registerCgUser "$c"
+    done
+    dfx canister --network $network call PostIndex getCgUsers
+    echo ""
+else
+    echo "Skipped."
+    echo ""
+fi
 
 echo "Registering Users for Canistergeek (User Canister)"
 
-for c in "${cgUserPrincipals[@]}"
+for c in "${cgUserPrincipals[@]-}"
 do
 dfx canister --network $network call User registerCgUser "$c"
 done
@@ -213,7 +230,7 @@ echo ""
 
 echo "Registering Users for Canistergeek (Storage Canister)"
 
-for c in "${cgUserPrincipals[@]}"
+for c in "${cgUserPrincipals[@]-}"
 do
 dfx canister --network $network call Storage registerCgUser "$c"
 done
@@ -222,7 +239,7 @@ echo ""
 
 echo "Registering Users for Canistergeek (KinicEndpoint Canister)"
 
-for c in "${cgUserPrincipals[@]}"
+for c in "${cgUserPrincipals[@]-}"
 do
 dfx canister --network $network call KinicEndpoint registerCgUser "$c"
 done

@@ -94,6 +94,8 @@ service : {
    SubscriptionTimeInterval, amount: nat) -> (Result_3);
   disperseTokensForSuccessfulSubscription: (eventId: text) -> (Result_4);
   expiredNotificationsHeartbeatExternal: () -> ();
+  getAuthorActivePaidSubscriberPrincipalIds: (writerPrincipalId: text) ->
+   (vec text) query;
   getCanisterVersion: () -> (text) query;
   getLatestTimerCall: () -> (text, text) query;
   getMaxMemorySize: () -> (nat) query;

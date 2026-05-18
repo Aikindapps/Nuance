@@ -23,6 +23,26 @@ export interface Date {
   'hour' : bigint,
   'year' : bigint,
 }
+export interface EmailBatchSummary {
+  'id' : string,
+  'nextAttemptAt' : bigint,
+  'attempts' : bigint,
+  'updatedAt' : bigint,
+  'lastError' : string,
+  'recipientCount' : bigint,
+  'firstAttemptedAt' : bigint,
+  'authorPrincipal' : string,
+  'postId' : string,
+}
+export interface EmailSubscriber {
+  'unsubscribedAt' : [] | [bigint],
+  'verified' : boolean,
+  'userId' : [] | [string],
+  'createdAt' : bigint,
+  'email' : string,
+  'verifiedAt' : [] | [bigint],
+  'authorPrincipal' : string,
+}
 export type Followers = [] | [[string, List]];
 export type FollowersPrincipals = [] | [[string, List]];
 export type GetHandleByPrincipalReturn = { 'ok' : [] | [string] } |
@@ -60,6 +80,23 @@ export interface PublicationObject {
   'isEditor' : boolean,
   'publicationName' : string,
 }
+export interface PublishedArticlePayload {
+  'url' : string,
+  'title' : string,
+  'contentHtml' : string,
+  'authorAvatar' : string,
+  'publishedAt' : bigint,
+  'publicationDisplayName' : [] | [string],
+  'publicationHandle' : [] | [string],
+  'headerImage' : string,
+  'authorDisplayName' : string,
+  'publicationAvatar' : [] | [string],
+  'authorHandle' : string,
+  'isMembersOnly' : boolean,
+  'subtitle' : string,
+  'authorPrincipal' : string,
+  'postId' : string,
+}
 export interface ReaderSubscriptionDetails {
   'readerSubscriptions' : Array<SubscriptionEvent>,
   'readerNotStoppedSubscriptionsWriters' : Array<WriterSubscriptionDetails>,
@@ -69,29 +106,43 @@ export type RegisterUserReturn = { 'ok' : User } |
   { 'err' : string };
 export type RemovePublicationReturn = { 'ok' : User } |
   { 'err' : string };
-export type Result = { 'ok' : User } |
+export type Result = { 'ok' : { 'email' : string, 'authorHandle' : string } } |
   { 'err' : string };
-export type Result_1 = { 'ok' : null } |
+export type Result_1 = { 'ok' : User } |
   { 'err' : string };
-export type Result_10 = { 'ok' : string } |
+export type Result_10 = { 'ok' : UserListItem } |
   { 'err' : string };
-export type Result_11 = { 'ok' : Array<[string, bigint]> } |
+export type Result_11 = { 'ok' : Array<EmailBatchSummary> } |
   { 'err' : string };
-export type Result_2 = { 'ok' : ReaderSubscriptionDetails } |
+export type Result_12 = { 'ok' : Array<UserListItem> } |
   { 'err' : string };
-export type Result_3 = { 'ok' : bigint } |
+export type Result_13 = { 'ok' : Array<User> } |
   { 'err' : string };
-export type Result_4 = { 'ok' : boolean } |
+export type Result_14 = { 'ok' : Array<EmailSubscriber> } |
   { 'err' : string };
-export type Result_5 = { 'ok' : [bigint, bigint] } |
+export type Result_15 = { 'ok' : Array<[string, bigint]> } |
   { 'err' : string };
-export type Result_6 = { 'ok' : Array<string> } |
+export type Result_2 = { 'ok' : string } |
   { 'err' : string };
-export type Result_7 = { 'ok' : UserListItem } |
+export type Result_3 = { 'ok' : null } |
   { 'err' : string };
-export type Result_8 = { 'ok' : Array<UserListItem> } |
+export type Result_4 = { 'ok' : ReaderSubscriptionDetails } |
   { 'err' : string };
-export type Result_9 = { 'ok' : Array<User> } |
+export type Result_5 = { 'ok' : bigint } |
+  { 'err' : string };
+export type Result_6 = { 'ok' : boolean } |
+  { 'err' : string };
+export type Result_7 = {
+    'ok' : {
+      'totalRecipients' : bigint,
+      'batchesFailed' : bigint,
+      'batchesSent' : bigint,
+    }
+  } |
+  { 'err' : string };
+export type Result_8 = { 'ok' : [bigint, bigint] } |
+  { 'err' : string };
+export type Result_9 = { 'ok' : Array<string> } |
   { 'err' : string };
 export interface SubscriptionEvent {
   'startTime' : bigint,
@@ -171,31 +222,34 @@ export interface _SERVICE {
     [PublicationObject, string],
     AddPublicationReturn
   >,
-  'adminAirDrop' : ActorMethod<[number], Result_10>,
+  'adminAirDrop' : ActorMethod<[number], Result_2>,
   'availableCycles' : ActorMethod<[], bigint>,
-  'blockUserFromClaiming' : ActorMethod<[string], Result_1>,
+  'blockUserFromClaiming' : ActorMethod<[string], Result_3>,
   'checkMyClaimNotification' : ActorMethod<[], undefined>,
-  'claimRestrictedTokens' : ActorMethod<[], Result>,
+  'claimRestrictedTokens' : ActorMethod<[], Result_1>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
-  'deleteConfirmedLinkings' : ActorMethod<[], Result_1>,
-  'deleteUser' : ActorMethod<[string], Result_3>,
+  'deleteConfirmedLinkings' : ActorMethod<[], Result_3>,
+  'deleteUser' : ActorMethod<[string], Result_5>,
   'dumpUsers' : ActorMethod<[], string>,
-  'followAuthor' : ActorMethod<[string], Result>,
+  'followAuthor' : ActorMethod<[string], Result_1>,
   'generateAccountIds' : ActorMethod<[], undefined>,
   'generateLowercaseHandles' : ActorMethod<[], [string, Array<string>]>,
   'getActiveUsersByRange' : ActorMethod<[Date], bigint>,
-  'getAdmins' : ActorMethod<[], Result_6>,
-  'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_11>,
+  'getAdmins' : ActorMethod<[], Result_9>,
+  'getAllClaimSubaccountIndexes' : ActorMethod<[], Result_15>,
   'getAllHandles' : ActorMethod<[], Array<string>>,
-  'getAllUserPrincipals' : ActorMethod<[], Result_6>,
+  'getAllUserPrincipals' : ActorMethod<[], Result_9>,
   'getCanisterMetrics' : ActorMethod<
     [GetMetricsParameters],
     [] | [CanisterMetrics]
   >,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_6>,
+  'getCgUsers' : ActorMethod<[], Result_9>,
   'getDailyMaxRegistration' : ActorMethod<[], bigint>,
+  'getDeadEmailBatches' : ActorMethod<[], Result_11>,
+  'getEmailSubscribersOfAuthor' : ActorMethod<[string], Result_14>,
+  'getEmailSubscribersOfPublication' : ActorMethod<[string], Result_14>,
   'getFollowersByPrincipalId' : ActorMethod<[Principal], Array<UserListItem>>,
   'getFollowersCount' : ActorMethod<[string], string>,
   'getFollowersPrincipalIdsByPrincipalId' : ActorMethod<
@@ -210,86 +264,106 @@ export interface _SERVICE {
   'getHandlesByPrincipals' : ActorMethod<[Array<string>], Array<string>>,
   'getLastDayClaimedTokensAmount' : ActorMethod<[], bigint>,
   'getLastDayNumberOfClaimEvents' : ActorMethod<[], bigint>,
-  'getLinkedPrincipal' : ActorMethod<[string], Result_10>,
+  'getLinkedPrincipal' : ActorMethod<[string], Result_2>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
-  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_9>,
-  'getMyFollowers' : ActorMethod<[], Result_8>,
+  'getMultipleUsersByPrincipalId' : ActorMethod<[Array<string>], Result_13>,
+  'getMyFollowers' : ActorMethod<[], Result_12>,
   'getNuaBalance' : ActorMethod<[string], NuaBalanceResult>,
   'getNumberOfAllRegisteredUsers' : ActorMethod<[], bigint>,
+  'getPendingEmailBatches' : ActorMethod<[], Result_11>,
   'getPlatformOperators' : ActorMethod<[], List>,
   'getPrincipalByHandle' : ActorMethod<[string], GetPrincipalByHandleReturn>,
   'getPrincipalsByHandles' : ActorMethod<[Array<string>], Array<string>>,
   'getRegistrationNumberLastDay' : ActorMethod<[], bigint>,
   'getTotalNumberOfClaimedTokens' : ActorMethod<[], bigint>,
-  'getTrustedCanisters' : ActorMethod<[], Result_6>,
-  'getUser' : ActorMethod<[], Result>,
-  'getUserByHandle' : ActorMethod<[string], Result>,
-  'getUserByPrincipalId' : ActorMethod<[string], Result>,
+  'getTrustedCanisters' : ActorMethod<[], Result_9>,
+  'getUser' : ActorMethod<[], Result_1>,
+  'getUserByHandle' : ActorMethod<[string], Result_1>,
+  'getUserByPrincipalId' : ActorMethod<[string], Result_1>,
   'getUserFollowers' : ActorMethod<[string], Array<UserListItem>>,
   'getUserInternal' : ActorMethod<[string], [] | [User]>,
-  'getUserListItemByHandle' : ActorMethod<[string], Result_7>,
-  'getUsersBlockedFromClaiming' : ActorMethod<[], Result_6>,
+  'getUserListItemByHandle' : ActorMethod<[string], Result_10>,
+  'getUsersBlockedFromClaiming' : ActorMethod<[], Result_9>,
   'getUsersByHandles' : ActorMethod<[Array<string>], Array<UserListItem>>,
   'getUsersByPrincipals' : ActorMethod<[Array<string>], Array<UserListItem>>,
-  'getVerificationStatus' : ActorMethod<[string], Result_4>,
+  'getVerificationStatus' : ActorMethod<[string], Result_6>,
   'handleClap' : ActorMethod<[string, string], undefined>,
+  'hasLettermintApiKey' : ActorMethod<[], boolean>,
   'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
   'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
+  'isEmailSubscribed' : ActorMethod<[string, string], boolean>,
+  'isEmailSubscribedByCaller' : ActorMethod<[string, [] | [string]], boolean>,
   'isRegistrationOpen' : ActorMethod<[], boolean>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
-  'linkInternetIdentityConfirm' : ActorMethod<[string], Result_1>,
-  'linkInternetIdentityRequest' : ActorMethod<[string, string], Result_1>,
+  'linkInternetIdentityConfirm' : ActorMethod<[string], Result_3>,
+  'linkInternetIdentityRequest' : ActorMethod<[string, string], Result_3>,
   'migrateFollowersHashmapsFromHandlesToPrincipalIds' : ActorMethod<
     [],
-    Result_5
+    Result_8
   >,
-  'registerAdmin' : ActorMethod<[string], Result_1>,
-  'registerCanister' : ActorMethod<[string], Result_1>,
-  'registerCgUser' : ActorMethod<[string], Result_1>,
-  'registerPlatformOperator' : ActorMethod<[string], Result_1>,
+  'notifyAuthorArticlePublished' : ActorMethod<
+    [PublishedArticlePayload, Array<string>, Array<string>],
+    Result_7
+  >,
+  'processPendingEmailBatchesNow' : ActorMethod<[], Result_2>,
+  'registerAdmin' : ActorMethod<[string], Result_3>,
+  'registerCanister' : ActorMethod<[string], Result_3>,
+  'registerCgUser' : ActorMethod<[string], Result_3>,
+  'registerPlatformOperator' : ActorMethod<[string], Result_3>,
   'registerUser' : ActorMethod<[string, string, string], RegisterUserReturn>,
-  'removePoh' : ActorMethod<[string], Result>,
+  'removePoh' : ActorMethod<[string], Result_1>,
   'removePublication' : ActorMethod<
     [PublicationObject, string],
     RemovePublicationReturn
   >,
-  'setDailyMaxRegistration' : ActorMethod<[bigint], Result_3>,
-  'setIsClaimActive' : ActorMethod<[boolean], Result_4>,
-  'setMaxMemorySize' : ActorMethod<[bigint], Result_3>,
-  'setMaxNumberOfClaimableTokens' : ActorMethod<[bigint], Result_3>,
-  'setMaxNumberOfDailyClaimableTokens' : ActorMethod<[bigint], Result_3>,
+  'retryDeadEmailBatch' : ActorMethod<[string], Result_2>,
+  'setDailyMaxRegistration' : ActorMethod<[bigint], Result_5>,
+  'setIsClaimActive' : ActorMethod<[boolean], Result_6>,
+  'setLettermintApiKey' : ActorMethod<[string], Result_3>,
+  'setMaxMemorySize' : ActorMethod<[bigint], Result_5>,
+  'setMaxNumberOfClaimableTokens' : ActorMethod<[bigint], Result_5>,
+  'setMaxNumberOfDailyClaimableTokens' : ActorMethod<[bigint], Result_5>,
   'spendNuaBalance' : ActorMethod<[string], undefined>,
   'spendRestrictedTokensForSubscription' : ActorMethod<
     [string, bigint],
-    Result_2
+    Result_4
   >,
   'spendRestrictedTokensForTipping' : ActorMethod<
     [string, string, bigint],
-    Result_1
+    Result_3
+  >,
+  'subscribeToAuthorByEmail' : ActorMethod<[string, string, string], Result_2>,
+  'subscribeToPublicationByEmail' : ActorMethod<
+    [string, string, string, string, string],
+    Result_2
   >,
   'testInstructionSize' : ActorMethod<[], string>,
-  'unblockUserFromClaiming' : ActorMethod<[string], Result_1>,
-  'unfollowAuthor' : ActorMethod<[string], Result>,
-  'unregisterAdmin' : ActorMethod<[string], Result_1>,
-  'unregisterCanister' : ActorMethod<[string], Result_1>,
-  'unregisterCgUser' : ActorMethod<[string], Result_1>,
-  'unregisterPlatformOperator' : ActorMethod<[string], Result_1>,
-  'updateAvatar' : ActorMethod<[string], Result>,
-  'updateBio' : ActorMethod<[string], Result>,
-  'updateDisplayName' : ActorMethod<[string], Result>,
-  'updateFontType' : ActorMethod<[string], Result>,
+  'unblockUserFromClaiming' : ActorMethod<[string], Result_3>,
+  'unfollowAuthor' : ActorMethod<[string], Result_1>,
+  'unregisterAdmin' : ActorMethod<[string], Result_3>,
+  'unregisterCanister' : ActorMethod<[string], Result_3>,
+  'unregisterCgUser' : ActorMethod<[string], Result_3>,
+  'unregisterPlatformOperator' : ActorMethod<[string], Result_3>,
+  'unsubscribeEmailByCaller' : ActorMethod<[string, [] | [string]], Result_2>,
+  'unsubscribeEmailByToken' : ActorMethod<[string, string], Result_2>,
+  'unsubscribeFromAuthorByEmail' : ActorMethod<[string, string], Result_2>,
+  'updateAvatar' : ActorMethod<[string], Result_1>,
+  'updateBio' : ActorMethod<[string], Result_1>,
+  'updateDisplayName' : ActorMethod<[string], Result_1>,
+  'updateFontType' : ActorMethod<[string], Result_1>,
   'updateHandle' : ActorMethod<
     [string, string, string, [] | [Array<string>]],
-    Result
+    Result_1
   >,
   'updateLastLogin' : ActorMethod<[], undefined>,
-  'updateSocialLinks' : ActorMethod<[string, Array<string>], Result>,
+  'updateSocialLinks' : ActorMethod<[string, Array<string>], Result_1>,
   'updateUserDetails' : ActorMethod<
     [string, string, string, string, Array<string>],
-    Result
+    Result_1
   >,
   'validate' : ActorMethod<[any], Validate>,
+  'verifyEmailSubscription' : ActorMethod<[string], Result>,
   'verifyPoh' : ActorMethod<[string], VerifyResult>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
