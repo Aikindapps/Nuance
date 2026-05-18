@@ -462,6 +462,9 @@ actor CyclesDispenser {
     canisterIdToMinimumAmountOfCyclesHashmap.delete(canisterId);
     canisterIdToTopUpAmountHashmap.delete(canisterId);
     canisterIdToBalanceHashmap.delete(canisterId);
+    canisterIdToIsStorageBucketHashmap.delete(canisterId);
+    canisterIdToConsecutiveFailuresHashmap.delete(canisterId);
+    canisterIdToLastFailureTimeHashmap.delete(canisterId);
     #ok();
   };
 
@@ -538,17 +541,18 @@ actor CyclesDispenser {
     return #AlreadyToppedUp;
   };
 
+  // Sequential by design: awaiting each call lets the safety-net catch below actually fire on traps,
+  // which a fire-and-forget `ignore checkCanisterBalance(...)` would silently swallow. With ~40 canisters
+  // and 1–2s per query call, a full sweep can take 40–80s; the timer runs every 4 minutes, so we have headroom.
+  // If the canister count grows materially, switch to bounded-concurrency chunks rather than back to fully concurrent.
   private func checkCanisters(canisterIds : [Text]) : async () {
     for (canisterId in canisterIds.vals()) {
       try {
         ignore await checkCanisterBalance(canisterId);
       } catch (e) {
-        // checkCanisterBalance now handles its own balance-read errors; this catch is a safety net
-        // for unexpected traps so one bad canister can't abort the rest of the chunk.
-        let prev = U.safeGet(canisterIdToConsecutiveFailuresHashmap, canisterId, 0);
-        canisterIdToConsecutiveFailuresHashmap.put(canisterId, prev + 1);
-        canisterIdToLastFailureTimeHashmap.put(canisterId, Time.now());
-        canisterIdToBalanceHashmap.put(canisterId, 0);
+        // Safety net only: keeps the loop alive if checkCanisterBalance traps after its own try/catch.
+        // We do NOT increment the failure counter here — checkCanisterBalance already records balance-read
+        // failures in its inner catch, and double-counting would flag canisters as stale at half the threshold.
         Debug.print("CyclesDispenser -> unexpected error in checkCanisterBalance for " # canisterId);
       };
     };
