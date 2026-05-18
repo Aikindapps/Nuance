@@ -159,7 +159,8 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
       restrictedTokenBalance,
     ] = await Promise.all([
       Promise.all(tokenBalancesPromises),
-      Promise.all(tokenPricesPromises),
+      // A broken sonic pool canister must not take down balances, so settle each price independently.
+      Promise.allSettled(tokenPricesPromises),
       user.claimInfo.subaccount.length === 0
         ? 0
         : new Uint8Array(user.claimInfo.subaccount[0]).length === 0
@@ -181,7 +182,16 @@ const createAuthStore: StateCreator<AuthStore> | StoreApi<AuthStore> = (
     );
 
     let tokenPrices: TokenPrice[] = [];
-    tokenPricesResponses.forEach((response, index) => {
+
+    tokenPricesResponses.forEach((settled, index) => {
+      if (settled.status !== 'fulfilled') {
+        console.warn(
+          `Sonic pool quote failed for ${SONIC_POOLS[index].canisterId}:`,
+          settled.reason
+        );
+        return;
+      }
+      const response = settled.value;
       if ('ok' in response) {
         tokenPrices.push({
           tokenSymbol:
