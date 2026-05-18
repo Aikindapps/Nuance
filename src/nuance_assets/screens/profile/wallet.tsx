@@ -759,7 +759,7 @@ const Wallet = () => {
                         className='key key-flex'
                         style={{ alignItems: 'start' }}
                       >
-                        {activity.isWriter ? 'New subscriber' : 'Subscribed'}
+                        {activity.isWriter ? 'New supporter' : 'Supporter'}
                       </div>
                       <div
                         className='transfer-icon transfer'

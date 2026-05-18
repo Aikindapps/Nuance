@@ -29,17 +29,20 @@ service : {
   getCanisterVersion: () -> (text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
-  getRelatedPosts: (text) -> (vec text) query;
+  getRelatedPosts: (postId: text) -> (vec text) query;
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
-  indexPost: (IndexPostModel) -> ();
-  indexPosts: (vec IndexPostModel) -> ();
+  indexPost: (indexPostModel: IndexPostModel) -> ();
+  indexPosts: (indexPostModels: vec IndexPostModel) -> ();
   isThereEnoughMemory: () -> (bool) query;
-  removePost: (text) -> ();
-  searchByTag: (text) -> (vec text) query;
-  searchByTagWithinPublication: (text, text) -> (vec text) composite_query;
-  searchByTags: (vec text, nat32, nat32) -> (SearchByTagsResponse) query;
-  searchPost: (text) -> (vec text) query;
-  searchPublicationPosts: (text, text) -> (vec text) composite_query;
-  setMaxMemorySize: (nat) -> (Result);
+  removePost: (postId: text) -> ();
+  searchByTag: (tagName: text) -> (vec text) query;
+  searchByTagWithinPublication: (tagName: text, publicationHandle: text) ->
+   (vec text) composite_query;
+  searchByTags: (tagNames: vec text, indexFrom: nat32, indexTo: nat32) ->
+   (SearchByTagsResponse) query;
+  searchPost: (searchTerm: text) -> (vec text) query;
+  searchPublicationPosts: (searchTerm: text, publicationHandle: text) ->
+   (vec text) composite_query;
+  setMaxMemorySize: (newValue: nat) -> (Result);
 }

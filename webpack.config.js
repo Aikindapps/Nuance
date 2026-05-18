@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -145,7 +146,9 @@ module.exports = {
     new ForkTsCheckerWebpackPlugin(),
     new webpack.optimize.AggressiveMergingPlugin(),
     new Dotenv({
-      path: `./.env${isDevelopment ? '.local' : ''}`,
+      path: fs.existsSync(`./.env${isDevelopment ? '.local' : ''}`)
+        ? `./.env${isDevelopment ? '.local' : ''}`
+        : './.env',
     }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, 'src', frontendDirectory, 'index.html'),

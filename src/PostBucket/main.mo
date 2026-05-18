@@ -1497,6 +1497,15 @@ actor class PostBucket() = this {
     };
 
 
+    // Detect whether this save transitions the post from draft -> published.
+    // We compute this *before* addOrUpdatePost mutates the draft flag.
+    let wasDraftBefore = isNew or U.safeGet(isDraftHashMap, postId, true);
+    let scheduledFuture = switch (postModel.scheduledPublishedDate) {
+      case (?d) d > U.epochTime();
+      case null false;
+    };
+    let becomesPublished = wasDraftBefore and (not postModel.isDraft) and (not scheduledFuture);
+
     addOrUpdatePost(
       isNew,
       postId,
@@ -1522,7 +1531,153 @@ actor class PostBucket() = this {
       addPostIdToUser(creatorPrincipal, postId);
     };
 
+    // Fire-and-forget email broadcast. Never let email sending fail the save.
+    // NFT (premium) articles are excluded from email broadcasts in all cases —
+    // detected via either the incoming premium payload or an existing NFT
+    // canister mapping for this postId.
+    let isNftArticle = postModel.premium != null or nftCanisterIdHashMap.get(postId) != null;
+    if (becomesPublished and not isNftArticle) {
+      let authorPrincipal = if (isPublication) { creatorPrincipal } else { postOwnerPrincipalId };
+      let authorHandle = if (isPublication) { creatorHandle } else { userHandle };
+      // Subscription targets — whose email-subscriber lists feed the broadcast.
+      //   * direct article: the writer's audience
+      //   * public publication article: writer + publication audiences
+      //   * members-only publication article: ONLY the publication's audience
+      //     (the article is gated on publication paid-subscription, so the
+      //     writer's audience must not receive it even if some of those
+      //     readers paid the writer directly).
+      let subscriptionTargets : [Text] =
+        if (isPublication) {
+          if (postModel.isMembersOnly) { [postOwnerPrincipalId] }
+          else { [authorPrincipal, postOwnerPrincipalId] };
+        } else { [authorPrincipal] };
+      // Members-only gate: paid subscribers are pulled from the same entity
+      // whose audience receives the email. Null for public posts.
+      let paidGateTargetId : ?Text =
+        if (postModel.isMembersOnly) {
+          if (isPublication) { ?postOwnerPrincipalId } else { ?authorPrincipal };
+        } else { null };
+      // When published inside a publication, the publication principal is
+      // the post owner — we pass it through so the broadcast can fetch the
+      // publication's display name + avatar for the email byline.
+      let publicationPrincipal : ?Text =
+        if (isPublication) { ?postOwnerPrincipalId } else { null };
+      try {
+        ignore triggerEmailBroadcast(
+          postId,
+          authorPrincipal,
+          authorHandle,
+          postModel.title,
+          postModel.subtitle,
+          postModel.headerImage,
+          postModel.content,
+          postModel.isMembersOnly,
+          subscriptionTargets,
+          paidGateTargetId,
+          publicationPrincipal,
+        );
+      } catch (_) {};
+    };
+
     #ok(buildPost(postId));
+  };
+
+  // Fire the email broadcast to the User canister. Called as fire-and-forget
+  // — we intentionally do *not* await the result so that a slow or failing
+  // Lettermint outcall never blocks the post-save / publish path.
+  private func triggerEmailBroadcast(
+    postId : Text,
+    authorPrincipal : Text,
+    authorHandle : Text,
+    title : Text,
+    subtitle : Text,
+    headerImage : Text,
+    contentHtml : Text,
+    isMembersOnly : Bool,
+    subscriptionTargetIds : [Text],
+    paidGateTargetId : ?Text,
+    publicationPrincipal : ?Text,
+  ) : async () {
+    let UserCanister = CanisterDeclarations.getUserCanister();
+    let SubscriptionCanister : actor {
+      getAuthorActivePaidSubscriberPrincipalIds : query (writerPrincipalId : Text) -> async [Text];
+    } = actor(ENV.SUBSCRIPTION_CANISTER_ID);
+
+    // For members-only posts we need the list of paid subscribers so the
+    // User canister can filter recipients. The paid-gate source is whichever
+    // entity the recipient pool belongs to: the publication for members-only
+    // articles published under a publication (subscribers paid the
+    // publication, not the writer), the writer otherwise. For public posts
+    // there is no gate.
+    var paidSubscribers : [Text] = [];
+    switch (paidGateTargetId) {
+      case (?gateId) {
+        try {
+          paidSubscribers := await SubscriptionCanister.getAuthorActivePaidSubscriberPrincipalIds(gateId);
+        } catch (_) {
+          paidSubscribers := [];
+        };
+      };
+      case null {};
+    };
+
+    // Fetch author display name + avatar. Fall back to the handle / empty
+    // string if the lookup fails — the email render handles those defaults.
+    var displayName = authorHandle;
+    var authorAvatar = "";
+    try {
+      switch (await UserCanister.getUserByPrincipalId(authorPrincipal)) {
+        case (#ok(u)) {
+          displayName := if (u.displayName.size() > 0) u.displayName else authorHandle;
+          authorAvatar := u.avatar;
+        };
+        case (#err(_)) {};
+      };
+    } catch (_) {};
+
+    // Publication metadata for the email byline. Publication principals are
+    // registered as "users" in the User canister with handle/displayName/avatar,
+    // so we can reuse the same lookup. All three fields stay null on failure
+    // so the renderer can decide to skip the publication line entirely.
+    var pubHandle : ?Text = null;
+    var pubDisplayName : ?Text = null;
+    var pubAvatar : ?Text = null;
+    switch (publicationPrincipal) {
+      case (?pid) {
+        try {
+          switch (await UserCanister.getUserByPrincipalId(pid)) {
+            case (#ok(p)) {
+              pubHandle := ?p.handle;
+              pubDisplayName := ?(if (p.displayName.size() > 0) p.displayName else p.handle);
+              pubAvatar := ?p.avatar;
+            };
+            case (#err(_)) {};
+          };
+        } catch (_) {};
+      };
+      case null {};
+    };
+
+    let publicationHandleForUrl : Text = switch (pubHandle) { case (?h) h; case null authorHandle };
+    let url = "https://nuance.xyz" # buildPostUrl(postId, publicationHandleForUrl, title);
+    let payload : CanisterDeclarations.PublishedArticleEmailPayload = {
+      postId;
+      authorPrincipal = authorPrincipal;
+      authorHandle;
+      authorDisplayName = displayName;
+      authorAvatar;
+      publicationHandle = pubHandle;
+      publicationDisplayName = pubDisplayName;
+      publicationAvatar = pubAvatar;
+      title;
+      subtitle;
+      headerImage;
+      contentHtml;
+      isMembersOnly;
+      url;
+      publishedAt = U.epochTime();
+    };
+    ignore await UserCanister.notifyAuthorArticlePublished(payload, paidSubscribers, subscriptionTargetIds);
   };
 
   public shared (msg) func saveMultiple(postModels : [PostSaveModel]) : async [SaveResult] {
@@ -2159,6 +2314,7 @@ actor class PostBucket() = this {
     };
 
     let now = U.epochTime();
+    let wasDraftBefore = updatingPost.isDraft;
     modifiedHashMap.put(postId, now);
     isDraftHashMap.put(postId, isDraft);
     if(isDraft){
@@ -2168,6 +2324,40 @@ actor class PostBucket() = this {
     let writerHandle = updatingPost.creatorHandle;
     let writerPrincipalId = U.safeGet(handleReverseHashMap, writerHandle, "");
     let keyProperties = await postCoreActor.updatePostDraft(postId, isDraft, now, writerPrincipalId);
+
+    // Editor-publishes-writer's-submission path: when an editor flips a
+    // publication post from draft -> published via the Publisher canister,
+    // the save() email path is bypassed. Fire the broadcast here too so
+    // subscribers are notified regardless of which path published the post.
+    // NFT (premium) articles are excluded from email broadcasts in all cases.
+    let isNftArticle = U.safeGet(isPremiumHashMap, postId, false) or nftCanisterIdHashMap.get(postId) != null;
+    if (wasDraftBefore and not isDraft and not isNftArticle) {
+      let publicationPrincipal = updatingPost.postOwnerPrincipal;
+      // Same fan-out rules as the save() path:
+      //   * members-only article: ONLY publication's audience, gated on
+      //     publication paid subscribers.
+      //   * public article: writer + publication audiences, no paid gate.
+      let subscriptionTargets : [Text] =
+        if (updatingPost.isMembersOnly) { [publicationPrincipal] }
+        else { [writerPrincipalId, publicationPrincipal] };
+      let paidGateTargetId : ?Text =
+        if (updatingPost.isMembersOnly) { ?publicationPrincipal } else { null };
+      try {
+        ignore triggerEmailBroadcast(
+          postId,
+          writerPrincipalId,
+          writerHandle,
+          updatingPost.title,
+          updatingPost.subtitle,
+          updatingPost.headerImage,
+          updatingPost.content,
+          updatingPost.isMembersOnly,
+          subscriptionTargets,
+          paidGateTargetId,
+          ?publicationPrincipal,
+        );
+      } catch (_) {};
+    };
 
     let postBucketType = buildPost(postId);
     #ok({

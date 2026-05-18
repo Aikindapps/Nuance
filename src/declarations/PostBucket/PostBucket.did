@@ -41,12 +41,12 @@ type Result_7 =
 type Result_6 = 
  variant {
    err: text;
-   ok: PostBucketType__1;
+   ok: PostBucketType;
  };
 type Result_5 = 
  variant {
    err: text;
-   ok: Comment__1;
+   ok: Comment;
  };
 type Result_4 = 
  variant {
@@ -71,7 +71,7 @@ type Result_11 =
 type Result_10 = 
  variant {
    err: text;
-   ok: vec Comment__1;
+   ok: vec Comment;
  };
 type Result_1 = 
  variant {
@@ -114,30 +114,6 @@ type PostSaveModel =
    tagNames: vec text;
    title: text;
  };
-type PostBucketType__1 = 
- record {
-   bucketCanisterId: text;
-   category: text;
-   content: text;
-   created: text;
-   creatorHandle: text;
-   creatorPrincipal: text;
-   handle: text;
-   headerImage: text;
-   isDraft: bool;
-   isMembersOnly: bool;
-   isPremium: bool;
-   isPublication: bool;
-   modified: text;
-   nftCanisterId: opt text;
-   postId: text;
-   postOwnerPrincipal: text;
-   publishedDate: text;
-   subtitle: text;
-   title: text;
-   url: text;
-   wordCount: text;
- };
 type PostBucketType = 
  record {
    bucketCanisterId: text;
@@ -165,22 +141,25 @@ type PostBucketType =
 type PostBucket = 
  service {
    acceptCycles: () -> ();
-   addPostCategory: (text, text) -> (Result_6);
-   addPostIdToUserDebug: (text, text) -> (Result_3);
+   addPostCategory: (postId: text, category: text) -> (Result_6);
+   addPostIdToUserDebug: (principalId: text, postId: text) -> (Result_3);
    availableCycles: () -> (nat) query;
-   buildCommentUrl: (text) -> (text) query;
-   checkTipping: (text) -> ();
-   checkTippingByTokenSymbol: (text, text, text) -> (Result_11);
+   buildCommentUrl: (commentId: text) -> (text) query;
+   checkTipping: (postId: text) -> ();
+   checkTippingByTokenSymbol: (postId: text, symbol: text, senderPrincipal:
+    text) -> (Result_11);
    debugMembersOnlyStatusOfExistingDraftArticles: () -> (Result_9);
-   debugSetCreatorFieldAndAddPostIdToUser: (text, text) -> (Result_6);
-   delete: (text) -> (Result_4);
-   deleteComment: (text) -> (Result_5);
-   deleteUserPosts: (text) -> (Result_4);
-   downvoteComment: (text) -> (Result);
+   debugSetCreatorFieldAndAddPostIdToUser: (postId: text, creatorPrincipal:
+    text) -> (Result_6);
+   delete: (postId: text) -> (Result_4);
+   deleteComment: (commentId: text) -> (Result_5);
+   deleteUserPosts: (principalId: text) -> (Result_4);
+   downvoteComment: (commentId: text) -> (Result);
    dumpIds: () -> (Result_3);
    dumpPosts: () -> (Result_3);
    dumpUserIds: () -> (Result_3);
-   fixEmptyCreatorFields: (text, text) -> (Result_4);
+   fixEmptyCreatorFields: (publicationPrincipalId: text,
+    assigningWriterPrincipalId: text) -> (Result_4);
    generatePublishedDates: () -> ();
    getAdmins: () -> (Result_9) query;
    getAllApplauds: () -> (vec Applaud) query;
@@ -189,75 +168,82 @@ type PostBucket =
                                 text;
                                 text;
                               }) query;
-   getApplaudById: (text) -> (Result_11) query;
+   getApplaudById: (applaudId: text) -> (Result_11) query;
    getBucketCanisterVersion: () -> (text) query;
    getCanisterVersion: () -> (text) query;
    getCgUsers: () -> (Result_9) query;
-   getComment: (text) -> (Result_5) query;
+   getComment: (commentId: text) -> (Result_5) query;
    getFrontendCanisterId: () -> (text) query;
    getKinicList: () -> (Result_9) query;
-   getList: (vec text) -> (vec PostBucketType__1) query;
+   getList: (postIds: vec text) -> (vec PostBucketType) query;
    getMaxMemorySize: () -> (nat) query;
    getMemorySize: () -> (nat) query;
    getMyApplauds: () -> (vec Applaud) query;
    getNotMigratedPremiumArticlePostIds: () -> (vec text) query;
    getPlatformOperators: () -> (List) query;
-   getPost: (text) -> (Result_6) query;
-   getPostApplauds: (text) -> (vec Applaud) query;
-   getPostComments: (text) -> (Result) query;
-   getPostCompositeQuery: (text) -> (Result_6) composite_query;
+   getPost: (postId: text) -> (Result_6) query;
+   getPostApplauds: (postId: text) -> (vec Applaud) query;
+   getPostComments: (postId: text) -> (Result) query;
+   getPostCompositeQuery: (postId: text) -> (Result_6) composite_query;
    getPostCoreCanisterId: () -> (text) query;
    getPostUrls: () -> (Result_2) query;
-   getPostsByPostIds: (vec text, bool) -> (vec PostBucketType__1) query;
-   getPostsByPostIdsMigration: (vec text) -> (vec PostBucketType__1) query;
-   getPublicationPosts: (vec text, text) ->
-    (vec PostBucketType__1) composite_query;
+   getPostsByPostIds: (postIds: vec text, includeDraft: bool) ->
+    (vec PostBucketType) query;
+   getPostsByPostIdsMigration: (postIds: vec text) ->
+    (vec PostBucketType) query;
+   getPublicationPosts: (postIds: vec text, publicationHandle: text) ->
+    (vec PostBucketType) composite_query;
    getReportedCommentIds: () -> (vec text);
    getReportedComments: () -> (Result_10) query;
    getTotalPostCount: () -> (nat) query;
    getTrustedCanisters: () -> (Result_9) query;
-   getUserApplaudsByPrincipal: (text) -> (vec Applaud) query;
-   getUserPostIds: (text) -> (vec text) query;
-   getUserPosts: (text, bool) -> (vec PostBucketType__1) query;
+   getUserApplaudsByPrincipal: (principalId: text) -> (vec Applaud) query;
+   getUserPostIds: (principalId: text) -> (vec text) query;
+   getUserPosts: (handle: text, includeDraft: bool) ->
+    (vec PostBucketType) query;
    icrc10_supported_standards: () -> (vec SupportedStandard) query;
    icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
-   initializeBucketCanister: (vec text, vec text, text) -> (Result_2);
-   initializeCanister: (text, text) -> (Result_2);
+   initializeBucketCanister: (nuanceCanistersInitial: vec text,
+    cgUsersInitial: vec text, initPostCoreCanisterId: text) -> (Result_2);
+   initializeCanister: (postIndexCai: text, userCai: text) -> (Result_2);
    isBucketCanisterActivePublic: () -> (bool) query;
    makeBucketCanisterNonActive: () -> (Result_8);
    migrateCreatorsFromHandlesToPrincipals: () -> (Result_7);
-   migratePostToPublication: (text, text, bool) -> (Result_1);
-   migratePremiumArticleFromOldArch: (text, opt nat) -> (Result_2);
-   registerAdmin: (text) -> (Result_3);
-   registerCanister: (text) -> (Result_3);
-   registerCgUser: (text) -> (Result_3);
-   registerPlatformOperator: (text) -> (Result_3);
+   migratePostToPublication: (postId: text, publicationHandle: text, isDraft:
+    bool) -> (Result_1);
+   migratePremiumArticleFromOldArch: (postId: text, price: opt nat) ->
+    (Result_2);
+   registerAdmin: (id: text) -> (Result_3);
+   registerCanister: (id: text) -> (Result_3);
+   registerCgUser: (id: text) -> (Result_3);
+   registerPlatformOperator: (id: text) -> (Result_3);
    reindex: () -> (Result_2);
-   rejectPostByModclub: (text) -> () oneway;
-   removeCommentVote: (text) -> (Result);
-   removePostCategory: (text) -> (Result_6);
-   removePostIdToUserDebug: (text, text) -> (Result_3);
-   reportComment: (text) -> (Result_2);
-   reviewComment: (text, bool) -> (Result_5);
-   save: (PostSaveModel) -> (SaveResult);
-   saveComment: (SaveCommentModel) -> (Result);
-   saveMultiple: (vec PostSaveModel) -> (vec SaveResult);
-   sendNewCommentNotification: (text) -> ();
-   setMaxMemorySize: (nat) -> (Result_4);
-   storeHandlesAndPrincipals: (vec record {
-                                     text;
-                                     text;
-                                   }) -> (Result_2);
+   rejectPostByModclub: (postId: text) -> () oneway;
+   removeCommentVote: (commentId: text) -> (Result);
+   removePostCategory: (postId: text) -> (Result_6);
+   removePostIdToUserDebug: (principalId: text, postId: text) -> (Result_3);
+   reportComment: (commentId: text) -> (Result_2);
+   reviewComment: (commentId: text, censor: bool) -> (Result_5);
+   save: (postModel: PostSaveModel) -> (SaveResult);
+   saveComment: (input: SaveCommentModel) -> (Result);
+   saveMultiple: (postModels: vec PostSaveModel) -> (vec SaveResult);
+   sendNewCommentNotification: (commentId: text) -> ();
+   setMaxMemorySize: (newValue: nat) -> (Result_4);
+   storeHandlesAndPrincipals: (handlesAndPrincipalIds:
+    vec record {
+          text;
+          text;
+        }) -> (Result_2);
    testInstructionSize: () -> (text);
-   unRejectPostByModclub: (text) -> () oneway;
-   unregisterAdmin: (text) -> (Result_3);
-   unregisterCanister: (text) -> (Result_3);
-   unregisterCgUser: (text) -> (Result_3);
-   unregisterPlatformOperator: (text) -> (Result_3);
-   updateHandle: (text, text) -> (Result_2);
-   updatePostDraft: (text, bool) -> (Result_1);
-   upvoteComment: (text) -> (Result);
-   validate: (reserved) -> (Validate);
+   unRejectPostByModclub: (postId: text) -> () oneway;
+   unregisterAdmin: (id: text) -> (Result_3);
+   unregisterCanister: (id: text) -> (Result_3);
+   unregisterCgUser: (id: text) -> (Result_3);
+   unregisterPlatformOperator: (id: text) -> (Result_3);
+   updateHandle: (principalId: text, newHandle: text) -> (Result_2);
+   updatePostDraft: (postId: text, isDraft: bool) -> (Result_1);
+   upvoteComment: (commentId: text) -> (Result);
+   validate: (input: reserved) -> (Validate);
  };
 type Post = 
  record {
@@ -295,24 +281,6 @@ type CommentsReturnType =
  record {
    comments: vec Comment;
    totalNumberOfComments: text;
- };
-type Comment__1 = 
- record {
-   avatar: text;
-   bucketCanisterId: text;
-   commentId: text;
-   content: text;
-   createdAt: text;
-   creator: text;
-   downVotes: vec text;
-   editedAt: opt text;
-   handle: text;
-   isCensored: bool;
-   isVerified: bool;
-   postId: text;
-   repliedCommentId: opt text;
-   replies: vec Comment;
-   upVotes: vec text;
  };
 type Comment = 
  record {

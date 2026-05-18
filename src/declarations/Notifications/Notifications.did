@@ -42,107 +42,6 @@ type Result =
    err: text;
    ok: UserNotificationSettings;
  };
-type NotificationContent__1 = 
- variant {
-   AuthorGainsNewSubscriber:
-    record {
-      amountOfTokens: text;
-      subscriberPrincipalId: text;
-      subscriptionEndTime: text;
-      subscriptionStartTime: text;
-      subscriptionTimeInterval: SubscriptionTimeInterval;
-    };
-   AuthorLosesSubscriber:
-    record {
-      subscriberPrincipalId: text;
-      subscriptionTimeInterval: SubscriptionTimeInterval;
-    };
-   FaucetClaimAvailable;
-   NewArticleByFollowedTag:
-    record {
-      bucketCanisterId: text;
-      postId: text;
-      postTitle: text;
-      postWriterPrincipal: text;
-      tagName: text;
-    };
-   NewArticleByFollowedWriter:
-    record {
-      bucketCanisterId: text;
-      postId: text;
-      postTitle: text;
-      postWriterPrincipal: text;
-    };
-   NewCommentOnMyArticle:
-    record {
-      bucketCanisterId: text;
-      commentContent: text;
-      commentId: text;
-      commenterPrincipal: text;
-      isReply: bool;
-      postId: text;
-      postTitle: text;
-    };
-   NewFollower: record {followerPrincipalId: text;};
-   PremiumArticleSold:
-    record {
-      amountOfTokens: text;
-      bucketCanisterId: text;
-      postId: text;
-      postTitle: text;
-      publicationPrincipalId: opt text;
-      purchasedTokenSymbol: text;
-      purchaserPrincipal: text;
-    };
-   ReaderExpiredSubscription:
-    record {
-      amountOfTokens: text;
-      isPublication: bool;
-      subscribedWriterPrincipalId: text;
-      subscriptionEndTime: text;
-      subscriptionStartTime: text;
-      subscriptionTimeInterval: SubscriptionTimeInterval;
-    };
-   ReplyToMyComment:
-    record {
-      bucketCanisterId: text;
-      myCommentContent: text;
-      myCommentId: text;
-      postId: text;
-      postTitle: text;
-      postWriterPrincipal: text;
-      replyCommentContent: text;
-      replyCommentId: text;
-      replyCommenterPrincipal: text;
-    };
-   TipReceived:
-    record {
-      amountOfTokens: text;
-      bucketCanisterId: text;
-      numberOfApplauds: text;
-      postId: text;
-      postTitle: text;
-      publicationPrincipalId: opt text;
-      tipSenderPrincipal: text;
-      tippedTokenSymbol: text;
-    };
-   VerifyProfile;
-   YouSubscribedToAuthor:
-    record {
-      amountOfTokens: text;
-      isPublication: bool;
-      subscribedWriterPrincipalId: text;
-      subscriptionEndTime: text;
-      subscriptionStartTime: text;
-      subscriptionTimeInterval: SubscriptionTimeInterval;
-    };
-   YouUnsubscribedFromAuthor:
-    record {
-      isPublication: bool;
-      subscribedWriterPrincipalId: text;
-      subscriptionTimeInterval: SubscriptionTimeInterval;
-    };
- };
 type NotificationContent = 
  variant {
    AuthorGainsNewSubscriber:
@@ -261,21 +160,26 @@ type GetUserNotificationsResponse =
 service : {
   acceptCycles: () -> ();
   availableCycles: () -> (nat) query;
-  broadcastNotification: (NotificationContent__1) -> (Result_2);
-  createNotification: (text, NotificationContent__1) -> ();
-  createNotifications: (vec record {
-                              text;
-                              NotificationContent__1;
-                            }) -> ();
+  broadcastNotification: (notificationContent: NotificationContent) ->
+   (Result_2);
+  createNotification: (notificationReceiverPrincipalId: text, content:
+   NotificationContent) -> ();
+  createNotifications: (notifications:
+   vec record {
+         text;
+         NotificationContent;
+       }) -> ();
   getCanisterVersion: () -> (text) query;
   getMaxMemorySize: () -> (nat) query;
   getMemorySize: () -> (nat) query;
   getUserNotificationSettings: () -> (UserNotificationSettings) query;
-  getUserNotifications: (text, text) -> (GetUserNotificationsResponse) query;
+  getUserNotifications: (from: text, to: text) ->
+   (GetUserNotificationsResponse) query;
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
   isThereEnoughMemory: () -> (bool) query;
-  markNotificationsAsRead: (vec text) -> ();
-  setMaxMemorySize: (nat) -> (Result_1);
-  updateNotificationSettings: (UserNotificationSettings) -> (Result);
+  markNotificationsAsRead: (notificationIds: vec text) -> ();
+  setMaxMemorySize: (newValue: nat) -> (Result_1);
+  updateNotificationSettings: (newNotificationSettings:
+   UserNotificationSettings) -> (Result);
 }

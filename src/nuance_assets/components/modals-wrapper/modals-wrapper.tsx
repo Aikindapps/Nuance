@@ -13,6 +13,8 @@ import { ClaimRestrictedTokensModal } from '../claim-restricted-tokens-modal/cla
 import { useNavigate } from 'react-router-dom';
 import { VerifyProfileModal } from '../verify-profile-modal/verify-profile-modal';
 import { LinkIIModal } from '../link-ii-modal/link-ii-modal';
+import EmailSubscribeModal from '../email-subscribe-modal/email-subscribe-modal';
+import EmailUnsubscribeConfirmModal from '../email-unsubscribe-confirm-modal/email-unsubscribe-confirm-modal';
 export const ModalsWrapper = () => {
   const modalContext = useContext(ModalContext);
   const navigate = useNavigate();
@@ -65,6 +67,10 @@ export const ModalsWrapper = () => {
         <VerifyProfileModal />
       ) : modalContext?.modalType === 'link ii' ? (
         <LinkIIModal />
+      ) : modalContext?.modalType === 'EmailSubscribe' ? (
+        <EmailSubscribeModal />
+      ) : modalContext?.modalType === 'EmailUnsubscribeConfirm' ? (
+        <EmailUnsubscribeConfirmModal />
       ) : null}
     </div>
   );

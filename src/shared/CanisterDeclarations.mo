@@ -84,6 +84,30 @@ module{
     public type RemovePublicationReturn = Result.Result<User, Text>;
     public type GetHandleByPrincipalReturn = Result.Result<?Text, Text>;
 
+    // Email subscription broadcast payload (mirrors User.EmailSubscription.PublishedArticlePayload).
+    public type PublishedArticleEmailPayload = {
+        postId: Text;
+        authorPrincipal: Text;
+        authorHandle: Text;
+        authorDisplayName: Text;
+        authorAvatar: Text;
+        publicationHandle: ?Text;
+        publicationDisplayName: ?Text;
+        publicationAvatar: ?Text;
+        title: Text;
+        subtitle: Text;
+        headerImage: Text;
+        contentHtml: Text;
+        isMembersOnly: Bool;
+        url: Text;
+        publishedAt: Int;
+    };
+    public type EmailBroadcastResult = Result.Result<{
+        totalRecipients: Nat;
+        batchesSent: Nat;
+        batchesFailed: Nat;
+    }, Text>;
+
     public type UserCanisterInterface = actor{
         getUserInternal : (userPrincipalId: Text) -> async ?User;
         getUserByHandle : query (handle : Text) -> async Result.Result<User, Text>;
@@ -110,6 +134,12 @@ module{
         getFollowersPrincipalIdsByPrincipalId : query (principalId: Text) -> async [Text];
         getAllUserPrincipals : query () -> async Result.Result<[Text], Text>;
         getNumberOfAllRegisteredUsers : query () -> async Nat;
+        // Email subscription
+        notifyAuthorArticlePublished : (
+            payload : PublishedArticleEmailPayload,
+            paidSubscriberPrincipalIds : [Text],
+            subscriptionTargetIds : [Text]
+        ) -> async EmailBroadcastResult;
     };
 
     public func getUserCanister() : UserCanisterInterface {

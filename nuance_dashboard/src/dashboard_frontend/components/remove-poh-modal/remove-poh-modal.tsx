@@ -34,7 +34,7 @@ export const RemovePohModal = () => {
             setHandle(t);
           }}
           value={handle}
-          defaultText={'Handle to remove...'}
+          defaultText={'User handle...'}
           width={'100%'}
           height={'40px'}
           fontSize={'14px'}

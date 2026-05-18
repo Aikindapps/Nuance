@@ -77,27 +77,9 @@ export const idlFactory = ({ IDL }) => {
     'handle' : IDL.Text,
     'postId' : IDL.Text,
   });
-  const PostKeyProperties__1 = IDL.Record({
-    'bucketCanisterId' : IDL.Text,
-    'created' : IDL.Text,
-    'principal' : IDL.Text,
-    'modified' : IDL.Text,
-    'views' : IDL.Text,
-    'publishedDate' : IDL.Text,
-    'claps' : IDL.Text,
-    'tags' : IDL.Vec(PostTagModel),
-    'isDraft' : IDL.Bool,
-    'category' : IDL.Text,
-    'handle' : IDL.Text,
-    'postId' : IDL.Text,
-  });
   const GetPostsByFollowers = IDL.Record({
     'totalCount' : IDL.Text,
-    'posts' : IDL.Vec(PostKeyProperties__1),
-  });
-  const PostTagModel__1 = IDL.Record({
-    'tagId' : IDL.Text,
-    'tagName' : IDL.Text,
+    'posts' : IDL.Vec(PostKeyProperties),
   });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
   const Result_5 = IDL.Variant({ 'ok' : PostKeyProperties, 'err' : IDL.Text });
@@ -329,7 +311,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(PostKeyProperties)],
         ['query'],
       ),
-    'getMyTags' : IDL.Func([], [IDL.Vec(PostTagModel__1)], ['query']),
+    'getMyTags' : IDL.Func([], [IDL.Vec(PostTagModel)], ['query']),
     'getNextPostId' : IDL.Func([], [Result_2], []),
     'getNextPostIdsDebug' : IDL.Func([IDL.Nat], [Result_2], []),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),

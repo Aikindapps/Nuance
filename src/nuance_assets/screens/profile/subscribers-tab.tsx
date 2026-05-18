@@ -112,7 +112,7 @@ const SubscribersTab: React.FC = () => {
             </div>
             <SubscribersChart data={chartData} />
             <p className='subscribers-table-info'>
-              These readers are currently subscribed to you. They have unlimited
+              These readers are currently supporting you. They have unlimited
               access to all of your content for a chosen period. Your
               subscribers are prompted to renew their memberships once the
               period has expired.
@@ -122,7 +122,7 @@ const SubscribersTab: React.FC = () => {
                 <thead>
                   <tr>
                     <th>READER</th>
-                    <th>SUBSCRIBED SINCE</th>
+                    <th>SUPPORTS SINCE</th>
                     <th>PERIOD</th>
                     <th>FEE PER PERIOD</th>
                     <th>EARNED TOTAL</th>

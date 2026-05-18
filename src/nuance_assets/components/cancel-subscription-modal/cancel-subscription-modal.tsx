@@ -55,7 +55,7 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
                     </div>
                     <div className='subscription-success-content'>
                         <p className='subscription-success-info'>
-                            You have canceled your subscription to <strong>@{handle}</strong>.
+                            You have stopped supporting <strong>@{handle}</strong>.
                             <br />
                         </p>
                     </div>
@@ -76,15 +76,15 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
                             <img src={darkTheme ? icons.EXIT_NOTIFICATIONS_DARK : icons.EXIT_NOTIFICATIONS} alt='Close subscriptions modal' />
                         </div>
                     </div>
-                    <h2 className='subscription-header'>Stop subscription to {isPublication ? 'Publication' : 'User'}</h2>
+                    <h2 className='subscription-header'>Stop supporting {isPublication ? 'Publication' : 'User'}</h2>
                     <div className='subscribee-info'>
                         <img className='cancel-subscription-profile-image' src={profileImage || images.DEFAULT_AVATAR} alt='profile' />
                         <img src={isPublication ? icons.STOP_SUBSCRIPTION : icons.CANCEL_SUBSCRIPTION_USER} alt='stop-subscription-icon' className='stop-subscription-publication-icon' />
                     </div>
                     <div className='subscription-modal-content'>
                         <p className='subscription-info'>
-                            You are about to cancel your subscription to the {isPublication ? 'publication of' : 'user'} <strong>@{handle}</strong>. <br /> <br />
-                            You will no longer have unlimited access to all its content. Effective from the expiration of your subscription. <br /> <br />
+                            You are about to cancel your support to the {isPublication ? 'publication of' : 'user'} <strong>@{handle}</strong>. <br /> <br />
+                            You will no longer have unlimited access to all its content. Effective from the expiration of your support. <br /> <br />
                             Is that what you want?
                         </p>
                     </div>
@@ -92,10 +92,10 @@ const CancelSubscriptionModal: React.FC<SubscriptionModalProps> = ({
                         {isLoading && <Loader />} {/* Display loader when loading */}
                         <div className='subscription-buttons'>
                             <Button type='button' styleType={{dark: 'navy-dark', light: 'navy'}} style={{ padding: '0px 16px', margin: '0px' }} onClick={() => modalContext?.closeModal()}>
-                                Keep subscription
+                                Keep supporting
                             </Button>
                             <Button type='button' styleType={{dark: 'white', light: 'white'}} style={{ padding: '0px 16px' }} onClick={handleCancelSubscription} disabled={isLoading}>
-                                Stop Subscription
+                                Stop supporting
                             </Button>
                         </div>
                     </div>

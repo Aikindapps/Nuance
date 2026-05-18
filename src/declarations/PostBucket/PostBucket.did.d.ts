@@ -31,23 +31,6 @@ export interface Comment {
   'avatar' : string,
   'postId' : string,
 }
-export interface Comment__1 {
-  'bucketCanisterId' : string,
-  'creator' : string,
-  'content' : string,
-  'commentId' : string,
-  'createdAt' : string,
-  'downVotes' : Array<string>,
-  'isCensored' : boolean,
-  'isVerified' : boolean,
-  'upVotes' : Array<string>,
-  'replies' : Array<Comment>,
-  'handle' : string,
-  'repliedCommentId' : [] | [string],
-  'editedAt' : [] | [string],
-  'avatar' : string,
-  'postId' : string,
-}
 export interface CommentsReturnType {
   'totalNumberOfComments' : string,
   'comments' : Array<Comment>,
@@ -117,7 +100,7 @@ export interface PostBucket {
   'getComment' : ActorMethod<[string], Result_5>,
   'getFrontendCanisterId' : ActorMethod<[], string>,
   'getKinicList' : ActorMethod<[], Result_9>,
-  'getList' : ActorMethod<[Array<string>], Array<PostBucketType__1>>,
+  'getList' : ActorMethod<[Array<string>], Array<PostBucketType>>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getMyApplauds' : ActorMethod<[], Array<Applaud>>,
@@ -131,15 +114,15 @@ export interface PostBucket {
   'getPostUrls' : ActorMethod<[], Result_2>,
   'getPostsByPostIds' : ActorMethod<
     [Array<string>, boolean],
-    Array<PostBucketType__1>
+    Array<PostBucketType>
   >,
   'getPostsByPostIdsMigration' : ActorMethod<
     [Array<string>],
-    Array<PostBucketType__1>
+    Array<PostBucketType>
   >,
   'getPublicationPosts' : ActorMethod<
     [Array<string>, string],
-    Array<PostBucketType__1>
+    Array<PostBucketType>
   >,
   'getReportedCommentIds' : ActorMethod<[], Array<string>>,
   'getReportedComments' : ActorMethod<[], Result_10>,
@@ -147,7 +130,7 @@ export interface PostBucket {
   'getTrustedCanisters' : ActorMethod<[], Result_9>,
   'getUserApplaudsByPrincipal' : ActorMethod<[string], Array<Applaud>>,
   'getUserPostIds' : ActorMethod<[string], Array<string>>,
-  'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType__1>>,
+  'getUserPosts' : ActorMethod<[string, boolean], Array<PostBucketType>>,
   'icrc10_supported_standards' : ActorMethod<[], Array<SupportedStandard>>,
   'icrc28_trusted_origins' : ActorMethod<[], Icrc28TrustedOriginsResponse>,
   'initializeBucketCanister' : ActorMethod<
@@ -217,29 +200,6 @@ export interface PostBucketType {
   'isPublication' : boolean,
   'postId' : string,
 }
-export interface PostBucketType__1 {
-  'url' : string,
-  'bucketCanisterId' : string,
-  'title' : string,
-  'created' : string,
-  'modified' : string,
-  'content' : string,
-  'wordCount' : string,
-  'isPremium' : boolean,
-  'publishedDate' : string,
-  'nftCanisterId' : [] | [string],
-  'isDraft' : boolean,
-  'creatorPrincipal' : string,
-  'category' : string,
-  'handle' : string,
-  'postOwnerPrincipal' : string,
-  'creatorHandle' : string,
-  'headerImage' : string,
-  'isMembersOnly' : boolean,
-  'subtitle' : string,
-  'isPublication' : boolean,
-  'postId' : string,
-}
 export interface PostSaveModel {
   'tagNames' : Array<string>,
   'title' : string,
@@ -270,7 +230,7 @@ export type Result = { 'ok' : CommentsReturnType } |
   { 'err' : string };
 export type Result_1 = { 'ok' : Post } |
   { 'err' : string };
-export type Result_10 = { 'ok' : Array<Comment__1> } |
+export type Result_10 = { 'ok' : Array<Comment> } |
   { 'err' : string };
 export type Result_11 = { 'ok' : Applaud } |
   { 'err' : string };
@@ -280,9 +240,9 @@ export type Result_3 = { 'ok' : null } |
   { 'err' : string };
 export type Result_4 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_5 = { 'ok' : Comment__1 } |
+export type Result_5 = { 'ok' : Comment } |
   { 'err' : string };
-export type Result_6 = { 'ok' : PostBucketType__1 } |
+export type Result_6 = { 'ok' : PostBucketType } |
   { 'err' : string };
 export type Result_7 = { 'ok' : [bigint, Array<string>] } |
   { 'err' : string };

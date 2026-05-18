@@ -89,7 +89,8 @@ service : {
   availableCycles: () -> (nat) query;
   collectCanisterMetrics: () -> ();
   getAdmins: () -> (Result_3) query;
-  getCanisterMetrics: (GetMetricsParameters) -> (opt CanisterMetrics) query;
+  getCanisterMetrics: (parameters: GetMetricsParameters) ->
+   (opt CanisterMetrics) query;
   getCanisterVersion: () -> (text) query;
   getCgUsers: () -> (Result_3) query;
   getKinicUrlList: () -> (KinicReturn);
@@ -99,16 +100,16 @@ service : {
   getTrustedPrincipals: () -> (Result_3) query;
   icrc10_supported_standards: () -> (vec SupportedStandard) query;
   icrc28_trusted_origins: () -> (Icrc28TrustedOriginsResponse);
-  initializeCanister: (text) -> (Result_2);
+  initializeCanister: (postCoreCai: text) -> (Result_2);
   isThereEnoughMemory: () -> (bool) query;
-  registerAdmin: (text) -> (Result);
-  registerCgUser: (text) -> (Result);
-  registerPlatformOperator: (text) -> (Result);
-  registerPrincipal: (text) -> (Result);
-  setMaxMemorySize: (nat) -> (Result_1);
-  unregisterAdmin: (text) -> (Result);
-  unregisterCgUser: (text) -> (Result);
-  unregisterPlatformOperator: (text) -> (Result);
-  unregisterPrincipal: (text) -> (Result);
-  validate: (reserved) -> (Validate);
+  registerAdmin: (id: text) -> (Result);
+  registerCgUser: (id: text) -> (Result);
+  registerPlatformOperator: (id: text) -> (Result);
+  registerPrincipal: (id: text) -> (Result);
+  setMaxMemorySize: (newValue: nat) -> (Result_1);
+  unregisterAdmin: (id: text) -> (Result);
+  unregisterCgUser: (id: text) -> (Result);
+  unregisterPlatformOperator: (id: text) -> (Result);
+  unregisterPrincipal: (id: text) -> (Result);
+  validate: (input: reserved) -> (Validate);
 }

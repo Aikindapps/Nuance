@@ -306,7 +306,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
       );
       return (
         <span>
-          You <span className='bold'>subscribed</span> to the{' '}
+          You <span className='bold'>support</span> the{' '}
           {content.isPublication ? 'publication ' : 'account '}{' '}
           {
             <span
@@ -552,7 +552,7 @@ const NotificationsSidebar: React.FC<NotificationsSidebarProps> = ({
           >
             {subscriberHandle}
           </span>{' '}
-          has <span className='bold'>subscribed</span> to you! (
+          has <span className='bold'>supported</span> you! (
           {convertSubscriptionTimeInterval(content.subscriptionTimeInterval)})
         </span>
       );

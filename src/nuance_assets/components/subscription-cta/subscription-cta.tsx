@@ -23,7 +23,7 @@ const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ onOpen }) => {
             <div className={darkTheme ? "subscription-card dark" : "subscription-card"}>
                 <div className="badge">NEW!</div>
                 <img src={icons.SUBSCRIPTION_STAR_ICON} alt="Star Icon" className="star-icon-cta" />
-                <p>Subscribe to this publication and get unlimited access to all <a href='/' >membership content</a> for a periodical fee!</p>
+                <p>Support this publication and get unlimited access to all <a href='/' >membership content</a> for a periodical fee!</p>
                 <Button
                     className={{dark: 'subscription-cta-navy-button', light:'subscription-cta-navy-button'}}
                     styleType={{dark: 'navy-dark', light: 'navy'}}
@@ -31,7 +31,7 @@ const SubscriptionCta: React.FC<SubscriptionCtaProps> = ({ onOpen }) => {
                     style={ { width: '100%' } }
                     onClick={() => handleOpen()}
                 >
-                    Subscribe now!
+                    Support now!
                 </Button>
             </div>
         </div >

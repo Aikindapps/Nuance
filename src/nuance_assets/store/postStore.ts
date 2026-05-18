@@ -59,7 +59,6 @@ import {
   Applaud,
   Comment,
   PostBucketType,
-  PostBucketType__1,
   SaveCommentModel,
 } from '../../../src/declarations/PostBucket/PostBucket.did';
 import Comments from '../components/comments/comments';
