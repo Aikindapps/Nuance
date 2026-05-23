@@ -41,6 +41,9 @@ actor Subscription {
         lifeTimeFee: ?Text; //stored as Nat, served as Text
         isSubscriptionActive: Bool;
         writerSubscriptions: [SubscriptionEvent];
+        stripeAccountId: ?Text;
+        stripeIsActive: Bool;
+        stripePricing: [(SubscriptionTimeInterval, Text, Text)]; //(interval, priceId, usdAmountCents)
     };
     //all the details of the reader's subscription history
     type ReaderSubscriptionDetails = {
@@ -56,6 +59,12 @@ actor Subscription {
         annuallyFee: ?Nat;
         lifeTimeFee: ?Nat;
     };
+    //distinguishes NUA token payments from Stripe fiat payments
+    type PaymentMethod = {
+        #Token;
+        #Fiat: { stripeSubscriptionId: Text; usdAmountCents: Text };
+    };
+
     //single subscription event
     type SubscriptionEvent = {
         subscriptionEventId: Text;
@@ -66,6 +75,7 @@ actor Subscription {
         startTime: Int;
         endTime: Int;
         isWriterSubscriptionActive: Bool;
+        paymentMethod: ?PaymentMethod;
     };
 
     //payment request returned to the reader
@@ -143,6 +153,32 @@ actor Subscription {
     //key: subscriptionEventId, value: [(receiver account principal id, receiver subaccount, amount, memo)]
     stable var pendingTokenDisbursementsArray = Map.new<Text, [(Text, ?Blob, Nat, ?Blob)]>();
 
+    //#region - Stripe integration state
+
+    //the IC principal of the trusted proxy bridge - only this principal can call Stripe-related update methods
+    stable var trustedProxyPrincipal : Text = "";
+
+    //key: principalId, value: (nonce, timestamp) - used for IC-based proxy authorization
+    stable var proxyAuthorizationStore = Map.new<Text, (Text, Int)>();
+
+    //key: writer principal id, value: Stripe Express Account ID (acct_...)
+    stable var writerPrincipalIdToStripeAccountId = Map.new<Text, Text>();
+    //key: writer principal id, value: whether Stripe subscription is active for this writer
+    stable var writerPrincipalIdToStripeIsActive = Map.new<Text, Bool>();
+    //key: writer principal id, value: [(interval, priceId, usdAmountCents)]
+    stable var writerPrincipalIdToStripePricing = Map.new<Text, [(SubscriptionTimeInterval, Text, Text)]>();
+
+    //key: reader principal id, value: Stripe Customer ID (cus_...)
+    stable var readerPrincipalIdToStripeCustomerId = Map.new<Text, Text>();
+
+    //key: subscription event id, value: PaymentMethod (#Token or #Fiat)
+    stable var subscriptionEventIdToPaymentMethod = Map.new<Text, PaymentMethod>();
+    //key: subscription event id, value: Stripe Subscription ID (sub_...) - used for renewal matching
+    stable var subscriptionEventIdToStripeSubId = Map.new<Text, Text>();
+
+    //key: Stripe event id (evt_...), value: timestamp when processed - used for idempotency
+    stable var processedStripeEventIds = Map.new<Text, Int>();
+
     //#region - public query functions
 
     //enables PostBucket canister to determine if the reader is an active subscriber of the writer
@@ -160,7 +196,9 @@ actor Subscription {
 
     //enables PostBucket canister to determine if the reader is an active subscriber of the writer
     public shared query func isWriterActivatedSubscription(writerPrincipalId: Text) : async Bool {
-        Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
+        let nuaActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
+        let stripeActive = Option.get(Map.get(writerPrincipalIdToStripeIsActive, thash, writerPrincipalId), false);
+        nuaActive or stripeActive
     };
 
     // Bulk query: returns the principal ids of all currently-active paid
@@ -599,31 +637,37 @@ actor Subscription {
                 };
             };
 
-            //if the subscription has expired, remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
-            //also send the notification
+            //if the subscription has expired, handle based on payment method
             switch(latestSubscriptionEvent) {
                 case(?event) {
                     if(event.endTime < now){
-                        notifications.add(event.readerPrincipalId, #ReaderExpiredSubscription({
-                            amountOfTokens = event.paymentFee;
-                            isPublication = Map.get(publicationCanisterIdsMap, thash, event.writerPrincipalId) != null;
-                            subscribedWriterPrincipalId = event.writerPrincipalId;
-                            subscriptionEndTime = Int.toText(event.endTime);
-                            subscriptionStartTime = Int.toText(event.startTime);
-                            subscriptionTimeInterval = event.subscriptionTimeInterval;
-                        }));
-
-                        //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
-                        let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
-                            writerPrincipalId != principalId
-                        });
-                        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                        switch(event.paymentMethod) {
+                            case(?#Fiat(_)) {
+                                //Stripe subscription: skip notification
+                                //cancelStripeSubscription handles cleanup when Stripe confirms deletion
+                            };
+                            case(_) {
+                                //NUA or legacy subscription: send notification and clean up
+                                notifications.add(event.readerPrincipalId, #ReaderExpiredSubscription({
+                                    amountOfTokens = event.paymentFee;
+                                    isPublication = Map.get(publicationCanisterIdsMap, thash, event.writerPrincipalId) != null;
+                                    subscribedWriterPrincipalId = event.writerPrincipalId;
+                                    subscriptionEndTime = Int.toText(event.endTime);
+                                    subscriptionStartTime = Int.toText(event.startTime);
+                                    subscriptionTimeInterval = event.subscriptionTimeInterval;
+                                }));
+                                let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                                    writerPrincipalId != principalId
+                                });
+                                Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                            };
+                        };
                     }
                     else{
                         //the subscription has not been expired yet
                         //nothing to do
                     };
-                    
+
                 };
                 case(null) {
                     //not possible to be here
@@ -642,6 +686,22 @@ actor Subscription {
             return #err("Canister reached the maximum memory threshold. Please try again later.");
         };
         let readerPrincipalId = Principal.toText(caller);
+
+        //check if the active subscription to this writer is a Stripe subscription
+        let readerEventIds = Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, readerPrincipalId), []);
+        let nowCheck = U.epochTime();
+        for (eventId in readerEventIds.vals()) {
+            let eventWriterId = Option.get(Map.get(subscriptionEventIdToWriterPrincipalId, thash, eventId), "");
+            let eventEndTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
+            if (eventWriterId == writerPrincipalId and nowCheck < eventEndTime) {
+                switch(Map.get(subscriptionEventIdToPaymentMethod, thash, eventId)) {
+                    case(?#Fiat(_)) {
+                        return #err("This is a Stripe subscription. Please use the Stripe billing portal to cancel.");
+                    };
+                    case(_) {};
+                };
+            };
+        };
         let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId), []);
 
         if(U.arrayContainsGeneric(writerPrincipalIds, writerPrincipalId, Text.equal)){
@@ -999,6 +1059,9 @@ actor Subscription {
             writerSubscriptions = Array.map<Text, SubscriptionEvent>(Option.get(Map.get(writerPrincipalIdToSubscriptionEventIds, thash, principal), []), func(subscriptionEventId : Text) : SubscriptionEvent {
                 buildSubscriptionEvent(subscriptionEventId)
             });
+            stripeAccountId = Map.get(writerPrincipalIdToStripeAccountId, thash, principal);
+            stripeIsActive = Option.get(Map.get(writerPrincipalIdToStripeIsActive, thash, principal), false);
+            stripePricing = Option.get(Map.get(writerPrincipalIdToStripePricing, thash, principal), []);
         }
     };
 
@@ -1013,6 +1076,9 @@ actor Subscription {
             paymentReceiverPrincipalId = Principal.toText(Option.get(Map.get(writerPrincipalIdToPaymentReceiverAddress, thash, principal), Principal.fromText(principal)));
             isSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal), false);
             writerSubscriptions = [];
+            stripeAccountId = Map.get(writerPrincipalIdToStripeAccountId, thash, principal);
+            stripeIsActive = Option.get(Map.get(writerPrincipalIdToStripeIsActive, thash, principal), false);
+            stripePricing = Option.get(Map.get(writerPrincipalIdToStripePricing, thash, principal), []);
         }
     };
 
@@ -1041,6 +1107,7 @@ actor Subscription {
             startTime = Option.get(Map.get(subscriptionEventIdToStartTime, thash, eventId), 0);
             endTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
             isWriterSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
+            paymentMethod = Map.get(subscriptionEventIdToPaymentMethod, thash, eventId);
         }
     };
 
@@ -1122,34 +1189,41 @@ actor Subscription {
                     };
                 };
 
-                //if the subscription has expired, remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
-                //also send the notification
+                //if the subscription has expired, handle based on payment method
                 switch(latestSubscriptionEvent) {
                     case(?event) {
                         if(event.endTime < now){
-                            notifications.add(event.readerPrincipalId, #ReaderExpiredSubscription({
-                                amountOfTokens = event.paymentFee;
-                                isPublication = Map.get(publicationCanisterIdsMap, thash, event.writerPrincipalId) != null;
-                                subscribedWriterPrincipalId = event.writerPrincipalId;
-                                subscriptionEndTime = Int.toText(event.endTime);
-                                subscriptionStartTime = Int.toText(event.startTime);
-                                subscriptionTimeInterval = event.subscriptionTimeInterval;
-                            }));
-
-                            //remove the writer principal id from the readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds map
-                            let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
-                                writerPrincipalId != principalId
-                            });
-                            Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                            switch(event.paymentMethod) {
+                                case(?#Fiat(_)) {
+                                    //Stripe subscription: skip notification - Stripe handles billing emails
+                                    //do NOT remove from notStopped list - cancelStripeSubscription handles that
+                                    //when Stripe confirms deletion via webhook
+                                };
+                                case(_) {
+                                    //NUA or legacy subscription: send notification and clean up
+                                    notifications.add(event.readerPrincipalId, #ReaderExpiredSubscription({
+                                        amountOfTokens = event.paymentFee;
+                                        isPublication = Map.get(publicationCanisterIdsMap, thash, event.writerPrincipalId) != null;
+                                        subscribedWriterPrincipalId = event.writerPrincipalId;
+                                        subscriptionEndTime = Int.toText(event.endTime);
+                                        subscriptionStartTime = Int.toText(event.startTime);
+                                        subscriptionTimeInterval = event.subscriptionTimeInterval;
+                                    }));
+                                    let filteredWriterPrincipalIds = Array.filter(writerPrincipalIds, func(principalId : Text) : Bool {
+                                        writerPrincipalId != principalId
+                                    });
+                                    Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerPrincipalId, filteredWriterPrincipalIds);
+                                };
+                            };
                         }
                         else{
                             //the subscription has not been expired yet
                             //nothing to do
                         };
-                    
+
                     };
                     case(null) {
-                        //not possible to be heref
+                        //not possible to be here
                         //nothing to do
                     };
                 };
@@ -1195,6 +1269,22 @@ actor Subscription {
         } catch (_) {
         };
 
+        //two-pass cleanup: proxyAuthorizationStore entries older than 5 minutes
+        let fiveMinNs : Int = 300_000_000_000;
+        let authToDelete = Buffer.Buffer<Text>(0);
+        for ((principalId, (_, ts)) in Map.entries(proxyAuthorizationStore)) {
+            if (Time.now() - ts > fiveMinNs) { authToDelete.add(principalId); };
+        };
+        for (p in authToDelete.vals()) { Map.delete(proxyAuthorizationStore, thash, p); };
+
+        //two-pass cleanup: processedStripeEventIds entries older than 90 days
+        let ninetyDaysNs : Int = 7_776_000_000_000_000;
+        let stripeToDelete = Buffer.Buffer<Text>(0);
+        for ((eventId, ts) in Map.entries(processedStripeEventIds)) {
+            if (Time.now() - ts > ninetyDaysNs) { stripeToDelete.add(eventId); };
+        };
+        for (e in stripeToDelete.vals()) { Map.delete(processedStripeEventIds, thash, e); };
+
         let now = Time.now();
         lastTimerCalled := now;
 
@@ -1202,6 +1292,206 @@ actor Subscription {
         //call every minute
         let next = Nat64.fromIntWrap(now) + 60_000_000_000;
         setGlobalTimer(next); // absolute time in nanoseconds
+    };
+
+    //#region - Stripe integration methods
+
+    private func isProxyCaller(caller: Principal) : Bool {
+        Principal.toText(caller) == trustedProxyPrincipal
+    };
+
+    private func isSameInterval(a: SubscriptionTimeInterval, b: SubscriptionTimeInterval) : Bool {
+        switch(a, b) {
+            case (#Weekly, #Weekly) { true };
+            case (#Monthly, #Monthly) { true };
+            case (#Annually, #Annually) { true };
+            case (#LifeTime, #LifeTime) { true };
+            case (_, _) { false };
+        }
+    };
+
+    //admin sets the trusted proxy bridge principal - only this principal can call Stripe update methods
+    public shared ({caller}) func setTrustedProxyPrincipal(principal: Text) : async Result.Result<Text, Text> {
+        if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+            return #err("Unauthorized");
+        };
+        trustedProxyPrincipal := principal;
+        #ok(trustedProxyPrincipal)
+    };
+
+    public shared query func getTrustedProxyPrincipal() : async Text {
+        trustedProxyPrincipal
+    };
+
+    //frontend calls this before making any proxy request
+    //IC protocol guarantees the caller is authenticated - nonce stored with timestamp for proxy to verify
+    public shared ({caller}) func authorizeForProxy(nonce: Text) : async () {
+        Map.set(proxyAuthorizationStore, thash, Principal.toText(caller), (nonce, Time.now()));
+    };
+
+    //proxy calls this query to verify the frontend authorized the action within the last 2 minutes
+    public shared query func checkProxyAuthorization(principalId: Text, nonce: Text) : async Bool {
+        let twoMinNs : Int = 120_000_000_000;
+        switch(Map.get(proxyAuthorizationStore, thash, principalId)) {
+            case(?(storedNonce, timestamp)) {
+                storedNonce == nonce and (Time.now() - timestamp) < twoMinNs
+            };
+            case(null) { false };
+        };
+    };
+
+    //proxy calls this after a successful high-value operation (e.g. onboard) to consume the nonce and prevent replay
+    public shared ({caller}) func consumeProxyAuthorization(principalId: Text) : async () {
+        if (not isProxyCaller(caller)) { return };
+        Map.delete(proxyAuthorizationStore, thash, principalId);
+    };
+
+    //proxy calls this after creating a Stripe Express account for the writer
+    public shared ({caller}) func updateStripeAccount(writerPrincipalId: Text, stripeAccountId: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+        Map.set(writerPrincipalIdToStripeAccountId, thash, writerPrincipalId, stripeAccountId);
+        Map.set(writerPrincipalIdToStripeIsActive, thash, writerPrincipalId, true);
+        #ok(buildWriterSubscriptionDetails(writerPrincipalId))
+    };
+
+    //proxy calls this after creating a Stripe Price for the writer - upserts by interval
+    public shared ({caller}) func updateStripePriceTier(writerPrincipalId: Text, interval: SubscriptionTimeInterval, priceId: Text, usdAmountCents: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+        let existing = Option.get(Map.get(writerPrincipalIdToStripePricing, thash, writerPrincipalId), []);
+        let filtered = Array.filter<(SubscriptionTimeInterval, Text, Text)>(existing, func(entry) {
+            not isSameInterval(entry.0, interval)
+        });
+        let updatedBuffer = Buffer.fromArray<(SubscriptionTimeInterval, Text, Text)>(filtered);
+        updatedBuffer.add((interval, priceId, usdAmountCents));
+        Map.set(writerPrincipalIdToStripePricing, thash, writerPrincipalId, Buffer.toArray(updatedBuffer));
+        #ok(buildWriterSubscriptionDetails(writerPrincipalId))
+    };
+
+    //proxy calls this when a writer disconnects their Stripe account
+    public shared ({caller}) func deactivateStripeAccount(writerPrincipalId: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+        Map.set(writerPrincipalIdToStripeIsActive, thash, writerPrincipalId, false);
+        #ok(buildWriterSubscriptionDetails(writerPrincipalId))
+    };
+
+    //proxy calls this when checkout.session.completed or invoice.paid webhook fires
+    //stripeEventId (evt_...) is used for idempotency
+    //if an existing event with the same stripeSubId is found, its endTime is updated (renewal)
+    //otherwise a new subscription event is created
+    public shared ({caller}) func syncStripeSubscription(
+        stripeEventId: Text,
+        writerId: Text,
+        readerId: Text,
+        interval: SubscriptionTimeInterval,
+        stripeSubId: Text,
+        stripeCustomerId: Text,
+        periodEnd: Int,
+        usdAmountCents: Text
+    ) : async Result.Result<(), Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+
+        switch(Map.get(processedStripeEventIds, thash, stripeEventId)) {
+            case(?_) { return #ok() };
+            case(null) {};
+        };
+
+        Map.set(readerPrincipalIdToStripeCustomerId, thash, readerId, stripeCustomerId);
+
+        //search reader's events for an existing one matching this stripeSubId (renewal detection)
+        let readerEventIds = Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, readerId), []);
+        var existingEventId : ?Text = null;
+        for (eventId in readerEventIds.vals()) {
+            switch(Map.get(subscriptionEventIdToStripeSubId, thash, eventId)) {
+                case(?storedSubId) {
+                    if (storedSubId == stripeSubId) { existingEventId := ?eventId; };
+                };
+                case(null) {};
+            };
+        };
+
+        switch(existingEventId) {
+            case(?eventId) {
+                //renewal: update endTime and the stored payment amount
+                Map.set(subscriptionEventIdToEndTime, thash, eventId, periodEnd);
+                Map.set(subscriptionEventIdToPaymentMethod, thash, eventId, #Fiat({ stripeSubscriptionId = stripeSubId; usdAmountCents = usdAmountCents }));
+            };
+            case(null) {
+                //new subscription: create all the flat map entries
+                let eventId = Nat.toText(subscriptionEventCounter);
+                subscriptionEventCounter += 1;
+
+                Map.set(subscriptionEventIdToWriterPrincipalId, thash, eventId, writerId);
+                Map.set(subscriptionEventIdToReaderPrincipalId, thash, eventId, readerId);
+                Map.set(subscriptionEventIdToSubscriptionTimeInterval, thash, eventId, interval);
+                Map.set(subscriptionEventIdToPaymentFee, thash, eventId, 0);
+                Map.set(subscriptionEventIdToStartTime, thash, eventId, U.epochTime());
+                Map.set(subscriptionEventIdToEndTime, thash, eventId, periodEnd);
+                Map.set(subscriptionEventIdToPaymentMethod, thash, eventId, #Fiat({ stripeSubscriptionId = stripeSubId; usdAmountCents = usdAmountCents }));
+                Map.set(subscriptionEventIdToStripeSubId, thash, eventId, stripeSubId);
+
+                let writerEvents = Option.get(Map.get(writerPrincipalIdToSubscriptionEventIds, thash, writerId), []);
+                let writerEventsBuffer = Buffer.fromArray<Text>(writerEvents);
+                writerEventsBuffer.add(eventId);
+                Map.set(writerPrincipalIdToSubscriptionEventIds, thash, writerId, Buffer.toArray(writerEventsBuffer));
+
+                let readerEvents = Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, readerId), []);
+                let readerEventsBuffer = Buffer.fromArray<Text>(readerEvents);
+                readerEventsBuffer.add(eventId);
+                Map.set(readerPrincipalIdToSubscriptionEventIds, thash, readerId, Buffer.toArray(readerEventsBuffer));
+
+                let readerNotStopped = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId), []);
+                let readerNotStoppedBuffer = Buffer.fromArray<Text>(readerNotStopped);
+                readerNotStoppedBuffer.add(writerId);
+                Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId, Buffer.toArray(readerNotStoppedBuffer));
+            };
+        };
+
+        Map.set(processedStripeEventIds, thash, stripeEventId, Time.now());
+        #ok()
+    };
+
+    //proxy calls this when customer.subscription.deleted or invoice.payment_failed webhook fires
+    public shared ({caller}) func cancelStripeSubscription(
+        stripeEventId: Text,
+        writerId: Text,
+        readerId: Text,
+        stripeSubId: Text
+    ) : async Result.Result<(), Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+
+        switch(Map.get(processedStripeEventIds, thash, stripeEventId)) {
+            case(?_) { return #ok() };
+            case(null) {};
+        };
+
+        //find the subscription event by stripeSubId
+        let readerEventIds = Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, readerId), []);
+        for (eventId in readerEventIds.vals()) {
+            switch(Map.get(subscriptionEventIdToStripeSubId, thash, eventId)) {
+                case(?storedSubId) {
+                    if (storedSubId == stripeSubId) {
+                        Map.set(subscriptionEventIdToEndTime, thash, eventId, U.epochTime());
+                    };
+                };
+                case(null) {};
+            };
+        };
+
+        //remove writer from reader's not-stopped list
+        let writerPrincipalIds = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId), []);
+        let filtered = Array.filter(writerPrincipalIds, func(p : Text) : Bool { p != writerId });
+        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId, filtered);
+
+        Map.set(processedStripeEventIds, thash, stripeEventId, Time.now());
+        #ok()
+    };
+
+    public shared query func getStripeAccountId(writerPrincipalId: Text) : async ?Text {
+        Map.get(writerPrincipalIdToStripeAccountId, thash, writerPrincipalId)
+    };
+
+    public shared query func getStripeCustomerId(readerPrincipalId: Text) : async ?Text {
+        Map.get(readerPrincipalIdToStripeCustomerId, thash, readerPrincipalId)
     };
 
     //generic functions which needs to be implemented in all Nuance canisters
