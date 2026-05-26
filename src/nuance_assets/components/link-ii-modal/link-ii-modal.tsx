@@ -13,9 +13,9 @@ export const LinkIIModal = () => {
   const modalContext = useContext(ModalContext);
   const darkTheme = useTheme();
 
-  const { user, proceedWithVerification } = useUserStore((state) => ({
+  const { user, startDecideIdVerification } = useUserStore((state) => ({
     user: state.user,
-    proceedWithVerification: state.proceedWithVerification,
+    startDecideIdVerification: state.startDecideIdVerification,
   }));
 
   const { requestLinkInternetIdentity } = useAuthStore((state) => ({
@@ -31,8 +31,11 @@ export const LinkIIModal = () => {
       return;
     }
 
-    // proceed with verification
-    await proceedWithVerification(iiPrincipal);
+    // With the DecideID OIDC flow the user re-authenticates against
+    // DecideID itself (which sits on II), so we no longer need the
+    // Nuance-side linked principal for verification — kick off the
+    // OIDC redirect once linking is complete.
+    await startDecideIdVerification();
   };
 
   const [loading, setLoading] = useState(false);

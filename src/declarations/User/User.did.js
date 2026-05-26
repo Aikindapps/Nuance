@@ -33,6 +33,8 @@ export const idlFactory = ({ IDL }) => {
   });
   const AddPublicationReturn = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
   const Result_2 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
+  const Result_16 = IDL.Variant({ 'ok' : IDL.Opt(IDL.Text), 'err' : IDL.Text });
+  const Result_6 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_1 = IDL.Variant({ 'ok' : User, 'err' : IDL.Text });
   const Result_5 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
@@ -141,7 +143,6 @@ export const idlFactory = ({ IDL }) => {
     'err' : IDL.Text,
   });
   const Result_10 = IDL.Variant({ 'ok' : UserListItem, 'err' : IDL.Text });
-  const Result_6 = IDL.Variant({ 'ok' : IDL.Bool, 'err' : IDL.Text });
   const SupportedStandard = IDL.Record({ 'url' : IDL.Text, 'name' : IDL.Text });
   const Icrc28TrustedOriginsResponse = IDL.Record({
     'trusted_origins' : IDL.Vec(IDL.Text),
@@ -238,12 +239,21 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'adminAirDrop' : IDL.Func([IDL.Float64], [Result_2], []),
+    'adminGetDecideIdClientId' : IDL.Func([], [Result_16], ['query']),
+    'adminIsDecideIdClientSecretSet' : IDL.Func([], [Result_6], ['query']),
+    'adminSetDecideIdClientId' : IDL.Func([IDL.Opt(IDL.Text)], [Result_3], []),
+    'adminSetDecideIdClientSecret' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [Result_3],
+        [],
+      ),
     'availableCycles' : IDL.Func([], [IDL.Nat], ['query']),
     'blockUserFromClaiming' : IDL.Func([IDL.Text], [Result_3], []),
     'checkMyClaimNotification' : IDL.Func([], [], []),
     'claimRestrictedTokens' : IDL.Func([], [Result_1], []),
     'clearAllMyFollowers' : IDL.Func([], [IDL.Text], []),
     'collectCanisterMetrics' : IDL.Func([], [], []),
+    'createDecideIdState' : IDL.Func([IDL.Text], [Result_2], []),
     'deleteConfirmedLinkings' : IDL.Func([], [Result_3], []),
     'deleteUser' : IDL.Func([IDL.Text], [Result_5], []),
     'dumpUsers' : IDL.Func([], [IDL.Text], ['query']),
@@ -470,7 +480,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'validate' : IDL.Func([IDL.Reserved], [Validate], []),
     'verifyEmailSubscription' : IDL.Func([IDL.Text], [Result], []),
-    'verifyPoh' : IDL.Func([IDL.Text], [VerifyResult], []),
+    'verifyPoh' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [VerifyResult], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

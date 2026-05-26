@@ -1,62 +1,26 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import './_verify-profile-modal.scss';
 import { Context as ModalContext } from '../../contextes/ModalContext';
 import { useTheme } from '../../contextes/ThemeContext';
 import { IoCloseOutline } from 'react-icons/io5';
-import { useAuthStore, usePostStore, useUserStore } from '../../store';
-import { colors, icons, images } from '../../shared/constants';
+import { useUserStore } from '../../store';
+import { colors } from '../../shared/constants';
 import Button from '../../UI/Button/Button';
-import { LuLoader2 } from 'react-icons/lu';
-import { Principal } from '@dfinity/principal';
 
 export const VerifyProfileModal = () => {
   const modalContext = useContext(ModalContext);
   const darkTheme = useTheme();
 
-  const { user, getLinkedPrincipal, verifyPoh, proceedWithVerification } =
-    useUserStore((state) => ({
-      user: state.user,
-      getLinkedPrincipal: state.getLinkedPrincipal,
-      verifyPoh: state.verifyPoh,
-      proceedWithVerification: state.proceedWithVerification,
-    }));
+  const startDecideIdVerification = useUserStore(
+    (state) => state.startDecideIdVerification,
+  );
 
-  const { loginMethod, getUserWallet } = useAuthStore((state) => ({
-    loginMethod: state.loginMethod,
-    getUserWallet: state.getUserWallet,
-  }));
-
+  // Kicks off the DecideID OIDC flow. The store function redirects the
+  // browser to id.decideai.xyz and never returns, so any code after
+  // this call only runs if the redirect failed to start.
   const verifyUserHumanity = async () => {
     try {
-      const userWallet = getUserWallet();
-
-      const currentLoginMethod = loginMethod;
-      let principalToUse: Principal;
-
-      if (currentLoginMethod === 'ii') {
-        // user is logged in via II
-        principalToUse = Principal.fromText((await userWallet).principal);
-        await proceedWithVerification(principalToUse);
-      } else {
-        // user is not logged in via II
-        // check if they have linked II principal
-        const linkedPrincipalResult = await getLinkedPrincipal(
-          (
-            await userWallet
-          ).principal
-        );
-
-        if (linkedPrincipalResult === undefined) {
-          // no linked II principal
-          // open link ii
-          modalContext?.openModal('link ii');
-          return;
-        } else {
-          // user has linked II principal
-          principalToUse = Principal.fromText(linkedPrincipalResult);
-          await proceedWithVerification(principalToUse);
-        }
-      }
+      await startDecideIdVerification();
     } catch (error) {
       console.error('Error during PoH verification:', error);
     }

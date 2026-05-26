@@ -122,6 +122,8 @@ export type Result_14 = { 'ok' : Array<EmailSubscriber> } |
   { 'err' : string };
 export type Result_15 = { 'ok' : Array<[string, bigint]> } |
   { 'err' : string };
+export type Result_16 = { 'ok' : [] | [string] } |
+  { 'err' : string };
 export type Result_2 = { 'ok' : string } |
   { 'err' : string };
 export type Result_3 = { 'ok' : null } |
@@ -223,12 +225,17 @@ export interface _SERVICE {
     AddPublicationReturn
   >,
   'adminAirDrop' : ActorMethod<[number], Result_2>,
+  'adminGetDecideIdClientId' : ActorMethod<[], Result_16>,
+  'adminIsDecideIdClientSecretSet' : ActorMethod<[], Result_6>,
+  'adminSetDecideIdClientId' : ActorMethod<[[] | [string]], Result_3>,
+  'adminSetDecideIdClientSecret' : ActorMethod<[[] | [string]], Result_3>,
   'availableCycles' : ActorMethod<[], bigint>,
   'blockUserFromClaiming' : ActorMethod<[string], Result_3>,
   'checkMyClaimNotification' : ActorMethod<[], undefined>,
   'claimRestrictedTokens' : ActorMethod<[], Result_1>,
   'clearAllMyFollowers' : ActorMethod<[], string>,
   'collectCanisterMetrics' : ActorMethod<[], undefined>,
+  'createDecideIdState' : ActorMethod<[string], Result_2>,
   'deleteConfirmedLinkings' : ActorMethod<[], Result_3>,
   'deleteUser' : ActorMethod<[string], Result_5>,
   'dumpUsers' : ActorMethod<[], string>,
@@ -364,7 +371,7 @@ export interface _SERVICE {
   >,
   'validate' : ActorMethod<[any], Validate>,
   'verifyEmailSubscription' : ActorMethod<[string], Result>,
-  'verifyPoh' : ActorMethod<[string], VerifyResult>,
+  'verifyPoh' : ActorMethod<[string, string, string], VerifyResult>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

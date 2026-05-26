@@ -58,6 +58,9 @@ const CategoryLanding = lazy(
 );
 const Wallet = lazy(() => import('./screens/profile/wallet'));
 const VerifyEmail = lazy(() => import('./screens/verify-email/verify-email'));
+const DecideIdCallback = lazy(
+  () => import('./screens/decideid-callback/decideid-callback')
+);
 const Unsubscribe = lazy(() => import('./screens/unsubscribe/unsubscribe'));
 import { Context } from './contextes/Context';
 import Followers from './screens/profile/followers';
@@ -82,6 +85,7 @@ const Routes = () => {
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
     { path: '/verify-email', element: <VerifyEmail /> },
+    { path: '/decideid-callback', element: <DecideIdCallback /> },
     { path: '/unsubscribe', element: <Unsubscribe /> },
     { path: '/:handle', element: <Profile /> },
     { path: '/user/:handle', element: <Profile /> },

@@ -135,6 +135,11 @@ type Result_2 =
    err: text;
    ok: text;
  };
+type Result_16 = 
+ variant {
+   err: text;
+   ok: opt text;
+ };
 type Result_15 = 
  variant {
    err: text;
@@ -335,12 +340,27 @@ service : {
   addPublication: (publication: PublicationObject, callerId: text) ->
    (AddPublicationReturn);
   adminAirDrop: (amount: float64) -> (Result_2);
+  /// Admin: read back the configured client_id. The secret is never
+  /// returned by any query — rotate it by setting a new value.
+  adminGetDecideIdClientId: () -> (Result_16) query;
+  /// Whether a client_secret has been configured. Exposed (without the
+  /// value) so the admin UI can show configuration status.
+  adminIsDecideIdClientSecretSet: () -> (Result_6) query;
+  /// Admin: set the DecideID OIDC client_id. Pass null to clear.
+  adminSetDecideIdClientId: (value: opt text) -> (Result_3);
+  /// Admin: set the DecideID OIDC client_secret. Pass null to clear.
+  adminSetDecideIdClientSecret: (value: opt text) -> (Result_3);
   availableCycles: () -> (nat) query;
   blockUserFromClaiming: (handle: text) -> (Result_3);
   checkMyClaimNotification: () -> ();
   claimRestrictedTokens: () -> (Result_1);
   clearAllMyFollowers: () -> (text);
   collectCanisterMetrics: () -> ();
+  /// Begin an OIDC authorization flow. Returns a random `state` value
+  /// the frontend must include in the authorize redirect; the canister
+  /// remembers it so only the same caller (with the same redirect URI)
+  /// can later redeem the resulting code.
+  createDecideIdState: (redirectUri: text) -> (Result_2);
   deleteConfirmedLinkings: () -> (Result_3);
   deleteUser: (principalId: text) -> (Result_5);
   dumpUsers: () -> (text) query;
@@ -531,5 +551,12 @@ service : {
   /// the expected error, but calling twice during the valid window is
   /// safe (no-ops on second call because the token is gone).
   verifyEmailSubscription: (token: text) -> (Result);
-  verifyPoh: (credentialJWT: text) -> (VerifyResult);
+  /// Exchange a DecideID authorization code for a userinfo response,
+  /// and on `verified=true` mark the calling user as PoH-verified.
+  /// 
+  /// The legacy VerifyResult shape is preserved so the frontend store
+  /// can keep its `'Ok' in result` / `result.Err` branching. The
+  /// `timestamp` field is set to the canister time when verification
+  /// succeeded — we no longer have a credential-issuance timestamp.
+  verifyPoh: (code: text, state: text, redirectUri: text) -> (VerifyResult);
 }

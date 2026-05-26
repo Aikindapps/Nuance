@@ -6,7 +6,10 @@ import ENV "env";
 import NotificationTypes "../NotificationsV3/types";
 module{
 
-    //****************VERIFY_POH_CANISTER****************
+    //****************VERIFY_POH (DecideID OIDC)****************
+    // Result shape kept for compatibility with the frontend store; the
+    // canister-to-canister VC issuer is no longer used — verification
+    // now goes through the DecideID OIDC flow inside the User canister.
     public type VerifyResult = {
     #Ok: UniquePersonProof;
     #Err: Text;
@@ -19,15 +22,6 @@ module{
     public type UniquePersonProof = {
     provider: UniquePersonProofProvider;
     timestamp: Nat64;
-    };
-
-    public type VerifyPohCanisterInterface = actor {
-        verify_proof_of_unique_personhood : query (principal : Principal, credential_jwt : Text, effectiveDerivationOrigin : Text, now : Nat64) -> async VerifyResult;
-    };
-
-    public func getVerifyPohCanister() : VerifyPohCanisterInterface {
-        let canister : VerifyPohCanisterInterface = actor("l72yd-3qaaa-aaaai-aqj7a-cai");
-        return canister;
     };
 
     //****************USER CANISTER*****************
