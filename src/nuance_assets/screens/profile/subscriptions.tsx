@@ -67,7 +67,7 @@ const Menu = ({
                             <Link to={`/${subscription.isPublication ? "publication" : "user"}/${subscription.userListItem.handle}`} onClick={toggleMenu}>
                                 <p>Go to {subscription.isPublication ? "publication" : "user profile"}</p>
                             </Link>
-                            <p onClick={handleOpenCancelSubscriptionModal}>Cancel subscription</p>
+                            <p onClick={handleOpenCancelSubscriptionModal}>Manage membership</p>
                         </>
                     )}
                 </div>
@@ -131,6 +131,10 @@ const Subscriptions = () => {
         const date = new Date(timestamp);
         return date.toLocaleDateString();
     };
+
+    // NUA fees are stored in e8s; Stripe fees in USD cents
+    const formatAmount = (amount: number, method: 'nua' | 'stripe') =>
+        method === 'stripe' ? `$${(amount / 100).toFixed(2)}` : `${amount / 1e8} NUA`;
 
     const filteredSubscriptions = activeTab === 'active' ? subscriptions.activeSubscriptions : subscriptions.expiredSubscriptions;
 
@@ -214,8 +218,8 @@ const Subscriptions = () => {
                                     <td className='subscribers-tab-chart-handle'><Link to={`/${sub.isPublication ? "publication" : "user"}/${sub.userListItem.handle}`} style={{ color: "currentcolor" }}>@{sub.userListItem.handle}</Link>{' '}{sub.userListItem.isVerified && <GradientMdVerified width='16' height='16' gradientKey={sub.userListItem.handle} />}</td>
                                     <td className='subscribers-tab-chart-info'>{formatDate(sub.subscriptionStartDate)}</td>
                                     <td className='subscribers-tab-chart-info'>{sub.period}</td>
-                                    <td className='subscribers-tab-chart-info'>{sub.feePerPeriod / 1e8} NUA</td>
-                                    <td className='subscribers-tab-chart-info'>{sub.totalFees / 1e8} NUA</td>
+                                    <td className='subscribers-tab-chart-info'>{formatAmount(sub.feePerPeriod, sub.paymentMethod)}</td>
+                                    <td className='subscribers-tab-chart-info'>{formatAmount(sub.totalFees, sub.paymentMethod)}</td>
                                     <td>
                                         <Menu
                                             activeTab={activeTab}

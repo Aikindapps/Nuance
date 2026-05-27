@@ -144,15 +144,21 @@ export type Result_8 = { 'ok' : [bigint, bigint] } |
   { 'err' : string };
 export type Result_9 = { 'ok' : Array<string> } |
   { 'err' : string };
+export type PaymentMethod = {
+    'Fiat' : { 'stripeSubscriptionId' : string, 'usdAmountCents' : string }
+  } |
+  { 'Token' : null };
 export interface SubscriptionEvent {
   'startTime' : bigint,
   'subscriptionEventId' : string,
+  'paymentMethod' : [] | [PaymentMethod],
   'endTime' : bigint,
   'subscriptionTimeInterval' : SubscriptionTimeInterval,
   'writerPrincipalId' : string,
   'paymentFee' : string,
   'isWriterSubscriptionActive' : boolean,
   'readerPrincipalId' : string,
+  'stripeCancelAtPeriodEnd' : [] | [boolean],
 }
 export type SubscriptionTimeInterval = { 'LifeTime' : null } |
   { 'Weekly' : null } |
@@ -214,6 +220,9 @@ export interface WriterSubscriptionDetails {
   'isSubscriptionActive' : boolean,
   'annuallyFee' : [] | [string],
   'monthlyFee' : [] | [string],
+  'stripeAccountId' : [] | [string],
+  'stripeIsActive' : boolean,
+  'stripePricing' : Array<[SubscriptionTimeInterval, string, string]>,
 }
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,

@@ -12,5 +12,6 @@ Junk/
 scripts/didc
 dist/
 dist_old/
+stripe-proxy/.env
 CyclesDispenser.json
 .vessel

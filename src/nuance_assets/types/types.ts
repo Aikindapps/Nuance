@@ -79,9 +79,10 @@ export type ClaimTransactionHistoryItem = {
 
 export type SubscriptionHistoryItem = {
   date: string;
-  subscriptionFee: number;
+  subscriptionFee: number; // e8s when paymentMethod is 'nua', USD cents when 'stripe'
   handle: string;
   isWriter: boolean;
+  paymentMethod: 'nua' | 'stripe';
 };
 
 export type UserListItem = {

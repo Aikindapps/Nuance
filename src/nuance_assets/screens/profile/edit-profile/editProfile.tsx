@@ -20,6 +20,7 @@ import { useTheme } from '../../../contextes/ThemeContext';
 import { colors, icons, images } from '../../../shared/constants';
 import { UserType } from 'src/nuance_assets/types/types';
 import SubscriptionSettings from '../../create-edit-publication/subscription-settings';
+import StripeSubscriptionSettings from '../../create-edit-publication/stripe-subscription-settings';
 import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 import { useSubscriptionStore } from '../../../store/subscriptionStore';
 import { SubscriptionStore } from '../../../store/subscriptionStore';
@@ -83,6 +84,8 @@ const EditProfile = () => {
   }, []);
 
   const [user, setUser] = useState<UserType | undefined>();
+  // bumped when the user returns from a Stripe tab, to re-fetch subscription details
+  const [stripeReturnNonce, setStripeReturnNonce] = useState(0);
 
   const [avatar, setAvatar] = useState(user?.avatar || images.DEFAULT_AVATAR);
   const [avatarMimeType, setAvatarMimeType] = useState('');
@@ -105,6 +108,9 @@ const EditProfile = () => {
       monthlyFeeEnabled: false,
       annuallyFeeEnabled: false,
       lifeTimeFeeEnabled: false,
+      stripeAccountId: [],
+      stripePricing: [],
+      stripeIsActive: false,
     });
 
   interface SubscriptionDetailsState extends WriterSubscriptionDetails {
@@ -169,6 +175,9 @@ const EditProfile = () => {
               monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
               annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
               lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0,
+              stripeAccountId: fetchedDetails.stripeAccountId,
+              stripePricing: fetchedDetails.stripePricing,
+              stripeIsActive: fetchedDetails.stripeIsActive,
             });
             console.log(
               'Fetched subscription details:',
@@ -182,12 +191,27 @@ const EditProfile = () => {
                 ? [fetchedDetails.annuallyFee[0]]
                 : []
             );
+          } else {
+            // No NUA subscription record yet - still set the principal so the
+            // writer can connect Stripe without first configuring NUA fees.
+            setSubscriptionDetails((prev) => ({
+              ...prev,
+              writerPrincipalId: userPrincipalId,
+            }));
           }
         }
       }
     };
     fetchSubscriptionDetails();
-  }, [user]);
+  }, [user, stripeReturnNonce]);
+
+  // re-fetch subscription details when the user returns from a Stripe tab,
+  // so the Stripe panel reflects the newly connected account
+  useEffect(() => {
+    const onStripeReturn = () => setStripeReturnNonce((n) => n + 1);
+    window.addEventListener('nuance:stripe-return', onStripeReturn);
+    return () => window.removeEventListener('nuance:stripe-return', onStripeReturn);
+  }, []);
 
   const onDisplayNameChange = (value: string) => {
     if (user) {
@@ -682,6 +706,15 @@ const EditProfile = () => {
             setSubscriptionDetails={setSubscriptionDetails}
             isPublication={false}
           />
+          {subscriptionDetails.writerPrincipalId && (
+            <StripeSubscriptionSettings
+              writerPrincipalId={subscriptionDetails.writerPrincipalId}
+              stripeAccountId={subscriptionDetails.stripeAccountId}
+              stripeIsActive={subscriptionDetails.stripeIsActive}
+              stripePricing={subscriptionDetails.stripePricing}
+              agent={agentIk}
+            />
+          )}
         </div>
         <div className='edit-profile-buttons-wrapper'>
           <Button

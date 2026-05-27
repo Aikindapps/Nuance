@@ -76,6 +76,7 @@ actor Subscription {
         endTime: Int;
         isWriterSubscriptionActive: Bool;
         paymentMethod: ?PaymentMethod;
+        stripeCancelAtPeriodEnd: ?Bool;
     };
 
     //payment request returned to the reader
@@ -175,6 +176,8 @@ actor Subscription {
     stable var subscriptionEventIdToPaymentMethod = Map.new<Text, PaymentMethod>();
     //key: subscription event id, value: Stripe Subscription ID (sub_...) - used for renewal matching
     stable var subscriptionEventIdToStripeSubId = Map.new<Text, Text>();
+    //key: subscription event id, value: whether the Stripe subscription is set to cancel at period end
+    stable var subscriptionEventIdToStripeCancelAtPeriodEnd = Map.new<Text, Bool>();
 
     //key: Stripe event id (evt_...), value: timestamp when processed - used for idempotency
     stable var processedStripeEventIds = Map.new<Text, Int>();
@@ -242,13 +245,10 @@ actor Subscription {
                 else{
                     //caller is the editor of the given publication
                     //if there exists any subscription detail, return the object
-                    switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, publicationCanisterId)) {
-                        case(?_) {
-                            return #ok(buildWriterSubscriptionDetails(publicationCanisterId))
-                        };
-                        case(null) {
-                            return #err("No subscription record found.")
-                        };
+                    if (hasSubscriptionRecord(publicationCanisterId)) {
+                        return #ok(buildWriterSubscriptionDetails(publicationCanisterId))
+                    } else {
+                        return #err("No subscription record found.")
                     };
                 }
 
@@ -257,13 +257,10 @@ actor Subscription {
                 //the argument is null
                 //if there exists any subscription detail for the writer, return it
                 let principal = Principal.toText(caller);
-                switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-                    case(?_) {
-                        return #ok(buildWriterSubscriptionDetails(principal))
-                    };
-                    case(null) {
-                        return #err("No subscription record found.")
-                    };
+                if (hasSubscriptionRecord(principal)) {
+                    return #ok(buildWriterSubscriptionDetails(principal))
+                } else {
+                    return #err("No subscription record found.")
                 };
             };
         };
@@ -285,13 +282,10 @@ actor Subscription {
     //a function to query the subscription details of the writer
     //can be called by anyone - doesn't return the subscription history
     public shared query func getWriterSubscriptionDetailsByPrincipalId(principal: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
-        switch(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal)) {
-            case(?_) {
-                return #ok(buildWriterSubscriptionDetailsLighter(principal))
-            };
-            case(null) {
-                return #err("No subscription record found.")
-            };
+        if (hasSubscriptionRecord(principal)) {
+            return #ok(buildWriterSubscriptionDetailsLighter(principal))
+        } else {
+            return #err("No subscription record found.")
         };
     };
 
@@ -1108,6 +1102,7 @@ actor Subscription {
             endTime = Option.get(Map.get(subscriptionEventIdToEndTime, thash, eventId), 0);
             isWriterSubscriptionActive = Option.get(Map.get(writerPrincipalIdToIsSubscriptionActive, thash, writerPrincipalId), false);
             paymentMethod = Map.get(subscriptionEventIdToPaymentMethod, thash, eventId);
+            stripeCancelAtPeriodEnd = Map.get(subscriptionEventIdToStripeCancelAtPeriodEnd, thash, eventId);
         }
     };
 
@@ -1310,6 +1305,12 @@ actor Subscription {
         }
     };
 
+    //a writer has a subscription record if they configured NUA fees OR connected Stripe
+    private func hasSubscriptionRecord(principal: Text) : Bool {
+        Map.get(writerPrincipalIdToIsSubscriptionActive, thash, principal) != null
+        or Map.get(writerPrincipalIdToStripeAccountId, thash, principal) != null
+    };
+
     //admin sets the trusted proxy bridge principal - only this principal can call Stripe update methods
     public shared ({caller}) func setTrustedProxyPrincipal(principal: Text) : async Result.Result<Text, Text> {
         if (not isAdmin(caller) and not isPlatformOperator(caller)) {
@@ -1327,6 +1328,18 @@ actor Subscription {
     //IC protocol guarantees the caller is authenticated - nonce stored with timestamp for proxy to verify
     public shared ({caller}) func authorizeForProxy(nonce: Text) : async () {
         Map.set(proxyAuthorizationStore, thash, Principal.toText(caller), (nonce, Time.now()));
+    };
+
+    //an editor calls this before a publication's proxy request (onboard / set prices)
+    //verifies the caller is an editor of the publication, then stores the nonce under
+    //the publication canister id so the proxy's checkProxyAuthorization(publicationCanisterId, nonce) succeeds
+    public shared ({caller}) func authorizeForProxyAsEditor(publicationCanisterId: Text, nonce: Text) : async Result.Result<(), Text> {
+        let PostCoreCanister = CanisterDeclarations.getPostCoreCanister();
+        if (not (await PostCoreCanister.isEditorPublic(publicationCanisterId, caller))) {
+            return #err("Unauthorized: caller is not an editor of this publication.");
+        };
+        Map.set(proxyAuthorizationStore, thash, publicationCanisterId, (nonce, Time.now()));
+        #ok()
     };
 
     //proxy calls this query to verify the frontend authorized the action within the last 2 minutes
@@ -1347,10 +1360,20 @@ actor Subscription {
     };
 
     //proxy calls this after creating a Stripe Express account for the writer
+    //the account is NOT active yet - it only becomes active once Stripe confirms
+    //the required capabilities (charges/transfers) via setStripeAccountActive
     public shared ({caller}) func updateStripeAccount(writerPrincipalId: Text, stripeAccountId: Text) : async Result.Result<WriterSubscriptionDetails, Text> {
         if (not isProxyCaller(caller)) { return #err("Unauthorized") };
         Map.set(writerPrincipalIdToStripeAccountId, thash, writerPrincipalId, stripeAccountId);
-        Map.set(writerPrincipalIdToStripeIsActive, thash, writerPrincipalId, true);
+        Map.set(writerPrincipalIdToStripeIsActive, thash, writerPrincipalId, false);
+        #ok(buildWriterSubscriptionDetails(writerPrincipalId))
+    };
+
+    //proxy calls this after checking the live Stripe account status, to reflect
+    //whether the connected account can actually receive payments (charges + transfers)
+    public shared ({caller}) func setStripeAccountActive(writerPrincipalId: Text, isActive: Bool) : async Result.Result<WriterSubscriptionDetails, Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+        Map.set(writerPrincipalIdToStripeIsActive, thash, writerPrincipalId, isActive);
         #ok(buildWriterSubscriptionDetails(writerPrincipalId))
     };
 
@@ -1483,6 +1506,33 @@ actor Subscription {
         Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId, filtered);
 
         Map.set(processedStripeEventIds, thash, stripeEventId, Time.now());
+        #ok()
+    };
+
+    //proxy calls this when a customer.subscription.updated webhook fires
+    //keeps the reader's "cancel at period end" flag and endTime in sync with Stripe
+    public shared ({caller}) func setStripeSubscriptionCancelState(
+        writerId: Text,
+        readerId: Text,
+        stripeSubId: Text,
+        cancelAtPeriodEnd: Bool,
+        periodEnd: Int
+    ) : async Result.Result<(), Text> {
+        if (not isProxyCaller(caller)) { return #err("Unauthorized") };
+
+        //find the subscription event by stripeSubId and sync its state
+        let readerEventIds = Option.get(Map.get(readerPrincipalIdToSubscriptionEventIds, thash, readerId), []);
+        for (eventId in readerEventIds.vals()) {
+            switch(Map.get(subscriptionEventIdToStripeSubId, thash, eventId)) {
+                case(?storedSubId) {
+                    if (storedSubId == stripeSubId) {
+                        Map.set(subscriptionEventIdToStripeCancelAtPeriodEnd, thash, eventId, cancelAtPeriodEnd);
+                        Map.set(subscriptionEventIdToEndTime, thash, eventId, periodEnd);
+                    };
+                };
+                case(null) {};
+            };
+        };
         #ok()
     };
 

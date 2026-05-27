@@ -9,6 +9,7 @@ import {
 import { SubscriptionHistoryItem, UserListItem } from '../types/types';
 import {
   ReaderSubscriptionDetails,
+  SubscriptionEvent,
   SubscriptionTimeInterval,
   WriterSubscriptionDetails,
 } from '../../declarations/Subscription/Subscription.did';
@@ -20,18 +21,30 @@ import { Toast } from 'react-bootstrap';
 import { useAuthStore } from './authStore';
 import { User } from '../services/ext-service/ext_v2.did';
 import { Agent } from '@dfinity/agent';
+import {
+  onboardWriter,
+  createPriceTier,
+  createCheckoutSession,
+  createBillingPortalSession,
+} from '../services/stripeProxyService';
 
 const SUBSCRIPTION_CANISTER_ID = process.env.SUBSCRIPTION_CANISTER_ID || '';
 
 
+// how a subscription was paid; drives the currency/units of fee fields below
+export type PaymentMethodKind = 'nua' | 'stripe';
+
 export type SubscribedWriterItem = {
   userListItem: UserListItem;
   subscriptionStartDate: number;
+  subscriptionEndDate: number;
   period: string;
-  feePerPeriod: number;
-  totalFees: number;
+  feePerPeriod: number; // e8s when paymentMethod is 'nua', USD cents when 'stripe'
+  totalFees: number; // same unit as feePerPeriod
   isPublication: boolean;
   isSubscriptionActive: boolean;
+  paymentMethod: PaymentMethodKind;
+  stripeCancelAtPeriodEnd: boolean; // only meaningful for 'stripe'
 };
 
 export type ExpiredSubscriptionItem = {
@@ -39,10 +52,11 @@ export type ExpiredSubscriptionItem = {
   subscriptionStartDate: number;
   subscriptionEndDate: number;
   period: string;
-  feePerPeriod: number;
-  totalFees: number;
+  feePerPeriod: number; // e8s when paymentMethod is 'nua', USD cents when 'stripe'
+  totalFees: number; // same unit as feePerPeriod
   isPublication: boolean;
   isSubscriptionActive: boolean;
+  paymentMethod: PaymentMethodKind;
 };
 
 export type ReaderSubscriptionDetailsConverted = {
@@ -50,21 +64,45 @@ export type ReaderSubscriptionDetailsConverted = {
   expiredSubscriptions: ExpiredSubscriptionItem[];
 };
 
+// full details of a reader's latest membership to a given writer, for the Manage Membership modal
+export type MembershipDetails = {
+  paymentMethod: 'stripe' | 'nua';
+  subscriptionTimeInterval: SubscriptionTimeInterval;
+  startDate: number; // milliseconds
+  endDate: number; // milliseconds
+  isActive: boolean; // now < endDate
+  stripeCancelAtPeriodEnd: boolean; // only meaningful for Stripe memberships
+};
+
 export type SubscribedReaderItem = {
   userListItem: UserListItem;
   subscriptionStartDate: number;
   period: string;
-  feePerPeriod: number;
-  totalFees: number;
+  feePerPeriod: number; // e8s when paymentMethod is 'nua', USD cents when 'stripe'
+  totalFees: number; // same unit as feePerPeriod
+  paymentMethod: PaymentMethodKind;
 };
 
 export type WriterSubscriptionDetailsConverted = {
   subscribedReaders: SubscribedReaderItem[];
   numberOfSubscribersHistoricalData: [number, number][];
   subscribersCount: number;
-  totalNuaEarned: number;
+  totalNuaEarned: number; // e8s, NUA-paid subscriptions only
+  totalUsdEarned: number; // USD cents, Stripe-paid subscriptions only
   lastWeekNewSubscribers: number;
   writerPaymentInfo: WriterSubscriptionDetails;
+};
+
+// Determines how a single subscription event was paid and the amount in that
+// method's native unit (NUA e8s, or USD cents for Stripe).
+const getEventPayment = (
+  event: SubscriptionEvent
+): { method: PaymentMethodKind; amount: number } => {
+  const pm = event.paymentMethod[0];
+  if (pm && 'Fiat' in pm) {
+    return { method: 'stripe', amount: Number(pm.Fiat.usdAmountCents) };
+  }
+  return { method: 'nua', amount: Number(event.paymentFee) };
 };
 
 export const getPeriodBySubscriptionTimeInterval = (
@@ -100,108 +138,67 @@ const convertReaderSubscriptionDetails = async (
   for (const userListItem of allUserListItems) {
     userListItemsMap.set(userListItem.principal, userListItem);
   }
-  //active
-  let activeSubscriptionsWriterPrincipalIds =
-    details.readerNotStoppedSubscriptionsWriters.map(
-      (val) => val.writerPrincipalId
-    );
-  //key: writer principal id, value: SubscribedWriterItem
-  let activeSubscriptionItemsMap = new Map<string, SubscribedWriterItem>();
-  let expiredSubscriptionItemsArray: ExpiredSubscriptionItem[] = [];
-  for (const subscriptionEvent of details.readerSubscriptions) {
-    if (
-      activeSubscriptionsWriterPrincipalIds.includes(
-        subscriptionEvent.writerPrincipalId
-      )
-    ) {
-      //the reader is still a subscriber
-      let subscribedWriterItem = activeSubscriptionItemsMap.get(
-        subscriptionEvent.writerPrincipalId
-      );
-      //the UserListItem of the writer
-      let writerUserListItem = userListItemsMap.get(
-        subscriptionEvent.writerPrincipalId
-      ) as UserListItem;
-      if (subscribedWriterItem) {
-        //the item is already in the map
-        //update the values if needed
-        if (
-          subscriptionEvent.startTime >
-          subscribedWriterItem.subscriptionStartDate
-        ) {
-          //this event is more recent
-          //update the related values
-          subscribedWriterItem = {
-            ...subscribedWriterItem,
-            feePerPeriod: Number(subscriptionEvent.paymentFee),
-            period: getPeriodBySubscriptionTimeInterval(
-              subscriptionEvent.subscriptionTimeInterval
-            ),
-            subscriptionStartDate: Number(subscriptionEvent.startTime),
-            totalFees:
-              subscribedWriterItem.totalFees +
-              Number(subscriptionEvent.paymentFee),
-          };
-        } else {
-          //this is an older event, just update the totalFees
-          subscribedWriterItem.totalFees =
-            subscribedWriterItem.totalFees +
-            Number(subscriptionEvent.paymentFee);
-        }
+  const activeSet = new Set(
+    details.readerNotStoppedSubscriptionsWriters.map((val) => val.writerPrincipalId)
+  );
+  const publicationIds = new Set(allPublications.map((val) => val[1]));
 
-        activeSubscriptionItemsMap.set(
-          subscriptionEvent.writerPrincipalId,
-          subscribedWriterItem
-        );
-      } else {
-        //the item is not in the list yet, build the SubscribedWriterItem and put it into the map
-        activeSubscriptionItemsMap.set(subscriptionEvent.writerPrincipalId, {
-          userListItem: writerUserListItem,
-          subscriptionStartDate: Number(subscriptionEvent.startTime),
-          period: getPeriodBySubscriptionTimeInterval(
-            subscriptionEvent.subscriptionTimeInterval
-          ),
-          feePerPeriod: Number(subscriptionEvent.paymentFee),
-          totalFees: Number(subscriptionEvent.paymentFee),
-          isPublication: allPublications
-            .map((val) => val[1])
-            .includes(subscriptionEvent.writerPrincipalId),
-          isSubscriptionActive: subscriptionEvent.isWriterSubscriptionActive,
-        });
-      }
-    } else {
-      //expired subscription
-      //calculate the total fee
-      var totalFee = 0;
-      details.readerSubscriptions.forEach((event) => {
-        if (event.writerPrincipalId === subscriptionEvent.writerPrincipalId) {
-          totalFee += Number(event.paymentFee);
-        }
-      });
-      //push the value to expiredSubscriptionItemsArray
-      let writerUserListItem = userListItemsMap.get(
-        subscriptionEvent.writerPrincipalId
-      ) as UserListItem;
-      expiredSubscriptionItemsArray.push({
+  //group the reader's events by writer so each writer becomes a single row
+  const eventsByWriter = new Map<string, SubscriptionEvent[]>();
+  for (const event of details.readerSubscriptions) {
+    const arr = eventsByWriter.get(event.writerPrincipalId) ?? [];
+    arr.push(event);
+    eventsByWriter.set(event.writerPrincipalId, arr);
+  }
+
+  const activeSubscriptions: SubscribedWriterItem[] = [];
+  const expiredSubscriptions: ExpiredSubscriptionItem[] = [];
+
+  for (const [writerPrincipalId, events] of eventsByWriter) {
+    const writerUserListItem = userListItemsMap.get(writerPrincipalId) as UserListItem;
+    //the most recent event determines the current payment method and fee
+    const latest = events.reduce((a, b) =>
+      Number(b.startTime) > Number(a.startTime) ? b : a
+    );
+    const latestPayment = getEventPayment(latest);
+    //sum only the events paid with the same method, to avoid mixing NUA and USD
+    const totalFees = events.reduce((sum, event) => {
+      const payment = getEventPayment(event);
+      return payment.method === latestPayment.method ? sum + payment.amount : sum;
+    }, 0);
+    const isPublication = publicationIds.has(writerPrincipalId);
+
+    if (activeSet.has(writerPrincipalId)) {
+      activeSubscriptions.push({
         userListItem: writerUserListItem,
-        subscriptionStartDate: Number(subscriptionEvent.startTime),
-        subscriptionEndDate: Number(subscriptionEvent.endTime),
-        period: getPeriodBySubscriptionTimeInterval(
-          subscriptionEvent.subscriptionTimeInterval
-        ),
-        feePerPeriod: Number(subscriptionEvent.paymentFee),
-        totalFees: totalFee,
-        isPublication: allPublications
-          .map((val) => val[1])
-          .includes(subscriptionEvent.writerPrincipalId),
-        isSubscriptionActive: subscriptionEvent.isWriterSubscriptionActive,
+        subscriptionStartDate: Number(latest.startTime),
+        subscriptionEndDate: Number(latest.endTime),
+        period: getPeriodBySubscriptionTimeInterval(latest.subscriptionTimeInterval),
+        feePerPeriod: latestPayment.amount,
+        totalFees,
+        isPublication,
+        isSubscriptionActive: latest.isWriterSubscriptionActive,
+        paymentMethod: latestPayment.method,
+        stripeCancelAtPeriodEnd: latest.stripeCancelAtPeriodEnd[0] ?? false,
+      });
+    } else {
+      expiredSubscriptions.push({
+        userListItem: writerUserListItem,
+        subscriptionStartDate: Number(latest.startTime),
+        subscriptionEndDate: Number(latest.endTime),
+        period: getPeriodBySubscriptionTimeInterval(latest.subscriptionTimeInterval),
+        feePerPeriod: latestPayment.amount,
+        totalFees,
+        isPublication,
+        isSubscriptionActive: latest.isWriterSubscriptionActive,
+        paymentMethod: latestPayment.method,
       });
     }
   }
-  //return the ReaderSubscriptionDetailsConverted object
+
   return {
-    activeSubscriptions: Array.from(activeSubscriptionItemsMap.values()),
-    expiredSubscriptions: expiredSubscriptionItemsArray,
+    activeSubscriptions,
+    expiredSubscriptions,
   };
 };
 
@@ -224,75 +221,45 @@ const convertWriterSubscriptionDetails = async (
     subscribedUserListItemsMap.set(userListItem.principal, userListItem);
   });
 
-  let subscribedReaderListItemsMap = new Map<string, SubscribedReaderItem>();
+  const activeSet = new Set(activeSubscribersPrincipalIds);
 
-  for (const subscriptionEvent of details.writerSubscriptions) {
-    //update the subscribedReaderListItemsMap if the event is done by an active subscriber
-    if (
-      activeSubscribersPrincipalIds.includes(
-        subscriptionEvent.readerPrincipalId
-      )
-    ) {
-      //user has an active subscription
-
-      //get the user list item
-      let readerUserListItem = subscribedUserListItemsMap.get(
-        subscriptionEvent.readerPrincipalId
-      ) as UserListItem;
-      //get the existing ReaderListItem if there's any
-      let subscribedReaderListItem = subscribedReaderListItemsMap.get(
-        subscriptionEvent.readerPrincipalId
-      );
-
-      if (subscribedReaderListItem) {
-        //reader already has an entry in the map
-        //update the values
-        if (
-          Number(subscriptionEvent.startTime) >
-          subscribedReaderListItem.subscriptionStartDate
-        ) {
-          //newer event
-          subscribedReaderListItem = {
-            ...subscribedReaderListItem,
-            subscriptionStartDate: Number(subscriptionEvent.startTime),
-            period: getPeriodBySubscriptionTimeInterval(
-              subscriptionEvent.subscriptionTimeInterval
-            ),
-            feePerPeriod: Number(subscriptionEvent.paymentFee),
-            totalFees:
-              subscribedReaderListItem.totalFees +
-              Number(subscriptionEvent.paymentFee),
-          };
-        } else {
-          //older event
-          subscribedReaderListItem = {
-            ...subscribedReaderListItem,
-            totalFees:
-              subscribedReaderListItem.totalFees +
-              Number(subscriptionEvent.paymentFee),
-          };
-        }
-        subscribedReaderListItemsMap.set(
-          subscriptionEvent.readerPrincipalId,
-          subscribedReaderListItem
-        );
-      } else {
-        //it's the first time
-        //build the SubscribedReaderItem and put it in the map
-        subscribedReaderListItemsMap.set(subscriptionEvent.readerPrincipalId, {
-          userListItem: readerUserListItem,
-          subscriptionStartDate: Number(subscriptionEvent.startTime),
-          period: getPeriodBySubscriptionTimeInterval(
-            subscriptionEvent.subscriptionTimeInterval
-          ),
-          feePerPeriod: Number(subscriptionEvent.paymentFee),
-          totalFees: Number(subscriptionEvent.paymentFee),
-        });
-      }
+  //group active subscribers' events by reader so each reader becomes a single row
+  const eventsByReader = new Map<string, SubscriptionEvent[]>();
+  for (const event of details.writerSubscriptions) {
+    if (!activeSet.has(event.readerPrincipalId)) {
+      continue;
     }
+    const arr = eventsByReader.get(event.readerPrincipalId) ?? [];
+    arr.push(event);
+    eventsByReader.set(event.readerPrincipalId, arr);
   }
-  //calculate the total nua earned
-  var totalNuaEarned = 0;
+
+  const subscribedReaders: SubscribedReaderItem[] = [];
+  for (const [readerPrincipalId, events] of eventsByReader) {
+    const readerUserListItem = subscribedUserListItemsMap.get(
+      readerPrincipalId
+    ) as UserListItem;
+    const latest = events.reduce((a, b) =>
+      Number(b.startTime) > Number(a.startTime) ? b : a
+    );
+    const latestPayment = getEventPayment(latest);
+    const totalFees = events.reduce((sum, event) => {
+      const payment = getEventPayment(event);
+      return payment.method === latestPayment.method ? sum + payment.amount : sum;
+    }, 0);
+    subscribedReaders.push({
+      userListItem: readerUserListItem,
+      subscriptionStartDate: Number(latest.startTime),
+      period: getPeriodBySubscriptionTimeInterval(latest.subscriptionTimeInterval),
+      feePerPeriod: latestPayment.amount,
+      totalFees,
+      paymentMethod: latestPayment.method,
+    });
+  }
+
+  //earnings, split by currency (NUA vs USD), across all events
+  var totalNuaEarned = 0; // e8s
+  var totalUsdEarned = 0; // USD cents
   //calculate the number of subscribers 1 week ago
   let oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
   let oneWeekAgoSubscribersCounter = 0;
@@ -305,7 +272,12 @@ const convertWriterSubscriptionDetails = async (
   breakPoints.set(new Date().getTime(), 0);
 
   for (const subscriptionEvent of details.writerSubscriptions) {
-    totalNuaEarned += Number(subscriptionEvent.paymentFee);
+    const payment = getEventPayment(subscriptionEvent);
+    if (payment.method === 'stripe') {
+      totalUsdEarned += payment.amount;
+    } else {
+      totalNuaEarned += payment.amount;
+    }
     for (const breakPoint of breakPoints) {
       if (
         breakPoint[0] >= Number(subscriptionEvent.startTime) &&
@@ -323,12 +295,12 @@ const convertWriterSubscriptionDetails = async (
   }
 
   return {
-    subscribedReaders: Array.from(subscribedReaderListItemsMap.values()),
+    subscribedReaders,
     numberOfSubscribersHistoricalData: Array.from(breakPoints),
-    subscribersCount: subscribedReaderListItemsMap.size,
+    subscribersCount: subscribedReaders.length,
     totalNuaEarned,
-    lastWeekNewSubscribers:
-      subscribedReaderListItemsMap.size - oneWeekAgoSubscribersCounter,
+    totalUsdEarned,
+    lastWeekNewSubscribers: subscribedReaders.length - oneWeekAgoSubscribersCounter,
     writerPaymentInfo: { ...details, writerSubscriptions: [] },
   };
 };
@@ -371,6 +343,41 @@ export interface SubscriptionStore {
     subscriptionTimeInterval: SubscriptionTimeInterval,
     amount: number
   ) => Promise<ReaderSubscriptionDetailsConverted | void>;
+  // Stripe — writer connects a Stripe account; returns the onboarding URL to redirect to.
+  // For publications, pass publicationCanisterId (== writerPrincipalId) to use the editor auth flow.
+  activateStripeForWriter: (
+    writerPrincipalId: string,
+    agent?: Agent,
+    publicationCanisterId?: string
+  ) => Promise<string | void>;
+  // Stripe — writer creates/updates a price tier for an interval (USD cents as string)
+  createStripePriceTier: (
+    writerPrincipalId: string,
+    interval: 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime',
+    usdAmountCents: string,
+    agent?: Agent,
+    publicationCanisterId?: string
+  ) => Promise<boolean>;
+  // Stripe — reader starts a checkout session; returns the Stripe Checkout URL to redirect to
+  subscribeWriterWithStripe: (
+    priceId: string,
+    writerPrincipalId: string,
+    readerPrincipalId: string,
+    agent?: Agent
+  ) => Promise<string | void>;
+  // Stripe — reader opens the billing portal; returns the portal URL to redirect to
+  openStripeBillingPortal: (
+    readerPrincipalId: string,
+    agent?: Agent
+  ) => Promise<string | void>;
+  // returns how the reader's currently-active subscription to a writer is paid
+  getActiveSubscriptionPaymentMethod: (
+    writerPrincipalId: string
+  ) => Promise<'stripe' | 'nua' | 'none'>;
+  // returns full details of the reader's latest membership to a writer (for Manage Membership)
+  getMembershipDetailsForWriter: (
+    writerPrincipalId: string
+  ) => Promise<MembershipDetails | null>;
 }
 
 // Encapsulates and abstracts AuthClient
@@ -453,15 +460,17 @@ const createSubscriptionStore:
         if ('ok' in readerDetails) {
           for (const readerSubscriptionEvent of readerDetails.ok
             .readerSubscriptions) {
+            const payment = getEventPayment(readerSubscriptionEvent);
             readerTransactionDetails.push({
               date: Number(readerSubscriptionEvent.startTime).toString(),
-              subscriptionFee: Number(readerSubscriptionEvent.paymentFee),
+              subscriptionFee: payment.amount,
               handle: (
                 userListItemsMap.get(
                   readerSubscriptionEvent.writerPrincipalId
                 ) as UserListItem
               ).handle,
               isWriter: false,
+              paymentMethod: payment.method,
             });
           }
         }
@@ -469,15 +478,17 @@ const createSubscriptionStore:
         if ('ok' in writerDetails) {
           for (const writerSubscriptionEvent of writerDetails.ok
             .writerSubscriptions) {
+            const payment = getEventPayment(writerSubscriptionEvent);
             writerTransactionDetails.push({
               date: Number(writerSubscriptionEvent.startTime).toString(),
-              subscriptionFee: Number(writerSubscriptionEvent.paymentFee),
+              subscriptionFee: payment.amount,
               handle: (
                 userListItemsMap.get(
                   writerSubscriptionEvent.readerPrincipalId
                 ) as UserListItem
               ).handle,
               isWriter: true,
+              paymentMethod: payment.method,
             });
           }
         }
@@ -726,6 +737,144 @@ const createSubscriptionStore:
         }
       } catch (error) {
         handleError(error, 'Unexpected error: ');
+      }
+    },
+
+    //writer connects a Stripe account - returns the onboarding URL to redirect to
+    activateStripeForWriter: async (
+      writerPrincipalId: string,
+      agent?: Agent,
+      publicationCanisterId?: string
+    ): Promise<string | void> => {
+      try {
+        const { url } = await onboardWriter(writerPrincipalId, agent, publicationCanisterId);
+        return url;
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
+      }
+    },
+
+    //writer creates or updates a Stripe price tier for the given interval
+    createStripePriceTier: async (
+      writerPrincipalId: string,
+      interval: 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime',
+      usdAmountCents: string,
+      agent?: Agent,
+      publicationCanisterId?: string
+    ): Promise<boolean> => {
+      try {
+        await createPriceTier(
+          writerPrincipalId,
+          interval,
+          usdAmountCents,
+          agent,
+          publicationCanisterId
+        );
+        return true;
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
+        return false;
+      }
+    },
+
+    //reader starts a Stripe checkout - returns the Stripe Checkout URL to redirect to
+    subscribeWriterWithStripe: async (
+      priceId: string,
+      writerPrincipalId: string,
+      readerPrincipalId: string,
+      agent?: Agent
+    ): Promise<string | void> => {
+      try {
+        const { url } = await createCheckoutSession(
+          priceId,
+          writerPrincipalId,
+          readerPrincipalId,
+          agent
+        );
+        return url;
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
+      }
+    },
+
+    //reader opens the Stripe billing portal - returns the portal URL to redirect to
+    openStripeBillingPortal: async (
+      readerPrincipalId: string,
+      agent?: Agent
+    ): Promise<string | void> => {
+      try {
+        const { url } = await createBillingPortalSession(readerPrincipalId, agent);
+        return url;
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
+      }
+    },
+
+    //inspects the reader's active subscription to a writer and reports how it is paid
+    getActiveSubscriptionPaymentMethod: async (
+      writerPrincipalId: string
+    ): Promise<'stripe' | 'nua' | 'none'> => {
+      try {
+        const subscriptionActor = await getSubscriptionActor();
+        const details = await subscriptionActor.getReaderSubscriptionDetails();
+        if ('ok' in details) {
+          const now = Date.now();
+          let foundActive = false;
+          for (const event of details.ok.readerSubscriptions) {
+            if (
+              event.writerPrincipalId === writerPrincipalId &&
+              now < Number(event.endTime)
+            ) {
+              foundActive = true;
+              const method = event.paymentMethod[0];
+              if (method && 'Fiat' in method) {
+                return 'stripe';
+              }
+            }
+          }
+          return foundActive ? 'nua' : 'none';
+        }
+        return 'none';
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
+        return 'none';
+      }
+    },
+
+    //returns full details of the reader's latest membership to a writer
+    getMembershipDetailsForWriter: async (
+      writerPrincipalId: string
+    ): Promise<MembershipDetails | null> => {
+      try {
+        const subscriptionActor = await getSubscriptionActor();
+        const details = await subscriptionActor.getReaderSubscriptionDetails();
+        if ('ok' in details) {
+          // pick the most recent event to this writer (highest endTime)
+          let latest: (typeof details.ok.readerSubscriptions)[number] | null = null;
+          for (const event of details.ok.readerSubscriptions) {
+            if (event.writerPrincipalId === writerPrincipalId) {
+              if (!latest || Number(event.endTime) > Number(latest.endTime)) {
+                latest = event;
+              }
+            }
+          }
+          if (latest) {
+            const pm = latest.paymentMethod[0];
+            const isStripe = !!pm && 'Fiat' in pm;
+            return {
+              paymentMethod: isStripe ? 'stripe' : 'nua',
+              subscriptionTimeInterval: latest.subscriptionTimeInterval,
+              startDate: Number(latest.startTime),
+              endDate: Number(latest.endTime),
+              isActive: Date.now() < Number(latest.endTime),
+              stripeCancelAtPeriodEnd: latest.stripeCancelAtPeriodEnd[0] ?? false,
+            };
+          }
+        }
+        return null;
+      } catch (error) {
+        handleError(error, 'Unexpected error: ');
+        return null;
       }
     },
   });

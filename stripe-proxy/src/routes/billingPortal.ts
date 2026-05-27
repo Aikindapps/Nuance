@@ -33,7 +33,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId[0],
-      return_url: process.env.STRIPE_CANCEL_URL ?? 'https://nuance.xyz',
+      return_url: `${process.env.STRIPE_CANCEL_URL ?? 'https://nuance.xyz'}?stripe_billing=return`,
     });
 
     return res.json({ url: portalSession.url });

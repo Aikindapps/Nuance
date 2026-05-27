@@ -59,15 +59,12 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = (props): JSX.Element => 
                 <Button
                     styleType={{dark: 'white', light: 'white'}}
                     type='button'
-                    style={
-                        props.isPublication ? { width: '180px', margin: '10px 0' }
-                            : { width: '120px', margin: '10px 0' }
-                    }
+                    style={{ width: '200px', margin: '10px 0' }}
                     onClick={handleUnsubscribe}
                     disabled={loading}
                     loading={loading}
                 >
-                    Stop supporting
+                    Manage Membership
                 </Button>
             ) : (
                 <Button

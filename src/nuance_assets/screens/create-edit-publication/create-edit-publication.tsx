@@ -47,6 +47,7 @@ import { string } from 'prop-types';
 import BreadCrumbCropper from '../../UI/breadCrumbCropper/breadCrumbCropper';
 import { Toggle } from '../../UI/toggle/toggle';
 import SubscriptionSettings from './subscription-settings';
+import StripeSubscriptionSettings from './stripe-subscription-settings';
 import { WriterSubscriptionDetails } from 'src/declarations/Subscription/Subscription.did';
 import { useSubscriptionStore } from '../../store/subscriptionStore';
 import { SubscriptionStore } from '../../store/subscriptionStore';
@@ -232,6 +233,9 @@ const CreateEditPublication = () => {
       monthlyFeeEnabled: false,
       annuallyFeeEnabled: false,
       lifeTimeFeeEnabled: false,
+      stripeAccountId: [],
+      stripePricing: [],
+      stripeIsActive: false,
     });
 
   interface SubscriptionDetailsState extends WriterSubscriptionDetails {
@@ -274,6 +278,10 @@ const CreateEditPublication = () => {
     }
   };
 
+  // the publication's canister id, used as the Stripe writerId + editor-auth target
+  const [stripePublicationCanisterId, setStripePublicationCanisterId] =
+    useState('');
+
   useEffect(() => {
     const fetchSubscriptionDetails = async () => {
       if (publication) {
@@ -281,6 +289,7 @@ const CreateEditPublication = () => {
           publicationHandle
         );
         if (publicationCanisterId) {
+          setStripePublicationCanisterId(publicationCanisterId);
           console.log(
             'Fetching subscription details for:',
             publicationCanisterId
@@ -312,7 +321,17 @@ const CreateEditPublication = () => {
               monthlyFeeEnabled: fetchedDetails.monthlyFee.length != 0,
               annuallyFeeEnabled: fetchedDetails.annuallyFee.length != 0,
               lifeTimeFeeEnabled: fetchedDetails.lifeTimeFee.length != 0,
+              stripeAccountId: fetchedDetails.stripeAccountId,
+              stripePricing: fetchedDetails.stripePricing,
+              stripeIsActive: fetchedDetails.stripeIsActive,
             });
+          } else {
+            // no subscription record yet - still set the writer id (publication
+            // canister id) so the Stripe panel can render its connect state
+            setSubscriptionDetails((prev) => ({
+              ...prev,
+              writerPrincipalId: publicationCanisterId,
+            }));
           }
         }
       }
@@ -2172,6 +2191,16 @@ const CreateEditPublication = () => {
                   isPublication={true}
                   error={!validPrincipal}
                 />
+                {stripePublicationCanisterId && (
+                  <StripeSubscriptionSettings
+                    writerPrincipalId={stripePublicationCanisterId}
+                    publicationCanisterId={stripePublicationCanisterId}
+                    stripeAccountId={subscriptionDetails.stripeAccountId}
+                    stripeIsActive={subscriptionDetails.stripeIsActive}
+                    stripePricing={subscriptionDetails.stripePricing}
+                    agent={agentToBeUsed}
+                  />
+                )}
               </div>
 
               <div style={{ display: 'inline-block' }}>

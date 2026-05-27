@@ -22,6 +22,7 @@ const idlFactory = ({ IDL }) => {
     endTime: IDL.Int,
     isWriterSubscriptionActive: IDL.Bool,
     paymentMethod: IDL.Opt(PaymentMethod),
+    stripeCancelAtPeriodEnd: IDL.Opt(IDL.Bool),
   });
   const WriterSubscriptionDetails = IDL.Record({
     writerPrincipalId: IDL.Text,
@@ -46,6 +47,7 @@ const idlFactory = ({ IDL }) => {
     checkProxyAuthorization: IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
     consumeProxyAuthorization: IDL.Func([IDL.Text], [], []),
     updateStripeAccount: IDL.Func([IDL.Text, IDL.Text], [Result], []),
+    setStripeAccountActive: IDL.Func([IDL.Text, IDL.Bool], [Result], []),
     updateStripePriceTier: IDL.Func([IDL.Text, SubscriptionTimeInterval, IDL.Text, IDL.Text], [Result], []),
     deactivateStripeAccount: IDL.Func([IDL.Text], [Result], []),
     syncStripeSubscription: IDL.Func(
@@ -55,6 +57,11 @@ const idlFactory = ({ IDL }) => {
     ),
     cancelStripeSubscription: IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [Result_ok],
+      []
+    ),
+    setStripeSubscriptionCancelState: IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Int],
       [Result_ok],
       []
     ),

@@ -69,6 +69,8 @@ const Profile = () => {
   const [isExpiring, setIsExpiring] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSubscribed, setIsEmailSubscribed] = useState(false);
+  // bumped when the user returns from a Stripe tab, to re-check subscription state
+  const [stripeReturnNonce, setStripeReturnNonce] = useState(0);
 
   const customHost = isLocal ? 'http://localhost:8080' : 'https://icp-api.io';
   const agentIk = useAgent({ host: customHost });
@@ -203,7 +205,19 @@ const Profile = () => {
     };
 
     fetchSubscriptionHistory();
-  }, [isLoggedIn, author?.handle, user?.handle]);
+  }, [isLoggedIn, author?.handle, user?.handle, stripeReturnNonce]);
+
+  // when the user returns from a Stripe tab, re-check subscription state so the
+  // button flips to "Manage Membership". Re-check again shortly after in case the
+  // Stripe webhook is still propagating to the canister.
+  useEffect(() => {
+    const onStripeReturn = () => {
+      setStripeReturnNonce((n) => n + 1);
+      setTimeout(() => setStripeReturnNonce((n) => n + 1), 2500);
+    };
+    window.addEventListener('nuance:stripe-return', onStripeReturn);
+    return () => window.removeEventListener('nuance:stripe-return', onStripeReturn);
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn && author?.handle) {
@@ -229,7 +243,10 @@ const Profile = () => {
               subscriptionDetails?.monthlyFee.length > 0) ||
             (subscriptionDetails &&
               subscriptionDetails?.annuallyFee.length > 0) ||
-            (subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0)
+            (subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) ||
+            (subscriptionDetails &&
+              subscriptionDetails.stripeIsActive &&
+              subscriptionDetails.stripePricing.length > 0)
           ) {
             setHasValidSubscriptionOptions(true);
           } else {

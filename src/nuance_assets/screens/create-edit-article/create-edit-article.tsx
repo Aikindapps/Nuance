@@ -836,7 +836,9 @@ const CreateEditArticle = () => {
             (subscriptionDetails.weeklyFee.length > 0 ||
               subscriptionDetails.monthlyFee.length > 0 ||
               subscriptionDetails.annuallyFee.length > 0 ||
-              subscriptionDetails.lifeTimeFee.length > 0)
+              subscriptionDetails.lifeTimeFee.length > 0 ||
+              (subscriptionDetails.stripeIsActive &&
+                subscriptionDetails.stripePricing.length > 0))
           ) {
             setHasValidSubscriptionOptions(true);
             console.log('Valid subscription options', subscriptionDetails);

@@ -54,6 +54,10 @@ router.post('/', async (req: Request, res: Response) => {
         await handleInvoicePaid(event);
         break;
       }
+      case 'customer.subscription.updated': {
+        await handleSubscriptionUpdated(event);
+        break;
+      }
       case 'customer.subscription.deleted': {
         await handleSubscriptionDeleted(event);
         break;
@@ -160,6 +164,37 @@ async function handleInvoicePaid(event: Stripe.Event): Promise<void> {
 
   if (result.err) {
     console.error('[webhook] syncStripeSubscription (renewal) failed:', result.err);
+  }
+}
+
+async function handleSubscriptionUpdated(event: Stripe.Event): Promise<void> {
+  const subscription = event.data.object as Stripe.Subscription;
+
+  const readerId = subscription.metadata?.readerId;
+  const writerId = subscription.metadata?.writerId;
+
+  if (!readerId || !writerId) {
+    console.error('[webhook] customer.subscription.updated missing readerId or writerId in metadata');
+    return;
+  }
+
+  const cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
+  const periodEnd = stripeTimestampToMilliseconds(subscription.current_period_end);
+
+  console.log(
+    `[webhook] Subscription updated: reader=${readerId} writer=${writerId} sub=${subscription.id} cancelAtPeriodEnd=${cancelAtPeriodEnd}`
+  );
+
+  const result = await subscriptionActor.setStripeSubscriptionCancelState(
+    writerId,
+    readerId,
+    subscription.id,
+    cancelAtPeriodEnd,
+    periodEnd
+  ) as any;
+
+  if (result.err) {
+    console.error('[webhook] setStripeSubscriptionCancelState failed:', result.err);
   }
 }
 

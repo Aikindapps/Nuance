@@ -34,26 +34,50 @@ router.post('/', async (req: Request, res: Response) => {
   }
 
   try {
-    // Create Stripe Express account for the writer
-    const account = await stripe.accounts.create({
-      type: 'express',
-      metadata: { writerId },
-    });
+    // Reuse an existing connected account if the writer already has one, so that
+    // re-running onboarding can fix/complete capabilities instead of orphaning accounts.
+    const existing = await subscriptionActor.getStripeAccountId(writerId) as [string] | [];
+    const existingId = existing[0];
+    let accountId: string;
 
-    // Store the Stripe account ID in the canister
-    const updateResult = await subscriptionActor.updateStripeAccount(writerId, account.id) as any;
-    if (updateResult.err) {
-      // Canister rejected - clean up the Stripe account
-      await stripe.accounts.del(account.id);
-      return res.status(500).json({ error: `Canister update failed: ${updateResult.err}` });
+    if (existingId) {
+      accountId = existingId;
+      // ensure the capabilities required for destination charges are requested
+      // (Stripe requires card_payments alongside transfers)
+      await stripe.accounts.update(accountId, {
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+      });
+    } else {
+      // Create a Stripe Express account for the writer with the capabilities
+      // required for destination charges (card_payments + transfers)
+      const account = await stripe.accounts.create({
+        type: 'express',
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        metadata: { writerId },
+      });
+      accountId = account.id;
+
+      // Store the Stripe account ID in the canister
+      const updateResult = await subscriptionActor.updateStripeAccount(writerId, accountId) as any;
+      if (updateResult.err) {
+        // Canister rejected - clean up the Stripe account
+        await stripe.accounts.del(accountId);
+        return res.status(500).json({ error: `Canister update failed: ${updateResult.err}` });
+      }
+
+      // Consume the nonce - prevents replay for this high-value operation
+      await subscriptionActor.consumeProxyAuthorization(writerId);
     }
-
-    // Consume the nonce - prevents replay for this high-value operation
-    await subscriptionActor.consumeProxyAuthorization(writerId);
 
     // Generate Stripe onboarding link
     const accountLink = await stripe.accountLinks.create({
-      account: account.id,
+      account: accountId,
       type: 'account_onboarding',
       refresh_url: `${process.env.STRIPE_CANCEL_URL}?stripe_onboard=refresh`,
       return_url: `${process.env.STRIPE_SUCCESS_URL}?stripe_onboard=complete`,
@@ -62,7 +86,7 @@ router.post('/', async (req: Request, res: Response) => {
     return res.json({ url: accountLink.url });
   } catch (err: any) {
     console.error('[onboard] Error:', err.message);
-    return res.status(500).json({ error: 'Failed to create Stripe account' });
+    return res.status(500).json({ error: `Failed to create Stripe account: ${err.message}` });
   }
 });
 

@@ -15,6 +15,8 @@ import Loader from '../../UI/loader/Loader';
 import './_subscription-modal.scss';
 import { useSubscriptionStore } from '../../store/subscriptionStore';
 import { useAuthStore } from '../../store/authStore';
+import { openStripeInNewTab } from '../../services/stripeRedirect';
+import { toast, ToastType } from '../../services/toastService';
 import {
   SubscriptionTimeInterval,
   WriterSubscriptionDetails,
@@ -70,12 +72,20 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       restrictedTokenBalance: state.restrictedTokenBalance,
     }));
 
-  const { subscribeWriter, getWriterSubscriptionDetailsByPrincipalId } =
-    useSubscriptionStore((state) => ({
-      subscribeWriter: state.subscribeWriter,
-      getWriterSubscriptionDetailsByPrincipalId:
-        state.getWriterSubscriptionDetailsByPrincipalId,
-    }));
+  const {
+    subscribeWriter,
+    subscribeWriterWithStripe,
+    getWriterSubscriptionDetailsByPrincipalId,
+  } = useSubscriptionStore((state) => ({
+    subscribeWriter: state.subscribeWriter,
+    subscribeWriterWithStripe: state.subscribeWriterWithStripe,
+    getWriterSubscriptionDetailsByPrincipalId:
+      state.getWriterSubscriptionDetailsByPrincipalId,
+  }));
+
+  // 'nua' = pay with NUA tokens (on-chain), 'stripe' = pay with card via Stripe
+  const [paymentMethod, setPaymentMethod] = useState<'nua' | 'stripe'>('nua');
+  const [selectedStripeOption, setSelectedStripeOption] = useState<string>('');
 
 
   const getSufficientBalance = (fee: number) => {
@@ -302,6 +312,68 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     !optionsLoading &&
     subscriptionOptions.some((option) => option.fee && option.fee.length > 0);
 
+  // Stripe card payment tiers, derived from the writer's stored stripePricing
+  const stripePriceTiers = (subscriptionDetails?.stripePricing || []).map(
+    ([interval, priceId, cents]) => ({
+      label: Object.keys(interval)[0], // 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime'
+      priceId,
+      usd: (Number(cents) / 100).toFixed(2),
+    })
+  );
+  const stripeAvailable =
+    !optionsLoading &&
+    !!subscriptionDetails?.stripeIsActive &&
+    stripePriceTiers.length > 0;
+
+  // default to whichever method the writer actually offers
+  useEffect(() => {
+    if (!hasValidOptions && stripeAvailable) {
+      setPaymentMethod('stripe');
+    } else {
+      setPaymentMethod('nua');
+    }
+  }, [optionsLoading, subscriptionDetails]);
+
+  const handleStripeSubscription = async () => {
+    if (!termsChecked || !selectedStripeOption) {
+      setTermCheckWarning(true);
+      return;
+    }
+    const tier = stripePriceTiers.find((t) => t.label === selectedStripeOption);
+    const readerId = userWallet?.principal;
+    if (!tier || !readerId) {
+      setSubscriptionError('Could not start Stripe checkout. Please try again.');
+      return;
+    }
+    setIsLoading(true);
+    // open Stripe's hosted checkout in a new tab so the reader keeps their place
+    const opened = await openStripeInNewTab(() =>
+      subscribeWriterWithStripe(tier.priceId, authorPrincipalId, readerId)
+    );
+    setIsLoading(false);
+    if (opened) {
+      toast('Continue in the new Stripe tab to complete payment…', ToastType.Plain);
+      modalContext?.closeModal();
+    } else {
+      setSubscriptionError('Could not start Stripe checkout. Please try again.');
+    }
+  };
+
+  const stripePeriodText = (label: string) => {
+    switch (label) {
+      case 'Weekly':
+        return 'week';
+      case 'Monthly':
+        return 'month';
+      case 'Annually':
+        return 'year';
+      case 'LifeTime':
+        return 'lifetime';
+      default:
+        return 'period';
+    }
+  };
+
   return (
     <div
       className={darkTheme ? 'subscription-modal dark' : 'subscription-modal'}
@@ -461,10 +533,113 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             </div>
           </div>
 
+          {hasValidOptions && stripeAvailable && (
+            <div className='subscription-method-tabs'>
+              <button
+                type='button'
+                className={`subscription-method-tab ${
+                  paymentMethod === 'nua' ? 'active' : ''
+                } ${darkTheme ? 'dark' : ''}`}
+                onClick={() => {
+                  setPaymentMethod('nua');
+                  setTermCheckWarning(false);
+                }}
+              >
+                Pay with NUA
+              </button>
+              <button
+                type='button'
+                className={`subscription-method-tab ${
+                  paymentMethod === 'stripe' ? 'active' : ''
+                } ${darkTheme ? 'dark' : ''}`}
+                onClick={() => {
+                  setPaymentMethod('stripe');
+                  setTermCheckWarning(false);
+                }}
+              >
+                Pay with card
+              </button>
+            </div>
+          )}
+
           <div className='subscription-modal-content'>
             {optionsLoading ? (
               <Loader />
-            ) : hasValidOptions ? (
+            ) : !hasValidOptions && !stripeAvailable ? (
+              <p className='no-subscription-info'>
+                Please check back later. The author has not set up any
+                subscriptions yet.
+              </p>
+            ) : paymentMethod === 'stripe' && stripeAvailable ? (
+              <>
+                <p className='subscription-info'>
+                  When you support this{' '}
+                  {isPublication ? 'publication' : 'user'} you get unlimited
+                  access to all of their membership content, paid by card via
+                  Stripe. You can manage or cancel anytime from the billing
+                  portal.
+                </p>
+                <p className='option-label'>
+                  Please choose the duration of your membership:
+                </p>
+                <div className='subscription-options'>
+                  {stripePriceTiers.map((tier) => (
+                    <div
+                      className={`option-wrapper ${
+                        selectedStripeOption === tier.label ? 'selected' : ''
+                      }`}
+                      key={tier.label}
+                      onClick={() => setSelectedStripeOption(tier.label)}
+                    >
+                      <div
+                        className={`option ${
+                          selectedStripeOption === tier.label ? 'selected' : ''
+                        } ${darkTheme ? 'dark' : ''}`}
+                      >
+                        <div className='option-content'>
+                          <img
+                            src={
+                              selectedStripeOption === tier.label
+                                ? icons.GRADIENT_STAR
+                                : icons.NO_FILL_STAR
+                            }
+                            alt='star'
+                            className='star-icon'
+                          />
+                          <div className='option-details'>
+                            <p className='option-title'>{tier.label}</p>
+                            <p>
+                              <strong>${tier.usd} USD</strong>
+                            </p>
+                            <div
+                              className={
+                                darkTheme
+                                  ? 'subscription-conversions dark'
+                                  : 'subscription-conversions'
+                              }
+                            >
+                              <p>per {stripePeriodText(tier.label)}</p>
+                            </div>
+                          </div>
+                          <div className='subscription-radio-wrapper'>
+                            <input
+                              type='radio'
+                              name='subscriptionStripeOption'
+                              checked={selectedStripeOption === tier.label}
+                              onChange={() =>
+                                setSelectedStripeOption(tier.label)
+                              }
+                              className='option-radio'
+                            />
+                            <span>Select</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
               <>
                 <p className='subscription-info'>
                   When you support this{' '}
@@ -559,15 +734,10 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   )}
                 </div>
               </>
-            ) : (
-              <p className='no-subscription-info'>
-                Please check back later. The author has not set up any
-                subscriptions yet.
-              </p>
             )}
           </div>
           <div className='subscription-modal-footer'>
-            {hasValidOptions && (
+            {(hasValidOptions || stripeAvailable) && (
               <div className='subscription-terms'>
                 <label className='terms-label'>
                   <input
@@ -600,7 +770,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               <WarningMessage message='Please select an option and agree to the terms and conditions.' />
             )}
 
-            {!sufficientBalance && !optionsLoading && (
+            {paymentMethod === 'nua' && !sufficientBalance && !optionsLoading && (
               <WarningMessage
                 message='Insufficient balance. Please fund your '
                 link='/my-profile/wallet'
@@ -616,25 +786,42 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               >
                 Cancel
               </Button>
-              <Button
-                type='button'
-                styleType={{dark: 'navy-dark', light: 'navy'}}
-                style={{
-                  padding: '0px 16px',
-                  display: 'flex',
-                  flexDirection: 'row-reverse',
-                }}
-                loading={isLoading}
-                disabled={
-                  !termsChecked ||
-                  !selectedOption ||
-                  isLoading ||
-                  !sufficientBalance
-                }
-                onClick={() => handleSubscription(parseFee(selectedOption))}
-              >
-                Support
-              </Button>
+              {paymentMethod === 'stripe' ? (
+                <Button
+                  type='button'
+                  styleType={{ dark: 'navy-dark', light: 'navy' }}
+                  style={{
+                    padding: '0px 16px',
+                    display: 'flex',
+                    flexDirection: 'row-reverse',
+                  }}
+                  loading={isLoading}
+                  disabled={!termsChecked || !selectedStripeOption || isLoading}
+                  onClick={handleStripeSubscription}
+                >
+                  Continue to payment
+                </Button>
+              ) : (
+                <Button
+                  type='button'
+                  styleType={{dark: 'navy-dark', light: 'navy'}}
+                  style={{
+                    padding: '0px 16px',
+                    display: 'flex',
+                    flexDirection: 'row-reverse',
+                  }}
+                  loading={isLoading}
+                  disabled={
+                    !termsChecked ||
+                    !selectedOption ||
+                    isLoading ||
+                    !sufficientBalance
+                  }
+                  onClick={() => handleSubscription(parseFee(selectedOption))}
+                >
+                  Support
+                </Button>
+              )}
             </div>
           </div>
         </>

@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 
 import onboardRouter from './routes/onboard';
+import accountStatusRouter from './routes/accountStatus';
 import createPriceRouter from './routes/createPrice';
 import checkoutRouter from './routes/checkout';
 import billingPortalRouter from './routes/billingPortal';
@@ -28,6 +29,7 @@ app.get('/health', (_req, res) => {
 
 // Stripe routes
 app.use('/stripe/onboard', onboardRouter);
+app.use('/stripe/account-status', accountStatusRouter);
 app.use('/stripe/create-price', createPriceRouter);
 app.use('/stripe/checkout', checkoutRouter);
 app.use('/stripe/billing-portal', billingPortalRouter);
