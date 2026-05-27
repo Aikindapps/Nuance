@@ -56,8 +56,11 @@ module {
   };
 
   /// Minimal subset of the userinfo response we need from DecideID.
-  /// `verified=true` is the only signal that gates Nuance verification.
+  /// `verified=true` is the humanity signal; `sub` is the stable
+  /// DecideID identifier used to enforce one-Nuance-account-per-DecideID
+  /// (so the same DecideID can't verify multiple Nuance profiles).
   public type DecideIdPohUserInfo = {
+    sub : Text;
     verified : Bool;
   };
 
@@ -143,8 +146,7 @@ module {
       body = ?bodyBytes;
       method = #post;
       transform = null;
-      // Form posts are state-changing — must be replicated.
-      is_replicated = ?true;
+      is_replicated = ?false;
     };
     try {
       Cycles.add<system>(OUTCALL_CYCLES);
@@ -175,7 +177,7 @@ module {
       body = null;
       method = #get;
       transform = null;
-      is_replicated = ?true;
+      is_replicated = ?false;
     };
     try {
       Cycles.add<system>(OUTCALL_CYCLES);

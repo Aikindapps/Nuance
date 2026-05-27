@@ -215,6 +215,16 @@ actor User {
   // canister redeems the returned code. Bounded by OIDC_SESSION_TTL_MS.
   stable var decideIdOidcSessionsEntries : [(Text, DecideID.OidcSession)] = [];
   var decideIdOidcSessions = HashMap.HashMap<Text, DecideID.OidcSession>(initCapacity, isEq, Text.hash);
+
+  // One-to-one binding between a DecideID `sub` and a Nuance principal.
+  // Populated only when a user completes the OIDC flow, so legacy
+  // `isVerified=true` accounts (which never went through OIDC) have no
+  // entry here and keep their verification untouched. A `sub` already
+  // mapped to one principal cannot be claimed by any other.
+  stable var decideIdSubToPrincipalEntries : [(Text, Text)] = [];
+  var decideIdSubToPrincipal = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  stable var decideIdPrincipalToSubEntries : [(Text, Text)] = [];
+  var decideIdPrincipalToSub = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //#endregion
 
   //SNS
@@ -954,15 +964,43 @@ actor User {
       case (?v) v;
       case (null) { return #Err("Userinfo response missing 'verified' field") };
     };
+    let sub = switch (DecideID.jsonGetString(userinfoJson, "sub")) {
+      case (?v) v;
+      case (null) { return #Err("Userinfo response missing 'sub' field") };
+    };
 
     // Single-use: drop the session even on failure so the same code
     // can't be re-tried.
     decideIdOidcSessions.delete(state);
 
     if (not verified) {
-      return #Err("DecideID: user is not currently verified");
+      return #Err("DecideID: account is not currently verified");
     };
 
+    // Enforce one-Nuance-account-per-DecideID. A `sub` already bound
+    // to another principal can never be re-claimed; a caller already
+    // bound to a different `sub` can't switch DecideID accounts either.
+    // Legacy verified users with no recorded sub are unaffected.
+    let callerText = Principal.toText(caller);
+    switch (decideIdSubToPrincipal.get(sub)) {
+      case (?existingPrincipal) {
+        if (existingPrincipal != callerText) {
+          return #Err("This DecideID account is already linked to another Nuance account");
+        };
+      };
+      case (null) {};
+    };
+    switch (decideIdPrincipalToSub.get(callerText)) {
+      case (?existingSub) {
+        if (existingSub != sub) {
+          return #Err("This Nuance account is already linked to a different DecideID account");
+        };
+      };
+      case (null) {};
+    };
+
+    decideIdSubToPrincipal.put(sub, callerText);
+    decideIdPrincipalToSub.put(callerText, sub);
     ignore updateVerificationStatus(caller, true);
     #Ok({
       provider = #DecideAI;
@@ -1021,6 +1059,16 @@ actor User {
     switch (principalId) {
       case (?pid) {
         isVerifiedUsersHashMap.delete(pid);
+        // Release the DecideID sub binding so a future re-verification
+        // (e.g. after a wrongful flag is cleared) can succeed. Without
+        // this, the sub would stay locked to a now-unverified account.
+        switch (decideIdPrincipalToSub.get(pid)) {
+          case (?sub) {
+            decideIdPrincipalToSub.delete(pid);
+            decideIdSubToPrincipal.delete(sub);
+          };
+          case (null) {};
+        };
         return #ok(buildUser(pid));
       };
       case (null) {
@@ -3552,7 +3600,7 @@ actor User {
     let unsubscribeBase =
       if (ENV.IS_LOCAL) {
         "http://localhost:8081"
-      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "t6unq-pqaaa-aaaai-q3nqa-cai") {
         "https://nuance.xyz"
       } else {
         "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
@@ -3949,6 +3997,8 @@ actor User {
     deadEmailBatchesEntries := Iter.toArray(deadEmailBatchesHashMap.entries());
     // DecideID OIDC sessions (in-flight only; expires in 10m anyway).
     decideIdOidcSessionsEntries := Iter.toArray(decideIdOidcSessions.entries());
+    decideIdSubToPrincipalEntries := Iter.toArray(decideIdSubToPrincipal.entries());
+    decideIdPrincipalToSubEntries := Iter.toArray(decideIdPrincipalToSub.entries());
   };
 
   system func postupgrade() {
@@ -3994,6 +4044,8 @@ actor User {
     pendingEmailBatchesHashMap := HashMap.fromIter(pendingEmailBatchesEntries.vals(), initCapacity, isEq, Text.hash);
     deadEmailBatchesHashMap := HashMap.fromIter(deadEmailBatchesEntries.vals(), initCapacity, isEq, Text.hash);
     decideIdOidcSessions := HashMap.fromIter(decideIdOidcSessionsEntries.vals(), initCapacity, isEq, Text.hash);
+    decideIdSubToPrincipal := HashMap.fromIter(decideIdSubToPrincipalEntries.vals(), initCapacity, isEq, Text.hash);
+    decideIdPrincipalToSub := HashMap.fromIter(decideIdPrincipalToSubEntries.vals(), initCapacity, isEq, Text.hash);
 
     // Re-register the retry timer (timers don't survive upgrades). Even
     // when the queue is empty, arm it so newly-enqueued failures after
@@ -4029,6 +4081,8 @@ actor User {
     pendingEmailBatchesEntries := [];
     deadEmailBatchesEntries := [];
     decideIdOidcSessionsEntries := [];
+    decideIdSubToPrincipalEntries := [];
+    decideIdPrincipalToSubEntries := [];
   };
 
   //#endregion

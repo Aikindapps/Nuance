@@ -85,7 +85,7 @@ const Routes = () => {
     { path: '/timed-out', element: <TimedOut /> },
     { path: '/register', element: <LoginRegistration /> },
     { path: '/verify-email', element: <VerifyEmail /> },
-    { path: '/decideid-callback', element: <DecideIdCallback /> },
+    { path: '/callback', element: <DecideIdCallback /> },
     { path: '/unsubscribe', element: <Unsubscribe /> },
     { path: '/:handle', element: <Profile /> },
     { path: '/user/:handle', element: <Profile /> },
