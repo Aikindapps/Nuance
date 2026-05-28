@@ -1,14 +1,6 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is not set.');
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
-
-export const APPLICATION_FEE_PERCENT = Number(process.env.NUANCE_APPLICATION_FEE_PERCENT ?? '10');
+// Pure helpers; per-env Stripe clients live in envConfig.ts.
 
 /** Maps our SubscriptionTimeInterval variant to Stripe's recurring interval string */
 export function toStripeInterval(interval: string): Stripe.PriceCreateParams.Recurring.Interval {
@@ -20,8 +12,7 @@ export function toStripeInterval(interval: string): Stripe.PriceCreateParams.Rec
     case 'Annually':
       return 'year';
     case 'LifeTime':
-      // Stripe has no "lifetime" concept - use year with a very long duration as a product
-      // For lifetime, create a one-time price instead of recurring
+      // Stripe has no "lifetime" concept - approximate with yearly recurrence
       return 'year';
     default:
       throw new Error(`Unknown subscription interval: ${interval}`);

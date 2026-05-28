@@ -7,7 +7,8 @@
     "dev": "ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "generate-identity": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/generateIdentity.ts"
+    "generate-identity": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/generateIdentity.ts",
+    "generate-identity-deploy": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\"}' scripts/generateIdentityToFile.ts"
   },
   "dependencies": {
     "@dfinity/agent": "^0.20.2",

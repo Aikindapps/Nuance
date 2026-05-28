@@ -72,6 +72,7 @@ jobs:
           NOTIFICATIONS_CANISTER_ID = "${{ secrets.UAT_NOTIFICATIONS }}"
           SUBSCRIPTION_CANISTER_ID =  "${{ secrets.UAT_SUBSCRIPTION }}"
           NUA_TRANSACTION_HISTORY_CANISTER_ID = "${{ secrets.NUA_TRANSACTION_HISTORY }}"
+          STRIPE_PROXY_URL = "${{ secrets.STRIPE_PROXY_URL_UAT }}"
           EOF
 
       - name: Generate canister_ids.json and canisterIds.mo

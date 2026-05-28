@@ -92,6 +92,7 @@ jobs:
           PUBLICATION_MANAGEMENT_CANISTER_ID = 'kq23y-aiaaa-aaaaf-qajmq-cai'
           NOTIFICATIONS_CANISTER_ID = 'qrlrq-biaaa-aaaaf-qal2q-cai'
           SUBSCRIPTION_CANISTER_ID = 's6qib-6qaaa-aaaaf-qalwa-cai'
+          STRIPE_PROXY_URL = "${{ secrets.STRIPE_PROXY_URL_PROD }}"
           EOF
 
       - name: Generate empty canister_ids.json to prevent undefined error
