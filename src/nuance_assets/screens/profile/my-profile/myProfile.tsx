@@ -46,8 +46,6 @@ const MyProfile = () => {
     userFollowersCount,
     loadingUser,
     getLinkedPrincipal,
-    verifyPoh,
-    proceedWithVerification,
   } = useUserStore((state) => ({
     user: state.user,
     getUser: state.getUser,
@@ -58,8 +56,6 @@ const MyProfile = () => {
     userFollowersCount: state.userFollowersCount,
     loadingUser: state.loadingUser,
     getLinkedPrincipal: state.getLinkedPrincipal,
-    verifyPoh: state.verifyPoh,
-    proceedWithVerification: state.proceedWithVerification,
   }));
 
   useEffect(() => {

@@ -31,6 +31,7 @@ import CanisterDeclarations "../shared/CanisterDeclarations";
 import NotificationTypes "../NotificationsV3/types";
 import TypesStandards "../shared/TypesStandards";
 import Email "./EmailSubscription";
+import DecideID "./DecideID";
 
 actor User {
   let Unauthorized = "Unauthorized";
@@ -200,6 +201,30 @@ actor User {
   // Whether the retry timer is currently registered. Reset on upgrade
   // (timers don't survive upgrades) and re-armed in postupgrade.
   var emailRetryTimerArmed : Bool = false;
+  //#endregion
+
+  //#region DecideID OIDC state
+  // Admin-set client credentials for the DecideID OIDC provider. Kept
+  // out of source / env.mo so the secret doesn't live in git. Set via
+  // adminSetDecideIdClientId / adminSetDecideIdClientSecret.
+  stable var decideIdClientId : ?Text = null;
+  stable var decideIdClientSecret : ?Text = null;
+
+  // In-flight OIDC sessions keyed by `state`. Created when the frontend
+  // begins an authorize redirect; consumed (or expired) when the
+  // canister redeems the returned code. Bounded by OIDC_SESSION_TTL_MS.
+  stable var decideIdOidcSessionsEntries : [(Text, DecideID.OidcSession)] = [];
+  var decideIdOidcSessions = HashMap.HashMap<Text, DecideID.OidcSession>(initCapacity, isEq, Text.hash);
+
+  // One-to-one binding between a DecideID `sub` and a Nuance principal.
+  // Populated only when a user completes the OIDC flow, so legacy
+  // `isVerified=true` accounts (which never went through OIDC) have no
+  // entry here and keep their verification untouched. A `sub` already
+  // mapped to one principal cannot be claimed by any other.
+  stable var decideIdSubToPrincipalEntries : [(Text, Text)] = [];
+  var decideIdSubToPrincipal = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
+  stable var decideIdPrincipalToSubEntries : [(Text, Text)] = [];
+  var decideIdPrincipalToSub = HashMap.HashMap<Text, Text>(initCapacity, isEq, Text.hash);
   //#endregion
 
   //SNS
@@ -806,62 +831,220 @@ actor User {
     return #ok(buildUser(callerPrincipal));
   };
 
-  public shared ({ caller }) func verifyPoh(credentialJWT: Text) : async VerifyResult {
+  //#region DecideID OIDC
 
-      if (isAnonymous(caller)) {
-        return #Err("Anonymous cannot call this method");
-      };
-
-      var result : VerifyResult = #Err("An error occured.");
-
-      if (ENV.IS_LOCAL) {
-        // assign the hardcoded success result to 'result'
-        result := #Ok({
-          provider = #DecideAI;
-          timestamp = 1_732_561_876_735;
-        });
-      } else {
-        let VerifyPohCanister = CanisterDeclarations.getVerifyPohCanister();
-        var effectiveDerivationOrigin : Text = "";
-        var credentialSubject : Principal = caller;
-
-        switch(confirmedLinkingRequestsHashMap.get(Principal.toText(caller))) {
-          case(?linkedPrincipal) {
-            credentialSubject := Principal.fromText(linkedPrincipal);
-          };
-          case(null) {
-            if (principalIdHashMap.get(Principal.toText(caller)) == null){
-              return #Err(Unauthorized);
-            };
-          };
-        };
-
-        if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
-          effectiveDerivationOrigin := "https://nuance.xyz";
-        } else {
-          effectiveDerivationOrigin := "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
-        };
-        // perform the actual canister call and assign the result
-        result := await VerifyPohCanister.verify_proof_of_unique_personhood(
-          credentialSubject,
-          credentialJWT,
-          effectiveDerivationOrigin,
-          Nat64.fromIntWrap(Time.now() / 1_000_000)
-        );
-      };
-
-      switch (result) {
-        case (#Ok(uniquePersonProof)) {
-          // handle the success case
-          let user = updateVerificationStatus(caller, true);
-          return #Ok(uniquePersonProof);
-        };
-        case (#Err(errMessage)) {
-          // handle the error case
-          return #Err(errMessage);
-        };
+  // Returns the canonical origin Nuance is served from. Used both to
+  // validate the redirect URI handed back by DecideID and as the value
+  // we expose to the frontend so it can build its own callback URL.
+  private func nuanceFrontendOrigin() : Text {
+    if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+      "https://nuance.xyz";
+    } else {
+      "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app";
     };
   };
+
+  private func nowMsNat() : Nat {
+    Nat64.toNat(Nat64.fromIntWrap(Time.now() / 1_000_000));
+  };
+
+  /// Begin an OIDC authorization flow. Returns a random `state` value
+  /// the frontend must include in the authorize redirect; the canister
+  /// remembers it so only the same caller (with the same redirect URI)
+  /// can later redeem the resulting code.
+  public shared ({ caller }) func createDecideIdState(redirectUri : Text) : async Result.Result<Text, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Anonymous cannot call this method");
+    };
+    if (principalIdHashMap.get(Principal.toText(caller)) == null) {
+      return #err(Unauthorized);
+    };
+
+    switch (DecideID.validateRedirectUri(redirectUri, nuanceFrontendOrigin())) {
+      case (#err(e)) { return #err(e) };
+      case (#ok(_)) {};
+    };
+
+    let state = await DecideID.newState();
+    let now = nowMsNat();
+    DecideID.purgeExpiredSessions(decideIdOidcSessions, now);
+    decideIdOidcSessions.put(state, {
+      caller;
+      redirectUri;
+      createdAtMs = now;
+    });
+    #ok(state);
+  };
+
+  /// Exchange a DecideID authorization code for a userinfo response,
+  /// and on `verified=true` mark the calling user as PoH-verified.
+  ///
+  /// The legacy VerifyResult shape is preserved so the frontend store
+  /// can keep its `'Ok' in result` / `result.Err` branching. The
+  /// `timestamp` field is set to the canister time when verification
+  /// succeeded — we no longer have a credential-issuance timestamp.
+  public shared ({ caller }) func verifyPoh(code : Text, state : Text, redirectUri : Text) : async VerifyResult {
+    if (isAnonymous(caller)) {
+      return #Err("Anonymous cannot call this method");
+    };
+    if (principalIdHashMap.get(Principal.toText(caller)) == null) {
+      return #Err(Unauthorized);
+    };
+
+    // IS_LOCAL bypass mirrors the previous flow: local dev cannot
+    // round-trip through DecideID, so accept any code and grant
+    // verification. Production / staging must always go through the
+    // real OIDC exchange.
+    if (ENV.IS_LOCAL) {
+      ignore updateVerificationStatus(caller, true);
+      return #Ok({
+        provider = #DecideAI;
+        timestamp = Nat64.fromIntWrap(Time.now() / 1_000_000);
+      });
+    };
+
+    let now = nowMsNat();
+    DecideID.purgeExpiredSessions(decideIdOidcSessions, now);
+
+    let session = switch (decideIdOidcSessions.get(state)) {
+      case (?s) { s };
+      case (null) { return #Err("Invalid or expired state") };
+    };
+
+    if (not Principal.equal(session.caller, caller)) {
+      return #Err("State does not belong to caller");
+    };
+    if (session.redirectUri != redirectUri) {
+      return #Err("Redirect URI mismatch");
+    };
+    if (now >= session.createdAtMs and now - session.createdAtMs > DecideID.OIDC_SESSION_TTL_MS) {
+      decideIdOidcSessions.delete(state);
+      return #Err("State expired");
+    };
+
+    let clientId = switch (decideIdClientId) {
+      case (?v) v;
+      case (null) { return #Err("DecideID client_id is not configured") };
+    };
+    let clientSecret = switch (decideIdClientSecret) {
+      case (?v) v;
+      case (null) { return #Err("DecideID client_secret is not configured") };
+    };
+
+    let tokenBody = DecideID.formUrlEncode([
+      ("grant_type", "authorization_code"),
+      ("code", code),
+      ("client_id", clientId),
+      ("client_secret", clientSecret),
+      ("redirect_uri", redirectUri),
+    ]);
+
+    let tokenBytes = switch (await DecideID.httpPostForm(DecideID.DECIDEID_TOKEN_ENDPOINT, tokenBody)) {
+      case (#ok(b)) b;
+      case (#err(e)) { return #Err("Token exchange failed: " # e) };
+    };
+    let tokenJson = switch (Text.decodeUtf8(Blob.fromArray(tokenBytes))) {
+      case (?t) t;
+      case (null) { return #Err("Token response was not valid UTF-8") };
+    };
+    let accessToken = switch (DecideID.jsonGetString(tokenJson, "access_token")) {
+      case (?t) t;
+      case (null) { return #Err("Token response missing access_token") };
+    };
+
+    let userinfoBytes = switch (await DecideID.httpGetJsonBearer(DecideID.DECIDEID_USERINFO_ENDPOINT, accessToken)) {
+      case (#ok(b)) b;
+      case (#err(e)) { return #Err("Userinfo request failed: " # e) };
+    };
+    let userinfoJson = switch (Text.decodeUtf8(Blob.fromArray(userinfoBytes))) {
+      case (?t) t;
+      case (null) { return #Err("Userinfo response was not valid UTF-8") };
+    };
+    let verified = switch (DecideID.jsonGetBool(userinfoJson, "verified")) {
+      case (?v) v;
+      case (null) { return #Err("Userinfo response missing 'verified' field") };
+    };
+    let sub = switch (DecideID.jsonGetString(userinfoJson, "sub")) {
+      case (?v) v;
+      case (null) { return #Err("Userinfo response missing 'sub' field") };
+    };
+
+    // Single-use: drop the session even on failure so the same code
+    // can't be re-tried.
+    decideIdOidcSessions.delete(state);
+
+    if (not verified) {
+      return #Err("DecideID: account is not currently verified");
+    };
+
+    // Enforce one-Nuance-account-per-DecideID. A `sub` already bound
+    // to another principal can never be re-claimed; a caller already
+    // bound to a different `sub` can't switch DecideID accounts either.
+    // Legacy verified users with no recorded sub are unaffected.
+    let callerText = Principal.toText(caller);
+    switch (decideIdSubToPrincipal.get(sub)) {
+      case (?existingPrincipal) {
+        if (existingPrincipal != callerText) {
+          return #Err("This DecideID account is already linked to another Nuance account");
+        };
+      };
+      case (null) {};
+    };
+    switch (decideIdPrincipalToSub.get(callerText)) {
+      case (?existingSub) {
+        if (existingSub != sub) {
+          return #Err("This Nuance account is already linked to a different DecideID account");
+        };
+      };
+      case (null) {};
+    };
+
+    decideIdSubToPrincipal.put(sub, callerText);
+    decideIdPrincipalToSub.put(callerText, sub);
+    ignore updateVerificationStatus(caller, true);
+    #Ok({
+      provider = #DecideAI;
+      timestamp = Nat64.fromIntWrap(Time.now() / 1_000_000);
+    });
+  };
+
+  /// Admin: set the DecideID OIDC client_id. Pass null to clear.
+  public shared ({ caller }) func adminSetDecideIdClientId(value : ?Text) : async Result.Result<(), Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    decideIdClientId := value;
+    #ok(());
+  };
+
+  /// Admin: set the DecideID OIDC client_secret. Pass null to clear.
+  public shared ({ caller }) func adminSetDecideIdClientSecret(value : ?Text) : async Result.Result<(), Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    decideIdClientSecret := value;
+    #ok(());
+  };
+
+  /// Admin: read back the configured client_id. The secret is never
+  /// returned by any query — rotate it by setting a new value.
+  public shared query ({ caller }) func adminGetDecideIdClientId() : async Result.Result<?Text, Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    #ok(decideIdClientId);
+  };
+
+  /// Whether a client_secret has been configured. Exposed (without the
+  /// value) so the admin UI can show configuration status.
+  public shared query ({ caller }) func adminIsDecideIdClientSecretSet() : async Result.Result<Bool, Text> {
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+    #ok(decideIdClientSecret != null);
+  };
+
+  //#endregion
 
   public shared ({ caller }) func removePoh(handle: Text) : async Result.Result<User, Text> {
     if (isAnonymous(caller)) {
@@ -876,6 +1059,16 @@ actor User {
     switch (principalId) {
       case (?pid) {
         isVerifiedUsersHashMap.delete(pid);
+        // Release the DecideID sub binding so a future re-verification
+        // (e.g. after a wrongful flag is cleared) can succeed. Without
+        // this, the sub would stay locked to a now-unverified account.
+        switch (decideIdPrincipalToSub.get(pid)) {
+          case (?sub) {
+            decideIdPrincipalToSub.delete(pid);
+            decideIdSubToPrincipal.delete(sub);
+          };
+          case (null) {};
+        };
         return #ok(buildUser(pid));
       };
       case (null) {
@@ -3407,7 +3600,7 @@ actor User {
     let unsubscribeBase =
       if (ENV.IS_LOCAL) {
         "http://localhost:8081"
-      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
+      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "t6unq-pqaaa-aaaai-q3nqa-cai") {
         "https://nuance.xyz"
       } else {
         "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
@@ -3802,6 +3995,10 @@ actor User {
     emailRateLimiterEntries := Iter.toArray(emailRateLimiterHashMap.entries());
     pendingEmailBatchesEntries := Iter.toArray(pendingEmailBatchesHashMap.entries());
     deadEmailBatchesEntries := Iter.toArray(deadEmailBatchesHashMap.entries());
+    // DecideID OIDC sessions (in-flight only; expires in 10m anyway).
+    decideIdOidcSessionsEntries := Iter.toArray(decideIdOidcSessions.entries());
+    decideIdSubToPrincipalEntries := Iter.toArray(decideIdSubToPrincipal.entries());
+    decideIdPrincipalToSubEntries := Iter.toArray(decideIdPrincipalToSub.entries());
   };
 
   system func postupgrade() {
@@ -3846,6 +4043,9 @@ actor User {
     emailRateLimiterHashMap := HashMap.fromIter(emailRateLimiterEntries.vals(), initCapacity, isEq, Text.hash);
     pendingEmailBatchesHashMap := HashMap.fromIter(pendingEmailBatchesEntries.vals(), initCapacity, isEq, Text.hash);
     deadEmailBatchesHashMap := HashMap.fromIter(deadEmailBatchesEntries.vals(), initCapacity, isEq, Text.hash);
+    decideIdOidcSessions := HashMap.fromIter(decideIdOidcSessionsEntries.vals(), initCapacity, isEq, Text.hash);
+    decideIdSubToPrincipal := HashMap.fromIter(decideIdSubToPrincipalEntries.vals(), initCapacity, isEq, Text.hash);
+    decideIdPrincipalToSub := HashMap.fromIter(decideIdPrincipalToSubEntries.vals(), initCapacity, isEq, Text.hash);
 
     // Re-register the retry timer (timers don't survive upgrades). Even
     // when the queue is empty, arm it so newly-enqueued failures after
@@ -3880,6 +4080,9 @@ actor User {
     emailRateLimiterEntries := [];
     pendingEmailBatchesEntries := [];
     deadEmailBatchesEntries := [];
+    decideIdOidcSessionsEntries := [];
+    decideIdSubToPrincipalEntries := [];
+    decideIdPrincipalToSubEntries := [];
   };
 
   //#endregion

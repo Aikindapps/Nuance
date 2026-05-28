@@ -24,8 +24,28 @@ import {
 } from '../services/actorService';
 import { removeDuplicatesFromArray } from '../shared/utils';
 import { NavigateFunction } from 'react-router-dom';
-import { requestVerifiablePresentation, VerifiablePresentationResponse } from '@dfinity/verifiable-credentials/request-verifiable-presentation';
-import { Principal } from '@dfinity/principal';
+// DecideID OIDC client integration. Frontend role:
+//   1. Ask the User canister for a fresh `state` via createDecideIdState.
+//   2. Stash it (with the redirect URI) in sessionStorage so the
+//      callback page can validate that the response came from a flow we
+//      initiated.
+//   3. Redirect the browser to the DecideID authorize endpoint.
+// The token exchange + userinfo lookup happen on the canister, not here.
+const DECIDEID_AUTHORIZE_URL = 'https://id.decideai.xyz/#/authorize';
+const DECIDEID_CLIENT_ID = process.env.DECIDEID_CLIENT_ID || 'nuance';
+const DECIDEID_CALLBACK_PATH = '/callback';
+const DECIDEID_SESSION_KEY = 'decideid_oidc_session';
+
+export type DecideIdSession = {
+  state: string;
+  redirectUri: string;
+  // Where to send the user after a successful (or failed) callback.
+  returnTo: string;
+};
+
+function buildDecideIdRedirectUri(): string {
+  return `${window.location.origin}${DECIDEID_CALLBACK_PATH}`;
+}
 import { Agent } from '@dfinity/agent';
 
 const Err = 'err';
@@ -33,20 +53,6 @@ const Unexpected = 'Unexpected error: ';
 const UserNotFound = 'User not found';
 
 //check derivation origin is PROD or UAT
-const NuanceUATCanisterId = process.env.UAT_FRONTEND_CANISTER_ID || '';
-const NuanceUAT = `https://${NuanceUATCanisterId}.ic0.app`;
-const NuancePROD = 'https://exwqn-uaaaa-aaaaf-qaeaa-cai.ic0.app';
-
-const derivationOrigin: string = window.location.origin.includes(
-  NuanceUATCanisterId
-)
-  ? NuanceUAT
-  : NuancePROD;
-
-const isLocal: boolean =
-  window.location.origin.includes('localhost') ||
-  window.location.origin.includes('127.0.0.1');
-
 const handleError = (err: any, preText?: string) => {
   const errorType = getErrorType(err);
 
@@ -301,9 +307,18 @@ export interface UserStore {
     amount: number,
     agent?: Agent
   ) => Promise<boolean | void>;
-  proceedWithVerification: (userPrincipal: Principal) => Promise<void>;
   getLinkedPrincipal: (principal: string) => Promise<string | undefined>;
-  verifyPoh: (jwt: string) => Promise<void>;
+  /// Begin the DecideID OIDC flow. Creates a `state` on the canister,
+  /// stashes it in sessionStorage, and redirects the browser to
+  /// DecideID. The caller does not return — the page navigates away.
+  startDecideIdVerification: (returnTo?: string) => Promise<void>;
+  /// Finish the DecideID OIDC flow after the browser returns to the
+  /// callback page with `?code=&state=`. Returns the toast message text
+  /// describing the outcome so the callback page can render it.
+  completeDecideIdVerification: (
+    code: string,
+    state: string,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   clearAll: () => void;
 }
 
@@ -365,67 +380,82 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
     return undefined;
   },
 
-  verifyPoh: async (jwt: string): Promise<void> => {
+  startDecideIdVerification: async (returnTo?: string): Promise<void> => {
     try {
-      const result = await (await getUserActor()).verifyPoh(jwt);
+      const redirectUri = buildDecideIdRedirectUri();
+      const result = await (await getUserActor()).createDecideIdState(redirectUri);
 
-      if ('Ok' in result) {
-        const userResult = await (await getUserActor()).getUser();
-
-        if ('ok' in userResult) {
-          const user = toUserModel(userResult.ok);
-          set({ user });
-
-          toast('Verification successful!', ToastType.Success);
-        } else {
-          toastError('Verification succeeded, but failed to update user information.');
-        }
-      } else {
-        toastError('Verification failed: ' + result.Err);
+      if (!('ok' in result)) {
+        toastError('Could not start verification: ' + result.err);
+        return;
       }
+      const state = result.ok;
+
+      const session: DecideIdSession = {
+        state,
+        redirectUri,
+        returnTo: returnTo ?? window.location.pathname + window.location.search,
+      };
+      window.sessionStorage.setItem(DECIDEID_SESSION_KEY, JSON.stringify(session));
+
+      const params = new URLSearchParams({
+        client_id: DECIDEID_CLIENT_ID,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'poh',
+        state,
+      });
+      // The authorize endpoint lives behind a hash route; the query
+      // string must therefore follow the fragment, not precede it.
+      window.location.href = `${DECIDEID_AUTHORIZE_URL}?${params.toString()}`;
     } catch (error) {
       handleError(error, Unexpected);
     }
   },
 
-  proceedWithVerification: async (verifyPrincipal: Principal): Promise<void> => {
+  completeDecideIdVerification: async (
+    code: string,
+    state: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const raw = window.sessionStorage.getItem(DECIDEID_SESSION_KEY);
+    if (!raw) {
+      return { ok: false, error: 'No DecideID session in progress — start verification again.' };
+    }
+    let session: DecideIdSession;
     try {
-      const jwt: string = await new Promise((resolve, reject) => {
-        requestVerifiablePresentation({
-          onSuccess: async (verifiablePresentation: VerifiablePresentationResponse) => {
-            if ('Ok' in verifiablePresentation) {
-              resolve(verifiablePresentation.Ok);
-            } else {
-              reject(new Error(verifiablePresentation.Err));
-            }
-          },
-          onError(err) {
-            reject(new Error(err));
-          },
-          issuerData: {
-            origin: 'https://id.decideai.xyz',
-            canisterId: Principal.fromText('qgxyr-pyaaa-aaaah-qdcwq-cai'),
-          },
-          credentialData: {
-            credentialSpec: {
-              credentialType: 'ProofOfUniqueness',
-              arguments: {
-                "minimumVerificationDate": "2020-12-01T00:00:00Z",
-              },
-            },
-            credentialSubject: verifyPrincipal,
-          },
-          identityProvider: new URL('https://identity.ic0.app/'),
-          derivationOrigin: isLocal ? undefined : derivationOrigin,
-        });
-      });
+      session = JSON.parse(raw) as DecideIdSession;
+    } catch {
+      return { ok: false, error: 'DecideID session is corrupted.' };
+    }
+    // Single-use: drop the stashed session no matter what happens next.
+    window.sessionStorage.removeItem(DECIDEID_SESSION_KEY);
 
-      // verify the JWT credentials
-      await get().verifyPoh(jwt);
+    if (session.state !== state) {
+      return { ok: false, error: 'State mismatch — possible CSRF, please try again.' };
+    }
 
+    try {
+      const result = await (await getUserActor()).verifyPoh(
+        code,
+        state,
+        session.redirectUri,
+      );
+
+      if ('Ok' in result) {
+        const userResult = await (await getUserActor()).getUser();
+        if ('ok' in userResult) {
+          set({ user: toUserModel(userResult.ok) });
+        }
+        toast('Verification successful!', ToastType.Success);
+        return { ok: true };
+      }
+      const message = 'Verification failed: ' + result.Err;
+      toastError(message);
+      return { ok: false, error: message };
     } catch (error) {
       handleError(error, Unexpected);
-      // handle error
+      const msg = (error as any)?.message ?? String(error);
+      return { ok: false, error: msg };
     }
   },
 
