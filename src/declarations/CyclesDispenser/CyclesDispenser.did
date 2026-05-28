@@ -16,6 +16,14 @@ type TimeRange =
    day: nat;
    hour: nat;
  };
+type StaleCanister = 
+ record {
+   cachedBalance: nat;
+   canisterId: text;
+   consecutiveFailures: nat;
+   isStorageBucket: bool;
+   lastFailureTime: int;
+ };
 type Result_4 = 
  variant {
    err: text;
@@ -85,6 +93,7 @@ service : {
   getMemorySize: () -> (nat) query;
   getPlatformOperators: () -> (List) query;
   getRegisteredCanister: (canisterId: text) -> (Result_4) query;
+  getStaleCanisters: () -> (vec StaleCanister) query;
   getStatus: () -> (text) query;
   getTopUp: (id: text) -> (Result_3) query;
   getTopUpsByRange: (range: TimeRange) -> (vec TopUp) query;

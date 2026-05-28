@@ -26,6 +26,13 @@ export const idlFactory = ({ IDL }) => {
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Result_3 = IDL.Variant({ 'ok' : TopUp, 'err' : IDL.Text });
   List.fill(IDL.Opt(IDL.Tuple(IDL.Text, List)));
+  const StaleCanister = IDL.Record({
+    'cachedBalance' : IDL.Nat,
+    'lastFailureTime' : IDL.Int,
+    'isStorageBucket' : IDL.Bool,
+    'canisterId' : IDL.Text,
+    'consecutiveFailures' : IDL.Nat,
+  });
   const TimeRange = IDL.Variant({ 'day' : IDL.Nat, 'hour' : IDL.Nat });
   const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Validate = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : IDL.Text });
@@ -59,6 +66,7 @@ export const idlFactory = ({ IDL }) => {
     'getMemorySize' : IDL.Func([], [IDL.Nat], ['query']),
     'getPlatformOperators' : IDL.Func([], [List], ['query']),
     'getRegisteredCanister' : IDL.Func([IDL.Text], [Result_4], ['query']),
+    'getStaleCanisters' : IDL.Func([], [IDL.Vec(StaleCanister)], ['query']),
     'getStatus' : IDL.Func([], [IDL.Text], ['query']),
     'getTopUp' : IDL.Func([IDL.Text], [Result_3], ['query']),
     'getTopUpsByRange' : IDL.Func([TimeRange], [IDL.Vec(TopUp)], ['query']),
