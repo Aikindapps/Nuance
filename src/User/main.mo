@@ -3600,7 +3600,7 @@ actor User {
     let unsubscribeBase =
       if (ENV.IS_LOCAL) {
         "http://localhost:8081"
-      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "t6unq-pqaaa-aaaai-q3nqa-cai") {
+      } else if (ENV.NUANCE_ASSETS_CANISTER_ID == "exwqn-uaaaa-aaaaf-qaeaa-cai") {
         "https://nuance.xyz"
       } else {
         "https://" # ENV.NUANCE_ASSETS_CANISTER_ID # ".ic0.app"
