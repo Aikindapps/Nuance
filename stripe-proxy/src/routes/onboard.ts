@@ -76,8 +76,12 @@ export const createOnboardRouter = (config: EnvConfig): Router => {
             .json({ error: `Canister update failed: ${updateResult.err}` });
         }
 
-        await subscriptionActor.consumeProxyAuthorization(writerId);
       }
+
+      // Consume the nonce in both branches (new account and existing-account
+      // refresh) so the same authorization can't be replayed within its
+      // 2-minute window to spawn additional Stripe API calls.
+      await subscriptionActor.consumeProxyAuthorization(writerId);
 
       const accountLink = await stripe.accountLinks.create({
         account: accountId,

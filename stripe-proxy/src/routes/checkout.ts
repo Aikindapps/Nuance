@@ -67,6 +67,10 @@ export const createCheckoutRouter = (config: EnvConfig): Router => {
         cancel_url: `${cancelUrl}?stripe_checkout=cancel`,
       });
 
+      // Consume the nonce so the same authorization can't be replayed within
+      // its 2-minute window to spawn additional checkout sessions.
+      await subscriptionActor.consumeProxyAuthorization(readerId);
+
       return res.json({ url: session.url });
     } catch (err: any) {
       console.error(`[${config.name}][checkout] Error:`, err.message);

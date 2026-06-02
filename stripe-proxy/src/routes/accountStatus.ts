@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { EnvConfig } from '../envConfig';
+import { verifyAuthorization } from '../auth';
 
 /**
  * POST /stripe/account-status  (or /:env/stripe/account-status)
@@ -7,20 +8,28 @@ import { EnvConfig } from '../envConfig';
  * canister's stripeIsActive flag to reflect whether the account can actually
  * receive payments (charges enabled + transfers capability active).
  *
- * Body: { writerId: string }
+ * Body: { writerId: string, nonce: string }
  *
- * No nonce auth needed: this only ever syncs the canister to Stripe's real
- * state, and the canister write itself is gated to the trusted proxy principal.
+ * Nonce auth: same pattern as the other routes. Without it, any caller who
+ * knows a writerId could trigger a stripe.accounts.retrieve + canister write.
+ * CORS is the only protection against browser callers, so a non-browser caller
+ * would otherwise be unrestricted.
  */
 export const createAccountStatusRouter = (config: EnvConfig): Router => {
   const router = Router();
   const { stripe, subscriptionActor } = config;
 
   router.post('/', async (req: Request, res: Response) => {
-    const { writerId } = req.body;
+    const { writerId, nonce } = req.body;
 
-    if (!writerId) {
-      return res.status(400).json({ error: 'writerId is required' });
+    if (!writerId || !nonce) {
+      return res.status(400).json({ error: 'writerId and nonce are required' });
+    }
+
+    try {
+      await verifyAuthorization(subscriptionActor, writerId, nonce);
+    } catch (err: any) {
+      return res.status(401).json({ error: err.message });
     }
 
     try {
@@ -47,6 +56,10 @@ export const createAccountStatusRouter = (config: EnvConfig): Router => {
           result.err
         );
       }
+
+      // Consume the nonce so the same authorization can't be replayed within
+      // its 2-minute window.
+      await subscriptionActor.consumeProxyAuthorization(writerId);
 
       return res.json({
         connected: true,

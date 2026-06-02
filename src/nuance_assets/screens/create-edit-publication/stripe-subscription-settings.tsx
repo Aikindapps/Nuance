@@ -22,8 +22,11 @@ interface StripeSubscriptionSettingsProps {
   publicationCanisterId?: string;
 }
 
-type Interval = 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime';
-const INTERVALS: Interval[] = ['Weekly', 'Monthly', 'Annually', 'LifeTime'];
+// LifeTime is intentionally excluded: Stripe has no one-time "lifetime" concept,
+// so charging a writer's "lifetime" tier as a yearly-recurring subscription
+// would mislead readers. NUA-based subscriptions still support LifeTime.
+type Interval = 'Weekly' | 'Monthly' | 'Annually';
+const INTERVALS: Interval[] = ['Weekly', 'Monthly', 'Annually'];
 
 const StripeSubscriptionSettings: React.FC<StripeSubscriptionSettingsProps> = ({
   writerPrincipalId,
@@ -49,11 +52,12 @@ const StripeSubscriptionSettings: React.FC<StripeSubscriptionSettingsProps> = ({
       Weekly: '',
       Monthly: '',
       Annually: '',
-      LifeTime: '',
     };
     for (const [interval, , cents] of stripePricing) {
-      const key = Object.keys(interval)[0] as Interval;
-      result[key] = (Number(cents) / 100).toString();
+      const key = Object.keys(interval)[0] as string;
+      if (key === 'Weekly' || key === 'Monthly' || key === 'Annually') {
+        result[key] = (Number(cents) / 100).toString();
+      }
     }
     return result;
   };
@@ -75,7 +79,11 @@ const StripeSubscriptionSettings: React.FC<StripeSubscriptionSettingsProps> = ({
     let cancelled = false;
     const checkStatus = async () => {
       try {
-        const status = await fetchStripeAccountStatus(writerPrincipalId);
+        const status = await fetchStripeAccountStatus(
+          writerPrincipalId,
+          agent,
+          publicationCanisterId
+        );
         if (!cancelled) {
           setAccountActive(status.active);
         }
@@ -89,7 +97,7 @@ const StripeSubscriptionSettings: React.FC<StripeSubscriptionSettingsProps> = ({
       cancelled = true;
       window.removeEventListener('nuance:stripe-return', checkStatus);
     };
-  }, [stripeAccountId, writerPrincipalId]);
+  }, [stripeAccountId, writerPrincipalId, agent, publicationCanisterId]);
 
   // the parent fetches subscription details asynchronously, so re-sync the
   // editable price inputs whenever the stored pricing arrives or changes
@@ -98,11 +106,12 @@ const StripeSubscriptionSettings: React.FC<StripeSubscriptionSettingsProps> = ({
       Weekly: '',
       Monthly: '',
       Annually: '',
-      LifeTime: '',
     };
     for (const [interval, , cents] of stripePricing) {
-      const key = Object.keys(interval)[0] as Interval;
-      result[key] = (Number(cents) / 100).toString();
+      const key = Object.keys(interval)[0] as string;
+      if (key === 'Weekly' || key === 'Monthly' || key === 'Annually') {
+        result[key] = (Number(cents) / 100).toString();
+      }
     }
     setPrices(result);
   }, [stripePricing]);

@@ -69,7 +69,7 @@ export const onboardWriter = async (
 // Creates a recurring Stripe Price for the writer at the given interval/amount.
 export const createPriceTier = async (
   writerId: string,
-  interval: 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime',
+  interval: 'Weekly' | 'Monthly' | 'Annually',
   usdAmountCents: string,
   agent?: Agent,
   publicationCanisterId?: string
@@ -115,18 +115,17 @@ export type StripeAccountStatus = {
 };
 
 // Checks the writer's live Stripe account status and syncs the canister's
-// active flag. No nonce needed: it only mirrors Stripe's real state.
+// active flag. Uses the same nonce auth as the other proxy routes to prevent
+// unauthenticated callers from triggering Stripe API calls.
 export const fetchStripeAccountStatus = async (
-  writerId: string
+  writerId: string,
+  agent?: Agent,
+  publicationCanisterId?: string
 ): Promise<StripeAccountStatus> => {
-  const response = await fetch(`${STRIPE_PROXY_URL}/stripe/account-status`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ writerId }),
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data?.error || 'Stripe account status request failed');
-  }
-  return data as StripeAccountStatus;
+  return authorizeAndPost<StripeAccountStatus>(
+    'account-status',
+    { writerId },
+    agent,
+    publicationCanisterId
+  );
 };

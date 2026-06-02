@@ -10,7 +10,7 @@ import { verifyAuthorization } from '../auth';
  *
  * Body: {
  *   writerId: string,
- *   interval: 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime',
+ *   interval: 'Weekly' | 'Monthly' | 'Annually',  // LifeTime not supported on Stripe
  *   usdAmountCents: string,  // e.g. "500" for $5.00
  *   nonce: string
  * }
@@ -25,6 +25,13 @@ export const createCreatePriceRouter = (config: EnvConfig): Router => {
     if (!writerId || !interval || !usdAmountCents || !nonce) {
       return res.status(400).json({
         error: 'writerId, interval, usdAmountCents, and nonce are required',
+      });
+    }
+
+    // LifeTime is not supported on Stripe — see stripe.ts toStripeInterval.
+    if (interval !== 'Weekly' && interval !== 'Monthly' && interval !== 'Annually') {
+      return res.status(400).json({
+        error: `Unsupported Stripe interval: ${interval}. Allowed: Weekly, Monthly, Annually.`,
       });
     }
 
@@ -79,6 +86,11 @@ export const createCreatePriceRouter = (config: EnvConfig): Router => {
           .status(500)
           .json({ error: `Canister update failed: ${updateResult.err}` });
       }
+
+      // Consume the nonce so the same authorization can't be replayed within
+      // its 2-minute window to create duplicate prices (which would orphan the
+      // earlier price on Stripe — the canister only keeps the latest priceId).
+      await subscriptionActor.consumeProxyAuthorization(writerId);
 
       return res.json({ priceId: price.id, interval, usdAmountCents });
     } catch (err: any) {

@@ -1463,9 +1463,19 @@ actor Subscription {
                 Map.set(readerPrincipalIdToSubscriptionEventIds, thash, readerId, Buffer.toArray(readerEventsBuffer));
 
                 let readerNotStopped = Option.get(Map.get(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId), []);
-                let readerNotStoppedBuffer = Buffer.fromArray<Text>(readerNotStopped);
-                readerNotStoppedBuffer.add(writerId);
-                Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId, Buffer.toArray(readerNotStoppedBuffer));
+                //dedup: if the reader cancels and re-subscribes to the same writer,
+                //we'd otherwise end up with writerId stored twice. The checkout
+                //route's isReaderSubscriber guard prevents this in practice, but
+                //this keeps the list correct if the guard is ever bypassed.
+                let alreadyListed = Array.find<Text>(readerNotStopped, func(p) { p == writerId });
+                switch (alreadyListed) {
+                    case (?_) {};
+                    case (null) {
+                        let readerNotStoppedBuffer = Buffer.fromArray<Text>(readerNotStopped);
+                        readerNotStoppedBuffer.add(writerId);
+                        Map.set(readerPrincipalIdToNotStoppedAndSubscribedWriterPrincipalIds, thash, readerId, Buffer.toArray(readerNotStoppedBuffer));
+                    };
+                };
             };
         };
 
@@ -1540,7 +1550,13 @@ actor Subscription {
         Map.get(writerPrincipalIdToStripeAccountId, thash, writerPrincipalId)
     };
 
-    public shared query func getStripeCustomerId(readerPrincipalId: Text) : async ?Text {
+    //restricted: only the proxy (for billing portal) or the reader themselves
+    //may look up a customer ID. Customer IDs are PII-adjacent and there's no
+    //reason for a third party to be able to enumerate them by principal.
+    public shared query ({caller}) func getStripeCustomerId(readerPrincipalId: Text) : async ?Text {
+        if (not isProxyCaller(caller) and Principal.toText(caller) != readerPrincipalId) {
+            return null;
+        };
         Map.get(readerPrincipalIdToStripeCustomerId, thash, readerPrincipalId)
     };
 

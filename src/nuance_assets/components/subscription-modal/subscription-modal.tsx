@@ -312,14 +312,18 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     !optionsLoading &&
     subscriptionOptions.some((option) => option.fee && option.fee.length > 0);
 
-  // Stripe card payment tiers, derived from the writer's stored stripePricing
-  const stripePriceTiers = (subscriptionDetails?.stripePricing || []).map(
-    ([interval, priceId, cents]) => ({
-      label: Object.keys(interval)[0], // 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime'
+  // Stripe card payment tiers, derived from the writer's stored stripePricing.
+  // LifeTime is filtered out: Stripe has no one-time "lifetime" concept and we
+  // no longer let writers create LifeTime Stripe prices. Any legacy LifeTime
+  // entry on the canister is hidden so it can't be checked out as a yearly
+  // recurring subscription.
+  const stripePriceTiers = (subscriptionDetails?.stripePricing || [])
+    .map(([interval, priceId, cents]) => ({
+      label: Object.keys(interval)[0], // 'Weekly' | 'Monthly' | 'Annually'
       priceId,
       usd: (Number(cents) / 100).toFixed(2),
-    })
-  );
+    }))
+    .filter((tier) => tier.label !== 'LifeTime');
   const stripeAvailable =
     !optionsLoading &&
     !!subscriptionDetails?.stripeIsActive &&
@@ -367,8 +371,6 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         return 'month';
       case 'Annually':
         return 'year';
-      case 'LifeTime':
-        return 'lifetime';
       default:
         return 'period';
     }

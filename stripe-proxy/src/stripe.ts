@@ -11,11 +11,10 @@ export function toStripeInterval(interval: string): Stripe.PriceCreateParams.Rec
       return 'month';
     case 'Annually':
       return 'year';
-    case 'LifeTime':
-      // Stripe has no "lifetime" concept - approximate with yearly recurrence
-      return 'year';
     default:
-      throw new Error(`Unknown subscription interval: ${interval}`);
+      // LifeTime intentionally not supported: Stripe has no one-time "lifetime"
+      // concept and mapping it to yearly recurrence misleads readers.
+      throw new Error(`Unsupported Stripe subscription interval: ${interval}`);
   }
 }
 

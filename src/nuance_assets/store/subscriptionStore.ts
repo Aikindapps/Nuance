@@ -353,7 +353,7 @@ export interface SubscriptionStore {
   // Stripe — writer creates/updates a price tier for an interval (USD cents as string)
   createStripePriceTier: (
     writerPrincipalId: string,
-    interval: 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime',
+    interval: 'Weekly' | 'Monthly' | 'Annually',
     usdAmountCents: string,
     agent?: Agent,
     publicationCanisterId?: string
@@ -757,7 +757,7 @@ const createSubscriptionStore:
     //writer creates or updates a Stripe price tier for the given interval
     createStripePriceTier: async (
       writerPrincipalId: string,
-      interval: 'Weekly' | 'Monthly' | 'Annually' | 'LifeTime',
+      interval: 'Weekly' | 'Monthly' | 'Annually',
       usdAmountCents: string,
       agent?: Agent,
       publicationCanisterId?: string

@@ -41,6 +41,10 @@ export const createBillingPortalRouter = (config: EnvConfig): Router => {
         return_url: `${cancelUrl}?stripe_billing=return`,
       });
 
+      // Consume the nonce so the same authorization can't be replayed within
+      // its 2-minute window to spawn additional billing portal sessions.
+      await subscriptionActor.consumeProxyAuthorization(readerId);
+
       return res.json({ url: portalSession.url });
     } catch (err: any) {
       console.error(`[${config.name}][billing-portal] Error:`, err.message);
