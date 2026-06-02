@@ -32,7 +32,17 @@ import { NavigateFunction } from 'react-router-dom';
 //   3. Redirect the browser to the DecideID authorize endpoint.
 // The token exchange + userinfo lookup happen on the canister, not here.
 const DECIDEID_AUTHORIZE_URL = 'https://id.decideai.xyz/#/authorize';
-const DECIDEID_CLIENT_ID = process.env.DECIDEID_CLIENT_ID || 'nuance';
+// Prod vs UAT have separate DecideID client registrations (each
+// registers its own redirect_uri allowlist). Pick at runtime so a
+// single build can serve both — mirrors the UAT/prod switch the old
+// derivationOrigin code used.
+const UAT_FRONTEND_CANISTER_ID = process.env.UAT_FRONTEND_CANISTER_ID || '';
+const isOnUatFrontend =
+  UAT_FRONTEND_CANISTER_ID !== '' &&
+  window.location.origin.includes(UAT_FRONTEND_CANISTER_ID);
+const DECIDEID_CLIENT_ID = isOnUatFrontend
+  ? process.env.DECIDEID_CLIENT_ID_UAT || ''
+  : process.env.DECIDEID_CLIENT_ID || '';
 const DECIDEID_CALLBACK_PATH = '/callback';
 const DECIDEID_SESSION_KEY = 'decideid_oidc_session';
 
@@ -382,6 +392,14 @@ const createUserStore: StateCreator<UserStore> | StoreApi<UserStore> = (
 
   startDecideIdVerification: async (returnTo?: string): Promise<void> => {
     try {
+      if (!DECIDEID_CLIENT_ID) {
+        toastError(
+          isOnUatFrontend
+            ? 'DECIDEID_CLIENT_ID_UAT is not set in the frontend build.'
+            : 'DECIDEID_CLIENT_ID is not set in the frontend build.',
+        );
+        return;
+      }
       const redirectUri = buildDecideIdRedirectUri();
       const result = await (await getUserActor()).createDecideIdState(redirectUri);
 
