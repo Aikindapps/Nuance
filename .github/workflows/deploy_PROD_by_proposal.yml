@@ -116,6 +116,8 @@ jobs:
           PUBLICATION_MANAGEMENT_CANISTER_ID = 'kq23y-aiaaa-aaaaf-qajmq-cai'
           NOTIFICATIONS_CANISTER_ID = 'qrlrq-biaaa-aaaaf-qal2q-cai'
           SUBSCRIPTION_CANISTER_ID = 's6qib-6qaaa-aaaaf-qalwa-cai'
+          DECIDEID_CLIENT_ID = '6902f824-184a-48e8-ae5b-1ed1ddb15e63'
+          DECIDEID_CLIENT_ID_UAT = '84aaf589-a8c8-4a6f-9a9f-2d7786890c0c'
           EOF
 
       - name: Generate empty canister_ids.json to prevent undefined error
