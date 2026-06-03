@@ -731,13 +731,11 @@ const Wallet = () => {
                         className='amount'
                         style={!activity.isWriter ? { color: '#cc4747' } : {}}
                       >
-                        {activity.isWriter
-                          ? '+ ' +
-                            activity.subscriptionFee / Math.pow(10, 8) +
-                            ' NUA'
-                          : '- ' +
-                            activity.subscriptionFee / Math.pow(10, 8) +
-                            ' NUA'}
+                        {(activity.isWriter ? '+ ' : '- ') +
+                          (activity.paymentMethod === 'stripe'
+                            ? '$' + (activity.subscriptionFee / 100).toFixed(2)
+                            : activity.subscriptionFee / Math.pow(10, 8) +
+                              ' NUA')}
                       </div>
                       <div
                         className='date'

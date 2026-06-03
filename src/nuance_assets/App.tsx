@@ -18,6 +18,7 @@ import {
 } from './contextes/ModalContext';
 import { images, colors } from './shared/constants';
 import { authChannel } from './store/authStore';
+import { initStripeReturnHandler } from './services/stripeRedirect';
 
 const HomePageGrid = lazy(() => import('./screens/home/homepage'));
 const Metrics = lazy(() => import('./screens/metrics/metrics'));
@@ -176,6 +177,13 @@ function App() {
       agent ? setIsLoading(false) : setIsLoading(true);
     }
   }, [agent, isLoggedIn]);
+
+  // Handles returns from Stripe: a returning tab notifies the original app tab
+  // and closes itself; the app tab shows a success toast and refreshes views.
+  useEffect(() => {
+    const cleanup = initStripeReturnHandler();
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     if (

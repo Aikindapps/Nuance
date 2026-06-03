@@ -164,6 +164,7 @@ module.exports = {
     }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
+      STRIPE_PROXY_URL: 'http://localhost:3001',
       ...canisterEnvVariables,
     }),
     new webpack.ProvidePlugin({

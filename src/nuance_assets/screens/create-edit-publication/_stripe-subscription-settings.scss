@@ -1,0 +1,143 @@
+@import '../../shared/styles/Colors';
+
+.stripe-subscription-settings {
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin-bottom: 100px;
+
+  .stripe-connect-row {
+    margin-top: 20px;
+  }
+
+  .stripe-status-row {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .stripe-refresh-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: $highlight-two;
+    font-family: Roboto;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+
+  .stripe-status-badge {
+    font-family: Roboto;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 4px;
+
+    &.active {
+      color: #1a7f37;
+      background: rgba(26, 127, 55, 0.12);
+    }
+
+    &.inactive {
+      color: #999999;
+      background: rgba(153, 153, 153, 0.12);
+    }
+  }
+
+  .stripe-price-options {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 20px;
+  }
+
+  .stripe-price-header {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    width: 100%;
+
+    .stripe-header-period,
+    .stripe-header-fee {
+      color: #999;
+      font-family: Roboto;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .stripe-header-period {
+      flex-basis: 30%;
+    }
+
+    .stripe-header-fee {
+      flex-basis: 70%;
+    }
+  }
+
+  .stripe-price-option {
+    display: flex;
+    align-items: center;
+    margin: 6px 0px;
+
+    @media (max-width: 768px) {
+      flex-wrap: wrap;
+      width: 100%;
+    }
+  }
+
+  .stripe-period {
+    flex-basis: 30%;
+    font-size: 12px;
+    color: #999999;
+  }
+
+  .stripe-value-container {
+    flex-basis: 70%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .stripe-dollar {
+      margin-right: 4px;
+      color: currentColor;
+    }
+
+    input {
+      width: 120px;
+      text-align: left;
+      border: none;
+      border-bottom: 1px solid $highlight-one;
+      padding: 5px;
+
+      &:focus {
+        outline: none;
+        border-bottom: 1px solid $highlight-two;
+      }
+
+      &.dark {
+        background: $dark-primary-background-color;
+        color: currentColor;
+      }
+    }
+  }
+
+  .stripe-save-row {
+    margin-top: 24px;
+  }
+
+  .stripe-setup-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #999999;
+    max-width: 480px;
+  }
+}

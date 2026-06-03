@@ -1,0 +1,59 @@
+# Render.com blueprint for the Nuance Stripe proxy.
+# One service serves UAT (test mode) and PROD (live mode) via path prefix:
+#   /uat/stripe/*  → UAT canister + Stripe test mode
+#   /prod/stripe/* → PROD canister + Stripe live mode
+#
+# Secrets (sync: false) MUST be set manually in the Render dashboard before deploy.
+# Non-secret values are committed below; edit if needed and the change auto-deploys.
+
+services:
+  - type: web
+    name: nuance-stripe-proxy
+    runtime: docker
+    dockerfilePath: ./stripe-proxy/Dockerfile
+    dockerContext: ./stripe-proxy
+    plan: starter # always-on; required for webhook reliability (no cold starts)
+    region: oregon
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: PROXY_ENVS
+        value: uat,prod
+      - key: PORT
+        value: 3001
+      - key: IC_HOST
+        value: https://icp-api.io
+      - key: NUANCE_APPLICATION_FEE_PERCENT
+        value: "10"
+
+      # Shared - proxy identity (set its principal as trustedProxyPrincipal on BOTH canisters)
+      - key: PROXY_IDENTITY_JSON
+        sync: false
+
+      # CORS - comma-separated allowlist of frontend origins
+      - key: CORS_ORIGINS
+        sync: false
+
+      # ---- UAT (Stripe test mode + UAT Subscription canister) ----
+      - key: SUBSCRIPTION_CANISTER_ID_UAT
+        value: szrov-tiaaa-aaaaf-qalwq-cai
+      - key: STRIPE_SECRET_KEY_UAT
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET_UAT
+        sync: false
+      - key: STRIPE_SUCCESS_URL_UAT
+        sync: false
+      - key: STRIPE_CANCEL_URL_UAT
+        sync: false
+
+      # ---- PROD (Stripe live mode + PROD Subscription canister) ----
+      - key: SUBSCRIPTION_CANISTER_ID_PROD
+        value: s6qib-6qaaa-aaaaf-qalwa-cai
+      - key: STRIPE_SECRET_KEY_PROD
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET_PROD
+        sync: false
+      - key: STRIPE_SUCCESS_URL_PROD
+        sync: false
+      - key: STRIPE_CANCEL_URL_PROD
+        sync: false

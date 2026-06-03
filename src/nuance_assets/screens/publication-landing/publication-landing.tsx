@@ -253,7 +253,10 @@ function PublicationLanding() {
               subscriptionDetails?.monthlyFee.length > 0) ||
             (subscriptionDetails &&
               subscriptionDetails?.annuallyFee.length > 0) ||
-            (subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0)
+            (subscriptionDetails && subscriptionDetails?.lifeTimeFee.length > 0) ||
+            (subscriptionDetails &&
+              subscriptionDetails.stripeIsActive &&
+              subscriptionDetails.stripePricing.length > 0)
           ) {
             setHasValidSubscriptionOptions(true);
           } else {

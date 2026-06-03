@@ -1,5 +1,104 @@
 @import "../../shared/styles/Colors";
 
+.membership-details {
+    width: 402px;
+    max-width: 99%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 4px 0px 8px;
+    padding: 16px;
+    border: 1px solid rgba(153, 153, 153, 0.3);
+    border-radius: 8px;
+}
+
+.membership-detail-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.membership-detail-label {
+    color: #999999;
+    font-family: Roboto;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.membership-detail-value {
+    font-family: Roboto;
+    font-size: 14px;
+    text-align: right;
+}
+
+.membership-status-badge {
+    font-family: Roboto;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-align: right;
+
+    &.active {
+        color: #1a7f37;
+        background: rgba(26, 127, 55, 0.12);
+    }
+
+    &.ending {
+        color: #b26a00;
+        background: rgba(178, 106, 0, 0.12);
+    }
+
+    &.ended {
+        color: #999999;
+        background: rgba(153, 153, 153, 0.12);
+    }
+}
+
+.membership-note {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #999999;
+}
+
+.subscription-method-tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 16px 0px 0px;
+}
+
+.subscription-method-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    background: transparent;
+    color: currentColor;
+    font-family: Roboto;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.active {
+        border-color: #25F68D;
+        background: rgba(37, 246, 141, 0.12);
+    }
+
+    &.dark {
+        border-color: #444444;
+
+        &.active {
+            border-color: #25F68D;
+            background: rgba(37, 246, 141, 0.16);
+        }
+    }
+}
+
 .subscription-card-wrapper {
     padding: 1px; 
     background: linear-gradient(to top, #1BC0F2, #25F68D);

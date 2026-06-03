@@ -22,6 +22,7 @@ const SubscribersTab: React.FC = () => {
   const [stats, setStats] = useState({
     subscribers: 0,
     nuaEarned: 0,
+    usdEarned: 0,
     thisWeek: 0,
   });
   const [chartData, setChartData] = useState<{ day: string; count: number }[]>(
@@ -49,6 +50,7 @@ const SubscribersTab: React.FC = () => {
             setStats({
               subscribers: details.subscribersCount || 0,
               nuaEarned: details.totalNuaEarned || 0,
+              usdEarned: details.totalUsdEarned || 0,
               thisWeek: details.lastWeekNewSubscribers || 0,
             });
             setSubscribers(details.subscribedReaders);
@@ -77,6 +79,10 @@ const SubscribersTab: React.FC = () => {
     return date.toLocaleDateString();
   };
 
+  // NUA fees are stored in e8s; Stripe fees in USD cents
+  const formatAmount = (amount: number, method: 'nua' | 'stripe') =>
+    method === 'stripe' ? `$${(amount / 100).toFixed(2)}` : `${amount / 1e8} NUA`;
+
   return (
     <div className='subscription-wrapper'>
       <div className='wrapper' style={{ padding: 0, width: '100%' }}>
@@ -95,6 +101,10 @@ const SubscribersTab: React.FC = () => {
                 <div className='subscription-stat'>
                   <p className='subscription-count'>{stats.nuaEarned / 1e8}</p>
                   <p className='subscription-title'>NUA earned</p>
+                </div>
+                <div className='subscription-stat'>
+                  <p className='subscription-count'>${(stats.usdEarned / 100).toFixed(2)}</p>
+                  <p className='subscription-title'>USD earned</p>
                 </div>
                 <div className='subscription-stat'>
                   <p
@@ -160,10 +170,10 @@ const SubscribersTab: React.FC = () => {
                         {sub.period}
                       </td>
                       <td className='subscribers-tab-chart-info'>
-                        {sub.feePerPeriod / 1e8}
+                        {formatAmount(sub.feePerPeriod, sub.paymentMethod)}
                       </td>
                       <td className='subscribers-tab-chart-info'>
-                        {sub.totalFees / 1e8}
+                        {formatAmount(sub.totalFees, sub.paymentMethod)}
                       </td>
                     </tr>
                   ))}
