@@ -1055,7 +1055,7 @@ actor User {
       return #err(Unauthorized);
     };
 
-    var principalId = lowercaseHandleReverseHashMap.get(handle);
+    var principalId = lowercaseHandleReverseHashMap.get(U.lowerCase(U.trim(handle)));
     switch (principalId) {
       case (?pid) {
         isVerifiedUsersHashMap.delete(pid);
@@ -1485,7 +1485,7 @@ actor User {
     };
 
     Debug.print("Get Followers Count => " # handle);
-    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(handle)), "");
     if (not Text.equal(principalId, "")) {
       return U.safeGet(followersCountsHashMap, principalId, "0");
     };
@@ -1673,7 +1673,7 @@ actor User {
       return #err("Handle text length exceeded");
     };
 
-    var principalId = lowercaseHandleReverseHashMap.get(handle);
+    var principalId = lowercaseHandleReverseHashMap.get(U.lowerCase(U.trim(handle)));
     if (principalId == null) {
       return #err(UserNotFound);
     };
@@ -1690,7 +1690,7 @@ actor User {
         return ["Handle text length exceeded"];
       };
 
-      switch (lowercaseHandleReverseHashMap.get(handle)) {
+      switch (lowercaseHandleReverseHashMap.get(U.lowerCase(U.trim(handle)))) {
         case (?principal) {
           resultBuffer.add(principal);
         };
@@ -2537,7 +2537,7 @@ actor User {
       return #err("Invalid handle length");
     };
 
-    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(handle)), "");
 
     if (principalId == "") {
       return #err(UserNotFound);
@@ -2552,7 +2552,7 @@ actor User {
       return #err("Invalid handle length");
     };
 
-    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+    let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(handle)), "");
 
     if (principalId == "") {
       return #err(UserNotFound);
@@ -2583,7 +2583,7 @@ actor User {
       if (not U.isTextLengthValid(handle, 64)) {
         return [];
       };
-      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.trim(handle), "");
+      let principalId = U.safeGet(lowercaseHandleReverseHashMap, U.lowerCase(U.trim(handle)), "");
       if (principalId != "") {
         let user : UserListItem = {
           handle = U.safeGet(handleHashMap, principalId, "");
@@ -2887,7 +2887,7 @@ actor User {
   };
 
   private func getAuthorPrincipalIdByHandle(authorHandle : Text) : ?Text {
-    handleReverseHashMap.get(U.lowerCase(authorHandle));
+    lowercaseHandleReverseHashMap.get(U.lowerCase(U.trim(authorHandle)));
   };
 
   private func getAuthorDisplayName(authorPrincipal : Text) : Text {
@@ -3379,7 +3379,7 @@ actor User {
     email : Text,
   ) : async Bool {
     let normalized = Email.normalizeEmail(email);
-    let authorPrincipal = switch (handleReverseHashMap.get(U.lowerCase(authorHandle))) {
+    let authorPrincipal = switch (lowercaseHandleReverseHashMap.get(U.lowerCase(U.trim(authorHandle)))) {
       case (?id) id;
       case null { return false };
     };
@@ -3401,7 +3401,7 @@ actor User {
     let targetId = switch (publicationCanisterId) {
       case (?cid) cid;
       case null {
-        switch (handleReverseHashMap.get(U.lowerCase(authorHandle))) {
+        switch (lowercaseHandleReverseHashMap.get(U.lowerCase(U.trim(authorHandle)))) {
           case (?id) id;
           case null { return false };
         };
