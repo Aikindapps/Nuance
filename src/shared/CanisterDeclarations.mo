@@ -544,7 +544,7 @@ module{
         expirationDate: Int;
         subaccount: Blob;
     };
-    type WriterSubscriptionDetails = {
+    public type WriterSubscriptionDetails = {
         writerPrincipalId: Text;
         paymentReceiverPrincipalId: Text;
         weeklyFee: ?Text; //stored as Nat, served as Text
@@ -553,6 +553,9 @@ module{
         lifeTimeFee: ?Text; //stored as Nat, served as Text
         isSubscriptionActive: Bool;
         writerSubscriptions: [SubscriptionEvent];
+        stripeAccountId: ?Text;
+        stripeIsActive: Bool;
+        stripePricing: [(SubscriptionTimeInterval, Text, Text)]; //(interval, priceId, usdAmountCents)
     };
 
     //distinguishes NUA token payments from Stripe fiat payments
