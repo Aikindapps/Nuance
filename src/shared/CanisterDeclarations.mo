@@ -555,7 +555,13 @@ module{
         writerSubscriptions: [SubscriptionEvent];
     };
 
-    type SubscriptionEvent = {
+    //distinguishes NUA token payments from Stripe fiat payments
+    public type PaymentMethod = {
+        #Token;
+        #Fiat: { stripeSubscriptionId: Text; usdAmountCents: Text };
+    };
+
+    public type SubscriptionEvent = {
         subscriptionEventId: Text;
         writerPrincipalId: Text;
         readerPrincipalId: Text;
@@ -564,6 +570,8 @@ module{
         startTime: Int;
         endTime: Int;
         isWriterSubscriptionActive: Bool;
+        paymentMethod: ?PaymentMethod;
+        stripeCancelAtPeriodEnd: ?Bool;
     };
 
     public type ReaderSubscriptionDetails = {
