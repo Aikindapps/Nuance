@@ -1,4 +1,5 @@
 .dfx/
+.env
 .env.*
 .DS_Store
 .idea/
