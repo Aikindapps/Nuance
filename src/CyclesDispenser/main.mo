@@ -5,6 +5,7 @@ import Nat "mo:base/Nat";
 import HashMap "mo:base/HashMap";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
+import Error "mo:base/Error";
 import Int "mo:base/Int";
 import Cycles "mo:base/ExperimentalCycles";
 import Time "mo:base/Time";
@@ -76,6 +77,12 @@ actor CyclesDispenser {
     unregisterPlatformOperator : (Text) -> async Result.Result<(), Text>;
   };
 
+  // management canister. deposit_cycles is the only way to add cycles to a canister that has already frozen:
+  // the regular top-up path (acceptCycles/wallet_receive) is an update call and a frozen canister rejects those.
+  let IC = actor "aaaaa-aa" : actor {
+    deposit_cycles : shared { canister_id : Principal } -> async ();
+  };
+
   public type StaleCanister = {
     canisterId : Text;
     consecutiveFailures : Nat;
@@ -90,6 +97,19 @@ actor CyclesDispenser {
   stable var nuanceCanisters : List.List<Text> = List.nil<Text>();
   stable var topUpId : Nat = 0;
   stable var CYCLES_DISPENSER_MINIMUM = 10_000_000_000_000;
+
+  // Storage buckets reserve roughly 10T cycles for their own freezing threshold, so a top-up threshold
+  // at or below that reserve can never fire: the bucket freezes first, and a frozen canister rejects the
+  // balance read (and every other call) that the top-up path depends on. Keep the threshold comfortably
+  // above the freezing reserve so buckets are topped up while they are still reachable.
+  stable var STORAGE_BUCKET_MINIMUM_THRESHOLD : Nat = 20_000_000_000_000;
+  stable var STORAGE_BUCKET_TOP_UP_AMOUNT : Nat = 10_000_000_000_000;
+  // buckets.mo caps a single wallet_receive at this much, anything above it would be refunded silently
+  let STORAGE_BUCKET_WALLET_RECEIVE_LIMIT : Nat = 20_000_000_000_000;
+  // The bucket that froze had reserved roughly 10T for its freezing threshold, and that reserve grows with
+  // the data the bucket holds. This is the floor the tuning method may not go below: without it the setter
+  // can put the buckets straight back into the state the thresholds above exist to prevent.
+  let STORAGE_BUCKET_MINIMUM_THRESHOLD_FLOOR : Nat = 15_000_000_000_000;
 
   stable var canisterIdToMinimumAmountOfCyclesEntries : [(Text, Nat)] = [];
   stable var canisterIdToTopUpAmountEntries : [(Text, Nat)] = [];
@@ -401,6 +421,24 @@ actor CyclesDispenser {
     };
   };
 
+  //stores a top-up record for the given canister and returns the id of the new record
+  private func logTopUp(canisterId : Text, amount : Nat, balanceBefore : Nat, balanceAfter : Nat) : Text {
+    let newTopUpId = getNextTopUpId();
+
+    //add the top-up id to canister's top-ups
+    let existingTopUpIds = List.fromArray(U.safeGet(canisterIdToTopUpIdsHashmap, canisterId, []));
+    canisterIdToTopUpIdsHashmap.put(canisterId, List.toArray(List.push(newTopUpId, existingTopUpIds)));
+
+    //put top-up data to hashmaps
+    topUpIdToCanisterIdHashmap.put(newTopUpId, canisterId);
+    topUpIdToTimeHashmap.put(newTopUpId, Time.now());
+    topUpIdToAmountHashmap.put(newTopUpId, amount);
+    topUpIdToCanisterBalanceBeforeHashmap.put(newTopUpId, balanceBefore);
+    topUpIdToCanisterBalanceAfterHashmap.put(newTopUpId, balanceAfter);
+
+    newTopUpId;
+  };
+
   private func buildRegisteredCanister(canisterId : Text) : RegisteredCanister {
     var topUpsBuffer = Buffer.Buffer<TopUp>(0);
     let topUps = U.safeGet(canisterIdToTopUpIdsHashmap, canisterId, []);
@@ -438,6 +476,7 @@ actor CyclesDispenser {
       canisterIdToTopUpAmountHashmap.put(canister.canisterId, canister.topUpAmount);
       canisterIdToBalanceHashmap.put(canister.canisterId, balance);
       canisterIdToIsStorageBucketHashmap.put(canister.canisterId, canister.isStorageBucket);
+      ignore U.logMetrics("addCanister", Principal.toText(caller));
       #ok(buildRegisteredCanister(canister.canisterId));
     } catch (e) {
       //if here, canister id is not valid or it doesn't contain the availableCycles method
@@ -449,7 +488,9 @@ actor CyclesDispenser {
     if (isAnonymous(caller)) {
       return #err(Unauthorized);
     };
-    if (not isAdmin(caller) and not isNuanceCanister(caller)) {
+    // platform operators are allowed here so retired/dead canisters can be unregistered without an
+    // SNS proposal — otherwise they keep failing balance reads forever and mask real stale canisters
+    if (not isAdmin(caller) and not isNuanceCanister(caller) and not isPlatformOperator(caller)) {
       return #err(Unauthorized);
     };
     switch (canisterIdToMinimumAmountOfCyclesHashmap.get(canisterId)) {
@@ -458,6 +499,8 @@ actor CyclesDispenser {
         return #err("Given canister id not found!");
       };
     };
+
+    ignore U.logMetrics("removeCanister", Principal.toText(caller));
 
     canisterIdToMinimumAmountOfCyclesHashmap.delete(canisterId);
     canisterIdToTopUpAmountHashmap.delete(canisterId);
@@ -495,8 +538,9 @@ actor CyclesDispenser {
     canisterIdToBalanceHashmap.put(canisterId, balance);
     let cyclesDispenserBalance = Cycles.balance();
 
-    // if there're not enough cycles to add, don't add cycles
-    if (Nat.sub(cyclesDispenserBalance, registeredCanister.topUpAmount) < CYCLES_DISPENSER_MINIMUM) {
+    // if there're not enough cycles to add, don't add cycles. Written as an addition because Nat.sub traps
+    // once the dispenser's own balance falls below a single top-up amount.
+    if (cyclesDispenserBalance < registeredCanister.topUpAmount + CYCLES_DISPENSER_MINIMUM) {
       return #UnsufficientCycles;
     };
 
@@ -514,25 +558,12 @@ actor CyclesDispenser {
         };
         
         //if here, it went well, store the data in hashmaps
-        let topUpId = getNextTopUpId();
         let newBalance = if(registeredCanister.isStorageBucket){await registeredCanisterActor.wallet_balance()} else{await registeredCanisterActor.availableCycles()};
 
         //put the new balance
         canisterIdToBalanceHashmap.put(canisterId, newBalance);
 
-        //add the top-up id to canister's top-ups
-        let existingTopUpIds = List.fromArray(U.safeGet(canisterIdToTopUpIdsHashmap, canisterId, []));
-        let newTopUpIds = List.toArray(List.push(topUpId, existingTopUpIds));
-        canisterIdToTopUpIdsHashmap.put(canisterId, newTopUpIds);
-
-        //put top-up data to hashmaps
-        topUpIdToCanisterIdHashmap.put(topUpId, canisterId);
-        topUpIdToTimeHashmap.put(topUpId, Time.now());
-        topUpIdToAmountHashmap.put(topUpId, registeredCanister.topUpAmount);
-        topUpIdToCanisterBalanceBeforeHashmap.put(topUpId, balance);
-        topUpIdToCanisterBalanceAfterHashmap.put(topUpId, newBalance);
-
-        return #Success(buildTopUp(topUpId));
+        return #Success(buildTopUp(logTopUp(canisterId, registeredCanister.topUpAmount, balance, newBalance)));
       } catch (e) {
         //if here, there was an error during adding the cycles, don't do anything
         return #UnsufficientCycles;
@@ -610,12 +641,121 @@ actor CyclesDispenser {
     };
   };
 
+  //rescues a registered canister the regular top-up path can no longer reach. A frozen canister rejects
+  //acceptCycles/wallet_receive and even the balance read, so checkCanisterBalance can never top it up;
+  //the management canister's deposit_cycles doesn't make the target execute anything, so it still lands.
+  public shared ({ caller }) func depositCyclesToCanister(canisterId : Text, amount : Nat) : async Result.Result<TopUp, Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    if (canisterIdToMinimumAmountOfCyclesHashmap.get(canisterId) == null) {
+      return #err("Given canister id is not registered yet.");
+    };
+
+    let cyclesDispenserBalance = Cycles.balance();
+    if (cyclesDispenserBalance < amount + CYCLES_DISPENSER_MINIMUM) {
+      return #err("CyclesDispenser canister has not enough cycles to deposit " # Nat.toText(amount) # " cycles.");
+    };
+
+    ignore U.logMetrics("depositCyclesToCanister", Principal.toText(caller));
+
+    let isStorageBucket = U.safeGet(canisterIdToIsStorageBucketHashmap, canisterId, false);
+    let balanceBefore = U.safeGet(canisterIdToBalanceHashmap, canisterId, 0);
+
+    try {
+      Cycles.add<system>(amount);
+      await IC.deposit_cycles({ canister_id = Principal.fromText(canisterId) });
+    } catch (e) {
+      return #err("Failed to deposit cycles into the given canister: " # Error.message(e));
+    };
+
+    //0 means the balance couldn't be read back, same convention checkCanisterBalance uses for a failed read
+    var balanceAfter : Nat = 0;
+    try {
+      let registeredCanisterActor : GeneralActorType = actor (canisterId);
+      balanceAfter := if (isStorageBucket) { await registeredCanisterActor.wallet_balance() } else { await registeredCanisterActor.availableCycles() };
+      //the canister answers again -> refresh the cache and let it drop out of getStaleCanisters
+      canisterIdToBalanceHashmap.put(canisterId, balanceAfter);
+      canisterIdToConsecutiveFailuresHashmap.put(canisterId, 0);
+    } catch (e) {
+      //the deposit went through but the canister still doesn't answer. Leave the cached balance and the
+      //failure counter untouched so it keeps being reported as stale.
+      Debug.print("CyclesDispenser -> balance read after the deposit failed for " # canisterId);
+    };
+
+    #ok(buildTopUp(logTopUp(canisterId, amount, balanceBefore, balanceAfter)));
+  };
+
+  //raises an already registered storage bucket up to the current thresholds. Deliberately written against
+  //the hashmaps instead of going through addCanister: addCanister probes the canister's balance first, which
+  //fails for exactly the buckets that need the higher threshold - the ones that already froze.
+  private func raiseStorageBucketThresholds(canisterId : Text) {
+    if (U.safeGet(canisterIdToMinimumAmountOfCyclesHashmap, canisterId, 0) < STORAGE_BUCKET_MINIMUM_THRESHOLD) {
+      canisterIdToMinimumAmountOfCyclesHashmap.put(canisterId, STORAGE_BUCKET_MINIMUM_THRESHOLD);
+    };
+    if (U.safeGet(canisterIdToTopUpAmountHashmap, canisterId, 0) < STORAGE_BUCKET_TOP_UP_AMOUNT) {
+      canisterIdToTopUpAmountHashmap.put(canisterId, STORAGE_BUCKET_TOP_UP_AMOUNT);
+    };
+  };
+
+  //allows admins/platform operators to tune the storage bucket top-up values without an upgrade
+  public shared ({ caller }) func setStorageBucketTopUpConfig(minimumThreshold : Nat, topUpAmount : Nat) : async Result.Result<(Nat, Nat), Text> {
+    if (isAnonymous(caller)) {
+      return #err("Cannot use this method anonymously.");
+    };
+
+    if (not isAdmin(caller) and not isPlatformOperator(caller)) {
+      return #err(Unauthorized);
+    };
+
+    if (topUpAmount == 0) {
+      return #err("The top-up amount must be greater than 0.");
+    };
+
+    if (minimumThreshold < STORAGE_BUCKET_MINIMUM_THRESHOLD_FLOOR) {
+      return #err("The minimum threshold must be at least " # Nat.toText(STORAGE_BUCKET_MINIMUM_THRESHOLD_FLOOR) # " cycles to stay clear of the bucket's freezing reserve.");
+    };
+
+    if (topUpAmount > STORAGE_BUCKET_WALLET_RECEIVE_LIMIT) {
+      return #err("A storage bucket accepts at most " # Nat.toText(STORAGE_BUCKET_WALLET_RECEIVE_LIMIT) # " cycles per top-up.");
+    };
+
+    if (minimumThreshold <= topUpAmount) {
+      return #err("The minimum threshold must be greater than the top-up amount to keep the bucket above its freezing threshold.");
+    };
+
+    ignore U.logMetrics("setStorageBucketTopUpConfig", Principal.toText(caller));
+    STORAGE_BUCKET_MINIMUM_THRESHOLD := minimumThreshold;
+    STORAGE_BUCKET_TOP_UP_AMOUNT := topUpAmount;
+
+    //registered buckets are raised to the new values by the next checkStorageBucketCanisters run
+    #ok((STORAGE_BUCKET_MINIMUM_THRESHOLD, STORAGE_BUCKET_TOP_UP_AMOUNT));
+  };
+
+  public shared query func getStorageBucketTopUpConfig() : async (Nat, Nat) {
+    (STORAGE_BUCKET_MINIMUM_THRESHOLD, STORAGE_BUCKET_TOP_UP_AMOUNT);
+  };
+
   //private function that controls if there's any new storage bucket canister. If there is, adds it to the registered canisters
   public shared ({caller}) func checkStorageBucketCanisters() : async () {
     if(not isAdmin(caller) and not isPlatformOperator(caller) and not isCanisterItself(caller)){
       //do nothing
       return;
     };
+    //migrate every bucket the dispenser itself knows about first. The Storage listing below can return an
+    //error or stop listing a bucket the dispenser still tops up, and a bucket left on the old thresholds is
+    //exactly the bug this is fixing - so the registry, not the external listing, drives the migration.
+    for ((registeredCanisterId, isStorageBucket) in canisterIdToIsStorageBucketHashmap.entries()) {
+      if (isStorageBucket) {
+        raiseStorageBucketThresholds(registeredCanisterId);
+      };
+    };
+
     let storageCanister = CanisterDeclarations.getStorageCanister();
     switch(await storageCanister.getAllDataCanisterIds()) {
       case(#ok((dataCanisterIds, retiredDataCanisterIds))) {
@@ -625,14 +765,15 @@ actor CyclesDispenser {
           let canisterIdText = Principal.toText(dataCanisterId);
           switch(canisterIdToIsStorageBucketHashmap.get(canisterIdText)) {
             case(?value) {
-              //already exists, do nothing
+              //already exists -> make sure it's not registered below the current thresholds
+              raiseStorageBucketThresholds(canisterIdText);
             };
             case(null) {
               //doesn't exist -> add it
               ignore addCanister({
                 canisterId = canisterIdText;
-                minimumThreshold = 10_000_000_000_000; 
-                topUpAmount = 5_000_000_000_000;
+                minimumThreshold = STORAGE_BUCKET_MINIMUM_THRESHOLD;
+                topUpAmount = STORAGE_BUCKET_TOP_UP_AMOUNT;
                 isStorageBucket = true;
               })
             };
@@ -644,14 +785,15 @@ actor CyclesDispenser {
           //check if the canister id already exists
           switch(canisterIdToMinimumAmountOfCyclesHashmap.get(retiredDataCanisterId)) {
             case(?value) {
-              //already exists, do nothing
+              //already exists -> make sure it's not registered below the current thresholds
+              raiseStorageBucketThresholds(retiredDataCanisterId);
             };
             case(null) {
               //doesn't exist -> add it
               ignore addCanister({
                 canisterId = retiredDataCanisterId;
-                minimumThreshold = 10_000_000_000_000; 
-                topUpAmount = 5_000_000_000_000;
+                minimumThreshold = STORAGE_BUCKET_MINIMUM_THRESHOLD;
+                topUpAmount = STORAGE_BUCKET_TOP_UP_AMOUNT;
                 isStorageBucket = true;
               })
             };

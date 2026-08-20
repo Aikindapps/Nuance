@@ -19,13 +19,15 @@ export interface RegisteredCanister {
 }
 export type Result = { 'ok' : null } |
   { 'err' : string };
-export type Result_1 = { 'ok' : bigint } |
+export type Result_1 = { 'ok' : [bigint, bigint] } |
   { 'err' : string };
-export type Result_2 = { 'ok' : Array<string> } |
+export type Result_2 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_3 = { 'ok' : TopUp } |
+export type Result_3 = { 'ok' : Array<string> } |
   { 'err' : string };
-export type Result_4 = { 'ok' : RegisteredCanister } |
+export type Result_4 = { 'ok' : TopUp } |
+  { 'err' : string };
+export type Result_5 = { 'ok' : RegisteredCanister } |
   { 'err' : string };
 export interface StaleCanister {
   'cachedBalance' : bigint,
@@ -47,31 +49,33 @@ export type Validate = { 'Ok' : string } |
   { 'Err' : string };
 export interface _SERVICE {
   'acceptCycles' : ActorMethod<[], undefined>,
-  'addCanister' : ActorMethod<[AddCanisterModel], Result_4>,
+  'addCanister' : ActorMethod<[AddCanisterModel], Result_5>,
   'availableCycles' : ActorMethod<[], bigint>,
-  'batchRegisterAdmin' : ActorMethod<[Principal], Result_2>,
-  'batchRegisterPlatformOperator' : ActorMethod<[Principal], Result_2>,
-  'batchUnregisterAdmin' : ActorMethod<[Principal], Result_2>,
-  'batchUnregisterPlatformOperator' : ActorMethod<[Principal], Result_2>,
+  'batchRegisterAdmin' : ActorMethod<[Principal], Result_3>,
+  'batchRegisterPlatformOperator' : ActorMethod<[Principal], Result_3>,
+  'batchUnregisterAdmin' : ActorMethod<[Principal], Result_3>,
+  'batchUnregisterPlatformOperator' : ActorMethod<[Principal], Result_3>,
   'checkAllRegisteredCanisters' : ActorMethod<[], Result>,
-  'checkRegisteredCanister' : ActorMethod<[string], Result_3>,
+  'checkRegisteredCanister' : ActorMethod<[string], Result_4>,
   'checkStorageBucketCanisters' : ActorMethod<[], undefined>,
-  'getAdmins' : ActorMethod<[], Result_2>,
+  'depositCyclesToCanister' : ActorMethod<[string, bigint], Result_4>,
+  'getAdmins' : ActorMethod<[], Result_3>,
   'getAllRegisteredCanisters' : ActorMethod<[], Array<RegisteredCanister>>,
   'getAllTopUps' : ActorMethod<[], Array<TopUp>>,
   'getCanisterVersion' : ActorMethod<[], string>,
-  'getCgUsers' : ActorMethod<[], Result_2>,
+  'getCgUsers' : ActorMethod<[], Result_3>,
   'getCyclesDispenserMinimumValue' : ActorMethod<[], bigint>,
   'getLatestTimerCall' : ActorMethod<[], [string, string]>,
   'getMaxMemorySize' : ActorMethod<[], bigint>,
   'getMemorySize' : ActorMethod<[], bigint>,
   'getPlatformOperators' : ActorMethod<[], List>,
-  'getRegisteredCanister' : ActorMethod<[string], Result_4>,
+  'getRegisteredCanister' : ActorMethod<[string], Result_5>,
   'getStaleCanisters' : ActorMethod<[], Array<StaleCanister>>,
   'getStatus' : ActorMethod<[], string>,
-  'getTopUp' : ActorMethod<[string], Result_3>,
+  'getStorageBucketTopUpConfig' : ActorMethod<[], [bigint, bigint]>,
+  'getTopUp' : ActorMethod<[string], Result_4>,
   'getTopUpsByRange' : ActorMethod<[TimeRange], Array<TopUp>>,
-  'getTrustedCanisters' : ActorMethod<[], Result_2>,
+  'getTrustedCanisters' : ActorMethod<[], Result_3>,
   'idQuick' : ActorMethod<[], Principal>,
   'isThereEnoughMemory' : ActorMethod<[], boolean>,
   'registerAdmin' : ActorMethod<[string], Result>,
@@ -79,7 +83,8 @@ export interface _SERVICE {
   'registerCgUser' : ActorMethod<[string], Result>,
   'registerPlatformOperator' : ActorMethod<[string], Result>,
   'removeCanister' : ActorMethod<[string], Result>,
-  'setMaxMemorySize' : ActorMethod<[bigint], Result_1>,
+  'setMaxMemorySize' : ActorMethod<[bigint], Result_2>,
+  'setStorageBucketTopUpConfig' : ActorMethod<[bigint, bigint], Result_1>,
   'unregisterAdmin' : ActorMethod<[string], Result>,
   'unregisterCanister' : ActorMethod<[string], Result>,
   'unregisterCgUser' : ActorMethod<[string], Result>,
