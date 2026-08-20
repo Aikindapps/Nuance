@@ -106,6 +106,10 @@ actor CyclesDispenser {
   stable var STORAGE_BUCKET_TOP_UP_AMOUNT : Nat = 10_000_000_000_000;
   // buckets.mo caps a single wallet_receive at this much, anything above it would be refunded silently
   let STORAGE_BUCKET_WALLET_RECEIVE_LIMIT : Nat = 20_000_000_000_000;
+  // The bucket that froze had reserved roughly 10T for its freezing threshold, and that reserve grows with
+  // the data the bucket holds. This is the floor the tuning method may not go below: without it the setter
+  // can put the buckets straight back into the state the thresholds above exist to prevent.
+  let STORAGE_BUCKET_MINIMUM_THRESHOLD_FLOOR : Nat = 15_000_000_000_000;
 
   stable var canisterIdToMinimumAmountOfCyclesEntries : [(Text, Nat)] = [];
   stable var canisterIdToTopUpAmountEntries : [(Text, Nat)] = [];
@@ -472,6 +476,7 @@ actor CyclesDispenser {
       canisterIdToTopUpAmountHashmap.put(canister.canisterId, canister.topUpAmount);
       canisterIdToBalanceHashmap.put(canister.canisterId, balance);
       canisterIdToIsStorageBucketHashmap.put(canister.canisterId, canister.isStorageBucket);
+      ignore U.logMetrics("addCanister", Principal.toText(caller));
       #ok(buildRegisteredCanister(canister.canisterId));
     } catch (e) {
       //if here, canister id is not valid or it doesn't contain the availableCycles method
@@ -494,6 +499,8 @@ actor CyclesDispenser {
         return #err("Given canister id not found!");
       };
     };
+
+    ignore U.logMetrics("removeCanister", Principal.toText(caller));
 
     canisterIdToMinimumAmountOfCyclesHashmap.delete(canisterId);
     canisterIdToTopUpAmountHashmap.delete(canisterId);
@@ -706,8 +713,12 @@ actor CyclesDispenser {
       return #err(Unauthorized);
     };
 
-    if (topUpAmount == 0 or minimumThreshold == 0) {
-      return #err("Both values must be greater than 0.");
+    if (topUpAmount == 0) {
+      return #err("The top-up amount must be greater than 0.");
+    };
+
+    if (minimumThreshold < STORAGE_BUCKET_MINIMUM_THRESHOLD_FLOOR) {
+      return #err("The minimum threshold must be at least " # Nat.toText(STORAGE_BUCKET_MINIMUM_THRESHOLD_FLOOR) # " cycles to stay clear of the bucket's freezing reserve.");
     };
 
     if (topUpAmount > STORAGE_BUCKET_WALLET_RECEIVE_LIMIT) {
@@ -736,6 +747,15 @@ actor CyclesDispenser {
       //do nothing
       return;
     };
+    //migrate every bucket the dispenser itself knows about first. The Storage listing below can return an
+    //error or stop listing a bucket the dispenser still tops up, and a bucket left on the old thresholds is
+    //exactly the bug this is fixing - so the registry, not the external listing, drives the migration.
+    for ((registeredCanisterId, isStorageBucket) in canisterIdToIsStorageBucketHashmap.entries()) {
+      if (isStorageBucket) {
+        raiseStorageBucketThresholds(registeredCanisterId);
+      };
+    };
+
     let storageCanister = CanisterDeclarations.getStorageCanister();
     switch(await storageCanister.getAllDataCanisterIds()) {
       case(#ok((dataCanisterIds, retiredDataCanisterIds))) {
